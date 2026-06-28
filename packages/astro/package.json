@@ -16,5 +16,10 @@
 	},
 	"peerDependencies": {
 		"astro": "^6.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nekoyoubi/xoji.git",
+		"directory": "packages/astro"
 	}
 }

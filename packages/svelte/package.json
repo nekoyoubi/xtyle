@@ -32,5 +32,10 @@
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"typescript": "^5.5.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nekoyoubi/xoji.git",
+		"directory": "packages/svelte"
 	}
 }
