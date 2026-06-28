@@ -1,6 +1,6 @@
 {
 	"name": "@xoji/svelte",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "Thin Svelte wrappers over the @xoji/core/elements custom elements.",
 	"type": "module",
 	"license": "MIT",
@@ -21,7 +21,7 @@
 		"build": "svelte-package -i src -o dist"
 	},
 	"dependencies": {
-		"@xoji/core": "^0.1.1"
+		"@xoji/core": "^0.2.0"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"

@@ -1,5 +1,7 @@
 # Changelog
 
+## v0.2.0 — TBD
+
 ## v0.1.1: README fixes & publish CI
 
 A corrections release on the heels of Genesis: one real install bug, plus the docs that had drifted from the engine.
