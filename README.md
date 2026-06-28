@@ -1,6 +1,6 @@
 # xoji
 
-[![built with xript](https://img.shields.io/badge/built%20with-xript-d6249f)](https://xript.dev)
+[![built with xript](https://img.shields.io/badge/built%20with-xript-e02e81)](https://xript.dev)
 [![npm](https://img.shields.io/npm/v/@xoji/core?label=npm)](https://www.npmjs.com/package/@xoji/core)
 [![docs](https://img.shields.io/badge/docs-xoji.dev-blue)](https://xoji.dev)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
