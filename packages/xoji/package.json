@@ -1,6 +1,6 @@
 {
 	"name": "@xoji/core",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "A themable-derivation engine: an algorithm plus a few anchors derive a full register of CSS-ready tokens.",
 	"type": "module",
 	"license": "MIT",

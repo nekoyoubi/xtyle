@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.1.1: README fixes & publish CI
+
+A corrections release on the heels of Genesis: one real install bug, plus the docs that had drifted from the engine.
+
+### Fixes
+
+- gave `@xoji/astro` its missing `@xoji/core` dependency, so a fresh `npm install @xoji/astro` resolves the `@xoji/core/markup`, `@xoji/core/elements`, and `@xoji/core` imports its components make
+- corrected the `@xoji/core` and root READMEs to match the engine: `constraints` (not `anchors`) is the derive input, the register is `276` tokens across the seven-dimension contract, and the knob list now carries `accentSplit` and `cues`
+
+### Tooling
+
+- added a GitHub Actions workflow that publishes `@xoji/core`, `@xoji/svelte`, and `@xoji/astro` on each release through npm OIDC trusted publishing
+- tightened the docs and the per-package READMEs
+
+| tests | count |
+| --- | --- |
+| passed | 238 |
+| skipped | 10 |
+
 ## v0.1.0: Genesis
 
 The spine chapter. The architecture settled and got written down, then went from spec to a working system: an OKLCH derivation engine mapping a small set of anchors and knobs into a full design-token register, a coverage contract as the one hard rule between what components consume and what an algorithm produces, the five blessed algorithms lifted into real xript mods that run in a zero-authority sandbox, a single-source custom-element component library with thin Svelte and Astro bindings, and a reference site that derives its own theme live. Everything below is the work that took each of those to green.
