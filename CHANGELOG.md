@@ -1,6 +1,13 @@
 # Changelog
 
-## v0.2.0 — TBD
+## v0.2.0: TBD
+
+### Tooling
+
+- added an MCP server, `xoji mcp`, that hands an agent the same engine the CLI hands a human over one stdio connection
+  - tools for `xoji_derive`, `xoji_coverage`, `xoji_components` (list a component or describe its full manifest), `xoji_gauntlet`, and `xoji_list_algorithms`, each running the same code the matching CLI path runs
+  - resources serving the concept docs and every component manifest, so an agent answers from what ships rather than from memory
+- consolidated the concept narrative into `@xoji/core` (the new `@xoji/core/concepts` entry), one source read by both the MCP and the site's `llms` generator
 
 ### Docs
 

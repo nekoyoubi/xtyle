@@ -1,16 +1,9 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { writeFile } from "node:fs/promises";
 
 const SITE_FALLBACK = "https://xoji.dev";
 
 const SUMMARY =
 	"xoji is a themable-derivation engine and component contract. A named, swappable algorithm maps a small set of overridable anchors plus a few knobs into a full, internally-consistent design-token set, co-designed against a component library so any valid theme renders well out of the box. The algorithm is the durable asset; a theme is a materialized invocation of one.";
-
-// Authored concept narrative under src/llms/. Order is the reading order in the
-// full-text corpus. A fixed allow-list (never a glob) keeps gitignored working
-// docs out of the published artifact by construction.
-const CONCEPTS = ["overview", "open-register", "algorithms", "consuming"];
 
 const GUIDES = [
 	{
@@ -50,23 +43,6 @@ const CATEGORY_ORDER = [
 	["layout", "Layout"],
 	["shell", "Shell"],
 ];
-
-function parseDoc(input) {
-	const raw = input.replace(/\r\n/g, "\n");
-	const lines = raw.split("\n");
-	let title = "Untitled";
-	let bodyStart = 0;
-	for (let i = 0; i < lines.length; i += 1) {
-		const heading = lines[i].match(/^#\s+(.+)$/);
-		if (heading) {
-			title = heading[1].trim();
-			bodyStart = i + 1;
-			break;
-		}
-	}
-	const body = lines.slice(bodyStart).join("\n").trim();
-	return { title, body };
-}
 
 function componentSection(component, url) {
 	const lines = [`# Component: ${component.name}`, `Source: ${url}`, ""];
@@ -126,23 +102,18 @@ function componentSection(component, url) {
 }
 
 export function llmsTxt() {
-	let conceptsDir;
 	let site = SITE_FALLBACK;
 	return {
 		name: "xoji-llms-txt",
 		hooks: {
 			"astro:config:done": ({ config }) => {
-				conceptsDir = join(fileURLToPath(config.srcDir), "llms");
 				if (config.site) site = config.site.replace(/\/$/, "");
 			},
 			"astro:build:done": async ({ dir, logger }) => {
 				const { listComponents } = await import("@xoji/core");
+				const { listConcepts } = await import("@xoji/core/concepts");
 				const components = listComponents().slice().sort((a, b) => a.name.localeCompare(b.name));
-
-				const concepts = [];
-				for (const slug of CONCEPTS) {
-					concepts.push(parseDoc(await readFile(join(conceptsDir, `${slug}.md`), "utf-8")));
-				}
+				const concepts = listConcepts();
 
 				const guideUrl = (slug) => `${site}/${slug}/`;
 				const componentUrl = (id) => `${site}/components/${id}/`;

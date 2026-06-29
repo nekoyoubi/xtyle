@@ -33,3 +33,13 @@ structure is the mode signal; it is auto-detected, never configured.
 The same engine runs in the browser through the QuickJS the xript runtime embeds,
 so live derivation in the generator and build-time derivation in the CLI are one
 codebase.
+
+## The MCP server
+
+`xoji mcp` starts a Model Context Protocol server over stdio, handing an agent the
+same engine the CLI hands a human. The tools cover `xoji_derive`,
+`xoji_coverage`, `xoji_components` (list a component or describe its full
+manifest), `xoji_gauntlet`, and `xoji_list_algorithms`; resources serve the
+concept docs and every component manifest. Point a client at `xoji mcp` (or `npx
+-y @xoji/core xoji mcp`) and an agent building against xoji reads token names and
+prop shapes from the manifest instead of guessing.

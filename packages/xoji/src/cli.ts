@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 import { coverage } from "./coverage.js";
 import { derive } from "./index.js";
@@ -7,7 +7,9 @@ import { emit, emitters } from "./emit/index.js";
 import { buildThemeFile, serializeThemeFile } from "./theme-file.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "./gauntlet.js";
 import { availableAlgorithms, resolveAlgorithm } from "./host/registry.js";
-import type { Algorithm, EmitFormat, TokenRegister } from "./types.js";
+import { bakedAlgorithm } from "./baked.js";
+import { constraintsFrom } from "./constraints.js";
+import type { EmitFormat } from "./types.js";
 
 type CliFormat = EmitFormat | "theme";
 type GauntletMode = "baked" | "hosted";
@@ -85,25 +87,8 @@ function parse(argv: string[]): ParsedArgs {
 	return args;
 }
 
-// `batteries.ts` (the baked algorithms) is bundled separately because it imports preset
-// sources outside this package's rootDir; a runtime dynamic import via a computed specifier
-// loads the bundled output without pulling it into the tsc program.
-async function bakedAlgorithm(id: string): Promise<Algorithm> {
-	const specifier = "./batteries.js";
-	const mod = (await import(specifier)) as { getAlgorithm(id: string): Algorithm };
-	return mod.getAlgorithm(id);
-}
-
-function resolveForMode(id: string, mode: GauntletMode): Promise<Algorithm> {
+function resolveForMode(id: string, mode: GauntletMode) {
 	return mode === "hosted" ? resolveAlgorithm(id) : bakedAlgorithm(id);
-}
-
-function constraintsFrom(args: ParsedArgs): TokenRegister {
-	const c: TokenRegister = {};
-	if (args.bg) c["--bg-0"] = args.bg;
-	if (args.fg) c["--fg-0"] = args.fg;
-	if (args.accent) c["--accent"] = args.accent;
-	return c;
 }
 
 function usage(): void {
@@ -116,6 +101,7 @@ function usage(): void {
 			"  xoji gauntlet [-a <algorithm>|all] [--mode baked|hosted] [--depth quick|standard|full] [--runs <n>]",
 			"  xoji coverage --consumed <a,b,c> [-a <algorithm>] [--bg <c>] [--accent <c>]",
 			"  xoji list",
+			"  xoji mcp",
 			"",
 			`algorithms: ${availableAlgorithms().join(", ")}`,
 			`emitters: ${emitters().join(", ")}`,
@@ -135,6 +121,14 @@ async function main(): Promise<void> {
 
 	if (args.command === "list") {
 		for (const id of availableAlgorithms()) process.stdout.write(`${id}\n`);
+		return;
+	}
+
+	if (args.command === "mcp") {
+		const { createServer } = await import("./mcp/server.js");
+		const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
+		const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf-8")).version as string;
+		await createServer(version).connect(new StdioServerTransport());
 		return;
 	}
 
