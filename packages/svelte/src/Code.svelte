@@ -14,14 +14,16 @@
 		lineNumbers?: boolean;
 		/** Tint chosen lines; a 1-based spec like `2`, `2,4`, or `4-6`. */
 		highlight?: string;
+		/** A caption header above the block, e.g. a filename. */
+		caption?: string;
 		children?: Snippet;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
 
-	let { lang, code, preload = false, copy = true, wrap = false, lineNumbers = false, highlight, children, ...rest }: Props = $props();
+	let { lang, code, preload = false, copy = true, wrap = false, lineNumbers = false, highlight, caption, children, ...rest }: Props = $props();
 </script>
 
-<xoji-code {...rest} {lang} {code} {preload} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlight || undefined}>
+<xoji-code {...rest} {lang} {code} {preload} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlight || undefined} caption={caption || undefined}>
 	{@render children?.()}
 </xoji-code>

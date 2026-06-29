@@ -50,6 +50,24 @@ export const codeCss = `
 	flex: 1 1 auto;
 	min-width: 0;
 }
+.xoji-code-caption {
+	display: flex;
+	align-items: center;
+	padding: var(--space-2) var(--space-4);
+	padding-right: 4rem;
+	color: var(--neutral-text);
+	background: var(--neutral-bg);
+	border-bottom: var(--border-thin) solid var(--field-border);
+	border-radius: var(--radius-md) var(--radius-md) 0 0;
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	line-height: 1.4;
+}
+.xoji-code-caption:empty { display: none; }
+:host(:has(.xoji-code-caption:not(:empty))) .xoji-code {
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
 .xoji-code-copy {
 	position: absolute;
 	top: var(--space-2);
