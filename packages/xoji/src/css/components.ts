@@ -44,6 +44,7 @@ import { skeletonCss } from "./components/skeleton.js";
 import { dialogCss } from "./components/dialog.js";
 import { toastCss } from "./components/toast.js";
 import { tableCss } from "./components/table.js";
+import { dockZoneCss } from "./components/dock-zone.js";
 import { progressCss } from "./components/progress.js";
 import { sliderCss } from "./components/slider.js";
 import { colorPickerCss } from "./components/color-picker.js";
@@ -162,6 +163,7 @@ export const componentsCss: string = [
 	dialogCss,
 	toastCss,
 	tableCss,
+	dockZoneCss,
 	progressCss,
 	sliderCss,
 	colorPickerCss,

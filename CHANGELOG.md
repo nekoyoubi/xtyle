@@ -15,6 +15,9 @@
   - a `dockPanel` moves a panel onto a target as a tab (`center`) or a split (an edge), pruning the leaf it leaves behind and collapsing any single-child split, so the tree never accumulates dead structure; every node is plain data, so persistence is `JSON.stringify` and `parseLayout` reads it back
     - proven end-to-end in a real browser: a working two-pane docker built from the seam, dragging panels between zones with no panel lost or duplicated
   - `layoutRects` closes the geometry loop: it lays the tree out inside a container (splits divide by their sizes, children inset by a gap) and returns each zone's rectangle, which a renderer positions by and `resolveDrop` reads back as its targets, so the engine round-trips from tree to rects to drop to tree
+- `<xoji-dock-zone>` lands the drag-and-drop dockable-panel workspace on top of that engine: its children are the panels (any element with a `data-panel-id` and a `data-title`), and it renders them as tabbed zones that rearrange by dragging a tab, joining another zone as a tab over the center or splitting it against an edge
+  - every rearrangement dispatches a `layout-change` event carrying the serializable layout tree, and setting the `layout` property restores a saved one, so a workspace persists across reloads; the tabs are real `<button>`s with `role="tab"` and `aria-selected`
+    - browser-dogfooded under a derived theme: dragging a tab to a zone's edge shows the drop preview and splits the zone, with the layout tree updating live
 
 ### Fixes
 
