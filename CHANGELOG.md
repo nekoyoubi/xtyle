@@ -11,6 +11,9 @@
 - `<xoji-code>` took a `caption` attribute: a header strip above the block (a filename, say) that rounds the block's top corners into it and reads in the mono face. It renders on the runtime and the zero-JS Astro paths, threads through the Svelte and Astro bindings, and reuses chrome tokens so coverage is unchanged.
 - a headless docking seam landed for drag-and-drop panel workspaces: `resolveDrop` (from `@xoji/core/elements`) takes the pointer and a set of zone rectangles and returns where a dragged panel would land (a `left`/`right`/`top`/`bottom` split or a `center` tab) plus the preview rectangle to highlight, so a consumer wires its own panel rendering into xoji's layout physics instead of rebuilding the hit-testing and drop resolution
   - pure geometry, the same shape as the overlay positioner: a target's `regions` narrow the accepted drops, corners resolve to the nearer edge, and a pointer over nothing returns `null` for a float; verified against real browser geometry, with the docking `dock-zone` / `dock-panel` elements that ride on it to follow
+- the docking seam grew its state half: a serializable zone/panel tree (`DockNode`) plus immutable mutations (`dockPanel`, `removePanel`, `activatePanel`, `parseLayout`) from `@xoji/core/elements`, so `resolveDrop` says where a panel lands and `dockPanel` applies it to the layout
+  - a `dockPanel` moves a panel onto a target as a tab (`center`) or a split (an edge), pruning the leaf it leaves behind and collapsing any single-child split, so the tree never accumulates dead structure; every node is plain data, so persistence is `JSON.stringify` and `parseLayout` reads it back
+    - proven end-to-end in a real browser: a working two-pane docker built from the seam, dragging panels between zones with no panel lost or duplicated
 
 ### Fixes
 

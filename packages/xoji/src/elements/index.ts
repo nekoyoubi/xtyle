@@ -24,6 +24,20 @@ export {
 	type ResolveDropInput,
 	type DropResolution,
 } from "./dock-layout.js";
+export {
+	dockPanel,
+	removePanel,
+	activatePanel,
+	singleZone,
+	allLeaves,
+	allPanels,
+	leafOf,
+	parseLayout,
+	type DockNode,
+	type DockLeaf,
+	type DockSplit,
+	type DockPanelInput,
+} from "./dock-model.js";
 export { XojiButton } from "./button.js";
 export { XojiField } from "./field.js";
 export { XojiCard } from "./card.js";
