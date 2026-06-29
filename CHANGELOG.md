@@ -10,6 +10,10 @@
 - `<xoji-splitter>` resets its size on a double-click of the handle, mirroring `<xoji-slider>`: it restores the `default` size, or the size it first rendered with when `default` is omitted. The keyboard reset now follows the same fallback.
 - `<xoji-code>` took a `caption` attribute: a header strip above the block (a filename, say) that rounds the block's top corners into it and reads in the mono face. It renders on the runtime and the zero-JS Astro paths, threads through the Svelte and Astro bindings, and reuses chrome tokens so coverage is unchanged.
 
+### Fixes
+
+- `<xoji-splitter>` keeps a drag alive once the pointer leaves the handle: the move and release listeners now sit on `window` instead of the handle element, so a thin vertical divider (a few-pixel grid column) tracks the pointer anywhere on screen. It used to lean entirely on pointer capture, which a narrow handle can lose the instant the pointer crosses out of the strip, freezing the drag with no resize.
+
 ### Tooling
 
 - added an MCP server, `xoji mcp`, that hands an agent the same engine the CLI hands a human over one stdio connection

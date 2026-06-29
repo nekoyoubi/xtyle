@@ -157,20 +157,25 @@ export class XojiSplitter extends XojiElement {
 		this.handle?.focus();
 		const startPos = this.axisIsX ? event.clientX : event.clientY;
 		const startValue = this.value;
+		// Capture is a complement, not the lifeline: the move/up listeners live on `window` so the
+		// drag tracks the pointer anywhere on screen even when capture doesn't hold (a thin vertical
+		// handle in WebView2 loses it the moment the pointer leaves the few-px strip).
 		(event.target as Element).setPointerCapture?.(event.pointerId);
 		const sign = this.reversed ? -1 : 1;
 		const move = (e: PointerEvent) => {
 			const delta = (this.axisIsX ? e.clientX : e.clientY) - startPos;
 			this.commit(startValue + sign * delta, "resize");
 		};
-		const up = (e: PointerEvent) => {
-			this.handle?.removeEventListener("pointermove", move);
-			this.handle?.removeEventListener("pointerup", up);
+		const end = (e: PointerEvent) => {
+			window.removeEventListener("pointermove", move);
+			window.removeEventListener("pointerup", end);
+			window.removeEventListener("pointercancel", end);
 			const delta = (this.axisIsX ? e.clientX : e.clientY) - startPos;
 			this.commit(startValue + sign * delta, "resize-end");
 		};
-		this.handle?.addEventListener("pointermove", move);
-		this.handle?.addEventListener("pointerup", up);
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", end);
+		window.addEventListener("pointercancel", end);
 	}
 
 	private applyIntent(intent: FragmentIntent, event: Event): void {
