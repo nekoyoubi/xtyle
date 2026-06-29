@@ -5,6 +5,8 @@ export interface MenuAction {
 	disabled?: boolean;
 	/** A trailing, muted, monospaced hint shown at the end of the row, e.g. an accelerator like `Ctrl+S`. Display-only; it is not part of the row's accessible name. */
 	hint?: string;
+	/** `"danger"` tints the row destructive (a delete / discard / close action), so the one irreversible item reads differently from the rest. Defaults to `"default"`. */
+	intent?: "danger" | "default";
 }
 
 /**

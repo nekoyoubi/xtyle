@@ -91,6 +91,13 @@ export const menuCss = `
 	background: var(--accent-bg);
 	color: var(--accent-text);
 }
+.xoji-menu__item[data-intent="danger"]:not([aria-disabled="true"]) {
+	color: var(--danger-text);
+}
+.xoji-menu__item[data-intent="danger"]:not([aria-disabled="true"]):hover,
+.xoji-menu__item[data-intent="danger"]:not([aria-disabled="true"]):focus-visible {
+	background: var(--danger-bg);
+}
 .xoji-menu__item[aria-disabled="true"] {
 	color: var(--fg-disabled);
 	cursor: not-allowed;

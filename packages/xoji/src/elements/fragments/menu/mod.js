@@ -14,8 +14,9 @@
     const label = item.label ?? "";
     const value = item.value ?? label;
     const disabledAttr = item.disabled ? ` aria-disabled="true"` : "";
+    const intentAttr = item.intent === "danger" ? ` data-intent="danger"` : "";
     const hint = item.hint ? `<span class="xoji-menu__item-hint" part="item-hint" aria-hidden="true">${escapeHtml(item.hint)}</span>` : "";
-    return `<button type="button" class="xoji-menu__item" role="menuitem" tabindex="-1"${disabledAttr} data-value="${escapeAttr(value)}" data-label="${escapeAttr(label)}"><span class="xoji-menu__item-label">${escapeHtml(label)}</span>${hint}</button>`;
+    return `<button type="button" class="xoji-menu__item" part="item" role="menuitem" tabindex="-1"${disabledAttr}${intentAttr} data-value="${escapeAttr(value)}" data-label="${escapeAttr(label)}"><span class="xoji-menu__item-label">${escapeHtml(label)}</span>${hint}</button>`;
   }
   function items(bindings) {
     let out = "";

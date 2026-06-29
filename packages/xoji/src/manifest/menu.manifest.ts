@@ -13,7 +13,7 @@ const htmlExample = `<xoji-menu label="File"></xoji-menu>
 		{ heading: "Help" },
 		{ label: "Shortcuts", value: "shortcuts", hint: "?" },
 		{ separator: true },
-		{ label: "Close", value: "close" },
+		{ label: "Close", value: "close", intent: "danger" },
 	];
 	menu.addEventListener("select", (e) => console.log(e.detail));
 </script>`;
@@ -30,7 +30,7 @@ const svelteExample = `<script lang="ts">
 		{ heading: "Help" },
 		{ label: "Shortcuts", value: "shortcuts", hint: "?" },
 		{ separator: true },
-		{ label: "Close", value: "close" },
+		{ label: "Close", value: "close", intent: "danger" },
 	];
 </script>
 
@@ -48,7 +48,7 @@ const items = [
 	{ heading: "Help" },
 	{ label: "Shortcuts", value: "shortcuts", hint: "?" },
 	{ separator: true },
-	{ label: "Close", value: "close" },
+	{ label: "Close", value: "close", intent: "danger" },
 ];
 ---
 
@@ -149,7 +149,7 @@ export const menuManifest: ComponentManifest = {
 			name: "items",
 			type: "MenuItem[]",
 			description:
-				"The action list. An action is `{ label, value?, disabled?, hint? }`, where `hint` is a trailing muted/mono accelerator like `Ctrl+S`. A `{ separator: true }` entry renders a divider, and a `{ heading: string }` entry opens a labeled group the following actions sit under (a `role=\"group\"` named by the heading). Passed as a property in the bindings (serialized to JSON for the element).",
+				"The action list. An action is `{ label, value?, disabled?, hint?, intent? }`, where `hint` is a trailing muted/mono accelerator like `Ctrl+S` and `intent: \"danger\"` tints a destructive row (a delete / discard / close). A `{ separator: true }` entry renders a divider, and a `{ heading: string }` entry opens a labeled group the following actions sit under (a `role=\"group\"` named by the heading). Passed as a property in the bindings (serialized to JSON for the element).",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -182,6 +182,12 @@ export const menuManifest: ComponentManifest = {
 			tokens: ["--accent-bg", "--accent-text"],
 		},
 		{
+			name: "item-danger",
+			description: "A destructive action (`intent: \"danger\"`): the row reads in the danger ink, and its hover/focus takes the danger tint instead of the accent one, so the one irreversible item stands apart.",
+			selector: '.xoji-menu__item[data-intent="danger"]',
+			tokens: ["--danger-text", "--danger-bg"],
+		},
+		{
 			name: "item-disabled",
 			description: "A locked action: muted and non-interactive, skipped by arrow navigation.",
 			selector: '.xoji-menu__item[aria-disabled="true"]',
@@ -206,6 +212,8 @@ export const menuManifest: ComponentManifest = {
 		"--surface-overlay-border",
 		"--accent-bg",
 		"--accent-text",
+		"--danger-bg",
+		"--danger-text",
 		"--line",
 		"--state-hover",
 		"--state-selected",

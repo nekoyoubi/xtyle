@@ -9,6 +9,7 @@ interface MenuItem {
 	value?: string;
 	disabled?: boolean;
 	hint?: string;
+	intent?: "danger" | "default";
 	separator?: true;
 	heading?: string;
 }
@@ -64,11 +65,12 @@ function action(item: MenuItem): string {
 	const label = item.label ?? "";
 	const value = item.value ?? label;
 	const disabledAttr = item.disabled ? ` aria-disabled="true"` : "";
+	const intentAttr = item.intent === "danger" ? ` data-intent="danger"` : "";
 	const hint = item.hint
 		? `<span class="xoji-menu__item-hint" part="item-hint" aria-hidden="true">${escapeHtml(item.hint)}</span>`
 		: "";
 	return (
-		`<button type="button" class="xoji-menu__item" role="menuitem" tabindex="-1"${disabledAttr} ` +
+		`<button type="button" class="xoji-menu__item" part="item" role="menuitem" tabindex="-1"${disabledAttr}${intentAttr} ` +
 		`data-value="${escapeAttr(value)}" data-label="${escapeAttr(label)}">` +
 		`<span class="xoji-menu__item-label">${escapeHtml(label)}</span>${hint}</button>`
 	);
