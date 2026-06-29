@@ -33,10 +33,12 @@ export {
 	allPanels,
 	leafOf,
 	parseLayout,
+	layoutRects,
 	type DockNode,
 	type DockLeaf,
 	type DockSplit,
 	type DockPanelInput,
+	type LeafRect,
 } from "./dock-model.js";
 export { XojiButton } from "./button.js";
 export { XojiField } from "./field.js";

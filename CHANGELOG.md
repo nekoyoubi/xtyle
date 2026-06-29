@@ -14,6 +14,7 @@
 - the docking seam grew its state half: a serializable zone/panel tree (`DockNode`) plus immutable mutations (`dockPanel`, `removePanel`, `activatePanel`, `parseLayout`) from `@xoji/core/elements`, so `resolveDrop` says where a panel lands and `dockPanel` applies it to the layout
   - a `dockPanel` moves a panel onto a target as a tab (`center`) or a split (an edge), pruning the leaf it leaves behind and collapsing any single-child split, so the tree never accumulates dead structure; every node is plain data, so persistence is `JSON.stringify` and `parseLayout` reads it back
     - proven end-to-end in a real browser: a working two-pane docker built from the seam, dragging panels between zones with no panel lost or duplicated
+  - `layoutRects` closes the geometry loop: it lays the tree out inside a container (splits divide by their sizes, children inset by a gap) and returns each zone's rectangle, which a renderer positions by and `resolveDrop` reads back as its targets, so the engine round-trips from tree to rects to drop to tree
 
 ### Fixes
 

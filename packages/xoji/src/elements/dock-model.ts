@@ -7,7 +7,7 @@
  * node is plain data. No DOM, no mutation in place.
  */
 
-import type { DockRegion } from "./dock-layout.js";
+import type { DockRect, DockRegion } from "./dock-layout.js";
 
 /** A tab group: one or more panels sharing a region, with one active. */
 export interface DockLeaf {
@@ -163,4 +163,40 @@ export function parseLayout(json: string): DockNode {
 	const value: unknown = JSON.parse(json);
 	if (!isNode(value)) throw new Error("xoji: malformed dock layout");
 	return value;
+}
+
+export interface LeafRect {
+	/** The leaf's id, matching a {@link DockLeaf}. */
+	id: string;
+	/** The leaf's rectangle within the laid-out container. */
+	rect: DockRect;
+}
+
+/**
+ * Lay the tree out inside `container`, returning every leaf's rectangle. Splits divide
+ * their axis by `sizes` (equal when absent) and inset their children by `gap`. This is
+ * the geometry-out companion to {@link ./dock-layout}'s `resolveDrop` (geometry-in): a
+ * renderer positions each zone by its rect, and the same rects feed straight back in as
+ * `resolveDrop` targets, so the engine round-trips tree to rects to drop to tree.
+ */
+export function layoutRects(node: DockNode, container: DockRect, gap = 0): LeafRect[] {
+	if (node.kind === "leaf") return [{ id: node.id, rect: container }];
+	const count = node.children.length;
+	if (count === 0) return [];
+	const sizes = node.sizes && node.sizes.length === count ? node.sizes : node.children.map(() => 1);
+	const total = sizes.reduce((sum, s) => sum + s, 0) || count;
+	const isRow = node.direction === "row";
+	const axis = isRow ? container.width : container.height;
+	const available = axis - gap * (count - 1);
+	let offset = isRow ? container.left : container.top;
+	const out: LeafRect[] = [];
+	node.children.forEach((child, i) => {
+		const extent = available * ((sizes[i] ?? 1) / total);
+		const childRect: DockRect = isRow
+			? { top: container.top, left: offset, width: extent, height: container.height }
+			: { top: offset, left: container.left, width: container.width, height: extent };
+		out.push(...layoutRects(child, childRect, gap));
+		offset += extent + gap;
+	});
+	return out;
 }

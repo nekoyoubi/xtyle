@@ -7,9 +7,11 @@ import {
 	allPanels,
 	leafOf,
 	parseLayout,
+	layoutRects,
 	type DockNode,
 	type DockSplit,
 } from "../src/elements/dock-model.js";
+import { resolveDrop } from "../src/elements/dock-layout.js";
 
 const base = () => singleZone("root", ["a", "b"]);
 
@@ -102,5 +104,57 @@ describe("dock-model", () => {
 		expect(restored).toEqual(root);
 		expect(() => parseLayout('{"kind":"leaf","id":"x"}')).toThrow(/malformed/);
 		expect(() => parseLayout('{"kind":"bogus"}')).toThrow(/malformed/);
+	});
+});
+
+const container = { top: 0, left: 0, width: 1000, height: 400 };
+
+describe("layoutRects", () => {
+	it("gives a single leaf the whole container", () => {
+		expect(layoutRects(singleZone("root", ["a"]), container)).toEqual([{ id: "root", rect: container }]);
+	});
+
+	it("divides a row split into side-by-side halves", () => {
+		const split: DockNode = { kind: "split", direction: "row", children: [singleZone("L", ["a"]), singleZone("R", ["b"])] };
+		const rects = layoutRects(split, container);
+		expect(rects).toEqual([
+			{ id: "L", rect: { top: 0, left: 0, width: 500, height: 400 } },
+			{ id: "R", rect: { top: 0, left: 500, width: 500, height: 400 } },
+		]);
+	});
+
+	it("stacks a column split top over bottom", () => {
+		const split: DockNode = { kind: "split", direction: "column", children: [singleZone("T", ["a"]), singleZone("B", ["b"])] };
+		const rects = layoutRects(split, container);
+		expect(rects[0]?.rect).toEqual({ top: 0, left: 0, width: 1000, height: 200 });
+		expect(rects[1]?.rect).toEqual({ top: 200, left: 0, width: 1000, height: 200 });
+	});
+
+	it("honors weighted sizes and insets children by the gap", () => {
+		const split: DockNode = { kind: "split", direction: "row", sizes: [3, 1], children: [singleZone("L", ["a"]), singleZone("R", ["b"])] };
+		const rects = layoutRects(split, container, 8);
+		// available = 1000 - 8 = 992; L = 992 * 3/4 = 744, R = 992 * 1/4 = 248
+		expect(rects[0]?.rect.width).toBe(744);
+		expect(rects[1]?.rect.left).toBe(744 + 8);
+		expect(rects[1]?.rect.width).toBe(248);
+	});
+
+	it("round-trips the whole engine: tree to rects to drop to tree", () => {
+		// A row split; lay it out, drop a new panel onto the left edge of zone R, apply, re-lay-out.
+		let layout: DockNode = { kind: "split", direction: "row", children: [singleZone("L", ["a"]), singleZone("R", ["b"])] };
+		const rects = layoutRects(layout, container);
+		const rTarget = rects.find((r) => r.id === "R")!;
+		// pointer near R's left edge -> resolveDrop says R/left
+		const res = resolveDrop({
+			pointer: { x: rTarget.rect.left + rTarget.rect.width * 0.05, y: rTarget.rect.top + rTarget.rect.height / 2 },
+			targets: rects.map((r) => ({ id: r.id, rect: r.rect })),
+		});
+		expect(res).toMatchObject({ targetId: "R", region: "left" });
+		layout = dockPanel(layout, { panel: "c", target: res!.targetId, region: res!.region, newLeafId: "new" });
+		// R split into [new(c), R(b)]; the whole tree now lays out to three leaves that tile the container.
+		const after = layoutRects(layout, container);
+		expect(after.map((r) => r.id)).toEqual(["L", "new", "R"]);
+		const totalWidth = after.reduce((sum, r) => sum + r.rect.width, 0);
+		expect(totalWidth).toBeCloseTo(container.width, 5);
 	});
 });
