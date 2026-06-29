@@ -21,7 +21,8 @@ npm install @xoji/core
 ## Quick start
 
 ```ts
-import { derive, emit, xojiDefault } from "@xoji/core";
+import { derive, emit } from "@xoji/core";
+import { xojiDefault } from "@xoji/core/algorithms";
 
 const register = derive(xojiDefault, {
 	constraints: { "--bg-0": "#0f1115", "--accent": "#5b8cff" },
@@ -36,6 +37,11 @@ console.log(emit(register, "css"));
 // }
 ```
 
+The engine (`derive`, `emit`) is on `@xoji/core`; the blessed algorithms (`xojiDefault`,
+`getAlgorithm`, the full set) are on `@xoji/core/algorithms`, which also re-exports the
+engine, so `import { derive, getAlgorithm, emitCss } from "@xoji/core/algorithms"` reaches
+the whole pure-derive path in one import.
+
 Constraints are pinned token values. They land in the output verbatim and feed back in as
 derivation inputs, so pinning `--bg-0` re-derives `--fg-0` to hold contrast. Tune posture
 with `knobs` (below).
@@ -44,8 +50,10 @@ with `knobs` (below).
 
 The package is environment-split by design:
 
-- **`@xoji/core`**: the neutral, importable API (`derive`, `emit`, `coverage`, `gauntlet`,
-  `xojiDefault`, color and graph helpers); no `node:*`, no DOM globals, safe in any runtime.
+- **`@xoji/core`**: the neutral, importable engine (`derive`, `emit`, `coverage`, `gauntlet`,
+  `makeXojiAlgorithm`, color and graph helpers); no `node:*`, no DOM globals, safe in any runtime.
+- **`@xoji/core/algorithms`**: the blessed algorithm set (`xojiDefault`, `getAlgorithm`, the
+  registry) plus a re-export of the engine, so the whole pure-derive path is one import.
 - **`@xoji/core/dom`**: browser helpers (`apply`, `clear`, `persist`, `restore`,
   `toStyleSheet`) that write tokens to a live `:root`.
 - **`xoji` bin**: a Node CLI for one-shot derivation, coverage, and the gauntlet.
@@ -152,7 +160,8 @@ and the structural ladders (type scale, weights, radius, borders, durations, ele
 strength, space).
 
 ```ts
-import { gauntlet, xojiDefault } from "@xoji/core";
+import { gauntlet } from "@xoji/core";
+import { xojiDefault } from "@xoji/core/algorithms";
 const report = gauntlet(xojiDefault, { runs: 200 });
 // { ok: true, passed: 200, runs: 200, failures: [] }
 ```

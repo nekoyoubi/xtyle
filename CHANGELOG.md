@@ -13,6 +13,12 @@
 ### Fixes
 
 - `<xoji-splitter>` keeps a drag alive once the pointer leaves the handle: the move and release listeners now sit on `window` instead of the handle element, so a thin vertical divider (a few-pixel grid column) tracks the pointer anywhere on screen. It used to lean entirely on pointer capture, which a narrow handle can lose the instant the pointer crosses out of the strip, freezing the drag with no resize.
+- the `@xoji/core` quick-start in the README imported `xojiDefault` from the neutral entry, where it never lived, so the documented first call derived against `undefined`; the examples now import the blessed algorithms from `@xoji/core/algorithms`, the surface that actually carries them
+
+### Engine (`@xoji/core`)
+
+- `@xoji/core/algorithms` re-exports the engine (`derive`, `deriveTraced`, `emit`, `emitCss`, `emitJson`) alongside the blessed algorithms (`getAlgorithm`, the registry, the named set), so an embedder reaches the whole pure-derive path through one import: `import { derive, getAlgorithm, emitCss } from "@xoji/core/algorithms"`
+  - the neutral `@xoji/core` entry can't carry `getAlgorithm` itself (the blessed presets live in the sibling `algorithms/` workspace, outside the engine's compile root, and are bundled separately), so the batteries surface is where the two halves meet
 
 ### Tooling
 
