@@ -2,6 +2,10 @@
 
 ## v0.2.0: TBD
 
+### Components
+
+- `<xoji-code>` took a `caption` attribute: a header strip above the block (a filename, say) that rounds the block's top corners into it and reads in the mono face. It renders on the runtime and the zero-JS Astro paths, threads through the Svelte and Astro bindings, and reuses chrome tokens so coverage is unchanged.
+
 ### Tooling
 
 - added an MCP server, `xoji mcp`, that hands an agent the same engine the CLI hands a human over one stdio connection
