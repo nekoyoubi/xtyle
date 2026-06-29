@@ -94,7 +94,7 @@ function resolveForMode(id: string, mode: GauntletMode) {
 function usage(): void {
 	process.stdout.write(
 		[
-			"xoji — themable-derivation engine",
+			"xoji: themable-derivation engine",
 			"",
 			"usage:",
 			"  xoji derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--format css|json|theme|prism|monaco] [--name <s>] [--out <file>]",
@@ -125,6 +125,21 @@ async function main(): Promise<void> {
 	}
 
 	if (args.command === "mcp") {
+		if (argv.includes("--help") || argv.includes("-h")) {
+			process.stdout.write(
+				[
+					"xoji mcp: start the MCP server (stdio transport)",
+					"",
+					"Exposes the engine the CLI runs to MCP clients: tools for derive, coverage,",
+					"components, gauntlet, and list-algorithms, plus the concept docs and every",
+					"component manifest as resources.",
+					"",
+					"Configure your client to run: xoji mcp (or npx -y @xoji/core xoji mcp)",
+					"",
+				].join("\n"),
+			);
+			return;
+		}
 		const { createServer } = await import("./mcp/server.js");
 		const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
 		const version = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf-8")).version as string;

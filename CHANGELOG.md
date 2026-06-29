@@ -11,6 +11,7 @@
 
 ### Docs
 
+- documented the MCP server: a `/mcp` reference page on the site, `xoji mcp --help` text, and a README section
 - generated `llms.txt` and `llms-full.txt` at the site root so agents can read xoji's reference the way they read its dependencies
   - `llms.txt` is a curated index: the guides and every component page, grouped by category, each with its one-line summary
   - `llms-full.txt` inlines the whole corpus, the concept narrative plus a full per-component reference (props, variants, states, slots, consumed tokens, accessibility, examples) generated from the manifests, so it never drifts from what ships

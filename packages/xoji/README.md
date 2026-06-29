@@ -45,7 +45,7 @@ with `knobs` (below).
 The package is environment-split by design:
 
 - **`@xoji/core`**: the neutral, importable API (`derive`, `emit`, `coverage`, `gauntlet`,
-  `xojiDefault`, color and graph helpers). No `node:*`, no DOM globals, safe in any runtime.
+  `xojiDefault`, color and graph helpers); no `node:*`, no DOM globals, safe in any runtime.
 - **`@xoji/core/dom`**: browser helpers (`apply`, `clear`, `persist`, `restore`,
   `toStyleSheet`) that write tokens to a live `:root`.
 - **`xoji` bin**: a Node CLI for one-shot derivation, coverage, and the gauntlet.
@@ -170,6 +170,21 @@ blessed set ships as real mods, a `mod-manifest.json` plus an esbuild-bundled `m
 through `@xriptjs/runtime`, and `resolveAlgorithm` runs the sandboxed mod as the canonical
 derive path, held byte-identical to the baked TypeScript that serves as the test oracle.
 Author your own with `defineXojiAlgorithm` / `defineAlgorithm` from `@xoji/core/authoring`.
+
+## The MCP server
+
+`xoji mcp` starts a Model Context Protocol server over stdio that hands an agent the same
+engine the CLI hands a human. Point an MCP client at `xoji mcp` (or `npx -y @xoji/core xoji
+mcp`).
+
+- **Tools**: `xoji_derive`, `xoji_coverage`, `xoji_components` (list every component or
+  describe one's full manifest), `xoji_gauntlet`, `xoji_list_algorithms`, and
+  `xoji_server_info`; each runs the same code as its CLI counterpart, so the two can't drift.
+- **Resources**: `xoji://concept/{id}` for the concept docs and `xoji://component/{id}` for
+  every component manifest, so an agent answers from what ships rather than from memory.
+
+An agent building against xoji reads token names and prop shapes from the manifest instead
+of guessing.
 
 ## License
 

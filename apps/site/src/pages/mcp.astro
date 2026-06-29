@@ -1,0 +1,143 @@
+---
+import Base from "../layouts/Base.astro";
+import Panel from "@xoji/astro/Panel.astro";
+import Dock from "@xoji/astro/Dock.astro";
+import Toc from "@xoji/astro/Toc.astro";
+import Alert from "@xoji/astro/Alert.astro";
+import Link from "@xoji/astro/Link.astro";
+import Table from "@xoji/astro/Table.astro";
+import Code from "@xoji/astro/Code.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Eyebrow from "@xoji/astro/Eyebrow.astro";
+
+const sections = [
+	{ id: "run", label: "Run it" },
+	{ id: "tools", label: "Tools" },
+	{ id: "resources", label: "Resources" },
+	{ id: "why", label: "Why it matters" },
+];
+
+const tools = [
+	{ name: "xoji_derive", note: "Run an algorithm over seed colors or pinned tokens and emit the register (css, json, theme, prism, monaco)." },
+	{ name: "xoji_coverage", note: "Check that a derived register covers a component's consumedTokens, an explicit token list, or every shipped component." },
+	{ name: "xoji_components", note: "List every component, or describe one's full manifest: props, variants, states, slots, consumedTokens, a11y, examples." },
+	{ name: "xoji_gauntlet", note: "Prove an algorithm's invariants across randomized inputs (one algorithm or all)." },
+	{ name: "xoji_list_algorithms", note: "List the algorithm ids and the emit formats." },
+	{ name: "xoji_server_info", note: "Report the running server's name, version, and build timestamp." },
+];
+
+const configSnippet = `{
+  "mcpServers": {
+    "xoji": {
+      "command": "npx",
+      "args": ["-y", "@xoji/core", "xoji", "mcp"]
+    }
+  }
+}`;
+---
+
+<Base
+	title="MCP server: xoji"
+	description="xoji mcp hands an agent the same engine the CLI hands a human, over one stdio connection: derive, coverage, components, and gauntlet as tools, plus the concept docs and every component manifest as resources."
+>
+	<Dock slot="right" side="right" size="sm" label="On this page" hideHeader class="docs-toc-rail">
+		<Toc items={sections} />
+	</Dock>
+
+	<div class="docs">
+		<Stack gap={8}>
+			<Stack gap={3}>
+				<Eyebrow>MCP server</Eyebrow>
+				<Heading level={1} size="3xl">The same engine, handed to an agent</Heading>
+				<Text size="lg" tone="muted">
+					<code>xoji mcp</code> is a <Link href="https://modelcontextprotocol.io">Model Context
+					Protocol</Link> server built into <code>@xoji/core</code>. It hands an agent the same
+					capabilities the CLI hands a human, over one stdio connection: every derivation and
+					proof as a callable tool, the concept docs and every component manifest as resources.
+					Each tool runs the same code its CLI counterpart runs, so the two can't drift.
+				</Text>
+			</Stack>
+
+			<Panel title="Run it" id="run" class="docs-anchor">
+				<Stack gap={4}>
+					<Text tone="muted">
+						The server is a subcommand of the <code>xoji</code> bin. Configure your MCP client
+						to launch it over stdio. The <code>npx</code> form needs no global install.
+					</Text>
+					<Code lang="sh" code="xoji mcp" />
+					<Code lang="json" code={configSnippet} />
+				</Stack>
+			</Panel>
+
+			<Panel title="Tools" id="tools" class="docs-anchor">
+				<Stack gap={4}>
+					<Text tone="muted">
+						<code>xoji_components</code> is the one to reach for first when building against
+						xoji: it returns token names and prop shapes from the manifest, so an agent works
+						from what ships rather than a guess.
+					</Text>
+					<Table aria-label="The xoji MCP tools">
+						<table>
+							<thead>
+								<tr><th>Tool</th><th>What it does</th></tr>
+							</thead>
+							<tbody>
+								{tools.map((t) => (
+									<tr>
+										<td><code>{t.name}</code></td>
+										<td>{t.note}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</Table>
+				</Stack>
+			</Panel>
+
+			<Panel title="Resources" id="resources" class="docs-anchor">
+				<Stack gap={4}>
+					<Text tone="muted">
+						It serves xoji's own docs and contracts straight from the package, so an
+						agent's answers track what ships rather than its training memory.
+					</Text>
+					<Table aria-label="The xoji MCP resources">
+						<table>
+							<thead>
+								<tr><th>Resource</th><th>What it serves</th></tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>xoji://concept/&#123;id&#125;</code></td>
+									<td>The concept narrative: <code>overview</code>, <code>open-register</code>, <code>algorithms</code>, <code>consuming</code>.</td>
+								</tr>
+								<tr>
+									<td><code>xoji://component/&#123;id&#125;</code></td>
+									<td>Every component manifest as JSON, the same data the reference pages render.</td>
+								</tr>
+							</tbody>
+						</table>
+					</Table>
+				</Stack>
+			</Panel>
+
+			<Panel title="Why it matters" id="why" class="docs-anchor">
+				<Stack gap={4}>
+					<Text tone="muted">
+						Agents are first-class consumers of xoji. Without the server an agent guesses at
+						token names, can't check coverage without a human at a terminal, and answers
+						theory questions from stale memory. The MCP closes that loop: derive, check, and
+						introspect the contract in one place, grounded in what the package actually ships.
+					</Text>
+					<Alert severity="info" variant="soft">
+						<span slot="title">Pairs with the engine, not a replacement for it</span>
+						The MCP runs the same <Link href="/start">engine</Link> the CLI and the browser run.
+						A derived theme is still just CSS custom properties: nothing about consuming one
+						depends on the server.
+					</Alert>
+				</Stack>
+			</Panel>
+		</Stack>
+	</div>
+</Base>

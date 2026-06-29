@@ -22,6 +22,11 @@ const GUIDES = [
 		description: "Extend a custom element, subclass a shipped component, and satisfy the coverage rule for tokens you add.",
 	},
 	{
+		slug: "mcp",
+		title: "MCP Server",
+		description: "Run `xoji mcp` to hand an agent the engine over stdio: derive, coverage, components, and gauntlet tools, plus docs and manifests as resources.",
+	},
+	{
 		slug: "generator",
 		title: "The Bench",
 		description: "Derive themes live in the browser and author algorithms on-site, theme and algorithm studio in one.",
