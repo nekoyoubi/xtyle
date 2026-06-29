@@ -14,6 +14,10 @@ export class XojiSplitter extends XojiElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "splitter", {
 		context: () => ({ axisIsX: this.axisIsX, reversed: this.reversed }),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		// The handle is built by the async `mount` op, not the static scaffold, so on a cold first
+		// mount it doesn't exist when `render()` runs. Wire it after every apply, once the op's DOM
+		// is live: a fresh handle (cold mount or a reshape remount) wires; an unchanged one no-ops.
+		afterApply: () => this.wireHandle(),
 	});
 
 	static get observedAttributes(): string[] {
@@ -227,7 +231,6 @@ export class XojiSplitter extends XojiElement {
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
 		this.applyValue();
-		this.wireHandle();
 	}
 
 	private wiredHandle: HTMLElement | null = null;

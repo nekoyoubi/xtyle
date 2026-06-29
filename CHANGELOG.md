@@ -21,6 +21,7 @@
 
 ### Fixes
 
+- `<xoji-splitter>` drags from the first frame even when it's the first component on a fresh page. Its handle is built asynchronously, so a splitter present at first paint (before the component runtime had warmed) wired its drag against a handle that did not exist yet, and nothing re-ran the wiring once the handle arrived, leaving the divider dead until something forced a remount. The wiring now re-runs the instant the handle is built, so a cold-mounted splitter is live with no remount and no consumer workaround.
 - `<xoji-splitter>` keeps a drag alive once the pointer leaves the handle: the move and release listeners now sit on `window` instead of the handle element, so a thin vertical divider (a few-pixel grid column) tracks the pointer anywhere on screen. It used to lean entirely on pointer capture, which a narrow handle can lose the instant the pointer crosses out of the strip, freezing the drag with no resize.
 - the `@xoji/core` quick-start in the README imported `xojiDefault` from the neutral entry, where it never lived, so the documented first call derived against `undefined`; the examples now import the blessed algorithms from `@xoji/core/algorithms`, the surface that actually carries them
 
