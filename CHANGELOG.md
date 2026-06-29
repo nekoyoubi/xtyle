@@ -9,6 +9,8 @@
   - the `accent` tone moved from `--accent-text` to the brighter `--accent-vivid` to match the rest of the roster, the punchier on-surface accent the other tones already use
 - `<xoji-splitter>` resets its size on a double-click of the handle, mirroring `<xoji-slider>`: it restores the `default` size, or the size it first rendered with when `default` is omitted. The keyboard reset now follows the same fallback.
 - `<xoji-code>` took a `caption` attribute: a header strip above the block (a filename, say) that rounds the block's top corners into it and reads in the mono face. It renders on the runtime and the zero-JS Astro paths, threads through the Svelte and Astro bindings, and reuses chrome tokens so coverage is unchanged.
+- a headless docking seam landed for drag-and-drop panel workspaces: `resolveDrop` (from `@xoji/core/elements`) takes the pointer and a set of zone rectangles and returns where a dragged panel would land (a `left`/`right`/`top`/`bottom` split or a `center` tab) plus the preview rectangle to highlight, so a consumer wires its own panel rendering into xoji's layout physics instead of rebuilding the hit-testing and drop resolution
+  - pure geometry, the same shape as the overlay positioner: a target's `regions` narrow the accepted drops, corners resolve to the nearer edge, and a pointer over nothing returns `null` for a float; verified against real browser geometry, with the docking `dock-zone` / `dock-panel` elements that ride on it to follow
 
 ### Fixes
 

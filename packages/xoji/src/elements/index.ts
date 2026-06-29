@@ -14,6 +14,16 @@ export {
 	type PlaceOverlayInput,
 	type PlaceOverlayResult,
 } from "./overlay-position.js";
+export {
+	resolveDrop,
+	DOCK_REGIONS,
+	DOCK_EDGES,
+	type DockRegion,
+	type DockRect,
+	type DockTarget,
+	type ResolveDropInput,
+	type DropResolution,
+} from "./dock-layout.js";
 export { XojiButton } from "./button.js";
 export { XojiField } from "./field.js";
 export { XojiCard } from "./card.js";
