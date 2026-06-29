@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://xoji.dev/sitemap-index.xml
+
+# LLM-readable docs: https://xoji.dev/llms.txt (index) and https://xoji.dev/llms-full.txt (full text)

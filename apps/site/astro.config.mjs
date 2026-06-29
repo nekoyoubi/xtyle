@@ -1,13 +1,14 @@
 import sitemap from "@astrojs/sitemap";
 import svelte from "@astrojs/svelte";
 import { defineConfig } from "astro/config";
+import { llmsTxt } from "./integrations/llms-txt.mjs";
 
 export default defineConfig({
 	site: "https://xoji.dev",
 	trailingSlash: "ignore",
 	server: { port: 4381, host: false },
 	devToolbar: { enabled: false },
-	integrations: [svelte(), sitemap()],
+	integrations: [svelte(), sitemap(), llmsTxt()],
 	vite: {
 		assetsInclude: ["**/*.wasm"],
 		optimizeDeps: {

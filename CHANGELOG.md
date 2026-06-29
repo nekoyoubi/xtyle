@@ -2,6 +2,13 @@
 
 ## v0.2.0 — TBD
 
+### Docs
+
+- generated `llms.txt` and `llms-full.txt` at the site root so agents can read xoji's reference the way they read its dependencies
+  - `llms.txt` is a curated index: the guides and every component page, grouped by category, each with its one-line summary
+  - `llms-full.txt` inlines the whole corpus, the concept narrative plus a full per-component reference (props, variants, states, slots, consumed tokens, accessibility, examples) generated from the manifests, so it never drifts from what ships
+  - pointed `robots.txt` at both
+
 ## v0.1.1: README fixes & publish CI
 
 A corrections release on the heels of Genesis: one real install bug, plus the docs that had drifted from the engine.
