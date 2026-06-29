@@ -108,7 +108,7 @@ export const splitterManifest: ComponentManifest = {
 		{
 			name: "default",
 			type: "number",
-			description: "A size to reset to on double-click. Omit to disable the reset affordance.",
+			description: "The size a reset restores, by double-clicking the handle or the keyboard reset. Omit it and a reset still works, restoring the size the splitter first rendered with, matching Slider.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -183,6 +183,7 @@ export const splitterManifest: ComponentManifest = {
 	a11y: [
 		"The handle is a `role=\"separator\"` with `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so assistive tech announces the size and its bounds.",
 		"It is fully keyboard-operable: arrow keys step by `step`, PageUp/PageDown jump ten steps, Home and End go to the bounds.",
+		"Double-clicking the handle resets the size to `default` (or the first-rendered size when `default` is omitted), the same gesture and fallback as Slider.",
 		"Give it a `label` (or `labelledby`) so the separator is announced by what it resizes, not as an unnamed divider.",
 	],
 	examples: [

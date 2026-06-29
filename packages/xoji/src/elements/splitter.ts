@@ -72,6 +72,15 @@ export class XojiSplitter extends XojiElement {
 		this.setAttribute("value", String(this.clamp(value)));
 	}
 
+	private initialValue = Number.NaN;
+
+	/** The value a double-click on the handle restores: an explicit `default`, else the value the splitter first rendered with. */
+	get defaultValue(): number {
+		const explicit = this.getAttribute("default");
+		if (explicit !== null && explicit !== "") return this.clamp(Number(explicit));
+		return this.clamp(Number.isNaN(this.initialValue) ? this.value : this.initialValue);
+	}
+
 	get disabled(): boolean {
 		return this.hasAttribute("disabled");
 	}
@@ -167,8 +176,7 @@ export class XojiSplitter extends XojiElement {
 	private applyIntent(intent: FragmentIntent, event: Event): void {
 		if (intent.preventDefault) event.preventDefault();
 		if (intent.reset) {
-			const raw = this.getAttribute("default");
-			if (raw !== null) this.commit(Number(raw), "resize-end");
+			this.commit(this.defaultValue, "resize-end");
 			return;
 		}
 		if (intent.jump) {
@@ -208,6 +216,7 @@ export class XojiSplitter extends XojiElement {
 	}
 
 	protected override render(): void {
+		if (Number.isNaN(this.initialValue)) this.initialValue = this.value;
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(splitterHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
@@ -222,6 +231,7 @@ export class XojiSplitter extends XojiElement {
 		if (!handle || handle === this.wiredHandle) return;
 		this.wiredHandle = handle;
 		handle.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
+		handle.addEventListener("dblclick", () => this.commit(this.defaultValue, "resize-end"));
 	}
 }
 
