@@ -22,8 +22,8 @@ export const dockZoneManifest: ComponentManifest = {
 	category: "layout",
 	summary: "A drag-and-drop dockable-panel workspace: tabbed zones that rearrange by dragging.",
 	description:
-		"Dock Zone is a movable-panel workspace, the editor-style chrome an app builds its layout from. Its direct children are the panels: any element with a `data-panel-id` and a `data-title` (or `title`) for its tab. The zone reads them, arranges them into a layout of tabbed zones, and renders the tab strips and splits around them. Dragging a tab re-docks its panel onto another zone, joining it as a tab when dropped over the center or splitting the zone when dropped against an edge. Every rearrangement dispatches a `layout-change` event carrying the serializable layout tree, and setting the `layout` property restores a saved one, so a workspace persists across reloads. The layout physics are xoji's own headless engine (`resolveDrop` for the drop geometry, `dockPanel` for the tree), the same primitives a consumer can drive directly from `@xoji/core/elements`.",
-	bindings: ["html"],
+		"Dock Zone is a movable-panel workspace, the editor-style chrome an app builds its layout from. Its direct children are the panels: any element with a `data-panel-id` and a `data-title` (or `title`) for its tab. The zone reads them, arranges them into a layout of tabbed zones, and renders the tab strips and splits around them. Dragging a tab re-docks its panel onto another zone, joining it as a tab when dropped over the center or splitting the zone when dropped against an edge. Every rearrangement dispatches a `layout-change` event carrying the serializable layout tree, and setting the `layout` property restores a saved one, so a workspace persists across reloads. The layout physics are xoji's own headless engine (`resolveDrop` for the drop geometry, `dockPanel` for the tree), the same primitives a consumer can drive directly from `@xoji/core/elements`. The Svelte binding surfaces `layout` as a prop and reports each rearrangement through an `onLayoutChange` callback; the Astro binding renders the panels and upgrades the workspace on the client.",
+	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
 			name: "zone",
@@ -50,7 +50,7 @@ export const dockZoneManifest: ComponentManifest = {
 			type: "DockNode",
 			default: "all panels in one zone",
 			description: "The layout tree (a `DockNode` from `@xoji/core/elements`). A JS property, not an attribute; set it to restore a persisted layout, read it from `layout-change.detail`.",
-			bindings: ["html"],
+			bindings: ["html", "svelte"],
 		},
 	],
 	variants: [],

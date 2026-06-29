@@ -51,6 +51,7 @@ export {
 	XojiSplitter,
 	XojiCode,
 	XojiPagination,
+	XojiDockZone,
 } from "@xoji/core/elements";
 
 import "@xoji/core/elements";

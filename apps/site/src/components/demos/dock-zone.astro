@@ -3,6 +3,7 @@ import Card from "@xoji/astro/Card.astro";
 import Stack from "@xoji/astro/Stack.astro";
 import Heading from "@xoji/astro/Heading.astro";
 import Text from "@xoji/astro/Text.astro";
+import DockZone from "@xoji/astro/DockZone.astro";
 ---
 
 <Stack gap={6}>
@@ -14,7 +15,7 @@ import Text from "@xoji/astro/Text.astro";
 				edge to split the zone. The layout is the drag physics only; the panels are your own
 				content.
 			</Text>
-			<xoji-dock-zone style="height: 360px; display: flex;">
+			<DockZone style="height: 360px;">
 				<section data-panel-id="files" data-title="Files">
 					The project tree. Drag this tab to rearrange the workspace.
 				</section>
@@ -27,11 +28,7 @@ import Text from "@xoji/astro/Text.astro";
 				<section data-panel-id="problems" data-title="Problems">
 					Diagnostics and warnings.
 				</section>
-			</xoji-dock-zone>
+			</DockZone>
 		</Stack>
 	</Card>
 </Stack>
-
-<script>
-	import "@xoji/core/elements";
-</script>

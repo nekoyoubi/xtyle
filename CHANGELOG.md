@@ -22,6 +22,7 @@
 - `<xoji-dock-zone>` lands the drag-and-drop dockable-panel workspace on top of that engine: its children are the panels (any element with a `data-panel-id` and a `data-title`), and it renders them as tabbed zones that rearrange by dragging a tab, joining another zone as a tab over the center or splitting it against an edge
   - every rearrangement dispatches a `layout-change` event carrying the serializable layout tree, and setting the `layout` property restores a saved one, so a workspace persists across reloads; the tabs are real `<button>`s with `role="tab"` and `aria-selected`
     - browser-dogfooded under a derived theme: dragging a tab to a zone's edge shows the drop preview and splits the zone, with the layout tree updating live
+  - `<xoji-dock-zone>` now ships its Svelte and Astro bindings alongside the raw element, so it reaches binding parity with the rest of the set: `@xoji/svelte`'s `DockZone` surfaces the saved `layout` as a prop and reports each rearrangement through an `onLayoutChange` callback, and `@xoji/astro`'s `DockZone` renders the panels and upgrades the workspace on the client
 
 ### Fixes
 
