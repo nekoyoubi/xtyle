@@ -35,7 +35,7 @@ export class XojiTextarea extends XojiElement {
 		return this.field?.value ?? this.getAttribute("value") ?? "";
 	}
 	set value(value: string | null | undefined) {
-		this.reflectString("value", value);
+		this.reflectStringLive("value", value, () => this.field);
 	}
 
 	get rows(): number {
