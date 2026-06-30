@@ -1,8 +1,14 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
+
+/** The on-surface chromatic ink each tone resolves to; AA-clean against `--bg-0`. */
+const toneVividTokens = FULL_TONES.map((t) => `--${t}-vivid`);
 
 const htmlExample = `<xoji-eyebrow>Themable-derivation engine</xoji-eyebrow>
 
-<xoji-eyebrow tone="muted" tracking="wide">By the numbers</xoji-eyebrow>`;
+<xoji-eyebrow tone="muted" tracking="wide">By the numbers</xoji-eyebrow>
+
+<xoji-eyebrow tone="success">Now shipping</xoji-eyebrow>`;
 
 const svelteExample = `<script lang="ts">
 	import { Eyebrow } from "@xoji/svelte";
@@ -10,7 +16,9 @@ const svelteExample = `<script lang="ts">
 
 <Eyebrow>Themable-derivation engine</Eyebrow>
 
-<Eyebrow tone="muted" tracking="wide">By the numbers</Eyebrow>`;
+<Eyebrow tone="muted" tracking="wide">By the numbers</Eyebrow>
+
+<Eyebrow tone="success">Now shipping</Eyebrow>`;
 
 const astroExample = `---
 import { Eyebrow } from "@xoji/astro";
@@ -18,22 +26,24 @@ import { Eyebrow } from "@xoji/astro";
 
 <Eyebrow>Themable-derivation engine</Eyebrow>
 
-<Eyebrow tone="muted" tracking="wide">By the numbers</Eyebrow>`;
+<Eyebrow tone="muted" tracking="wide">By the numbers</Eyebrow>
+
+<Eyebrow tone="success">Now shipping</Eyebrow>`;
 
 export const eyebrowManifest: ComponentManifest = {
 	id: "eyebrow",
 	name: "Eyebrow",
-	category: "layout",
+	category: "data-display",
 	summary: "The small uppercase kicker that sits above a heading.",
 	description:
-		"Eyebrow is the overline a section wears above its title: short, uppercase, tracked-out, and accent-toned by default. It is one element with no layout of its own: drop it as the first child of a `Stack` and the gap does the spacing. `tone` swaps the accent ink for a quieter `muted` or `subtle`, and `tracking` widens the letter-spacing for a more deliberate label. Choose the `as` element to match the surrounding flow: a `p` for a standalone kicker, a `span` for one inline with other text.",
+		"Eyebrow is the overline a section wears above its title: short, uppercase, tracked-out, and accent-toned by default. It is one element with no layout of its own: drop it as the first child of a `Stack` and the gap does the spacing. `tone` swaps the accent ink for a quieter `muted` or `subtle`, or for any tone in the full roster (every semantic role, accent variant, or named hue) so a kicker can carry a status color, in that tone's on-surface ink derived to stay legible against the page. `tracking` widens the letter-spacing for a more deliberate label. Choose the `as` element to match the surrounding flow: a `p` for a standalone kicker, a `span` for one inline with other text.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
 			name: "eyebrow",
 			description: "The kicker root carrying the tone and tracking classes.",
 			selector: ".xoji-eyebrow",
-			tokens: ["--font-sans", "--text-xs", "--weight-semibold", "--leading-tight", "--accent-text"],
+			tokens: ["--font-sans", "--text-xs", "--weight-semibold", "--leading-tight", "--accent-vivid"],
 		},
 	],
 	props: [
@@ -49,9 +59,9 @@ export const eyebrowManifest: ComponentManifest = {
 			name: "tone",
 			type: "EyebrowTone",
 			default: "accent",
-			description: "The ink: accent by default, or a quieter `muted` / `subtle`.",
+			description: "Ink: accent by default, a quieter `muted` / `subtle`, or any tone in the full roster (semantic role, accent variant, or named hue) for a status-colored kicker in that tone's on-surface ink.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["accent", "muted", "subtle"],
+			options: ["muted", "subtle", ...FULL_TONES],
 		},
 		{
 			name: "tracking",
@@ -77,9 +87,9 @@ export const eyebrowManifest: ComponentManifest = {
 		"--text-xs",
 		"--weight-semibold",
 		"--leading-tight",
-		"--accent-text",
 		"--fg-2",
 		"--fg-3",
+		...toneVividTokens,
 	],
 	composition: [
 		"Lead a `Section` or a `Card` header with an Eyebrow, then a `Heading`, then `Text`: a three-step hierarchy with no bespoke CSS.",
@@ -94,7 +104,7 @@ export const eyebrowManifest: ComponentManifest = {
 		{
 			id: "tones-and-tracking",
 			title: "Tones and tracking",
-			description: "The accent default against the muted and subtle tones, at both tracking widths.",
+			description: "The accent default against the muted emphasis tone and a status color from the full roster, at both tracking widths.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
 		},
 	],

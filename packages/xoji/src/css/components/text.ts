@@ -1,16 +1,16 @@
-const TONES = ["default", "muted", "subtle", "accent"] as const;
+import { FULL_TONES } from "../../vocab.js";
 
-const toneInk = {
-	default: "--fg-0",
-	muted: "--fg-2",
-	subtle: "--fg-3",
-	accent: "--accent-text",
-} as const;
+const EMPHASIS = [
+	["muted", "--fg-2"],
+	["subtle", "--fg-3"],
+] as const;
 
-const toneRules = TONES.map(
-	(t) => `.xoji-text--${t} {
-	color: var(${toneInk[t]});
-}`,
+const emphasisRules = EMPHASIS.map(
+	([name, token]) => `.xoji-text--${name} { color: var(${token}); }`,
+).join("\n");
+
+const toneRules = FULL_TONES.map(
+	(t) => `.xoji-text--${t} { color: var(--${t}-vivid); }`,
 ).join("\n");
 
 export const textCss = `
@@ -34,6 +34,7 @@ export const textCss = `
 .xoji-text--tight { line-height: var(--leading-tight); }
 .xoji-text--snug { line-height: var(--leading-normal); }
 .xoji-text--loose { line-height: var(--leading-loose); }
+${emphasisRules}
 ${toneRules}
 .xoji-text--mono {
 	font-family: var(--font-mono);

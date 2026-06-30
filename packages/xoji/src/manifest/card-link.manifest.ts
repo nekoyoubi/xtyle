@@ -2,7 +2,7 @@ import type { ComponentManifest } from "./types.js";
 
 const htmlExample = `<xoji-card-link href="/components/button" interactive>
 	<strong slot="header">Button</strong>
-	The thing people click — variants, tones, and sizes.
+	The thing people click: variants, tones, and sizes.
 	<span slot="footer">View component →</span>
 </xoji-card-link>`;
 
@@ -12,7 +12,7 @@ const svelteExample = `<script lang="ts">
 
 <CardLink href="/components/button" interactive>
 	{#snippet header()}<strong>Button</strong>{/snippet}
-	The thing people click — variants, tones, and sizes.
+	The thing people click: variants, tones, and sizes.
 	{#snippet footer()}<span>View component →</span>{/snippet}
 </CardLink>`;
 
@@ -22,7 +22,7 @@ import { CardLink } from "@xoji/astro";
 
 <CardLink href="/components/button" interactive>
 	<strong slot="header">Button</strong>
-	The thing people click — variants, tones, and sizes.
+	The thing people click: variants, tones, and sizes.
 	<span slot="footer">View component →</span>
 </CardLink>`;
 

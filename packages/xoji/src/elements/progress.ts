@@ -19,7 +19,7 @@ export class XojiProgress extends XojiElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "colorize-value", "value-position", "aria-label"];
+		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "colorize-value", "value-position", "meter", "aria-label"];
 	}
 
 	get variant(): ProgressVariant {
@@ -100,6 +100,19 @@ export class XojiProgress extends XojiElement {
 		this.setAttribute("value-position", value);
 	}
 
+	/** Report as a `meter` (a measurement against a capacity, e.g. disk used) rather than the default
+	 * `progressbar` (a task advancing). Flips the ARIA role; the visual treatment is unchanged. */
+	get meter(): boolean {
+		return this.hasAttribute("meter");
+	}
+	set meter(value: boolean) {
+		this.reflectBoolean("meter", value);
+	}
+
+	private get ariaRole(): string {
+		return this.meter ? "meter" : "progressbar";
+	}
+
 	/** The `<threshold>` config elements — direct children of the host, never displayed. Read live off
 	 * the host (`:scope > threshold`): they sit there as hidden direct children under SSR-light and as
 	 * unprojected light children under a shadow render alike. The captured-group read is a fallback for
@@ -162,6 +175,7 @@ export class XojiProgress extends XojiElement {
 			colorizeValue: this.colorizeValue,
 			valuePosition: this.valuePosition,
 			pulse: this.effectivePulse(),
+			role: this.ariaRole,
 			ariaLabel: this.getAttribute("aria-label"),
 			ariaLabelledby: this.getAttribute("aria-labelledby"),
 		};
@@ -183,7 +197,7 @@ export class XojiProgress extends XojiElement {
 	private warnIfUnnamed(): void {
 		if (!this.getAttribute("aria-label") && !this.getAttribute("aria-labelledby")) {
 			console.warn(
-				"xoji-progress: a progressbar has no accessible name. Provide an `aria-label` so it is announced.",
+				`xoji-progress: a ${this.ariaRole} has no accessible name. Provide an \`aria-label\` so it is announced.`,
 			);
 		}
 	}

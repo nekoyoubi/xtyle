@@ -32,7 +32,7 @@ export const paginationManifest: ComponentManifest = {
 	category: "navigation",
 	summary: "A page navigator: previous/next controls around a windowed list of page numbers with ellipses.",
 	description:
-		'Pagination walks a reader through a paged collection. It is a `<nav>` landmark wrapping previous and next controls and an ordered list of page numbers; the current page is marked `aria-current="page"`, and a sibling window around it keeps the control compact, collapsing the gaps to an ellipsis when there are more pages than fit. The visible range is computed from `page` and `total` plus two knobs — `siblings` (links on each side of the current page) and `boundaries` (links pinned at each end). Give it an `href` template containing `{page}` and every page renders as a real link, so the control navigates with zero JavaScript and works on the static Astro path; omit the template and the pages render as buttons that emit a `page-change` event carrying the chosen page. A `tone` colors the current-page pill and three `size`s scale the type.',
+		'Pagination walks a reader through a paged collection. It is a `<nav>` landmark wrapping previous and next controls and an ordered list of page numbers; the current page is marked `aria-current="page"`, and a sibling window around it keeps the control compact, collapsing the gaps to an ellipsis when there are more pages than fit. The visible range is computed from `page` and `total` plus two knobs: `siblings` (links on each side of the current page) and `boundaries` (links pinned at each end). Give it an `href` template containing `{page}` and every page renders as a real link, so the control navigates with zero JavaScript and works on the static Astro path; omit the template and the pages render as buttons that emit a `page-change` event carrying the chosen page. A `tone` colors the current-page pill and three `size`s scale the type.',
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -43,7 +43,7 @@ export const paginationManifest: ComponentManifest = {
 		},
 		{
 			name: "page",
-			description: "A page number — a link (href mode) or button — with a hover wash and a focus ring.",
+			description: "A page number, a link (href mode) or button, with a hover wash and a focus ring.",
 			selector: ".xoji-pagination__page",
 			tokens: ["--fg-1", "--bg-2", "--radius-sm", "--space-0", "--space-1"],
 		},
@@ -202,11 +202,11 @@ export const paginationManifest: ComponentManifest = {
 	],
 	a11y: [
 		'Renders a `<nav>` landmark with an accessible name (`aria-label`, default "Pagination") so screen readers can find and announce the pager.',
-		'The current page carries `aria-current="page"` and is not actionable — it is the destination, not a target.',
+		'The current page carries `aria-current="page"` and is not actionable; it is the destination, not a target.',
 		"Each page and control has an explicit accessible name (`Go to page N`, `Previous page`, `Next page`), so the digit or arrow glyph is never read bare.",
 		'Previous/next at the ends of the range are marked `aria-disabled="true"` and made non-interactive rather than removed, so their position stays stable.',
 		"The ellipsis is decorative and `aria-hidden`, never announced between pages.",
-		"In button mode the pages are real `<button>`s — keyboard-operable and focusable for free; the chosen page rides a `page-change` event.",
+		"In button mode the pages are real `<button>`s, keyboard-operable and focusable for free; the chosen page rides a `page-change` event.",
 	],
 	examples: [
 		{

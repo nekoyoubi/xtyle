@@ -8,6 +8,7 @@ import Cluster from "@xoji/astro/Cluster.astro";
 const sizes = ["lg", "body", "sm", "xs"] as const;
 const weights = ["normal", "medium", "semibold", "bold"] as const;
 const tones = ["default", "muted", "subtle", "accent"] as const;
+const colorTones = ["accent", "neutral", "danger", "success", "warn", "info", "green", "purple", "pink"] as const;
 const leadings = ["tight", "snug", "loose"] as const;
 
 const sample =
@@ -43,6 +44,18 @@ const sample =
 				{tones.map((tone) => <Text tone={tone}>{tone} tone</Text>)}
 				<Text mono tone="muted">monospaced</Text>
 			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">The full color roster</Heading>
+		<Stack gap={2}>
+			<Cluster gap={4} align="baseline">
+				{colorTones.map((tone) => <Text weight="semibold" tone={tone}>{tone}</Text>)}
+			</Cluster>
+			<Text tone="muted" size="sm">
+				Any tone paints the copy in its on-surface ink, derived to stay legible against the page.
+			</Text>
 		</Stack>
 	</Card>
 

@@ -105,7 +105,7 @@ export const avatarManifest: ComponentManifest = {
 			name: "tone",
 			type: "FullTone",
 			default: "neutral",
-			description: "Soft-tint color for the fallback background — any semantic role, accent variant, or named hue.",
+			description: "Soft-tint color for the fallback background: any semantic role, accent variant, or named hue.",
 			bindings: ["html", "svelte", "astro"],
 			options: [...FULL_TONES],
 		},

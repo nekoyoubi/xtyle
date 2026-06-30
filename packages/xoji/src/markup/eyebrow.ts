@@ -1,5 +1,7 @@
+import type { FullTone } from "../vocab.js";
+
 export type EyebrowTag = "p" | "span" | "div";
-export type EyebrowTone = "accent" | "muted" | "subtle";
+export type EyebrowTone = "muted" | "subtle" | FullTone;
 export type EyebrowTracking = "normal" | "wide";
 
 export interface EyebrowMarkupProps {

@@ -18,6 +18,10 @@ import Grid from "@xoji/astro/Grid.astro";
 import Separator from "@xoji/astro/Separator.astro";
 import Section from "@xoji/astro/Section.astro";
 import Eyebrow from "@xoji/astro/Eyebrow.astro";
+import Checkbox from "@xoji/astro/Checkbox.astro";
+import Radio from "@xoji/astro/Radio.astro";
+import Segmented from "@xoji/astro/Segmented.astro";
+import Slider from "@xoji/astro/Slider.astro";
 
 const site = await getStats();
 const anchors = SITE_ANCHORS;
@@ -33,7 +37,7 @@ const anchorChips = [
 	{ label: "accent", value: anchors.accent, swatch: "var(--accent)", ink: "var(--accent-fg)" },
 ] as const;
 
-const toneRow = ["accent", "success", "warn", "danger", "info", "neutral"] as const;
+const toneRow = ["accent", "success", "warn", "danger"] as const;
 const variantRow = ["solid", "outline", "ghost", "subtle"] as const;
 const sampleBadges = ["accent", "success", "warn", "danger", "info"] as const;
 
@@ -182,6 +186,18 @@ const pillars = [
 									))}
 								</Stack>
 							</div>
+
+							<Separator />
+
+							<Stack gap={3}>
+								<Text as="span" size="sm" weight="semibold" tone="muted">More controls</Text>
+								<Cluster gap={4} align="center">
+									<Checkbox label="Ship it" checked tone="success" />
+									<Radio name="hero-radio" label="On" checked />
+								</Cluster>
+								<Segmented label="View" options="Day,Week,Month" value="Week" />
+								<Slider label="Tint" value={62} showValue tone="accent" />
+							</Stack>
 
 							<Cluster gap={2}>
 								{sampleBadges.map((tone) => (

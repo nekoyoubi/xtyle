@@ -172,7 +172,7 @@ export const switchManifest: ComponentManifest = {
 			name: "orientation",
 			type: "\"horizontal\" | \"vertical\"",
 			default: "horizontal",
-			description: "Track axis. Horizontal slides the thumb left-to-right (on at the right); vertical stands the track up and follows a wall switch — down is off, up is on.",
+			description: "Track axis. Horizontal slides the thumb left-to-right (on at the right); vertical stands the track up and follows a wall switch: down is off, up is on.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["horizontal", "vertical"],
 		},

@@ -111,10 +111,25 @@ export class XojiTooltip extends XojiElement {
 		return `${this.text != null}`;
 	}
 
+	/** The trigger element(s) wrapped by the tooltip. In shadow DOM the trigger is projected through
+	 * the default `<slot>`, so read its `assignedElements`. In light DOM the scaffold's `<slot>` was
+	 * replaced by the trigger at compose time, so it's a direct child of `[data-root]` — every element
+	 * child except the content panel. */
 	private triggerEls(): HTMLElement[] {
 		const slot = this.triggerSlot;
-		if (!slot) return [];
-		return slot.assignedElements({ flatten: true }).filter((el): el is HTMLElement => el instanceof HTMLElement);
+		if (slot) {
+			return slot.assignedElements({ flatten: true }).filter((el): el is HTMLElement => el instanceof HTMLElement);
+		}
+		const root = this.root.querySelector("[data-root]");
+		if (!root) return [];
+		// The content panel is the trigger's sibling; non-rendering nodes (a binding's hydration
+		// `<script>`, a `<style>`, etc.) can ride along in the composed slot and have no box — anchoring
+		// to one collapses placement to a zero rect, so keep only real, layout-bearing trigger elements.
+		const nonVisual = new Set(["SCRIPT", "STYLE", "TEMPLATE", "LINK"]);
+		return [...root.children].filter(
+			(el): el is HTMLElement =>
+				el instanceof HTMLElement && !el.hasAttribute("data-content") && !nonVisual.has(el.tagName),
+		);
 	}
 
 	private show = (): void => {
@@ -203,9 +218,21 @@ export class XojiTooltip extends XojiElement {
 		}
 	}
 
+	/** A tip is "empty" only when it has neither bound `text` nor `content`. Read the live panel rather
+	 * than `[slot="content"]` — SSR composition strips the `slot` attribute as it folds the content in,
+	 * so the attribute check would false-warn on every composed content tooltip. Anything in the panel
+	 * beyond the arrow and the (empty) bound-text node counts as content. */
 	private warnIfEmpty(): void {
-		const hasNamedSlot = this.querySelector('[slot="content"]') !== null;
-		if (!this.text && !hasNamedSlot) {
+		if (this.text) return;
+		const content = this.content;
+		const hasContent =
+			!!content &&
+			[...content.childNodes].some((node) =>
+				node instanceof Element
+					? !node.classList.contains("xoji-tooltip__arrow") && !node.hasAttribute("data-text")
+					: (node.textContent ?? "").trim() !== "",
+			);
+		if (!hasContent) {
 			console.warn(
 				"xoji-tooltip: no tip text. Provide a `text` attribute or a `content` slot so the tooltip describes its trigger.",
 			);

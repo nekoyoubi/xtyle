@@ -1,7 +1,7 @@
 import type { ComponentManifest } from "./types.js";
 import { FULL_TONES } from "../vocab.js";
 
-/** The four-token family every tone exposes — the exact set a tone-driven component consumes. */
+/** The four-token family every tone exposes: the exact set a tone-driven component consumes. */
 const toneTokens = FULL_TONES.flatMap((t) => [`--${t}`, `--${t}-bg`, `--${t}-fg`, `--${t}-text`]);
 
 const htmlExample = `<xoji-button variant="solid" tone="accent">Save changes</xoji-button>
@@ -116,7 +116,7 @@ export const buttonManifest: ComponentManifest = {
 			name: "tone",
 			type: "FullTone",
 			default: "accent",
-			description: "Color tone driving fill, text, and border per variant — any semantic role, accent variant, or named hue.",
+			description: "Color tone driving fill, text, and border per variant: any semantic role, accent variant, or named hue.",
 			bindings: ["html", "svelte", "astro"],
 			options: [...FULL_TONES],
 		},

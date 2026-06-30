@@ -78,6 +78,20 @@ import Code from "@xoji/astro/Code.astro";
 	return sum;
 }\`} />`;
 
+const htmlCaptionExample = `<xoji-code lang="ts" caption="theme.ts">export const accent = "#5b8cff";</xoji-code>`;
+
+const svelteCaptionExample = `<script lang="ts">
+	import { Code } from "@xoji/svelte";
+</script>
+
+<Code lang="ts" caption="theme.ts">{\`export const accent = "#5b8cff";\`}</Code>`;
+
+const astroCaptionExample = `---
+import Code from "@xoji/astro/Code.astro";
+---
+
+<Code lang="ts" caption="theme.ts" code={\`export const accent = "#5b8cff";\`} />`;
+
 export const codeManifest: ComponentManifest = {
 	id: "code",
 	name: "Code",
@@ -98,6 +112,13 @@ export const codeManifest: ComponentManifest = {
 			description: "The tokenized source: `.token.*` spans colored by the per-scope code tokens.",
 			selector: ".xoji-code code",
 			tokens: ["--code-keyword", "--code-string", "--code-comment", "--code-function"],
+		},
+		{
+			name: "caption",
+			description:
+				"An optional header strip above the block, set via `caption` (a filename, say); reads in the mono face on a neutral surface and rounds the block's top corners into it.",
+			selector: ".xoji-code-caption",
+			tokens: ["--neutral-bg", "--neutral-text", "--field-border", "--radius-md", "--font-mono", "--text-xs"],
 		},
 		{
 			name: "copy",
@@ -146,7 +167,7 @@ export const codeManifest: ComponentManifest = {
 			type: "boolean",
 			default: "true",
 			description:
-				"The copy-to-clipboard button. On by default; set `copy=\"false\"` to drop it. It only paints where it can work — hidden in an insecure context (no Clipboard API) and on the zero-JS Astro path.",
+				"The copy-to-clipboard button. On by default; set `copy=\"false\"` to drop it. It only paints where it can work: hidden in an insecure context (no Clipboard API) and on the zero-JS Astro path.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -154,7 +175,7 @@ export const codeManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description:
-				"Soft-wrap long lines instead of scrolling them horizontally. Purely declarative — the host attribute drives a CSS rule, so it needs no JavaScript and works on the zero-JS Astro path.",
+				"Soft-wrap long lines instead of scrolling them horizontally. Purely declarative; the host attribute drives a CSS rule, so it needs no JavaScript and works on the zero-JS Astro path.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -162,14 +183,21 @@ export const codeManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description:
-				"Number each line in a gutter that stays put while the code scrolls sideways. Tag-aware, so a token spanning lines (a block comment, a multi-line string) still numbers cleanly, and it co-operates with `wrap` — a wrapped line keeps a single number at its top. The gutter is pure derived chrome — it borrows `--code-comment` and `--field-border`, adding no tokens — and renders on the zero-JS Astro path too.",
+				"Number each line in a gutter that stays put while the code scrolls sideways. Tag-aware, so a token spanning lines (a block comment, a multi-line string) still numbers cleanly, and it co-operates with `wrap` (a wrapped line keeps a single number at its top). The gutter is pure derived chrome; it borrows `--code-comment` and `--field-border`, adding no tokens, and renders on the zero-JS Astro path too.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
 			name: "highlight",
 			type: "string",
 			description:
-				"Tint chosen lines with `--code-line-highlight` to call out the ones that matter — a 1-based spec like `2`, `2,4`, or `4-6`, mixable as `1,3-5,8`. Pairs with `line-numbers`, works under `wrap`, and renders on the zero-JS Astro path; it reuses a token the algorithm already derives, so it adds none.",
+				"Tint chosen lines with `--code-line-highlight` to call out the ones that matter: a 1-based spec like `2`, `2,4`, or `4-6`, mixable as `1,3-5,8`. Pairs with `line-numbers`, works under `wrap`, and renders on the zero-JS Astro path; it reuses a token the algorithm already derives, so it adds none.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "caption",
+			type: "string",
+			description:
+				"A caption header above the block, typically a filename. Left empty, no header renders. It rounds the block's top corners into the strip and reads in the mono face; it reuses chrome tokens, so it adds none, and renders on the zero-JS Astro path.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -259,6 +287,13 @@ export const codeManifest: ComponentManifest = {
 			description:
 				"`highlight` tints the lines that matter, via a 1-based spec like `2,4` or `4-6`, drawn from the `--code-line-highlight` token the algorithm already derives; it pairs with `line-numbers`.",
 			source: { html: htmlHighlightExample, svelte: svelteHighlightExample, astro: astroHighlightExample },
+		},
+		{
+			id: "caption",
+			title: "A caption header",
+			description:
+				"`caption` adds a header strip above the block for a filename or label, rounding the top corners into it. It reuses chrome tokens and renders on the static Astro path.",
+			source: { html: htmlCaptionExample, svelte: svelteCaptionExample, astro: astroCaptionExample },
 		},
 	],
 };

@@ -1,10 +1,11 @@
 import { XojiElement, define, type StyleMode } from "./base.js";
+import type { FullTone } from "../vocab.js";
 import { eyebrowHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/eyebrow/source.generated.js";
 
 type EyebrowTag = "p" | "span" | "div";
-type EyebrowTone = "accent" | "muted" | "subtle";
+type EyebrowTone = "muted" | "subtle" | FullTone;
 type EyebrowTracking = "normal" | "wide";
 
 export class XojiEyebrow extends XojiElement {

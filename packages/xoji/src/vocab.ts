@@ -87,5 +87,5 @@ export function headingSizeForLevel(level: HeadingLevel): HeadingSize {
 	return HEADING_LEVEL_SIZE[level] ?? "body";
 }
 
-/** The heading's ink-emphasis ramp. */
-export type HeadingTone = "default" | "muted" | "subtle" | "accent";
+/** The heading's ink: the `default`/`muted`/`subtle` emphasis ramp, or any tone in the full roster. */
+export type HeadingTone = "default" | "muted" | "subtle" | FullTone;

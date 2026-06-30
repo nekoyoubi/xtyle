@@ -21,7 +21,8 @@ npm install @xoji/core
 ## Quick start
 
 ```ts
-import { derive, emit, xojiDefault } from "@xoji/core";
+import { derive, emit } from "@xoji/core";
+import { xojiDefault } from "@xoji/core/algorithms";
 
 const register = derive(xojiDefault, {
 	constraints: { "--bg-0": "#0f1115", "--accent": "#5b8cff" },
@@ -36,6 +37,11 @@ console.log(emit(register, "css"));
 // }
 ```
 
+The engine (`derive`, `emit`) is on `@xoji/core`; the blessed algorithms (`xojiDefault`,
+`getAlgorithm`, the full set) are on `@xoji/core/algorithms`, which also re-exports the
+engine, so `import { derive, getAlgorithm, emitCss } from "@xoji/core/algorithms"` reaches
+the whole pure-derive path in one import.
+
 Constraints are pinned token values. They land in the output verbatim and feed back in as
 derivation inputs, so pinning `--bg-0` re-derives `--fg-0` to hold contrast. Tune posture
 with `knobs` (below).
@@ -44,8 +50,10 @@ with `knobs` (below).
 
 The package is environment-split by design:
 
-- **`@xoji/core`**: the neutral, importable API (`derive`, `emit`, `coverage`, `gauntlet`,
-  `xojiDefault`, color and graph helpers). No `node:*`, no DOM globals, safe in any runtime.
+- **`@xoji/core`**: the neutral, importable engine (`derive`, `emit`, `coverage`, `gauntlet`,
+  `makeXojiAlgorithm`, color and graph helpers); no `node:*`, no DOM globals, safe in any runtime.
+- **`@xoji/core/algorithms`**: the blessed algorithm set (`xojiDefault`, `getAlgorithm`, the
+  registry) plus a re-export of the engine, so the whole pure-derive path is one import.
 - **`@xoji/core/dom`**: browser helpers (`apply`, `clear`, `persist`, `restore`,
   `toStyleSheet`) that write tokens to a live `:root`.
 - **`xoji` bin**: a Node CLI for one-shot derivation, coverage, and the gauntlet.
@@ -59,6 +67,18 @@ apply(register, { persistKey: "theme" });
 xoji derive --bg "#0f1115" --accent "#5b8cff" --format css
 xoji coverage --consumed "--bg-0,--fg-0,--accent" --bg "#0f1115"
 xoji gauntlet --runs 200
+```
+
+`--bg` / `--fg` / `--accent` are shorthands for the three headline anchors; `--set <token>=<value>`
+(repeatable, alias `--constraint`) pins *any* token, so a full multi-anchor recipe bakes straight
+from the CLI without dropping to the importable API. The leading `--` on the token is optional.
+
+```sh
+xoji derive --accent "#2d5a9e" \
+  --set --accent-2=#7c3aed \
+  --set font-sans="Inter, system-ui, sans-serif" \
+  --set radius-md=10px \
+  --format css
 ```
 
 ## The seven-dimension contract
@@ -152,7 +172,8 @@ and the structural ladders (type scale, weights, radius, borders, durations, ele
 strength, space).
 
 ```ts
-import { gauntlet, xojiDefault } from "@xoji/core";
+import { gauntlet } from "@xoji/core";
+import { xojiDefault } from "@xoji/core/algorithms";
 const report = gauntlet(xojiDefault, { runs: 200 });
 // { ok: true, passed: 200, runs: 200, failures: [] }
 ```
@@ -170,6 +191,21 @@ blessed set ships as real mods, a `mod-manifest.json` plus an esbuild-bundled `m
 through `@xriptjs/runtime`, and `resolveAlgorithm` runs the sandboxed mod as the canonical
 derive path, held byte-identical to the baked TypeScript that serves as the test oracle.
 Author your own with `defineXojiAlgorithm` / `defineAlgorithm` from `@xoji/core/authoring`.
+
+## The MCP server
+
+`xoji mcp` starts a Model Context Protocol server over stdio that hands an agent the same
+engine the CLI hands a human. Point an MCP client at `xoji mcp` (or `npx -y @xoji/core xoji
+mcp`).
+
+- **Tools**: `xoji_derive`, `xoji_coverage`, `xoji_components` (list every component or
+  describe one's full manifest), `xoji_gauntlet`, `xoji_list_algorithms`, and
+  `xoji_server_info`; each runs the same code as its CLI counterpart, so the two can't drift.
+- **Resources**: `xoji://concept/{id}` for the concept docs and `xoji://component/{id}` for
+  every component manifest, so an agent answers from what ships rather than from memory.
+
+An agent building against xoji reads token names and prop shapes from the manifest instead
+of guessing.
 
 ## License
 

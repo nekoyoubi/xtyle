@@ -1,6 +1,6 @@
 {
 	"name": "@xoji/astro",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "Zero-JS Astro components that emit semantic HTML against the xoji component classes; the SSR binding of the component contract.",
 	"type": "module",
 	"license": "MIT",
@@ -12,7 +12,7 @@
 		"README.md"
 	],
 	"dependencies": {
-		"@xoji/core": "^0.1.1"
+		"@xoji/core": "^0.2.0"
 	},
 	"peerDependencies": {
 		"astro": "^6.0.0"

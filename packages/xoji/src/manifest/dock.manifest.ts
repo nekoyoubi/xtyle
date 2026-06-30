@@ -119,14 +119,14 @@ export const dockManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description:
-				"Move the edge (the toned accent or the hairline) to the rail's outer side instead of the inner divider side — to outer-edge a rail or keep a left/right pair consistently sided.",
+				"Move the edge (the toned accent or the hairline) to the rail's outer side instead of the inner divider side: to outer-edge a rail or keep a left/right pair consistently sided.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
 			name: "edgeWidth",
 			type: "\"thin\" | \"thick\" | \"bold\"",
 			description:
-				"Edge thickness: thin (hairline), thick, or bold (a chunky accent spine). Omit to use the default — a hairline when untoned, thick when toned.",
+				"Edge thickness: thin (hairline), thick, or bold (a chunky accent spine). Omit to use the default, a hairline when untoned, thick when toned.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["thin", "thick", "bold"],
 		},

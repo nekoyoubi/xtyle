@@ -1,8 +1,10 @@
+import type { FullTone } from "../vocab.js";
+
 export type TextAs = "p" | "span";
 export type TextSize = "xs" | "sm" | "body" | "lg";
 export type TextWeight = "normal" | "medium" | "semibold" | "bold";
 export type TextLeading = "tight" | "snug" | "loose";
-export type TextTone = "default" | "muted" | "subtle" | "accent";
+export type TextTone = "default" | "muted" | "subtle" | FullTone;
 
 export interface TextMarkupProps {
 	as?: TextAs;

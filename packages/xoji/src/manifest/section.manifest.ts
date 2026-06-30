@@ -42,7 +42,7 @@ export const sectionManifest: ComponentManifest = {
 	category: "layout",
 	summary: "A page band or a framed stage: the full-width strips and demo grounds a page is built from.",
 	description:
-		"Section is the structural strip between the page primitives and the page itself: a padded surface band you lay content across, or a framed `stage` for showing something off. As a **band** it carries a `tone` — transparent (`plain`), a neutral raise (`quiet`), or a tint from the full tone roster (any semantic role, accent variant, or named hue) — and optional `bordered` hairlines top and bottom, with a `padding` rhythm that eases off on narrow screens. As a **stage** (`variant=\"stage\"`) it becomes an elevated, accent-tinted frame with an optional corner `label`: the demo ground this very site sits its live examples in. It owns surface and spacing only; arrange what goes inside with `Stack`, `Cluster`, or `Grid`.",
+		"Section is the structural strip between the page primitives and the page itself: a padded surface band you lay content across, or a framed `stage` for showing something off. As a **band** it carries a `tone` (transparent (`plain`), a neutral raise (`quiet`), or a tint from the full tone roster: any semantic role, accent variant, or named hue) and optional `bordered` hairlines top and bottom, with a `padding` rhythm that eases off on narrow screens. As a **stage** (`variant=\"stage\"`) it becomes an elevated, accent-tinted frame with an optional corner `label`: the demo ground this very site sits its live examples in. It owns surface and spacing only; arrange what goes inside with `Stack`, `Cluster`, or `Grid`.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -85,7 +85,7 @@ export const sectionManifest: ComponentManifest = {
 			name: "tone",
 			type: "SectionTone",
 			default: "plain",
-			description: "The band surface: transparent (`plain`), a neutral raise (`quiet`), or a tint from the full tone roster — any semantic role, accent variant, or named hue (`accent`, `success`, `pink`, …). Ignored by the stage.",
+			description: "The band surface: transparent (`plain`), a neutral raise (`quiet`), or a tint from the full tone roster, any semantic role, accent variant, or named hue (`accent`, `success`, `pink`, …). Ignored by the stage.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["plain", "quiet", ...FULL_TONES],
 		},

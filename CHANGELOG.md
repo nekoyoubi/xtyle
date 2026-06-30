@@ -1,5 +1,69 @@
 # Changelog
 
+## v0.2.0: Docking & MCP
+
+### Components
+
+- `<xoji-progress>` took a `meter` attribute that reports `role="meter"` (a measurement against a capacity, like disk used) instead of the default `role="progressbar"` (a task advancing), so a capacity bar reads correctly to assistive tech; the visual treatment is unchanged
+  - its already-built threshold engine is now documented and demoed: `<threshold below tone pulse>` children recolor the bar by value (green under a band, amber past it, red and pulsing when critical), and the `value-format` / `value-position` / `colorize-value` readout options join them on the reference page, which had shipped them silently
+  - the Svelte `Progress` wrapper reached parity with the element and the Astro wrapper, which had pulled ahead: it now surfaces `valueFormat`, `valuePosition`, and `colorizeValue` (plus `meter`) as typed props instead of dropping them
+- `<xoji-menu>` grew the shape a real app menu needs: a `{ heading: string }` item opens a labeled section (a `role="group"` named by the heading) that the following actions sit under, and an action takes a `hint` for a trailing accelerator keycap like `Ctrl+S`, rendered muted and monospaced at the end of the row
+  - the heading is `aria-hidden` so it shows without a double read, and it is not a focus target, so arrow navigation walks only the actions; the hint is `aria-hidden` too, so the keycap shows visually while the action's accessible name stays the bare label
+  - both render through the one fragment fill, so the runtime, the zero-JS Astro path, and the Svelte and Astro bindings all carry them with no per-binding work; the keycap reads in the theme's mono face and the heading in its muted ink, and there is a `::part(item-hint)` to restyle the keycap
+  - an action also takes `intent: "danger"`, which tints a destructive row (a delete, discard, or close) in the theme's danger ink and gives it the danger tint on hover instead of the accent one, so the one irreversible item in a list reads as different; every item button now carries `part="item"` too, so a consumer can reach a single row from the light side without forking the menu
+- the typographic trio, `<xoji-heading>` / `<xoji-text>` / `<xoji-eyebrow>`, took the full tone roster: alongside the `default` / `muted` / `subtle` emphasis ramp, any of the 21 tones (the semantic roles, the accent variants, the twelve named hues) now paints colored type, so a `danger` heading or a `success` eyebrow is one attribute
+  - each tone renders in its on-surface ink (`--{tone}-vivid`), derived to clear AA against the page; a brand-palette regression test pins every tone across all five algorithms and five real-world palettes, so the contract fails loudly if a tone ever drops below the floor
+  - the `accent` tone moved from `--accent-text` to the brighter `--accent-vivid` to match the rest of the roster, the punchier on-surface accent the other tones already use
+- `<xoji-splitter>` resets its size on a double-click of the handle, mirroring `<xoji-slider>`: it restores the `default` size, or the size it first rendered with when `default` is omitted; the keyboard reset follows the same fallback
+- `<xoji-code>` took a `caption` attribute: a header strip above the block (a filename, say) that rounds the block's top corners into it and reads in the mono face; it renders on the runtime and the zero-JS Astro paths, threads through the Svelte and Astro bindings, and reuses chrome tokens so coverage is unchanged
+- a headless docking seam landed for drag-and-drop panel workspaces: `resolveDrop` (from `@xoji/core/elements`) takes the pointer and a set of zone rectangles and returns where a dragged panel would land (a `left`/`right`/`top`/`bottom` split or a `center` tab) plus the preview rectangle to highlight, so a consumer wires its own panel rendering into xoji's layout physics instead of rebuilding the hit-testing and drop resolution
+  - pure geometry, the same shape as the overlay positioner: a target's `regions` narrow the accepted drops, corners resolve to the nearer edge, and a pointer over nothing returns `null` for a float; verified against real browser geometry, with the docking `dock-zone` / `dock-panel` elements that ride on it to follow
+- the docking seam grew its state half: a serializable zone/panel tree (`DockNode`) plus immutable mutations (`dockPanel`, `removePanel`, `activatePanel`, `parseLayout`) from `@xoji/core/elements`, so `resolveDrop` says where a panel lands and `dockPanel` applies it to the layout
+  - a `dockPanel` moves a panel onto a target as a tab (`center`) or a split (an edge), pruning the leaf it leaves behind and collapsing any single-child split, so the tree never accumulates dead structure; every node is plain data, so persistence is `JSON.stringify` and `parseLayout` reads it back
+    - proven end-to-end in a real browser: a working two-pane docker built from the seam, dragging panels between zones with no panel lost or duplicated
+  - `layoutRects` closes the geometry loop: it lays the tree out inside a container (splits divide by their sizes, children inset by a gap) and returns each zone's rectangle, which a renderer positions by and `resolveDrop` reads back as its targets, so the engine round-trips from tree to rects to drop to tree
+- `<xoji-dock-zone>` lands the drag-and-drop dockable-panel workspace on top of that engine: its children are the panels (any element with a `data-panel-id` and a `data-title`), and it renders them as tabbed zones that rearrange by dragging a tab, joining another zone as a tab over the center or splitting it against an edge
+  - every rearrangement dispatches a `layout-change` event carrying the serializable layout tree, and setting the `layout` property restores a saved one, so a workspace persists across reloads; the tabs are real `<button>`s with `role="tab"` and `aria-selected`
+    - browser-dogfooded under a derived theme: dragging a tab to a zone's edge shows the drop preview and splits the zone, with the layout tree updating live
+  - `<xoji-dock-zone>` now ships its Svelte and Astro bindings alongside the raw element, so it reaches binding parity with the rest of the set: `@xoji/svelte`'s `DockZone` surfaces the saved `layout` as a prop and reports each rearrangement through an `onLayoutChange` callback, and `@xoji/astro`'s `DockZone` renders the panels and upgrades the workspace on the client
+  - `<xoji-dock-zone>` then took a round of refinement on that first landing:
+    - a tab re-docks only after the pointer travels past a small threshold now, so a plain click just selects the tab where any click used to trigger an erratic split
+    - a declarative JSON `layout` attribute authors a split multi-zone workspace up front with no hydration script, the markup twin of the JS `layout` property that already handled restore and persist
+    - the drag preview now films every live zone by role instead of one flat highlight rectangle: the drop target tints in `--accent`, the remnant a split would leave behind in `--accent-2`, and every other zone in `--accent-3`
+    - the leaf border moved off a bogus `--border` token the register never produced onto `--line`, closing the component-coverage check at 51/51
+- recategorized the reference catalog so each component sits under what it is: `Eyebrow` moved into Display, and `Splitter` and `Dock Zone` into Shell
+
+### Fixes
+
+- clearing a value-bearing control through its `value` property now empties it, so a form that resets its model (each bound value going `undefined`) clears the boxes instead of leaving stale text. `<xoji-field>`, `<xoji-textarea>`, and `<xoji-select>` reflected an empty `value` to the attribute but never wrote it to the live inner control, which is dirty once typed into, so `el.value = ""` left the old text sitting there while a native `<input bind:value>` would have cleared. The setter now drives the inner element's property too (`<xoji-number-input>` already did). This is what `bind:value` rides on, so a Svelte reset clears with no `{#key}` remount.
+- `<xoji-splitter>` wires its drag the instant its handle is built, so a cold-mounted splitter is live with no remount and no consumer workaround. The handle is built asynchronously, so a splitter present at first paint (before the component runtime had warmed) wired its drag against a handle that did not exist yet, and nothing re-ran the wiring once the handle arrived, leaving the divider dead until something forced a remount.
+- `<xoji-splitter>` keeps a drag alive once the pointer leaves the handle: the move and release listeners now sit on `window` instead of the handle element, so a thin vertical divider (a few-pixel grid column) tracks the pointer anywhere on screen. It used to lean entirely on pointer capture, which a narrow handle can lose the instant the pointer crosses out of the strip, freezing the drag with no resize.
+- the `@xoji/core` quick-start in the README imported `xojiDefault` from the neutral entry, where it never lived, so the documented first call derived against `undefined`; the examples now import the blessed algorithms from `@xoji/core/algorithms`, the surface that actually carries them
+- `<xoji-tooltip>` was inert in light DOM, which is exactly how the SSR and Astro paths render: it looked the trigger up through `slot.assignedElements()`, but the SSR composition replaces the `<slot>` with the trigger itself, so nothing was found and no hover or focus listeners ever wired, and the hint only appeared when pinned `open`. The trigger is now read as the `[data-root]` element child, so hover and focus reveal it again. Two follow-on bugs fell out of the fix: rich-mode and `content`-slot tooltips rendered an empty panel because the update hook re-injected an inert light-DOM `<slot>` over the composed content on every hydration (the content slot is left intact now), and once hover worked a `top`-placed tip popped to the lower-right because placement anchored to the Button's hydration `<script>`, a zero-size node (non-rendering nodes are excluded now, so placement lands right on all four sides).
+- the build-time fragment renderer corrupted any consumer content carrying a `$`-sequence: it applied ops through `String.prototype.replace` with a `$1...$2` replacement string, so a `$17.50` table cell, a shell `$1`, or a regex example (anything with `$1`..`$9`, `$&`, `` $` ``, `$'`, or `$$`) got read as a backreference and rewritten, duplicating the scaffold's own tag mid-content into malformed markup that broke the page layout. The applier now inserts values verbatim through function replacements, with regression tests across all three op paths.
+
+### Engine (`@xoji/core`)
+
+- `@xoji/core/algorithms` re-exports the engine (`derive`, `deriveTraced`, `emit`, `emitCss`, `emitJson`) alongside the blessed algorithms (`getAlgorithm`, the registry, the named set), so an embedder reaches the whole pure-derive path through one import: `import { derive, getAlgorithm, emitCss } from "@xoji/core/algorithms"`
+  - the neutral `@xoji/core` entry can't carry `getAlgorithm` itself (the blessed presets live in the sibling `algorithms/` workspace, outside the engine's compile root, and are bundled separately), so the batteries surface is where the two halves meet
+
+### Tooling
+
+- added an MCP server, `xoji mcp`, that hands an agent the same engine the CLI hands a human over one stdio connection
+  - tools for `xoji_derive`, `xoji_coverage`, `xoji_components` (list a component or describe its full manifest), `xoji_gauntlet`, and `xoji_list_algorithms`, each running the same code the matching CLI path runs
+  - resources serving the concept docs and every component manifest, so an agent answers from what ships rather than from memory
+- consolidated the concept narrative into `@xoji/core` (the new `@xoji/core/concepts` entry), one source read by both the MCP and the site's `llms` generator
+- `xoji derive` (and `xoji coverage`) took a repeatable `--set <token>=<value>` flag (alias `--constraint`) that pins any token, not just the three `--bg`/`--fg`/`--accent` headline anchors, so a full multi-anchor recipe (a secondary accent, font stacks, radii) bakes straight from the CLI instead of dropping to the importable `derive` API
+  - the leading `--` on the token is optional (`--set radius-md=10px` and `--set --radius-md=10px` both pin `--radius-md`), and the pins feed back into derivation like any constraint, so pinning `--accent-2` re-coheres its `-bg`/`-fg`/`-text` family
+
+### Docs
+
+- documented the MCP server: a `/mcp` reference page on the site, `xoji mcp --help` text, and a README section
+- generated `llms.txt` and `llms-full.txt` at the site root so agents can read xoji's reference the way they read its dependencies
+  - `llms.txt` is a curated index: the guides and every component page, grouped by category, each with its one-line summary
+  - `llms-full.txt` inlines the whole corpus, the concept narrative plus a full per-component reference (props, variants, states, slots, consumed tokens, accessibility, examples) generated from the manifests, so it never drifts from what ships
+  - pointed `robots.txt` at both
+
 ## v0.1.1: README fixes & publish CI
 
 A corrections release on the heels of Genesis: one real install bug, plus the docs that had drifted from the engine.

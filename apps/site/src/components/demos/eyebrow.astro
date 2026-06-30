@@ -33,4 +33,17 @@ import Text from "@xoji/astro/Text.astro";
 			</Stack>
 		</Stack>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">The full color roster</Heading>
+		<Text tone="muted" size="sm">
+			A kicker can carry a status color from the full tone roster, in that tone's on-surface ink.
+		</Text>
+		<Stack gap={1}>
+			<Eyebrow tone="danger">Deprecated</Eyebrow>
+			<Eyebrow tone="success">Now shipping</Eyebrow>
+			<Eyebrow tone="warn">Experimental</Eyebrow>
+			<Eyebrow tone="info">Heads up</Eyebrow>
+		</Stack>
+	</Card>
 </Stack>

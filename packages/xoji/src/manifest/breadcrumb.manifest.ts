@@ -102,7 +102,7 @@ export const breadcrumbManifest: ComponentManifest = {
 			name: "tone",
 			type: "FullTone",
 			default: "accent",
-			description: "Color tinting the ancestor links — any tone in the roster: a semantic role, an accent variant, or a named hue.",
+			description: "Color tinting the ancestor links, from any tone in the roster: a semantic role, an accent variant, or a named hue.",
 			bindings: ["html", "svelte", "astro"],
 			options: [...FULL_TONES],
 		},

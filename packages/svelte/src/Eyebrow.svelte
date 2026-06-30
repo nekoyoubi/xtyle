@@ -1,9 +1,10 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
+	import type { FullTone } from "@xoji/core";
 
 	type EyebrowTag = "p" | "span" | "div";
-	type EyebrowTone = "accent" | "muted" | "subtle";
+	type EyebrowTone = "muted" | "subtle" | FullTone;
 	type EyebrowTracking = "normal" | "wide";
 
 	interface Props {

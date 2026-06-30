@@ -1,12 +1,13 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
+	import type { FullTone } from "@xoji/core";
 
 	type TextAs = "p" | "span";
 	type TextSize = "xs" | "sm" | "body" | "lg";
 	type TextWeight = "normal" | "medium" | "semibold" | "bold";
 	type TextLeading = "tight" | "snug" | "loose";
-	type TextTone = "default" | "muted" | "subtle" | "accent";
+	type TextTone = "default" | "muted" | "subtle" | FullTone;
 
 	interface Props {
 		as?: TextAs;

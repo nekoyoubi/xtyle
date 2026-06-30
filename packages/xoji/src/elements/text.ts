@@ -1,4 +1,5 @@
 import { XojiElement, define, type StyleMode } from "./base.js";
+import type { FullTone } from "../vocab.js";
 import { textHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/text/source.generated.js";
@@ -7,7 +8,7 @@ export type TextAs = "p" | "span";
 export type TextSize = "xs" | "sm" | "body" | "lg";
 export type TextWeight = "normal" | "medium" | "semibold" | "bold";
 export type TextLeading = "tight" | "snug" | "loose";
-export type TextTone = "default" | "muted" | "subtle" | "accent";
+export type TextTone = "default" | "muted" | "subtle" | FullTone;
 
 export class XojiText extends XojiElement {
 	protected override get styleMode(): StyleMode {

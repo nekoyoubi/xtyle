@@ -132,7 +132,7 @@ function setAttrInTag(openTag: string, attr: string, value: string): string {
 	const existing = new RegExp(`\\s${attr}="[^"]*"`);
 	if (value === "") return openTag.replace(existing, "");
 	const attrStr = ` ${attr}="${escapeAttr(value)}"`;
-	if (existing.test(openTag)) return openTag.replace(existing, attrStr);
+	if (existing.test(openTag)) return openTag.replace(existing, () => attrStr);
 	return openTag.replace(/\s*\/?>$/, (close) => `${attrStr}${close}`);
 }
 
@@ -155,16 +155,21 @@ export function applyOpsToHtml(html: string, ops: FragmentOp[]): string {
 		if (!openTag || !tag) continue;
 		switch (op.op) {
 			case "setAttr":
-				if (op.attr) out = out.replace(openTag, setAttrInTag(openTag, op.attr, String(op.value ?? "")));
+				if (op.attr) {
+					const next = setAttrInTag(openTag, op.attr, String(op.value ?? ""));
+					out = out.replace(openTag, () => next);
+				}
 				break;
 			case "replaceChildren": {
 				const empty = new RegExp(`(<${tag}[^>]*\\b${name}\\b[^>]*>)(</${tag}>)`);
-				out = out.replace(empty, `$1${String(op.value ?? "")}$2`);
+				const value = String(op.value ?? "");
+				out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
 				break;
 			}
 			case "setText": {
 				const empty = new RegExp(`(<${tag}[^>]*\\b${name}\\b[^>]*>)(</${tag}>)`);
-				out = out.replace(empty, `$1${escapeAttr(String(op.value ?? ""))}$2`);
+				const value = escapeAttr(String(op.value ?? ""));
+				out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
 				break;
 			}
 			case "addClass":

@@ -143,7 +143,7 @@ export const statusbarManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description:
-				"Draws a thin divider between adjacent items at the bar's own spacing, so each cell stays an individual item (and `collapse` counts and drops them independently) instead of carrying its own `Separator`. The leading divider is suppressed at the start of each run — the first item and any item after a `spacer` — and stays correct as items collapse.",
+				"Draws a thin divider between adjacent items at the bar's own spacing, so each cell stays an individual item (and `collapse` counts and drops them independently) instead of carrying its own `Separator`. The leading divider is suppressed at the start of each run (the first item and any item after a `spacer`) and stays correct as items collapse.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{

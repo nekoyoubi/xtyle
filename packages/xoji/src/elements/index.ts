@@ -14,6 +14,32 @@ export {
 	type PlaceOverlayInput,
 	type PlaceOverlayResult,
 } from "./overlay-position.js";
+export {
+	resolveDrop,
+	DOCK_REGIONS,
+	DOCK_EDGES,
+	type DockRegion,
+	type DockRect,
+	type DockTarget,
+	type ResolveDropInput,
+	type DropResolution,
+} from "./dock-layout.js";
+export {
+	dockPanel,
+	removePanel,
+	activatePanel,
+	singleZone,
+	allLeaves,
+	allPanels,
+	leafOf,
+	parseLayout,
+	layoutRects,
+	type DockNode,
+	type DockLeaf,
+	type DockSplit,
+	type DockPanelInput,
+	type LeafRect,
+} from "./dock-model.js";
 export { XojiButton } from "./button.js";
 export { XojiField } from "./field.js";
 export { XojiCard } from "./card.js";
@@ -24,6 +50,7 @@ export { XojiLink } from "./link.js";
 export { XojiAppShell } from "./app-shell.js";
 export { XojiToolbar } from "./toolbar.js";
 export { XojiDock } from "./dock.js";
+export { XojiDockZone } from "./dock-zone.js";
 export { XojiPanel } from "./panel.js";
 export { XojiStatusbar } from "./statusbar.js";
 export { XojiCheckbox, XojiCheckboxGroup } from "./checkbox.js";
@@ -64,7 +91,7 @@ export type { TocItem } from "./toc.js";
 export { XojiKbd } from "./kbd.js";
 export { XojiSwatch } from "./swatch.js";
 export { XojiMenu } from "./menu.js";
-export type { MenuItem } from "./menu.js";
+export type { MenuItem, MenuAction } from "./menu.js";
 export { XojiCode } from "./code.js";
 export { XojiPagination } from "./pagination.js";
 
@@ -78,6 +105,7 @@ import "./link.js";
 import "./app-shell.js";
 import "./toolbar.js";
 import "./dock.js";
+import "./dock-zone.js";
 import "./panel.js";
 import "./statusbar.js";
 import "./checkbox.js";

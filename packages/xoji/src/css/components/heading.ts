@@ -1,17 +1,21 @@
+import { FULL_TONES } from "../../vocab.js";
+
 const LARGE_SIZES = ["lg", "xl", "2xl", "3xl", "4xl", "5xl"] as const;
-const TONES = [
-	["default", "--fg-0"],
+const EMPHASIS = [
 	["muted", "--fg-2"],
 	["subtle", "--fg-3"],
-	["accent", "--accent-text"],
 ] as const;
 
 const sizeRules = LARGE_SIZES.map(
 	(s) => `.xoji-heading--${s} { font-size: var(--text-${s}); }`,
 ).join("\n");
 
-const toneRules = TONES.map(
+const emphasisRules = EMPHASIS.map(
 	([name, token]) => `.xoji-heading--${name} { color: var(${token}); }`,
+).join("\n");
+
+const toneRules = FULL_TONES.map(
+	(t) => `.xoji-heading--${t} { color: var(--${t}-vivid); }`,
 ).join("\n");
 
 export const headingCss = `
@@ -38,5 +42,6 @@ export const headingCss = `
 	font-size: var(--text-body);
 }
 ${sizeRules}
+${emphasisRules}
 ${toneRules}
 `.trim();

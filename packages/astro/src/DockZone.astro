@@ -1,0 +1,17 @@
+---
+interface Props {
+	class?: string;
+	/** Any other attribute (`style`, `id`, `data-*`, `aria-*`, …) passes through to the element. Set a `height` so the workspace has a definite size to fill. */
+	[key: string]: unknown;
+}
+
+const { class: extra, ...rest } = Astro.props;
+---
+
+<xoji-dock-zone class:list={[extra]} {...rest}>
+	<slot />
+</xoji-dock-zone>
+
+<script>
+	import "@xoji/core/elements";
+</script>

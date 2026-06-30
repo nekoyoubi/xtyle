@@ -1,4 +1,8 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
+
+/** The on-surface chromatic ink each tone resolves to; AA-clean against `--bg-0`. */
+const toneVividTokens = FULL_TONES.map((t) => `--${t}-vivid`);
 
 const htmlExample = `<xoji-heading level="1" size="3xl">Themable derivation</xoji-heading>
 
@@ -6,7 +10,7 @@ const htmlExample = `<xoji-heading level="1" size="3xl">Themable derivation</xoj
 
 <xoji-heading level="3" size="lg" tone="muted">A theme is the print</xoji-heading>
 
-<xoji-heading level="2" size="sm" tone="subtle">Section label</xoji-heading>`;
+<xoji-heading level="2" size="sm" tone="danger">Breaking change</xoji-heading>`;
 
 const svelteExample = `<script lang="ts">
 	import { Heading } from "@xoji/svelte";
@@ -18,7 +22,7 @@ const svelteExample = `<script lang="ts">
 
 <Heading level={3} size="lg" tone="muted">A theme is the print</Heading>
 
-<Heading level={2} size="sm" tone="subtle">Section label</Heading>`;
+<Heading level={2} size="sm" tone="danger">Breaking change</Heading>`;
 
 const astroExample = `---
 import { Heading } from "@xoji/astro";
@@ -30,7 +34,7 @@ import { Heading } from "@xoji/astro";
 
 <Heading level={3} size="lg" tone="muted">A theme is the print</Heading>
 
-<Heading level={2} size="sm" tone="subtle">Section label</Heading>`;
+<Heading level={2} size="sm" tone="danger">Breaking change</Heading>`;
 
 export const headingManifest: ComponentManifest = {
 	id: "heading",
@@ -38,7 +42,7 @@ export const headingManifest: ComponentManifest = {
 	category: "data-display",
 	summary: "A semantic section heading whose visual size is decoupled from its document level.",
 	description:
-		"Heading renders a native `<h1>`–`<h6>` chosen by `level`, while `size` sets the visual scale independently across seven steps (xs, sm, body, lg, xl, 2xl, 3xl). That split lets the document outline stay correct (an `<h2>` deep in a page) while the type still reads at whatever weight the layout wants (small label, or a hero at 3xl), so a site can stop faking type with raw tags and ad-hoc font sizes. Three tones (default, muted, subtle) walk down the foreground ramp for primary titles, secondary headings, and quiet eyebrow labels. The display font carries every step.",
+		"Heading renders a native `<h1>`–`<h6>` chosen by `level`, while `size` sets the visual scale independently across seven steps (xs, sm, body, lg, xl, 2xl, 3xl). That split lets the document outline stay correct (an `<h2>` deep in a page) while the type still reads at whatever weight the layout wants (small label, or a hero at 3xl), so a site can stop faking type with raw tags and ad-hoc font sizes. The `tone` axis sets the ink: `default`, `muted`, and `subtle` walk down the foreground ramp for primary titles, secondary headings, and quiet labels; the full color roster (every semantic role, accent variant, or named hue) paints a colored heading in that tone's on-surface ink, derived to stay legible against the page. The display font carries every step.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -75,9 +79,9 @@ export const headingManifest: ComponentManifest = {
 			name: "tone",
 			type: "HeadingTone",
 			default: "default",
-			description: "Foreground emphasis: full-strength, muted, or quiet ink off the fg ramp, or `accent` for a tinted title.",
+			description: "Heading ink: the `default`/`muted`/`subtle` emphasis ramp off the foreground, or any tone in the full roster (semantic role, accent variant, or named hue) for a colored heading in that tone's on-surface ink.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["default", "muted", "subtle", "accent"],
+			options: ["default", "muted", "subtle", ...FULL_TONES],
 		},
 	],
 	variants: [
@@ -101,9 +105,9 @@ export const headingManifest: ComponentManifest = {
 		},
 		{
 			name: "accent",
-			description: "Accent-tinted ink for a highlighted title or a metric figure.",
+			description: "Accent-colored ink for a highlighted title or a metric figure; the first stop of the full tone roster, which paints any heading in a tone's on-surface `--{tone}-vivid` ink.",
 			className: "xoji-heading--accent",
-			tokens: ["--accent-text"],
+			tokens: ["--accent-vivid"],
 		},
 	],
 	sizes: [
@@ -143,7 +147,7 @@ export const headingManifest: ComponentManifest = {
 		"--fg-0",
 		"--fg-2",
 		"--fg-3",
-		"--accent-text",
+		...toneVividTokens,
 	],
 	composition: [
 		"Pair with Text for the body copy beneath a heading; the two share the foreground ramp.",

@@ -70,4 +70,15 @@ const wrapSource = `const message = "a deliberately long single line that would 
 		</Stack>
 		<Code lang="ts" code={wrapSource} wrap />
 	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={2} size="sm">Caption header</Heading>
+			<Text size="sm" tone="muted">
+				<Text as="span" mono size="xs">caption</Text> labels a block (a filename, say) in a
+				header strip that rounds the block's top corners into it.
+			</Text>
+		</Stack>
+		<Code lang="ts" caption="theme.ts" code={tsSource} />
+	</Card>
 </Stack>

@@ -1,5 +1,5 @@
 /**
- * The component manifest registry — the single source of truth that `coverage()`,
+ * The component manifest registry: the single source of truth that `coverage()`,
  * the reference site, and the theme studio all read.
  *
  * ## Registering a component
@@ -47,6 +47,7 @@ import { skeletonManifest } from "./skeleton.manifest.js";
 import { dialogManifest } from "./dialog.manifest.js";
 import { toastManifest } from "./toast.manifest.js";
 import { tableManifest } from "./table.manifest.js";
+import { dockZoneManifest } from "./dock-zone.manifest.js";
 import { progressManifest } from "./progress.manifest.js";
 import { sliderManifest } from "./slider.manifest.js";
 import { colorPickerManifest } from "./color-picker.manifest.js";
@@ -99,6 +100,7 @@ export const components: ComponentRegistry = {
 	dialog: dialogManifest,
 	toast: toastManifest,
 	table: tableManifest,
+	"dock-zone": dockZoneManifest,
 	progress: progressManifest,
 	slider: sliderManifest,
 	"color-picker": colorPickerManifest,

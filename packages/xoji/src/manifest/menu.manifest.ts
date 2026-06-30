@@ -5,13 +5,15 @@ const htmlExample = `<xoji-menu label="File"></xoji-menu>
 <script>
 	const menu = document.querySelector("xoji-menu");
 	menu.items = [
-		{ label: "New", value: "new" },
-		{ label: "Open…", value: "open" },
-		{ separator: true },
-		{ label: "Save", value: "save" },
+		{ heading: "File" },
+		{ label: "New", value: "new", hint: "Ctrl+N" },
+		{ label: "Open…", value: "open", hint: "Ctrl+O" },
+		{ label: "Save", value: "save", hint: "Ctrl+S" },
 		{ label: "Save As…", value: "save-as", disabled: true },
+		{ heading: "Help" },
+		{ label: "Shortcuts", value: "shortcuts", hint: "?" },
 		{ separator: true },
-		{ label: "Close", value: "close" },
+		{ label: "Close", value: "close", intent: "danger" },
 	];
 	menu.addEventListener("select", (e) => console.log(e.detail));
 </script>`;
@@ -20,13 +22,15 @@ const svelteExample = `<script lang="ts">
 	import { Menu } from "@xoji/svelte";
 
 	const items = [
-		{ label: "New", value: "new" },
-		{ label: "Open…", value: "open" },
-		{ separator: true },
-		{ label: "Save", value: "save" },
+		{ heading: "File" },
+		{ label: "New", value: "new", hint: "Ctrl+N" },
+		{ label: "Open…", value: "open", hint: "Ctrl+O" },
+		{ label: "Save", value: "save", hint: "Ctrl+S" },
 		{ label: "Save As…", value: "save-as", disabled: true },
+		{ heading: "Help" },
+		{ label: "Shortcuts", value: "shortcuts", hint: "?" },
 		{ separator: true },
-		{ label: "Close", value: "close" },
+		{ label: "Close", value: "close", intent: "danger" },
 	];
 </script>
 
@@ -36,13 +40,15 @@ const astroExample = `---
 import { Menu } from "@xoji/astro";
 
 const items = [
-	{ label: "New", value: "new" },
-	{ label: "Open…", value: "open" },
-	{ separator: true },
-	{ label: "Save", value: "save" },
+	{ heading: "File" },
+	{ label: "New", value: "new", hint: "Ctrl+N" },
+	{ label: "Open…", value: "open", hint: "Ctrl+O" },
+	{ label: "Save", value: "save", hint: "Ctrl+S" },
 	{ label: "Save As…", value: "save-as", disabled: true },
+	{ heading: "Help" },
+	{ label: "Shortcuts", value: "shortcuts", hint: "?" },
 	{ separator: true },
-	{ label: "Close", value: "close" },
+	{ label: "Close", value: "close", intent: "danger" },
 ];
 ---
 
@@ -54,7 +60,7 @@ export const menuManifest: ComponentManifest = {
 	category: "overlay",
 	summary: "A menu button: a trigger that opens an anchored popup list of actions.",
 	description:
-		"Menu is the app-menu shape: a labeled trigger (a File button, a kebab, a profile name) that opens a floating list of actions under it. It builds the WAI-ARIA menu button pattern: the trigger carries `aria-haspopup=\"menu\"` and `aria-expanded`, and the popup is a `role=\"menu\"` of `role=\"menuitem\"` actions with a single roving focus, so the keyboard walks it like a native menu. Like Tree, it is data-driven: an `items` array of `{ label, value?, disabled?, separator? }` drives the markup, and a `separator` item renders a `role=\"separator\"` divider rather than an action. The popup uses the native Popover API, so it renders in the top layer and escapes any clipping or stacking context an ancestor would otherwise impose, positioned under the trigger (and flipped up when there is no room below). Choosing an action fires a `select` event with the item's `value`, `label`, and `index` and closes the menu; the engine never navigates, the consumer decides what an action does. Its chrome (the overlay surface, the elevation, the accent-tinted active row) is derived, so a menu frames its actions in the theme's own voice.",
+		"Menu is the app-menu shape: a labeled trigger (a File button, a kebab, a profile name) that opens a floating list of actions under it. It builds the WAI-ARIA menu button pattern: the trigger carries `aria-haspopup=\"menu\"` and `aria-expanded`, and the popup is a `role=\"menu\"` of `role=\"menuitem\"` actions with a single roving focus, so the keyboard walks it like a native menu. Like Tree, it is data-driven: an `items` array drives the markup. An action carries a `label` plus optional `value`, `disabled`, and a `hint` (a trailing muted/mono accelerator like `Ctrl+S`); a `{ separator: true }` entry renders a `role=\"separator\"` divider; and a `{ heading: string }` entry opens a labeled `role=\"group\"` the following actions sit under, so a real app menu can group its commands under \"File\" and \"Help\" headers. The popup uses the native Popover API, so it renders in the top layer and escapes any clipping or stacking context an ancestor would otherwise impose, positioned under the trigger (and flipped up when there is no room below). Choosing an action fires a `select` event with the item's `value`, `label`, and `index` and closes the menu; the engine never navigates, the consumer decides what an action does. Its chrome (the overlay surface, the elevation, the accent-tinted active row) is derived, so a menu frames its actions in the theme's own voice.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -109,7 +115,6 @@ export const menuManifest: ComponentManifest = {
 			selector: ".xoji-menu__item",
 			tokens: [
 				"--space-1",
-				"--space-2",
 				"--space-3",
 				"--fg-1",
 				"--fg-disabled",
@@ -119,6 +124,18 @@ export const menuManifest: ComponentManifest = {
 				"--duration-fast",
 				"--ease-standard",
 			],
+		},
+		{
+			name: "item-hint",
+			description: "A row's trailing accelerator hint (e.g. `Ctrl+S`): a muted, monospaced span at the end of the action, exposed so a consumer can restyle the keycap text.",
+			selector: ".xoji-menu__item-hint",
+			tokens: ["--font-mono", "--text-xs"],
+		},
+		{
+			name: "heading",
+			description: "A group label for a `heading` item: the muted, uppercase title a labeled section of actions sits under.",
+			selector: ".xoji-menu__heading",
+			tokens: ["--space-1", "--space-3", "--text-xs", "--fg-2"],
 		},
 		{
 			name: "separator",
@@ -132,7 +149,7 @@ export const menuManifest: ComponentManifest = {
 			name: "items",
 			type: "MenuItem[]",
 			description:
-				"The action list. Each `MenuItem` has a `label` and optional `value`, `disabled`, and `separator`. A `{ separator: true }` item renders a divider. Passed as a property in the bindings (serialized to JSON for the element).",
+				"The action list. An action is `{ label, value?, disabled?, hint?, intent? }`, where `hint` is a trailing muted/mono accelerator like `Ctrl+S` and `intent: \"danger\"` tints a destructive row (a delete / discard / close). A `{ separator: true }` entry renders a divider, and a `{ heading: string }` entry opens a labeled group the following actions sit under (a `role=\"group\"` named by the heading). Passed as a property in the bindings (serialized to JSON for the element).",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -165,6 +182,12 @@ export const menuManifest: ComponentManifest = {
 			tokens: ["--accent-bg", "--accent-text"],
 		},
 		{
+			name: "item-danger",
+			description: "A destructive action (`intent: \"danger\"`): the row reads in the danger ink, and its hover/focus takes the danger tint instead of the accent one, so the one irreversible item stands apart.",
+			selector: '.xoji-menu__item[data-intent="danger"]',
+			tokens: ["--danger-text", "--danger-bg"],
+		},
+		{
 			name: "item-disabled",
 			description: "A locked action: muted and non-interactive, skipped by arrow navigation.",
 			selector: '.xoji-menu__item[aria-disabled="true"]',
@@ -177,15 +200,20 @@ export const menuManifest: ComponentManifest = {
 		"--space-2",
 		"--space-3",
 		"--font-sans",
+		"--font-mono",
 		"--text-sm",
+		"--text-xs",
 		"--fg-0",
 		"--fg-1",
+		"--fg-2",
 		"--fg-disabled",
 		"--bg-1",
 		"--surface-overlay",
 		"--surface-overlay-border",
 		"--accent-bg",
 		"--accent-text",
+		"--danger-bg",
+		"--danger-text",
 		"--line",
 		"--state-hover",
 		"--state-selected",
@@ -209,6 +237,8 @@ export const menuManifest: ComponentManifest = {
 		"From the trigger, Enter / Space / Down open the menu and focus the first action; Up opens and focuses the last.",
 		"In the menu, Up/Down move between enabled actions (wrapping), Home/End jump to the first/last, Enter/Space activates the focused action, Tab closes the menu, and Escape closes it and returns focus to the trigger.",
 		"Disabled actions carry `aria-disabled` and are skipped by arrow navigation and not activatable.",
+		"A `heading` item opens a `role=\"group\"` named by the heading text, so assistive tech announces which section an action belongs to; the visible heading is `aria-hidden` to avoid a double read, and headings are not focus targets, so arrow navigation walks only the actions.",
+		"A `hint` (the accelerator keycap) is `aria-hidden`, so it shows visually without padding the action's accessible name; the name stays the bare label.",
 		"A single roving focus keeps the menu a coherent keyboard surface. Clicking outside closes it (the Popover API's light-dismiss); clicking an action activates it.",
 	],
 	examples: [

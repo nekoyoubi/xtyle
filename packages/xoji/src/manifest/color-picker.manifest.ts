@@ -172,7 +172,7 @@ export const colorPickerManifest: ComponentManifest = {
 		},
 		{
 			name: "trigger-badge",
-			description: "The WCAG rating chip overlaid on the trigger swatch (shown when `trigger` and `contrastAgainst` are both set): AAA reads `success`, AA reads `info`, A (large-text floor) reads `warn`, and a sub-AA hazard reads `danger` — so the safety of the current color against its reference is legible without opening the picker.",
+			description: "The WCAG rating chip overlaid on the trigger swatch (shown when `trigger` and `contrastAgainst` are both set): AAA reads `success`, AA reads `info`, A (large-text floor) reads `warn`, and a sub-AA hazard reads `danger`, so the safety of the current color against its reference is legible without opening the picker.",
 			selector: ".xoji-color-picker__trigger-badge",
 			tokens: ["--radius-sm", "--weight-bold", "--neutral", "--neutral-fg", "--success", "--success-fg", "--info", "--info-fg", "--warn", "--warn-fg", "--danger", "--danger-fg"],
 		},
@@ -359,8 +359,8 @@ export const colorPickerManifest: ComponentManifest = {
 	],
 	a11y: [
 		"The saturation/brightness handle is `role=\"slider\"` with a descriptive `aria-valuetext` (\"saturation N%, brightness N%\") updated as it moves; arrow keys nudge, Shift+arrow jumps.",
-		"The hue handle is `role=\"slider\"` over 0–360 with `aria-valuenow`; arrows step, Home/End jump to the ends.",
-		"The opacity handle is `role=\"slider\"` over 0–100 with `aria-valuenow`; arrows step, Home/End jump to clear and opaque.",
+		"The hue handle is `role=\"slider\"` over 0-360 with `aria-valuenow`; arrows step, Home/End jump to the ends.",
+		"The opacity handle is `role=\"slider\"` over 0-100 with `aria-valuenow`; arrows step, Home/End jump to clear and opaque.",
 		"The wrapper is `role=\"group\"` and requires an accessible name (`labelledby` wins, then `label`); the binding warns at runtime when neither is present.",
 		"Pointer drags use pointer capture so a handle keeps tracking when the cursor leaves its field.",
 		"The value input accepts any CSS Color 4 string, commits on Enter or blur, reformats to the active format, and reverts to the current value on invalid input; the `format` button cycles `hex` → `rgb` → `hsl` → `oklch`.",

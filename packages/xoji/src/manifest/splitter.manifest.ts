@@ -36,7 +36,7 @@ import Splitter from "@xoji/astro/Splitter.astro";
 export const splitterManifest: ComponentManifest = {
 	id: "splitter",
 	name: "Splitter",
-	category: "layout",
+	category: "shell",
 	summary: "A draggable divider that resizes an adjacent pane, with configurable bounds and steps.",
 	description:
 		"Splitter is the handle between two panes: drag it (or arrow it with the keyboard) and the neighboring pane grows or shrinks. It is a `role=\"separator\"` control, so it announces its current, minimum, and maximum size and takes the full keyboard. The size it manages is _data_ the consumer owns: the splitter clamps a `value` (in px) to `min`/`max`, snaps it to an integral `step`, writes it into a CSS custom property (`var`) on a target so a grid or flex track resizes declaratively, and fires `resize` (live, during the drag) and `resize-end` (on release) so the consumer can react or persist. `orientation` picks the axis (`vertical` resizes width, `horizontal` resizes height), and `reversed` flips the direction for a trailing-edge pane like a right rail. Its own chrome is derived: the grip and its focus ring read from the same tokens the rest of the UI does.",
@@ -108,7 +108,7 @@ export const splitterManifest: ComponentManifest = {
 		{
 			name: "default",
 			type: "number",
-			description: "A size to reset to on double-click. Omit to disable the reset affordance.",
+			description: "The size a reset restores, by double-clicking the handle or the keyboard reset. Omit it and a reset still works, restoring the size the splitter first rendered with, matching Slider.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -183,6 +183,7 @@ export const splitterManifest: ComponentManifest = {
 	a11y: [
 		"The handle is a `role=\"separator\"` with `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so assistive tech announces the size and its bounds.",
 		"It is fully keyboard-operable: arrow keys step by `step`, PageUp/PageDown jump ten steps, Home and End go to the bounds.",
+		"Double-clicking the handle resets the size to `default` (or the first-rendered size when `default` is omitted), the same gesture and fallback as Slider.",
 		"Give it a `label` (or `labelledby`) so the separator is announced by what it resizes, not as an unnamed divider.",
 	],
 	examples: [

@@ -33,7 +33,7 @@ export class XojiCode extends XojiElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["language", "code", "preload", "copy", "line-numbers", "highlight"];
+		return ["language", "code", "preload", "copy", "line-numbers", "highlight", "caption"];
 	}
 
 	private renderToken = 0;
@@ -96,6 +96,14 @@ export class XojiCode extends XojiElement {
 		this.reflectString("highlight", value);
 	}
 
+	/** A caption header above the block, e.g. a filename; left empty, no header renders. */
+	get caption(): string | null {
+		return this.getAttribute("caption");
+	}
+	set caption(value: string | null | undefined) {
+		this.reflectString("caption", value);
+	}
+
 	attributeChangedCallback(): void {
 		if (this.root.firstChild) this.render();
 	}
@@ -140,7 +148,8 @@ export class XojiCode extends XojiElement {
 		const language = resolveLanguage(this.lang);
 		const html = this.withLines(plainCodeHtml(this.source));
 		this.seedScaffold(html, language);
-		this.fragment.update({ html, language });
+		this.seedCaption();
+		this.fragment.update({ html, language, caption: this.caption });
 		if (this.preload && this.lang) void warmLanguages([this.lang]);
 		this.recolor();
 		wireHostControls(
@@ -202,8 +211,14 @@ export class XojiCode extends XojiElement {
 		void highlight(source, lang).then((result) => {
 			if (token !== this.renderToken) return;
 			if (result.language === null) return;
-			this.fragment.update({ html: this.withLines(result.html), language: result.language });
+			this.fragment.update({ html: this.withLines(result.html), language: result.language, caption: this.caption });
 		});
+	}
+
+	/** Fill the caption header synchronously on first paint, before the async fragment runtime warms. */
+	private seedCaption(): void {
+		const caption = this.root.querySelector("[data-caption]");
+		if (caption instanceof HTMLElement) caption.textContent = this.caption ?? "";
 	}
 }
 

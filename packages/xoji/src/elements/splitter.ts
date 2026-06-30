@@ -14,6 +14,10 @@ export class XojiSplitter extends XojiElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "splitter", {
 		context: () => ({ axisIsX: this.axisIsX, reversed: this.reversed }),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		// The handle is built by the async `mount` op, not the static scaffold, so on a cold first
+		// mount it doesn't exist when `render()` runs. Wire it after every apply, once the op's DOM
+		// is live: a fresh handle (cold mount or a reshape remount) wires; an unchanged one no-ops.
+		afterApply: () => this.wireHandle(),
 	});
 
 	static get observedAttributes(): string[] {
@@ -70,6 +74,15 @@ export class XojiSplitter extends XojiElement {
 	}
 	set value(value: number) {
 		this.setAttribute("value", String(this.clamp(value)));
+	}
+
+	private initialValue = Number.NaN;
+
+	/** The value a double-click on the handle restores: an explicit `default`, else the value the splitter first rendered with. */
+	get defaultValue(): number {
+		const explicit = this.getAttribute("default");
+		if (explicit !== null && explicit !== "") return this.clamp(Number(explicit));
+		return this.clamp(Number.isNaN(this.initialValue) ? this.value : this.initialValue);
 	}
 
 	get disabled(): boolean {
@@ -148,27 +161,31 @@ export class XojiSplitter extends XojiElement {
 		this.handle?.focus();
 		const startPos = this.axisIsX ? event.clientX : event.clientY;
 		const startValue = this.value;
+		// Capture is a complement, not the lifeline: the move/up listeners live on `window` so the
+		// drag tracks the pointer anywhere on screen even when capture doesn't hold (a thin vertical
+		// handle in WebView2 loses it the moment the pointer leaves the few-px strip).
 		(event.target as Element).setPointerCapture?.(event.pointerId);
 		const sign = this.reversed ? -1 : 1;
 		const move = (e: PointerEvent) => {
 			const delta = (this.axisIsX ? e.clientX : e.clientY) - startPos;
 			this.commit(startValue + sign * delta, "resize");
 		};
-		const up = (e: PointerEvent) => {
-			this.handle?.removeEventListener("pointermove", move);
-			this.handle?.removeEventListener("pointerup", up);
+		const end = (e: PointerEvent) => {
+			window.removeEventListener("pointermove", move);
+			window.removeEventListener("pointerup", end);
+			window.removeEventListener("pointercancel", end);
 			const delta = (this.axisIsX ? e.clientX : e.clientY) - startPos;
 			this.commit(startValue + sign * delta, "resize-end");
 		};
-		this.handle?.addEventListener("pointermove", move);
-		this.handle?.addEventListener("pointerup", up);
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", end);
+		window.addEventListener("pointercancel", end);
 	}
 
 	private applyIntent(intent: FragmentIntent, event: Event): void {
 		if (intent.preventDefault) event.preventDefault();
 		if (intent.reset) {
-			const raw = this.getAttribute("default");
-			if (raw !== null) this.commit(Number(raw), "resize-end");
+			this.commit(this.defaultValue, "resize-end");
 			return;
 		}
 		if (intent.jump) {
@@ -208,12 +225,12 @@ export class XojiSplitter extends XojiElement {
 	}
 
 	protected override render(): void {
+		if (Number.isNaN(this.initialValue)) this.initialValue = this.value;
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(splitterHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
 		this.applyValue();
-		this.wireHandle();
 	}
 
 	private wiredHandle: HTMLElement | null = null;
@@ -222,6 +239,7 @@ export class XojiSplitter extends XojiElement {
 		if (!handle || handle === this.wiredHandle) return;
 		this.wiredHandle = handle;
 		handle.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
+		handle.addEventListener("dblclick", () => this.commit(this.defaultValue, "resize-end"));
 	}
 }
 

@@ -7,22 +7,24 @@ import Heading from "@xoji/astro/Heading.astro";
 import type { MenuItem } from "@xoji/core/markup";
 
 const fileItems: MenuItem[] = [
-	{ label: "New", value: "new" },
-	{ label: "Open…", value: "open" },
+	{ heading: "File" },
+	{ label: "New", value: "new", hint: "Ctrl+N" },
+	{ label: "Open…", value: "open", hint: "Ctrl+O" },
+	{ label: "Save", value: "save", hint: "Ctrl+S" },
+	{ label: "Save As…", value: "save-as", hint: "Ctrl+Shift+S", disabled: true },
+	{ heading: "Help" },
+	{ label: "Shortcuts", value: "shortcuts", hint: "?" },
 	{ separator: true },
-	{ label: "Save", value: "save" },
-	{ label: "Save As…", value: "save-as", disabled: true },
-	{ separator: true },
-	{ label: "Close", value: "close" },
+	{ label: "Close", value: "close", hint: "Ctrl+W", intent: "danger" },
 ];
 
 const editItems: MenuItem[] = [
-	{ label: "Undo", value: "undo" },
-	{ label: "Redo", value: "redo", disabled: true },
+	{ label: "Undo", value: "undo", hint: "Ctrl+Z" },
+	{ label: "Redo", value: "redo", hint: "Ctrl+Y", disabled: true },
 	{ separator: true },
-	{ label: "Cut", value: "cut" },
-	{ label: "Copy", value: "copy" },
-	{ label: "Paste", value: "paste" },
+	{ label: "Cut", value: "cut", hint: "Ctrl+X" },
+	{ label: "Copy", value: "copy", hint: "Ctrl+C" },
+	{ label: "Paste", value: "paste", hint: "Ctrl+V" },
 ];
 ---
 

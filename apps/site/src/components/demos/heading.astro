@@ -19,6 +19,7 @@ const scale = [
 ] as const;
 
 const tones = ["default", "muted", "subtle", "accent"] as const;
+const colorTones = ["accent", "neutral", "danger", "success", "warn", "info", "green", "purple", "pink"] as const;
 ---
 
 <Stack gap={6}>
@@ -42,6 +43,24 @@ const tones = ["default", "muted", "subtle", "accent"] as const;
 			{
 				tones.map((tone) => (
 					<Heading level={2} size="xl" tone={tone}>
+						A {tone} heading
+					</Heading>
+				))
+			}
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">The full color roster</Heading>
+		<Text tone="muted" size="sm">
+			Beyond the emphasis ramp, any tone paints a colored heading in its on-surface ink,
+			derived to stay legible against the page.
+		</Text>
+		<Separator />
+		<Stack gap={2}>
+			{
+				colorTones.map((tone) => (
+					<Heading level={2} size="lg" tone={tone}>
 						A {tone} heading
 					</Heading>
 				))

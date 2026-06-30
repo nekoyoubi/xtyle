@@ -58,8 +58,8 @@ export function styleQueryPairsInCss(css: string): Array<{ token: string; value:
 /**
  * The consume side of the keyword-domain contract: every `@container style(--token: value)`
  * branch in a component's CSS must query a value inside that token's declared domain. An
- * out-of-domain or misspelled keyword silently never matches at runtime — the cue just never
- * appears — so this catches it at build instead. Only tokens with a declared domain are checked;
+ * out-of-domain or misspelled keyword silently never matches at runtime (the cue just never
+ * appears), so this catches it at build instead. Only tokens with a declared domain are checked;
  * the domain registry is the source of truth, passed in so this module stays free of any
  * algorithm import (the produce side enforces the same domains in the gauntlet).
  */
@@ -78,7 +78,7 @@ export function lintStyleQueryDomains(
  * The host-control side of the fragment contract: every interactive control a fill declares in
  * `hostControls` must actually ship its `marker` attribute in the scaffold, or the element wires
  * a button that does not exist (a silent dead control). A marker counts only as a standalone
- * attribute — `data-copy` in `data-copy-label` does not satisfy a `data-copy` declaration.
+ * attribute: `data-copy` in `data-copy-label` does not satisfy a `data-copy` declaration.
  */
 export function lintHostControls(
 	markers: readonly string[],

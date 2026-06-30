@@ -120,7 +120,7 @@ export const statManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description:
-				"Lays the stat out horizontally — label, value, and trend delta on one baseline, like a ticker — for a status strip or a dense row instead of a dashboard tile.",
+				"Lays the stat out horizontally (label, value, and trend delta on one baseline, like a ticker) for a status strip or a dense row instead of a dashboard tile.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -166,7 +166,7 @@ export const statManifest: ComponentManifest = {
 		"Pair the `delta` + `trend` with period-over-period figures; the arrow carries direction without relying on color.",
 	],
 	a11y: [
-		"The trend pairs its color with a directional arrow (▲ up, ▼ down, — flat), so the change reads without color perception (WCAG 1.4.1).",
+		"The trend pairs its color with a directional arrow (▲ up, ▼ down, a flat bar for no change), so the change reads without color perception (WCAG 1.4.1).",
 		"The arrow glyph is a decorative `aria-hidden` SVG; the delta's meaning comes from its text.",
 		"Order is visual only; the label sits above the value via flex `order`, while the DOM keeps value-then-label, so a screen reader reads the figure first.",
 	],
@@ -174,7 +174,7 @@ export const statManifest: ComponentManifest = {
 		{
 			id: "metrics-trends-and-sizes",
 			title: "Metrics, trends, and sizes",
-			description: "A value under its label, with optional trend deltas and captions, across the three sizes and both alignments — plus the `inline` ticker layout that lays label, value, and delta on one line.",
+			description: "A value under its label, with optional trend deltas and captions, across the three sizes and both alignments, plus the `inline` ticker layout that lays label, value, and delta on one line.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
 		},
 	],

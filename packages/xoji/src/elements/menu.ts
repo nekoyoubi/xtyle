@@ -4,7 +4,7 @@ import { menuHostCss, type MenuItem } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/menu/source.generated.js";
 
-export type { MenuItem } from "../markup/index.js";
+export type { MenuItem, MenuAction } from "../markup/index.js";
 
 let menuSeq = 0;
 

@@ -1,6 +1,10 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
 
-const htmlExample = `<xoji-text>The quiet default — body copy at comfortable measure.</xoji-text>
+/** The on-surface chromatic ink each tone resolves to; AA-clean against `--bg-0`. */
+const toneVividTokens = FULL_TONES.map((t) => `--${t}-vivid`);
+
+const htmlExample = `<xoji-text>The quiet default: body copy at comfortable measure.</xoji-text>
 
 <xoji-text size="lg" weight="semibold">A lead paragraph that sets up the section.</xoji-text>
 
@@ -14,7 +18,7 @@ const svelteExample = `<script lang="ts">
 	import { Text } from "@xoji/svelte";
 </script>
 
-<Text>The quiet default — body copy at comfortable measure.</Text>
+<Text>The quiet default: body copy at comfortable measure.</Text>
 
 <Text size="lg" weight="semibold">A lead paragraph that sets up the section.</Text>
 
@@ -28,7 +32,7 @@ const astroExample = `---
 import { Text } from "@xoji/astro";
 ---
 
-<Text>The quiet default — body copy at comfortable measure.</Text>
+<Text>The quiet default: body copy at comfortable measure.</Text>
 
 <Text size="lg" weight="semibold">A lead paragraph that sets up the section.</Text>
 
@@ -44,7 +48,7 @@ export const textManifest: ComponentManifest = {
 	category: "data-display",
 	summary: "A body-text primitive: paragraph or inline span across four sizes, four weights, three leadings, and four tones.",
 	description:
-		"Text is the primitive for running copy. It renders a block `<p>` by default or an inline `<span>` via the `as` prop, then tunes appearance along four independent axes: `size` (xs, sm, body, lg), `weight` (normal, medium, semibold, bold), `leading` (tight, snug, loose), and `tone` (default ink, muted, subtle, or accent). A `mono` flag swaps the family to the monospace stack for inline code and tabular figures. Every axis maps to a design token, so a paragraph picks up the active theme's type scale and ink ladder without any local color: `default` reads as `--fg-0`, `muted` steps down to `--fg-2`, `subtle` to `--fg-3`, and `accent` tints to `--accent-text`.",
+		"Text is the primitive for running copy. It renders a block `<p>` by default or an inline `<span>` via the `as` prop, then tunes appearance along four independent axes: `size` (xs, sm, body, lg), `weight` (normal, medium, semibold, bold), `leading` (tight, snug, loose), and `tone`. A `mono` flag swaps the family to the monospace stack for inline code and tabular figures. Every axis maps to a design token, so a paragraph picks up the active theme's type scale and ink ladder without any local color: the `default`/`muted`/`subtle` emphasis tones read as `--fg-0`/`--fg-2`/`--fg-3`, and the full color roster (every semantic role, accent variant, or named hue) paints the copy in that tone's on-surface ink, derived to stay legible against the page.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -91,9 +95,9 @@ export const textManifest: ComponentManifest = {
 			name: "tone",
 			type: "TextTone",
 			default: "default",
-			description: "Ink emphasis: default, muted, subtle, or `accent` for a tinted line. `default` emits no class.",
+			description: "Ink: the `default`/`muted`/`subtle` emphasis ramp off the foreground, or any tone in the full roster (semantic role, accent variant, or named hue) for colored copy in that tone's on-surface ink. `default` emits no class.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["default", "muted", "subtle", "accent"],
+			options: ["default", "muted", "subtle", ...FULL_TONES],
 		},
 		{
 			name: "mono",
@@ -124,9 +128,9 @@ export const textManifest: ComponentManifest = {
 		},
 		{
 			name: "accent",
-			description: "Accent-tinted ink for a highlighted word, link-like emphasis, or a figure.",
+			description: "Accent-colored ink for a highlighted word, link-like emphasis, or a figure; the first stop of the full tone roster, which paints any run in a tone's on-surface `--{tone}-vivid` ink.",
 			className: "xoji-text--accent",
-			tokens: ["--accent-text"],
+			tokens: ["--accent-vivid"],
 		},
 		{
 			name: "mono",
@@ -153,7 +157,7 @@ export const textManifest: ComponentManifest = {
 		"--fg-0",
 		"--fg-2",
 		"--fg-3",
-		"--accent-text",
+		...toneVividTokens,
 		"--font-mono",
 		"--font-sans",
 		"--leading-loose",

@@ -50,6 +50,7 @@ export { default as Menu } from "./Menu.svelte";
 export { default as Splitter } from "./Splitter.svelte";
 export { default as Code } from "./Code.svelte";
 export { default as Pagination } from "./Pagination.svelte";
+export { default as DockZone } from "./DockZone.svelte";
 
 export {
 	XojiButton,
@@ -104,4 +105,5 @@ export {
 	XojiSplitter,
 	XojiCode,
 	XojiPagination,
+	XojiDockZone,
 } from "./register.js";

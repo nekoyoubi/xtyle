@@ -18,12 +18,14 @@ interface Props {
 	lineNumbers?: boolean;
 	/** Tint chosen lines; a 1-based spec like `2`, `2,4`, or `4-6`. Works on the zero-JS path. */
 	highlight?: string;
+	/** A caption header above the block, e.g. a filename. Works on the zero-JS path. */
+	caption?: string;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
-const { lang, code = "", preload = false, static: isStatic = false, copy = true, wrap = false, lineNumbers = false, highlight: highlightSpec, class: extra, ...rest } = Astro.props;
+const { lang, code = "", preload = false, static: isStatic = false, copy = true, wrap = false, lineNumbers = false, highlight: highlightSpec, caption, class: extra, ...rest } = Astro.props;
 
 const result = await highlight(code, lang ?? null);
 const base = result.language === null ? plainCodeHtml(code) : result.html;
@@ -31,10 +33,10 @@ const litSet = highlightSpec ? parseLineSpec(highlightSpec) : undefined;
 const split = lineNumbers || litSet ? splitCodeLines(base, litSet) : null;
 const inner = split ? split.html : base;
 const gutter = split && lineNumbers ? `--xoji-code-gutter: ${codeGutterWidth(split.lines)}` : undefined;
-const bindings = { html: inner, language: result.language };
+const bindings = { html: inner, language: result.language, caption: caption ?? null };
 const light = await renderFragmentLight("code", bindings);
 ---
 
-<xoji-code language={lang ?? undefined} code={code} preload={preload || undefined} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlightSpec || undefined} style={gutter} class={extra} set:html={light} {...rest} />
+<xoji-code language={lang ?? undefined} code={code} preload={preload || undefined} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlightSpec || undefined} caption={caption || undefined} style={gutter} class={extra} set:html={light} {...rest} />
 
 {!isStatic && <script>import "@xoji/core/elements";</script>}

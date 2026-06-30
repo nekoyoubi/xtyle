@@ -9,22 +9,18 @@
     if (b.size === "md") cls.push("xoji-tooltip--md");
     return cls.join(" ");
   }
-  function body(b) {
-    const text = b.text ?? null;
-    return text !== null ? text : `<slot name="content"></slot>`;
-  }
-  function contentInner(b) {
-    return `<span class="xoji-tooltip__arrow" part="arrow" aria-hidden="true"></span>${body(b)}`;
+  function textValue(b) {
+    return b.text ?? "";
   }
   hooks.fragment.mount("tooltip", (bindings, ops) => {
     ops.setAttr("[data-root]", "class", tooltipClass(bindings));
     ops.setAttr("[data-content]", "id", bindings.contentId ?? "");
     ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-    ops.replaceChildren("[data-content]", contentInner(bindings));
+    ops.setText("[data-text]", textValue(bindings));
   });
   hooks.fragment.update("tooltip", (bindings, ops) => {
     ops.setAttr("[data-root]", "class", tooltipClass(bindings));
     ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-    ops.replaceChildren("[data-content]", contentInner(bindings));
+    ops.setText("[data-text]", textValue(bindings));
   });
 })();

@@ -129,6 +129,26 @@ export abstract class XojiElement extends HTMLElement {
 		if (value == null || value === "") this.removeAttribute(name);
 		else this.setAttribute(name, value);
 	}
+
+	/**
+	 * Reflect a string prop to an attribute and drive the inner control's live `.value`
+	 * property. A user-modified control is dirty — its `.value` no longer tracks the
+	 * content attribute — so `reflectString` alone leaves stale text when programmatically
+	 * clearing the field. The live element is resolved via a getter *after* the attribute
+	 * write because `reflectString` can trigger a synchronous `attributeChangedCallback`
+	 * that rebuilds the DOM; reading the element before that write would capture a
+	 * potentially stale reference.
+	 */
+	protected reflectStringLive(
+		name: string,
+		value: string | null | undefined,
+		getLiveElement: () => { value: string } | null | undefined,
+	): void {
+		const next = value == null ? "" : String(value);
+		this.reflectString(name, next);
+		const el = getLiveElement();
+		if (el && el.value !== next) el.value = next;
+	}
 }
 
 export function define(name: string, ctor: CustomElementConstructor): void {

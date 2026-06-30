@@ -96,6 +96,31 @@ const TONE_GROUPS = [
 	</Card>
 
 	<Card compact>
+		<Heading slot="header" level={3} size="sm">Capacity meter (<code>role="meter"</code>)</Heading>
+		<Stack gap={4}>
+			{
+				[
+					{ name: "System", used: 910, total: 1000, free: "90 GB free of 1 TB" },
+					{ name: "Media", used: 800, total: 2000, free: "1.2 TB free of 2 TB" },
+					{ name: "Projects", used: 410, total: 500, free: "90 GB free of 500 GB" },
+				].map((drive) => (
+					<Stack gap={1}>
+						<Cluster gap={2} align="center">
+							<Text as="span" size="sm" weight="medium">{drive.name}</Text>
+							<Text as="span" size="xs" tone="muted">{drive.free}</Text>
+						</Cluster>
+						<Progress meter value={drive.used} max={drive.total} aria-label={`${drive.name} capacity`} class="demo-progress-bar">
+							<threshold below="75" tone="success" />
+							<threshold below="90" tone="warn" />
+							<threshold below="101" tone="danger" pulse="fast" />
+						</Progress>
+					</Stack>
+				))
+			}
+		</Stack>
+	</Card>
+
+	<Card compact>
 		<Heading slot="header" level={3} size="sm">Inset readout</Heading>
 		<Stack gap={4}>
 			<Progress size="lg" value={66} showValue valuePosition="inset" aria-label="Inset readout at 66 percent" class="demo-progress-bar" />

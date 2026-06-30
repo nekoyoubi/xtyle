@@ -1,6 +1,7 @@
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
+	setText(selector: string, value: string): void;
 }
 
 interface TooltipBindings {
@@ -27,24 +28,23 @@ function tooltipClass(b: TooltipBindings): string {
 	return cls.join(" ");
 }
 
-function body(b: TooltipBindings): string {
-	const text = b.text ?? null;
-	return text !== null ? text : `<slot name="content"></slot>`;
-}
-
-function contentInner(b: TooltipBindings): string {
-	return `<span class="xoji-tooltip__arrow" part="arrow" aria-hidden="true"></span>${body(b)}`;
+/** Set the bound tip text on its own node and leave the `content` slot untouched, so a hydration
+ * `update` can't clobber the consumer's SSR-composed rich content (a panel-wide `replaceChildren`
+ * would re-emit an inert light-DOM `<slot>` and drop it). Text and slot are mutually exclusive at
+ * the call site; an empty `data-text` node in the slot case is inert. */
+function textValue(b: TooltipBindings): string {
+	return b.text ?? "";
 }
 
 hooks.fragment.mount("tooltip", (bindings, ops) => {
 	ops.setAttr("[data-root]", "class", tooltipClass(bindings));
 	ops.setAttr("[data-content]", "id", bindings.contentId ?? "");
 	ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-	ops.replaceChildren("[data-content]", contentInner(bindings));
+	ops.setText("[data-text]", textValue(bindings));
 });
 
 hooks.fragment.update("tooltip", (bindings, ops) => {
 	ops.setAttr("[data-root]", "class", tooltipClass(bindings));
 	ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-	ops.replaceChildren("[data-content]", contentInner(bindings));
+	ops.setText("[data-text]", textValue(bindings));
 });

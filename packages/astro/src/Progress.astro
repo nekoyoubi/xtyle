@@ -20,6 +20,8 @@ interface Props {
 	colorizeValue?: boolean;
 	/** `end` (after the bar) or `inset` (centered in the track, contrast-flipping as the fill crosses). */
 	valuePosition?: "end" | "inset";
+	/** Report `role="meter"` (a capacity measurement) instead of `role="progressbar"` (a task). */
+	meter?: boolean;
 	"aria-label"?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -40,6 +42,7 @@ const {
 	valueFormat = "percent",
 	colorizeValue = false,
 	valuePosition = "end",
+	meter = false,
 	"aria-label": ariaLabel,
 	static: isStatic = false,
 	class: extra,
@@ -59,6 +62,7 @@ const bindings = {
 	colorizeValue,
 	valuePosition,
 	pulse: null,
+	role: meter ? "meter" : "progressbar",
 	ariaLabel: ariaLabel ?? null,
 	ariaLabelledby: null,
 };
@@ -82,6 +86,7 @@ const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
 	value-format={valueFormat !== "percent" ? valueFormat : undefined}
 	colorize-value={colorizeValue || undefined}
 	value-position={valuePosition !== "end" ? valuePosition : undefined}
+	meter={meter || undefined}
 	aria-label={ariaLabel}
 	class={extra}
 	set:html={composed}

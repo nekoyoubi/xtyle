@@ -47,9 +47,9 @@ export const badgeManifest: ComponentManifest = {
 	id: "badge",
 	name: "Badge",
 	category: "data-display",
-	summary: "A compact status or label chip: three fills across six semantic tones and twelve named hues.",
+	summary: "A compact label, tag, or status chip: three fills across six semantic tones and twelve named hues, optionally removable.",
 	description:
-		"Badge labels, counts, and statuses inline. Fill treatment (`variant`) and color (`tone`) are independent axes: each of the three fills (solid, soft, outline) can carry any of the six semantic tones (accent, neutral, danger, success, warn, info) or any of the twelve named hues (red … black). It adds a leading status dot, a tabular count affordance, and a dismissible form whose `×` is a real focusable `<button>`. A standalone `.xoji-dot` indicator covers the bare-dot case. Status tones (success, warn, danger, info) emit a screen-reader-only tone word so meaning never rides on color alone.",
+		"Badge labels, tags, counts, and statuses inline. Fill treatment (`variant`) and color (`tone`) are independent axes: each of the three fills (solid, soft, outline) can carry any of the six semantic tones (accent, neutral, danger, success, warn, info) or any of the twelve named hues (red … black). It adds a leading status dot, a tabular count affordance, and a `removable` form whose `×` is a real focusable `<button>` that emits a `remove` event. That's the removable tag you build a filter row or token input from. A standalone `.xoji-dot` indicator covers the bare-dot case. Status tones (success, warn, danger, info) emit a screen-reader-only tone word so meaning never rides on color alone.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -112,7 +112,7 @@ export const badgeManifest: ComponentManifest = {
 			name: "tone",
 			type: "FullTone",
 			default: "neutral",
-			description: "Any color tone — a semantic role, an accent variant (accent-2/3/4), or a named hue (red … black).",
+			description: "Any color tone: a semantic role, an accent variant (accent-2/3/4), or a named hue (red … black).",
 			bindings: ["html", "svelte", "astro"],
 			options: [...FULL_TONES],
 		},

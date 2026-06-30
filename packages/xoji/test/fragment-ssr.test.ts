@@ -70,6 +70,33 @@ describe("light-DOM native slots", () => {
 		expect(composed).not.toContain('<slot name="icon">');
 	});
 
+	// `applyOpsToHtml` builds the output with `String.prototype.replace`. A bare string replacement
+	// treats `$1`..`$9`, `$&`, `` $` ``, `$'`, and `$$` in the inserted value as match references, so
+	// any consumer content carrying them (a `$17.50` price cell, a `$1` shell var) was silently
+	// rewritten — duplicating the captured scaffold tag mid-content and corrupting the markup. The
+	// applier must insert values verbatim.
+	describe("dollar-sign-safe op application", () => {
+		it("inserts replaceChildren content with `$`-sequences verbatim", async () => {
+			const html =
+				'<td class="cell">$17.50</td> $1 $& $`{} ' + "$'" + " $$ end";
+			const out = await renderFragmentLight("code", { html, language: "markup", caption: null });
+			expect(out).toContain(html);
+			// exactly one scaffold code element — no group-1 backreference duplicated it
+			expect(out.split('part="code"').length - 1).toBe(1);
+		});
+
+		it("inserts setText content with `$`-sequences verbatim", async () => {
+			const out = await renderFragmentLight("tooltip", { text: "Save $1 now ($17.50 off)", placement: "top" });
+			expect(out).toContain("Save $1 now ($17.50 off)");
+		});
+
+		it("inserts setAttr values with `$`-sequences verbatim", async () => {
+			const out = await renderFragmentLight("code", { html: "x", language: "lang-$1-$2", caption: null });
+			expect(out).toContain('class="language-lang-$1-$2"');
+			expect(out).toContain('aria-label="lang-$1-$2 code"');
+		});
+	});
+
 	it("renders progress with a computed value readout wrapped as a replaceable slot fallback", async () => {
 		const html = await renderFragmentLight("progress", { value: 33, showValue: true });
 		// the computed "33%" rides in the value slot's fallback content the consumer slot can replace

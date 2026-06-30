@@ -58,7 +58,7 @@
     const percent = Math.round(fraction(b) * 100);
     const width = b.indeterminate ? "" : ` style="width:${percent}%"`;
     const readout = b.showValue ? valueReadout(b) : "";
-    return `<div part="progress" class="${progressClass(b)}" role="progressbar"${ariaAttrs(b)}><div class="xoji-progress__track" part="track"><div class="xoji-progress__indicator" part="indicator"${width}></div></div>${readout}</div>`;
+    return `<div part="progress" class="${progressClass(b)}" role="${b.role ?? "progressbar"}"${ariaAttrs(b)}><div class="xoji-progress__track" part="track"><div class="xoji-progress__indicator" part="indicator"${width}></div></div>${readout}</div>`;
   }
   function circularHtml(b) {
     const dasharray = CIRCUMFERENCE.toFixed(3);
@@ -67,7 +67,7 @@
     const readout = b.showValue && !b.indeterminate ? valueReadout(b) : "";
     const size = b.size ?? "md";
     const sw = size === "sm" ? 3 : size === "lg" ? 5 : 4;
-    return `<div part="progress" class="${progressClass(b)}" role="progressbar"${ariaAttrs(b)}><svg class="xoji-progress__svg" viewBox="0 0 40 40" aria-hidden="true"><circle class="xoji-progress__track-ring" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"></circle><circle class="xoji-progress__indicator" part="indicator" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"${dashStyle}></circle></svg>${readout}</div>`;
+    return `<div part="progress" class="${progressClass(b)}" role="${b.role ?? "progressbar"}"${ariaAttrs(b)}><svg class="xoji-progress__svg" viewBox="0 0 40 40" aria-hidden="true"><circle class="xoji-progress__track-ring" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"></circle><circle class="xoji-progress__indicator" part="indicator" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"${dashStyle}></circle></svg>${readout}</div>`;
   }
   function progressHtml(b) {
     return (b.variant ?? "linear") === "circular" ? circularHtml(b) : linearHtml(b);
@@ -77,6 +77,7 @@
   });
   hooks.fragment.update("progress", (bindings, ops) => {
     ops.setAttr('[part="progress"]', "class", progressClass(bindings));
+    ops.setAttr('[part="progress"]', "role", bindings.role ?? "progressbar");
     ops.setAttr('[part="progress"]', "aria-valuemin", String(bindings.min ?? 0));
     ops.setAttr('[part="progress"]', "aria-valuemax", String(bindings.max ?? 100));
     if (!bindings.indeterminate) ops.setAttr('[part="progress"]', "aria-valuenow", String(bindings.value ?? 0));

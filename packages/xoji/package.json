@@ -1,6 +1,6 @@
 {
 	"name": "@xoji/core",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "A themable-derivation engine: an algorithm plus a few anchors derive a full register of CSS-ready tokens.",
 	"type": "module",
 	"license": "MIT",
@@ -17,6 +17,7 @@
 			"default": "./dist/batteries.js"
 		},
 		"./authoring": "./dist/authoring.js",
+		"./concepts": "./dist/concepts.js",
 		"./dom": "./dist/dom.js",
 		"./css": "./dist/css/index.js",
 		"./markup": "./dist/markup/index.js",
@@ -26,6 +27,7 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"dist",
+		"concepts",
 		"algorithms.d.ts",
 		"manifest.json",
 		"README.md"
@@ -35,10 +37,12 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.12.0",
 		"@xriptjs/runtime": "^0.7.0",
 		"culori": "^4.0.2",
 		"prism-svelte": "^0.5.0",
-		"prismjs": "^1.29.0"
+		"prismjs": "^1.29.0",
+		"zod": "^3.23.8"
 	},
 	"devDependencies": {
 		"@types/culori": "^4.0.1",

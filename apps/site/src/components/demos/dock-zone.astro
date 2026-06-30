@@ -1,0 +1,184 @@
+---
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+import DockZone from "@xoji/astro/DockZone.astro";
+
+const initialLayout = {
+	kind: "split",
+	direction: "row",
+	sizes: [1, 2],
+	children: [
+		{ kind: "leaf", id: "zone-0", panels: ["files"], active: 0 },
+		{
+			kind: "split",
+			direction: "column",
+			sizes: [3, 2],
+			children: [
+				{ kind: "leaf", id: "zone-1", panels: ["preview"], active: 0 },
+				{ kind: "leaf", id: "zone-2", panels: ["problems", "outline"], active: 0 },
+			],
+		},
+	],
+};
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={2} size="sm">A movable-panel workspace</Heading>
+		<Stack gap={3}>
+			<Text tone="muted">
+				The workspace opens already split into zones. Drag a tab onto another zone to move it:
+				drop over the center to join as a tab, or against an edge to split. Clicking a tab just
+				selects it. The layout is the drag physics only; the panels are your own content.
+			</Text>
+			<DockZone layout={JSON.stringify(initialLayout)} style="height: 360px;" class="dock-demo">
+				<section data-panel-id="files" data-title="Files">
+					<ul class="dz-tree">
+						<li class="dz-tree__dir">src
+							<ul>
+								<li class="dz-tree__dir">components
+									<ul>
+										<li>Button.astro</li>
+										<li class="is-active">DockZone.astro</li>
+										<li>Table.astro</li>
+									</ul>
+								</li>
+								<li>derive.ts</li>
+								<li>register.ts</li>
+							</ul>
+						</li>
+						<li>package.json</li>
+						<li>README.md</li>
+					</ul>
+				</section>
+				<section data-panel-id="outline" data-title="Outline">
+					<ul class="dz-outline">
+						<li>Overview</li>
+						<li class="dz-outline--child">Anchors</li>
+						<li class="dz-outline--child">Knobs</li>
+						<li>Derivation</li>
+						<li class="dz-outline--child">Color ramp</li>
+						<li>Coverage</li>
+					</ul>
+				</section>
+				<section data-panel-id="preview" data-title="Preview">
+					<div class="dz-preview">
+						<span class="dz-preview__eyebrow">Themed output</span>
+						<strong class="dz-preview__title">midnight-ocean</strong>
+						<p>A full token set derived from three anchors, ready to paint the whole library.</p>
+						<div class="dz-preview__swatches" aria-hidden="true">
+							<span style="background: var(--bg-1)"></span>
+							<span style="background: var(--accent)"></span>
+							<span style="background: var(--success)"></span>
+							<span style="background: var(--warn)"></span>
+							<span style="background: var(--danger)"></span>
+						</div>
+					</div>
+				</section>
+				<section data-panel-id="problems" data-title="Problems">
+					<ul class="dz-problems">
+						<li class="dz-problems--warn">Contrast 4.2:1 below AA on <code>--warn-bg</code></li>
+						<li class="dz-problems--error">Token <code>--border</code> consumed, not produced</li>
+						<li class="dz-problems--info">3 components consume <code>--accent-3</code></li>
+					</ul>
+				</section>
+			</DockZone>
+		</Stack>
+	</Card>
+</Stack>
+
+<style>
+	.dock-demo :global(section[data-panel-id]) {
+		font-size: var(--text-sm);
+		line-height: var(--leading-normal);
+		color: var(--fg-1);
+	}
+	.dock-demo :global(.dz-tree),
+	.dock-demo :global(.dz-tree ul),
+	.dock-demo :global(.dz-outline),
+	.dock-demo :global(.dz-problems) {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.dock-demo :global(.dz-tree ul) {
+		padding-inline-start: var(--space-4);
+	}
+	.dock-demo :global(.dz-tree li),
+	.dock-demo :global(.dz-outline li) {
+		padding: var(--space-0) 0;
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+	}
+	.dock-demo :global(.dz-tree__dir) {
+		color: var(--fg-0);
+		font-weight: var(--weight-medium);
+	}
+	.dock-demo :global(.dz-tree .is-active) {
+		color: var(--accent-text);
+	}
+	.dock-demo :global(.dz-outline--child) {
+		padding-inline-start: var(--space-3);
+		color: var(--fg-2);
+	}
+	.dock-demo :global(.dz-preview) {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+	.dock-demo :global(.dz-preview__eyebrow) {
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--accent-text);
+	}
+	.dock-demo :global(.dz-preview__title) {
+		font-size: var(--text-lg);
+		color: var(--fg-0);
+	}
+	.dock-demo :global(.dz-preview p) {
+		margin: 0;
+		color: var(--fg-2);
+	}
+	.dock-demo :global(.dz-preview__swatches) {
+		display: flex;
+		gap: var(--space-1);
+	}
+	.dock-demo :global(.dz-preview__swatches span) {
+		width: var(--space-6);
+		height: var(--space-6);
+		border-radius: var(--radius-sm);
+		border: var(--border-thin) solid var(--line);
+	}
+	.dock-demo :global(.dz-problems li) {
+		display: flex;
+		gap: var(--space-2);
+		padding: var(--space-1) 0;
+		border-bottom: var(--border-thin) solid var(--line);
+	}
+	.dock-demo :global(.dz-problems li::before) {
+		content: "";
+		width: var(--space-2);
+		height: var(--space-2);
+		margin-top: 0.35em;
+		flex: none;
+		border-radius: var(--radius-full);
+	}
+	.dock-demo :global(.dz-problems--warn::before) {
+		background: var(--warn);
+	}
+	.dock-demo :global(.dz-problems--error::before) {
+		background: var(--danger);
+	}
+	.dock-demo :global(.dz-problems--info::before) {
+		background: var(--info);
+	}
+	.dock-demo :global(.dz-problems code) {
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		color: var(--fg-1);
+	}
+</style>

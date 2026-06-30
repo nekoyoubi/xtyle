@@ -56,7 +56,7 @@ export class XojiField extends XojiElement {
 		return this.input?.value ?? this.getAttribute("value") ?? "";
 	}
 	set value(value: string | null | undefined) {
-		this.reflectString("value", value);
+		this.reflectStringLive("value", value, () => this.input);
 	}
 
 	get name(): string | null {
