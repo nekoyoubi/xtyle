@@ -109,7 +109,6 @@ export class XojiDockZone extends HTMLElement {
 
 	private render(): void {
 		if (!this._layout) return;
-		// Prune any panels that vanished from the DOM; keep only known ids in the tree.
 		const known = new Set(this.panels.keys());
 		const live = allPanels(this._layout).filter((p) => known.has(p));
 		for (const id of known) {
@@ -210,8 +209,8 @@ export class XojiDockZone extends HTMLElement {
 	}
 
 	private ensureOverlays(): void {
-		if (!this.dropFilm) this.dropFilm = this.film("drop");
-		if (!this.remnantFilm) this.remnantFilm = this.film("remnant");
+		this.dropFilm ??= this.film("drop");
+		this.remnantFilm ??= this.film("remnant");
 		// Re-attach last so the films layer above the freshly rendered zones.
 		this.appendChild(this.dropFilm);
 		this.appendChild(this.remnantFilm);
