@@ -47,7 +47,7 @@ export const headingManifest: ComponentManifest = {
 	anatomy: [
 		{
 			name: "heading",
-			description: "The native heading element (`<h1>`–`<h6>`) carrying the size and tone classes.",
+			description: "The native heading element (`<h1>`–`<h6>`) carrying the size and tone classes; exposed as `::part(heading)` for a consumer-side color override.",
 			selector: ".xoji-heading",
 			tokens: [
 				"--font-display",
@@ -153,6 +153,7 @@ export const headingManifest: ComponentManifest = {
 		"Pair with Text for the body copy beneath a heading; the two share the foreground ramp.",
 		"Set `level` to keep the document outline correct, then pick `size` purely for the look.",
 		"Use `size=\"xs\"` or `size=\"sm\"` with `tone=\"subtle\"` for eyebrow labels above a larger title.",
+		"A colored tone renders in its on-surface `--{tone}-vivid` ink by contract. To pin a heading to a tone's base shade instead (a brand whose accent *is* `--accent`, say), style `::part(heading)` from the consumer side: `xoji-heading::part(heading) { color: var(--accent) }`. A per-instance custom property set on the host (`xoji-heading { --accent-vivid: ... }`) does not reach the inner element's own token register, so `::part` is the reliable seam for a one-off color.",
 	],
 	a11y: [
 		"Renders a real `<h1>`–`<h6>` so the document outline and screen-reader heading navigation come for free.",

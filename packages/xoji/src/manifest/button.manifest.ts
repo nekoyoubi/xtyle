@@ -54,6 +54,40 @@ import { Button } from "@xoji/astro";
 
 <Button variant="link" tone="info" href="/docs">Read the docs</Button>`;
 
+const listRowHtml = `<xoji-button block align="start" variant="ghost" tone="neutral">
+	<svg slot="icon-start" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+		<path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h10v4H4v-4Z" />
+	</svg>
+	Recent projects
+	<svg slot="icon-end" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+		<path fill="currentColor" d="m9 6 6 6-6 6-1.4-1.4L11.2 12 7.6 8.4 9 6Z" />
+	</svg>
+</xoji-button>`;
+
+const listRowSvelte = `<Button block align="start" variant="ghost" tone="neutral" onclick={() => openRecent()}>
+	{#snippet iconStart()}
+		<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+			<path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h10v4H4v-4Z" />
+		</svg>
+	{/snippet}
+	Recent projects
+	{#snippet iconEnd()}
+		<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+			<path fill="currentColor" d="m9 6 6 6-6 6-1.4-1.4L11.2 12 7.6 8.4 9 6Z" />
+		</svg>
+	{/snippet}
+</Button>`;
+
+const listRowAstro = `<Button block align="start" variant="ghost" tone="neutral">
+	<svg slot="icon-start" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+		<path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h10v4H4v-4Z" />
+	</svg>
+	Recent projects
+	<svg slot="icon-end" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+		<path fill="currentColor" d="m9 6 6 6-6 6-1.4-1.4L11.2 12 7.6 8.4 9 6Z" />
+	</svg>
+</Button>`;
+
 export const buttonManifest: ComponentManifest = {
 	id: "button",
 	name: "Button",
@@ -161,6 +195,15 @@ export const buttonManifest: ComponentManifest = {
 			default: "false",
 			description: "Stretches the button to fill its container's width.",
 			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "align",
+			type: '"start" | "center" | "end"',
+			default: "center",
+			description:
+				"Justifies the content within the button. Visible only when the button is wider than its content (with `block` or an explicit width): `start` left-aligns the label and icons for a list-row button, `end` right-aligns them.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["start", "center", "end"],
 		},
 		{
 			name: "iconOnly",
@@ -317,6 +360,7 @@ export const buttonManifest: ComponentManifest = {
 		"Pair with Field for form submit/reset actions; bind the button `type` accordingly.",
 		"Use the `icon-start` / `icon-end` slots with an Icon component once it lands; for now any inline SVG works.",
 		"The icon-only form is the seed of a future IconButton convenience wrapper.",
+		"For a left-aligned action row (a settings entry, a recent-file row, or a nav item running a callback), pair `block` with `align=\"start\"` and hang a chevron or meta in the `icon-end` slot.",
 	],
 	a11y: [
 		"Renders a native `<button>` (or `<a>` with `href`) so keyboard and screen-reader semantics come for free.",
@@ -334,6 +378,13 @@ export const buttonManifest: ComponentManifest = {
 			title: "Variants and tones",
 			description: "The five variants and the six tones are independent. Mix freely.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "list-row",
+			title: "List-row button",
+			description:
+				"A full-width action row that runs a callback: `block` gives it the width, `align=\"start\"` left-aligns the label, and a trailing icon reads as a chevron.",
+			source: { html: listRowHtml, svelte: listRowSvelte, astro: listRowAstro },
 		},
 	],
 };

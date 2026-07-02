@@ -36,6 +36,23 @@ import Text from "@xoji/astro/Text.astro";
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Tones</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A <code>tone</code> tints the whole keycap for a primary-chord or status key.
+			</Text>
+			<Cluster gap={2} align="center">
+				<Kbd tone="accent">⌘</Kbd>
+				<Kbd tone="accent">K</Kbd>
+				<Kbd tone="success">Enter</Kbd>
+				<Kbd tone="warn">Tab</Kbd>
+				<Kbd tone="danger">Del</Kbd>
+				<Kbd tone="info">?</Kbd>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Inline</Heading>
 		<Text>
 			Press <Kbd size="sm">/</Kbd> to search, or <Kbd size="sm">Esc</Kbd> to dismiss.

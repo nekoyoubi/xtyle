@@ -25,6 +25,9 @@ import { manifest as formGroupManifest, fragmentSources as formGroupSources } fr
 import { manifest as gridManifest, fragmentSources as gridSources } from "./fragments/grid/source.generated.js";
 import { manifest as headingManifest, fragmentSources as headingSources } from "./fragments/heading/source.generated.js";
 import { manifest as kbdManifest, fragmentSources as kbdSources } from "./fragments/kbd/source.generated.js";
+import { manifest as barManifest, fragmentSources as barSources } from "./fragments/bar/source.generated.js";
+import { manifest as sparklineManifest, fragmentSources as sparklineSources } from "./fragments/sparkline/source.generated.js";
+import { manifest as pieManifest, fragmentSources as pieSources } from "./fragments/pie/source.generated.js";
 import { manifest as linkManifest, fragmentSources as linkSources } from "./fragments/link/source.generated.js";
 import { manifest as menuManifest, fragmentSources as menuSources } from "./fragments/menu/source.generated.js";
 import { manifest as numberInputManifest, fragmentSources as numberInputSources } from "./fragments/number-input/source.generated.js";
@@ -86,6 +89,9 @@ const fragments: Record<string, FragmentEntry> = {
 	grid: { manifest: gridManifest, fragmentSources: gridSources },
 	heading: { manifest: headingManifest, fragmentSources: headingSources },
 	kbd: { manifest: kbdManifest, fragmentSources: kbdSources },
+	bar: { manifest: barManifest, fragmentSources: barSources },
+	sparkline: { manifest: sparklineManifest, fragmentSources: sparklineSources },
+	pie: { manifest: pieManifest, fragmentSources: pieSources },
 	link: { manifest: linkManifest, fragmentSources: linkSources },
 	menu: { manifest: menuManifest, fragmentSources: menuSources },
 	"number-input": { manifest: numberInputManifest, fragmentSources: numberInputSources },

@@ -12,7 +12,14 @@
     const variant = b.variant ?? "soft";
     const tone = b.tone ?? "neutral";
     const size = b.size ?? "md";
-    return ["xoji-badge", `xoji-badge--${variant}`, `xoji-badge--${tone}`, size !== "md" && `xoji-badge--${size}`].filter(Boolean).join(" ");
+    const pulse = b.pulse === "fast" || b.pulse === "slow" ? b.pulse : null;
+    return [
+      "xoji-badge",
+      `xoji-badge--${variant}`,
+      `xoji-badge--${tone}`,
+      size !== "md" && `xoji-badge--${size}`,
+      pulse && b.dot && `xoji-badge--pulse-${pulse}`
+    ].filter(Boolean).join(" ");
   }
   function badgeHtml(b) {
     const tone = b.tone ?? "neutral";

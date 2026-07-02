@@ -13,4 +13,4 @@
 	let { tone = "accent", size = "md", ariaLabel = "Loading", ...rest }: Props = $props();
 </script>
 
-<xoji-spinner {...rest} {tone} {size} aria-label={ariaLabel}></xoji-spinner>
+<xoji-spinner {...rest} {tone} {size} aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}></xoji-spinner>

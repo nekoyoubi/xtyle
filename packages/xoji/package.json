@@ -1,6 +1,6 @@
 {
 	"name": "@xoji/core",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "A themable-derivation engine: an algorithm plus a few anchors derive a full register of CSS-ready tokens.",
 	"type": "module",
 	"license": "MIT",
@@ -22,7 +22,8 @@
 		"./css": "./dist/css/index.js",
 		"./markup": "./dist/markup/index.js",
 		"./host": "./dist/host/registry.js",
-		"./host/load": "./dist/host/index.js"
+		"./host/load": "./dist/host/index.js",
+		"./host/bundle": "./dist/host/bundle.js"
 	},
 	"types": "./dist/index.d.ts",
 	"files": [

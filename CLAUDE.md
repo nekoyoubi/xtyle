@@ -59,6 +59,22 @@ npx xoji mcp                                          # start the MCP server (th
 - Branches: `feature/` new work · `fix/` bug fixes · `clean/` refactor/cleanup/docs
 - **Tests and dogfood passes clean up after themselves.** Anything a test or a manual derive-and-look session starts (a site preview server, a spawned `node` process, a temp file, a held port) gets torn down before the work is considered done. Don't leave orphaned preview servers or sockets bound; a pass that walks away with processes still running hasn't finished. Kill a stray preview by its PID on the port, never with a blanket `node` kill (that takes unrelated processes with it).
 
+## ⚠️ DEMOS, DOCS, AND CODE SAMPLES ARE PART OF THE FEATURE — NEVER OPTIONAL
+
+**A change to a component or the engine is NOT DONE until its demo, its docs, and its code samples show the change. No exceptions. This is not cleanup for "later" or a follow-up task — it is half of the work, every single time.**
+
+When you add or change a prop, variant, size, state, token, or behavior, you MUST update **all** of these in the same change, or the feature effectively does not exist to anyone using the library:
+
+1. **The manifest** — `packages/xoji/src/manifest/<id>.manifest.ts`. This is the source of truth the reference page, the MCP server, and coverage all read. Update every relevant field: `props`, `variants`, `sizes`, `states`, `anatomy`, `slots`, `consumedTokens`, `a11y`, `description`, and the `examples`. A new capability with no manifest entry is invisible and uncovered.
+
+2. **The live demo** — `apps/site/src/components/demos/<id>.astro`. **This is the single most-forgotten surface, and the most important one.** The reference page's "Live demo" stage renders *this file*, not the manifest examples. A manifest `example` is a **code snippet** shown in the "Code" section; it is NOT a live demo. If a new `tone`/`pulse`/`variant`/state isn't added to the demo `.astro`, then someone browsing the docs sees the component render without ever seeing the thing you just built. **Adding a manifest example is not enough. Update the demo file so the new behavior is on screen.**
+
+3. **The code samples** — every `example.source` (`html` / `svelte` / `astro`) in the manifest must actually exercise the new capability and stay accurate and copy-pasteable. Stale or wrong samples are worse than none.
+
+**Then prove it with your own eyes.** Build the site and actually load the demo page (browser/screenshot, not just a passing test) to confirm the new thing renders in the live demo under a derived theme. "The manifest example has it" is not proof the demo shows it — those are different surfaces, and the demo is the one users look at.
+
+**The failure this rule exists to prevent:** shipping a feature that works in code and passes tests but appears *nowhere* in the docs a user actually browses — so it's built, but undiscoverable. If you catch yourself thinking "the code's done, the demos can come later," stop: the demos are not later, they are now, in this change.
+
 ## Release Process
 
 Mirrors xript. The version is cut at the **start** of a development cycle, not on the tail of finished work: a full spread bump across every lib up front, so all of `@xoji/*` always share one version. Two scripts handle the mechanics:

@@ -2,6 +2,7 @@
 import { renderFragmentLight } from "@xoji/core/elements/ssr";
 
 type StatTrend = "up" | "down" | "flat";
+type StatSentiment = "positive" | "negative" | "neutral";
 type StatAlign = "start" | "center";
 type Size = "sm" | "md" | "lg";
 
@@ -9,10 +10,12 @@ interface Props {
 	label?: string;
 	delta?: string;
 	trend?: StatTrend;
+	/** The delta's color reading. Omit to derive it from `trend` (up→positive, down→negative, flat→neutral). */
+	sentiment?: StatSentiment;
 	caption?: string;
 	size?: Size;
 	align?: StatAlign;
-	/** Lay the stat out horizontally — value, label, and trend delta on one line, like a ticker. */
+	/** Lay the stat out horizontally: value, label, and trend delta on one line, like a ticker. */
 	inline?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -25,6 +28,7 @@ const {
 	label,
 	delta,
 	trend = "flat",
+	sentiment,
 	caption,
 	size = "md",
 	align = "start",
@@ -38,6 +42,7 @@ const bindings = {
 	label: label ?? null,
 	delta: delta ?? null,
 	trend,
+	sentiment,
 	caption: caption ?? null,
 	size,
 	align,
@@ -52,6 +57,7 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	label={label}
 	delta={delta}
 	trend={trend}
+	sentiment={sentiment}
 	caption={caption}
 	size={size}
 	align={align}

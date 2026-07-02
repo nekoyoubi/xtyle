@@ -1,0 +1,84 @@
+---
+import Bar from "@xoji/astro/Bar.astro";
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Grid from "@xoji/astro/Grid.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+
+const quarters = ["Q1", "Q2", "Q3", "Q4"];
+const revenue = [
+	{ name: "Web", values: [12, 19, 15, 22] },
+	{ name: "Mobile", values: [8, 14, 18, 25] },
+];
+
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const load = [
+	{ name: "CPU", values: [30, 45, 28, 52, 40] },
+	{ name: "IO", values: [20, 18, 34, 22, 30] },
+	{ name: "Net", values: [12, 22, 16, 28, 18] },
+];
+
+const traffic = [{ name: "Visits", values: [40, 62, 55, 78, 90, 72, 60] }];
+const week = ["S", "M", "T", "W", "T", "F", "S"];
+
+const languages = ["Rust", "TypeScript", "Svelte", "Astro", "CSS"];
+const lines = [{ name: "Lines", values: [4200, 3800, 1500, 900, 2100] }];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Grouped series</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Two series across four quarters, colored from the <code>accents</code> scheme.
+				Hover or focus a bar for its value.
+			</Text>
+			<Bar categories={quarters} series={revenue} scheme="accents" label="Revenue by quarter" height={260} showValues />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Stacked</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>stacked</code> folds each day's tiers into one bar, here on the <code>thermal</code> scale.
+			</Text>
+			<Bar categories={days} series={load} scheme="thermal" stacked label="Load by tier" height={260} />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Horizontal</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>orientation="horizontal"</code> runs bars rightward with the categories down
+				the side, better for long labels. A single series colors by category, so each
+				bar takes its own <code>skittles</code> hue.
+			</Text>
+			<Bar categories={languages} series={lines} orientation="horizontal" scheme="skittles" label="Lines by language" height={220} showValues />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">One scheme, four flavors</Heading>
+		<Grid minColWidth="16rem" gap={4}>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">skittles</Text>
+				<Bar categories={quarters} series={revenue} scheme="skittles" label="Skittles scheme" height={180} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">status</Text>
+				<Bar categories={quarters} series={revenue} scheme="status" label="Status scheme" height={180} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">thermal, reversed</Text>
+				<Bar categories={quarters} series={revenue} scheme="thermal" reverse label="Thermal reversed" height={180} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">single series</Text>
+				<Bar categories={week} series={traffic} scheme="accents" label="Weekly visits" height={180} />
+			</Stack>
+		</Grid>
+	</Card>
+</Stack>

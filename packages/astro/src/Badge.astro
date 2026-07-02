@@ -10,6 +10,7 @@ interface Props {
 	tone?: BadgeTone;
 	size?: Size;
 	dot?: boolean;
+	pulse?: boolean | "slow" | "fast";
 	count?: string | number;
 	removable?: boolean;
 	removeLabel?: string;
@@ -25,6 +26,7 @@ const {
 	tone = "neutral",
 	size = "md",
 	dot = false,
+	pulse,
 	count,
 	removable = false,
 	removeLabel,
@@ -45,6 +47,7 @@ const bindings = {
 	tone,
 	size,
 	dot,
+	pulse: pulse === true ? "slow" : pulse || null,
 	count: count ?? null,
 	removable,
 	removeLabel: resolvedRemoveLabel,
@@ -58,6 +61,7 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	tone={tone}
 	size={size}
 	dot={dot || undefined}
+	pulse={pulse === true ? "slow" : pulse || undefined}
 	count={count !== undefined && count !== null && count !== "" ? String(count) : undefined}
 	removable={removable || undefined}
 	remove-label={resolvedRemoveLabel}

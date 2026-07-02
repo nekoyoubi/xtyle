@@ -5,6 +5,7 @@ import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/stat/source.generated.js";
 
 type StatTrend = "up" | "down" | "flat";
+type StatSentiment = "positive" | "negative" | "neutral";
 type StatAlign = "start" | "center";
 
 export class XojiStat extends XojiElement {
@@ -17,7 +18,7 @@ export class XojiStat extends XojiElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["label", "delta", "trend", "caption", "size", "align", "inline"];
+		return ["label", "delta", "trend", "sentiment", "caption", "size", "align", "inline"];
 	}
 
 	get label(): string | null {
@@ -39,6 +40,14 @@ export class XojiStat extends XojiElement {
 	}
 	set trend(value: StatTrend) {
 		this.setAttribute("trend", value);
+	}
+
+	/** The color reading of the delta. Omit to derive it from `trend` (up→positive, down→negative, flat→neutral). */
+	get sentiment(): StatSentiment | null {
+		return this.getAttribute("sentiment") as StatSentiment | null;
+	}
+	set sentiment(value: StatSentiment | null | undefined) {
+		this.reflectString("sentiment", value);
 	}
 
 	get caption(): string | null {
@@ -78,6 +87,7 @@ export class XojiStat extends XojiElement {
 			label: this.label,
 			delta: this.delta,
 			trend: this.trend,
+			sentiment: this.sentiment ?? undefined,
 			caption: this.caption,
 			size: this.size,
 			align: this.align,
@@ -85,13 +95,13 @@ export class XojiStat extends XojiElement {
 		};
 	}
 
-	/** A signature of the state ops can't express incrementally — the label, delta, and caption
-	 * text (each rendered into a shadow span, not patched on update) and the trend (which swaps
-	 * the delta's modifier class and its icon). Keying on the text values, not just presence,
-	 * means a content-only edit forces a rebuild rather than going stale; size/align stay cheap
-	 * class patches. */
+	/** A signature of the state ops can't express incrementally: the label, delta, and caption
+	 * text (each rendered into a shadow span, not patched on update), the trend (which swaps the
+	 * delta's icon and is the default color signal), and the sentiment (which swaps the delta's
+	 * color modifier class). Keying on the text values, not just presence, means a content-only
+	 * edit forces a rebuild rather than going stale; size/align stay cheap class patches. */
 	private shapeSignature(): string {
-		return `${this.label}|${this.delta}|${this.caption}|${this.trend}`;
+		return `${this.label}|${this.delta}|${this.caption}|${this.trend}|${this.sentiment}`;
 	}
 
 	protected template(): string {

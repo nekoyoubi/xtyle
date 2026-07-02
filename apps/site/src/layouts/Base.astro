@@ -214,10 +214,10 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 				];
 				let value = -seconds;
 				let unit: Intl.RelativeTimeFormatUnit = "second";
-				for (const [span, nextUnit] of steps) {
+				for (const [span, stepUnit] of steps) {
+					unit = stepUnit;
 					if (Math.abs(value) < span) break;
 					value = Math.round(value / span);
-					unit = nextUnit;
 				}
 				return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
 					value,

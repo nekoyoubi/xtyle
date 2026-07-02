@@ -14,6 +14,7 @@
       b.invalid && "xoji-field--invalid",
       b.disabled && "xoji-field--disabled",
       b.readonly && "xoji-field--readonly",
+      b.mono && "xoji-field--mono",
       size !== "md" && `xoji-field--${size}`
     ].filter(Boolean).join(" ");
   }

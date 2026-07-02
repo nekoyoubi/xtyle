@@ -28,7 +28,8 @@
       const isSelected = key === selected;
       const tabindex = isSelected && !tab.disabled ? "0" : "-1";
       const disabledAttr = tab.disabled ? ' disabled aria-disabled="true"' : "";
-      return `<button class="xoji-tabs__tab" part="tab" type="button" role="tab" id="${uid}-tab-${i}" data-key="${key}" aria-selected="${String(isSelected)}" aria-controls="${uid}-panel-${i}" tabindex="${tabindex}"${disabledAttr}>${tab.label}</button>`;
+      const controls = bindings.tablist ? "" : ` aria-controls="${uid}-panel-${i}"`;
+      return `<button class="xoji-tabs__tab" part="tab" type="button" role="tab" id="${uid}-tab-${i}" data-key="${key}" aria-selected="${String(isSelected)}"${controls} tabindex="${tabindex}"${disabledAttr}>${tab.label}</button>`;
     }).join("");
   }
   function panels(bindings, selected) {
@@ -49,7 +50,7 @@
     const tablistAttr = bindings.labelledby ? "aria-labelledby" : "aria-label";
     if (tablistLabel) ops.setAttr("[data-tablist]", tablistAttr, tablistLabel);
     ops.replaceChildren("[data-tablist]", tabButtons(bindings, selected));
-    ops.replaceChildren("[data-panels]", panels(bindings, selected));
+    ops.replaceChildren("[data-panels]", bindings.tablist ? "" : panels(bindings, selected));
   });
   hooks.fragment.update("tabs", (bindings, ops) => {
     const selected = selectedKey(bindings);

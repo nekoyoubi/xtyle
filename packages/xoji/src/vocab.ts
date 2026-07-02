@@ -63,6 +63,9 @@ export type Size = "sm" | "md" | "lg";
 /** The button's variant set. */
 export type ButtonVariant = "solid" | "outline" | "ghost" | "subtle" | "link";
 
+/** How a button justifies its content when it is wider than that content. */
+export type ButtonAlign = "start" | "center" | "end";
+
 /** The heading level — maps to the `<h1>`–`<h6>` semantic tag. */
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 

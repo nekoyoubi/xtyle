@@ -38,6 +38,7 @@ export const menuCss = `
 	padding: var(--space-1);
 	font-family: var(--font-sans);
 	font-size: var(--text-sm);
+	line-height: var(--leading-normal);
 	background: var(--surface-overlay);
 	border: var(--border-thin) solid var(--surface-overlay-border);
 	border-radius: var(--radius-md);

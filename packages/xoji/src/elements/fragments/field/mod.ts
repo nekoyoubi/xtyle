@@ -22,6 +22,7 @@ interface FieldBindings {
 	description?: string | null;
 	error?: string | null;
 	ariaLabel?: string | null;
+	mono?: boolean;
 	inputId?: string;
 	descriptionId?: string;
 	errorId?: string;
@@ -61,6 +62,7 @@ function fieldClass(b: FieldBindings): string {
 		b.invalid && "xoji-field--invalid",
 		b.disabled && "xoji-field--disabled",
 		b.readonly && "xoji-field--readonly",
+		b.mono && "xoji-field--mono",
 		size !== "md" && `xoji-field--${size}`,
 	]
 		.filter(Boolean)

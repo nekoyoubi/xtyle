@@ -53,6 +53,7 @@ export const fieldCss = `
 }
 .xoji-field--sm .xoji-field__input { font-size: var(--text-sm); padding: var(--space-1) var(--space-2); }
 .xoji-field--lg .xoji-field__input { font-size: var(--text-lg); padding: var(--space-3) var(--space-4); }
+.xoji-field--mono .xoji-field__input { font-family: var(--font-mono); }
 .xoji-field__adornment {
 	display: inline-flex;
 	align-items: center;

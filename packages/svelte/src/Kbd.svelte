@@ -1,19 +1,21 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
+	import type { FullTone as KbdTone } from "@xoji/core";
 
 	type KbdSize = "sm" | "md" | "lg";
 
 	interface Props {
 		size?: KbdSize;
+		tone?: KbdTone;
 		children?: Snippet;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
 
-	let { size = "md", children, ...rest }: Props = $props();
+	let { size = "md", tone, children, ...rest }: Props = $props();
 </script>
 
-<xoji-kbd {...rest} {size}>
+<xoji-kbd {...rest} {size} {tone}>
 	{@render children?.()}
 </xoji-kbd>

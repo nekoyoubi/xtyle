@@ -134,8 +134,8 @@ export class XojiTooltip extends XojiElement {
 
 	private show = (): void => {
 		window.clearTimeout(this.hideTimer);
-		this.reposition();
 		this.open = true;
+		this.reposition();
 	};
 
 	/** Flip to the placement that fits the viewport, then clamp the cross-axis so the tip never

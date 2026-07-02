@@ -1,10 +1,12 @@
 ---
 import { renderFragmentLight } from "@xoji/core/elements/ssr";
 
+import type { FullTone as KbdTone } from "@xoji/core";
 type KbdSize = "sm" | "md" | "lg";
 
 interface Props {
 	size?: KbdSize;
+	tone?: KbdTone;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -12,14 +14,14 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { size = "md", static: isStatic = false, class: extra, ...rest } = Astro.props;
+const { size = "md", tone, static: isStatic = false, class: extra, ...rest } = Astro.props;
 
-const bindings = { size };
+const bindings = { size, tone };
 const chrome = await renderFragmentLight("kbd", bindings);
 const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-kbd size={size} class={extra} set:html={composed} {...rest} />
+<xoji-kbd size={size} tone={tone} class={extra} set:html={composed} {...rest} />
 
 {!isStatic && <script>import "@xoji/core/elements";</script>}

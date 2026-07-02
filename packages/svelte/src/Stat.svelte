@@ -3,6 +3,7 @@
 	import type { Snippet } from "svelte";
 
 	type StatTrend = "up" | "down" | "flat";
+	type StatSentiment = "positive" | "negative" | "neutral";
 	type StatAlign = "start" | "center";
 	type Size = "sm" | "md" | "lg";
 
@@ -10,6 +11,8 @@
 		label?: string;
 		delta?: string;
 		trend?: StatTrend;
+		/** The delta's color reading. Omit to derive it from `trend` (up→positive, down→negative, flat→neutral). */
+		sentiment?: StatSentiment;
 		caption?: string;
 		size?: Size;
 		align?: StatAlign;
@@ -23,6 +26,7 @@
 		label,
 		delta,
 		trend = "flat",
+		sentiment,
 		caption,
 		size = "md",
 		align = "start",
@@ -32,6 +36,6 @@
 	}: Props = $props();
 </script>
 
-<xoji-stat {...rest} {label} {delta} {trend} {caption} {size} {align} inline={inline || undefined}>
+<xoji-stat {...rest} {label} {delta} {trend} {sentiment} {caption} {size} {align} inline={inline || undefined}>
 	{@render children?.()}
 </xoji-stat>

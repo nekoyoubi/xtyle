@@ -18,6 +18,11 @@ interface Props {
 	description?: string;
 	error?: string;
 	"aria-label"?: string;
+	/** Type-ahead suggestions: `string[]` or `{ value, label }[]`, rendered into the field's `<datalist>`
+	 * once the element upgrades. Needs the runtime (not `static`), since the datalist is wired on the client. */
+	options?: ReadonlyArray<string | { value: string; label?: string }>;
+	/** Render the input in the monospace stack for code-shaped values. */
+	mono?: boolean;
 	/** Render zero-JS: emit the declarative shadow but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -40,6 +45,8 @@ const {
 	description,
 	error,
 	"aria-label": ariaLabel,
+	options,
+	mono = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -67,6 +74,7 @@ const bindings = {
 	invalid,
 	required,
 	clearable,
+	mono,
 	description: description ?? null,
 	error: error ?? null,
 	ariaLabel: ariaLabel ?? null,
@@ -96,9 +104,11 @@ const composed = composeFallbackSlot(composeFallbackSlot(light, "reveal-icon", r
 	invalid={invalid || undefined}
 	required={required || undefined}
 	clearable={clearable || undefined}
+	mono={mono || undefined}
 	description={description}
 	error={error}
 	aria-label={ariaLabel}
+	options={options ? JSON.stringify(options) : undefined}
 	class={extra}
 	set:html={composed}
 	{...rest}

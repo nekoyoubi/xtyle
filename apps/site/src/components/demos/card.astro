@@ -50,6 +50,19 @@ const TONE_GROUPS = [
 				</Text>
 			</Stack>
 		</Card>
+
+		<Card action onclick="const n = this.querySelector('[data-count]'); n.textContent = String(Number(n.textContent) + 1)">
+			<Stack gap={2}>
+				<Cluster gap={2} justify="between" align="center">
+					<Heading level={2} size="md">Action</Heading>
+					<Badge tone="accent" variant="soft" size="sm">click / Enter</Badge>
+				</Cluster>
+				<Text tone="muted" size="sm">
+					The whole card is the button — click it, or Tab to it and press Enter or
+					Space. Activated <span data-count>0</span> times.
+				</Text>
+			</Stack>
+		</Card>
 	</Grid>
 
 	<Card>

@@ -1,10 +1,15 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
 
 const htmlExample = `<xoji-kbd>Ctrl</xoji-kbd>
 <xoji-kbd>K</xoji-kbd>
 
 <xoji-kbd size="sm">Esc</xoji-kbd>
 <xoji-kbd size="lg">Enter</xoji-kbd>`;
+
+const toneHtmlExample = `<xoji-kbd tone="accent">⌘</xoji-kbd>
+<xoji-kbd tone="success">Enter</xoji-kbd>
+<xoji-kbd tone="danger">Del</xoji-kbd>`;
 
 const svelteExample = `<script lang="ts">
 	import { Kbd } from "@xoji/svelte";
@@ -13,6 +18,13 @@ const svelteExample = `<script lang="ts">
 <Kbd>Ctrl</Kbd>
 <Kbd>K</Kbd>`;
 
+const toneSvelteExample = `<script lang="ts">
+	import { Kbd } from "@xoji/svelte";
+</script>
+
+<Kbd tone="accent">⌘</Kbd>
+<Kbd tone="danger">Del</Kbd>`;
+
 const astroExample = `---
 import Kbd from "@xoji/astro/Kbd.astro";
 ---
@@ -20,13 +32,20 @@ import Kbd from "@xoji/astro/Kbd.astro";
 <Kbd>Ctrl</Kbd>
 <Kbd>K</Kbd>`;
 
+const toneAstroExample = `---
+import Kbd from "@xoji/astro/Kbd.astro";
+---
+
+<Kbd tone="accent">⌘</Kbd>
+<Kbd tone="danger">Del</Kbd>`;
+
 export const kbdManifest: ComponentManifest = {
 	id: "kbd",
 	name: "Kbd",
 	category: "data-display",
 	summary: "A keycap for the keys in a shortcut.",
 	description:
-		"Kbd renders a single key as a physical keycap: a mono-faced label on a raised surface, the depth read from a heavier bottom edge rather than a drop shadow, so it sits cleanly inline in running text. It carries no layout of its own: set a few side by side in a `Cluster` to spell a chord (`Ctrl` `+` `K`). Everything about its look is derived chrome: the surface, the edge, the radius all come from the same tokens the rest of the theme does, so a keycap matches the UI it documents. The `size` prop steps it with the surrounding type from `sm` to `lg`.",
+		"Kbd renders a single key as a physical keycap: a mono-faced label on a raised surface, the depth read from a heavier bottom edge rather than a drop shadow, so it sits cleanly inline in running text. It carries no layout of its own: set a few side by side in a `Cluster` to spell a chord (`Ctrl` `+` `K`). Everything about its look is derived chrome: the surface, the edge, the radius all come from the same tokens the rest of the theme does, so a keycap matches the UI it documents. The `size` prop steps it with the surrounding type from `sm` to `lg`, and an optional `tone` tints the whole keycap (face, edge, and label) to any of the semantic roles or named hues for a primary-chord or status key.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -44,6 +63,14 @@ export const kbdManifest: ComponentManifest = {
 			description: "The keycap size, stepping with the type scale: `sm`, `md`, or `lg`.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["sm", "md", "lg"],
+		},
+		{
+			name: "tone",
+			type: "KbdTone",
+			description:
+				"Tints the keycap face, edge, and label to a semantic role (accent, success, danger, …) or a named hue (red … black). Omit for the neutral keycap.",
+			bindings: ["html", "svelte", "astro"],
+			options: [...FULL_TONES],
 		},
 	],
 	variants: [],
@@ -73,6 +100,7 @@ export const kbdManifest: ComponentManifest = {
 		"--text-lg",
 		"--weight-medium",
 		"--leading-tight",
+		...FULL_TONES.flatMap((t) => [`--${t}`, `--${t}-bg`, `--${t}-text`]),
 	],
 	composition: [
 		"Spell a chord by setting keys in a `Cluster` with a small gap: `Ctrl` `+` `K`.",
@@ -89,6 +117,12 @@ export const kbdManifest: ComponentManifest = {
 			title: "Keys and sizes",
 			description: "Single keys and a chord, shown across the three sizes.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "toned-keys",
+			title: "Toned keycaps",
+			description: "A `tone` tints the whole keycap for a primary-chord or status key.",
+			source: { html: toneHtmlExample, svelte: toneSvelteExample, astro: toneAstroExample },
 		},
 	],
 };

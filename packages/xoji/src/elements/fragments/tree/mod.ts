@@ -4,6 +4,12 @@ interface OpsBuilder {
 	toggle(selector: string, condition: boolean): void;
 }
 
+interface TreeAction {
+	id: string;
+	label: string;
+	icon?: string;
+}
+
 interface TreeNode {
 	label: string;
 	value?: string;
@@ -12,6 +18,8 @@ interface TreeNode {
 	locked?: boolean;
 	selected?: boolean;
 	disabled?: boolean;
+	badge?: string;
+	actions?: TreeAction[];
 	children?: TreeNode[];
 }
 
@@ -54,6 +62,7 @@ interface Intent {
 	expandKey?: string;
 	expand?: boolean;
 	activate?: string;
+	emit?: { type: string; detail?: unknown };
 	preventDefault?: boolean;
 	stopPropagation?: boolean;
 }
@@ -99,6 +108,20 @@ function rovingTarget(bindings: TreeBindings): string | null {
 	return first ? nodeKey(first) : null;
 }
 
+function treeTrailing(node: TreeNode, value: string, isLink: boolean): string {
+	const badge = node.badge ? `<span class="xoji-tree__badge" part="badge" aria-hidden="true">${escapeHtml(node.badge)}</span>` : "";
+	const actionItems = !isLink && node.actions ? node.actions : [];
+	const actions = actionItems.length
+		? `<span class="xoji-tree__actions" part="actions">${actionItems
+				.map(
+					(a) =>
+						`<button type="button" class="xoji-tree__action" part="row-action" data-action="${escapeAttr(a.id)}" data-value="${escapeAttr(value)}" aria-label="${escapeAttr(a.label)}" title="${escapeAttr(a.label)}" tabindex="-1">${escapeHtml(a.icon ?? a.label)}</button>`,
+				)
+				.join("")}</span>`
+		: "";
+	return badge || actions ? `<span class="xoji-tree__trailing">${badge}${actions}</span>` : "";
+}
+
 function buildNodes(
 	nodes: TreeNode[],
 	level: number,
@@ -125,6 +148,7 @@ function buildNodes(
 				? `<a class="xoji-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">`
 				: `<div class="xoji-tree__row" part="row" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">`;
 			const rowClose = isLink ? "</a>" : "</div>";
+			const trailing = treeTrailing(node, value, isLink);
 			const group = hasChildren
 				? `<ul class="xoji-tree__group" role="group"${open ? "" : " hidden"}>${buildNodes(node.children as TreeNode[], level + 1, selectedValue, expanded, roving)}</ul>`
 				: "";
@@ -133,7 +157,7 @@ function buildNodes(
 			const lockedAttr = locked ? ` data-locked="true"` : "";
 			const itemClass = locked ? "xoji-tree__item xoji-tree__item--locked" : "xoji-tree__item";
 			const tabindex = value === roving ? "0" : "-1";
-			return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${rowClose}${group}</li>`;
+			return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
 		})
 		.join("");
 }
@@ -185,6 +209,15 @@ xript.exports.register("selectRow", (payload: unknown): Intent => {
 	const isLink = e.tagName === "A";
 	if (isLink) return { select: key, focus: key };
 	return { select: key, focus: key, expandKey: key };
+});
+
+xript.exports.register("rowAction", (payload: unknown): Intent => {
+	const e = payload as EventPayload;
+	const action = e.dataset?.action;
+	const value = e.dataset?.value;
+	if (!action || value === undefined) return { stopPropagation: true };
+	// stopPropagation so the row's own selectRow (a bubbling sibling handler) doesn't fire too.
+	return { emit: { type: "tree-action", detail: { value, action } }, stopPropagation: true, preventDefault: true };
 });
 
 xript.exports.register("toggleTwisty", (payload: unknown): Intent => {

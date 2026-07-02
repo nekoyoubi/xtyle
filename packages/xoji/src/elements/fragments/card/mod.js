@@ -5,7 +5,8 @@
     return [
       "xoji-card",
       b.overlay && "xoji-card--overlay",
-      b.interactive && "xoji-card--interactive",
+      (b.interactive || b.action) && "xoji-card--interactive",
+      b.action && "xoji-card--action",
       b.compact && "xoji-card--compact",
       b.tone && `xoji-card--${b.tone}`,
       b.tone && "xoji-card--toned"

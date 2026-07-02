@@ -113,7 +113,7 @@ export class XojiTree extends XojiElement {
 		};
 	}
 
-	/** A pre-order flatten of the currently-visible rows — the keyboard handler's nav surface. */
+	/** A pre-order flatten of the currently-visible rows: the keyboard handler's nav surface. */
 	private navContext(): { rows: NavRow[] } {
 		const expanded = this.ensureExpanded();
 		const rows: NavRow[] = [];
@@ -155,6 +155,9 @@ export class XojiTree extends XojiElement {
 	private applyIntent(intent: FragmentIntent, event: Event): void {
 		if (intent.preventDefault) event.preventDefault();
 		if (intent.stopPropagation) event.stopPropagation();
+		if (intent.emit) {
+			this.dispatchEvent(new CustomEvent(intent.emit.type, { bubbles: true, composed: true, detail: intent.emit.detail }));
+		}
 		if (intent.select !== undefined) {
 			this.selectedValue = intent.select;
 			this.dispatchEvent(new CustomEvent("select", { bubbles: true, composed: true, detail: { value: intent.select } }));

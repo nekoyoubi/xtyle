@@ -53,7 +53,7 @@ export const textManifest: ComponentManifest = {
 	anatomy: [
 		{
 			name: "text",
-			description: "The paragraph or span element carrying the size, weight, leading, tone, and mono classes.",
+			description: "The paragraph or span element carrying the size, weight, leading, tone, and mono classes; exposed as `::part(text)` for a consumer-side color override.",
 			selector: ".xoji-text",
 			tokens: ["--font-sans", "--text-body", "--weight-normal", "--leading-normal", "--fg-0"],
 		},
@@ -176,6 +176,7 @@ export const textManifest: ComponentManifest = {
 		"Pair with Heading for titles; Text carries the running copy beneath them.",
 		"Use `mono` for inline code spans; for code blocks reach for a dedicated Code component once it lands.",
 		"Compose `tone=\"subtle\"` with `size=\"xs\"` for captions and metadata under cards and figures.",
+		"A colored tone renders in its on-surface `--{tone}-vivid` ink by contract. To pin text to a tone's base shade instead, style `::part(text)` from the consumer side: `xoji-text::part(text) { color: var(--accent) }`. A per-instance custom property set on the host does not reach the inner element's own token register, so `::part` is the reliable seam for a one-off color.",
 	],
 	a11y: [
 		"Renders a native `<p>` or `<span>`, so the semantics carry meaning; no ARIA needed.",

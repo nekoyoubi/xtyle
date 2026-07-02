@@ -17,6 +17,7 @@
 		required?: boolean;
 		error?: string;
 		ariaLabel?: string;
+		mono?: boolean;
 		onchange?: (event: Event) => void;
 		oninput?: (event: Event) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -36,6 +37,7 @@
 		required = false,
 		error = "",
 		ariaLabel,
+		mono = false,
 		onchange,
 		oninput,
 		...rest
@@ -64,8 +66,9 @@
 	disabled={disabled || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	mono={mono || undefined}
 	{error}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	oninput={handleInput}
 	onchange={handleChange}
 ></xoji-textarea>

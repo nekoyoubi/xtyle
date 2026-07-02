@@ -30,8 +30,9 @@
 						"--fg-2",
 						"--fg-3",
 						"--neutral-text",
-						"--success-text",
-						"--danger-text",
+						"--success-vivid",
+						"--danger-vivid",
+						"--neutral-vivid",
 						"--space-1",
 						"--space-2"
 					]

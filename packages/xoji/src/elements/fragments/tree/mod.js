@@ -30,6 +30,14 @@
     const first = items[0];
     return first ? nodeKey(first) : null;
   }
+  function treeTrailing(node, value, isLink) {
+    const badge = node.badge ? `<span class="xoji-tree__badge" part="badge" aria-hidden="true">${escapeHtml(node.badge)}</span>` : "";
+    const actionItems = !isLink && node.actions ? node.actions : [];
+    const actions = actionItems.length ? `<span class="xoji-tree__actions" part="actions">${actionItems.map(
+      (a) => `<button type="button" class="xoji-tree__action" part="row-action" data-action="${escapeAttr(a.id)}" data-value="${escapeAttr(value)}" aria-label="${escapeAttr(a.label)}" title="${escapeAttr(a.label)}" tabindex="-1">${escapeHtml(a.icon ?? a.label)}</button>`
+    ).join("")}</span>` : "";
+    return badge || actions ? `<span class="xoji-tree__trailing">${badge}${actions}</span>` : "";
+  }
   function buildNodes(nodes, level, selectedValue, expanded, roving) {
     return nodes.map((node) => {
       const hasChildren = !!(node.children && node.children.length);
@@ -44,13 +52,14 @@
       const isLink = !!node.href;
       const rowOpen = isLink ? `<a class="xoji-tree__row" part="row" href="${escapeAttr(node.href)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">` : `<div class="xoji-tree__row" part="row" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">`;
       const rowClose = isLink ? "</a>" : "</div>";
+      const trailing = treeTrailing(node, value, isLink);
       const group = hasChildren ? `<ul class="xoji-tree__group" role="group"${open ? "" : " hidden"}>${buildNodes(node.children, level + 1, selectedValue, expanded, roving)}</ul>` : "";
       const expandedAttr = hasChildren ? ` aria-expanded="${String(open)}"` : "";
       const disabledAttr = disabled ? ` aria-disabled="true"` : "";
       const lockedAttr = locked ? ` data-locked="true"` : "";
       const itemClass = locked ? "xoji-tree__item xoji-tree__item--locked" : "xoji-tree__item";
       const tabindex = value === roving ? "0" : "-1";
-      return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${rowClose}${group}</li>`;
+      return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
     }).join("");
   }
   function tree(bindings) {
@@ -97,6 +106,13 @@
     const isLink = e.tagName === "A";
     if (isLink) return { select: key, focus: key };
     return { select: key, focus: key, expandKey: key };
+  });
+  xript.exports.register("rowAction", (payload) => {
+    const e = payload;
+    const action = e.dataset?.action;
+    const value = e.dataset?.value;
+    if (!action || value === void 0) return { stopPropagation: true };
+    return { emit: { type: "tree-action", detail: { value, action } }, stopPropagation: true, preventDefault: true };
   });
   xript.exports.register("toggleTwisty", (payload) => {
     const e = payload;

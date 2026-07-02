@@ -121,6 +121,8 @@ ${linkRules}
 	display: flex;
 	width: 100%;
 }
+.xoji-button--align-start { justify-content: flex-start; }
+.xoji-button--align-end { justify-content: flex-end; }
 .xoji-button--icon {
 	padding: var(--space-2);
 	aspect-ratio: 1;

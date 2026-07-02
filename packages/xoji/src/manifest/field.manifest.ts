@@ -25,6 +25,25 @@ const htmlExample = `<xoji-field label="Email" name="email" type="email" placeho
 	<span slot="prefix">$</span>
 </xoji-field>`;
 
+const htmlOptionsExample = `<xoji-field id="branch" label="Branch" name="branch" placeholder="Type to filter…"></xoji-field>
+<script>
+	document.getElementById("branch").options = ["main", "develop", "release/1.0", "hotfix"];
+</script>`;
+
+const svelteOptionsExample = `<script lang="ts">
+	import { Field } from "@xoji/svelte";
+	const branches = ["main", "develop", "release/1.0", "hotfix"];
+</script>
+
+<Field label="Branch" name="branch" placeholder="Type to filter…" options={branches} />`;
+
+const astroOptionsExample = `---
+import { Field } from "@xoji/astro";
+const branches = ["main", "develop", "release/1.0", "hotfix"];
+---
+
+<Field label="Branch" name="branch" placeholder="Type to filter…" options={branches} />`;
+
 const svelteExample = `<script lang="ts">
 	import { Field } from "@xoji/svelte";
 	let email = $state("");
@@ -215,6 +234,21 @@ export const fieldManifest: ComponentManifest = {
 			description: "Shows a built-in clear button when the field has a value. (html / svelte: needs JS.)",
 			bindings: ["html", "svelte"],
 		},
+		{
+			name: "options",
+			type: "string[] | { value: string; label?: string }[]",
+			description:
+				"Type-ahead suggestions. Field renders them into a `<datalist>` it owns inside the input's own root and wires the input's `list` to it, so suggestions work even though the input lives in a shadow root (where a page-level `<datalist>` could never reach it). Set the JS property in html / svelte; the Astro binding takes a JSON array attribute. Needs the runtime. (html / svelte / astro on hydrate.)",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "mono",
+			type: "boolean",
+			default: "false",
+			description:
+				"Renders the input in the monospace stack (`--font-mono`) for code-shaped values: identifiers, paths, hex colors, expressions, env values. A presentational swap on an existing token, so it bakes into the zero-JS Astro markup too.",
+			bindings: ["html", "svelte", "astro"],
+		},
 	],
 	variants: [
 		{
@@ -291,6 +325,7 @@ export const fieldManifest: ComponentManifest = {
 	],
 	consumedTokens: [
 		"--font-sans",
+		"--font-mono",
 		"--text-sm",
 		"--text-lg",
 		"--weight-medium",
@@ -327,6 +362,8 @@ export const fieldManifest: ComponentManifest = {
 		"Pair with Button (`type=\"submit\"`) inside a native `<form>`; the form-associated element submits its value by `name`.",
 		"Use the `prefix` / `suffix` slots with any inline SVG or text node; they'll take an Icon component directly when one ships.",
 		"The clear button and password reveal are JS-driven, so they appear in the html and svelte bindings; the Astro binding is zero-JS and omits them.",
+		"For type-ahead, pass `options` rather than a hand-authored `<datalist>`; a page-level datalist can't reach the input across the shadow boundary, so Field owns the list itself.",
+		"Native input attributes (`spellcheck`, `inputmode`, `autocomplete`, `autocapitalize`, `autocorrect`, `enterkeyhint`) set on the host are forwarded to the inner input, so `spellcheck=\"false\"` on a code field works without reaching through `::part`.",
 	],
 	a11y: [
 		"Always generates a stable input `id` and links the label with `for`, so clicking the label focuses the input.",
@@ -342,6 +379,13 @@ export const fieldManifest: ComponentManifest = {
 			title: "Labels, validation, and adornments",
 			description: "A required email, a password with helper text, a clearable search with a leading icon, and an invalid amount with a currency prefix.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "type-ahead",
+			title: "Type-ahead suggestions",
+			description:
+				"Pass `options` and Field renders a `<datalist>` in the input's own root, so suggestions work across the shadow boundary where a page-level datalist can't reach.",
+			source: { html: htmlOptionsExample, svelte: svelteOptionsExample, astro: astroOptionsExample },
 		},
 	],
 };

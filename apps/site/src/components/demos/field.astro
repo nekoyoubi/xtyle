@@ -71,6 +71,45 @@ import Heading from "@xoji/astro/Heading.astro";
 			<Field label="Inherited setting" name="disabled" value="From parent theme" disabled />
 		</Grid>
 	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Type-ahead</Heading>
+		<Grid minColWidth="16rem" gap={4}>
+			<Field
+				label="Branch"
+				name="branch"
+				placeholder="Type to filter…"
+				description="Suggestions come from the field's own datalist, so they work inside the shadow root."
+				options={["main", "develop", "release/1.0", "hotfix/login", "feature/themes"]}
+			/>
+			<Field
+				label="Timezone"
+				name="tz"
+				placeholder="Start typing a city…"
+				options={[
+					{ value: "America/New_York", label: "New York" },
+					{ value: "Europe/London", label: "London" },
+					{ value: "Asia/Tokyo", label: "Tokyo" },
+					{ value: "Australia/Sydney", label: "Sydney" },
+				]}
+			/>
+		</Grid>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Code-shaped</Heading>
+		<Grid minColWidth="16rem" gap={4}>
+			<Field
+				label="Accent token"
+				name="hex"
+				mono
+				spellcheck="false"
+				value="#7c5cff"
+				description="A mono field for hex, ids, and paths; spellcheck is forwarded off."
+			/>
+			<Field label="Slug" name="slug" mono spellcheck="false" value="open-register" placeholder="kebab-case" />
+		</Grid>
+	</section>
 </Stack>
 
 <style>

@@ -6,6 +6,7 @@ import type { FullTone as Tone } from "@xoji/core";
 interface Props {
 	overlay?: boolean;
 	interactive?: boolean;
+	action?: boolean;
 	compact?: boolean;
 	tone?: Tone;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
@@ -15,10 +16,10 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { overlay = false, interactive = false, compact = false, tone, static: isStatic = false, class: extra, ...rest } =
+const { overlay = false, interactive = false, action = false, compact = false, tone, static: isStatic = false, class: extra, ...rest } =
 	Astro.props;
 
-const bindings = { overlay, interactive, compact, tone: tone ?? null };
+const bindings = { overlay, interactive, action, compact, tone: tone ?? null };
 const chrome = await renderFragmentLight("card", bindings);
 const headerHtml = Astro.slots.has("header") ? await Astro.slots.render("header") : "";
 const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
@@ -32,6 +33,7 @@ const composed = chrome
 <xoji-card
 	overlay={overlay || undefined}
 	interactive={interactive || undefined}
+	action={action || undefined}
 	compact={compact || undefined}
 	tone={tone}
 	class={extra}

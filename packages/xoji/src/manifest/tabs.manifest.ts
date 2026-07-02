@@ -52,6 +52,46 @@ import { Tabs } from "@xoji/astro";
 	</div>
 </Tabs>`;
 
+const headlessSvelte = `<script lang="ts">
+	import { Tabs } from "@xoji/svelte";
+
+	let view = $state("editor");
+	const tabs = [
+		{ value: "editor", label: "Editor" },
+		{ value: "preview", label: "Preview" },
+		{ value: "diff", label: "Diff" },
+	];
+</script>
+
+<!-- No panel snippet: Tabs is a bare tablist driving \`view\`. -->
+<Tabs {tabs} label="Workspace view" bind:value={view} />
+
+<div class="workspace">
+	<main>
+		{#if view === "editor"}<CodeEditor />{/if}
+		{#if view === "preview"}<Preview />{/if}
+		{#if view === "diff"}<DiffView />{/if}
+	</main>
+	<!-- The inspector lives outside the tabs, so it keeps its scroll and selection across switches. -->
+	<aside><Inspector /></aside>
+</div>`;
+
+const headlessHtml = `<xoji-tabs id="view-tabs" tablist label="Workspace view" value="editor">
+	<button slot="tab" value="editor">Editor</button>
+	<button slot="tab" value="preview">Preview</button>
+	<button slot="tab" value="diff">Diff</button>
+</xoji-tabs>
+
+<div class="workspace">
+	<main id="view"><!-- rendered by your own change listener --></main>
+	<aside><!-- persists across tab switches --></aside>
+</div>
+
+<script type="module">
+	const tabs = document.getElementById("view-tabs");
+	tabs.addEventListener("change", (e) => renderView(e.detail.value));
+</script>`;
+
 export const tabsManifest: ComponentManifest = {
 	id: "tabs",
 	name: "Tabs",
@@ -157,10 +197,26 @@ export const tabsManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "tablist",
+			type: "boolean",
+			default: "false",
+			description:
+				"Render only the tab strip, no panel region: the element drives selection, roving focus, and keyboard nav as a bare `role=\"tablist\"` while you render the content yourself against the `change` event / bound `value`. Lets a persistent sidebar or split live outside the panel region and keep its own state across switches. In Svelte, omit the `panel` snippet to get this automatically. Tabs omit `aria-controls` in this mode since the element owns no panels.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "tabs",
 			type: "TabItem[]",
 			description:
 				"Svelte only: an array of `{ value, label, disabled? }` declaring the tabs; panel content comes from the `panel` snippet keyed by value.",
+			bindings: ["svelte"],
+		},
+		{
+			name: "lazy",
+			type: "boolean",
+			default: "false",
+			description:
+				"Svelte only: mount a panel's `panel` snippet only once its tab is first shown, then keep it mounted (keep-alive). Off by default (every panel renders up front). Reach for it when panels are heavy (an editor, a chart, a data grid) or must lay out only while visible; the tab strip, roving focus, and a11y are unchanged. The active panel mounts on the client after hydration, so an SSR page shows it a beat later.",
 			bindings: ["svelte"],
 		},
 	],
@@ -273,9 +329,10 @@ export const tabsManifest: ComponentManifest = {
 		"Pair each panel's content with any other component: a Field-laden form, a Card grid, a table.",
 		"Use `activation=\"manual\"` when switching tabs is expensive (each panel fetches data), so arrowing previews focus without triggering loads.",
 		"Drive `value` from app state and listen for the `change` event (CustomEvent with `detail.value`) to keep tabs and routing in sync.",
+		"Set `tablist` (or omit the Svelte `panel` snippet) when the tabs control only part of a layout: an editor whose left pane switches per tab while a right sidebar persists across all of them, keeping its own scroll and selection.",
 	],
 	a11y: [
-		"Implements the WAI-ARIA tabs pattern: `role=\"tablist\"` / `role=\"tab\"` / `role=\"tabpanel\"` with `aria-selected`, `aria-controls`, and `aria-labelledby` wired automatically.",
+		"Implements the WAI-ARIA tabs pattern: `role=\"tablist\"` / `role=\"tab\"` / `role=\"tabpanel\"` with `aria-selected`, `aria-controls`, and `aria-labelledby` wired automatically; in `tablist` mode the element owns no panels, so tabs omit `aria-controls` and stand as a bare tablist.",
 		"Roving tabindex: only the selected tab is in the tab order; arrow keys move between tabs, Home/End jump to the first/last enabled tab.",
 		"`activation` chooses automatic (select on focus) or manual (Enter/Space to select) per the WAI-ARIA guidance for cheap vs. expensive panels.",
 		"Disabled tabs are announced as disabled and skipped by arrow-key navigation.",
@@ -291,6 +348,13 @@ export const tabsManifest: ComponentManifest = {
 			description:
 				"The same tablist semantics across the three treatments; declare tabs and panels as paired slotted elements (or, in Svelte, a `tabs` array plus a `panel` snippet).",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "headless-tablist",
+			title: "Headless tablist",
+			description:
+				"Omit the panels and the element is a bare tablist that drives a value: the tabs switch the main view while a sidebar persists outside the panel region, keeping its own state. In Svelte, drop the `panel` snippet; in html / astro, set `tablist`.",
+			source: { html: headlessHtml, svelte: headlessSvelte },
 		},
 	],
 };

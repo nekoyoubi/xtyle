@@ -203,6 +203,7 @@ export const menuManifest: ComponentManifest = {
 		"--font-mono",
 		"--text-sm",
 		"--text-xs",
+		"--leading-normal",
 		"--fg-0",
 		"--fg-1",
 		"--fg-2",

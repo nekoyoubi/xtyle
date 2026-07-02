@@ -69,6 +69,17 @@ export const segmentedCss = `
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
 }
+.xoji-segmented__option:disabled {
+	cursor: not-allowed;
+	color: var(--fg-disabled);
+}
+.xoji-segmented__option:disabled:hover::after { background: transparent; }
+.xoji-segmented__badge {
+	margin-inline-start: var(--space-1);
+	font-size: 0.85em;
+	opacity: 0.7;
+	font-variant-numeric: tabular-nums;
+}
 .xoji-segmented--sm .xoji-segmented__option {
 	padding: var(--space-1) var(--space-2);
 }

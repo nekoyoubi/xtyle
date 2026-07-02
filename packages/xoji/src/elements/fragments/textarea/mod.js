@@ -15,6 +15,7 @@
     return [
       "xoji-textarea",
       b.invalid && "xoji-textarea--invalid",
+      b.mono && "xoji-textarea--mono",
       size === "sm" && "xoji-textarea--sm",
       size === "lg" && "xoji-textarea--lg",
       RESIZE_CLASS[resize]

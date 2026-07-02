@@ -27,7 +27,7 @@
 	{target}
 	{rel}
 	external-icon={externalIcon === undefined ? undefined : String(externalIcon)}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	{onclick}
 >
 	{@render children?.()}

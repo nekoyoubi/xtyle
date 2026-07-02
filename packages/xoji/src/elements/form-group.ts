@@ -14,6 +14,7 @@ export class XojiFormGroup extends XojiElement {
 	private errorId = `xoji-form-group-error-${this.groupNumber}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "form-group", {
 		applyIntent: () => {},
+		afterApply: () => this.bindRegion(),
 	});
 	private contentObserver: MutationObserver | null = null;
 
@@ -180,15 +181,13 @@ export class XojiFormGroup extends XojiElement {
 		return "";
 	}
 
-	protected override render(): void {
-		this.adoptComponentSheet();
-		this.fragment.ensureScaffold(formGroupHostCss);
-		this.fragment.reshapeIfChanged(this.shapeSignature());
-		this.fragment.update(this.bindings);
+	// Light DOM has no `slotchange`, so watch the region for a swapped-in control instead.
+	// `wireControl` only sets attributes (never children), so observing `childList` can't loop.
+	// Runs from both `render` and `afterApply`: the `[data-slot]` region is built by the async
+	// fragment fill, so the first shadow-DOM instance has no region when `render` runs and the
+	// observer would never arm without the `afterApply` pass. Idempotent (the observer arms once).
+	private bindRegion = (): void => {
 		this.wireControl();
-		// Light DOM has no `slotchange`, so watch the region for a swapped-in control instead.
-		// `wireControl` only sets attributes (never children), so observing `childList` can't
-		// loop. The first `[data-slot]` appears after mount, so (re)bind whenever it's missing.
 		if (!this.contentObserver) {
 			const region = this.querySelector("[data-slot]");
 			if (region) {
@@ -196,6 +195,14 @@ export class XojiFormGroup extends XojiElement {
 				this.contentObserver.observe(region, { childList: true });
 			}
 		}
+	};
+
+	protected override render(): void {
+		this.adoptComponentSheet();
+		this.fragment.ensureScaffold(formGroupHostCss);
+		this.fragment.reshapeIfChanged(this.shapeSignature());
+		this.fragment.update(this.bindings);
+		this.bindRegion();
 		this.warnIfUnlabelled();
 	}
 

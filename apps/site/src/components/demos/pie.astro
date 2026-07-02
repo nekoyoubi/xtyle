@@ -1,0 +1,57 @@
+---
+import Pie from "@xoji/astro/Pie.astro";
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Grid from "@xoji/astro/Grid.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+
+const traffic = [
+	{ label: "Direct", value: 42 },
+	{ label: "Search", value: 30 },
+	{ label: "Social", value: 18 },
+	{ label: "Referral", value: 10 },
+];
+
+const budget = [
+	{ label: "Rent", value: 1200 },
+	{ label: "Food", value: 600 },
+	{ label: "Transit", value: 300 },
+	{ label: "Fun", value: 400 },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Pie and donut</Heading>
+		<Text tone="muted" size="sm">
+			Parts of a whole. Hover or focus a slice for its value and share; the donut carries the total.
+		</Text>
+		<Grid minColWidth="15rem" gap={4}>
+			<Pie data={traffic} label="Traffic by source" showValues size={220} />
+			<Pie data={budget} variant="donut" scheme="accents" label="Monthly budget" size={220} />
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">One data set, four schemes</Heading>
+		<Grid minColWidth="12rem" gap={4}>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">skittles</Text>
+				<Pie data={traffic} scheme="skittles" label="Skittles scheme" size={150} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">accents</Text>
+				<Pie data={traffic} variant="donut" scheme="accents" label="Accents scheme" size={150} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">thermal, reversed</Text>
+				<Pie data={traffic} scheme="thermal" reverse label="Thermal reversed scheme" size={150} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">status</Text>
+				<Pie data={traffic} variant="donut" scheme="status" label="Status scheme" size={150} legend={false} />
+			</Stack>
+		</Grid>
+	</Card>
+</Stack>

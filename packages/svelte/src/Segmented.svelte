@@ -2,9 +2,11 @@
 	import "./register.js";
 	import type { Size, FullTone as Tone } from "@xoji/core";
 
+	type SegmentOption = { value: string; label?: string; disabled?: boolean; badge?: string };
+
 	interface Props {
 		value?: string;
-		options?: string;
+		options?: string | ReadonlyArray<string | SegmentOption>;
 		disabled?: boolean;
 		size?: Size;
 		tone?: Tone;
@@ -29,17 +31,24 @@
 		...rest
 	}: Props = $props();
 
+	let host: (HTMLElement & { options: string | ReadonlyArray<string | SegmentOption> }) | undefined = $state();
+
+	$effect(() => {
+		if (host && options != null) host.options = options;
+	});
+
 	function handleChange(event: Event) {
-		const host = event.currentTarget as HTMLElement & { value: string };
-		value = host.value;
+		const target = event.currentTarget as HTMLElement & { value: string };
+		value = target.value;
 		onchange?.(event);
 	}
 </script>
 
 <xoji-segmented
+	bind:this={host}
 	{...rest}
 	value={value || undefined}
-	{options}
+	options={typeof options === "string" ? options : undefined}
 	disabled={disabled || undefined}
 	{size}
 	{tone}

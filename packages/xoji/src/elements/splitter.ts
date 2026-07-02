@@ -158,6 +158,10 @@ export class XojiSplitter extends XojiElement {
 	private onPointerdown(event: PointerEvent): void {
 		if (this.disabled) return;
 		event.preventDefault();
+		// The handle focuses itself so the arrow keys can drive it after the click, but a scripted
+		// `focus()` mid-pointer trips `:focus-visible` — so flag this focus as pointer-originated and
+		// let the handle's own focus listener withhold the keyboard ring (see wireHandle).
+		this.focusViaPointer = true;
 		this.handle?.focus();
 		const startPos = this.axisIsX ? event.clientX : event.clientY;
 		const startValue = this.value;
@@ -174,6 +178,7 @@ export class XojiSplitter extends XojiElement {
 			window.removeEventListener("pointermove", move);
 			window.removeEventListener("pointerup", end);
 			window.removeEventListener("pointercancel", end);
+			this.focusViaPointer = false;
 			const delta = (this.axisIsX ? e.clientX : e.clientY) - startPos;
 			this.commit(startValue + sign * delta, "resize-end");
 		};
@@ -233,6 +238,8 @@ export class XojiSplitter extends XojiElement {
 		this.applyValue();
 	}
 
+	private focusViaPointer = false;
+
 	private wiredHandle: HTMLElement | null = null;
 	private wireHandle(): void {
 		const handle = this.handle;
@@ -240,6 +247,17 @@ export class XojiSplitter extends XojiElement {
 		this.wiredHandle = handle;
 		handle.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
 		handle.addEventListener("dblclick", () => this.commit(this.defaultValue, "resize-end"));
+		// Paint the focus ring only on genuine keyboard entry: Tab focus (no preceding pointer) and any
+		// key press arm it; the pointer-originated focus from a drag does not, so a mouse drag never rings.
+		handle.addEventListener("focus", () => {
+			if (this.focusViaPointer) return;
+			handle.setAttribute("data-focus-ring", "");
+		});
+		handle.addEventListener("keydown", () => handle.setAttribute("data-focus-ring", ""));
+		handle.addEventListener("blur", () => {
+			handle.removeAttribute("data-focus-ring");
+			this.focusViaPointer = false;
+		});
 	}
 }
 

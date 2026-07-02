@@ -28,17 +28,28 @@ export {
 	dockPanel,
 	removePanel,
 	activatePanel,
+	toggleCollapsed,
+	setLeafMode,
 	singleZone,
 	allLeaves,
 	allPanels,
 	leafOf,
 	parseLayout,
 	layoutRects,
+	floatPanel,
+	updateFloating,
+	dockFloating,
+	removeFloating,
+	allLayoutPanels,
+	parseDockLayout,
 	type DockNode,
 	type DockLeaf,
 	type DockSplit,
 	type DockPanelInput,
 	type LeafRect,
+	type FloatingPanel,
+	type DockLayout,
+	type FloatRect,
 } from "./dock-model.js";
 export { XojiButton } from "./button.js";
 export { XojiField } from "./field.js";
@@ -89,6 +100,12 @@ export { XojiCardLink } from "./card-link.js";
 export { XojiToc } from "./toc.js";
 export type { TocItem } from "./toc.js";
 export { XojiKbd } from "./kbd.js";
+export { XojiBar } from "./bar.js";
+export type { BarSeries, BarScheme } from "./bar.js";
+export { XojiSparkline } from "./sparkline.js";
+export type { SparklineVariant, SparklineTone } from "./sparkline.js";
+export { XojiPie } from "./pie.js";
+export type { PieDatum, PieScheme, PieVariant } from "./pie.js";
 export { XojiSwatch } from "./swatch.js";
 export { XojiMenu } from "./menu.js";
 export type { MenuItem, MenuAction } from "./menu.js";
@@ -141,6 +158,9 @@ import "./eyebrow.js";
 import "./card-link.js";
 import "./toc.js";
 import "./kbd.js";
+import "./bar.js";
+import "./sparkline.js";
+import "./pie.js";
 import "./swatch.js";
 import "./menu.js";
 import "./code.js";

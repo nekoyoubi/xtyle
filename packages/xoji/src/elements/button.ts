@@ -1,5 +1,5 @@
 import { XojiElement, define, type StyleMode } from "./base.js";
-import type { ButtonVariant, Size, FullTone } from "../index.js";
+import type { ButtonVariant, ButtonAlign, Size, FullTone } from "../index.js";
 import { buttonHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/button/source.generated.js";
@@ -18,7 +18,7 @@ export class XojiButton extends XojiElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "type", "href", "disabled", "loading", "block", "icon-only", "pressed", "selected", "aria-label", "aria-labelledby"];
+		return ["variant", "tone", "size", "align", "type", "href", "disabled", "loading", "block", "icon-only", "pressed", "selected", "aria-label", "aria-labelledby"];
 	}
 
 	get variant(): ButtonVariant {
@@ -40,6 +40,13 @@ export class XojiButton extends XojiElement {
 	}
 	set size(value: ButtonSize) {
 		this.setAttribute("size", value);
+	}
+
+	get align(): ButtonAlign {
+		return (this.getAttribute("align") as ButtonAlign) ?? "center";
+	}
+	set align(value: ButtonAlign) {
+		this.setAttribute("align", value);
 	}
 
 	get disabled(): boolean {
@@ -114,6 +121,7 @@ export class XojiButton extends XojiElement {
 			variant: this.variant,
 			tone: this.tone,
 			size: this.size,
+			align: this.align,
 			type: this.getAttribute("type") ?? "button",
 			href: this.href,
 			disabled: this.disabled,

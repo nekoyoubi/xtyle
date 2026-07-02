@@ -160,6 +160,42 @@ const TONE_GROUPS = [
 			<Button block tone="accent">Block button — fills its container</Button>
 		</Stack>
 	</Card>
+
+	<Card class="button-demo__panel">
+		<Stack gap={4}>
+			<header class="button-demo__head">
+				<Heading level={2} size="md">List rows & alignment</Heading>
+				<Text size="sm" tone="muted">
+					Pair <code>block</code> with <code>align="start"</code> for a left-aligned action row: a settings entry or a recent-file row that runs a callback, chevron trailing.
+				</Text>
+			</header>
+			<Stack gap={2} class="button-demo__rows">
+				<Button block align="start" variant="ghost" tone="neutral">
+					<svg slot="icon-start" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+						<path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h10v4H4v-4Z" />
+					</svg>
+					Recent projects
+					<svg slot="icon-end" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+						<path fill="currentColor" d="m9 6 6 6-6 6-1.4-1.4L11.2 12 7.6 8.4 9 6Z" />
+					</svg>
+				</Button>
+				<Button block align="start" variant="ghost" tone="neutral">
+					<svg slot="icon-start" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+						<path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 4-2-1 1-2-2-2-2 1-1-2h-2l-1 2-2-1-2 2 1 2-2 1v2l2 1-1 2 2 2 2-1 1 2h2l1-2 2 1 2-2-1-2 2-1v-2Z" />
+					</svg>
+					Settings
+					<svg slot="icon-end" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+						<path fill="currentColor" d="m9 6 6 6-6 6-1.4-1.4L11.2 12 7.6 8.4 9 6Z" />
+					</svg>
+				</Button>
+			</Stack>
+			<Stack gap={2}>
+				<Button block align="start" variant="outline" tone="neutral">Start-aligned</Button>
+				<Button block variant="outline" tone="neutral">Centered (default)</Button>
+				<Button block align="end" variant="outline" tone="neutral">End-aligned</Button>
+			</Stack>
+		</Stack>
+	</Card>
 </Stack>
 
 <style>
@@ -208,5 +244,8 @@ const TONE_GROUPS = [
 	.button-demo__matrix-cell :global(.xoji-button) {
 		width: 100%;
 		justify-content: center;
+	}
+	.button-demo__rows :global(.xoji-button__label) {
+		margin-right: auto;
 	}
 </style>

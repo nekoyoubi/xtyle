@@ -78,7 +78,8 @@ ${cardToneVars}
 .xoji-card--interactive:hover::after { background: var(--state-hover); }
 .xoji-card--interactive:active { transform: none; }
 .xoji-card--interactive:active::after { background: var(--state-press); }
-.xoji-card--interactive:focus-within {
+.xoji-card--interactive:not(.xoji-card--action):focus-within,
+.xoji-card--action:focus-visible {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
 }

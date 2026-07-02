@@ -30,7 +30,7 @@ export class XojiTabs extends XojiElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "size", "activation", "value", "label", "labelledby", "items", "sticky"];
+		return ["variant", "size", "activation", "value", "label", "labelledby", "items", "sticky", "tablist"];
 	}
 
 	get variant(): TabsVariant {
@@ -66,6 +66,13 @@ export class XojiTabs extends XojiElement {
 	}
 	set sticky(value: boolean) {
 		this.reflectBoolean("sticky", value);
+	}
+
+	get tablist(): boolean {
+		return this.hasAttribute("tablist");
+	}
+	set tablist(value: boolean) {
+		this.reflectBoolean("tablist", value);
 	}
 
 	get items(): TabItemData[] {
@@ -136,7 +143,7 @@ export class XojiTabs extends XojiElement {
 	 * static HTML and strip handlers and effects.
 	 */
 	private assignPanelSlots(): void {
-		if (this.items.length > 0) return;
+		if (this.tablist || this.items.length > 0) return;
 		this.pairs.forEach((pair, i) => pair.panel?.setAttribute("slot", `panel-${i}`));
 	}
 
@@ -165,6 +172,7 @@ export class XojiTabs extends XojiElement {
 			variant: this.variant,
 			size: this.size,
 			sticky: this.sticky,
+			tablist: this.tablist,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
 			uid: this.uid,

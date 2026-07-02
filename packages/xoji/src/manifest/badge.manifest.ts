@@ -43,13 +43,30 @@ import { Badge } from "@xoji/astro";
 
 <span class="xoji-dot xoji-dot--success" role="img" aria-label="Online"></span>`;
 
+const pulseHtmlExample = `<xoji-badge variant="soft" tone="success" dot pulse>Live</xoji-badge>
+<xoji-badge variant="soft" tone="danger" dot pulse="fast">Alert</xoji-badge>`;
+
+const pulseSvelteExample = `<script lang="ts">
+	import { Badge } from "@xoji/svelte";
+</script>
+
+<Badge variant="soft" tone="success" dot pulse>Live</Badge>
+<Badge variant="soft" tone="danger" dot pulse="fast">Alert</Badge>`;
+
+const pulseAstroExample = `---
+import { Badge } from "@xoji/astro";
+---
+
+<Badge variant="soft" tone="success" dot pulse>Live</Badge>
+<Badge variant="soft" tone="danger" dot pulse="fast">Alert</Badge>`;
+
 export const badgeManifest: ComponentManifest = {
 	id: "badge",
 	name: "Badge",
 	category: "data-display",
 	summary: "A compact label, tag, or status chip: three fills across six semantic tones and twelve named hues, optionally removable.",
 	description:
-		"Badge labels, tags, counts, and statuses inline. Fill treatment (`variant`) and color (`tone`) are independent axes: each of the three fills (solid, soft, outline) can carry any of the six semantic tones (accent, neutral, danger, success, warn, info) or any of the twelve named hues (red … black). It adds a leading status dot, a tabular count affordance, and a `removable` form whose `×` is a real focusable `<button>` that emits a `remove` event. That's the removable tag you build a filter row or token input from. A standalone `.xoji-dot` indicator covers the bare-dot case. Status tones (success, warn, danger, info) emit a screen-reader-only tone word so meaning never rides on color alone.",
+		"Badge labels, tags, counts, and statuses inline. Fill treatment (`variant`) and color (`tone`) are independent axes: each of the three fills (solid, soft, outline) can carry any of the six semantic tones (accent, neutral, danger, success, warn, info) or any of the twelve named hues (red … black). It adds a leading status dot (which can `pulse` to read as live), a tabular count affordance, and a `removable` form whose `×` is a real focusable `<button>` that emits a `remove` event. That's the removable tag you build a filter row or token input from. A standalone `.xoji-dot` indicator covers the bare-dot case. Status tones (success, warn, danger, info) emit a screen-reader-only tone word so meaning never rides on color alone.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -71,9 +88,9 @@ export const badgeManifest: ComponentManifest = {
 		},
 		{
 			name: "dot",
-			description: "The optional leading status dot, painted in the badge's current text color.",
+			description: "The optional leading status dot, painted in the badge's current text color; breathes on a soft opacity loop when `pulse` is set.",
 			selector: ".xoji-badge__dot",
-			tokens: ["--space-2", "--space-3", "--radius-full"],
+			tokens: ["--space-2", "--space-3", "--radius-full", "--ease-standard"],
 		},
 		{
 			name: "label",
@@ -132,6 +149,14 @@ export const badgeManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "pulse",
+			type: `boolean | "slow" | "fast"`,
+			description:
+				"Breathes the `dot` on a soft opacity loop so the chip reads as live (streaming, connected, active), reusing Progress's pulse cadence: a bare `pulse` (or `slow`) runs at 1.8s, `fast` at 0.9s. No-op without `dot`, and held still under `prefers-reduced-motion`.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["slow", "fast"],
+		},
+		{
 			name: "count",
 			type: "string | number",
 			description: "A numeric count rendered after the label in tabular figures.",
@@ -184,6 +209,12 @@ export const badgeManifest: ComponentManifest = {
 		{ name: "lg", description: "Large.", className: "xoji-badge--lg" },
 	],
 	states: [
+		{
+			name: "pulse",
+			description: "With `pulse` and a `dot`, the dot breathes on a soft opacity loop at Progress's own two speeds (`slow` 1.8s, `fast` 0.9s); held still under `prefers-reduced-motion`.",
+			selector: ".xoji-badge--pulse-slow .xoji-badge__dot, .xoji-badge--pulse-fast .xoji-badge__dot",
+			tokens: ["--ease-standard"],
+		},
 		{
 			name: "remove-hover",
 			description: "Pointer over the dismiss button. Its overlay paints the hover tint.",
@@ -240,6 +271,7 @@ export const badgeManifest: ComponentManifest = {
 	a11y: [
 		"Status tones (success, warn, danger, info) emit a screen-reader-only tone word, so meaning is conveyed without relying on color (WCAG 1.4.1).",
 		"The leading dot is decorative (`aria-hidden`); the standalone `.xoji-dot` should carry `role=\"img\"` and an `aria-label` when it conveys meaning on its own.",
+			"The `pulse` animation is purely decorative and is disabled under `prefers-reduced-motion`; the live meaning should also be carried by the label text, never by the motion alone.",
 		"The dismiss control is a native `<button>` with an `aria-label`; the html/svelte bindings warn at runtime when you omit `remove-label`.",
 		"The dismiss button shows focus with a token ring plus a transparent outline that the forced-colors base rule promotes to a real system outline.",
 		"The `×` glyph is drawn as a decorative `aria-hidden` SVG; the button's accessible name comes from its label, not the icon.",
@@ -250,6 +282,12 @@ export const badgeManifest: ComponentManifest = {
 			title: "Fills, tones, and affordances",
 			description: "The three fills cross all tones and hues; dot, count, and the removable form layer on top, with a standalone dot for the bare case.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "live-pulse",
+			title: "Live status",
+			description: "`pulse` breathes the dot so a chip reads as live, streaming, or connected, at Progress's two speeds (`slow` and `fast`); it holds still under reduced-motion.",
+			source: { html: pulseHtmlExample, svelte: pulseSvelteExample, astro: pulseAstroExample },
 		},
 	],
 };

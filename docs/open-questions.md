@@ -111,6 +111,23 @@ next component is a registration checklist, not an architecture decision.
 The thin `-tauri` edge: theme persistence, OS dark/light detection, window-chrome
 theming, live-switch IPC. Confirm the boundary so it never leaks into the core.
 
+A working reference shape already exists in a shipping Tauri + xoji consumer, worth
+mirroring rather than redesigning from scratch:
+
+- **persistence**: the active theme id lives in a small key-value store (a `ui.theme`
+  key), read at boot and written on switch; the adapter exposes a store-backed
+  `getTheme()` / `setTheme(id)` seam so no app reinvents it.
+- **live-switch**: a Rust-side `theme-changed` event re-applies the register to
+  `document.documentElement` with a `setProperty` loop (no re-derive), so a switch is
+  instant and flicker-free.
+- **OS scheme**: track the OS light/dark signal and flip between a light and dark
+  recipe; a time-aware auto-switch rides the same seam.
+- **window chrome**: the OS titlebar and frame read the same register, so the native
+  chrome stays coherent with the webview content.
+
+The boundary to confirm: this all lives in a `@xoji/tauri` edge package, never the
+environment-neutral core. The package itself is a deliberate, user-owned call.
+
 ## 9. Knob vocabulary: the next load-bearing fork
 
 The casual author's entire world is **tier 2 (algorithm knobs)**, so the shape of
@@ -395,3 +412,37 @@ mutual-distinguishability invariant in the gauntlet (perceptual OKLab distance, 
 `<xoji-code>` component consumes it: Prism tokenization that re-themes live, plus `copy`, `wrap`,
 `line-numbers`, and `highlight` (the last finally rendering the derived `--code-line-highlight`).
 Dogfooded on real blocks across the site.
+
+## 15. Hosted-canonical derivation & the browser runtime
+
+Every algorithm runs two ways, proven byte-identical: **baked** (the synchronous `getAlgorithm`
+registry compiled into `@xoji/core`) and **hosted** (the algorithm's xript mod run through the
+zero-authority sandbox via `resolveAlgorithm`). Hosted is the thesis: an algorithm is a real xript
+plugin, so the sandboxed mod that ships is the one that derives. It is already the canonical path
+everywhere it can be, the CLI (`derive` / `coverage`), the MCP tools, and the site's SSR all resolve
+hosted. Baked persists in two deliberate roles: the **byte-identical test oracle** (the gauntlet proves
+hosted against it, so retiring it would drop the guarantee), and a **synchronous fallback** for the one
+surface hosted can't yet serve.
+
+That surface is the **browser**, and two things keep baked its default today:
+
+- **The resolver is Node-only.** `resolveAlgorithm` reads each mod's manifest and bundle off disk with
+  `node:fs`, so it cannot run client-side. A browser path needs the mods *bundled for delivery* (manifest
+  + `mod.js` as importable assets) plus a browser-side loader over the JS/WASM xript runtime.
+- **First paint is synchronous; the mod load is async.** A reactive live-derivation surface (the
+  generator, a `$derived` preview) paints before any async sandbox load could settle, so it falls back to
+  baked for that frame. `snapshotAlgorithm` already reads the canonical mod synchronously *once warm*, so
+  the missing half is warming it in the browser.
+
+Sub-forks: bundle every blessed mod eagerly, or lazily per selected algorithm? Keep the gauntlet's baked
+default (kept for speed, cold hosted being ~30x slower) or give it a snapshot fast-path? And is the oracle
+role permanent, or does a future self-verifying mod retire even that?
+
+**Status: essentially closed.** Hosted is canonical everywhere: the CLI / MCP / SSR resolve it, and the
+browser generator flips its live derivation to the hosted mod once warm (`hosted?.get(id) ?? baked`), so
+baked serves only the synchronous first-paint frame and the byte-identical test oracle. The filesystem-free
+core resolver landed too: `loadAlgorithm` was already environment-neutral, so a build-time mod bundle
+(`algorithms-bundle.generated.ts`) plus `resolveBundledAlgorithm` (at `@xoji/core/host/bundle`) run the
+canonical mod client-side, byte-identical to baked, and the site's bench now consumes it in place of its own
+`?raw` loader. What's genuinely left is small and optional: retire the sync-first-paint baked frame (a
+snapshot fast-path, if it's worth the complexity) and decide whether the oracle role is permanent.

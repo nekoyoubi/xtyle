@@ -54,7 +54,7 @@
 	invalid={invalid || undefined}
 	{label}
 	labelledby={labelledby || undefined}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	onchange={handleChange}
 >
 	{@render children?.()}

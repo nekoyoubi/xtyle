@@ -15,6 +15,9 @@ import {
 	type ComponentManifest,
 } from "../src/index.js";
 import { declaredHostControls } from "../src/elements/host-controls.js";
+import { normalizeFieldOptions } from "../src/elements/field-options.js";
+import { NATIVE_INPUT_ATTRS } from "../src/elements/native-input-attrs.js";
+import { normalizeSegments } from "../src/markup/index.js";
 import { xojiDefault } from "../src/batteries.js";
 
 const register = derive(xojiDefault, { constraints: { "--bg-0": "#0f1115", "--accent": "#5b8cff" } });
@@ -275,4 +278,186 @@ describe("coverComponent / coverComponents", () => {
 		const results = coverComponents(register);
 		expect(results).toHaveLength(listComponents().length);
 	});
+
+	it("every registered component's consumedTokens are actually produced by the register", () => {
+		const uncovered = coverComponents(register).filter((r) => !r.covered);
+		expect(uncovered, JSON.stringify(uncovered)).toHaveLength(0);
+	});
+});
+
+describe("tooltip closed-state layout", () => {
+	it("hides the closed content with display:none so it never inflates a scroll ancestor", async () => {
+		const css = await loadCssModule("tooltip");
+		const closed = css.match(/\.xoji-tooltip__content\s*\{[^}]*\}/)?.[0] ?? "";
+		expect(closed).toContain("display: none");
+		expect(closed).not.toContain("visibility: hidden");
+	});
+
+	it("shows the open content as a displayed box", async () => {
+		const css = await loadCssModule("tooltip");
+		const open = css.match(/\.xoji-tooltip__content\[data-open="true"\]\s*\{[^}]*\}/)?.[0] ?? "";
+		expect(open).toContain("display: block");
+		expect(open).toContain("opacity: 1");
+	});
+});
+
+describe("card action button semantics", () => {
+	it("declares the action prop across all three bindings", () => {
+		const card = listComponents().find((m) => m.id === "card");
+		const action = card?.props?.find((p) => p.name === "action");
+		expect(action).toBeDefined();
+		expect(action?.type).toBe("boolean");
+		expect(action?.bindings).toEqual(["html", "svelte", "astro"]);
+	});
+
+	it("rings an action card on keyboard focus only, and never on a pointer click", async () => {
+		const css = await loadCssModule("card");
+		// the action card (it is the button) keys its ring on :focus-visible, so a mouse click never paints it
+		expect(css).toContain(".xoji-card--action:focus-visible");
+		// the interactive-only ring (focus lands on an inner control) is scoped away from action cards
+		expect(css).toContain(".xoji-card--interactive:not(.xoji-card--action):focus-within");
+		expect(css).not.toMatch(/\.xoji-card--interactive:focus-within\s*\{/);
+	});
+});
+
+describe("field type-ahead options", () => {
+	it("declares the options prop across all three bindings", () => {
+		const field = listComponents().find((m) => m.id === "field");
+		const options = field?.props?.find((p) => p.name === "options");
+		expect(options).toBeDefined();
+		expect(options?.bindings).toEqual(["html", "svelte", "astro"]);
+	});
+
+	it("normalizes a string array into value-only options", () => {
+		expect(normalizeFieldOptions(["main", "dev"])).toEqual([{ value: "main" }, { value: "dev" }]);
+	});
+
+	it("keeps value/label pairs and drops a label equal to the value at render time only", () => {
+		expect(normalizeFieldOptions([{ value: "Europe/London", label: "London" }, { value: "x" }])).toEqual([
+			{ value: "Europe/London", label: "London" },
+			{ value: "x" },
+		]);
+	});
+
+	it("parses a JSON string (the declarative attribute path) and skips malformed entries", () => {
+		expect(normalizeFieldOptions('["a", {"value":"b","label":"B"}, {"nope":1}, 7]')).toEqual([
+			{ value: "a" },
+			{ value: "b", label: "B" },
+		]);
+	});
+
+	it("returns an empty list for nullish, non-array, or unparseable input", () => {
+		expect(normalizeFieldOptions(null)).toEqual([]);
+		expect(normalizeFieldOptions("not json")).toEqual([]);
+		expect(normalizeFieldOptions({ value: "x" })).toEqual([]);
+	});
+});
+
+describe("field / textarea mono + native-attr forwarding", () => {
+	it("forwards the form-hygiene allow-list", () => {
+		expect([...NATIVE_INPUT_ATTRS]).toEqual([
+			"spellcheck",
+			"inputmode",
+			"autocomplete",
+			"autocapitalize",
+			"autocorrect",
+			"enterkeyhint",
+		]);
+	});
+
+	for (const id of ["field", "textarea"]) {
+		it(`${id} declares a mono prop across all three bindings`, () => {
+			const mono = listComponents().find((m) => m.id === id)?.props?.find((p) => p.name === "mono");
+			expect(mono).toBeDefined();
+			expect(mono?.type).toBe("boolean");
+			expect(mono?.bindings).toEqual(["html", "svelte", "astro"]);
+		});
+
+		it(`${id} swaps the control to the mono stack under --mono`, async () => {
+			const css = await loadCssModule(id);
+			expect(css).toContain(`xoji-${id}--mono`);
+			const monoRule = css.split("\n").find((line) => line.includes(`xoji-${id}--mono`)) ?? "";
+			expect(monoRule).toContain("font-family: var(--font-mono)");
+		});
+	}
+});
+
+describe("splitter keyboard-only focus ring", () => {
+	it("keys the ring on the modality attribute, not :focus-visible (so a mouse drag never rings)", async () => {
+		const css = await loadCssModule("splitter");
+		expect(css).toContain(".xoji-splitter[data-focus-ring]");
+		expect(css).not.toContain(":focus-visible");
+	});
+
+	it("documents the keyboard-focus state with the data-attr selector", () => {
+		const splitter = listComponents().find((m) => m.id === "splitter");
+		const focus = splitter?.states?.find((s) => s.selector?.includes("data-focus-ring"));
+		expect(focus).toBeDefined();
+		expect(focus?.selector).not.toContain(":focus-visible");
+	});
+});
+
+describe("segmented structured options", () => {
+	it("parses the comma-string shorthand: bare labels and label:value pairs", () => {
+		expect(normalizeSegments("Day,Week")).toEqual([
+			{ value: "Day", label: "Day" },
+			{ value: "Week", label: "Week" },
+		]);
+		expect(normalizeSegments("Left:start,Right:end")).toEqual([
+			{ value: "start", label: "Left" },
+			{ value: "end", label: "Right" },
+		]);
+	});
+
+	it("accepts a structured array, defaulting a missing label to the value", () => {
+		expect(normalizeSegments([{ value: "md", label: "Markdown" }, { value: "html" }, "epub"])).toEqual([
+			{ value: "md", label: "Markdown" },
+			{ value: "html", label: "html" },
+			{ value: "epub", label: "epub" },
+		]);
+	});
+
+	it("parses a JSON array string (the declarative attribute path)", () => {
+		expect(normalizeSegments('[{"value":"md","label":"Markdown"},"epub"]')).toEqual([
+			{ value: "md", label: "Markdown" },
+			{ value: "epub", label: "epub" },
+		]);
+	});
+
+	it("returns an empty list for nullish or non-array, non-string input", () => {
+		expect(normalizeSegments(null)).toEqual([]);
+		expect(normalizeSegments({ value: "x" })).toEqual([]);
+	});
+
+	it("declares the options prop accepting both shapes plus per-option state across all three bindings", () => {
+		const options = listComponents().find((m) => m.id === "segmented")?.props?.find((p) => p.name === "options");
+		expect(options?.type).toContain("string");
+		expect(options?.type).toContain("value: string; label?: string");
+		expect(options?.type).toContain("disabled?: boolean");
+		expect(options?.type).toContain("badge?: string");
+		expect(options?.bindings).toEqual(["html", "svelte", "astro"]);
+	});
+});
+
+describe("svelte wrappers do not clobber a rest-passed aria-label", () => {
+	const svelteWrappers = import.meta.glob("../../svelte/src/*.svelte", {
+		query: "?raw",
+		import: "default",
+		eager: true,
+	}) as Record<string, string>;
+
+	it("has wrappers to check", () => {
+		expect(Object.keys(svelteWrappers).length).toBeGreaterThan(10);
+	});
+
+	for (const [path, source] of Object.entries(svelteWrappers)) {
+		const name = path.split("/").pop();
+		it(`${name} never sets a bare aria-label={ariaLabel} after a {...rest} spread`, () => {
+			// a bare explicit aria-label={ariaLabel} overwrites the rest-passed kebab attribute with undefined;
+			// the merge form (aria-label={ariaLabel ?? rest["aria-label"]}) preserves it
+			if (source.includes("{...rest}") && source.includes("aria-label={ariaLabel")) {
+				expect(source).not.toMatch(/aria-label=\{ariaLabel\}/);
+			}
+		});
+	}
 });

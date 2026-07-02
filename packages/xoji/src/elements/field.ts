@@ -3,8 +3,13 @@ import type { Size } from "../index.js";
 import { fieldHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/field/source.generated.js";
+import { normalizeFieldOptions, type FieldOption } from "./field-options.js";
+import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attrs.js";
 
 let fieldCounter = 0;
+
+export type { FieldOption };
+export { normalizeFieldOptions };
 
 export class XojiField extends XojiElement {
 	protected override get styleMode(): StyleMode {
@@ -18,9 +23,15 @@ export class XojiField extends XojiElement {
 	private inputId = `xoji-field-${this.fieldNumber}`;
 	private descriptionId = `xoji-field-desc-${this.fieldNumber}`;
 	private errorId = `xoji-field-error-${this.fieldNumber}`;
+	private listId = `xoji-field-list-${this.fieldNumber}`;
+	private optionsProp: FieldOption[] | null = null;
 	private lastShape = "";
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "field", {
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		afterApply: () => {
+			this.syncDatalist();
+			this.forwardNativeAttrs();
+		},
 	});
 
 	constructor() {
@@ -49,7 +60,22 @@ export class XojiField extends XojiElement {
 			"clearable",
 			"description",
 			"error",
+			"options",
+			"mono",
+			...NATIVE_INPUT_ATTRS,
 		];
+	}
+
+	/** Type-ahead suggestions. Set the JS property with `string[]` or `{ value, label }[]`, or pass the
+	 * `options` attribute as a JSON array (the declarative / SSR-hydration path). Field renders them into
+	 * a `<datalist>` it owns *inside the input's own tree* (shadow or light), since a native datalist in
+	 * the page's light DOM can never associate with an input that lives in a shadow root. */
+	get options(): FieldOption[] {
+		return this.optionsProp ?? normalizeFieldOptions(this.getAttribute("options"));
+	}
+	set options(value: ReadonlyArray<string | FieldOption> | string | null | undefined) {
+		this.optionsProp = value == null ? null : normalizeFieldOptions(value);
+		if (this.root.firstChild) this.syncDatalist();
 	}
 
 	get value(): string {
@@ -129,6 +155,7 @@ export class XojiField extends XojiElement {
 			invalid: this.invalid,
 			required: this.required,
 			clearable: this.clearable,
+			mono: this.mono,
 			description: this.getAttribute("description"),
 			error: this.getAttribute("error"),
 			ariaLabel: this.getAttribute("aria-label"),
@@ -136,6 +163,13 @@ export class XojiField extends XojiElement {
 			descriptionId: this.descriptionId,
 			errorId: this.errorId,
 		};
+	}
+
+	get mono(): boolean {
+		return this.hasAttribute("mono");
+	}
+	set mono(value: boolean) {
+		this.reflectBoolean("mono", value);
 	}
 
 	/** Structural state the `update` ops can't patch incrementally — chiefly attribute *removal*,
@@ -192,6 +226,37 @@ export class XojiField extends XojiElement {
 		}
 	}
 
+	/** Build (or tear down) the `<datalist>` next to the input and wire the input's `list` to it. The
+	 * datalist sits in the input's own root so the association resolves; a remount wipes it with the rest
+	 * of the scaffold, so this re-runs every render. Options are written through the DOM (not markup) so
+	 * a value never needs escaping. */
+	private syncDatalist(): void {
+		const input = this.input;
+		if (!input) return;
+		const options = this.options;
+		const root = input.getRootNode() as ParentNode;
+		let list = root.querySelector<HTMLDataListElement>(`#${CSS.escape(this.listId)}`);
+		if (options.length === 0) {
+			list?.remove();
+			input.removeAttribute("list");
+			return;
+		}
+		if (!list) {
+			list = document.createElement("datalist");
+			list.id = this.listId;
+			input.after(list);
+		}
+		list.replaceChildren(
+			...options.map((option) => {
+				const el = document.createElement("option");
+				el.value = option.value;
+				if (option.label && option.label !== option.value) el.label = option.label;
+				return el;
+			}),
+		);
+		input.setAttribute("list", this.listId);
+	}
+
 	private syncActions(): void {
 		const reveal = this.root.querySelector('[data-action="reveal"]');
 		if (reveal) {
@@ -234,8 +299,15 @@ export class XojiField extends XojiElement {
 		if (structuralChange || this.valueIsStale()) this.fragment.remount();
 		this.lastShape = signature;
 		this.fragment.update(this.bindings);
+		this.syncDatalist();
+		this.forwardNativeAttrs();
 		this.warnIfUnnamed();
 		this.syncFormValue();
+	}
+
+	private forwardNativeAttrs(): void {
+		const input = this.input;
+		if (input) forwardNativeInputAttrs(this, input);
 	}
 
 	formDisabledCallback(disabled: boolean): void {

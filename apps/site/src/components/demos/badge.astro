@@ -74,6 +74,23 @@ const TONE_GROUPS = [
 			</Cluster>
 		</Stack>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Live status</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A <code>pulse</code> breathes the dot so a chip reads as live, at Progress's
+				two speeds (<code>slow</code> and <code>fast</code>). It holds still under
+				reduced-motion, and a plain dot stays static for contrast.
+			</Text>
+			<Cluster gap={3} align="center">
+				<Badge variant="soft" tone="success" dot pulse>Live</Badge>
+				<Badge variant="soft" tone="accent" dot pulse>Streaming</Badge>
+				<Badge variant="soft" tone="danger" dot pulse="fast">Alert</Badge>
+				<Badge variant="soft" tone="neutral" dot>Idle</Badge>
+			</Cluster>
+		</Stack>
+	</Card>
 </Stack>
 
 <script>

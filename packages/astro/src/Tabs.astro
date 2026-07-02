@@ -16,6 +16,9 @@ interface Props {
 	labelledby?: string;
 	/** Pin the tablist while the active panel scrolls beneath it (app-surface tabs); off for inline tabs. */
 	sticky?: boolean;
+	/** Render only the tab strip (no panel region) so the consumer owns the content; the element still
+	 * drives selection, roving focus, and a11y, and tabs omit `aria-controls` since they own no panels. */
+	tablist?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -32,6 +35,7 @@ const {
 	label,
 	labelledby,
 	sticky = false,
+	tablist = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -51,6 +55,7 @@ const bindings = {
 	variant,
 	size,
 	sticky,
+	tablist,
 	label: label ?? null,
 	labelledby: labelledby ?? null,
 	uid,
@@ -72,13 +77,14 @@ const light = useItems ? await renderFragmentLight("tabs", bindings) : "";
 		label={label}
 		labelledby={labelledby}
 		sticky={sticky}
+		tablist={tablist || undefined}
 		items={JSON.stringify(items)}
 		class={extra}
 		set:html={light}
 		{...rest}
 	/>
 ) : (
-	<xoji-tabs variant={variant} size={size} activation={activation} value={value} label={label} labelledby={labelledby} sticky={sticky} class={extra} {...rest}>
+	<xoji-tabs variant={variant} size={size} activation={activation} value={value} label={label} labelledby={labelledby} sticky={sticky} tablist={tablist || undefined} class={extra} {...rest}>
 		<slot name="tab" />
 		<slot name="panel" />
 		<slot />

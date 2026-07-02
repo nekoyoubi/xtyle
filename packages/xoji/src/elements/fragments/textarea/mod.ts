@@ -13,6 +13,7 @@ interface TextareaBindings {
 	size?: string;
 	resize?: string;
 	invalid?: boolean;
+	mono?: boolean;
 }
 
 interface EventPayload {
@@ -46,6 +47,7 @@ function rootClass(b: TextareaBindings): string {
 	return [
 		"xoji-textarea",
 		b.invalid && "xoji-textarea--invalid",
+		b.mono && "xoji-textarea--mono",
 		size === "sm" && "xoji-textarea--sm",
 		size === "lg" && "xoji-textarea--lg",
 		RESIZE_CLASS[resize],

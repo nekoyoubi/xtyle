@@ -32,13 +32,22 @@ import { Stat } from "@xoji/astro";
 
 <Stat label="components" delta="+1" trend="up" inline>49</Stat>`;
 
+const sentimentExample = `<!-- Up is bad: a rising error rate arrows up but paints red. -->
+<xoji-stat label="Error rate" delta="+2.1%" trend="up" sentiment="negative" caption="last hour">4.8%</xoji-stat>
+
+<!-- Down is good: latency falling arrows down and paints green. -->
+<xoji-stat label="p95 latency" delta="-18ms" trend="down" sentiment="positive">142ms</xoji-stat>
+
+<!-- Directional but neutral: a run-count delta shows the arrow in a muted tint, no good/bad. -->
+<xoji-stat label="Runs" delta="-8%" trend="down" sentiment="neutral" caption="24h">312</xoji-stat>`;
+
 export const statManifest: ComponentManifest = {
 	id: "stat",
 	name: "Stat",
-	category: "data-display",
+	category: "metrics",
 	summary: "A single metric: a prominent value with its label, optional trend delta, and caption.",
 	description:
-		"Stat presents one figure at a glance: a large `value` (the default slot) under a small uppercase `label`, with an optional `delta` carrying a `trend` (up / down / flat) and an optional `caption` for context. The value and delta render in tabular figures so columns of stats align digit-for-digit. The trend tints the delta (success for up, danger for down, neutral for flat) and pairs the color with a directional arrow so meaning never rides on color alone. Pure presentation: compose several in a `Grid` or `Cluster` for a dashboard strip, or drop one into a `Card` header.",
+		"Stat presents one figure at a glance: a large `value` (the default slot) under a small uppercase `label`, with an optional `delta` carrying a `trend` (up / down / flat) and an optional `caption` for context. The value and delta render in tabular figures so columns of stats align digit-for-digit. `trend` picks the delta's directional arrow; a separate `sentiment` (positive / negative / neutral) picks its color and defaults to the trend's own reading (up→positive/green, down→negative/red, flat→neutral). Splitting the axes lets an up-is-bad metric (a rising error rate) paint red on an up-arrow, or a sentiment-neutral metric show a direction in a muted tint, while the color is always paired with the arrow so meaning never rides on color alone. Pure presentation: compose several in a `Grid` or `Cluster` for a dashboard strip, or drop one into a `Card` header.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -61,9 +70,9 @@ export const statManifest: ComponentManifest = {
 		},
 		{
 			name: "delta",
-			description: "The optional change indicator with a directional arrow, tinted by trend.",
+			description: "The optional change indicator: a directional arrow (from `trend`) over a base `--neutral-text`, tinted by `sentiment` (positive `--success-vivid`, negative `--danger-vivid`, neutral `--neutral-vivid`).",
 			selector: ".xoji-stat__delta",
-			tokens: ["--text-sm", "--weight-semibold", "--space-1", "--neutral-text", "--success-text", "--danger-text"],
+			tokens: ["--text-sm", "--weight-semibold", "--space-1", "--neutral-text", "--neutral-vivid", "--success-vivid", "--danger-vivid"],
 		},
 		{
 			name: "caption",
@@ -89,9 +98,16 @@ export const statManifest: ComponentManifest = {
 			name: "trend",
 			type: "StatTrend",
 			default: "flat",
-			description: "Colors the delta and picks its arrow: success/up, danger/down, neutral/flat.",
+			description: "Picks the delta's directional arrow (▲ up, ▼ down, a flat bar). Also the default color, via `sentiment`.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["up", "down", "flat"],
+		},
+		{
+			name: "sentiment",
+			type: "StatSentiment",
+			description: "Colors the delta independently of its arrow: positive (`--success-vivid`), negative (`--danger-vivid`), neutral (`--neutral-vivid`). Omit to derive from `trend` (up→positive, down→negative, flat→neutral), so an up-is-bad metric sets `trend=\"up\" sentiment=\"negative\"` and a directional-but-neutral one sets `sentiment=\"neutral\"`.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["positive", "negative", "neutral"],
 		},
 		{
 			name: "caption",
@@ -164,6 +180,7 @@ export const statManifest: ComponentManifest = {
 		"Lay several in a `Grid` or `Cluster` for a dashboard strip; the tabular figures keep the values aligned.",
 		"Drop one into a `Card` to head a panel with its key number.",
 		"Pair the `delta` + `trend` with period-over-period figures; the arrow carries direction without relying on color.",
+		"For a metric where up is bad (error rate, latency, queue depth) set `trend=\"up\" sentiment=\"negative\"`; for a direction that carries no good/bad meaning set `sentiment=\"neutral\"` to keep the arrow but drop the green/red.",
 	],
 	a11y: [
 		"The trend pairs its color with a directional arrow (▲ up, ▼ down, a flat bar for no change), so the change reads without color perception (WCAG 1.4.1).",
@@ -176,6 +193,12 @@ export const statManifest: ComponentManifest = {
 			title: "Metrics, trends, and sizes",
 			description: "A value under its label, with optional trend deltas and captions, across the three sizes and both alignments, plus the `inline` ticker layout that lays label, value, and delta on one line.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "direction-vs-sentiment",
+			title: "Direction vs. sentiment",
+			description: "`sentiment` colors the delta independently of the `trend` arrow: an up-is-bad error rate arrows up but reads red, a falling latency arrows down but reads green, and a neutral run-count keeps the arrow without a good/bad tint.",
+			source: { html: sentimentExample },
 		},
 	],
 };

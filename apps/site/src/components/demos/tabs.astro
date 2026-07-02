@@ -98,6 +98,44 @@ import Badge from "@xoji/astro/Badge.astro";
 
 	<Card>
 		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">Headless tablist</Heading>
+			<Text size="sm" tone="muted">
+				With no panels, Tabs is a bare tablist driving a value. The main view swaps on
+				`change`, while the sidebar lives outside the tabs and keeps its own state across switches.
+			</Text>
+		</Stack>
+		<div class="headless-demo">
+			<Tabs tablist variant="pill" value="editor" label="Workspace view" id="headless-tabs">
+				<button slot="tab" value="editor">Editor</button>
+				<button slot="tab" value="preview">Preview</button>
+				<button slot="tab" value="diff">Diff</button>
+			</Tabs>
+			<div class="headless-demo__body">
+				<main class="headless-demo__main">
+					<div data-view="editor"><Text size="sm" tone="muted">The editor view: code lives here.</Text></div>
+					<div data-view="preview" hidden><Text size="sm" tone="muted">The preview view: rendered output.</Text></div>
+					<div data-view="diff" hidden><Text size="sm" tone="muted">The diff view: what changed.</Text></div>
+				</main>
+				<aside class="headless-demo__aside">
+					<Text as="span" size="xs" tone="subtle" weight="semibold">Inspector (persists)</Text>
+					<input class="headless-demo__note" type="text" placeholder="Type here, switch tabs, come back" aria-label="Persistent note" />
+				</aside>
+			</div>
+		</div>
+		<script is:inline>
+			(() => {
+				const tabs = document.getElementById("headless-tabs");
+				const views = document.querySelectorAll(".headless-demo__main [data-view]");
+				tabs?.addEventListener("change", (e) => {
+					const value = e.detail.value;
+					views.forEach((v) => (v.hidden = v.getAttribute("data-view") !== value));
+				});
+			})();
+		</script>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
 			<Cluster gap={2} align="center" justify="between">
 				<Heading level={3} size="lg">Sizes & disabled state</Heading>
 				<Badge tone="info">size="sm"</Badge>
@@ -116,3 +154,43 @@ import Badge from "@xoji/astro/Badge.astro";
 		</Tabs>
 	</Card>
 </Stack>
+
+<style>
+	.headless-demo {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+	.headless-demo__body {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4);
+	}
+	@media (min-width: 40rem) {
+		.headless-demo__body {
+			grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+		}
+	}
+	.headless-demo__main {
+		padding: var(--space-4);
+		background: var(--bg-2);
+		border-radius: var(--radius-md);
+		min-height: 4rem;
+	}
+	.headless-demo__aside {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		padding: var(--space-4);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+	}
+	.headless-demo__note {
+		font: inherit;
+		padding: var(--space-2);
+		color: var(--fg-1);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-sm);
+	}
+</style>

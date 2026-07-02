@@ -44,8 +44,9 @@ const DEFAULT_ACCENT_SPLIT = 45;
 // derivation); kept low enough that any hue stays a neutral-reading surface rather than a muddy fill.
 const DERIVED_SURFACE_TINT_C = 0.02;
 // How accent-2/3/4 fan off the primary accent. "split-complement": 2 and 3 flank the
-// accent at ∓the accentSplit knob, 4 is its 180° complement. "wheel": an even fan, each
-// accent one accentShiftStep past the last.
+// accent at ∓the accentSplit knob, 4 is its 180° complement; if a theme pins either wing, the
+// other mirrors its hue across the accent instead of the fixed knob, so the pair stays symmetric
+// around the author's choice. "wheel": an even fan, each accent one accentShiftStep past the last.
 const ACCENT_FAN: "split-complement" | "wheel" = "split-complement";
 const ACHROMATIC_CHROMA = 0.02;
 const DERIVED_ACCENT_HUE_ROTATION = 150;
@@ -1214,8 +1215,19 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 	let a3: OklchColor;
 	let a4: OklchColor;
 	if (ACCENT_FAN === "split-complement") {
-		a2 = fanned("2", applyAccentDelta(a1, rotate(-accentSplit)));
-		a3 = fanned("3", applyAccentDelta(a1, rotate(accentSplit)));
+		// The two flanks are symmetric either way: pin either wing and the other mirrors its hue
+		// across the accent, so the fan stays balanced around the author's choice. With neither
+		// pinned it's the default ∓split; with both pinned each holds its own value. Lightness and
+		// chroma stay the accent's throughout, per the constant-L/C fan.
+		const mirrorOf = (c: OklchColor): OklchColor => applyAccentDelta(a1, rotate(-hueDelta(a1.h, c.h)));
+		const a2Pin = pinned["--accent-2"];
+		const a3Pin = pinned["--accent-3"];
+		let a2Derived = applyAccentDelta(a1, rotate(-accentSplit));
+		let a3Derived = applyAccentDelta(a1, rotate(accentSplit));
+		if (a2Pin && !a3Pin) a3Derived = mirrorOf(toOklchColor(a2Pin as string));
+		else if (a3Pin && !a2Pin) a2Derived = mirrorOf(toOklchColor(a3Pin as string));
+		a2 = fanned("2", a2Derived);
+		a3 = fanned("3", a3Derived);
 		a4 = fanned("4", applyAccentDelta(a1, rotate(180)));
 	} else {
 		a2 = fanned("2", applyAccentDelta(a1, rotate(shiftStep)));
@@ -2073,12 +2085,22 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 				typeof ctx.knobs.accentSplit === "number"
 					? ctx.knobs.accentSplit
 					: DEFAULT_ACCENT_SPLIT;
+			const accent2Value = ctx.register["--accent-2"];
+			const accent3Value = ctx.register["--accent-3"];
+			const pinnedAccent2 =
+				ctx.constraints["--accent-2"] && accent2Value ? toOklchColor(accent2Value) : null;
+			const pinnedAccent3 =
+				ctx.constraints["--accent-3"] && accent3Value ? toOklchColor(accent3Value) : null;
 			const fanOffset = (n: number): number =>
 				ACCENT_FAN === "split-complement"
 					? n === 2
-						? -split
+						? pinnedAccent3
+							? -hueDelta(accent.h, pinnedAccent3.h)
+							: -split
 						: n === 3
-							? split
+							? pinnedAccent2
+								? -hueDelta(accent.h, pinnedAccent2.h)
+								: split
 							: 180
 					: step * (n - 1);
 			for (let n = 2; n <= 4; n++) {

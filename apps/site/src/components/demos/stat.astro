@@ -29,6 +29,22 @@ import Text from "@xoji/astro/Text.astro";
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={2} size="sm">Direction and sentiment are separate axes</Heading>
+		<Stack gap={3}>
+			<Text tone="muted">
+				<code>trend</code> sets the arrow; <code>sentiment</code> sets the color and defaults to the
+				trend's reading. So up can be bad, down can be good, and a direction can carry no judgment at all.
+			</Text>
+			<Grid columns={4} gap={4}>
+				<Stat label="Error rate" delta="+2.1%" trend="up" sentiment="negative" caption="up is bad">4.8%</Stat>
+				<Stat label="p95 latency" delta="-18ms" trend="down" sentiment="positive" caption="down is good">142ms</Stat>
+				<Stat label="Runs" delta="-8%" trend="down" sentiment="neutral" caption="24h · neutral">312</Stat>
+				<Stat label="Queue depth" delta="+140" trend="up" sentiment="negative">1,020</Stat>
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={2} size="sm">Three sizes, two alignments</Heading>
 		<Stack gap={5}>
 			<Cluster gap={6} align="center">

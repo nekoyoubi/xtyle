@@ -8,6 +8,7 @@ interface BadgeBindings {
 	tone?: string;
 	size?: string;
 	dot?: boolean;
+	pulse?: string | null;
 	count?: string | number | null;
 	removable?: boolean;
 	removeLabel?: string;
@@ -30,7 +31,14 @@ function badgeClass(b: BadgeBindings): string {
 	const variant = b.variant ?? "soft";
 	const tone = b.tone ?? "neutral";
 	const size = b.size ?? "md";
-	return ["xoji-badge", `xoji-badge--${variant}`, `xoji-badge--${tone}`, size !== "md" && `xoji-badge--${size}`]
+	const pulse = b.pulse === "fast" || b.pulse === "slow" ? b.pulse : null;
+	return [
+		"xoji-badge",
+		`xoji-badge--${variant}`,
+		`xoji-badge--${tone}`,
+		size !== "md" && `xoji-badge--${size}`,
+		pulse && b.dot && `xoji-badge--pulse-${pulse}`,
+	]
 		.filter(Boolean)
 		.join(" ");
 }

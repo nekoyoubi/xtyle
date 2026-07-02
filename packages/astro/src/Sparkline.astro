@@ -1,0 +1,50 @@
+---
+import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import type { SparklineVariant, SparklineTone } from "@xoji/core";
+
+interface Props {
+	values?: number[];
+	variant?: SparklineVariant;
+	tone?: SparklineTone;
+	showEnd?: boolean;
+	min?: number;
+	max?: number;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `style`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	values = [],
+	variant = "line",
+	tone = "accent",
+	showEnd = true,
+	min,
+	max,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const bindings = { values, variant, tone, showEnd, min, max, label: label ?? null };
+const chrome = await renderFragmentLight("sparkline", bindings);
+---
+
+<xoji-sparkline
+	values={JSON.stringify(values)}
+	variant={variant}
+	tone={tone}
+	show-end={showEnd ? undefined : "false"}
+	min={min ?? undefined}
+	max={max ?? undefined}
+	label={label}
+	class={extra}
+	set:html={chrome}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xoji/core/elements";</script>}

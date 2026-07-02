@@ -1,0 +1,65 @@
+---
+import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { resolveSeriesColors } from "./internal/palette.ts";
+import type { PieDatum, PieScheme } from "@xoji/core";
+
+interface Props {
+	data?: PieDatum[];
+	scheme?: PieScheme;
+	reverse?: boolean;
+	variant?: "pie" | "donut";
+	showValues?: boolean;
+	legend?: boolean;
+	size?: number;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `style`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	data = [],
+	scheme = "skittles",
+	reverse = false,
+	variant = "pie",
+	showValues = false,
+	legend = true,
+	size = 200,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const slices = data.filter((d) => Number(d.value) > 0);
+const colors = await resolveSeriesColors(scheme, slices.length, reverse);
+const bindings = {
+	data: slices,
+	colors,
+	variant,
+	showValues,
+	legend,
+	size,
+	title: label ?? null,
+	ariaLabel: label ?? null,
+};
+const chrome = await renderFragmentLight("pie", bindings);
+---
+
+<xoji-pie
+	data={JSON.stringify(data)}
+	scheme={Array.isArray(scheme) ? JSON.stringify(scheme) : scheme}
+	variant={variant}
+	reverse={reverse || undefined}
+	show-values={showValues || undefined}
+	legend={legend ? undefined : "false"}
+	size={size}
+	label={label}
+	class={extra}
+	set:html={chrome}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xoji/core/elements";</script>}

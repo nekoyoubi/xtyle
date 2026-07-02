@@ -1,3 +1,13 @@
+import { FULL_TONES as TONES } from "../../vocab.js";
+
+const kbdTones = TONES.map(
+	(t) => `.xoji-kbd--${t} {
+	background-color: var(--${t}-bg);
+	border-color: var(--${t});
+	color: var(--${t}-text);
+}`,
+).join("\n");
+
 export const kbdCss = `
 [data-kbd] { display: contents; }
 .xoji-kbd {
@@ -19,4 +29,5 @@ export const kbdCss = `
 }
 .xoji-kbd--sm { font-size: var(--text-xs); }
 .xoji-kbd--lg { font-size: var(--text-lg); }
+${kbdTones}
 `.trim();

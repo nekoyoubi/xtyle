@@ -62,7 +62,7 @@
 	value-position={valuePosition !== "end" ? valuePosition : undefined}
 	colorize-value={colorizeValue || undefined}
 	meter={meter || undefined}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 >
 	{@render children?.()}
 </xoji-progress>

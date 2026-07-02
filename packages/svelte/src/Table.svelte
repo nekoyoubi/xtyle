@@ -33,7 +33,7 @@
 	{size}
 	hover={hover || undefined}
 	sticky={sticky || undefined}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 >
 	{@render children?.()}
 </xoji-table>

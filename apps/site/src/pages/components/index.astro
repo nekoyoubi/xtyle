@@ -17,6 +17,7 @@ import {
 	categoryMeta,
 } from "../../components/reference/categories.ts";
 import { renderMarkdownInline } from "../../components/reference/inline-markdown.ts";
+import { isNewComponent } from "../../data/newness.ts";
 import type { ComponentManifest } from "@xoji/core";
 
 const site = await getStats();
@@ -108,9 +109,14 @@ const metaDescription = `The xoji component contract: ${total} components across
 						>
 							<Card interactive class="cx-card">
 								<Cluster justify="between" align="start" gap={2} class="cx-card__top">
-									<Heading level={3} size="sm" class="cx-card__name">
-										{component.name}
-									</Heading>
+									<Cluster gap={2} align="center" class="cx-card__title">
+										<Heading level={3} size="sm" class="cx-card__name">
+											{component.name}
+										</Heading>
+										{isNewComponent(component.since) && (
+											<Badge variant="soft" tone="accent" size="sm">New</Badge>
+										)}
+									</Cluster>
 									<CoverageBadge
 										covered={cov.covered}
 										missing={cov.missing}

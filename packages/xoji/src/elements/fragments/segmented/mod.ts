@@ -6,6 +6,8 @@ interface OpsBuilder {
 interface Segment {
 	value: string;
 	label: string;
+	disabled?: boolean;
+	badge?: string;
 }
 
 interface SegmentedBindings {
@@ -44,8 +46,9 @@ declare const xript: { exports: { register(name: string, fn: (...args: unknown[]
 function selectedValue(bindings: SegmentedBindings): string {
 	const segments = bindings.segments ?? [];
 	const requested = bindings.value ?? null;
-	if (requested != null && segments.some((s) => s.value === requested)) return requested;
-	return segments[0]?.value ?? "";
+	if (requested != null && segments.some((s) => s.value === requested && !s.disabled)) return requested;
+	const firstEnabled = segments.find((s) => !s.disabled) ?? segments[0];
+	return firstEnabled?.value ?? "";
 }
 
 function rootClass(bindings: SegmentedBindings): string {
@@ -61,17 +64,27 @@ function rootClass(bindings: SegmentedBindings): string {
 		.join(" ");
 }
 
+function escapeHtml(value: string): string {
+	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeAttr(value: string): string {
+	return escapeHtml(value).replace(/"/g, "&quot;");
+}
+
 function options(bindings: SegmentedBindings, selected: string): string {
 	const segments = bindings.segments ?? [];
-	const disabled = bindings.disabled ?? false;
+	const groupDisabled = bindings.disabled ?? false;
 	return segments
 		.map((seg) => {
+			const segDisabled = groupDisabled || !!seg.disabled;
 			const isOn = seg.value === selected;
-			const tabindex = disabled ? "-1" : isOn ? "0" : "-1";
-			const disabledAttr = disabled ? " disabled" : "";
+			const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
+			const disabledAttr = segDisabled ? " disabled" : "";
+			const badge = seg.badge ? `<span class="xoji-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
 			return (
 				`<button class="xoji-segmented__option" part="option" type="button" role="radio" ` +
-				`aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${seg.value}"${disabledAttr}>${seg.label}</button>`
+				`aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${disabledAttr}>${escapeHtml(seg.label)}${badge}</button>`
 			);
 		})
 		.join("");
@@ -92,21 +105,22 @@ function fieldInner(bindings: SegmentedBindings, selected: string): string {
 	return `${label}<div class="${rootClass(bindings)}" part="segmented" role="radiogroup"${groupName}>${options(bindings, selected)}</div>`;
 }
 
-/** Build the whole structure once — the expensive `replaceChildren` rebuild. */
+/** Build the whole structure once: the expensive `replaceChildren` rebuild. */
 hooks.fragment.mount("segmented", (bindings, ops) => {
 	const selected = selectedValue(bindings);
 	ops.replaceChildren("[data-field]", fieldInner(bindings, selected));
 });
 
-/** A selection change — patch state on the existing nodes, never rebuild them. */
+/** A selection change: patch state on the existing nodes, never rebuild them. */
 hooks.fragment.update("segmented", (bindings, ops) => {
 	const selected = selectedValue(bindings);
-	const disabled = bindings.disabled ?? false;
+	const groupDisabled = bindings.disabled ?? false;
 	ops.setAttr('[role="radiogroup"]', "class", rootClass(bindings));
 	for (const seg of bindings.segments ?? []) {
+		const segDisabled = groupDisabled || !!seg.disabled;
 		const isOn = seg.value === selected;
 		ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "aria-checked", String(isOn));
-		ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "tabindex", disabled ? "-1" : isOn ? "0" : "-1");
+		ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
 	}
 });
 

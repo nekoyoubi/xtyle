@@ -103,6 +103,14 @@ export const textareaManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "mono",
+			type: "boolean",
+			default: "false",
+			description:
+				"Renders the control in the monospace stack (`--font-mono`) for code-shaped text: expressions, snippets, config, structured input. A presentational swap on an existing token, so it bakes into the zero-JS Astro markup too.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "size",
 			type: "Size",
 			default: "md",
@@ -190,6 +198,7 @@ export const textareaManifest: ComponentManifest = {
 	],
 	consumedTokens: [
 		"--font-sans",
+		"--font-mono",
 		"--text-sm",
 		"--text-lg",
 		"--weight-medium",
@@ -210,6 +219,7 @@ export const textareaManifest: ComponentManifest = {
 	composition: [
 		"Pair with Button (`type=\"submit\"` / `type=\"reset\"`) inside a `<form>`; the form-associated element submits and resets natively.",
 		"Mirror the `label` / `invalid` / `error` surface of Field and Select so a form reads consistently across single-line and multi-line inputs.",
+		"For code-shaped content (expressions, snippets, config), set `mono`; native input attributes (`spellcheck`, `inputmode`, `autocomplete`, `autocapitalize`, `autocorrect`, `enterkeyhint`) set on the host are forwarded to the inner control, so `spellcheck=\"false\"` on an expression field works.",
 	],
 	a11y: [
 		"Renders a native `<textarea>`, so editing, selection, and screen-reader semantics come for free.",

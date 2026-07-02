@@ -14,6 +14,7 @@
 				"format": "text/html+jsml",
 				"source": "tree.html",
 				"handlers": [
+					{ "selector": ".xoji-tree__action", "on": "click", "handler": "rowAction" },
 					{ "selector": ".xoji-tree__twisty:not(.xoji-tree__twisty--leaf)", "on": "click", "handler": "toggleTwisty" },
 					{ "selector": ".xoji-tree__row", "on": "click", "handler": "selectRow" },
 					{ "selector": "[role=\"treeitem\"]", "on": "keydown", "handler": "navKeydown" }
@@ -28,9 +29,11 @@
 						"--fg-2",
 						"--fg-3",
 						"--fg-disabled",
+						"--space-0",
 						"--space-1",
 						"--space-2",
 						"--space-4",
+						"--text-xs",
 						"--radius-sm",
 						"--duration-fast",
 						"--ease-standard",

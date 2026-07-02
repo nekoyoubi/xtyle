@@ -1,7 +1,7 @@
 ---
 import { renderFragmentLight } from "@xoji/core/elements/ssr";
 
-import type { FullTone } from "@xoji/core";
+import type { FullTone, ButtonAlign } from "@xoji/core";
 
 type ButtonVariant = "solid" | "outline" | "ghost" | "subtle" | "link";
 type Size = "xs" | "sm" | "md" | "lg";
@@ -10,6 +10,7 @@ interface Props {
 	variant?: ButtonVariant;
 	tone?: FullTone;
 	size?: Size;
+	align?: ButtonAlign;
 	type?: "button" | "submit" | "reset";
 	href?: string;
 	disabled?: boolean;
@@ -29,6 +30,7 @@ const {
 	variant = "solid",
 	tone = "accent",
 	size = "md",
+	align = "center",
 	type = "button",
 	href,
 	disabled = false,
@@ -46,6 +48,7 @@ const bindings = {
 	variant,
 	tone,
 	size,
+	align,
 	type,
 	href: href ?? null,
 	disabled,
@@ -71,6 +74,7 @@ const composed = chrome
 	variant={variant}
 	tone={tone}
 	size={size}
+	align={align}
 	type={type}
 	href={href}
 	disabled={disabled || undefined}

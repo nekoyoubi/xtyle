@@ -147,9 +147,10 @@ export const splitterManifest: ComponentManifest = {
 	],
 	states: [
 		{
-			name: "focus-visible",
-			description: "The handle focused by keyboard: a ring picks it out, the grip tints to accent.",
-			selector: ".xoji-splitter:focus-visible",
+			name: "keyboard-focus",
+			description:
+				"The handle focused by keyboard: a ring picks it out and the grip tints to accent. The ring is armed only on genuine keyboard entry (Tab or a key press), so the scripted focus a drag takes never rings.",
+			selector: ".xoji-splitter[data-focus-ring]",
 			tokens: ["--border-normal", "--border-thick", "--ring", "--accent"],
 		},
 		{

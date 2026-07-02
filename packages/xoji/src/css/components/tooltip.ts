@@ -31,15 +31,20 @@ export const tooltipCss = `
 	border: var(--border-thin) solid var(--surface-overlay-border);
 	border-radius: var(--radius-sm);
 	box-shadow: var(--elevation-2);
+	display: none;
 	opacity: 0;
-	visibility: hidden;
 	transition:
 		opacity var(--duration-fast) var(--ease-standard),
-		visibility var(--duration-fast) var(--ease-standard);
+		display var(--duration-fast) var(--ease-standard) allow-discrete;
 }
 .xoji-tooltip__content[data-open="true"] {
+	display: block;
 	opacity: 1;
-	visibility: visible;
+}
+@starting-style {
+	.xoji-tooltip__content[data-open="true"] {
+		opacity: 0;
+	}
 }
 .xoji-tooltip__content::before {
 	content: "";

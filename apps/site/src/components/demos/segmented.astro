@@ -33,6 +33,44 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Structured options</Heading>
+		<Stack gap={2}>
+			<Text size="sm" tone="muted">
+				Pass <code>{`{ value, label }[]`}</code> when the label differs from the value the handler
+				needs, or carries a comma or colon the shorthand can't survive.
+			</Text>
+			<Segmented
+				label="Export"
+				value="md"
+				options={[
+					{ value: "md", label: "Markdown" },
+					{ value: "html", label: "HTML" },
+					{ value: "epub", label: "EPUB" },
+				]}
+			/>
+		</Stack>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Per-option disabled &amp; badges</Heading>
+		<Stack gap={2}>
+			<Text size="sm" tone="muted">
+				A data-conditional view switch: <code>report</code> carries a count while <code>text</code>
+				and <code>log</code> stay disabled until their data exists. Arrow keys skip the disabled
+				segments, and the default selection lands on the first enabled one.
+			</Text>
+			<Segmented
+				label="Run output"
+				options={[
+					{ value: "report", label: "Report", badge: "128" },
+					{ value: "text", label: "Text", disabled: true },
+					{ value: "log", label: "Log", disabled: true },
+				]}
+			/>
+		</Stack>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={2} size="sm" tone="muted">Every tone</Heading>
 		<Stack gap={4}>
 			{TONE_GROUPS.map((group) => (

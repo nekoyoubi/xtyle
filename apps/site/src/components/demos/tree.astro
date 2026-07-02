@@ -45,6 +45,34 @@ const files = [
 	},
 	{ label: "package.json", href: "#pkg" },
 ];
+
+const binder = [
+	{
+		label: "Chapter 1",
+		value: "ch1",
+		expanded: true,
+		badge: "1.2k",
+		children: [
+			{
+				label: "Opening",
+				value: "ch1-1",
+				selected: true,
+				badge: "3",
+				actions: [
+					{ id: "rename", label: "Rename", icon: "✎" },
+					{ id: "delete", label: "Delete", icon: "✕" },
+				],
+			},
+			{
+				label: "Rising action",
+				value: "ch1-2",
+				actions: [{ id: "rename", label: "Rename", icon: "✎" }],
+			},
+		],
+	},
+	{ label: "Chapter 2", value: "ch2", badge: "0.8k", actions: [{ id: "rename", label: "Rename", icon: "✎" }] },
+	{ label: "Notes", value: "notes", badge: "12" },
+];
 ---
 
 <Stack gap={6} class="demo">
@@ -57,7 +85,28 @@ const files = [
 		<Heading level={3} size="sm" tone="muted">Files · compact</Heading>
 		<Tree label="Project files" items={files} size="sm" />
 	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Binder · row badges & actions</Heading>
+		<Tree label="Binder" items={binder} class="binder" />
+	</section>
 </Stack>
+
+<script>
+	import "@xoji/core/elements";
+	// Row actions fire tree-action; a real app would rename/delete here. Flash the row for the demo.
+	document.addEventListener("tree-action", (event) => {
+		const tree = event.target as HTMLElement | null;
+		if (!tree?.classList?.contains("binder")) return;
+		const { value } = (event as CustomEvent<{ value: string; action: string }>).detail;
+		// Light-DOM (Astro) mode has no shadow root; the rows live directly under the element.
+		const root: ParentNode = tree.shadowRoot ?? tree;
+		const row = root.querySelector(`[data-value="${value}"] .xoji-tree__row`) as HTMLElement | null;
+		if (row) {
+			row.animate([{ background: "var(--accent-bg)" }, { background: "transparent" }], { duration: 500 });
+		}
+	});
+</script>
 
 <style>
 	.demo {

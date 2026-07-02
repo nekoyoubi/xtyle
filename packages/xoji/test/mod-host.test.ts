@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getAlgorithm } from "../src/batteries.js";
 import { loadAlgorithm } from "../src/host/index.js";
+import { resolveBundledAlgorithm, bundledAlgorithms } from "../src/host/bundle.js";
 import type { Algorithm } from "../src/types.js";
 import { buildMatrix } from "./matrix.js";
 
@@ -83,3 +84,25 @@ for (const id of ALGORITHM_IDS) {
 		}
 	});
 }
+
+// The browser-delivery bundle resolves the same mods through the same host, sourced from the embedded
+// data instead of disk, so it inherits the byte-identical guarantee. A single smoke per algorithm proves
+// the bundle data is valid and the filesystem-free resolver is wired; the disk path above is the deep proof.
+describe("browser bundle resolver", () => {
+	const smoke = matrix[0]!.opts;
+
+	it("bundles every blessed algorithm", () => {
+		expect([...bundledAlgorithms()].sort()).toEqual([...ALGORITHM_IDS].sort());
+	});
+
+	for (const id of ALGORITHM_IDS) {
+		it(`derives byte-identical to baked from the bundle for ${id}`, async () => {
+			const bundled = await resolveBundledAlgorithm(id);
+			expect(JSON.stringify(bundled.derive(smoke))).toBe(JSON.stringify(getAlgorithm(id).derive(smoke)));
+		}, HOST_TIMEOUT_MS);
+	}
+
+	it("rejects an unknown bundled id", async () => {
+		await expect(resolveBundledAlgorithm("not-a-mod")).rejects.toThrow(/no bundled mod/);
+	});
+});

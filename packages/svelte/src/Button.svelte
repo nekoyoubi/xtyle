@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { ButtonVariant, Size, FullTone } from "@xoji/core";
+	import type { ButtonVariant, ButtonAlign, Size, FullTone } from "@xoji/core";
 
 	type ButtonSize = Size | "xs";
 
@@ -9,6 +9,7 @@
 		variant?: ButtonVariant;
 		tone?: FullTone;
 		size?: ButtonSize;
+		align?: ButtonAlign;
 		type?: "button" | "submit" | "reset";
 		href?: string;
 		disabled?: boolean;
@@ -30,6 +31,7 @@
 		variant = "solid",
 		tone = "accent",
 		size = "md",
+		align = "center",
 		type = "button",
 		href,
 		disabled = false,
@@ -54,6 +56,7 @@
 	{variant}
 	{tone}
 	{size}
+	{align}
 	{type}
 	href={href && !blocked ? href : undefined}
 	disabled={disabled || undefined}
@@ -62,7 +65,7 @@
 	icon-only={iconOnly || undefined}
 	pressed={pressed === undefined ? undefined : String(pressed)}
 	selected={selected === undefined ? undefined : String(selected)}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	{onclick}
 >
 	{#if iconStart}<span slot="icon-start">{@render iconStart()}</span>{/if}

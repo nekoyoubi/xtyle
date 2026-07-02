@@ -72,10 +72,10 @@ export const splitterCss = `
 	border-radius: 0;
 }
 .xoji-splitter:hover .xoji-splitter__grip,
-.xoji-splitter:focus-visible .xoji-splitter__grip {
+.xoji-splitter[data-focus-ring] .xoji-splitter__grip {
 	background: var(--accent);
 }
-.xoji-splitter:focus-visible {
+.xoji-splitter[data-focus-ring] {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
 	border-radius: var(--radius-sm);

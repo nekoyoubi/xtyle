@@ -40,7 +40,7 @@
 	{size}
 	disabled={disabled || undefined}
 	manual={manual || undefined}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	{onchange}
 >
 	{@render children?.()}

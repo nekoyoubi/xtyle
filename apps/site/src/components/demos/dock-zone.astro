@@ -31,10 +31,21 @@ const initialLayout = {
 			<Text tone="muted">
 				The workspace opens already split into zones. Drag a tab onto another zone to move it:
 				drop over the center to join as a tab, or against an edge to split. Clicking a tab just
-				selects it. The layout is the drag physics only; the panels are your own content.
+				selects it. Float the Preview panel out with its <span aria-hidden="true">⧉</span> button, or drag
+					any tab out past the zones. Drag a window by its titlebar to move it, back over a zone to
+					re-dock, or its corner to resize. The layout is the drag physics only; the panels are your own content.
 			</Text>
 			<DockZone layout={JSON.stringify(initialLayout)} style="height: 360px;" class="dock-demo">
-				<section data-panel-id="files" data-title="Files">
+				<section
+					data-panel-id="files"
+					data-title="Files"
+					data-actions={JSON.stringify([{ id: "new-file", label: "New file", icon: "+" }])}
+					data-menu={JSON.stringify([
+						{ heading: "Files" },
+						{ label: "Collapse all", value: "collapse-all" },
+						{ label: "Refresh", value: "refresh", hint: "F5" },
+					])}
+				>
 					<ul class="dz-tree">
 						<li class="dz-tree__dir">src
 							<ul>
@@ -53,7 +64,7 @@ const initialLayout = {
 						<li>README.md</li>
 					</ul>
 				</section>
-				<section data-panel-id="outline" data-title="Outline">
+				<section data-panel-id="outline" data-title="Outline" data-badge="6" data-closable>
 					<ul class="dz-outline">
 						<li>Overview</li>
 						<li class="dz-outline--child">Anchors</li>
@@ -63,7 +74,18 @@ const initialLayout = {
 						<li>Coverage</li>
 					</ul>
 				</section>
-				<section data-panel-id="preview" data-title="Preview">
+				<section
+					data-panel-id="preview"
+					data-title="Preview"
+					data-closable
+					data-actions={JSON.stringify([{ id: "float", label: "Float panel", icon: "⧉" }])}
+					data-menu={JSON.stringify([
+						{ label: "Reveal in tree", value: "reveal" },
+						{ label: "Float panel", value: "float" },
+						{ separator: true },
+						{ label: "Close preview", value: "close", intent: "danger" },
+					])}
+				>
 					<div class="dz-preview">
 						<span class="dz-preview__eyebrow">Themed output</span>
 						<strong class="dz-preview__title">midnight-ocean</strong>
@@ -77,7 +99,7 @@ const initialLayout = {
 						</div>
 					</div>
 				</section>
-				<section data-panel-id="problems" data-title="Problems">
+				<section data-panel-id="problems" data-title="Problems" data-badge="3">
 					<ul class="dz-problems">
 						<li class="dz-problems--warn">Contrast 4.2:1 below AA on <code>--warn-bg</code></li>
 						<li class="dz-problems--error">Token <code>--border</code> consumed, not produced</li>
@@ -87,7 +109,57 @@ const initialLayout = {
 			</DockZone>
 		</Stack>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">A stacked tool rail</Heading>
+		<Stack gap={3}>
+			<Text tone="muted">
+				The same element in <code>mode="stack"</code>: every panel is open at once as a collapsible
+				section, the shape a tool or inspector rail wants. Click a section header to collapse it;
+				drag a header to re-dock it, exactly like a tab.
+			</Text>
+			<DockZone mode="stack" style="height: 320px; max-width: 300px;" class="dock-rail">
+				<section data-panel-id="layers" data-title="Layers" data-actions={JSON.stringify([{ id: "add-layer", label: "Add layer", icon: "+" }])}>
+					<ul class="dz-outline">
+						<li>Background</li>
+						<li class="dz-outline--child">Gradient</li>
+						<li>Midground</li>
+						<li>Foreground</li>
+						<li class="dz-outline--child">Highlights</li>
+					</ul>
+				</section>
+				<section data-panel-id="props" data-title="Properties">
+					<ul class="dz-outline">
+						<li>Opacity 100%</li>
+						<li>Blend normal</li>
+						<li>X 128 · Y 96</li>
+					</ul>
+				</section>
+				<section data-panel-id="history" data-title="History" data-badge="12" data-menu={JSON.stringify([{ label: "Clear history", value: "clear", intent: "danger" }])}>
+					<ul class="dz-outline">
+						<li>Move layer</li>
+						<li>Recolor accent</li>
+						<li>Add gradient</li>
+					</ul>
+				</section>
+			</DockZone>
+		</Stack>
+	</Card>
 </Stack>
+
+<script>
+	import "@xoji/core/elements";
+
+	// Listen on document, not the element: Astro's ClientRouter remounts the zone on navigation,
+	// which would detach a zone-scoped listener. The event bubbles and composes, so document catches it.
+	document.addEventListener("panel-action", (event) => {
+		const zone = event.target as (HTMLElement & { closePanel(id: string): void; floatPanel(id: string): void }) | null;
+		if (!zone?.classList?.contains("dock-demo")) return;
+		const { panelId, actionId } = (event as CustomEvent<{ panelId: string; actionId: string }>).detail;
+		if (actionId === "close") zone.closePanel(panelId);
+		else if (actionId === "float") zone.floatPanel(panelId);
+	});
+</script>
 
 <style>
 	.dock-demo :global(section[data-panel-id]) {

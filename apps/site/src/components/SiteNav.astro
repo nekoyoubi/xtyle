@@ -2,6 +2,7 @@
 import { listComponents } from "@xoji/core";
 import Tree from "@xoji/astro/Tree.astro";
 import { categoryOrder, categoryMeta } from "./reference/categories.ts";
+import { isNewComponent } from "../data/newness.ts";
 
 interface Props {
 	currentPath: string;
@@ -28,6 +29,7 @@ const categoryNodes = categoryOrder
 				value: c.id,
 				href: `/components/${c.id}`,
 				selected: c.id === activeId,
+				...(isNewComponent(c.since) ? { badge: "New" } : {}),
 			})),
 		};
 	})
@@ -55,3 +57,17 @@ const items = [
 <nav class="x-sitenav">
 	<Tree items={items} label="Site navigation" />
 </nav>
+
+<style>
+	.x-sitenav :global(.xoji-tree__badge) {
+		color: var(--accent-text);
+		background: var(--accent-bg);
+		font-size: var(--text-xs);
+		font-weight: var(--weight-semibold);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		padding: 0.05em 0.4em;
+		border-radius: var(--radius-full);
+		line-height: 1.4;
+	}
+</style>

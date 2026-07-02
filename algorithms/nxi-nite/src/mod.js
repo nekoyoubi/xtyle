@@ -4444,8 +4444,17 @@
     let a3;
     let a4;
     if (ACCENT_FAN === "split-complement") {
-      a2 = fanned("2", applyAccentDelta(a1, rotate(-accentSplit)));
-      a3 = fanned("3", applyAccentDelta(a1, rotate(accentSplit)));
+      const mirrorOf = (c2) => applyAccentDelta(a1, rotate(-hueDelta(a1.h, c2.h)));
+      const a2Pin = pinned["--accent-2"];
+      const a3Pin = pinned["--accent-3"];
+      let a2Derived = applyAccentDelta(a1, rotate(-accentSplit));
+      let a3Derived = applyAccentDelta(a1, rotate(accentSplit));
+      if (a2Pin && !a3Pin)
+        a3Derived = mirrorOf(toOklchColor(a2Pin));
+      else if (a3Pin && !a2Pin)
+        a2Derived = mirrorOf(toOklchColor(a3Pin));
+      a2 = fanned("2", a2Derived);
+      a3 = fanned("3", a3Derived);
       a4 = fanned("4", applyAccentDelta(a1, rotate(180)));
     } else {
       a2 = fanned("2", applyAccentDelta(a1, rotate(shiftStep)));
@@ -5151,7 +5160,11 @@
         }
         const step = typeof ctx.knobs.accentShiftStep === "number" ? ctx.knobs.accentShiftStep : DEFAULT_SHIFT_STEP;
         const split = typeof ctx.knobs.accentSplit === "number" ? ctx.knobs.accentSplit : DEFAULT_ACCENT_SPLIT;
-        const fanOffset = (n) => ACCENT_FAN === "split-complement" ? n === 2 ? -split : n === 3 ? split : 180 : step * (n - 1);
+        const accent2Value = ctx.register["--accent-2"];
+        const accent3Value = ctx.register["--accent-3"];
+        const pinnedAccent2 = ctx.constraints["--accent-2"] && accent2Value ? toOklchColor(accent2Value) : null;
+        const pinnedAccent3 = ctx.constraints["--accent-3"] && accent3Value ? toOklchColor(accent3Value) : null;
+        const fanOffset = (n) => ACCENT_FAN === "split-complement" ? n === 2 ? pinnedAccent3 ? -hueDelta(accent.h, pinnedAccent3.h) : -split : n === 3 ? pinnedAccent2 ? -hueDelta(accent.h, pinnedAccent2.h) : split : 180 : step * (n - 1);
         for (let n = 2; n <= 4; n++) {
           if (ctx.constraints[`--accent-${n}`])
             continue;

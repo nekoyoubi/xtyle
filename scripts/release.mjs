@@ -49,6 +49,13 @@ console.log(`Releasing ${title}`);
 console.log(`  version: ${version} (from packages/xoji)`);
 console.log(`  body:    ${body.split("\n").length} lines from CHANGELOG.md\n`);
 
+const tagExists = spawnSync("git", ["rev-parse", "-q", "--verify", `refs/tags/${tag}`], { cwd: root }).status === 0;
+if (!tagExists) {
+	execSync(`git tag -a ${tag} -m "${title}"`, { cwd: root, stdio: "inherit" });
+	execSync(`git push origin ${tag}`, { cwd: root, stdio: "inherit" });
+	console.log(`Annotated tag ${tag} created and pushed.`);
+}
+
 spawnSync("gh", ["release", "create", tag, "--title", title, "--notes-file", "-"], {
 	cwd: root,
 	input: body,

@@ -3,6 +3,8 @@
 	import type { Snippet } from "svelte";
 	import type { Size } from "@xoji/core";
 
+	type FieldOption = { value: string; label?: string };
+
 	interface Props {
 		label?: string;
 		name?: string;
@@ -18,6 +20,8 @@
 		description?: string;
 		error?: string;
 		ariaLabel?: string;
+		options?: ReadonlyArray<string | FieldOption>;
+		mono?: boolean;
 		oninput?: (event: Event) => void;
 		onchange?: (event: Event) => void;
 		prefix?: Snippet;
@@ -41,12 +45,20 @@
 		description = "",
 		error = "",
 		ariaLabel,
+		options,
+		mono = false,
 		oninput,
 		onchange,
 		prefix,
 		suffix,
 		...rest
 	}: Props = $props();
+
+	let host: (HTMLElement & { options: ReadonlyArray<string | FieldOption> }) | undefined = $state();
+
+	$effect(() => {
+		if (host) host.options = options ?? [];
+	});
 
 	function handleInput(event: Event) {
 		value = (event.target as HTMLElement & { value: string }).value;
@@ -55,6 +67,7 @@
 </script>
 
 <xoji-field
+	bind:this={host}
 	{...rest}
 	{label}
 	name={name || undefined}
@@ -67,9 +80,10 @@
 	invalid={invalid || undefined}
 	required={required || undefined}
 	clearable={clearable || undefined}
+	mono={mono || undefined}
 	{description}
 	{error}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	oninput={handleInput}
 	{onchange}
 >

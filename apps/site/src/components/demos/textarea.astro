@@ -43,6 +43,18 @@ import Heading from "@xoji/astro/Heading.astro";
 			<Textarea label="Read-only summary" name="disabled" disabled rows={3} value="Generated from your activity." />
 		</Grid>
 	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Code-shaped</Heading>
+		<Textarea
+			label="Condition"
+			name="condition"
+			mono
+			spellcheck="false"
+			rows={3}
+			value={`score >= 0.8 && tags.includes("ready") && !archived`}
+		/>
+	</section>
 </Stack>
 
 <style>

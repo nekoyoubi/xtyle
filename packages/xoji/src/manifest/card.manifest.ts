@@ -17,6 +17,30 @@ const htmlExample = `<xoji-card>
 	<a slot="footer" href="/pricing">View plans</a>
 </xoji-card>`;
 
+const htmlActionExample = `<xoji-card action onclick="openProject('atlas')">
+	<h3 slot="header">Atlas</h3>
+	<p>Last edited 2 hours ago.</p>
+</xoji-card>`;
+
+const svelteActionExample = `<script lang="ts">
+	import { Card } from "@xoji/svelte";
+	let { openProject }: { openProject: (id: string) => void } = $props();
+</script>
+
+<Card action onclick={() => openProject("atlas")}>
+	{#snippet header()}<h3>Atlas</h3>{/snippet}
+	<p>Last edited 2 hours ago.</p>
+</Card>`;
+
+const astroActionExample = `---
+import { Card } from "@xoji/astro";
+---
+
+<Card action onclick="openProject('atlas')">
+	<h3 slot="header">Atlas</h3>
+	<p>Last edited 2 hours ago.</p>
+</Card>`;
+
 const svelteExample = `<script lang="ts">
 	import { Card } from "@xoji/svelte";
 </script>
@@ -116,7 +140,15 @@ export const cardManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description:
-				"Adds a hover elevation lift and a focus-within ring for cards that act as a single clickable target. Presentational only: wrap the clickable content in a real button or link.",
+				"Adds a hover elevation lift and a focus-within ring for cards that act as a single clickable target. Presentational only: it adds no role or tab stop, so wrap the clickable content in a real button or link (or use `action` when the card itself is the button).",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "action",
+			type: "boolean",
+			default: "false",
+			description:
+				"Makes the card itself the button: it takes `role=\"button\"`, a tab stop, and Enter/Space activation, so a JS `onclick` on the card is keyboard-reachable with no inner control. Implies the interactive hover lift, and its focus ring shows on keyboard entry only. Use it for a card that runs an action (open this item, select this row); for a card that navigates, use a link inside or `CardLink`. Do not put another interactive element inside an `action` card.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -232,13 +264,15 @@ export const cardManifest: ComponentManifest = {
 	],
 	composition: [
 		"Use Card as the frame for any grouped content: forms, media, summaries, list items.",
-		"For a clickable card, set `interactive` and wrap the content (or the whole region) in a real `<button>` or `<a>`; the variant supplies the hover/focus affordance but no behavior.",
+		"For a card whose content carries its own control, set `interactive` and wrap that content in a real `<button>` or `<a>`; the variant supplies the hover/focus affordance but no behavior.",
+		"For a card that is itself one clickable target running a JS action, set `action` instead: the card becomes a keyboard-operable button (`role=\"button\"`, tab stop, Enter/Space), so an `onclick` on it works for the keyboard with nothing to wrap.",
 		"Pair the `overlay` variant with floating surfaces (popovers, menus, toasts) so the card matches their translucent treatment.",
 	],
 	a11y: [
 		"Card is a plain surface container with no implicit role; put semantic elements (headings, lists, buttons) inside it.",
 		"The `interactive` variant is presentational only: it adds no role or tab stop. Wrap the clickable target in a native `<button>` or `<a>` so keyboard and screen-reader semantics come for free.",
-		"The focus ring is driven by `:focus-within`, so it appears whenever the real interactive element inside the card takes focus.",
+		"The `action` variant makes the card itself the button: it reflects `role=\"button\"`, takes a `tabindex` tab stop, and maps Enter/Space to the same activation a click fires. Do not nest another interactive element inside an `action` card; a button must not contain a button or link.",
+		"An `interactive` card rings on `:focus-within` (the real control inside it takes focus); an `action` card rings on `:focus-visible`, so a pointer click never paints the ring but keyboard entry does.",
 		"Focus is shown with a token ring and a transparent outline that the forced-colors base rule promotes to a real system outline.",
 	],
 	examples: [
@@ -247,6 +281,13 @@ export const cardManifest: ComponentManifest = {
 			title: "Regions and variants",
 			description: "Header, body, and footer regions; the overlay, compact, and interactive variants.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "action-card",
+			title: "Action card",
+			description:
+				"An `action` card is itself a keyboard-operable button: it focuses, Enter and Space fire its `onclick`, and the ring shows on keyboard entry only.",
+			source: { html: htmlActionExample, svelte: svelteActionExample, astro: astroActionExample },
 		},
 	],
 };

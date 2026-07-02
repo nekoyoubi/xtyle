@@ -59,6 +59,9 @@ import { eyebrowCss } from "./components/eyebrow.js";
 import { cardLinkCss } from "./components/card-link.js";
 import { tocCss } from "./components/toc.js";
 import { kbdCss } from "./components/kbd.js";
+import { barCss } from "./components/bar.js";
+import { sparklineCss } from "./components/sparkline.js";
+import { pieCss } from "./components/pie.js";
 import { swatchCss } from "./components/swatch.js";
 import { menuCss } from "./components/menu.js";
 import { codeCss } from "./components/code.js";
@@ -83,6 +86,9 @@ const hostDisplayCss = [
 	"xoji-panel { display: block; }",
 	"xoji-section { display: block; }",
 	"xoji-kbd { display: inline-block; }",
+	"xoji-bar { display: block; }",
+	"xoji-sparkline { display: inline-block; }",
+	"xoji-pie { display: block; }",
 	"xoji-spinner { display: inline-flex; }",
 	"xoji-skeleton { display: block; }",
 	"xoji-link { display: inline; }",
@@ -178,6 +184,9 @@ export const componentsCss: string = [
 	cardLinkCss,
 	tocCss,
 	kbdCss,
+	barCss,
+	sparklineCss,
+	pieCss,
 	swatchCss,
 	menuCss,
 	codeCss,

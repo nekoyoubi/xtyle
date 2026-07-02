@@ -4,8 +4,9 @@
   function selectedValue(bindings) {
     const segments = bindings.segments ?? [];
     const requested = bindings.value ?? null;
-    if (requested != null && segments.some((s) => s.value === requested)) return requested;
-    return segments[0]?.value ?? "";
+    if (requested != null && segments.some((s) => s.value === requested && !s.disabled)) return requested;
+    const firstEnabled = segments.find((s) => !s.disabled) ?? segments[0];
+    return firstEnabled?.value ?? "";
   }
   function rootClass(bindings) {
     const size = bindings.size ?? "md";
@@ -17,14 +18,22 @@
       bindings.disabled && "xoji-segmented--disabled"
     ].filter(Boolean).join(" ");
   }
+  function escapeHtml(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(/"/g, "&quot;");
+  }
   function options(bindings, selected) {
     const segments = bindings.segments ?? [];
-    const disabled = bindings.disabled ?? false;
+    const groupDisabled = bindings.disabled ?? false;
     return segments.map((seg) => {
+      const segDisabled = groupDisabled || !!seg.disabled;
       const isOn = seg.value === selected;
-      const tabindex = disabled ? "-1" : isOn ? "0" : "-1";
-      const disabledAttr = disabled ? " disabled" : "";
-      return `<button class="xoji-segmented__option" part="option" type="button" role="radio" aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${seg.value}"${disabledAttr}>${seg.label}</button>`;
+      const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
+      const disabledAttr = segDisabled ? " disabled" : "";
+      const badge = seg.badge ? `<span class="xoji-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
+      return `<button class="xoji-segmented__option" part="option" type="button" role="radio" aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${disabledAttr}>${escapeHtml(seg.label)}${badge}</button>`;
     }).join("");
   }
   function fieldInner(bindings, selected) {
@@ -41,12 +50,13 @@
   });
   hooks.fragment.update("segmented", (bindings, ops) => {
     const selected = selectedValue(bindings);
-    const disabled = bindings.disabled ?? false;
+    const groupDisabled = bindings.disabled ?? false;
     ops.setAttr('[role="radiogroup"]', "class", rootClass(bindings));
     for (const seg of bindings.segments ?? []) {
+      const segDisabled = groupDisabled || !!seg.disabled;
       const isOn = seg.value === selected;
       ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "aria-checked", String(isOn));
-      ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "tabindex", disabled ? "-1" : isOn ? "0" : "-1");
+      ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
     }
   });
   xript.exports.register("selectOption", (payload) => {

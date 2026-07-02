@@ -23,6 +23,7 @@ export const textareaCss = `
 .xoji-textarea--resize-none .xoji-textarea__control { resize: none; }
 .xoji-textarea--resize-horizontal .xoji-textarea__control { resize: horizontal; }
 .xoji-textarea--resize-both .xoji-textarea__control { resize: both; }
+.xoji-textarea--mono .xoji-textarea__control { font-family: var(--font-mono); }
 .xoji-textarea--sm .xoji-textarea__control {
 	font-size: var(--text-sm);
 	padding: var(--space-1) var(--space-2);

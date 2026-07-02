@@ -1,5 +1,5 @@
 ---
-import { parseSegments } from "@xoji/core/markup";
+import { normalizeSegments } from "@xoji/core/markup";
 import { renderFragmentLight } from "@xoji/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xoji/core";
@@ -7,7 +7,7 @@ type Size = "sm" | "md" | "lg";
 
 interface Props {
 	value?: string;
-	options?: string;
+	options?: string | ReadonlyArray<string | { value: string; label?: string; disabled?: boolean; badge?: string }>;
 	disabled?: boolean;
 	size?: Size;
 	tone?: Tone;
@@ -36,7 +36,8 @@ const {
 } = Astro.props;
 
 const elementId = `xoji-segmented-${Math.random().toString(36).slice(2, 8)}`;
-const segments = parseSegments(options ?? "");
+const segments = normalizeSegments(options);
+const optionsAttr = typeof options === "string" ? options : options ? JSON.stringify(options) : undefined;
 
 const bindings = {
 	segments,
@@ -53,7 +54,7 @@ const light = await renderFragmentLight("segmented", bindings);
 
 <xoji-segmented
 	value={value}
-	options={options}
+	options={optionsAttr}
 	disabled={disabled || undefined}
 	size={size}
 	tone={tone}

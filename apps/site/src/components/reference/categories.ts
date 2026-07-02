@@ -15,6 +15,7 @@ export const categoryOrder: ComponentCategory[] = [
 	"feedback",
 	"overlay",
 	"data-display",
+	"metrics",
 ];
 
 export const categoryMeta: Record<ComponentCategory, CategoryMeta> = {
@@ -57,6 +58,11 @@ export const categoryMeta: Record<ComponentCategory, CategoryMeta> = {
 		id: "data-display",
 		label: "Display",
 		blurb: "The shapes that surface structured content: tables, avatars, badges.",
+	},
+	metrics: {
+		id: "metrics",
+		label: "Metrics",
+		blurb: "The shapes that turn numbers into a read at a glance: charts and single-figure stats.",
 	},
 };
 

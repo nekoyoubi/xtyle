@@ -3,13 +3,23 @@ import {
 	dockPanel,
 	removePanel,
 	activatePanel,
+	toggleCollapsed,
+	setLeafMode,
 	singleZone,
 	allPanels,
 	leafOf,
 	parseLayout,
 	layoutRects,
+	floatPanel,
+	updateFloating,
+	dockFloating,
+	removeFloating,
+	allLayoutPanels,
+	parseDockLayout,
 	type DockNode,
+	type DockLeaf,
 	type DockSplit,
+	type DockLayout,
 } from "../src/elements/dock-model.js";
 import { resolveDrop } from "../src/elements/dock-layout.js";
 
@@ -107,6 +117,52 @@ describe("dock-model", () => {
 	});
 });
 
+describe("dock-model stack mode", () => {
+	it("builds a stacked single zone and leaves tabs as the default", () => {
+		expect(singleZone("root", ["a", "b"], "stack").mode).toBe("stack");
+		expect(singleZone("root", ["a", "b"]).mode).toBeUndefined();
+	});
+
+	it("toggles a panel's collapsed state, and is a no-op for an absent panel", () => {
+		const root = singleZone("root", ["a", "b"], "stack");
+		const collapsed = toggleCollapsed(root, "a") as DockLeaf;
+		expect(collapsed.collapsed).toEqual(["a"]);
+		const expanded = toggleCollapsed(collapsed, "a") as DockLeaf;
+		expect(expanded.collapsed).toBeUndefined(); // empty collapsed set is dropped, not stored as []
+		expect(toggleCollapsed(root, "z")).toBe(root);
+	});
+
+	it("preserves mode and prunes collapsed through a dock and a remove", () => {
+		let root: DockNode = { kind: "leaf", id: "root", panels: ["a", "b"], active: 0, mode: "stack", collapsed: ["a", "b"] };
+		// Add c at center: mode stays, collapsed carries the still-present panels, c is expanded.
+		root = dockPanel(root, { panel: "c", target: "root", region: "center" });
+		expect(root.kind === "leaf" && root.mode).toBe("stack");
+		expect(root.kind === "leaf" && root.collapsed).toEqual(["a", "b"]);
+		// Remove b: mode stays, b drops out of collapsed.
+		const removed = removePanel(root, "b") as DockLeaf;
+		expect(removed.mode).toBe("stack");
+		expect(removed.collapsed).toEqual(["a"]);
+	});
+
+	it("sets a leaf's mode by id without touching its siblings", () => {
+		const split: DockNode = {
+			kind: "split",
+			direction: "row",
+			children: [singleZone("L", ["a"]), singleZone("R", ["b"])],
+		};
+		const stacked = setLeafMode(split, "R", "stack") as DockSplit;
+		expect(stacked.children[0]?.kind === "leaf" && stacked.children[0].mode).toBeUndefined();
+		expect(stacked.children[1]?.kind === "leaf" && stacked.children[1].mode).toBe("stack");
+	});
+
+	it("round-trips mode and collapsed, and rejects a bad mode or collapsed", () => {
+		const root: DockNode = { kind: "leaf", id: "root", panels: ["a", "b"], active: 0, mode: "stack", collapsed: ["b"] };
+		expect(parseLayout(JSON.stringify(root))).toEqual(root);
+		expect(() => parseLayout('{"kind":"leaf","id":"x","panels":["a"],"active":0,"mode":"grid"}')).toThrow(/malformed/);
+		expect(() => parseLayout('{"kind":"leaf","id":"x","panels":["a"],"active":0,"collapsed":[1]}')).toThrow(/malformed/);
+	});
+});
+
 const container = { top: 0, left: 0, width: 1000, height: 400 };
 
 describe("layoutRects", () => {
@@ -156,5 +212,82 @@ describe("layoutRects", () => {
 		expect(after.map((r) => r.id)).toEqual(["L", "new", "R"]);
 		const totalWidth = after.reduce((sum, r) => sum + r.rect.width, 0);
 		expect(totalWidth).toBeCloseTo(container.width, 5);
+	});
+});
+
+describe("dock-model floating", () => {
+	const rect = { x: 40, y: 30, w: 320, h: 200 };
+	const baseLayout = (): DockLayout => ({ tree: singleZone("root", ["a", "b", "c"]), floating: [] });
+
+	it("floats a docked panel out of the tree into a window, recording its origin leaf", () => {
+		const layout = floatPanel(baseLayout(), "b", rect);
+		expect(allPanels(layout.tree)).toEqual(["a", "c"]);
+		expect(layout.floating).toEqual([{ panelId: "b", ...rect, origin: "root" }]);
+	});
+
+	it("is a no-op to float a panel that isn't docked", () => {
+		const start = baseLayout();
+		expect(floatPanel(start, "z", rect)).toBe(start);
+	});
+
+	it("records the exact origin leaf when floating out of a split", () => {
+		const split: DockLayout = {
+			tree: { kind: "split", direction: "row", children: [singleZone("left", ["a"]), singleZone("right", ["b", "c"])] },
+			floating: [],
+		};
+		const layout = floatPanel(split, "c", rect);
+		expect(layout.floating[0]?.origin).toBe("right");
+	});
+
+	it("falls back to an empty root zone when floating empties the tree", () => {
+		const layout = floatPanel({ tree: singleZone("root", ["only"]), floating: [] }, "only", rect, "root");
+		expect(layout.tree).toEqual({ kind: "leaf", id: "root", panels: [], active: 0 });
+		expect(layout.floating[0]?.panelId).toBe("only");
+	});
+
+	it("moves / resizes a floating window", () => {
+		const floated = floatPanel(baseLayout(), "b", rect);
+		const moved = updateFloating(floated, "b", { x: 100, y: 120 });
+		expect(moved.floating[0]).toMatchObject({ panelId: "b", x: 100, y: 120, w: 320, h: 200 });
+		expect(updateFloating(floated, "z", { x: 5 })).toBe(floated);
+	});
+
+	it("re-docks a floating panel through dockPanel (a tab)", () => {
+		const floated = floatPanel(baseLayout(), "b", rect);
+		const redocked = dockFloating(floated, "b", { target: "root", region: "center" });
+		expect(redocked.floating).toEqual([]);
+		expect(allPanels(redocked.tree)).toContain("b");
+	});
+
+	it("re-docks a floating panel to an edge as a split", () => {
+		const floated = floatPanel(baseLayout(), "b", rect);
+		const redocked = dockFloating(floated, "b", { target: "root", region: "right", newLeafId: "z" });
+		expect(redocked.tree.kind).toBe("split");
+		expect(allPanels(redocked.tree)).toContain("b");
+	});
+
+	it("removes a floating panel entirely", () => {
+		const floated = floatPanel(baseLayout(), "b", rect);
+		expect(removeFloating(floated, "b").floating).toEqual([]);
+	});
+
+	it("lists docked then floating panels", () => {
+		const floated = floatPanel(baseLayout(), "b", rect);
+		expect(allLayoutPanels(floated)).toEqual(["a", "c", "b"]);
+	});
+
+	it("parses a wrapper layout and round-trips it", () => {
+		const floated = floatPanel(baseLayout(), "b", rect);
+		expect(parseDockLayout(JSON.stringify(floated))).toEqual(floated);
+	});
+
+	it("parses a bare tree as a layout with no floats (legacy)", () => {
+		const tree = singleZone("root", ["a", "b"]);
+		expect(parseDockLayout(JSON.stringify(tree))).toEqual({ tree, floating: [] });
+	});
+
+	it("throws on a malformed layout", () => {
+		expect(() => parseDockLayout('{"floating":[]}')).toThrow();
+		expect(() => parseDockLayout('{"tree":{"kind":"leaf","id":"r","panels":["a"],"active":0},"floating":[{"panelId":"a"}]}')).toThrow();
 	});
 });

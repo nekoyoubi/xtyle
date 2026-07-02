@@ -1,0 +1,62 @@
+---
+import Sparkline from "@xoji/astro/Sparkline.astro";
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Cluster from "@xoji/astro/Cluster.astro";
+import Grid from "@xoji/astro/Grid.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+
+const trend = [4, 6, 5, 8, 7, 9, 12, 10, 13];
+const dip = [18, 16, 17, 12, 9, 11, 8, 6, 7];
+
+const metrics = [
+	{ label: "Signups", value: "1,284", tone: "success" as const, data: trend },
+	{ label: "Latency", value: "212ms", tone: "warn" as const, data: [180, 190, 210, 205, 240, 230, 260, 250, 212] },
+	{ label: "Errors", value: "0.4%", tone: "danger" as const, data: dip },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Line, area, and bar</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The same series as three shapes. Sweep across one for the value at the nearest point.
+			</Text>
+			<Cluster gap={4} align="center">
+				<Sparkline values={trend} label="Trend, line" />
+				<Sparkline values={trend} variant="area" tone="success" label="Trend, area" />
+				<Sparkline values={trend} variant="bar" tone="purple" label="Trend, bars" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Beside a stat</Heading>
+		<Grid minColWidth="14rem" gap={4}>
+			{metrics.map((m) => (
+				<Card compact>
+					<Stack gap={1}>
+						<Text size="xs" tone="subtle" weight="semibold">{m.label}</Text>
+						<Cluster justify="between" align="center" gap={2}>
+							<Text size="lg" weight="bold">{m.value}</Text>
+							<Sparkline values={m.data} variant="area" tone={m.tone} label={`${m.label} trend`} style="--spark-width: 5rem; --spark-height: 1.6rem;" />
+						</Cluster>
+					</Stack>
+				</Card>
+			))}
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Inline in text</Heading>
+		<Text>
+			Signups climbed
+			<Sparkline values={trend} tone="accent" label="Signups trend" style="--spark-width: 4.5rem; --spark-height: 1.1rem;" />
+			34% this week, while error rate
+			<Sparkline values={dip} variant="line" tone="danger" label="Error rate trend" style="--spark-width: 4.5rem; --spark-height: 1.1rem;" />
+			fell to 0.4%.
+		</Text>
+	</Card>
+</Stack>

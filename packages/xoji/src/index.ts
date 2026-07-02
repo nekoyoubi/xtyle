@@ -21,6 +21,7 @@ export * from "./vocab.js";
 export * from "./token-meta.js";
 export * from "./color.js";
 export * from "./convert.js";
+export * from "./series.js";
 export * from "./graph.js";
 export {
 	emit,

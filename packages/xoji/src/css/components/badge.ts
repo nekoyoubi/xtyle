@@ -66,6 +66,21 @@ ${toneOutline}
 	width: var(--space-3);
 	height: var(--space-3);
 }
+.xoji-badge--pulse-slow .xoji-badge__dot {
+	animation: xoji-badge-pulse 1.8s var(--ease-standard) infinite;
+}
+.xoji-badge--pulse-fast .xoji-badge__dot {
+	animation: xoji-badge-pulse 0.9s var(--ease-standard) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.xoji-badge--pulse-slow .xoji-badge__dot,
+	.xoji-badge--pulse-fast .xoji-badge__dot {
+		animation: none;
+	}
+}
+@keyframes xoji-badge-pulse {
+	50% { opacity: 0.4; }
+}
 .xoji-badge__count {
 	font-variant-numeric: tabular-nums;
 	font-weight: var(--weight-semibold);

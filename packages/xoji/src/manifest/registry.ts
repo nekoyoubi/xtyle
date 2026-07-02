@@ -61,6 +61,9 @@ import { eyebrowManifest } from "./eyebrow.manifest.js";
 import { cardLinkManifest } from "./card-link.manifest.js";
 import { tocManifest } from "./toc.manifest.js";
 import { kbdManifest } from "./kbd.manifest.js";
+import { barManifest } from "./bar.manifest.js";
+import { sparklineManifest } from "./sparkline.manifest.js";
+import { pieManifest } from "./pie.manifest.js";
 import { swatchManifest } from "./swatch.manifest.js";
 import { menuManifest } from "./menu.manifest.js";
 import { splitterManifest } from "./splitter.manifest.js";
@@ -114,6 +117,9 @@ export const components: ComponentRegistry = {
 	"card-link": cardLinkManifest,
 	toc: tocManifest,
 	kbd: kbdManifest,
+	bar: barManifest,
+	sparkline: sparklineManifest,
+	pie: pieManifest,
 	swatch: swatchManifest,
 	menu: menuManifest,
 	splitter: splitterManifest,

@@ -205,6 +205,33 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.bar",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xoji.component.bar",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.sparkline",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xoji.component.sparkline",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.pie",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xoji.component.pie",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.link",
 			"accepts": [
 				"text/html+jsml"
@@ -643,6 +670,18 @@
 		},
 		"xoji.component.pagination": {
 			"description": "Permits a mod to provide the markup and behavior of the xoji Pagination component.",
+			"risk": "low"
+		},
+		"xoji.component.bar": {
+			"description": "Permits a mod to provide the markup of the xoji Bar chart component.",
+			"risk": "low"
+		},
+		"xoji.component.sparkline": {
+			"description": "Permits a mod to provide the markup of the xoji Sparkline component.",
+			"risk": "low"
+		},
+		"xoji.component.pie": {
+			"description": "Permits a mod to provide the markup of the xoji Pie chart component.",
 			"risk": "low"
 		}
 	},

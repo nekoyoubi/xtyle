@@ -18,6 +18,7 @@ interface TabsBindings {
 	variant?: string;
 	size?: string;
 	sticky?: boolean;
+	tablist?: boolean;
 	label?: string | null;
 	labelledby?: string | null;
 	uid?: string;
@@ -77,9 +78,11 @@ function tabButtons(bindings: TabsBindings, selected: string | null): string {
 			const isSelected = key === selected;
 			const tabindex = isSelected && !tab.disabled ? "0" : "-1";
 			const disabledAttr = tab.disabled ? " disabled aria-disabled=\"true\"" : "";
+			// In tablist mode the element owns no panels, so there is nothing to reference.
+			const controls = bindings.tablist ? "" : ` aria-controls="${uid}-panel-${i}"`;
 			return (
 				`<button class="xoji-tabs__tab" part="tab" type="button" role="tab" id="${uid}-tab-${i}" ` +
-				`data-key="${key}" aria-selected="${String(isSelected)}" aria-controls="${uid}-panel-${i}" ` +
+				`data-key="${key}" aria-selected="${String(isSelected)}"${controls} ` +
 				`tabindex="${tabindex}"${disabledAttr}>${tab.label}</button>`
 			);
 		})
@@ -111,7 +114,7 @@ hooks.fragment.mount("tabs", (bindings, ops) => {
 	const tablistAttr = bindings.labelledby ? "aria-labelledby" : "aria-label";
 	if (tablistLabel) ops.setAttr("[data-tablist]", tablistAttr, tablistLabel);
 	ops.replaceChildren("[data-tablist]", tabButtons(bindings, selected));
-	ops.replaceChildren("[data-panels]", panels(bindings, selected));
+	ops.replaceChildren("[data-panels]", bindings.tablist ? "" : panels(bindings, selected));
 });
 
 /** A selection change — toggle state on the existing nodes, never rebuild them. */

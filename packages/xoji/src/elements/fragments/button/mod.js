@@ -5,11 +5,13 @@
     const variant = b.variant ?? "solid";
     const tone = b.tone ?? "accent";
     const size = b.size ?? "md";
+    const align = b.align ?? "center";
     return [
       "xoji-button",
       `xoji-button--${variant}`,
       `xoji-button--${tone}`,
       size !== "md" && `xoji-button--${size}`,
+      align !== "center" && `xoji-button--align-${align}`,
       b.block && "xoji-button--block",
       b.iconOnly && "xoji-button--icon",
       b.loading && "xoji-button--loading"

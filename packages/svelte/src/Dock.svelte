@@ -48,7 +48,7 @@
 	edge-width={edgeWidth}
 	nav={nav || undefined}
 	{label}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	hide-header={hideHeader || undefined}
 >
 	{#if header}<span slot="header">{@render header()}</span>{/if}

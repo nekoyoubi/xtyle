@@ -10,6 +10,7 @@
 		tone?: BadgeTone;
 		size?: Size;
 		dot?: boolean;
+		pulse?: boolean | "slow" | "fast";
 		count?: string | number;
 		removable?: boolean;
 		removeLabel?: string;
@@ -24,6 +25,7 @@
 		tone = "neutral",
 		size = "md",
 		dot = false,
+		pulse,
 		count,
 		removable = false,
 		removeLabel,
@@ -39,6 +41,7 @@
 	{tone}
 	{size}
 	dot={dot || undefined}
+	pulse={pulse === true ? "slow" : pulse || undefined}
 	count={count !== undefined && count !== null && count !== "" ? String(count) : undefined}
 	removable={removable || undefined}
 	remove-label={removeLabel}

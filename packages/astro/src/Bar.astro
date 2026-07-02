@@ -1,0 +1,78 @@
+---
+import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { resolveSeriesColors } from "./internal/palette.ts";
+import type { BarSeries, BarScheme } from "@xoji/core";
+
+interface Props {
+	series?: BarSeries[];
+	categories?: string[];
+	scheme?: BarScheme;
+	reverse?: boolean;
+	colorBy?: "series" | "category";
+	orientation?: "vertical" | "horizontal";
+	stacked?: boolean;
+	showValues?: boolean;
+	legend?: boolean;
+	height?: number;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	series = [],
+	categories = [],
+	scheme = "accents",
+	reverse = false,
+	colorBy,
+	orientation = "vertical",
+	stacked = false,
+	showValues = false,
+	legend = true,
+	height = 320,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const resolvedColorBy = colorBy ?? (series.length <= 1 ? "category" : "series");
+const colorCount = resolvedColorBy === "category" ? categories.length : series.length;
+const colors = await resolveSeriesColors(scheme, colorCount, reverse);
+const bindings = {
+	series,
+	categories,
+	colors,
+	colorBy: resolvedColorBy,
+	orientation,
+	stacked,
+	showValues,
+	legend,
+	height,
+	title: label ?? null,
+	ariaLabel: label ?? null,
+};
+const chrome = await renderFragmentLight("bar", bindings);
+---
+
+<xoji-bar
+	series={JSON.stringify(series)}
+	categories={JSON.stringify(categories)}
+	scheme={Array.isArray(scheme) ? JSON.stringify(scheme) : scheme}
+	reverse={reverse || undefined}
+	color-by={colorBy}
+	orientation={orientation === "horizontal" ? "horizontal" : undefined}
+	stacked={stacked || undefined}
+	show-values={showValues || undefined}
+	legend={legend ? undefined : "false"}
+	height={height}
+	label={label}
+	class={extra}
+	set:html={chrome}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xoji/core/elements";</script>}

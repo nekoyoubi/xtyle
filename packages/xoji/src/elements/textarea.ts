@@ -3,6 +3,7 @@ import type { Size } from "../index.js";
 import { textareaHostCss, type TextareaResize } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/textarea/source.generated.js";
+import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attrs.js";
 
 export type { TextareaResize };
 
@@ -28,7 +29,28 @@ export class XojiTextarea extends XojiElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["label", "value", "rows", "resize", "placeholder", "size", "disabled", "invalid", "required", "error", "name"];
+		return [
+			"label",
+			"value",
+			"rows",
+			"resize",
+			"placeholder",
+			"size",
+			"disabled",
+			"invalid",
+			"required",
+			"error",
+			"name",
+			"mono",
+			...NATIVE_INPUT_ATTRS,
+		];
+	}
+
+	get mono(): boolean {
+		return this.hasAttribute("mono");
+	}
+	set mono(value: boolean) {
+		this.reflectBoolean("mono", value);
 	}
 
 	get value(): string {
@@ -109,6 +131,7 @@ export class XojiTextarea extends XojiElement {
 			size: this.size,
 			resize: this.resize,
 			invalid: this.invalid,
+			mono: this.mono,
 		};
 	}
 
@@ -123,6 +146,7 @@ export class XojiTextarea extends XojiElement {
 		field.disabled = this.disabled;
 		field.required = this.required;
 		field.rows = this.rows;
+		forwardNativeInputAttrs(this, field);
 
 		const placeholder = this.getAttribute("placeholder");
 		if (placeholder !== null) field.placeholder = placeholder;

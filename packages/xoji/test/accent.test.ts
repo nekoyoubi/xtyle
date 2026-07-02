@@ -46,15 +46,32 @@ describe("xoji-default accent ramp", () => {
 		expect(complement).toBeCloseTo(180, 0);
 	});
 
-	it("honors a pinned --accent-2 without disturbing 3 or 4", () => {
+	it("mirrors a pinned --accent-2 into the opposing wing, holding the 180 complement", () => {
 		const r = derive(xojiDefault, {
 			constraints: { "--accent": "#ff0000", "--accent-2": "#00ff00" },
 		});
 		expect(r["--accent"]).toBe("#ff0000");
 		expect(r["--accent-2"]).toBe("#00ff00");
 
-		const { over, complement } = splitDeltas(accentHues(r));
-		expect(over).toBeCloseTo(DEFAULT_STEP / 2, 0);
+		const { under, over, complement } = splitDeltas(accentHues(r));
+		// accent-3 is now the mirror of the pinned accent-2 across the accent, not the fixed +split,
+		// so the two wings stay symmetric around the author's choice.
+		expect(over).toBeCloseTo(-under, 0);
+		expect(Math.abs(over - DEFAULT_STEP / 2)).toBeGreaterThan(10);
+		expect(complement).toBeCloseTo(180, 0);
+	});
+
+	it("mirrors a pinned --accent-3 into the opposing wing, holding the 180 complement", () => {
+		const r = derive(xojiDefault, {
+			constraints: { "--accent": "#ff0000", "--accent-3": "#00ff00" },
+		});
+		expect(r["--accent"]).toBe("#ff0000");
+		expect(r["--accent-3"]).toBe("#00ff00");
+
+		const { under, over, complement } = splitDeltas(accentHues(r));
+		// The fan is symmetric either way: pinning accent-3 pulls accent-2 into its mirror.
+		expect(under).toBeCloseTo(-over, 0);
+		expect(Math.abs(under - -DEFAULT_STEP / 2)).toBeGreaterThan(10);
 		expect(complement).toBeCloseTo(180, 0);
 	});
 

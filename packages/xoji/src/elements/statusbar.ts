@@ -62,6 +62,7 @@ export class XojiStatusbar extends XojiElement {
 	private lastEmittedHidden: HTMLElement[] | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "statusbar", {
 		applyIntent: () => {},
+		afterApply: () => this.armCollapse(),
 	});
 
 	attributeChangedCallback(): void {
@@ -133,10 +134,21 @@ export class XojiStatusbar extends XojiElement {
 
 	private slotElements(): HTMLElement[] {
 		const slot = this.root.querySelector("slot:not([name])") as HTMLSlotElement | null;
-		if (!slot) return [];
-		return slot
-			.assignedElements({ flatten: true })
-			.filter((el): el is HTMLElement => el instanceof HTMLElement);
+		if (slot) {
+			return slot
+				.assignedElements({ flatten: true })
+				.filter((el): el is HTMLElement => el instanceof HTMLElement);
+		}
+		// Light DOM has no `<slot>`, so cells are the bar's own children. The scaffold's overflow
+		// menu and any injected script are excluded by matching only the item/spacer classes.
+		const bar = this.bar;
+		if (!bar) return [];
+		return [...bar.children].filter(
+			(el): el is HTMLElement =>
+				el instanceof HTMLElement &&
+				(el.classList.contains("xoji-statusbar__item") ||
+					el.classList.contains("xoji-statusbar__spacer")),
+		);
 	}
 
 	private cellsFrom(elements: HTMLElement[]): Cell[] {
@@ -307,20 +319,28 @@ export class XojiStatusbar extends XojiElement {
 		return "";
 	}
 
+	/** Arms the collapse machinery once the bar exists. Runs from both `render` (the bar is present
+	 * synchronously in light DOM, and once the fill is warm in shadow DOM) and `afterApply` (the
+	 * first shadow-DOM instance builds its bar on a later microtask, after `render`'s one-shot
+	 * `whenBar` has already given up), so a statically-authored collapsing bar arms in either mode. */
+	private armCollapse = (): void => {
+		this.teardownCollapse();
+		if (this.overflow !== "collapse" || !this.isConnected) return;
+		this.whenBar((bar) => {
+			if (!this.manualOverflow) {
+				this.overflowPopover?.addEventListener("toggle", this.positionPopover);
+			}
+			this.observeBar(bar);
+		});
+	};
+
 	protected override render(): void {
 		this.teardownCollapse();
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(statusbarHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
-		if (this.overflow === "collapse") {
-			this.whenBar(() => {
-				if (!this.manualOverflow) {
-					this.overflowPopover?.addEventListener("toggle", this.positionPopover);
-				}
-				this.observeBar(this.bar!);
-			});
-		}
+		this.armCollapse();
 	}
 }
 

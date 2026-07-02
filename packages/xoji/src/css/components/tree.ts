@@ -68,6 +68,52 @@ export const treeCss = `
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+.xoji-tree__trailing {
+	margin-inline-start: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	flex: none;
+	padding-inline-start: var(--space-2);
+}
+.xoji-tree__badge {
+	font-size: var(--text-xs);
+	color: var(--fg-3);
+	font-variant-numeric: tabular-nums;
+}
+.xoji-tree__actions {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-0);
+	opacity: 0;
+	transition: opacity var(--duration-fast) var(--ease-standard);
+}
+.xoji-tree__row:hover .xoji-tree__actions,
+.xoji-tree__item:focus-visible > .xoji-tree__row .xoji-tree__actions,
+.xoji-tree__actions:focus-within {
+	opacity: 1;
+}
+.xoji-tree__action {
+	appearance: none;
+	border: none;
+	background: transparent;
+	color: var(--fg-2);
+	font: inherit;
+	font-size: var(--text-xs);
+	line-height: 1;
+	display: grid;
+	place-items: center;
+	width: var(--space-4);
+	height: var(--space-4);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+.xoji-tree__action:hover { color: var(--fg-0); background: var(--state-hover); }
+.xoji-tree__action:focus-visible {
+	outline: var(--border-normal) solid transparent;
+	box-shadow: inset 0 0 0 var(--border-normal) var(--ring);
+	opacity: 1;
+}
 .xoji-tree--lg { font-size: var(--text-body); }
 .xoji-tree--lg .xoji-tree__row { padding-block: var(--space-2); }
 @container style(--selection-cue: marker) {

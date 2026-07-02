@@ -5,6 +5,7 @@ interface OpsBuilder {
 
 interface KbdBindings {
 	size?: string;
+	tone?: string;
 }
 
 declare const hooks: {
@@ -13,7 +14,10 @@ declare const hooks: {
 
 function kbdClass(b: KbdBindings): string {
 	const size = b.size ?? "md";
-	return ["xoji-kbd", size !== "md" && `xoji-kbd--${size}`].filter(Boolean).join(" ");
+	const tone = b.tone ?? "";
+	return ["xoji-kbd", size !== "md" && `xoji-kbd--${size}`, tone && `xoji-kbd--${tone}`]
+		.filter(Boolean)
+		.join(" ");
 }
 
 function kbdHtml(b: KbdBindings): string {

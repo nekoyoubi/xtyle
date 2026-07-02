@@ -32,7 +32,7 @@
 	{label}
 	labelledby={labelledby || undefined}
 	disabled={disabled || undefined}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	{onchange}
 >
 	{@render children?.()}

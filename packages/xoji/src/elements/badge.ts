@@ -5,6 +5,7 @@ import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/badge/source.generated.js";
 
 type BadgeVariant = "solid" | "soft" | "outline";
+type BadgePulse = "slow" | "fast" | null;
 
 const STATUS_WORD: Record<string, string> = {
 	success: "Success",
@@ -23,7 +24,7 @@ export class XojiBadge extends XojiElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "dot", "count", "removable", "remove-label"];
+		return ["variant", "tone", "size", "dot", "pulse", "count", "removable", "remove-label"];
 	}
 
 	get variant(): BadgeVariant {
@@ -52,6 +53,18 @@ export class XojiBadge extends XojiElement {
 	}
 	set dot(value: boolean) {
 		this.reflectBoolean("dot", value);
+	}
+
+	/** Mirrors Progress's pulse: a bare `pulse` (or `slow`) breathes on the 1.8s cadence, `fast` on 0.9s. */
+	get pulse(): BadgePulse {
+		const raw = this.getAttribute("pulse");
+		if (raw === null) return null;
+		return raw === "fast" ? "fast" : "slow";
+	}
+	set pulse(value: BadgePulse | boolean) {
+		if (value === true) this.setAttribute("pulse", "slow");
+		else if (!value) this.removeAttribute("pulse");
+		else this.setAttribute("pulse", value);
 	}
 
 	get count(): string | null {
@@ -89,6 +102,7 @@ export class XojiBadge extends XojiElement {
 			tone: this.tone,
 			size: this.size,
 			dot: this.dot,
+			pulse: this.pulse,
 			count: this.count,
 			removable: this.removable,
 			removeLabel: this.removeLabel,

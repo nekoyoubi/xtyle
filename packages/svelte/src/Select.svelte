@@ -50,7 +50,7 @@
 	invalid={invalid || undefined}
 	required={required || undefined}
 	{error}
-	aria-label={ariaLabel}
+	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	onchange={handleChange}
 >
 	{@render children?.()}

@@ -1,10 +1,10 @@
-const TRENDS = [
-	["up", "--success-vivid"],
-	["down", "--danger-vivid"],
-	["flat", "--neutral-vivid"],
+const SENTIMENTS = [
+	["positive", "--success-vivid"],
+	["negative", "--danger-vivid"],
+	["neutral", "--neutral-vivid"],
 ] as const;
 
-const trendRules = TRENDS.map(
+const sentimentRules = SENTIMENTS.map(
 	([name, token]) => `.xoji-stat__delta--${name} { color: var(${token}); }`,
 ).join("\n");
 
@@ -72,7 +72,7 @@ export const statCss = `
 	width: 0.85em;
 	height: 0.85em;
 }
-${trendRules}
+${sentimentRules}
 .xoji-stat__caption {
 	font-size: var(--text-xs);
 	line-height: var(--leading-normal);
