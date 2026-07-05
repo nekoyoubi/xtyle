@@ -128,6 +128,7 @@ const GLYPH_TAGS: Record<string, string[]> = {
 	error: ["error", "alert", "danger", "status"],
 	success: ["success", "check", "done", "status"],
 	"external-link": ["link", "external", "open", "out"],
+	maximize: ["zoom", "expand", "enlarge", "fullscreen"],
 	dot: ["dot", "point", "circle", "bullet"],
 	loader: ["loader", "spinner", "loading", "progress"],
 	play: ["play", "media", "playback", "control"],

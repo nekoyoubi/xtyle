@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getComponent, coverComponent, derive } from "../src/index.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
 import { imageCss, imageLightboxCss } from "../src/css/components/image.js";
+import { hasIcon, ICONS } from "../src/icons.js";
 import { xtyleDefault } from "../src/batteries.js";
 
 const register = derive(xtyleDefault, {
@@ -87,6 +88,33 @@ describe("image", () => {
 		expect(imageLightboxCss).toContain(".xtyle-image__close {");
 		expect(imageLightboxCss).toContain("width: 92vw");
 		expect(imageCss).toContain(imageLightboxCss);
+	});
+
+	it("hides the closed dialog so it can't intercept the page", () => {
+		// Author `display: flex` on the dialog beats the UA `dialog:not([open])` hide (author beats UA
+		// regardless of specificity), so without this a closed 92vw dialog covers the page and eats clicks.
+		expect(imageLightboxCss).toContain(".xtyle-image__lightbox:not([open]) { display: none; }");
+	});
+
+	it("offers a trigger prop with frame and button modes", () => {
+		const prop = getComponent("image").props.find((p) => p.name === "trigger");
+		expect(prop, "trigger prop should be declared").toBeDefined();
+		expect(prop?.default).toBe("frame");
+		expect(prop?.options).toEqual(["frame", "button"]);
+	});
+
+	it("styles the zoom button so it reveals on frame hover and on focus", () => {
+		expect(imageCss).toContain(".xtyle-image__zoom {");
+		expect(imageCss).toContain(".xtyle-image__frame:hover .xtyle-image__zoom");
+		expect(imageCss).toContain(".xtyle-image__zoom:focus-visible");
+		// The reveal transition must back off under reduced-motion, like the shimmer and fade.
+		const reduced = imageCss.slice(imageCss.indexOf("@media (prefers-reduced-motion"));
+		expect(reduced).toContain(".xtyle-image__zoom { transition: none; }");
+	});
+
+	it("ships the maximize glyph the zoom button renders", () => {
+		expect(hasIcon("maximize")).toBe(true);
+		expect(ICONS.maximize).toContain("path");
 	});
 
 	it("escapes a hostile src, alt, and caption so they can't break out", async () => {

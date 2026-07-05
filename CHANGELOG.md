@@ -2,6 +2,14 @@
 
 ## v0.6.0: TBD
 
+### Image
+
+- **The lightbox opens against the viewport, not its container.** `<xtyle-image lightbox>` now builds its modal on `document.body` instead of inside the element, so an ancestor with `transform`, `filter`, `backdrop-filter`, `will-change`, or `contain` (a frosted panel, an animated card) can no longer become the dialog's containing block and drag it off-center. The dialog carries its own styling, so it stays themed outside the shadow root, and it tears down with its host
+  - fixed in the same pass: a closed lightbox kept its `display: flex` (an author rule outranks the browser's own closed-dialog hide), so it lingered as an invisible full-viewport box that swallowed clicks; the closed state is hidden explicitly now
+- **A `trigger` for where the zoom lives.** `trigger="frame"` (the default) keeps the whole image as the zoom target; `trigger="button"` moves it onto a dedicated zoom button that reveals on hover and focus, so click-to-zoom sits beside selectable text without fighting it
+  - the button is a real `<button>` (keyboard-focusable, Enter or Space), stays visible on touch where there is no hover, and keeps a ring and a lift so it holds its edge over any image instead of dissolving into a dark photo
+- **A `maximize` glyph** joined the functional icon set, the diagonal-expand mark the zoom button draws; it rides as a `symbol-maximize` primitive in the icon builder too
+
 ## v0.5.0: The xtyle Rename
 
 ### Renamed: xoji is now xtyle

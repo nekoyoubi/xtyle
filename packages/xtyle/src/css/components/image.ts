@@ -1,3 +1,28 @@
+/**
+ * The shared chrome for the two round corner controls: the frame's zoom button (in `imageFrameCss`)
+ * and the dialog's close button (in `imageLightboxCss`). They live in different bundles because the
+ * dialog is portalled out of the shadow root, so the common shape is shared as a declaration block
+ * rather than a grouped selector.
+ */
+const cornerButton = `
+	position: absolute;
+	top: var(--space-2);
+	right: var(--space-2);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--space-7);
+	height: var(--space-7);
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-full);
+	background: var(--bg-1);
+	color: var(--fg-1);
+	/* A ring plus a lift so the chip keeps its silhouette over any image: the chip fill can match a
+	   dark photo (dissolving it), but the overlay-border ring stays legible on both light and dark. */
+	box-shadow: 0 0 0 var(--border-thin) var(--surface-overlay-border), var(--elevation-3);
+`.trim();
+
 const imageFrameCss = `
 [data-image] { display: contents; }
 .xtyle-image {
@@ -52,9 +77,26 @@ const imageFrameCss = `
 	color: var(--fg-2);
 }
 .xtyle-image__frame[role="button"] { cursor: zoom-in; }
-.xtyle-image__frame[role="button"]:focus-visible {
+.xtyle-image__zoom {
+	${cornerButton}
+	cursor: zoom-in;
+	opacity: 0;
+	transform: scale(0.9);
+	transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+.xtyle-image__frame:hover .xtyle-image__zoom,
+.xtyle-image__zoom:focus-visible {
+	opacity: 1;
+	transform: none;
+}
+.xtyle-image__frame[role="button"]:focus-visible,
+.xtyle-image__zoom:focus-visible {
 	outline: var(--border-thick) solid var(--ring);
 	outline-offset: 2px;
+}
+/* No hover to reveal on (touch): the button would never show, so keep it visible. */
+@media (hover: none) {
+	.xtyle-image__zoom { opacity: 1; transform: none; }
 }
 .xtyle-image__caption {
 	margin-top: var(--space-2);
@@ -69,6 +111,7 @@ const imageFrameCss = `
 @media (prefers-reduced-motion: reduce) {
 	.xtyle-image__placeholder { animation: none; }
 	.xtyle-image__img { transition: none; }
+	.xtyle-image__zoom { transition: none; }
 }
 `.trim();
 
@@ -80,6 +123,10 @@ const imageFrameCss = `
  * and the coverage lint still see every lightbox token.
  */
 export const imageLightboxCss = `
+/* An author display:flex on the dialog beats the UA closed-dialog hide (author origin wins over UA
+   regardless of specificity), so a closed dialog would keep its 92vw box and intercept the whole
+   page. Re-assert the hidden state in author CSS. */
+.xtyle-image__lightbox:not([open]) { display: none; }
 .xtyle-image__lightbox {
 	padding: 0;
 	border: 0;
@@ -105,19 +152,7 @@ export const imageLightboxCss = `
 	pointer-events: none;
 }
 .xtyle-image__close {
-	position: absolute;
-	top: var(--space-2);
-	right: var(--space-2);
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: var(--space-6);
-	height: var(--space-6);
-	padding: 0;
-	border: 0;
-	border-radius: var(--radius-full);
-	background: var(--bg-1);
-	color: var(--fg-1);
+	${cornerButton}
 	cursor: pointer;
 }
 .xtyle-image__close:focus-visible {

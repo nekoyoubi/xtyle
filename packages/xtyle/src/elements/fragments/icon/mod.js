@@ -29,6 +29,7 @@
     error: circle + stroke("M15 9l-6 6") + stroke("M9 9l6 6"),
     success: circle + stroke("M8.5 12l2.5 2.5L16 9"),
     "external-link": stroke("M14 4h6v6") + stroke("M20 4l-9 9") + stroke("M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"),
+    maximize: stroke("M15 3h6v6") + stroke("M9 21H3v-6") + stroke("M21 3l-7 7") + stroke("M3 21l7-7"),
     dot: `<circle cx="12" cy="12" r="4" fill="currentColor"/>`,
     loader: stroke("M12 3a9 9 0 1 0 9 9"),
     play: fill("M8 5v14l11-7z"),

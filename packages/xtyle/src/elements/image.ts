@@ -1,7 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { imageHostCss, escapeAttr } from "../markup/index.js";
 import { imageLightboxCss } from "../css/components/image.js";
-import type { ImageFit, ImageRadius, ImageLoading } from "../markup/image.js";
+import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger } from "../markup/image.js";
 import { renderIcon } from "../icons.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/image/source.generated.js";
@@ -22,7 +22,7 @@ export class XtyleImage extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["src", "alt", "ratio", "fit", "radius", "loading", "lightbox", "caption"];
+		return ["src", "alt", "ratio", "fit", "radius", "loading", "lightbox", "caption", "trigger"];
 	}
 
 	get src(): string | null {
@@ -76,6 +76,13 @@ export class XtyleImage extends XtyleElement {
 		this.toggleAttribute("lightbox", value);
 	}
 
+	get trigger(): ImageTrigger {
+		return this.getAttribute("trigger") === "button" ? "button" : "frame";
+	}
+	set trigger(value: ImageTrigger) {
+		this.setAttribute("trigger", value);
+	}
+
 	get caption(): string | null {
 		return this.getAttribute("caption");
 	}
@@ -126,35 +133,69 @@ export class XtyleImage extends XtyleElement {
 			}
 		}
 
-		if (this.lightbox) {
-			frame.setAttribute("role", "button");
-			frame.setAttribute("tabindex", "0");
-			frame.setAttribute("aria-label", this.alt ? `View image: ${this.alt}` : "View image");
-			if (this.wiredFrame !== frame) {
-				this.wiredFrame = frame;
-				this.lightboxTrigger?.abort();
-				this.lightboxTrigger = new AbortController();
-				const { signal } = this.lightboxTrigger;
-				frame.addEventListener("click", () => this.openLightbox(), { signal });
-				frame.addEventListener(
-					"keydown",
-					(event) => {
-						if (event.key === "Enter" || event.key === " ") {
-							event.preventDefault();
-							this.openLightbox();
-						}
-					},
-					{ signal },
-				);
-			}
-		} else {
-			this.lightboxTrigger?.abort();
-			this.lightboxTrigger = null;
-			this.wiredFrame = null;
-			frame.removeAttribute("role");
-			frame.removeAttribute("tabindex");
-			frame.removeAttribute("aria-label");
+		if (!this.lightbox) {
+			this.clearFrameTrigger(frame);
+			this.removeZoomButton(frame);
+			return;
 		}
+		const label = this.alt ? `View image: ${this.alt}` : "View image";
+		if (this.trigger === "button") {
+			// The frame is not the click target; a dedicated zoom button is, so a click meant for
+			// the surrounding prose (or a drag-select over the image) doesn't fire the modal.
+			this.clearFrameTrigger(frame);
+			this.ensureZoomButton(frame, label);
+		} else {
+			this.removeZoomButton(frame);
+			this.wireFrameTrigger(frame, label);
+		}
+	}
+
+	private wireFrameTrigger(frame: HTMLElement, label: string): void {
+		frame.setAttribute("role", "button");
+		frame.setAttribute("tabindex", "0");
+		frame.setAttribute("aria-label", label);
+		if (this.wiredFrame === frame) return;
+		this.wiredFrame = frame;
+		this.lightboxTrigger?.abort();
+		this.lightboxTrigger = new AbortController();
+		const { signal } = this.lightboxTrigger;
+		frame.addEventListener("click", () => this.openLightbox(), { signal });
+		frame.addEventListener(
+			"keydown",
+			(event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					this.openLightbox();
+				}
+			},
+			{ signal },
+		);
+	}
+
+	private clearFrameTrigger(frame: HTMLElement): void {
+		this.lightboxTrigger?.abort();
+		this.lightboxTrigger = null;
+		this.wiredFrame = null;
+		frame.removeAttribute("role");
+		frame.removeAttribute("tabindex");
+		frame.removeAttribute("aria-label");
+	}
+
+	private ensureZoomButton(frame: HTMLElement, label: string): void {
+		let button = frame.querySelector<HTMLButtonElement>(".xtyle-image__zoom");
+		if (!button) {
+			button = document.createElement("button");
+			button.type = "button";
+			button.className = "xtyle-image__zoom";
+			button.innerHTML = renderIcon("maximize");
+			button.addEventListener("click", () => this.openLightbox());
+			frame.appendChild(button);
+		}
+		button.setAttribute("aria-label", label);
+	}
+
+	private removeZoomButton(frame: HTMLElement): void {
+		frame.querySelector(".xtyle-image__zoom")?.remove();
 	}
 
 	private markLoaded(frame: HTMLElement): void {
