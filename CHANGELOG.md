@@ -16,6 +16,10 @@
   - the button is a real `<button>` (keyboard-focusable, Enter or Space), stays visible on touch where there is no hover, and keeps a ring and a lift so it holds its edge over any image instead of dissolving into a dark photo
 - **A `maximize` glyph** joined the functional icon set, the diagonal-expand mark the zoom button draws; it rides as a `symbol-maximize` primitive in the icon builder too
 
+### Fixes
+
+- **`wrap`, `line-numbers`, and `highlight` work on server-rendered `Code` again.** Their CSS keyed on `:host([…])`, which only matches a shadow host, so on the site (the light-DOM path) a `wrap` block didn't wrap, the line-number gutter stayed empty, and `highlight` did nothing. Each state selector now carries a light-DOM twin, so the three land in both render modes, and the copy button reveals on hover on the site too
+
 ## v0.5.0: The xtyle Rename
 
 ### Renamed: xoji is now xtyle

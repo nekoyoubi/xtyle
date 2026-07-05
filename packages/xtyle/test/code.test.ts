@@ -17,3 +17,12 @@ describe("xtyle-code scroll-region focus", () => {
 		expect(rule.slice(0, rule.indexOf("}"))).toContain("var(--ring)");
 	});
 });
+
+describe("xtyle-code dual-mode state styling", () => {
+	it.each(["xtyle-code[wrap]", "xtyle-code[highlight]", "xtyle-code[line-numbers]", "xtyle-code:hover"])(
+		"carries a light-DOM selector for the %s state, not only :host()",
+		(sel) => {
+			expect(codeCss).toContain(sel);
+		},
+	);
+});
