@@ -1,5 +1,14 @@
 "use strict";
 (() => {
+  // packages/xoji/src/elements/fragments/selector-escape.ts
+  var BACKSLASH = /\\/g;
+  var DQUOTE = /"/g;
+  var NEWLINE = /\n/g;
+  var CR = /\r/g;
+  function escapeSelectorValue(value) {
+    return value.replace(BACKSLASH, "\\\\").replace(DQUOTE, '\\"').replace(NEWLINE, "\\A ").replace(CR, "\\D ");
+  }
+
   // packages/xoji/src/elements/fragments/tree/mod.ts
   var AMP = /&/g;
   var LT = /</g;
@@ -23,12 +32,25 @@
     if (locked) return true;
     return expanded.has(nodeKey(node));
   }
+  function isStaticNode(node) {
+    const hasChildren = !!(node.children && node.children.length);
+    const locked = (node.locked ?? false) && hasChildren;
+    return locked && !node.href;
+  }
+  function firstFocusableKey(nodes) {
+    for (const node of nodes) {
+      if (!isStaticNode(node)) return nodeKey(node);
+      if (node.children && node.children.length) {
+        const child = firstFocusableKey(node.children);
+        if (child) return child;
+      }
+    }
+    return null;
+  }
   function rovingTarget(bindings) {
     if (bindings.rovingValue) return bindings.rovingValue;
     if (bindings.selectedValue) return bindings.selectedValue;
-    const items = bindings.items ?? [];
-    const first = items[0];
-    return first ? nodeKey(first) : null;
+    return firstFocusableKey(bindings.items ?? []);
   }
   function treeTrailing(node, value, isLink) {
     const badge = node.badge ? `<span class="xoji-tree__badge" part="badge" aria-hidden="true">${escapeHtml(node.badge)}</span>` : "";
@@ -50,7 +72,10 @@
       const twisty = hasChildren && !locked ? `<span class="xoji-tree__twisty" aria-hidden="true" data-value="${escapeAttr(value)}"${disabledData}><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6" /></svg></span>` : `<span class="xoji-tree__twisty xoji-tree__twisty--leaf" aria-hidden="true"></span>`;
       const label = `<span class="xoji-tree__label">${escapeHtml(node.label)}</span>`;
       const isLink = !!node.href;
-      const rowOpen = isLink ? `<a class="xoji-tree__row" part="row" href="${escapeAttr(node.href)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">` : `<div class="xoji-tree__row" part="row" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">`;
+      const isStatic = locked && !isLink;
+      const staticData = isStatic ? ` data-static="true"` : "";
+      const rowClass = isStatic ? "xoji-tree__row xoji-tree__row--static" : "xoji-tree__row";
+      const rowOpen = isLink ? `<a class="xoji-tree__row" part="row" href="${escapeAttr(node.href)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">` : `<div class="${rowClass}" part="row" data-value="${escapeAttr(value)}"${disabledData}${staticData} style="--tree-level: ${level}">`;
       const rowClose = isLink ? "</a>" : "</div>";
       const trailing = treeTrailing(node, value, isLink);
       const group = hasChildren ? `<ul class="xoji-tree__group" role="group"${open ? "" : " hidden"}>${buildNodes(node.children, level + 1, selectedValue, expanded, roving)}</ul>` : "";
@@ -58,7 +83,7 @@
       const disabledAttr = disabled ? ` aria-disabled="true"` : "";
       const lockedAttr = locked ? ` data-locked="true"` : "";
       const itemClass = locked ? "xoji-tree__item xoji-tree__item--locked" : "xoji-tree__item";
-      const tabindex = value === roving ? "0" : "-1";
+      const tabindex = !isStatic && value === roving ? "0" : "-1";
       return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
     }).join("");
   }
@@ -84,7 +109,7 @@
       for (const node of nodes) {
         const hasChildren = !!(node.children && node.children.length);
         const value = nodeKey(node);
-        const sel = `[role="treeitem"][data-value="${value}"]`;
+        const sel = `[role="treeitem"][data-value="${escapeSelectorValue(value)}"]`;
         ops.setAttr(sel, "aria-selected", String(value === selected));
         ops.setAttr(sel, "tabindex", value === roving ? "0" : "-1");
         if (hasChildren) {
@@ -100,7 +125,7 @@
   });
   xript.exports.register("selectRow", (payload) => {
     const e = payload;
-    if (e.dataset?.disabled === "true") return {};
+    if (e.dataset?.disabled === "true" || e.dataset?.static === "true") return {};
     const key = e.dataset?.value;
     if (!key) return {};
     const isLink = e.tagName === "A";
@@ -130,20 +155,27 @@
     const here = rows.findIndex((r) => r.key === current);
     const row = here >= 0 ? rows[here] : void 0;
     if (!row) return {};
+    const isStatic = (r) => r.locked && !r.isLink;
+    const step = (from, dir) => {
+      for (let i = from + dir; i >= 0 && i < rows.length; i += dir) {
+        if (!isStatic(rows[i])) return rows[i];
+      }
+      return void 0;
+    };
     switch (k) {
       case "ArrowDown": {
-        const next = rows[here + 1];
+        const next = step(here, 1);
         return next ? { focus: next.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
       }
       case "ArrowUp": {
-        const prev = rows[here - 1];
+        const prev = step(here, -1);
         return prev ? { focus: prev.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
       }
       case "ArrowRight": {
         if (row.expandable && !row.expanded)
           return { expandKey: row.key, expand: true, focus: row.key, preventDefault: true, stopPropagation: true };
         if (row.expandable && row.expanded) {
-          const child = rows.find((r) => r.parent === row.key);
+          const child = rows.find((r) => r.parent === row.key && !isStatic(r));
           return child ? { focus: child.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
         }
         return { preventDefault: true, stopPropagation: true };
@@ -151,21 +183,27 @@
       case "ArrowLeft": {
         if (row.expandable && row.expanded && !row.locked)
           return { expandKey: row.key, expand: false, focus: row.key, preventDefault: true, stopPropagation: true };
-        if (row.parent !== null) return { focus: row.parent, preventDefault: true, stopPropagation: true };
+        if (row.parent !== null) {
+          const parent = rows.find((r) => r.key === row.parent);
+          if (parent && !isStatic(parent)) return { focus: row.parent, preventDefault: true, stopPropagation: true };
+          const parentIdx = rows.findIndex((r) => r.key === row.parent);
+          const above = parentIdx >= 0 ? step(parentIdx, -1) : void 0;
+          if (above) return { focus: above.key, preventDefault: true, stopPropagation: true };
+        }
         return { preventDefault: true, stopPropagation: true };
       }
       case "Home": {
-        const first = rows[0];
+        const first = rows.find((r) => !isStatic(r));
         return first ? { focus: first.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
       }
       case "End": {
-        const last = rows[rows.length - 1];
+        const last = step(rows.length, -1);
         return last ? { focus: last.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
       }
       case "Enter":
       case " ":
       case "Spacebar": {
-        if (row.disabled) return { preventDefault: true, stopPropagation: true };
+        if (row.disabled || isStatic(row)) return { preventDefault: true, stopPropagation: true };
         if (row.isLink) return { select: row.key, activate: row.key, preventDefault: true, stopPropagation: true };
         if (row.expandable) return { select: row.key, expandKey: row.key, preventDefault: true, stopPropagation: true };
         return { select: row.key, preventDefault: true, stopPropagation: true };

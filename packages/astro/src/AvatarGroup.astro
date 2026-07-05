@@ -1,0 +1,44 @@
+---
+import { renderFragmentLight } from "@xoji/core/elements/ssr";
+
+type AvatarGroupSize = "sm" | "md" | "lg" | "xl";
+type AvatarGroupSpacing = "snug" | "normal" | "loose";
+
+interface Props {
+	size?: AvatarGroupSize;
+	spacing?: AvatarGroupSpacing;
+	/** How many avatars beyond the shown ones to summarize as a trailing `+N` chip. */
+	overflow?: number;
+	/** Accessible name for the group (a list of people). */
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { size, spacing, overflow, label, static: isStatic = false, class: extra, ...rest } = Astro.props;
+
+const bindings = {
+	size: size ?? null,
+	spacing: spacing ?? null,
+	overflow: overflow ?? 0,
+	label: label ?? null,
+};
+const chrome = await renderFragmentLight("avatar-group", bindings);
+const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const composed = chrome.replace("<slot></slot>", () => slotHtml);
+---
+
+<xoji-avatar-group
+	size={size}
+	spacing={spacing}
+	overflow={overflow ?? undefined}
+	label={label}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xoji/core/elements";</script>}

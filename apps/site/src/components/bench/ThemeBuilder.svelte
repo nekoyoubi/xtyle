@@ -11,7 +11,9 @@
 	import EmailClient from "./mockups/EmailClient.svelte";
 	import NewsSite from "./mockups/NewsSite.svelte";
 	import CrmApp from "./mockups/CrmApp.svelte";
-	import { AppShell, Badge, Switch, Tabs, Toolbar } from "@xoji/svelte";
+	import SettingsPanel from "./mockups/SettingsPanel.svelte";
+	import DashboardApp from "./mockups/DashboardApp.svelte";
+	import { AppShell, Badge, Button, Switch, Tabs, Toolbar } from "@xoji/svelte";
 	import { loadHostedAlgorithms } from "./hosted.js";
 	import type { BenchState } from "./state.js";
 	import {
@@ -527,6 +529,8 @@
 		{ value: "email", label: "Email Client" },
 		{ value: "news", label: "News Site" },
 		{ value: "crm", label: "CRM App" },
+		{ value: "settings", label: "Settings" },
+		{ value: "dashboard", label: "Dashboard" },
 	];
 	let mockupTab = $state("email");
 
@@ -606,13 +610,13 @@
 				{/snippet}
 				{#snippet center()}
 					<div class="bench-actions">
-						<button type="button" class="bench__btn bench-actions__library" onclick={() => (libraryOpen = true)}>
+						<Button size="sm" variant="subtle" onclick={() => (libraryOpen = true)}>
 							<span aria-hidden="true">&#9656;</span> Library
-						</button>
-						<button type="button" class="bench__btn" onclick={newTheme}>New</button>
-						<button type="button" class="bench__btn" onclick={duplicateTheme}>Save a copy</button>
-						<button type="button" class="bench__btn bench__btn--warn" onclick={reset}>Reset</button>
-						<button type="button" class="bench__btn bench__btn--danger" onclick={deleteTheme}>Delete</button>
+						</Button>
+						<Button size="sm" variant="subtle" onclick={newTheme}>New</Button>
+						<Button size="sm" variant="subtle" onclick={duplicateTheme}>Save a copy</Button>
+						<Button size="sm" variant="subtle" tone="warn" onclick={reset}>Reset</Button>
+						<Button size="sm" variant="subtle" tone="danger" onclick={deleteTheme}>Delete</Button>
 					</div>
 				{/snippet}
 				{#snippet end()}
@@ -655,8 +659,12 @@
 										<EmailClient {register} />
 									{:else if scene === "news"}
 										<NewsSite {register} />
-									{:else}
+									{:else if scene === "crm"}
 										<CrmApp {register} />
+									{:else if scene === "settings"}
+										<SettingsPanel {register} />
+									{:else}
+										<DashboardApp {register} />
 									{/if}
 								</div>
 							{/snippet}
@@ -688,9 +696,9 @@
 							{#snippet panel(fmt)}
 								<div class="bench-scene bench-export">
 									<div class="bench__export-actions">
-										<button type="button" class="bench__btn" onclick={() => (importOpen = !importOpen)}>{importOpen ? "Close import" : "Import JSON"}</button>
-										<button type="button" class="bench__btn" onclick={copyShare}>{shareLabel}</button>
-										<button type="button" class="bench__btn bench__btn--accent" onclick={copyExport}>{copyLabel}</button>
+										<Button size="sm" variant="subtle" onclick={() => (importOpen = !importOpen)}>{importOpen ? "Close import" : "Import JSON"}</Button>
+										<Button size="sm" variant="subtle" onclick={copyShare}>{shareLabel}</Button>
+										<Button size="sm" variant="solid" tone="accent" onclick={copyExport}>{copyLabel}</Button>
 									</div>
 									{#if importOpen}
 										<div class="bench__import">
@@ -703,7 +711,7 @@
 												bind:value={importText}
 											></textarea>
 											<div class="bench__import-actions">
-												<button type="button" class="bench__btn bench__btn--accent" onclick={loadFromText} disabled={!importText.trim()}>Load theme</button>
+												<Button size="sm" variant="solid" tone="accent" onclick={loadFromText} disabled={!importText.trim()}>Load theme</Button>
 												{#if importStatus}<span class="bench__import-status" role="status">{importStatus}</span>{/if}
 											</div>
 										</div>
@@ -952,35 +960,6 @@
 		gap: var(--space-2);
 	}
 
-	.bench__btn {
-		font-family: var(--font-sans);
-		font-size: var(--text-sm);
-		font-weight: var(--weight-semibold);
-		color: var(--fg-0);
-		background: var(--bg-2);
-		border: var(--border-thin) solid var(--line);
-		border-radius: var(--radius-md);
-		padding: var(--space-2) var(--space-3);
-		cursor: pointer;
-	}
-
-	.bench__btn--accent {
-		background: var(--accent);
-		color: var(--accent-fg);
-		border-color: var(--accent);
-	}
-
-	.bench__btn--warn {
-		background: var(--warn-bg, color-mix(in oklab, var(--warn) 14%, transparent));
-		color: var(--warn-text, var(--warn));
-		border-color: var(--warn);
-	}
-
-	.bench__btn--danger {
-		background: var(--danger-bg, color-mix(in oklab, var(--danger) 14%, transparent));
-		color: var(--danger-text, var(--danger));
-		border-color: var(--danger);
-	}
 
 	.bench__import {
 		display: flex;

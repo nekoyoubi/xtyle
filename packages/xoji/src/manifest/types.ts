@@ -8,7 +8,8 @@ export type ComponentCategory =
 	| "overlay"
 	| "navigation"
 	| "layout"
-	| "data-display"
+	| "content"
+	| "media"
 	| "metrics"
 	| "shell";
 

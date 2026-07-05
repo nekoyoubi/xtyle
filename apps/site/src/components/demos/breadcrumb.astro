@@ -19,6 +19,20 @@ const toneTrail = [
 	{ label: "Section" },
 ];
 
+const ancestry = [
+	{ label: "root", value: "root" },
+	{ label: "window", value: "window" },
+	{ label: "toolbar", value: "toolbar" },
+	{ label: "button" },
+];
+
+const pathTrail = [
+	{ label: "~", href: "#", title: "/home/ada" },
+	{ label: "…", href: "#", title: "projects/2026/q3" },
+	{ label: "reports", href: "#", title: "projects/2026/q3/reports" },
+	{ label: "annual-summary-final-v3.md", title: "projects/2026/q3/reports/annual-summary-final-v3.md" },
+];
+
 const TONE_GROUPS = [
 	{ label: "Accents", tones: ["accent", ...ACCENT_VARIANTS, "neutral"] },
 	{ label: "Statuses", tones: ["success", "info", "warn", "danger"] },
@@ -45,9 +59,44 @@ const sizes = [
 
 	<Card>
 		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">In-app crumbs</Heading>
+			<Text size="sm" tone="muted">
+				Give a crumb a <Text as="span" mono size="xs">value</Text> instead of an
+				<Text as="span" mono size="xs">href</Text> and it becomes a keyboard-accessible button that fires
+				<Text as="span" mono size="xs">select</Text> with <Text as="span" mono size="xs">{"{ value, index }"}</Text>,
+				for a trail that drives app state rather than navigating. Click an ancestor below.
+			</Text>
+		</Stack>
+		<Stack gap={3}>
+			<Breadcrumb id="ancestry-demo" items={ancestry} tone="accent" label="Node ancestry" />
+			<Text size="sm" tone="muted">Selected: <Text as="span" mono size="xs" id="ancestry-readout">(click a crumb)</Text></Text>
+		</Stack>
+		<script is:inline>
+			const bar = document.getElementById("ancestry-demo");
+			const out = document.getElementById("ancestry-readout");
+			bar?.addEventListener("select", (e) => {
+				out.textContent = `value="${e.detail.value}", index=${e.detail.index}`;
+			});
+		</script>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">Shortened crumbs with hover detail</Heading>
+			<Text size="sm" tone="muted">
+				A crumb's <Text as="span" mono size="xs">title</Text> reveals the full value behind an abbreviated,
+				truncated, or glyph label on hover (and carries it to assistive tech as the crumb's accessible
+				description). Hover the crumbs below to read each full path segment.
+			</Text>
+		</Stack>
+		<Breadcrumb items={pathTrail} tone="neutral" label="File path" />
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
 			<Heading level={3} size="lg">Every tone</Heading>
 			<Text size="sm" tone="muted">
-				The link tone tracks the active register — any tone in the roster, drawn at its
+				The link tone tracks the active register: any tone in the roster, drawn at its
 				panel-readable <Text as="span" mono size="xs">--{"{tone}"}-vivid</Text> ink.
 			</Text>
 		</Stack>
@@ -87,7 +136,7 @@ const sizes = [
 		<Stack gap={3} slot="header">
 			<Heading level={3} size="lg">Custom separator</Heading>
 			<Text size="sm" tone="muted">
-				Any string works — swap the slash for a chevron.
+				Any string works; swap the slash for a chevron.
 			</Text>
 		</Stack>
 		<Stack gap={4}>

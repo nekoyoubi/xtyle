@@ -1,12 +1,11 @@
-import { XojiElement, define, type StyleMode } from "./base.js";
+import { XojiElement, define, escapeHtml, type StyleMode } from "./base.js";
 import { barHostCss, type BarSeries, type BarScheme } from "../markup/index.js";
-import { seriesPalette, SERIES_TOKENS, type SeriesScheme } from "../series.js";
+import { seriesPalette, seriesColorsFor, SERIES_SCHEMES, SERIES_TOKENS, type SeriesScheme } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
+import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/bar/source.generated.js";
 
 export type { BarSeries, BarScheme };
-
-const BUILT_IN: SeriesScheme[] = ["accents", "skittles", "thermal", "status"];
 
 function parseJson<T>(raw: string | null): T | null {
 	if (!raw) return null;
@@ -31,7 +30,7 @@ export class XojiBar extends XojiElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["series", "categories", "scheme", "reverse", "color-by", "orientation", "stacked", "show-values", "legend", "height", "label"];
+		return ["series", "categories", "scheme", "reverse", "color-by", "orientation", "stacked", "show-values", "legend", "height", "label", "selectable"];
 	}
 
 	/** Which axis drives the palette. `auto` (default) colors by category for a single series so the
@@ -84,6 +83,13 @@ export class XojiBar extends XojiElement {
 		this.reflectBoolean("stacked", value);
 	}
 
+	get selectable(): boolean {
+		return this.hasAttribute("selectable");
+	}
+	set selectable(value: boolean) {
+		this.reflectBoolean("selectable", value);
+	}
+
 	attributeChangedCallback(name: string): void {
 		if (name === "series") this.seriesProp = null;
 		if (name === "categories") this.categoriesProp = null;
@@ -93,30 +99,26 @@ export class XojiBar extends XojiElement {
 
 	/** Reads the schemes' tokens off the live cascade, so the palette tracks the applied theme. */
 	private paletteRegister(): Record<string, string> {
-		const styles = getComputedStyle(this);
-		const register: Record<string, string> = {};
-		for (const token of SERIES_TOKENS) {
-			const value = styles.getPropertyValue(token).trim();
-			if (value) register[token] = value;
-		}
-		return register;
+		return readLiveRegister(this, SERIES_TOKENS, () => {
+			if (this.root.firstChild) this.render();
+		});
 	}
 
-	private colors(count: number): string[] {
+	private colors(items: readonly { tone?: string }[]): string[] {
 		const scheme = this.scheme;
-		if (Array.isArray(scheme)) return seriesPalette(scheme, count, {}, { reverse: this.reverse });
-		if (!BUILT_IN.includes(scheme)) return seriesPalette("accents", count, this.paletteRegister(), { reverse: this.reverse });
-		return seriesPalette(scheme, count, this.paletteRegister(), { reverse: this.reverse });
+		if (Array.isArray(scheme)) return seriesPalette(scheme, items.length, {}, { reverse: this.reverse });
+		const resolved = SERIES_SCHEMES.includes(scheme) ? scheme : "accents";
+		return seriesColorsFor(resolved, items, this.paletteRegister(), { reverse: this.reverse });
 	}
 
 	private get bindings(): Record<string, unknown> {
 		const series = this.series;
 		const colorBy = this.resolvedColorBy();
-		const count = colorBy === "category" ? this.categories.length : series.length;
+		const colorItems = colorBy === "category" ? this.categories.map(() => ({})) : series;
 		return {
 			series,
 			categories: this.categories,
-			colors: this.colors(count),
+			colors: this.colors(colorItems),
 			colorBy,
 			orientation: this.getAttribute("orientation") === "horizontal" ? "horizontal" : "vertical",
 			stacked: this.stacked,
@@ -125,6 +127,7 @@ export class XojiBar extends XojiElement {
 			height: this.getAttribute("height") ? Number(this.getAttribute("height")) : 320,
 			title: this.getAttribute("label"),
 			ariaLabel: this.getAttribute("label"),
+			selectable: this.selectable,
 		};
 	}
 
@@ -142,7 +145,7 @@ export class XojiBar extends XojiElement {
 			const name = series[si]?.name ?? "";
 			const value = series[si]?.values[ci] ?? 0;
 			const category = categories[ci] ?? "";
-			tooltip.innerHTML = `<span class="xoji-bar__tooltip-name">${category}${name ? ` · ${name}` : ""}</span> <span class="xoji-bar__tooltip-value">${value}</span>`;
+			tooltip.innerHTML = `<span class="xoji-bar__tooltip-name">${escapeHtml(category)}${name ? ` · ${escapeHtml(name)}` : ""}</span> <span class="xoji-bar__tooltip-value">${escapeHtml(String(value))}</span>`;
 			const chartRect = chart.getBoundingClientRect();
 			const barRect = bar.getBoundingClientRect();
 			tooltip.style.left = `${barRect.left + barRect.width / 2 - chartRect.left}px`;
@@ -162,6 +165,34 @@ export class XojiBar extends XojiElement {
 			bar.addEventListener("focus", () => show(bar));
 			bar.addEventListener("pointerleave", hide);
 			bar.addEventListener("blur", hide);
+		}
+
+		if (!this.selectable) return;
+		const emitSelect = (bar: SVGRectElement): void => {
+			const si = Number(bar.dataset.si);
+			const ci = Number(bar.dataset.ci);
+			this.dispatchEvent(
+				new CustomEvent("select", {
+					bubbles: true,
+					composed: true,
+					detail: {
+						series: series[si]?.name ?? "",
+						category: categories[ci] ?? "",
+						value: series[si]?.values[ci] ?? 0,
+						seriesIndex: si,
+						categoryIndex: ci,
+					},
+				}),
+			);
+		};
+		for (const bar of bars) {
+			bar.addEventListener("click", () => emitSelect(bar));
+			bar.addEventListener("keydown", (event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					emitSelect(bar);
+				}
+			});
 		}
 	}
 

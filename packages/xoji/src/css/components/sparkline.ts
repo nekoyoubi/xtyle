@@ -71,5 +71,9 @@ export const sparklineCss = `
 	white-space: nowrap;
 }
 .xoji-sparkline__tooltip[hidden] { display: none; }
+.xoji-sparkline__empty {
+	color: var(--fg-2);
+	font-size: var(--text-xs);
+}
 ${toneVars}
 `.trim();

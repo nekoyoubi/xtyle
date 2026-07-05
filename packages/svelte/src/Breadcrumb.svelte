@@ -6,6 +6,7 @@
 	interface BreadcrumbItem {
 		label: string;
 		href?: string;
+		value?: string;
 		current?: boolean;
 	}
 
@@ -16,15 +17,17 @@
 		size?: Size;
 		label?: string;
 		children?: Snippet;
+		/** Fired when a valued crumb (no `href`) is activated; `detail` carries `{ value, index }`. */
+		onselect?: (event: CustomEvent<{ value: string; index: number }>) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
 
-	let { items, separator = "/", tone = "accent", size = "md", label = "Breadcrumb", children, ...rest }: Props = $props();
+	let { items, separator = "/", tone = "accent", size = "md", label = "Breadcrumb", children, onselect, ...rest }: Props = $props();
 
 	const itemsAttr = $derived(items && items.length > 0 ? JSON.stringify(items) : undefined);
 </script>
 
-<xoji-breadcrumb {...rest} {tone} {size} {separator} {label} items={itemsAttr}>
+<xoji-breadcrumb {...rest} {tone} {size} {separator} {label} items={itemsAttr} {onselect}>
 	{@render children?.()}
 </xoji-breadcrumb>

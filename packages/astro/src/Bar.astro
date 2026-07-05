@@ -1,6 +1,6 @@
 ---
 import { renderFragmentLight } from "@xoji/core/elements/ssr";
-import { resolveSeriesColors } from "./internal/palette.ts";
+import { resolveSeriesColorsFor } from "./internal/palette.ts";
 import type { BarSeries, BarScheme } from "@xoji/core";
 
 interface Props {
@@ -15,6 +15,8 @@ interface Props {
 	legend?: boolean;
 	height?: number;
 	label?: string;
+	/** Make bars actionable: each becomes a `role="button"` that fires `select` on click or Enter/Space. */
+	selectable?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -34,14 +36,15 @@ const {
 	legend = true,
 	height = 320,
 	label,
+	selectable = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
 
 const resolvedColorBy = colorBy ?? (series.length <= 1 ? "category" : "series");
-const colorCount = resolvedColorBy === "category" ? categories.length : series.length;
-const colors = await resolveSeriesColors(scheme, colorCount, reverse);
+const colorItems = resolvedColorBy === "category" ? categories.map(() => ({})) : series;
+const colors = await resolveSeriesColorsFor(scheme, colorItems, reverse);
 const bindings = {
 	series,
 	categories,
@@ -54,6 +57,7 @@ const bindings = {
 	height,
 	title: label ?? null,
 	ariaLabel: label ?? null,
+	selectable,
 };
 const chrome = await renderFragmentLight("bar", bindings);
 ---
@@ -68,6 +72,7 @@ const chrome = await renderFragmentLight("bar", bindings);
 	stacked={stacked || undefined}
 	show-values={showValues || undefined}
 	legend={legend ? undefined : "false"}
+	selectable={selectable || undefined}
 	height={height}
 	label={label}
 	class={extra}

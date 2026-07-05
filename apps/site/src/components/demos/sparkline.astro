@@ -15,6 +15,23 @@ const metrics = [
 	{ label: "Latency", value: "212ms", tone: "warn" as const, data: [180, 190, 210, 205, 240, 230, 260, 250, 212] },
 	{ label: "Errors", value: "0.4%", tone: "danger" as const, data: dip },
 ];
+
+// A fixed reference and explicit domain keep the demo deterministic; a live app would pass a sliding `window`.
+const t0 = Date.parse("2026-07-02T12:00:00Z");
+const domain: [number, number] = [t0, t0 + 300_000];
+const signal = [0, 9, 23, 38, 55, 74, 96, 128, 171, 214, 262, 298].map((s, i) => ({
+	at: t0 + s * 1000,
+	value: Math.round(48 + 34 * Math.sin(s / 42) + (i % 3) * 5),
+}));
+const uptime = [
+	{ at: t0, value: 1 },
+	{ at: t0 + 62_000, value: 1 },
+	{ at: t0 + 78_000, value: 0 },
+	{ at: t0 + 120_000, value: 1 },
+	{ at: t0 + 244_000, value: 1 },
+	{ at: t0 + 258_000, value: 0 },
+	{ at: t0 + 300_000, value: 0 },
+];
 ---
 
 <Stack gap={6}>
@@ -50,6 +67,27 @@ const metrics = [
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Time-windowed series</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>points</code> with real timestamps sit at their true position across the window
+				instead of assuming even spacing, so irregular samples read honestly. <code>step</code>
+				holds each value for an on/off signal.
+			</Text>
+			<Grid minColWidth="16rem" gap={4}>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">signal (irregular samples)</Text>
+					<Sparkline points={signal} domain={domain} variant="area" tone="info" label="Signal, last 5 minutes" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">uptime (stepped on/off)</Text>
+					<Sparkline points={uptime} domain={domain} step min={0} max={1} tone="success" label="Uptime, last 5 minutes" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Inline in text</Heading>
 		<Text>
 			Signups climbed
@@ -58,5 +96,14 @@ const metrics = [
 			<Sparkline values={dip} variant="line" tone="danger" label="Error rate trend" style="--spark-width: 4.5rem; --spark-height: 1.1rem;" />
 			fell to 0.4%.
 		</Text>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Empty state</Heading>
+		<Text tone="muted" size="sm">
+			An empty series shows a muted <code>No data</code> label instead of a blank box, so a metric with
+			no samples yet reads as intentional.
+		</Text>
+		<Sparkline values={[]} label="Latency, last hour" style="--spark-width: 8rem; --spark-height: 2rem;" />
 	</Card>
 </Stack>

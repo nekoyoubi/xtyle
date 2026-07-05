@@ -61,6 +61,40 @@ const stackExample = `<!-- A tool rail: every panel open at once, each a collaps
 	};
 </script>`;
 
+const svelteExample = `<script lang="ts">
+	import { DockZone } from "@xoji/svelte";
+	import type { DockLayout } from "@xoji/core/elements";
+
+	// Restore a persisted layout in; read the current one back out via onLayoutChange.
+	let layout: DockLayout | null = $state(JSON.parse(localStorage.getItem("layout") ?? "null"));
+</script>
+
+<DockZone
+	{layout}
+	style="height: 320px;"
+	onLayoutChange={(e) => {
+		layout = e.detail.layout;
+		localStorage.setItem("layout", JSON.stringify(layout));
+	}}
+>
+	<section data-panel-id="files" data-title="Files">The file tree.</section>
+	<section data-panel-id="outline" data-title="Outline">The document outline.</section>
+	<section data-panel-id="preview" data-title="Preview">The rendered preview.</section>
+</DockZone>`;
+
+const astroExample = `---
+import { DockZone } from "@xoji/astro";
+---
+
+<DockZone style="height: 320px;">
+	<section data-panel-id="files" data-title="Files">The file tree.</section>
+	<section data-panel-id="outline" data-title="Outline">The document outline.</section>
+	<section data-panel-id="preview" data-title="Preview">The rendered preview.</section>
+</DockZone>
+
+<!-- The Astro wrapper renders the initial panels; wire persistence in a client
+	 script that reads the element's \`layout\` and listens for \`layout-change\`. -->`;
+
 export const dockZoneManifest: ComponentManifest = {
 	id: "dock-zone",
 	name: "Dock Zone",
@@ -232,7 +266,7 @@ export const dockZoneManifest: ComponentManifest = {
 			id: "panels-and-persistence",
 			title: "Panels and persistence",
 			description: "Three panels in one zone; drag a tab to split or re-tab, and the layout persists to `localStorage`.",
-			source: { html: htmlExample },
+			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
 		},
 		{
 			id: "panel-chrome",

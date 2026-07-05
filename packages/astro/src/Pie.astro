@@ -1,6 +1,6 @@
 ---
 import { renderFragmentLight } from "@xoji/core/elements/ssr";
-import { resolveSeriesColors } from "./internal/palette.ts";
+import { resolveSeriesColorsFor } from "./internal/palette.ts";
 import type { PieDatum, PieScheme } from "@xoji/core";
 
 interface Props {
@@ -34,7 +34,7 @@ const {
 } = Astro.props;
 
 const slices = data.filter((d) => Number(d.value) > 0);
-const colors = await resolveSeriesColors(scheme, slices.length, reverse);
+const colors = await resolveSeriesColorsFor(scheme, slices, reverse);
 const bindings = {
 	data: slices,
 	colors,

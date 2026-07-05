@@ -37,6 +37,16 @@ import Text from "@xoji/astro/Text.astro";
 	</section>
 
 	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Free-form</Heading>
+		<Cluster gap={5} align="end" class="demo__row">
+			<Stack gap={2}>
+				<NumberInput label="Graph parameter" value={3.14159} step="any" />
+				<Text size="xs" tone="subtle">step="any" → type 1e-3 or 2.71828; commits verbatim, no clamp</Text>
+			</Stack>
+		</Cluster>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={3} size="sm" tone="muted">Sizes &amp; disabled</Heading>
 		<Cluster gap={5} align="end">
 			<Stack gap={2} align="center">

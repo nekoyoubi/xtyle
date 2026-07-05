@@ -1,6 +1,6 @@
 import type { Algorithm, TokenRegister } from "@xoji/core";
 import { derive } from "@xoji/core";
-import { getAlgorithm } from "@xoji/core/algorithms";
+import { hostedAlgorithm } from "@xoji/core/algorithms";
 import type { BenchState } from "../../components/bench/state.js";
 import { anchorsToConstraints, defaultState, toDeriveKnobs } from "../../components/bench/state.js";
 import type { ThemeRecipe } from "./types.js";
@@ -42,14 +42,13 @@ export function deriveRegister(
 	let algorithm: Algorithm;
 	try {
 		algorithm =
-			algos?.get(recipe.algorithm) ?? getAlgorithm(recipe.algorithm);
+			algos?.get(recipe.algorithm) ?? hostedAlgorithm(recipe.algorithm);
 	} catch {
-		algorithm = getAlgorithm("xoji-default");
+		algorithm = hostedAlgorithm("xoji-default");
 	}
 	try {
 		const register = derive(algorithm, {
 			knobs: toDeriveKnobs(recipe.knobs),
-			// The saved theme's bg/fg/accent ride the one token channel now; overrides layer on top.
 			constraints: { ...anchorsToConstraints(recipe.anchors), ...recipe.overrides },
 		});
 		return { register, error: null };

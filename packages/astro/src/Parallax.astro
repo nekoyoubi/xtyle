@@ -1,0 +1,18 @@
+---
+interface Props {
+	minHeight?: string;
+	amplitude?: number;
+	mode?: "scroll" | "cursor";
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { minHeight, amplitude, mode, class: extra, ...rest } = Astro.props;
+---
+
+<xoji-parallax min-height={minHeight} amplitude={amplitude} mode={mode} class={extra} {...rest}>
+	<slot />
+</xoji-parallax>
+
+<script>import "@xoji/core/elements";</script>

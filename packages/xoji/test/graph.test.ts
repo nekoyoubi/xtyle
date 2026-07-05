@@ -85,4 +85,23 @@ describe.each(SET.map((a) => [a.id, a] as const))("graph(%s)", (_id, algorithm: 
 			expect(node?.refs ?? []).toEqual([]);
 		}
 	});
+
+	it("declares an honest split-complement accent fan: 2/3/4 all flank the accent, none chains off another", () => {
+		const nodes = algorithm.lineage();
+		const refsOf = (name: string) => nodes.find((n) => n.name === name)?.refs ?? [];
+		// each of 2/3/4 derives off the primary accent (flanks + complement), so the fan can't claim a
+		// wheel-style chain (4 <- 3 <- 2) it never computes
+		expect(refsOf("--accent-2")).toEqual(["--accent"]);
+		expect(refsOf("--accent-3")).toEqual(["--accent"]);
+		expect(refsOf("--accent-4")).toEqual(["--accent"]);
+	});
+
+	it("pulls the mirror flank into the lineage when a wing is pinned, keeping 4 the accent's complement", () => {
+		const nodes = algorithm.lineage({ constraints: { "--accent-2": "#22c55e" } });
+		const refsOf = (name: string) => nodes.find((n) => n.name === name)?.refs ?? [];
+		// the pinned wing is a ref-less input; its mirror (3) now honestly reads it; 4 is untouched
+		expect(refsOf("--accent-2")).toEqual([]);
+		expect(refsOf("--accent-3")).toContain("--accent-2");
+		expect(refsOf("--accent-4")).toEqual(["--accent"]);
+	});
 });

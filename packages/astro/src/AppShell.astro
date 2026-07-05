@@ -7,6 +7,14 @@ interface Props {
 	leftSize?: number | string;
 	/** Initial width of the right rail; sets `--xoji-app-right` server-side so the grid doesn't reflow on hydration. Number → px. */
 	rightSize?: number | string;
+	/** Make the left / right rail user-resizable: a drag handle, arrow-key nudges, and a double-click reset to `leftSize` / `rightSize`. Needs the hydrated runtime. */
+	leftResizable?: boolean;
+	rightResizable?: boolean;
+	/** Clamp for the resizable rails, in px. */
+	leftMin?: number;
+	leftMax?: number;
+	rightMin?: number;
+	rightMax?: number;
 	/** The `id` of the `<main>` region and the skip link's target. Override when more than one shell renders on a page so the ids stay unique. */
 	mainId?: string;
 	/** Render zero-JS: emit the declarative shadow but never load the runtime to hydrate it. */
@@ -16,7 +24,21 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { skipLink, leftSize, rightSize, mainId = "main", static: isStatic = false, class: extra, ...rest } = Astro.props;
+const {
+	skipLink,
+	leftSize,
+	rightSize,
+	leftResizable,
+	rightResizable,
+	leftMin,
+	leftMax,
+	rightMin,
+	rightMax,
+	mainId = "main",
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
 
 const hasLeft = Astro.slots.has("left");
 const hasRight = Astro.slots.has("right");
@@ -39,6 +61,8 @@ const bindings = {
 	skipLinkText: skipText,
 	bodyStyle,
 	mainId,
+	leftResizable: Boolean(leftResizable),
+	rightResizable: Boolean(rightResizable),
 };
 const light = await renderFragmentLight("app-shell", bindings);
 const toolbarHtml = hasToolbar ? await Astro.slots.render("toolbar") : "";
@@ -58,6 +82,12 @@ const composed = light
 	skip-link={typeof skipLink === "string" ? skipLink : showSkip ? "" : undefined}
 	left-size={leftSize === undefined ? undefined : String(leftSize)}
 	right-size={rightSize === undefined ? undefined : String(rightSize)}
+	left-resizable={leftResizable ? "" : undefined}
+	right-resizable={rightResizable ? "" : undefined}
+	left-min={leftMin === undefined ? undefined : String(leftMin)}
+	left-max={leftMax === undefined ? undefined : String(leftMax)}
+	right-min={rightMin === undefined ? undefined : String(rightMin)}
+	right-max={rightMax === undefined ? undefined : String(rightMax)}
 	main-id={mainId === "main" ? undefined : mainId}
 	class={extra}
 	set:html={composed}

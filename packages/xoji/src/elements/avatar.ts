@@ -17,7 +17,7 @@ export class XojiAvatar extends XojiElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["src", "alt", "tone", "size", "shape", "status", "status-label"];
+		return ["src", "alt", "tone", "size", "shape", "status", "status-label", "pulse"];
 	}
 
 	get src(): string | null {
@@ -66,6 +66,15 @@ export class XojiAvatar extends XojiElement {
 		return this.getAttribute("status-label");
 	}
 
+	get pulse(): "" | "slow" | "fast" | null {
+		return this.getAttribute("pulse") as "" | "slow" | "fast" | null;
+	}
+	set pulse(value: boolean | "slow" | "fast" | null | undefined) {
+		if (value === true) this.setAttribute("pulse", "");
+		else if (!value) this.removeAttribute("pulse");
+		else this.setAttribute("pulse", value);
+	}
+
 	attributeChangedCallback(): void {
 		if (this.root.firstChild) this.render();
 	}
@@ -79,6 +88,7 @@ export class XojiAvatar extends XojiElement {
 			shape: this.shape,
 			status: this.status,
 			statusLabel: this.statusLabel,
+			pulse: this.pulse,
 		};
 	}
 

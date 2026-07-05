@@ -1,0 +1,53 @@
+---
+import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { bakeIconMark } from "./internal/palette.ts";
+import { ICON_NAMES, iconClass } from "@xoji/core";
+import type { FullTone, IconName, IconSize, SeriesScheme } from "@xoji/core";
+
+interface Props {
+	name: IconName | (string & {});
+	size?: IconSize;
+	tone?: FullTone;
+	/** The series scheme a generated mark's `c3+` color slots draw from. */
+	colors?: SeriesScheme;
+	label?: string;
+	spin?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	name,
+	size = "md",
+	tone,
+	colors = "accents",
+	label,
+	spin = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+// A functional glyph is looked up; any other name is offered to the mark generators and baked when one claims it.
+const isGlyph = typeof name !== "string" || (ICON_NAMES as readonly string[]).includes(name);
+const mark = isGlyph ? null : await bakeIconMark(name, colors, iconClass({ size, tone, spin }));
+const composed =
+	mark != null ? `<span data-root data-icon>${mark}</span>` : await renderFragmentLight("icon", { name, size, tone, label, spin });
+---
+
+<xoji-icon
+	name={name}
+	size={size}
+	tone={tone}
+	colors={mark != null ? colors : undefined}
+	label={label}
+	spin={spin ? "" : undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xoji/core/elements";</script>}

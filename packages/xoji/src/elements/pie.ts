@@ -1,12 +1,11 @@
-import { XojiElement, define, type StyleMode } from "./base.js";
+import { XojiElement, define, escapeHtml, type StyleMode } from "./base.js";
 import { pieHostCss, type PieDatum, type PieScheme, type PieVariant } from "../markup/index.js";
-import { seriesPalette, SERIES_TOKENS, type SeriesScheme } from "../series.js";
+import { seriesPalette, seriesColorsFor, SERIES_SCHEMES, SERIES_TOKENS, type SeriesScheme } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
+import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/pie/source.generated.js";
 
 export type { PieDatum, PieScheme, PieVariant };
-
-const BUILT_IN: SeriesScheme[] = ["accents", "skittles", "thermal", "status"];
 
 function parseJson<T>(raw: string | null): T | null {
 	if (!raw) return null;
@@ -74,27 +73,23 @@ export class XojiPie extends XojiElement {
 	}
 
 	private paletteRegister(): Record<string, string> {
-		const styles = getComputedStyle(this);
-		const register: Record<string, string> = {};
-		for (const token of SERIES_TOKENS) {
-			const value = styles.getPropertyValue(token).trim();
-			if (value) register[token] = value;
-		}
-		return register;
+		return readLiveRegister(this, SERIES_TOKENS, () => {
+			if (this.root.firstChild) this.render();
+		});
 	}
 
-	private colors(count: number): string[] {
+	private colors(items: readonly PieDatum[]): string[] {
 		const scheme = this.scheme;
-		if (Array.isArray(scheme)) return seriesPalette(scheme, count, {}, { reverse: this.reverse });
-		const resolved = BUILT_IN.includes(scheme) ? scheme : "skittles";
-		return seriesPalette(resolved, count, this.paletteRegister(), { reverse: this.reverse });
+		if (Array.isArray(scheme)) return seriesPalette(scheme, items.length, {}, { reverse: this.reverse });
+		const resolved = SERIES_SCHEMES.includes(scheme) ? scheme : "skittles";
+		return seriesColorsFor(resolved, items, this.paletteRegister(), { reverse: this.reverse });
 	}
 
 	private get bindings(): Record<string, unknown> {
 		const data = this.data.filter((d) => Number(d.value) > 0);
 		return {
 			data,
-			colors: this.colors(data.length),
+			colors: this.colors(data),
 			variant: this.variant,
 			showValues: this.hasAttribute("show-values"),
 			legend: this.getAttribute("legend") !== "false",
@@ -117,7 +112,7 @@ export class XojiPie extends XojiElement {
 			const d = data[i];
 			if (!d) return;
 			const percent = Math.round((Number(d.value) / total) * 100);
-			tooltip.innerHTML = `<span class="xoji-pie__tooltip-name">${d.label}</span> <span class="xoji-pie__tooltip-value">${d.value} · ${percent}%</span>`;
+			tooltip.innerHTML = `<span class="xoji-pie__tooltip-name">${escapeHtml(d.label)}</span> <span class="xoji-pie__tooltip-value">${escapeHtml(String(d.value))} · ${percent}%</span>`;
 			const chartRect = chart.getBoundingClientRect();
 			const sliceRect = slice.getBoundingClientRect();
 			tooltip.style.left = `${sliceRect.left + sliceRect.width / 2 - chartRect.left}px`;

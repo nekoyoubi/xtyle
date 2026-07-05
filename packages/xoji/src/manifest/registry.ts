@@ -40,6 +40,7 @@ import { clusterManifest } from "./cluster.manifest.js";
 import { gridManifest } from "./grid.manifest.js";
 import { spinnerManifest } from "./spinner.manifest.js";
 import { avatarManifest } from "./avatar.manifest.js";
+import { avatarGroupManifest } from "./avatar-group.manifest.js";
 import { tooltipManifest } from "./tooltip.manifest.js";
 import { tabsManifest } from "./tabs.manifest.js";
 import { breadcrumbManifest } from "./breadcrumb.manifest.js";
@@ -61,8 +62,14 @@ import { eyebrowManifest } from "./eyebrow.manifest.js";
 import { cardLinkManifest } from "./card-link.manifest.js";
 import { tocManifest } from "./toc.manifest.js";
 import { kbdManifest } from "./kbd.manifest.js";
+import { iconManifest } from "./icon.manifest.js";
+import { imageManifest } from "./image.manifest.js";
+import { carouselManifest } from "./carousel.manifest.js";
+import { parallaxManifest } from "./parallax.manifest.js";
+import { heroManifest } from "./hero.manifest.js";
 import { barManifest } from "./bar.manifest.js";
 import { sparklineManifest } from "./sparkline.manifest.js";
+import { heatmapManifest } from "./heatmap.manifest.js";
 import { pieManifest } from "./pie.manifest.js";
 import { swatchManifest } from "./swatch.manifest.js";
 import { menuManifest } from "./menu.manifest.js";
@@ -96,6 +103,7 @@ export const components: ComponentRegistry = {
 	grid: gridManifest,
 	spinner: spinnerManifest,
 	avatar: avatarManifest,
+	"avatar-group": avatarGroupManifest,
 	tooltip: tooltipManifest,
 	tabs: tabsManifest,
 	breadcrumb: breadcrumbManifest,
@@ -117,8 +125,14 @@ export const components: ComponentRegistry = {
 	"card-link": cardLinkManifest,
 	toc: tocManifest,
 	kbd: kbdManifest,
+	icon: iconManifest,
+	image: imageManifest,
+	carousel: carouselManifest,
+	parallax: parallaxManifest,
+	hero: heroManifest,
 	bar: barManifest,
 	sparkline: sparklineManifest,
+	heatmap: heatmapManifest,
 	pie: pieManifest,
 	swatch: swatchManifest,
 	menu: menuManifest,

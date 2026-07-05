@@ -78,9 +78,10 @@
         }
       }
     }
-    const center = donut ? `<text class="xoji-pie__center" x="${CX}" y="${CY}" text-anchor="middle" dy="0.32em">${esc(formatTotal(total))}</text>` : "";
-    const a11y = label ? ` aria-label="${esc(label)}"` : ` aria-label="Pie chart of ${data.length} slices"`;
-    const svg = `<svg class="xoji-pie__svg" viewBox="0 0 ${SZ} ${SZ}" role="img"${a11y}><g class="xoji-pie__slices">${slices}</g><g class="xoji-pie__labels">${labels}</g>${center}</svg>`;
+    const center = donut && total > 0 ? `<text class="xoji-pie__center" x="${CX}" y="${CY}" text-anchor="middle" dy="0.32em">${esc(formatTotal(total))}</text>` : "";
+    const a11y = label ? ` aria-label="${esc(label)}"` : ` aria-label="${total > 0 ? `Pie chart of ${data.length} slices` : "No data"}"`;
+    const empty = total > 0 ? "" : `<text class="xoji-pie__empty" x="${CX}" y="${CY}" text-anchor="middle" dy="0.32em">No data</text>`;
+    const svg = `<svg class="xoji-pie__svg" viewBox="0 0 ${SZ} ${SZ}" role="img"${a11y}><g class="xoji-pie__slices">${slices}</g><g class="xoji-pie__labels">${labels}</g>${empty}${center}</svg>`;
     const legend = b.legend !== false ? legendHtml(data, colors) : "";
     const tooltip = `<div class="xoji-pie__tooltip" part="tooltip" role="status" aria-hidden="true" hidden></div>`;
     const table = tableHtml(data, total || 1, label);

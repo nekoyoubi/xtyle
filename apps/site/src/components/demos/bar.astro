@@ -24,6 +24,9 @@ const week = ["S", "M", "T", "W", "T", "F", "S"];
 
 const languages = ["Rust", "TypeScript", "Svelte", "Astro", "CSS"];
 const lines = [{ name: "Lines", values: [4200, 3800, 1500, 900, 2100] }];
+
+const workflows = ["Alpha", "Bravo", "Charlie", "Delta"];
+const runs = [{ name: "Runs", values: [42, 30, 18, 9] }];
 ---
 
 <Stack gap={6}>
@@ -61,6 +64,25 @@ const lines = [{ name: "Lines", values: [4200, 3800, 1500, 900, 2100] }];
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Actionable bars</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>selectable</code> makes each bar a button that fires <code>select</code> on click or
+				Enter/Space, carrying <code>{"{ series, category, value, … }"}</code> for a drill-in.
+			</Text>
+			<Bar id="runs-chart" categories={workflows} series={runs} scheme="accents" label="Runs by workflow" height={220} selectable legend={false} />
+			<Text size="sm" tone="muted">Selected: <Text as="span" mono size="xs" id="runs-readout">(click a bar)</Text></Text>
+		</Stack>
+		<script is:inline>
+			const chart = document.getElementById("runs-chart");
+			const out = document.getElementById("runs-readout");
+			chart?.addEventListener("select", (e) => {
+				out.textContent = `${e.detail.category} · ${e.detail.value} runs`;
+			});
+		</script>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">One scheme, four flavors</Heading>
 		<Grid minColWidth="16rem" gap={4}>
 			<Stack gap={1}>
@@ -80,5 +102,14 @@ const lines = [{ name: "Lines", values: [4200, 3800, 1500, 900, 2100] }];
 				<Bar categories={week} series={traffic} scheme="accents" label="Weekly visits" height={180} />
 			</Stack>
 		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Empty state</Heading>
+		<Text tone="muted" size="sm">
+			With no categories or series to plot, the chart shows a muted <code>No data</code> message in
+			place of the axes, so a no-data period reads as intentional rather than broken.
+		</Text>
+		<Bar categories={[]} series={[]} label="Revenue by quarter" height={200} />
 	</Card>
 </Stack>

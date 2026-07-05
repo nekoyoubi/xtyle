@@ -1,4 +1,4 @@
-import { XojiElement, define, type StyleMode } from "./base.js";
+import { XojiElement, define, escapeHtml, escapeAttr, type StyleMode } from "./base.js";
 import {
 	ASSERTIVE_SEVERITIES,
 	CLOSE_ICON,
@@ -182,12 +182,12 @@ export class XojiToastRegion extends XojiElement {
 		item.setAttribute("aria-atomic", "true");
 
 		const action = opts.actionLabel
-			? `<button class="xoji-toast__action" part="action" type="button">${opts.actionLabel}</button>`
+			? `<button class="xoji-toast__action" part="action" type="button">${escapeHtml(opts.actionLabel)}</button>`
 			: "";
 		const close = closable
-			? `<button class="xoji-toast__close" part="close" type="button" aria-label="${opts.closeLabel ?? "Dismiss"}">${CLOSE_ICON}</button>`
+			? `<button class="xoji-toast__close" part="close" type="button" aria-label="${escapeAttr(opts.closeLabel ?? "Dismiss")}">${CLOSE_ICON}</button>`
 			: "";
-		item.innerHTML = `${toastIconMarkup(severity)}<div class="xoji-toast__body" part="body"><span class="xoji-toast__message" part="message">${opts.message}</span>${action}</div>${close}`;
+		item.innerHTML = `${toastIconMarkup(severity)}<div class="xoji-toast__body" part="body"><span class="xoji-toast__message" part="message">${escapeHtml(opts.message)}</span>${action}</div>${close}`;
 
 		const region = this.regionEl;
 		region?.appendChild(item);

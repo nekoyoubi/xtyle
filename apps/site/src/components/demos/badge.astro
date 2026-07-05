@@ -89,6 +89,24 @@ const TONE_GROUPS = [
 				<Badge variant="soft" tone="danger" dot pulse="fast">Alert</Badge>
 				<Badge variant="soft" tone="neutral" dot>Idle</Badge>
 			</Cluster>
+			<Text tone="muted" size="sm">
+				The same breathe drives the standalone <code>.xoji-dot</code> for a chip-less
+				live pip, a connection light or a per-row streaming indicator with no label around it.
+			</Text>
+			<Cluster gap={4} align="center">
+				<Cluster gap={2} align="center">
+					<span class="xoji-dot xoji-dot--success xoji-dot--pulse-slow" role="img" aria-label="Connected"></span>
+					<Text size="sm">Connected</Text>
+				</Cluster>
+				<Cluster gap={2} align="center">
+					<span class="xoji-dot xoji-dot--accent xoji-dot--pulse-fast" role="img" aria-label="Streaming"></span>
+					<Text size="sm">Streaming</Text>
+				</Cluster>
+				<Cluster gap={2} align="center">
+					<span class="xoji-dot xoji-dot--neutral" role="img" aria-label="Offline"></span>
+					<Text size="sm">Offline</Text>
+				</Cluster>
+			</Cluster>
 		</Stack>
 	</Card>
 </Stack>

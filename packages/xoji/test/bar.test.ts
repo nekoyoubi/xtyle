@@ -78,4 +78,31 @@ describe("bar chart", () => {
 		expect(rects.length).toBeGreaterThan(0);
 		expect(html).toContain("xoji-bar--stacked");
 	});
+
+	it("renders bars as read-only image data points by default", async () => {
+		const html = await renderFragmentLight("bar", bindings);
+		expect(html).toContain('role="img"');
+		expect(html).not.toContain('role="button"');
+		expect(html).not.toContain("xoji-bar--selectable");
+	});
+
+	it("promotes bars to buttons when selectable, for an actionable chart", async () => {
+		const html = await renderFragmentLight("bar", { ...bindings, selectable: true });
+		expect(html).toContain("xoji-bar--selectable");
+		expect(html).toContain('role="button"');
+		expect(html).not.toContain('role="img"');
+		// every bar takes the button role, not just the first
+		const buttons = html.match(/role="button"/g) ?? [];
+		const rects = html.match(/class="xoji-bar__bar"/g) ?? [];
+		expect(buttons).toHaveLength(rects.length);
+	});
+
+	it("shows a No data message with no axes when there is nothing to plot", async () => {
+		const html = await renderFragmentLight("bar", { categories: [], series: [] });
+		expect(html).toContain('class="xoji-bar__empty"');
+		expect(html).toContain(">No data</text>");
+		expect(html).not.toContain('class="xoji-bar__bar"');
+		expect(html).not.toContain('class="xoji-bar__grid"');
+		expect(html).toContain('aria-label="No data"');
+	});
 });

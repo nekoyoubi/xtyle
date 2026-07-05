@@ -13,6 +13,8 @@ interface Props {
 	shape?: AvatarShape;
 	status?: Tone;
 	statusLabel?: string;
+	/** Breathe the status dot for a live / online presence: a bare `true` pulses slow, `"fast"` quick. */
+	pulse?: boolean | "slow" | "fast";
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -28,6 +30,7 @@ const {
 	shape = "circle",
 	status,
 	statusLabel,
+	pulse,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -41,6 +44,7 @@ const bindings = {
 	shape,
 	status: status ?? null,
 	statusLabel: statusLabel ?? null,
+	pulse: pulse ?? null,
 };
 const chrome = await renderFragmentLight("avatar", bindings);
 const iconHtml = Astro.slots.has("icon") ? await Astro.slots.render("icon") : "";
@@ -58,6 +62,7 @@ const composed = chrome
 	shape={shape}
 	status={status ?? undefined}
 	status-label={statusLabel ?? undefined}
+	pulse={pulse === true ? "" : pulse || undefined}
 	class={extra}
 	set:html={composed}
 	{...rest}

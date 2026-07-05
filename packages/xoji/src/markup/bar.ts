@@ -1,8 +1,12 @@
-import type { SeriesScheme } from "../series.js";
+import type { SeriesScheme, StatusTone } from "../series.js";
 
 export interface BarSeries {
 	name: string;
 	values: number[];
+	/** For the `statuses` scheme when coloring by series, the semantic outcome this series represents.
+	 * Colors it by meaning regardless of which series are present. Ignored by every other scheme, and
+	 * by category-colored charts (categories carry no tone). */
+	tone?: StatusTone;
 }
 
 export type BarScheme = SeriesScheme | string[];

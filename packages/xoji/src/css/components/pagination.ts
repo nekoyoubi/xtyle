@@ -70,6 +70,20 @@ export const paginationCss = `
 	font-weight: var(--weight-medium);
 	cursor: default;
 }
+@container style(--selection-cue: marker) {
+	.xoji-pagination__page--current {
+		position: relative;
+	}
+	.xoji-pagination__page--current::after {
+		content: "";
+		position: absolute;
+		inset-inline: 30%;
+		inset-block-end: 15%;
+		block-size: var(--border-thick);
+		background: var(--accent-fg);
+		border-radius: var(--radius-sm);
+	}
+}
 ${toneRules}
 .xoji-pagination__control[aria-disabled="true"] {
 	color: var(--fg-3);

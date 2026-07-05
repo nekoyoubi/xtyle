@@ -91,7 +91,9 @@ describe("algorithm set", () => {
 	});
 
 	it("xoji-quiet and xoji-loud differ in accent chroma", () => {
-		const anchors = { bg: "#0f1115", accent: "#5b8cff" };
+		// Seed only the background so the accent is *derived* (a pinned accent is honored
+		// verbatim and identical across algorithms); the vibrancy posture shows in the derived hue.
+		const anchors = { bg: "#0f1115" };
 		const quiet = toOklchColor(derive(xojiQuiet, { anchors })["--accent"]!);
 		const loud = toOklchColor(derive(xojiLoud, { anchors })["--accent"]!);
 		expect(loud.c).toBeGreaterThan(quiet.c + 0.02);

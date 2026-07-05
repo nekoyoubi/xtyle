@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xoji/core";
-	import { clampToGamut, contrast, coverComponents, toOklchColor } from "@xoji/core";
-	import { CONTRAST_PAIRS, isColorToken } from "./tokens.js";
+	import { auditRegister, clampToGamut, coverComponents, toOklchColor } from "@xoji/core";
+	import { isColorToken } from "./tokens.js";
 	import type { BenchState } from "./state.js";
 	import { anchorsToConstraints, toDeriveKnobs } from "./state.js";
 
@@ -15,21 +15,16 @@
 
 	let { register, algorithm, bench, panel }: Props = $props();
 
-	const AA = 4.5;
-	const AAA = 7;
-
+	const audit = $derived(auditRegister(register));
 	const contrastRows = $derived(
-		CONTRAST_PAIRS.filter((p) => register[p.fg] && register[p.bg]).map((p) => {
-			const ratio = contrast(register[p.fg] as string, register[p.bg] as string);
-			return {
-				label: p.label,
-				ratio,
-				aa: ratio >= AA,
-				aaa: ratio >= AAA,
-				fg: register[p.fg] as string,
-				bg: register[p.bg] as string,
-			};
-		}),
+		audit.entries.map((e) => ({
+			label: `${e.fg.replace(/^--/, "")} on ${e.bg.replace(/^--/, "")}`,
+			ratio: e.ratio,
+			aa: e.tier !== "fail",
+			aaa: e.tier === "AAA",
+			fg: e.fgValue,
+			bg: e.bgValue,
+		})),
 	);
 
 	const coverage = $derived(coverComponents(register));
@@ -81,7 +76,11 @@
 <div class="bench-inspectors">
 	<div class="bench-insp__body">
 		{#if panel === "contrast"}
-			<p class="bench-insp__lead x-caption">Pairwise WCAG ratios for the algorithm's promised contracts.</p>
+			<p class="bench-insp__lead x-caption">
+				<code>auditRegister()</code> grades xoji's canonical text/fill pairs:
+				<strong class:xoji-text-success-text={audit.passes} class:xoji-text-warn-text={!audit.passes}>{audit.tallies.AAA} AAA · {audit.tallies.AA} AA · {audit.tallies.fail} fail</strong>,
+				weakest {audit.worst.toFixed(2)}.
+			</p>
 			<ul class="bench-contrast">
 				{#each contrastRows as row (row.label)}
 					<li class="bench-contrast__row">

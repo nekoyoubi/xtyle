@@ -6,7 +6,8 @@
 		value?: number | string;
 		min?: number;
 		max?: number;
-		step?: number;
+		/** A positive number, or `"any"` for unstepped free-form entry (no snapping, no precision cap). */
+		step?: number | "any";
 		altStep?: number;
 		altDefault?: boolean;
 		modifier?: "shift" | "alt" | "ctrl" | "meta";

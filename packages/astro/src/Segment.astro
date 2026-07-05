@@ -1,0 +1,15 @@
+---
+interface Props {
+	/** The value this segment selects; emitted on `change` and submitted with the form. */
+	value: string;
+	/** Accessible name for the segment, since its content is markup (an icon) rather than text. */
+	label?: string;
+	disabled?: boolean;
+	/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the segment. */
+	[key: string]: unknown;
+}
+
+const { value, label, disabled = false, ...rest } = Astro.props;
+---
+
+<span slot="segment" value={value} label={label} disabled={disabled || undefined} {...rest}><slot /></span>

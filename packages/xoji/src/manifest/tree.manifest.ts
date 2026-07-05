@@ -215,6 +215,7 @@ export const treeManifest: ComponentManifest = {
 		"A single roving tab stop makes the whole tree one Tab stop; Up/Down move between visible nodes, Right expands or steps into a node, Left collapses or steps out to the parent, and Home/End jump to the first and last.",
 		"Enter or Space activates a node: selecting it, toggling a parent, or following a leaf's link.",
 		"A node marked `disabled` is announced and cannot be selected or toggled.",
+		"A `locked` branch with no `href` is a non-interactive section header: roving focus skips it and it can't be selected, so a keyboard user tabs straight to its children (a locked branch that carries an `href` stays a navigable header).",
 		"Focus shows an inset token ring on the node's row plus a transparent outline the forced-colors base rule promotes to a real system outline.",
 		"Selection carries a non-color channel on demand: when the theme sets `--selection-cue: marker`, the selected row gains a check glyph alongside the color, satisfying WCAG 1.4.1 (color is not the only differentiator). The algorithm decides. High-contrast emits `marker` by default, and any algorithm can opt in via the `cues` knob.",
 		"A row's `actions` are real `<button>`s with an accessible name (their `label`), revealed on row hover and keyboard focus; a `badge` is decorative (`aria-hidden`), so the row's accessible name stays the bare label. The action buttons are pointer- and screen-reader-reachable; they are not standalone Tab stops, matching the tree's single roving tab stop.",

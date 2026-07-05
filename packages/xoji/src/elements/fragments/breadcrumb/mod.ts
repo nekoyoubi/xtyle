@@ -6,8 +6,20 @@ interface OpsBuilder {
 interface BreadcrumbItem {
 	label?: string;
 	href?: string;
+	value?: string;
+	title?: string;
 	current?: boolean;
 }
+
+interface SelectIntent {
+	select?: string;
+}
+
+interface EventPayload {
+	dataset?: { value?: string };
+}
+
+declare const xript: { exports: { register: (name: string, fn: (payload: unknown) => SelectIntent) => void } };
 
 interface BreadcrumbBindings {
 	items?: BreadcrumbItem[];
@@ -46,38 +58,45 @@ function separatorMarkup(separator: string): string {
 	return `<li class="xoji-breadcrumb__separator" part="separator" aria-hidden="true">${escapeHtml(separator)}</li>`;
 }
 
+function crumbCell(item: BreadcrumbItem, isCurrent: boolean, label: string): string {
+	const title = item.title ? ` title="${escapeAttr(item.title)}"` : "";
+	if (isCurrent) return `<span class="xoji-breadcrumb__current" part="item" aria-current="page"${title}>${label}</span>`;
+	if (item.href) return `<a class="xoji-breadcrumb__link" part="item" href="${escapeAttr(item.href)}"${title}>${label}</a>`;
+	if (item.value !== undefined)
+		return `<button type="button" class="xoji-breadcrumb__link" part="item" data-value="${escapeAttr(item.value)}"${title}>${label}</button>`;
+	return `<span class="xoji-breadcrumb__current" part="item"${title}>${label}</span>`;
+}
+
 function list(bindings: BreadcrumbBindings): string {
 	const items = bindings.items ?? [];
-	// no items → project the consumer's own `<li>` rows through a native `<slot>`; a
-	// `display:contents` passthrough keeps them flowing as the `<ol>`'s children
-	if (items.length === 0) return '<span class="xoji-slot"><slot></slot></span>';
+	if (items.length === 0) return "<slot></slot>";
 	const separator = bindings.separator ?? "/";
 	const lastIndex = items.length - 1;
 	return items
 		.map((item, index) => {
 			const isCurrent = item.current === true || (item.current === undefined && index === lastIndex);
 			const label = escapeHtml(item.label ?? "");
-			const cell =
-				item.href && !isCurrent
-					? `<a class="xoji-breadcrumb__link" part="item" href="${escapeAttr(item.href)}">${label}</a>`
-					: isCurrent
-						? `<span class="xoji-breadcrumb__current" part="item" aria-current="page">${label}</span>`
-						: `<span class="xoji-breadcrumb__current" part="item">${label}</span>`;
+			const cell = crumbCell(item, isCurrent, label);
 			const row = `<li class="xoji-breadcrumb__item" part="item-wrap">${cell}</li>`;
 			return index < lastIndex ? `${row}${separatorMarkup(separator)}` : row;
 		})
 		.join("");
 }
 
-/** Build the whole list once — the expensive `replaceChildren` rebuild. */
 hooks.fragment.mount("breadcrumb", (bindings, ops) => {
 	ops.setAttr("[data-root]", "class", breadcrumbClass(bindings));
 	ops.setAttr("[data-root]", "aria-label", bindings.label ?? "Breadcrumb");
 	ops.replaceChildren("[data-list]", list(bindings));
 });
 
-/** A presentational change — patch the existing nodes, never rebuild the list. */
 hooks.fragment.update("breadcrumb", (bindings, ops) => {
 	ops.setAttr("[data-root]", "class", breadcrumbClass(bindings));
 	ops.setAttr("[data-root]", "aria-label", bindings.label ?? "Breadcrumb");
+});
+
+/** A valued crumb was activated (click, or Enter/Space on the native button): hand its value up so
+ * the element fires `select`. */
+xript.exports.register("selectCrumb", (payload: unknown): SelectIntent => {
+	const value = (payload as EventPayload).dataset?.value;
+	return value !== undefined ? { select: value } : {};
 });

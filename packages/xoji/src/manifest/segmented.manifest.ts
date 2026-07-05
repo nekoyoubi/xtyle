@@ -51,6 +51,34 @@ const formats = [
 
 <Segmented label="Export" options={formats} value="md" />`;
 
+const htmlSlottedExample = `<xoji-segmented label="Severity" value="info">
+	<span slot="segment" value="info" label="Info"><xoji-icon name="info"></xoji-icon></span>
+	<span slot="segment" value="warn" label="Warnings"><xoji-icon name="warning"></xoji-icon></span>
+	<span slot="segment" value="error" label="Errors"><xoji-icon name="error"></xoji-icon></span>
+</xoji-segmented>`;
+
+const svelteSlottedExample = `<script lang="ts">
+	import { Segmented, Segment, Icon } from "@xoji/svelte";
+
+	let severity = $state("info");
+</script>
+
+<Segmented label="Severity" bind:value={severity}>
+	<Segment value="info" label="Info"><Icon name="info" /></Segment>
+	<Segment value="warn" label="Warnings"><Icon name="warning" /></Segment>
+	<Segment value="error" label="Errors"><Icon name="error" /></Segment>
+</Segmented>`;
+
+const astroSlottedExample = `---
+import { Segmented, Segment, Icon } from "@xoji/astro";
+---
+
+<Segmented label="Severity" value="info">
+	<Segment value="info" label="Info"><Icon name="info" /></Segment>
+	<Segment value="warn" label="Warnings"><Icon name="warning" /></Segment>
+	<Segment value="error" label="Errors"><Icon name="error" /></Segment>
+</Segmented>`;
+
 const svelteExample = `<script lang="ts">
 	import { Segmented } from "@xoji/svelte";
 
@@ -83,7 +111,7 @@ export const segmentedManifest: ComponentManifest = {
 	category: "control",
 	summary: "A single-select toggle bar: pick one of a few options from a connected button group.",
 	description:
-		"Segmented picks one option from a small, fixed set rendered as a connected button bar. It's the compact alternative to a radio group when the choices are few and worth showing at once. It is a `role=\"radiogroup\"` of `role=\"radio\"` buttons with roving tabindex: the selected segment is the tab stop, arrow keys move and select with wraparound, and Home/End jump to the ends. Options are declared as a comma-separated `options` string (bare labels, or `label:value` pairs), or as a structured `{ value, label }[]` when a label differs from its value or carries a comma or colon. It's form-associated; give it a `name` and the chosen value submits. Three sizes: `sm`, `md`, `lg`.",
+		"Segmented picks one option from a small, fixed set rendered as a connected button bar. It's the compact alternative to a radio group when the choices are few and worth showing at once. It is a `role=\"radiogroup\"` of `role=\"radio\"` buttons with roving tabindex: the selected segment is the tab stop, arrow keys move and select with wraparound, and Home/End jump to the ends. Options are declared as a comma-separated `options` string (bare labels, or `label:value` pairs), or as a structured `{ value, label }[]` when a label differs from its value or carries a comma or colon. For rich segments, drop in `<Segment value=\"…\" label=\"…\">` children holding an icon or other markup instead of a text label; they win over `options` when both are present. It's form-associated; give it a `name` and the chosen value submits. Three sizes: `sm`, `md`, `lg`.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -131,6 +159,7 @@ export const segmentedManifest: ComponentManifest = {
 		{ name: "tone", type: "FullTone", default: "accent", description: "Color of the selected segment's fill. Any semantic role, accent variant, or named hue.", bindings: ["html", "svelte", "astro"], options: [...FULL_TONES] },
 		{ name: "label", type: "string", description: "Visible label, also the accessible name via `aria-labelledby`.", bindings: ["html", "svelte", "astro"] },
 		{ name: "labelledby", type: "string", description: "ID of an external element that names the group. Takes precedence over `label`.", bindings: ["html", "svelte", "astro"] },
+		{ name: "aria-label", type: "string", description: "Names the group with no visible label, for a compact icon bar (a toolbar) where a heading would be noise. `labelledby` and a visible `label` both win over it.", bindings: ["html", "svelte", "astro"] },
 		{ name: "name", type: "string", description: "Form field name; the selected value submits with the form.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
@@ -166,7 +195,14 @@ export const segmentedManifest: ComponentManifest = {
 			tokens: ["--fg-disabled", "--state-disabled"],
 		},
 	],
-	slots: [],
+	slots: [
+		{
+			name: "segment",
+			description:
+				"Rich-content segments: one `[slot=\"segment\"]` child (a `<Segment>`) per option, each carrying `value`, an accessible `label`, and markup like an `<Icon>`. The element derives selection, roving tabindex, and the form value from them exactly as it would from `options`, and projects each child's live content into its radio. Children win over `options` when both are given.",
+			bindings: ["html", "svelte", "astro"],
+		},
+	],
 	consumedTokens: [
 		"--font-sans",
 		"--text-sm",
@@ -199,11 +235,13 @@ export const segmentedManifest: ComponentManifest = {
 		"Reach for it over a radio group when there are two to five options worth showing at once: view switches, alignment, light/dark/auto.",
 		"For many options, a long list, or free text, use Select instead.",
 		"Pair with a form and a `name` so the chosen value submits like any field.",
+		"For icon-only or icon-plus-text segments, use `<Segment>` children instead of `options`, and give each an accessible `label`.",
 	],
 	a11y: [
 		"The bar is `role=\"radiogroup\"` and each segment `role=\"radio\"` with `aria-checked`, never conveying selection by color alone.",
 		"Roving tabindex: the selected segment is the single tab stop; arrow keys move and select with wraparound, Home/End jump to the ends, click selects.",
-		"Requires an accessible name: `labelledby` wins, then `label`; the binding warns at runtime when neither is present.",
+		"Requires an accessible name: `labelledby` wins, then a visible `label`, then a bare `aria-label` for an unlabeled icon bar; the binding warns at runtime when none is present.",
+		"An icon segment owns its option's name and tooltip: the radio carries `aria-label` and a `title` from the `<Segment>`'s `label`, so the projected icon stays decorative and hovering the option (not the glyph) shows what it selects.",
 		"Focus is shown with a token ring and a transparent outline the forced-colors base rule promotes to a real system outline.",
 		"Selection carries a non-color channel on demand: when the theme sets `--selection-cue: marker`, the selected segment gains a check glyph alongside the color fill, satisfying WCAG 1.4.1. High-contrast emits `marker` by default, and any algorithm can opt in via the `cues` knob.",
 		"The group-level `disabled` blocks selection, drops the segments out of the tab order, and mutes the bar; a per-option `disabled` does the same for one segment, so the arrow keys skip it and the default selection lands on the first enabled option.",
@@ -227,6 +265,13 @@ export const segmentedManifest: ComponentManifest = {
 			title: "Per-option disabled and badges",
 			description: "A data-conditional view switch: a `report` segment carries a count while `text` / `log` stay disabled until their data exists, so the arrow keys skip them and the selection lands on the first enabled option.",
 			source: { html: perOptionExample },
+		},
+		{
+			id: "rich-segments",
+			title: "Icon segments",
+			description:
+				"Drop `<Segment>` children holding an `<Icon>` in place of text labels; each carries a `value` and an accessible `label`, and the bar keeps its selection, roving focus, and form value unchanged. The children project live, so framework-owned content stays reactive.",
+			source: { html: htmlSlottedExample, svelte: svelteSlottedExample, astro: astroSlottedExample },
 		},
 	],
 };

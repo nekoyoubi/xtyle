@@ -8,6 +8,8 @@ interface AppShellBindings {
 	skipLinkText?: string;
 	bodyStyle?: string | null;
 	mainId?: string | null;
+	leftResizable?: boolean;
+	rightResizable?: boolean;
 }
 
 function escapeAttr(value: string): string {
@@ -28,17 +30,31 @@ function mainId(b: AppShellBindings): string {
 	return explicit && explicit.length > 0 ? explicit : "main";
 }
 
+function rail(side: "left" | "right", resizable: boolean): string {
+	const resize = resizable ? " xoji-app__rail--resizable" : "";
+	return `<div class="xoji-app__rail xoji-app__rail--${side}${resize}"><slot name="${side}"></slot></div>`;
+}
+
+function resizer(side: "left" | "right"): string {
+	const label = side === "left" ? "Resize left panel" : "Resize right panel";
+	return `<div data-handle="${side}" class="xoji-app__resizer xoji-app__resizer--${side}" role="separator" aria-orientation="vertical" tabindex="0" aria-label="${label}"></div>`;
+}
+
 function appInner(b: AppShellBindings): string {
 	const id = mainId(b);
 	const skip = b.skipLink
 		? `<a part="skip-link" class="xoji-app__skip-link" href="#${escapeAttr(id)}">${escapeAttr(skipText(b))}</a>`
 		: "";
+	const handles = (b.leftResizable ? resizer("left") : "") + (b.rightResizable ? resizer("right") : "");
 	return (
 		skip +
 		'<slot name="toolbar"></slot>' +
-		'<div data-body class="xoji-app__body"><slot name="left"></slot>' +
+		'<div data-body class="xoji-app__body">' +
+		rail("left", Boolean(b.leftResizable)) +
 		`<main part="main" id="${escapeAttr(id)}" class="xoji-main" tabindex="0"><slot></slot></main>` +
-		'<slot name="right"></slot></div>' +
+		rail("right", Boolean(b.rightResizable)) +
+		handles +
+		"</div>" +
 		'<slot name="statusbar"></slot>'
 	);
 }

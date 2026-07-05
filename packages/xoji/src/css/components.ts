@@ -37,6 +37,7 @@ import { clusterCss } from "./components/cluster.js";
 import { gridCss } from "./components/grid.js";
 import { spinnerCss } from "./components/spinner.js";
 import { avatarCss } from "./components/avatar.js";
+import { avatarGroupCss } from "./components/avatar-group.js";
 import { tooltipCss } from "./components/tooltip.js";
 import { tabsCss } from "./components/tabs.js";
 import { breadcrumbCss } from "./components/breadcrumb.js";
@@ -59,8 +60,14 @@ import { eyebrowCss } from "./components/eyebrow.js";
 import { cardLinkCss } from "./components/card-link.js";
 import { tocCss } from "./components/toc.js";
 import { kbdCss } from "./components/kbd.js";
+import { iconCss } from "./components/icon.js";
+import { imageCss } from "./components/image.js";
+import { carouselCss } from "./components/carousel.js";
+import { parallaxCss } from "./components/parallax.js";
+import { heroCss } from "./components/hero.js";
 import { barCss } from "./components/bar.js";
 import { sparklineCss } from "./components/sparkline.js";
+import { heatmapCss } from "./components/heatmap.js";
 import { pieCss } from "./components/pie.js";
 import { swatchCss } from "./components/swatch.js";
 import { menuCss } from "./components/menu.js";
@@ -86,14 +93,18 @@ const hostDisplayCss = [
 	"xoji-panel { display: block; }",
 	"xoji-section { display: block; }",
 	"xoji-kbd { display: inline-block; }",
+	"xoji-icon { display: inline-flex; }",
+	"xoji-image { display: block; }",
 	"xoji-bar { display: block; }",
 	"xoji-sparkline { display: inline-block; }",
+	"xoji-heatmap { display: block; }",
 	"xoji-pie { display: block; }",
 	"xoji-spinner { display: inline-flex; }",
 	"xoji-skeleton { display: block; }",
 	"xoji-link { display: inline; }",
 	"xoji-card-link { display: block; }",
 	"xoji-avatar { display: inline-flex; }",
+	"xoji-avatar-group { display: inline-flex; }",
 	"xoji-button { display: inline-flex; } xoji-button[block] { display: flex; }",
 	"xoji-alert { display: block; }",
 	'xoji-text { display: block; } xoji-text[as="span"] { display: inline; }',
@@ -162,6 +173,7 @@ export const componentsCss: string = [
 	gridCss,
 	spinnerCss,
 	avatarCss,
+	avatarGroupCss,
 	tooltipCss,
 	tabsCss,
 	breadcrumbCss,
@@ -184,8 +196,14 @@ export const componentsCss: string = [
 	cardLinkCss,
 	tocCss,
 	kbdCss,
+	iconCss,
+	imageCss,
+	carouselCss,
+	parallaxCss,
+	heroCss,
 	barCss,
 	sparklineCss,
+	heatmapCss,
 	pieCss,
 	swatchCss,
 	menuCss,

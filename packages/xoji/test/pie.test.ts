@@ -66,4 +66,18 @@ describe("pie chart", () => {
 		expect(html).toContain("<caption>Traffic</caption>");
 		expect(html).toContain("42%");
 	});
+
+	it("shows a No data message for an empty or all-zero chart, with no slices", async () => {
+		const empty = await renderFragmentLight("pie", { data: [] });
+		expect(empty).toContain('class="xoji-pie__empty"');
+		expect(empty).toContain(">No data</text>");
+		expect(empty).not.toContain('class="xoji-pie__slice"');
+		expect(empty).toContain('aria-label="No data"');
+		const zeros = await renderFragmentLight("pie", { data: [{ label: "a", value: 0 }, { label: "b", value: 0 }] });
+		expect(zeros).toContain('class="xoji-pie__empty"');
+		expect(zeros).not.toContain('class="xoji-pie__slice"');
+		const donut = await renderFragmentLight("pie", { data: [], variant: "donut" });
+		expect(donut).toContain('class="xoji-pie__empty"');
+		expect(donut).not.toContain('class="xoji-pie__center"');
+	});
 });

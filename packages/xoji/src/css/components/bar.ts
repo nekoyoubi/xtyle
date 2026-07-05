@@ -30,11 +30,16 @@ export const barCss = `
 	fill: var(--fg-2);
 	font-size: var(--text-xs);
 }
+.xoji-bar__empty {
+	fill: var(--fg-2);
+	font-size: var(--text-sm);
+}
 .xoji-bar__bar {
 	rx: 2;
 	transition: opacity var(--duration-fast) var(--ease-standard);
 	cursor: default;
 }
+.xoji-bar--selectable .xoji-bar__bar { cursor: pointer; }
 .xoji-bar__bar:focus-visible {
 	outline: var(--border-thick) solid var(--ring);
 	outline-offset: 1px;

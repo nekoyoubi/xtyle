@@ -3,6 +3,7 @@ import { listComponents } from "@xoji/core";
 import Tree from "@xoji/astro/Tree.astro";
 import { categoryOrder, categoryMeta } from "./reference/categories.ts";
 import { isNewComponent } from "../data/newness.ts";
+import { BENCH_TOOLS } from "../data/bench-tools.ts";
 
 interface Props {
 	currentPath: string;
@@ -36,12 +37,20 @@ const categoryNodes = categoryOrder
 	.filter((node): node is NonNullable<typeof node> => node !== null);
 
 const items = [
-	{ label: "Overview", value: "overview", href: "/", selected: currentPath === "/" },
-	{ label: "Getting started", value: "start", href: "/start", selected: currentPath === "/start" },
-	{ label: "The Bench", value: "bench", href: "/generator", selected: currentPath === "/generator" },
-	{ label: "Algorithms", value: "algorithms", href: "/algorithms", selected: currentPath === "/algorithms" },
-	{ label: "Extending", value: "extending", href: "/extending-components", selected: currentPath === "/extending-components" },
-	{ label: "MCP", value: "mcp", href: "/mcp", selected: currentPath === "/mcp" },
+	{ label: "About", value: "overview", href: "/", selected: currentPath === "/" },
+	{
+		label: "Bench",
+		value: "bench",
+		expanded: true,
+		locked: true,
+		children: BENCH_TOOLS.map((t) => ({
+			label: t.label,
+			value: `bench-${t.id}`,
+			href: t.href,
+			selected: currentPath === t.href,
+			...(isNewComponent(t.since) ? { badge: "New" } : {}),
+		})),
+	},
 	{
 		label: "Components",
 		value: "components",
@@ -50,6 +59,18 @@ const items = [
 		expanded: true,
 		locked: true,
 		children: categoryNodes,
+	},
+	{
+		label: "Docs",
+		value: "docs",
+		expanded: true,
+		locked: true,
+		children: [
+			{ label: "Getting started", value: "start", href: "/start", selected: currentPath === "/start" },
+			{ label: "Algorithms", value: "algorithms", href: "/algorithms", selected: currentPath === "/algorithms" },
+			{ label: "Extending", value: "extending", href: "/extending-components", selected: currentPath === "/extending-components" },
+			{ label: "MCP", value: "mcp", href: "/mcp", selected: currentPath === "/mcp" },
+		],
 	},
 ];
 ---

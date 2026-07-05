@@ -50,7 +50,7 @@ import { Avatar } from "@xoji/astro";
 export const avatarManifest: ComponentManifest = {
 	id: "avatar",
 	name: "Avatar",
-	category: "data-display",
+	category: "media",
 	summary: "An identity chip: a photo when one loads, a tinted initials-or-icon fallback when it doesn't.",
 	description:
 		"Avatar presents a person or entity as a compact square or circle. Given a `src`, it shows the image, cover-cropped to fill; if the image is absent or fails to load, it falls back to the slotted content (initials as text, or an icon via the `icon` slot) on a soft, hue-tinted background. The fallback tint follows `tone`, which accepts any of the six semantic roles or the twelve named hues, so a deterministic per-user color is a one-attribute choice. Four sizes (sm, md, lg, xl), two shapes (circle, square), and an optional corner status dot in any semantic tone round out the surface. `alt` names the image; the fallback text stays in the accessibility tree so the avatar is announced either way.",
@@ -138,6 +138,13 @@ export const avatarManifest: ComponentManifest = {
 			description: "Accessible name for the status dot (e.g. \"Online\"); announced as additional avatar text.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "pulse",
+			type: 'boolean | "slow" | "fast"',
+			description:
+				"Breathe the status dot for a live / online presence: a bare `true` pulses slow, `\"fast\"` quick. A no-op without `status`, and held still under `prefers-reduced-motion`.",
+			bindings: ["html", "svelte", "astro"],
+		},
 	],
 	variants: [
 		{
@@ -172,6 +179,12 @@ export const avatarManifest: ComponentManifest = {
 			selector: ".xoji-avatar__status-dot",
 			tokens: ["--neutral", "--border-thick", "--bg-1"],
 		},
+		{
+			name: "pulse",
+			description: "With `pulse`, the status dot breathes on a soft opacity loop so the avatar reads as live, at a slow or fast cadence; held still under reduced-motion.",
+			selector: ".xoji-avatar--pulse-slow .xoji-avatar__status-dot",
+			tokens: ["--ease-standard"],
+		},
 	],
 	slots: [
 		{
@@ -205,6 +218,7 @@ export const avatarManifest: ComponentManifest = {
 		"--radius-full",
 		"--border-thick",
 		"--bg-1",
+		"--ease-standard",
 		...FULL_TONES.flatMap((t) => [`--${t}-bg`, `--${t}-text`]),
 		...TONES.map((t) => `--${t}`),
 	],
@@ -217,6 +231,7 @@ export const avatarManifest: ComponentManifest = {
 		"The image carries `alt`; the binding warns at runtime when `src` is set without it.",
 		"When the image is absent or errors, the fallback initials or `aria-label`'d icon remain in the accessibility tree so the avatar is still announced.",
 		"The decorative status dot is `aria-hidden`; its meaning rides on `statusLabel` as visually-hidden text in the accessibility tree.",
+		"`pulse` is decorative motion only, never the carrier of meaning: put the live state in `statusLabel` (\"Online\") so it reads the same to assistive tech and under `prefers-reduced-motion`, where the pulse holds still.",
 		"The fallback icon slot is decorative. Provide `alt` (or fallback initials) so the avatar still has a name.",
 	],
 	examples: [
@@ -225,6 +240,16 @@ export const avatarManifest: ComponentManifest = {
 			title: "Image, fallback, and status",
 			description: "A photo when one loads, tinted initials or an icon when it doesn't, with an optional presence dot.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "live-presence",
+			title: "Live presence",
+			description: "A pulsing status dot reads as online in real time; `statusLabel` carries the meaning for assistive tech.",
+			source: {
+				html: '<xoji-avatar alt="Grace Hopper" status="success" status-label="Online" pulse>GH</xoji-avatar>',
+				svelte: '<Avatar alt="Grace Hopper" status="success" statusLabel="Online" pulse>GH</Avatar>',
+				astro: '<Avatar alt="Grace Hopper" status="success" statusLabel="Online" pulse>GH</Avatar>',
+			},
 		},
 	],
 };

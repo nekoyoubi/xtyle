@@ -45,9 +45,25 @@ export interface Knobs {
  */
 export type Constraints = TokenRegister;
 
+/**
+ * The friendly seed shape: bg / fg / accent (plus arbitrary `overrides`) named as
+ * anchors instead of raw token keys. The `derive` entry translates these into
+ * `constraints` (`bg` → `--bg-0`, `fg` → `--fg-0`, `accent` → `--accent`) before
+ * derivation, so `{ anchors: { accent } }` seeds the same channel a pinned
+ * `{ constraints: { "--accent": … } }` does. An explicit `constraints` entry for the
+ * same token wins over the anchor.
+ */
+export interface AnchorSeed {
+	bg?: string;
+	fg?: string;
+	accent?: string;
+	overrides?: Record<string, string>;
+}
+
 export interface DeriveOptions {
 	knobs?: Knobs;
 	constraints?: Constraints;
+	anchors?: AnchorSeed;
 }
 
 /**

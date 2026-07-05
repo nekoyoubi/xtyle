@@ -461,3 +461,21 @@ describe("svelte wrappers do not clobber a rest-passed aria-label", () => {
 		});
 	}
 });
+
+describe("button unnamed-check honors the live host attribute", () => {
+	const src = import.meta.glob("../src/elements/button.ts", { query: "?raw", import: "default", eager: true }) as Record<
+		string,
+		string
+	>;
+	const buttonSource = Object.values(src)[0] ?? "";
+
+	// The button strips `aria-label` off the host into `ariaLabelValue`; on upgrade the attributes fire in
+	// DOM order, so the render-time unnamed-check can run before that capture. Reading only the cached value
+	// gave a correctly-labelled icon-only button a spurious "no accessible name" warning. Guard that the
+	// check still reads the live host attribute so the fix can't silently regress.
+	it("reads the live aria-label attribute in the unnamed check", () => {
+		const check = buttonSource.slice(buttonSource.indexOf("warnIfUnnamed"));
+		const body = check.slice(0, check.indexOf("console.warn"));
+		expect(body).toContain('this.getAttribute("aria-label")');
+	});
+});

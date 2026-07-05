@@ -112,6 +112,31 @@ export function loadFill(manifest: unknown, fragmentSources: Record<string, stri
 	return entry;
 }
 
+let fillFailureWarned = false;
+
+/**
+ * Surface a fill / component-runtime load failure. A client-only (bare-shadow) element has
+ * only its empty scaffold when the fill can't load, so it collapses to 0×0 with no other
+ * signal; an SSR-composed element keeps its server-rendered content but loses live updates.
+ * Marks the host `data-xoji-fill-error` (inspectable, and a CSS hook for a consumer fallback)
+ * and logs one attributed diagnostic per page, so a silently-blank client-only UI can't cost a
+ * consumer a debugging session chasing an invisible runtime-init failure.
+ */
+export function markFillFailure(host: Element, error: unknown): void {
+	host.setAttribute("data-xoji-fill-error", "");
+	if (fillFailureWarned) return;
+	fillFailureWarned = true;
+	const tag = host.tagName.toLowerCase();
+	console.error(
+		`xoji: the component fragment runtime failed to load, so client-rendered elements ` +
+			`(starting with <${tag}>) cannot paint their content and will appear empty. This usually ` +
+			`means the xript runtime's WebAssembly could not initialize in this environment ` +
+			`(e.g. a Content-Security-Policy blocking wasm, or a blocked asset fetch). Server-rendered ` +
+			`content is unaffected; only the client-only render path needs the runtime.`,
+		error,
+	);
+}
+
 function serializeEvent(el: HTMLElement, event: Event): SerializedEvent {
 	const input = el as HTMLInputElement;
 	return {
@@ -315,11 +340,19 @@ export class FragmentHost {
 		this.pendingBindings = bindings;
 		if (this.loadKicked) return;
 		this.loadKicked = true;
-		void loadFill(this.manifest, this.fragmentSources).then((l) => {
-			const latest = this.pendingBindings;
-			this.pendingBindings = null;
-			if (latest) this.apply(l, latest);
-		});
+		void loadFill(this.manifest, this.fragmentSources).then(
+			(l) => {
+				const latest = this.pendingBindings;
+				this.pendingBindings = null;
+				if (latest) this.apply(l, latest);
+			},
+			(error) => markFillFailure(this.hostElement(), error),
+		);
+	}
+
+	/** The light-DOM host element or the shadow root's host — where a fill-load failure is marked. */
+	private hostElement(): Element {
+		return this.lightDom ? (this.root as HTMLElement) : (this.root as ShadowRoot).host;
 	}
 
 	private apply(loaded: LoadedFill, bindings: Record<string, unknown>): void {
@@ -351,15 +384,32 @@ export class FragmentHost {
 		this.binding.afterApply?.();
 	}
 
+	/**
+	 * Resolve a delegated handler target across the shadow boundary. `target.closest(selector)` walks
+	 * the clicked node's own-tree ancestors, so a click that lands on *projected* (slotted) light-DOM
+	 * content — an icon inside a segment — never reaches the shadow control that owns the handler: the
+	 * slotted node's light-DOM ancestors are the host element, not the shadow button. Walking the
+	 * composed path instead crosses the boundary and finds the first matching element inside this
+	 * host's own subtree, so a click on slotted content selects the same as a click on the control's
+	 * own chrome. The subtree guard keeps a nested component's matching element from being claimed here.
+	 */
+	private matchInPath(path: EventTarget[], selector: string): HTMLElement | null {
+		for (const node of path) {
+			if (node === this.root) break;
+			if (node instanceof HTMLElement && node.matches(selector) && this.root.contains(node)) return node;
+		}
+		return null;
+	}
+
 	private wire(runtime: XriptRuntime): void {
 		const eventTypes = [...new Set(this.handlers.map((h) => h.on))];
 		for (const type of eventTypes) {
 			this.root.addEventListener(type, (event) => {
-				const target = event.target as HTMLElement | null;
-				if (!target) return;
+				const path = event.composedPath();
+				if (path.length === 0) return;
 				for (const decl of this.handlers) {
 					if (decl.on !== type) continue;
-					const match = target.closest<HTMLElement>(decl.selector);
+					const match = this.matchInPath(path, decl.selector);
 					if (!match) continue;
 					const payload = serializeEvent(match, event);
 					// Handlers are namespaced by fragment id (`tabs__navKeydown`) so the shared

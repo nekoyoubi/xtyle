@@ -1,0 +1,39 @@
+---
+interface Props {
+	label?: string;
+	autoplay?: boolean;
+	interval?: number;
+	loop?: boolean;
+	controls?: boolean;
+	dots?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	label,
+	autoplay = false,
+	interval,
+	loop = false,
+	controls = true,
+	dots = true,
+	class: extra,
+	...rest
+} = Astro.props;
+---
+
+<xoji-carousel
+	label={label}
+	interval={interval}
+	autoplay={autoplay ? "" : undefined}
+	loop={loop ? "" : undefined}
+	controls={controls ? undefined : "false"}
+	dots={dots ? undefined : "false"}
+	class={extra}
+	{...rest}
+>
+	<slot />
+</xoji-carousel>
+
+<script>import "@xoji/core/elements";</script>

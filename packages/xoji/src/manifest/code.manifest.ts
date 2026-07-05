@@ -95,7 +95,7 @@ import Code from "@xoji/astro/Code.astro";
 export const codeManifest: ComponentManifest = {
 	id: "code",
 	name: "Code",
-	category: "data-display",
+	category: "content",
 	summary: "A read-only, syntax-highlighted code block themed entirely from the code-token family.",
 	description:
 		"Code is a turnkey, read-only code block with the tokenizer built in; it's the first component to read the `--code-*` family. It tokenizes with Prism, whose output is class-based, so the block re-themes live the moment the theme changes: the colors are just cascading CSS variables, never baked inline. The `lang` prop names the language with aliases resolved (`ts` → `typescript`), and the source is the element's text content (or, for Astro, a `code` prop). Grammar loading is fully lazy and per-language. A page with no code block loads nothing; a page with a few languages loads Prism core once plus only those grammar chunks, walking each grammar's dependencies first. At runtime the block paints immediately as plain-but-themed text and recolors in place once the grammar resolves, so there is no flash and no layout shift; the Astro binding tokenizes at build and ships pre-colored with zero browser JS. `preload` warms a block's grammar eagerly to kill even the minor recolor flash, sharing one warm path with the page-level `XojiCode.warm()` static. An unknown language falls back to plain-but-themed text rather than erroring.",

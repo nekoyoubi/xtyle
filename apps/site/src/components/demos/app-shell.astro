@@ -20,10 +20,22 @@ const { tokens } = await getStats();
 <Stack gap={2} class="appshell-demo">
 	<Heading level={3} size="sm" tone="muted">A full three-row scaffold — Toolbar · Dock + main · Statusbar</Heading>
 	<Text size="sm" tone="muted" class="appshell-demo__hint">
-		Tab into the frame to reveal the skip link in the top-left corner.
+		Both rails are resizable: drag either inner edge (or focus the handle and use the arrow keys), and double-click to reset. Tab into the frame to reveal the skip link.
 	</Text>
 	<div class="appshell-demo__device">
-		<AppShell skipLink mainId="appshell-demo-main" class="appshell-demo__shell">
+		<AppShell
+			skipLink
+			mainId="appshell-demo-main"
+			class="appshell-demo__shell"
+			leftSize={200}
+			leftResizable
+			leftMin={144}
+			leftMax={280}
+			rightSize={224}
+			rightResizable
+			rightMin={168}
+			rightMax={320}
+		>
 			<Toolbar slot="toolbar" heading="xoji" href="#" landmark>
 				<Cluster slot="center" gap={1}>
 					<Link href="#" variant="quiet">Overview</Link>
@@ -117,5 +129,9 @@ const { tokens } = await getStats();
 	}
 	.appshell-demo__device :global(.xoji-app) {
 		height: 30rem;
+	}
+	/* The rails are sized by the shell now, so the docks fill them instead of their default width. */
+	.appshell-demo__device :global(.xoji-dock) {
+		width: 100%;
 	}
 </style>

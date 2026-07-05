@@ -14,7 +14,9 @@ export interface TreeNode {
 	value?: string;
 	href?: string;
 	expanded?: boolean;
-	/** Pin a branch open: forced expanded, no twisty, and no collapse path. Renders as a permanent section header. */
+	/** Pin a branch open: forced expanded, no twisty, and no collapse path — a permanent section header.
+	 * With an `href` it stays a navigable header (its row is a link); without one it is inert — not
+	 * selectable, not a keyboard-focus stop — a pure label over its children. */
 	locked?: boolean;
 	selected?: boolean;
 	disabled?: boolean;
@@ -80,9 +82,12 @@ function buildNodes(nodes: TreeNode[], level: number, selectedValue: string | nu
 				: `<span class="xoji-tree__twisty xoji-tree__twisty--leaf" aria-hidden="true"></span>`;
 			const label = `<span class="xoji-tree__label">${escapeHtml(node.label)}</span>`;
 			const isLink = !!node.href;
+			const isStatic = locked && !isLink;
+			const staticData = isStatic ? ` data-static="true"` : "";
+			const rowClass = isStatic ? "xoji-tree__row xoji-tree__row--static" : "xoji-tree__row";
 			const rowOpen = isLink
 				? `<a class="xoji-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1" style="--tree-level: ${level}">`
-				: `<div class="xoji-tree__row" part="row" style="--tree-level: ${level}">`;
+				: `<div class="${rowClass}" part="row"${staticData} style="--tree-level: ${level}">`;
 			const rowClose = isLink ? "</a>" : "</div>";
 			const trailing = treeTrailing(node, value, isLink);
 			const group = hasChildren

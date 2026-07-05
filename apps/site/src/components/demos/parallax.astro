@@ -1,0 +1,49 @@
+---
+import Parallax from "@xoji/astro/Parallax.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+import Button from "@xoji/astro/Button.astro";
+
+const skySvg =
+	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2a4a"/><stop offset="1" stop-color="#6ea8fe"/></linearGradient></defs><rect width="640" height="360" fill="url(#s)"/><circle cx="150" cy="90" r="40" fill="#fdf2c9" opacity="0.9"/></svg>';
+const cloudsSvg =
+	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice"><g fill="#eaf1ff" opacity="0.85"><ellipse cx="120" cy="120" rx="90" ry="26"/><ellipse cx="200" cy="100" rx="60" ry="22"/><ellipse cx="470" cy="80" rx="110" ry="28"/><ellipse cx="560" cy="100" rx="70" ry="22"/></g></svg>';
+const hillsSvg =
+	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" preserveAspectRatio="xMidYMax slice"><path d="M0 225 L120 160 L260 235 L400 150 L520 220 L640 170 L640 360 L0 360 Z" fill="#2a1c4a"/><path d="M0 250 L160 200 L320 250 L480 200 L640 250 L640 360 L0 360 Z" fill="#140f26"/></svg>';
+const sky = "data:image/svg+xml," + encodeURIComponent(skySvg);
+const clouds = "data:image/svg+xml," + encodeURIComponent(cloudsSvg);
+const hills = "data:image/svg+xml," + encodeURIComponent(hillsSvg);
+---
+
+<Stack gap={5}>
+	<Stack gap={4}>
+		<Text tone="muted" size="sm"
+			>Scroll the page: the layers drift at different depths and the clouds slide sideways (`data-direction="e"`). With
+			JavaScript off or reduced-motion on, the banner is a static layered composition.</Text
+		>
+		<Parallax minHeight="26rem" amplitude={120}>
+			<img data-speed="0.35" src={sky} alt="" />
+			<img data-speed="0.6" data-direction="e" src={clouds} alt="" />
+			<img data-speed="0.85" src={hills} alt="" />
+			<Stack gap={3} align="center" style="text-align: center; color: #f4f6fb;">
+				<Heading level={2}>Into the valley</Heading>
+				<Text>A layered banner that drifts as you scroll.</Text>
+				<Button variant="solid">Start the descent</Button>
+			</Stack>
+		</Parallax>
+	</Stack>
+
+	<Stack gap={4}>
+		<Text tone="muted" size="sm">Move your cursor across this one (`mode="cursor"`): the layers follow the pointer in 2D for a depth effect.</Text>
+		<Parallax minHeight="26rem" mode="cursor" amplitude={48}>
+			<img data-speed="0.4" src={sky} alt="" />
+			<img data-speed="0.7" src={clouds} alt="" />
+			<img data-speed="1" src={hills} alt="" />
+			<Stack gap={3} align="center" style="text-align: center; color: #f4f6fb;">
+				<Heading level={2}>Follow the cursor</Heading>
+				<Text>The scene shifts with your pointer.</Text>
+			</Stack>
+		</Parallax>
+	</Stack>
+</Stack>

@@ -1,4 +1,4 @@
-import { XojiElement, define, type StyleMode } from "./base.js";
+import { XojiElement, define, readAttrOrProp, readBoolAttrOrProp, type StyleMode } from "./base.js";
 import type { Size, FullTone } from "../index.js";
 import { segmentedHostCss, normalizeSegments, selectedValue, type Segment, type SegmentInput } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
@@ -23,7 +23,7 @@ export class XojiSegmented extends XojiElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["value", "options", "disabled", "size", "tone", "label", "labelledby", "name"];
+		return ["value", "options", "disabled", "size", "tone", "label", "labelledby", "aria-label", "name"];
 	}
 
 	constructor() {
@@ -31,13 +31,71 @@ export class XojiSegmented extends XojiElement {
 		if (typeof this.attachInternals === "function") this.internals = this.attachInternals();
 	}
 
+	private settleHandle = 0;
+
+	override connectedCallback(): void {
+		super.connectedCallback();
+		this.scheduleSettle();
+	}
+
+	disconnectedCallback(): void {
+		if (this.settleHandle && typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(this.settleHandle);
+		this.settleHandle = 0;
+	}
+
+	/** Re-assert the child→slot mapping once the DOM settles after connect: a framework re-render or a
+	 * view-transition swap can connect this element before its `[slot="segment"]` children are in place,
+	 * which would leave a segment unslotted and its content unstyled until the next render. A second pass
+	 * on the next frame runs against the settled child set. */
+	private scheduleSettle(): void {
+		if (typeof requestAnimationFrame === "undefined") return;
+		if (this.settleHandle) cancelAnimationFrame(this.settleHandle);
+		this.settleHandle = requestAnimationFrame(() => {
+			this.settleHandle = 0;
+			if (this.isConnected && this.root.firstChild) this.render();
+		});
+	}
+
 	private optionsProp: Segment[] | null = null;
+
+	/** The light-DOM segment children — `[slot="segment"]` before the element reindexes them, and
+	 * `[slot^="segment-"]` after — the rich-content authoring mode where each segment projects an
+	 * icon or other framework-owned markup instead of a plain text label. */
+	private get segChildren(): HTMLElement[] {
+		return Array.from(
+			this.querySelectorAll<HTMLElement>(':scope > [slot="segment"], :scope > [slot^="segment-"]'),
+		);
+	}
+
+	/** Derive segments from the light-DOM children: `value` / `label` / `disabled` read off each child
+	 * (attributes, or the DOM properties a framework may set instead), plus the `slot` name the fill
+	 * projects the child's content through. Selection, roving tabindex, and the form value are then
+	 * identical to the `options` path — the segments just carry a slot instead of a text label. */
+	private childSegments(): Segment[] {
+		return this.segChildren.map((child, i) => {
+			const value = readAttrOrProp(child, "value") ?? String(i);
+			const label = readAttrOrProp(child, "label") ?? child.getAttribute("aria-label") ?? value;
+			const disabled = readBoolAttrOrProp(child, "disabled") || child.getAttribute("aria-disabled") === "true";
+			const seg: Segment = { value, label, slot: `segment-${i}` };
+			if (disabled) seg.disabled = true;
+			return seg;
+		});
+	}
 
 	/** Options as the comma-string shorthand (`label:value` pairs or bare labels), or a structured
 	 * `{ value, label }[]` set through the JS property for labels that differ from their value or carry
-	 * commas / colons the shorthand can't survive. */
+	 * commas / colons the shorthand can't survive. Light-DOM `[slot="segment"]` children win over both
+	 * when present, so a rich-content bar can still fall back to the `options` shorthand. */
 	private get segments(): Segment[] {
+		const fromChildren = this.childSegments();
+		if (fromChildren.length > 0) return fromChildren;
 		return this.optionsProp ?? normalizeSegments(this.getAttribute("options"));
+	}
+
+	/** Project each light-DOM child through its own named slot so live framework content stays mounted
+	 * and reactive — mirrors the fill's `<slot name="segment-${i}">` by index. */
+	private assignSegmentSlots(): void {
+		this.segChildren.forEach((child, i) => child.setAttribute("slot", `segment-${i}`));
 	}
 
 	get options(): Segment[] {
@@ -89,6 +147,7 @@ export class XojiSegmented extends XojiElement {
 			tone: this.tone,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
+			ariaLabel: this.getAttribute("aria-label"),
 			elementId: this.elementId,
 		};
 	}
@@ -98,8 +157,8 @@ export class XojiSegmented extends XojiElement {
 	 * move is a cheap patch that keeps the focused node. */
 	private shapeSignature(): string {
 		const segs = JSON.stringify(this.segments);
-		const hasLabel = this.getAttribute("label") != null || this.getAttribute("labelledby") != null;
-		return `${this.disabled}|${hasLabel}|${segs}`;
+		const naming = `${this.getAttribute("label")}|${this.getAttribute("labelledby")}|${this.getAttribute("aria-label")}`;
+		return `${this.disabled}|${naming}|${segs}`;
 	}
 
 	private syncForm(): void {
@@ -127,9 +186,9 @@ export class XojiSegmented extends XojiElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("label") && !this.getAttribute("labelledby")) {
+		if (!this.getAttribute("label") && !this.getAttribute("labelledby") && !this.getAttribute("aria-label")) {
 			console.warn(
-				"xoji-segmented: no accessible name. Provide a `label` or `labelledby` so the group is announced.",
+				"xoji-segmented: no accessible name. Provide a `label`, `labelledby`, or `aria-label` so the group is announced.",
 			);
 		}
 	}
@@ -139,6 +198,7 @@ export class XojiSegmented extends XojiElement {
 	}
 
 	protected override render(): void {
+		this.assignSegmentSlots();
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(segmentedHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());

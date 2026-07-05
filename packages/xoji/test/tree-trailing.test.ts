@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { treeMarkup, treeTrailing, type TreeNode } from "../src/markup/tree.js";
+import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
+
+const NAV: TreeNode[] = [
+	{ label: "About", value: "overview", href: "/" },
+	{ label: "Bench", value: "bench", locked: true, expanded: true, children: [{ label: "Themes", value: "themes", href: "/bench/themes" }] },
+	{ label: "Components", value: "components", href: "/components", locked: true, expanded: true, children: [{ label: "Button", value: "button", href: "/components/button" }] },
+];
 
 describe("tree trailing content", () => {
 	it("renders a badge as decorative trailing text", () => {
@@ -40,5 +47,39 @@ describe("tree trailing content", () => {
 		const html = treeMarkup({ items, label: "Binder" });
 		expect(html).toMatch(/xoji-tree__trailing[\s\S]*<\/div>/);
 		expect(html).toContain('data-action="del"');
+	});
+});
+
+describe("tree locked section headers", () => {
+	it("marks a locked, hrefless branch as a static (non-interactive) header", () => {
+		const html = treeMarkup({ items: NAV, label: "Nav" });
+		// Bench: locked, no href → inert div header
+		expect(html).toMatch(/<div class="xoji-tree__row xoji-tree__row--static"[^>]*data-static="true"/);
+		// its child is still a normal link
+		expect(html).toContain('href="/bench/themes"');
+	});
+
+	it("keeps a locked branch that carries an href a navigable link, not a static header", () => {
+		const html = treeMarkup({ items: NAV, label: "Nav" });
+		// Components: locked + href → an <a>, never static
+		expect(html).toMatch(/<a class="xoji-tree__row"[^>]*href="\/components"/);
+		const componentsRow = html.slice(html.indexOf('href="/components"') - 60, html.indexOf('href="/components"') + 20);
+		expect(componentsRow).not.toContain("data-static");
+	});
+
+	it("renders the same static-header markup through the live SSR fragment", async () => {
+		const html = await renderFragmentLight("tree", {
+			items: NAV,
+			label: "Nav",
+			selectedValue: null,
+			expandedKeys: ["bench", "components"],
+			rovingValue: null,
+		});
+		expect(html).toMatch(/data-value="bench"[^>]*data-static="true"|data-static="true"[^>]*data-value="bench"/);
+		expect(html).toContain("xoji-tree__row--static");
+		// a locked header never takes the roving tab stop
+		expect(html).toMatch(/<li class="xoji-tree__item xoji-tree__item--locked"[^>]*data-value="bench"[^>]*tabindex="-1"/);
+		// Components (locked + href) stays a link with no static marker
+		expect(html).toMatch(/<a class="xoji-tree__row"[^>]*data-value="components"/);
 	});
 });

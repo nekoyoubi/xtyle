@@ -46,6 +46,16 @@ describe("xoji-default accent ramp", () => {
 		expect(complement).toBeCloseTo(180, 0);
 	});
 
+	it("fans a near-gray accent into distinct tints, so a categorical chart stays legible", () => {
+		const r = derive(xojiDefault, { constraints: { "--accent": "#888888" } });
+		const fan = ["--accent", "--accent-2", "--accent-3", "--accent-4"].map((n) => r[n] as string);
+		// hue rotation on a zero-chroma accent would collapse the fan to four identical grays
+		expect(new Set(fan).size).toBe(4);
+		// the primary accent stays as authored (near-gray); only the fan floors its chroma for distinctness
+		expect(toOklchColor(fan[0] as string).c).toBeLessThan(0.02);
+		for (const v of fan.slice(1)) expect(toOklchColor(v as string).c).toBeGreaterThan(0.03);
+	});
+
 	it("mirrors a pinned --accent-2 into the opposing wing, holding the 180 complement", () => {
 		const r = derive(xojiDefault, {
 			constraints: { "--accent": "#ff0000", "--accent-2": "#00ff00" },

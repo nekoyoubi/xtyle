@@ -22,6 +22,7 @@
 						"--text-xs",
 						"--leading-normal",
 						"--fg-0",
+						"--fg-2",
 						"--space-1",
 						"--space-2",
 						"--radius-md",

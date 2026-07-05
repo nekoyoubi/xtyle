@@ -1,0 +1,116 @@
+---
+import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { resolveHeatmapColors, resolveHeatmapGlows, resolveHeatmapScale } from "./internal/palette.ts";
+import type { HeatmapScheme } from "@xoji/core";
+
+interface Props {
+	values?: number[][];
+	/** A second intensity matrix (same shape as `values`) driving each cell's glow halo. */
+	glow?: number[][];
+	rows?: string[];
+	cols?: string[];
+	scheme?: HeatmapScheme;
+	reverse?: boolean;
+	max?: number;
+	/** The glow-channel ceiling a full-strength halo maps to; defaults to the glow data's own max. */
+	glowMax?: number;
+	/** The px blur a full-strength glow halo reaches; defaults to 7. Lower it on a dense grid, raise it on a sparse one. */
+	glowBlur?: number;
+	/** Names the glow metric so its value reaches each cell's accessible name and readout; defaults to "glow". */
+	glowLabel?: string;
+	/** Cells to ring as the current / "now" marker, each a `[rowIndex, colIndex]` pair. */
+	current?: number[][];
+	/** Tint for the current-cell ring: a semantic tone (`success` / `danger` / `warn` / `info` / `neutral`); defaults to accent. */
+	currentTone?: "success" | "danger" | "warn" | "info" | "neutral";
+	/** Pulse the current-cell ring (honors `prefers-reduced-motion`). */
+	currentPulse?: boolean;
+	/** Per-cell hover text (same shape as `values`); overrides a cell's default readout and accessible name. */
+	titles?: string[][];
+	/** Show a color-scale key (five swatches from the ramp with 0..max endpoints) below the grid. */
+	scale?: boolean;
+	showValues?: boolean;
+	/** Make cells actionable: each becomes a `role="button"` that fires `select` on click or Enter/Space. */
+	selectable?: boolean;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	values = [],
+	glow = [],
+	rows = [],
+	cols = [],
+	scheme = "accent",
+	reverse = false,
+	max,
+	glowMax,
+	glowBlur,
+	glowLabel,
+	current = [],
+	currentTone,
+	currentPulse = false,
+	titles = [],
+	scale = false,
+	showValues = false,
+	selectable = false,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const cellColors = await resolveHeatmapColors(scheme, values, reverse, max);
+const cellGlows = await resolveHeatmapGlows(scheme, glow, reverse, glowMax, glowBlur);
+const resolvedGlowLabel = glow.length ? (glowLabel ?? "glow") : null;
+const scaleKey = scale ? await resolveHeatmapScale(scheme, values, reverse, max) : null;
+const bindings = {
+	values,
+	rows,
+	cols,
+	cellColors,
+	cellGlows,
+	glowValues: glow,
+	glowLabel: resolvedGlowLabel,
+	current,
+	currentTone: currentTone ?? null,
+	currentPulse,
+	titles,
+	scale,
+	...(scaleKey ?? {}),
+	showValues,
+	selectable,
+	title: label ?? null,
+	ariaLabel: label ?? null,
+};
+const chrome = await renderFragmentLight("heatmap", bindings);
+---
+
+<xoji-heatmap
+	values={JSON.stringify(values)}
+	glow={glow.length ? JSON.stringify(glow) : undefined}
+	rows={JSON.stringify(rows)}
+	cols={JSON.stringify(cols)}
+	current={current.length ? JSON.stringify(current) : undefined}
+	titles={titles.length ? JSON.stringify(titles) : undefined}
+	scheme={Array.isArray(scheme) ? JSON.stringify(scheme) : scheme}
+	reverse={reverse || undefined}
+	max={max ?? undefined}
+	glow-max={glowMax ?? undefined}
+	glow-blur={glowBlur ?? undefined}
+	glow-label={glowLabel ?? undefined}
+	current-tone={currentTone ?? undefined}
+	current-pulse={currentPulse || undefined}
+	scale={scale || undefined}
+	show-values={showValues || undefined}
+	selectable={selectable || undefined}
+	label={label}
+	class={extra}
+	set:html={chrome}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xoji/core/elements";</script>}

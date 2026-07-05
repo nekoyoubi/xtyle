@@ -8,8 +8,8 @@ Pre-alpha. The derivation architecture is settled (see [`derivation-model.md`](.
 
 The layer that _defines_ the product, algorithms as xript plugins, is **largely true now**. The hosting spine has landed: `@xriptjs/runtime` is a real dependency, `src/host/` loads mods, every algorithm carries a real `mod-manifest.json` (xript 0.7 schema, declared capabilities + `graph`/`manifest`/`invariants` exports) plus an esbuild-bundled, self-contained `mod.js`, and the hosted path is proven byte-identical to baked across the whole suite. The sandboxed mod is the **canonical `derive` path** for the CLI and the site (`resolveAlgorithm`, with an in-process derive cache so repeat derivations skip the sandbox); mods are authored through the ergonomic `defineXojiAlgorithm` / `defineAlgorithm` surface, and color reaches them through the `cuti` host binding. The math (`buildGraph`, the invariants) lives in `@xoji/core`; the default mods import it by name and ship bundled with core: a settled call (core is batteries-included; no separate math packages, no extraction). What remains before the thesis is fully closed:
 
-1. **The neutral importable API still leads with baked.** The `@xoji/core/algorithms` surface exposes `getAlgorithm` (baked) as the importable path, alongside a re-export of the engine so the whole pure-derive path is one import; `resolveAlgorithm` is the Node-side host seam and hasn't been generalized to the browser/importable surface. Baked stays the byte-identical oracle regardless.
-2. **Mods aren't yet bundled into the published package.** `resolveAlgorithm` finds `algorithms/` by walking the repo; for a published `@xoji/core` the default mods need to ship inside the package so resolution works from a plain install.
+1. ✅ **The importable surface reaches the canonical mod.** `@xoji/core/algorithms` now exports `resolveAlgorithm` / `snapshotAlgorithm` (re-exported from the shipped `@xoji/core/host/bundle`), so a plain `import { resolveAlgorithm } from "@xoji/core/algorithms"` derives through the *same* sandboxed mod the CLI and site do, proven byte-identical to baked across the suite. `getAlgorithm` stays alongside as the synchronous baked oracle and the first-paint fallback for the window before the async resolve settles.
+2. **Retire baked-as-default outside the oracle.** The importable/browser canonical resolver reads the *embedded* mod bundle (`algorithms-bundle.generated.ts`), which ships in the published package, so it resolves from a plain install; the Node-side `resolveAlgorithm` (`src/host/registry`) still walks the repo for `algorithms/` (the in-repo CLI path). Baked remains reachable as `getAlgorithm`; the last step is making the hosted path the *default* everywhere a caller doesn't opt out, leaving baked purely as the byte-identical oracle.
 
 ## milestones
 
@@ -28,11 +28,11 @@ Landed since:
 - ✅ **Flipped the default.** `resolveAlgorithm` runs the sandboxed mod as the canonical path for the CLI and the site; baked `getAlgorithm` is demoted to the byte-identical test oracle.
 - ✅ **Resolved math ownership.** Settled: `@xoji/core` ships the derivation math and the default mods bundled; mods import core by name (the on-ramp a stranger uses too), and color crosses to mods through the `cuti` host binding. No separate math packages.
 - ✅ **Tamed the runtime cost.** An in-process derive cache keyed on `(id, opts)` collapses the site's repeated derives (~5.8s → ~0.16s); novel inputs pay the sandbox once.
+- ✅ **Generalized the canonical path to the importable surface.** `@xoji/core/algorithms` now exports `resolveAlgorithm` / `snapshotAlgorithm` (bundle-backed, re-exported from the shipped `@xoji/core/host/bundle`), so an importable/browser consumer reaches the canonical sandboxed mod, proven byte-identical to baked; `getAlgorithm` stays the sync baked oracle + first-paint fallback.
 
 Remaining:
 
-- **Generalize the canonical path to the importable/browser surface** (today `resolveAlgorithm` is the Node host seam; the neutral entry still leads with baked `getAlgorithm`).
-- **Bundle the default mods into the published `@xoji/core`** so `resolveAlgorithm` resolves from a plain install, then retire baked-as-default outside the oracle.
+- **Retire baked-as-default outside the oracle.** The importable/browser resolver reads the embedded, shipped mod bundle (resolves from a plain install); the Node `resolveAlgorithm` still walks the repo for the in-repo CLI. Last step: make the hosted path the default wherever a caller doesn't opt out, leaving baked purely as the byte-identical oracle.
 - **Earn the free toolchain.** With the mod as source of truth, run xript's validate / typegen / docgen / init against it instead of approximating in TS.
 
 ### 2. derivation depth & realism

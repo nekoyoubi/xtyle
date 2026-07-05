@@ -165,7 +165,7 @@ export class XojiTabs extends XojiElement {
 				key: item.value ?? String(i),
 				label: item.label,
 				panelSlot: item.panelSlot,
-				panel: item.panel,
+				panel: item.panel ?? "",
 				disabled: item.disabled,
 			})),
 			activeId: this.value,

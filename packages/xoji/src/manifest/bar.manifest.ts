@@ -103,14 +103,56 @@ const series = [{ name: "Lines", values: [4200, 3800, 1500, 900, 2100] }];
 
 <Bar categories={categories} series={series} orientation="horizontal" scheme="skittles" label="Lines by language" height={240} />`;
 
+const actionableHtmlExample = `<xoji-bar
+	categories='["Alpha","Bravo","Charlie","Delta"]'
+	label="Runs by workflow"
+	selectable
+	height="240"></xoji-bar>
+<script>
+	const bar = document.querySelector("xoji-bar");
+	bar.series = [{ name: "Runs", values: [42, 30, 18, 9] }];
+	bar.addEventListener("select", (e) => {
+		openWorkflow(e.detail.category);
+	});
+</script>`;
+
+const actionableSvelteExample = `<script lang="ts">
+	import { Bar } from "@xoji/svelte";
+
+	const categories = ["Alpha", "Bravo", "Charlie", "Delta"];
+	const series = [{ name: "Runs", values: [42, 30, 18, 9] }];
+</script>
+
+<Bar
+	{categories}
+	{series}
+	label="Runs by workflow"
+	selectable
+	height={240}
+	onselect={(e) => openWorkflow(e.detail.category)}
+/>`;
+
+const actionableAstroExample = `---
+import { Bar } from "@xoji/astro";
+const categories = ["Alpha", "Bravo", "Charlie", "Delta"];
+const series = [{ name: "Runs", values: [42, 30, 18, 9] }];
+---
+
+<Bar categories={categories} series={series} label="Runs by workflow" selectable height={240} />
+<script>
+	document.querySelector("xoji-bar").addEventListener("select", (e) => {
+		openWorkflow(e.detail.category);
+	});
+</script>`;
+
 export const barManifest: ComponentManifest = {
 	id: "bar",
 	name: "Bar",
 	since: "0.3.0",
 	category: "metrics",
-	summary: "A grouped or stacked bar chart, colored from a theme-derived series palette, with an interactive value readout.",
+	summary: "A grouped or stacked bar chart, colored from a theme-derived series palette, with an interactive value readout and opt-in clickable bars.",
 	description:
-		"Bar plots one or more numeric series across a set of categories as an SVG chart that renders from data alone. Each series takes its color from a `scheme` resolved off the live theme (the `accents` fan, the `skittles` hue ring, a `thermal` cold-to-hot scale, or the `status` roster), so a chart is coherent with the rest of the UI out of the box; pass an explicit color array for full control, and `reverse` to flip any scheme. Bars sit side by side by default or stack with `stacked`, and run vertically or horizontally (`orientation`) for long category labels. It's interactive: hovering or focusing a bar dims the rest and floats a value readout, and the whole chart is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. A value axis with gridlines and category labels come derived; a legend appears for multi-series data. Set `height` for the plot area; the chart fills its container's width.",
+		"Bar plots one or more numeric series across a set of categories as an SVG chart that renders from data alone. Each series takes its color from a `scheme` resolved off the live theme (the `accents` fan, the `skittles` hue ring, a `thermal` cold-to-hot scale, or the `status` roster), so a chart is coherent with the rest of the UI out of the box; pass an explicit color array for full control, and `reverse` to flip any scheme. Bars sit side by side by default or stack with `stacked`, and run vertically or horizontally (`orientation`) for long category labels. It's interactive: hovering or focusing a bar dims the rest and floats a value readout, and the whole chart is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: each bar becomes a button that fires a `select` event with its series, category, and value, so a click filters, navigates, or drills into that data. A value axis with gridlines and category labels come derived; a legend appears for multi-series data. Set `height` for the plot area; the chart fills its container's width. With no categories or series to plot, it shows a muted `No data` message in place of the axes.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -222,6 +264,14 @@ export const barManifest: ComponentManifest = {
 			description: "An accessible name for the chart, used as the data table's caption.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "selectable",
+			type: "boolean",
+			default: "false",
+			description:
+				"Makes bars actionable: each bar becomes a `role=\"button\"` with a pointer cursor, and clicking one (or pressing Enter/Space while it's focused) fires a `select` `CustomEvent` whose `detail` carries `{ series, category, value, seriesIndex, categoryIndex }`. `@xoji/svelte` surfaces it as an `onselect` callback. Leave it off for a read-only chart.",
+			bindings: ["html", "svelte", "astro"],
+		},
 	],
 	variants: [],
 	sizes: [],
@@ -270,10 +320,12 @@ export const barManifest: ComponentManifest = {
 		"Colors come from the same register the rest of the UI does, so a chart matches its surrounding chrome without hand-picking colors. Pick a `scheme` that fits the data: `accents` for a branded set, `skittles` for many distinct categories, `thermal` or `status` for a scale.",
 		"Pair a Bar with `Stat` cards in the Metrics family for a headline number beside its breakdown.",
 		"For a single-series chart, drop the legend (`legend={false}`) and let the category labels carry the meaning.",
+		"Make a dashboard chart a drill-in with `selectable` and a `select` listener: click a bar to filter the table beside it, open that category's detail, or route to a filtered view. The event's `detail` names the exact `series` / `category` / `value` clicked, so the handler needs no lookup.",
 	],
 	a11y: [
 		"The SVG is decorative (`aria-hidden`); the chart's data is mirrored into a visually-hidden `<table>` so assistive tech reads the actual numbers. `label` becomes the table's caption.",
 		"Each bar is a focusable tab stop with an `aria-label` naming its series, category, and value, so the chart is navigable by keyboard, and the value readout appears on focus as well as hover.",
+		"With `selectable`, each bar becomes a `role=\"button\"` (announced as actionable) and activates on Enter/Space as well as click, so a keyboard user can drill in; a read-only chart keeps its bars as `role=\"img\"` data points.",
 		"Color is never the only channel: the legend names each series in text, and the table repeats every value.",
 	],
 	examples: [
@@ -294,6 +346,12 @@ export const barManifest: ComponentManifest = {
 			title: "Horizontal",
 			description: "`orientation=\"horizontal\"` runs bars rightward with the categories down the side. A single series colors by category, so each bar takes its own `skittles` hue.",
 			source: { html: horizontalHtmlExample, svelte: horizontalSvelteExample, astro: horizontalAstroExample },
+		},
+		{
+			id: "actionable",
+			title: "Actionable bars",
+			description: "`selectable` makes each bar a button that fires `select` on click or Enter/Space, so a chart can drive a drill-in. The `detail` carries the series, category, value, and both indices.",
+			source: { html: actionableHtmlExample, svelte: actionableSvelteExample, astro: actionableAstroExample },
 		},
 	],
 };

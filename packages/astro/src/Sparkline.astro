@@ -1,9 +1,19 @@
 ---
 import { renderFragmentLight } from "@xoji/core/elements/ssr";
-import type { SparklineVariant, SparklineTone } from "@xoji/core";
+import { windowedPlot } from "@xoji/core";
+import type { SparklineVariant, SparklineTone, TimeSample } from "@xoji/core";
 
 interface Props {
 	values?: number[];
+	/** Time-windowed mode: timestamped points (`at` is epoch ms or a date string) placed on a real
+	 * time axis instead of even spacing. Pass alongside `window` or `domain`. */
+	points?: TimeSample[];
+	/** The sliding window width in ms (default 5m), ending at now; ignored when `domain` is set. */
+	window?: number;
+	/** An explicit `[start, end]` x-axis span (epoch ms or date strings), instead of a sliding window. */
+	domain?: [number | string, number | string];
+	/** Render the line as a sample-and-hold step (for on/off or discrete series). */
+	step?: boolean;
 	variant?: SparklineVariant;
 	tone?: SparklineTone;
 	showEnd?: boolean;
@@ -19,6 +29,10 @@ interface Props {
 
 const {
 	values = [],
+	points,
+	window: windowMs,
+	domain,
+	step = false,
 	variant = "line",
 	tone = "accent",
 	showEnd = true,
@@ -30,15 +44,30 @@ const {
 	...rest
 } = Astro.props;
 
-const bindings = { values, variant, tone, showEnd, min, max, label: label ?? null };
+const plot =
+	points && points.length > 0 ? windowedPlot(points, { window: windowMs, domain, now: Date.now() }) : null;
+const bindings = {
+	...(plot ? { plot } : { values }),
+	variant,
+	tone,
+	showEnd,
+	step,
+	min,
+	max,
+	label: label ?? null,
+};
 const chrome = await renderFragmentLight("sparkline", bindings);
 ---
 
 <xoji-sparkline
 	values={JSON.stringify(values)}
+	points={points ? JSON.stringify(points) : undefined}
+	window={windowMs ?? undefined}
+	domain={domain ? JSON.stringify(domain) : undefined}
 	variant={variant}
 	tone={tone}
 	show-end={showEnd ? undefined : "false"}
+	step={step || undefined}
 	min={min ?? undefined}
 	max={max ?? undefined}
 	label={label}

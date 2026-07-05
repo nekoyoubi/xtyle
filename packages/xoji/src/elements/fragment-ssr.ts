@@ -10,6 +10,7 @@ import { manifest as switchManifest, fragmentSources as switchSources } from "./
 import { manifest as alertManifest, fragmentSources as alertSources } from "./fragments/alert/source.generated.js";
 import { manifest as appShellManifest, fragmentSources as appShellSources } from "./fragments/app-shell/source.generated.js";
 import { manifest as avatarManifest, fragmentSources as avatarSources } from "./fragments/avatar/source.generated.js";
+import { manifest as avatarGroupManifest, fragmentSources as avatarGroupSources } from "./fragments/avatar-group/source.generated.js";
 import { manifest as badgeManifest, fragmentSources as badgeSources } from "./fragments/badge/source.generated.js";
 import { manifest as breadcrumbManifest, fragmentSources as breadcrumbSources } from "./fragments/breadcrumb/source.generated.js";
 import { manifest as cardManifest, fragmentSources as cardSources } from "./fragments/card/source.generated.js";
@@ -25,8 +26,11 @@ import { manifest as formGroupManifest, fragmentSources as formGroupSources } fr
 import { manifest as gridManifest, fragmentSources as gridSources } from "./fragments/grid/source.generated.js";
 import { manifest as headingManifest, fragmentSources as headingSources } from "./fragments/heading/source.generated.js";
 import { manifest as kbdManifest, fragmentSources as kbdSources } from "./fragments/kbd/source.generated.js";
+import { manifest as iconManifest, fragmentSources as iconSources } from "./fragments/icon/source.generated.js";
+import { manifest as imageManifest, fragmentSources as imageSources } from "./fragments/image/source.generated.js";
 import { manifest as barManifest, fragmentSources as barSources } from "./fragments/bar/source.generated.js";
 import { manifest as sparklineManifest, fragmentSources as sparklineSources } from "./fragments/sparkline/source.generated.js";
+import { manifest as heatmapManifest, fragmentSources as heatmapSources } from "./fragments/heatmap/source.generated.js";
 import { manifest as pieManifest, fragmentSources as pieSources } from "./fragments/pie/source.generated.js";
 import { manifest as linkManifest, fragmentSources as linkSources } from "./fragments/link/source.generated.js";
 import { manifest as menuManifest, fragmentSources as menuSources } from "./fragments/menu/source.generated.js";
@@ -74,6 +78,7 @@ const fragments: Record<string, FragmentEntry> = {
 	alert: { manifest: alertManifest, fragmentSources: alertSources },
 	"app-shell": { manifest: appShellManifest, fragmentSources: appShellSources },
 	avatar: { manifest: avatarManifest, fragmentSources: avatarSources },
+	"avatar-group": { manifest: avatarGroupManifest, fragmentSources: avatarGroupSources },
 	badge: { manifest: badgeManifest, fragmentSources: badgeSources },
 	breadcrumb: { manifest: breadcrumbManifest, fragmentSources: breadcrumbSources },
 	card: { manifest: cardManifest, fragmentSources: cardSources },
@@ -89,8 +94,11 @@ const fragments: Record<string, FragmentEntry> = {
 	grid: { manifest: gridManifest, fragmentSources: gridSources },
 	heading: { manifest: headingManifest, fragmentSources: headingSources },
 	kbd: { manifest: kbdManifest, fragmentSources: kbdSources },
+	icon: { manifest: iconManifest, fragmentSources: iconSources },
+	image: { manifest: imageManifest, fragmentSources: imageSources },
 	bar: { manifest: barManifest, fragmentSources: barSources },
 	sparkline: { manifest: sparklineManifest, fragmentSources: sparklineSources },
+	heatmap: { manifest: heatmapManifest, fragmentSources: heatmapSources },
 	pie: { manifest: pieManifest, fragmentSources: pieSources },
 	link: { manifest: linkManifest, fragmentSources: linkSources },
 	menu: { manifest: menuManifest, fragmentSources: menuSources },

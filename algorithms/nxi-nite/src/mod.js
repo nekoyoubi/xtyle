@@ -3723,6 +3723,7 @@
   var ACCENT_RAMP_L_MIN = 0.1;
   var ACCENT_RAMP_L_MAX = 0.95;
   var HUE_STABLE_CHROMA = 0.1;
+  var FAN_MIN_CHROMA = 0.045;
   var HUE_TOLERANCE = 8;
   var LIGHTNESS_TOLERANCE = 0.05;
   var DEFAULT_TYPE_SCALE = 1.2;
@@ -4438,32 +4439,42 @@
       return formatCss2({ ...color, c: Math.min(color.c, maxC) });
     };
     const a1 = accentDisplay;
+    const fanBase = { ...a1, c: Math.max(a1.c, FAN_MIN_CHROMA) };
     const rotate = (deg) => ({ dL: 0, dC: 0, dH: deg });
     const fanned = (n, derived) => pinned[`--accent-${n}`] ? toOklchColor(pinned[`--accent-${n}`]) : derived;
     let a2;
     let a3;
     let a4;
+    let a2Refs;
+    let a3Refs;
+    let a4Refs;
     if (ACCENT_FAN === "split-complement") {
-      const mirrorOf = (c2) => applyAccentDelta(a1, rotate(-hueDelta(a1.h, c2.h)));
+      const mirrorOf = (c2) => applyAccentDelta(fanBase, rotate(-hueDelta(a1.h, c2.h)));
       const a2Pin = pinned["--accent-2"];
       const a3Pin = pinned["--accent-3"];
-      let a2Derived = applyAccentDelta(a1, rotate(-accentSplit));
-      let a3Derived = applyAccentDelta(a1, rotate(accentSplit));
+      let a2Derived = applyAccentDelta(fanBase, rotate(-accentSplit));
+      let a3Derived = applyAccentDelta(fanBase, rotate(accentSplit));
       if (a2Pin && !a3Pin)
         a3Derived = mirrorOf(toOklchColor(a2Pin));
       else if (a3Pin && !a2Pin)
         a2Derived = mirrorOf(toOklchColor(a3Pin));
       a2 = fanned("2", a2Derived);
       a3 = fanned("3", a3Derived);
-      a4 = fanned("4", applyAccentDelta(a1, rotate(180)));
+      a4 = fanned("4", applyAccentDelta(fanBase, rotate(180)));
+      a2Refs = a3Pin && !a2Pin ? ["--accent", "--accent-3"] : ["--accent"];
+      a3Refs = a2Pin && !a3Pin ? ["--accent", "--accent-2"] : ["--accent"];
+      a4Refs = ["--accent"];
     } else {
-      a2 = fanned("2", applyAccentDelta(a1, rotate(shiftStep)));
-      a3 = fanned("3", applyAccentDelta(a2, accentDelta(a1, a2)));
+      a2 = fanned("2", applyAccentDelta(fanBase, rotate(shiftStep)));
+      a3 = fanned("3", applyAccentDelta(a2, accentDelta(fanBase, a2)));
       a4 = fanned("4", applyAccentDelta(a3, accentDelta(a2, a3)));
+      a2Refs = ["--accent", "--accent-shift-step"];
+      a3Refs = ["--accent-2", "--accent"];
+      a4Refs = ["--accent-3", "--accent-2"];
     }
-    lit("--accent-2", emitAccent(a2), ["--accent", "--accent-shift-step"]);
-    lit("--accent-3", emitAccent(a3), ["--accent-2", "--accent"]);
-    lit("--accent-4", emitAccent(a4), ["--accent-3", "--accent-2"]);
+    lit("--accent-2", emitAccent(a2), a2Refs);
+    lit("--accent-3", emitAccent(a3), a3Refs);
+    lit("--accent-4", emitAccent(a4), a4Refs);
     lit("--accent-shift-step", String(shiftStep));
     const emitAccentFamily = (n, raw) => {
       const color = toOklchColor(emitAccent(raw));
@@ -4504,8 +4515,30 @@
     lit("--state-drag", overlay(0.1));
     lit("--selection", formatCss2(withAlpha(accentFill, 0.3)), ["--accent"]);
     lit("--highlight", formatCss2(withAlpha(oklch2(scheme === "dark" ? 0.85 : 0.9, 0.16, paletteHueAngle("yellow")), 0.35)));
-    lit("--link", formatCss2(enforceChromaticOnPanels(accent)), ["--accent", ...refIfPinned("--bg-0")]);
-    lit("--link-hover", formatCss2(enforceChromaticOnPanels(withLightness(accent, accent.l + (scheme === "dark" ? 0.08 : -0.08)))), ["--link", ...refIfPinned("--bg-0")]);
+    const linkColor = enforceChromaticOnPanels(accent);
+    const linkCss = formatCss2(linkColor);
+    let linkHoverColor = enforceChromaticOnPanels(withLightness(accent, accent.l + (scheme === "dark" ? 0.08 : -0.08)));
+    if (formatCss2(linkHoverColor) === linkCss) {
+      const pole = textLight ? 1 : 0;
+      const toward = linkColor.l < pole ? 1 : -1;
+      const distinctHover = (candidate) => {
+        const enforced = enforceChromaticOnPanels(candidate);
+        return formatCss2(enforced) === linkCss ? void 0 : enforced;
+      };
+      let hover;
+      for (let step = 0.1; step <= 0.6 && !hover; step += 0.05) {
+        hover = distinctHover(withLightness(linkColor, linkColor.l + toward * step));
+      }
+      for (let step = 0.1; step <= 0.6 && !hover; step += 0.05) {
+        hover = distinctHover(withLightness(linkColor, linkColor.l - toward * step));
+      }
+      for (let cut = 0.7; cut >= 0.05 && !hover; cut -= 0.15) {
+        hover = distinctHover(oklch2(linkColor.l, linkColor.c * cut, linkColor.h));
+      }
+      linkHoverColor = hover ?? linkHoverColor;
+    }
+    lit("--link", formatCss2(linkColor), ["--accent", ...refIfPinned("--bg-0")]);
+    lit("--link-hover", formatCss2(linkHoverColor), ["--link", ...refIfPinned("--bg-0")]);
     for (const [hue3, spec2] of Object.entries(PALETTE_HUES)) {
       const pinnedBase = typeof spec2 === "object" ? parseChromaticPin(pinned[`--${hue3}`] ?? pinned[`--color-${hue3}-base`] ?? pinned[`--color-${hue3}`]) : null;
       const effectiveSpec = pinnedBase && typeof spec2 === "object" ? { h: pinnedBase.h, c: pinnedBase.c } : spec2;
@@ -5147,6 +5180,21 @@
           }
         }
         return { name: linkName, ok: true };
+      },
+      (ctx) => {
+        const name = "link hover distinct from link";
+        const link = ctx.register["--link"];
+        const hover = ctx.register["--link-hover"];
+        if (!link || !hover)
+          return { name, ok: true };
+        if (ctx.constraints["--link"] || ctx.constraints["--link-hover"])
+          return { name, ok: true };
+        if (link === hover) {
+          if (link === "#000000" || link === "#ffffff")
+            return { name, ok: true };
+          return { name, ok: false, detail: `--link and --link-hover both ${link}` };
+        }
+        return { name, ok: true };
       },
       (ctx) => {
         const name = "unpinned accent ramp holds its fan at constant L/C";

@@ -1,6 +1,6 @@
 import { XojiElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
-import { numberInputHostCss } from "../markup/index.js";
+import { numberInputHostCss, clampNumber } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/number-input/source.generated.js";
 
@@ -35,7 +35,13 @@ export class XojiNumberInput extends XojiElement {
 		const raw = this.getAttribute("max");
 		return raw === null ? undefined : Number(raw);
 	}
+	/** `step="any"` (the native free-form contract) puts the field in unstepped mode: typed values
+	 * commit verbatim with no grid snap and no precision cap, and the steppers fall back to a whole step. */
+	get unstepped(): boolean {
+		return (this.getAttribute("step") ?? "").trim().toLowerCase() === "any";
+	}
 	get step(): number {
+		if (this.unstepped) return 1;
 		const step = Number(this.getAttribute("step") ?? "1");
 		return step > 0 ? step : 1;
 	}
@@ -75,15 +81,7 @@ export class XojiNumberInput extends XojiElement {
 	}
 
 	private clamp(value: number): number {
-		const { min, max } = this;
-		const grid = this.snapGrid;
-		if (Number.isNaN(value)) return min ?? 0;
-		const base = min ?? 0;
-		const snapped = Math.round((value - base) / grid) * grid + base;
-		let v = snapped;
-		if (min !== undefined) v = Math.max(min, v);
-		if (max !== undefined) v = Math.min(max, v);
-		return Number(v.toFixed(6));
+		return clampNumber(value, { min: this.min, max: this.max, grid: this.snapGrid, unstepped: this.unstepped });
 	}
 
 	private get numeric(): number {

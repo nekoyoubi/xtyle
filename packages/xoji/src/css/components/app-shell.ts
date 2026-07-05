@@ -21,8 +21,19 @@ export const appShellCss = `
 	overflow: hidden;
 	position: relative;
 }
-.xoji-app__body > slot[name="left"] {
+.xoji-app__rail {
+	min-width: 0;
+}
+.xoji-app__rail--left {
 	grid-column: 1;
+}
+.xoji-app__rail--right {
+	grid-column: 4;
+}
+/* A resizable rail is the positioned, full-height container its content can fill (an inset panel that
+   scrolls), while its handle rides the body edge. */
+.xoji-app__rail--resizable {
+	position: relative;
 }
 .xoji-main {
 	grid-column: 3;
@@ -30,8 +41,53 @@ export const appShellCss = `
 	overflow-y: auto;
 	padding: var(--space-5);
 }
-.xoji-app__body > slot[name="right"] {
-	grid-column: 4;
+/* The rail resize handle: absolutely placed on the rail's inner edge (following its size var), so it
+   spans the body row and never touches the toolbar or status bar. Driven by the element's drag. */
+.xoji-app__resizer {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 11px;
+	z-index: 5;
+	padding: 0;
+	background: none;
+	border: none;
+	cursor: col-resize;
+	touch-action: none;
+}
+.xoji-app__resizer--left {
+	left: var(--xoji-app-left);
+	transform: translateX(-50%);
+}
+.xoji-app__resizer--right {
+	right: var(--xoji-app-right);
+	transform: translateX(50%);
+}
+.xoji-app__resizer::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 50%;
+	width: var(--border-thin);
+	transform: translateX(-50%);
+	background: var(--line);
+	transition:
+		background var(--duration-fast) var(--ease-standard),
+		width var(--duration-fast) var(--ease-standard);
+}
+.xoji-app__resizer:hover::before,
+.xoji-app__resizer[data-active]::before {
+	background: var(--accent);
+	width: var(--border-normal);
+}
+.xoji-app__resizer:focus-visible {
+	outline: none;
+}
+.xoji-app__resizer[data-focus-ring]::before {
+	background: var(--accent);
+	width: var(--border-normal);
+	box-shadow: 0 0 0 var(--border-thin) var(--ring);
 }
 .xoji-main:focus-visible {
 	outline: var(--border-normal) solid transparent;
@@ -65,6 +121,9 @@ export const appShellCss = `
 		height: auto;
 		min-height: 100dvh;
 		overflow: visible;
+		/* Document scrolls vertically at this width; clip the x-axis so a wide child
+		   (a code sample, a data table) scrolls itself instead of the whole page. */
+		overflow-x: clip;
 	}
 	.xoji-app__body {
 		grid-template-columns: minmax(0, 1fr);
@@ -74,8 +133,12 @@ export const appShellCss = `
 		grid-column: 1;
 		overflow: visible;
 	}
-	.xoji-app__body > slot[name="right"] {
+	.xoji-app__rail--left,
+	.xoji-app__rail--right {
 		grid-column: 1;
+	}
+	.xoji-app__resizer {
+		display: none;
 	}
 }
 `.trim();

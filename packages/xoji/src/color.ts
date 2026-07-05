@@ -19,6 +19,11 @@ export interface OklchColor {
 
 const DEFAULT_OKLCH: OklchColor = { l: 0, c: 0, h: 0, alpha: 1 };
 
+/**
+ * Parses any CSS color string (or passes an `OklchColor` through) into an `OklchColor`. Hex follows CSS:
+ * `#RGB` / `#RRGGBB`, and an 8-digit `#RRGGBBAA` is alpha-*last*. Alpha-first ARGB (`#AARRGGBB`) is not a
+ * CSS format and parses wrong; convert it with `argbToRgbHex` first. Throws on an unparseable input.
+ */
 export function toOklchColor(input: string | OklchColor): OklchColor {
 	if (typeof input !== "string") return input;
 	const parsed = parse(input);
@@ -63,6 +68,35 @@ export function lightness(input: string | OklchColor): number {
 	return toOklchColor(input).l;
 }
 
+const HEX_BODY = /^[0-9a-fA-F]+$/;
+
+/**
+ * Converts an alpha-first ARGB hex (`#AARRGGBB`, the Material Color Utilities / Android
+ * `Color.toArgb()` / Jetpack Compose serialization) to a CSS `#RRGGBB` by dropping the leading alpha
+ * byte. Passes a `#RRGGBB` through and expands a `#RGB` shorthand, so any hex out of an ARGB pipeline
+ * can be routed through it before `contrast` or `toOklchColor`, which read CSS hex only: an 8-digit
+ * input is taken as CSS alpha-*last* `#RRGGBBAA`, so an un-converted ARGB color parses silently wrong
+ * (its alpha byte becomes red). Throws on a non-hex string.
+ */
+export function argbToRgbHex(hex: string): string {
+	const body = hex.startsWith("#") ? hex.slice(1) : hex;
+	if (!HEX_BODY.test(body)) throw new Error(`xoji: not a hex color "${hex}"`);
+	if (body.length === 3) {
+		const [r, g, b] = body;
+		return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+	}
+	if (body.length === 6) return `#${body.toLowerCase()}`;
+	if (body.length === 8) return `#${body.slice(2).toLowerCase()}`;
+	throw new Error(`xoji: expected a 3-, 6-, or 8-digit hex color, got "${hex}"`);
+}
+
+/**
+ * The WCAG 2.x contrast ratio (1..21) between two colors, each a CSS color string or an `OklchColor`.
+ * Alpha is ignored (WCAG contrast is defined on opaque colors). Hex is read as CSS: `#RGB` / `#RRGGBB`,
+ * and an 8-digit `#RRGGBBAA` is alpha-*last*. Alpha-first ARGB (`#AARRGGBB`, common out of Material
+ * Color Utilities / Android) is NOT a CSS format and parses silently wrong here; convert it with
+ * `argbToRgbHex` first.
+ */
 export function contrast(a: string | OklchColor, b: string | OklchColor): number {
 	const value = wcagContrast(formatCss(a), formatCss(b));
 	return value ?? 1;

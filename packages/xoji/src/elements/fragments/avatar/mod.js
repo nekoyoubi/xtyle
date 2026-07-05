@@ -1,6 +1,10 @@
 "use strict";
 (() => {
   // packages/xoji/src/elements/fragments/avatar/mod.ts
+  function avatarPulseClass(pulse, hasStatus) {
+    if (!hasStatus || pulse == null || pulse === false) return false;
+    return pulse === "fast" ? "xoji-avatar--pulse-fast" : "xoji-avatar--pulse-slow";
+  }
   function avatarClass(b) {
     const tone = b.tone ?? "neutral";
     const size = b.size ?? "md";
@@ -10,7 +14,8 @@
       `xoji-avatar--${tone}`,
       size !== "md" && `xoji-avatar--${size}`,
       shape === "square" && "xoji-avatar--square",
-      b.status && `xoji-avatar--status-${b.status}`
+      b.status && `xoji-avatar--status-${b.status}`,
+      avatarPulseClass(b.pulse, Boolean(b.status))
     ].filter(Boolean).join(" ");
   }
   function avatarLabel(b) {
