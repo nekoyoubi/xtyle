@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type ImageFit = "cover" | "contain";
 type ImageRadius = "none" | "sm" | "md" | "lg";
@@ -39,7 +39,7 @@ const bindings = { src, alt, ratio, fit, radius, loading, caption };
 const composed = await renderFragmentLight("image", bindings);
 ---
 
-<xoji-image
+<xtyle-image
 	src={src}
 	alt={alt}
 	ratio={ratio}
@@ -53,4 +53,4 @@ const composed = await renderFragmentLight("image", bindings);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

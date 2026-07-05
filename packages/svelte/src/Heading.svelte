@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { HeadingLevel, HeadingSize, HeadingTone } from "@xoji/core";
+	import type { HeadingLevel, HeadingSize, HeadingTone } from "@xtyle/core";
 
 	interface Props {
 		level?: HeadingLevel;
@@ -15,6 +15,6 @@
 	let { level = 2, size, tone = "default", children, ...rest }: Props = $props();
 </script>
 
-<xoji-heading {...rest} level={level} {size} {tone}>
+<xtyle-heading {...rest} level={level} {size} {tone}>
 	{@render children?.()}
-</xoji-heading>
+</xtyle-heading>

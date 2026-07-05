@@ -1,0 +1,63 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-toast-default",
+	"version": "0.0.1",
+	"title": "Xtyle Toast (default)",
+	"description": "The built-in fill for the xtyle Toast component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.toast"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.toast": [
+			{
+				"id": "toast",
+				"format": "text/html+jsml",
+				"source": "toast.html",
+				"handlers": [
+					{ "selector": ".xtyle-toast__close", "on": "click", "handler": "dismiss" },
+					{ "selector": ".xtyle-toast__action", "on": "click", "handler": "action" }
+				],
+				"meta": {
+					"tokens": [
+						"--success",
+						"--success-fg",
+						"--warn",
+						"--warn-fg",
+						"--danger",
+						"--danger-fg",
+						"--info",
+						"--info-fg",
+						"--fg-0",
+						"--font-sans",
+						"--text-body",
+						"--text-sm",
+						"--text-lg",
+						"--leading-normal",
+						"--leading-tight",
+						"--weight-medium",
+						"--weight-semibold",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--border-thin",
+						"--border-normal",
+						"--border-thick",
+						"--radius-md",
+						"--radius-sm",
+						"--shadow",
+						"--ring",
+						"--state-hover",
+						"--state-press",
+						"--duration-fast",
+						"--duration-base",
+						"--ease-standard",
+						"--ease-emphasized",
+						"--space-0",
+						"--space-1",
+						"--space-3",
+						"--space-4"
+					]
+				}
+			}
+		]
+	}
+}

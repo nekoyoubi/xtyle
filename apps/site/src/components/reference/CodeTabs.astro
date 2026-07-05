@@ -1,7 +1,7 @@
 ---
-import type { Binding } from "@xoji/core";
-import Tabs from "@xoji/astro/Tabs.astro";
-import Code from "@xoji/astro/Code.astro";
+import type { Binding } from "@xtyle/core";
+import Tabs from "@xtyle/astro/Tabs.astro";
+import Code from "@xtyle/astro/Code.astro";
 
 interface Props {
 	sources: Partial<Record<Binding, string>>;
@@ -50,7 +50,7 @@ const initial = entries[0]?.binding;
 
 <script>
 	function activeSource(root: HTMLElement): string {
-		const tabs = root.querySelector<HTMLElement & { value?: string | null }>("xoji-tabs");
+		const tabs = root.querySelector<HTMLElement & { value?: string | null }>("xtyle-tabs");
 		const binding = tabs?.value ?? root.querySelector<HTMLElement>("[data-source]")?.dataset.binding;
 		const panel = binding
 			? root.querySelector<HTMLElement>(`[data-binding="${binding}"]`)

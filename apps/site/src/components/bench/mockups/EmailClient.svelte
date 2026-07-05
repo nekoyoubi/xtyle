@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { TokenRegister } from "@xoji/core";
-	import { Avatar, Badge, Button } from "@xoji/svelte";
+	import type { TokenRegister } from "@xtyle/core";
+	import { Avatar, Badge, Button } from "@xtyle/svelte";
 	import MockFrame from "./MockFrame.svelte";
 
 	interface Props {

@@ -1,11 +1,11 @@
 ---
-import Badge from "@xoji/astro/Badge.astro";
-import Card from "@xoji/astro/Card.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import { ACCENT_VARIANTS, HUES } from "@xoji/core";
+import Badge from "@xtyle/astro/Badge.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
 
 const variants = ["solid", "soft", "outline"] as const;
 const semantic = ["accent", "neutral", "success", "warn", "danger", "info"] as const;
@@ -90,20 +90,20 @@ const TONE_GROUPS = [
 				<Badge variant="soft" tone="neutral" dot>Idle</Badge>
 			</Cluster>
 			<Text tone="muted" size="sm">
-				The same breathe drives the standalone <code>.xoji-dot</code> for a chip-less
+				The same breathe drives the standalone <code>.xtyle-dot</code> for a chip-less
 				live pip, a connection light or a per-row streaming indicator with no label around it.
 			</Text>
 			<Cluster gap={4} align="center">
 				<Cluster gap={2} align="center">
-					<span class="xoji-dot xoji-dot--success xoji-dot--pulse-slow" role="img" aria-label="Connected"></span>
+					<span class="xtyle-dot xtyle-dot--success xtyle-dot--pulse-slow" role="img" aria-label="Connected"></span>
 					<Text size="sm">Connected</Text>
 				</Cluster>
 				<Cluster gap={2} align="center">
-					<span class="xoji-dot xoji-dot--accent xoji-dot--pulse-fast" role="img" aria-label="Streaming"></span>
+					<span class="xtyle-dot xtyle-dot--accent xtyle-dot--pulse-fast" role="img" aria-label="Streaming"></span>
 					<Text size="sm">Streaming</Text>
 				</Cluster>
 				<Cluster gap={2} align="center">
-					<span class="xoji-dot xoji-dot--neutral" role="img" aria-label="Offline"></span>
+					<span class="xtyle-dot xtyle-dot--neutral" role="img" aria-label="Offline"></span>
 					<Text size="sm">Offline</Text>
 				</Cluster>
 			</Cluster>
@@ -115,8 +115,8 @@ const TONE_GROUPS = [
 	function initRemovableBadges(): void {
 		for (const cluster of document.querySelectorAll<HTMLElement>(".demo-removable")) {
 			cluster.addEventListener("click", (event) => {
-				const button = (event.target as HTMLElement).closest(".xoji-badge__remove");
-				button?.closest(".xoji-badge")?.remove();
+				const button = (event.target as HTMLElement).closest(".xtyle-badge__remove");
+				button?.closest(".xtyle-badge")?.remove();
 			});
 		}
 	}

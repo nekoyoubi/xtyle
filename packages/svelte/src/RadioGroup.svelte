@@ -26,7 +26,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-radio-group
+<xtyle-radio-group
 	{...rest}
 	{orientation}
 	{label}
@@ -36,4 +36,4 @@
 	{onchange}
 >
 	{@render children?.()}
-</xoji-radio-group>
+</xtyle-radio-group>

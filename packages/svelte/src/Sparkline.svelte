@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { SparklineVariant, SparklineTone, TimeSample } from "@xoji/core";
+	import type { SparklineVariant, SparklineTone, TimeSample } from "@xtyle/core";
 
 	interface Props {
 		values?: number[];
@@ -47,7 +47,7 @@
 	});
 </script>
 
-<xoji-sparkline
+<xtyle-sparkline
 	bind:this={host}
 	{...rest}
 	{variant}
@@ -59,4 +59,4 @@
 	min={min ?? undefined}
 	max={max ?? undefined}
 	{label}
-></xoji-sparkline>
+></xtyle-sparkline>

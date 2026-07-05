@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone as BadgeTone, Tone } from "@xoji/core";
+	import type { FullTone as BadgeTone, Tone } from "@xtyle/core";
 
 	type AvatarSize = "sm" | "md" | "lg" | "xl";
 	type AvatarShape = "circle" | "square";
@@ -37,7 +37,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-avatar
+<xtyle-avatar
 	{...rest}
 	{src}
 	{alt}
@@ -50,4 +50,4 @@
 >
 	{#if icon}<span slot="icon">{@render icon()}</span>{/if}
 	{@render children?.()}
-</xoji-avatar>
+</xtyle-avatar>

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { type SeriesScheme, composeIcon, primitiveSince, primitiveTags, resolveIconMark, seriesPalette, SERIES_TOKENS } from "@xoji/core";
-	import { AppShell, Button, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xoji/svelte";
+	import { type SeriesScheme, composeIcon, primitiveSince, primitiveTags, resolveIconMark, seriesPalette, SERIES_TOKENS } from "@xtyle/core";
+	import { AppShell, Button, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xtyle/svelte";
 	import { isNewComponent } from "../../data/newness.ts";
 	import { ACTIVE_CHANGED_EVENT } from "../../lib/theme-active.ts";
 
@@ -1152,7 +1152,7 @@
 	}
 
 	/*
-	 * The dock is a child component, so its `xoji-dock` element sits outside this component's
+	 * The dock is a child component, so its `xtyle-dock` element sits outside this component's
 	 * style scope — reach it with `:global`. The nested shell's right cell sizes to content, so
 	 * the dock can't resolve a percentage height and its tall control stack won't scroll. Pin the
 	 * dock to the shell body (a definite-height, position:relative ancestor) so it fills the body,
@@ -1327,7 +1327,7 @@
 			repeat-y, repeat-y, repeat-y,
 			repeat-x, repeat-x, repeat-x;
 	}
-	.ib__canvas :global(xoji-icon) {
+	.ib__canvas :global(xtyle-icon) {
 		/* xl doubles this, so 7.5rem → a 15rem mark that exactly fills the 15rem canvas. */
 		font-size: 7.5rem;
 	}
@@ -1357,7 +1357,7 @@
 		place-content: center;
 		padding: var(--space-2);
 	}
-	.ib__bg-picker :global(xoji-swatch) {
+	.ib__bg-picker :global(xtyle-swatch) {
 		font-size: 1.4rem;
 	}
 	.ib__size {
@@ -1592,7 +1592,7 @@
 	.ib__example:hover {
 		border-color: var(--accent);
 	}
-	.ib__example :global(xoji-icon) {
+	.ib__example :global(xtyle-icon) {
 		font-size: 2rem;
 	}
 	.ib__palette-group {
@@ -1741,7 +1741,7 @@
 		color: var(--accent);
 	}
 	/* A bigger glyph in the same 2rem tile — less padding, more icon. */
-	.ib__addtile :global(xoji-icon) {
+	.ib__addtile :global(xtyle-icon) {
 		font-size: 1.5rem;
 	}
 	/* A quiet "new" dot in the corner of a recently-added primitive. */
@@ -1779,7 +1779,7 @@
 	}
 	/* The swatch dot is `1em`; its `size` prop only steps the font a little, so bump it here for a
 	   proper, easy-to-hit color chip. */
-	.ib__swatches :global(xoji-swatch) {
+	.ib__swatches :global(xtyle-swatch) {
 		font-size: 1.6rem;
 	}
 	.ib__input {

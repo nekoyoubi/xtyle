@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { untrack } from "svelte";
-	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xoji/core";
-	import { buildThemeFile, derive, emit, loadAuthoredAlgorithm, serializeThemeFile } from "@xoji/core";
-	import { getAlgorithm } from "@xoji/core/algorithms";
-	import { makeXojiAlgorithm, toPreset, type XojiAlgorithmSpec } from "@xoji/core/authoring";
+	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xtyle/core";
+	import { buildThemeFile, derive, emit, loadAuthoredAlgorithm, serializeThemeFile } from "@xtyle/core";
+	import { getAlgorithm } from "@xtyle/core/algorithms";
+	import { makeXtyleAlgorithm, toPreset, type XtyleAlgorithmSpec } from "@xtyle/core/authoring";
 	import Controls from "./Controls.svelte";
 	import BenchGallery from "./BenchGallery.svelte";
 	import Inspectors from "./Inspectors.svelte";
@@ -13,7 +13,7 @@
 	import CrmApp from "./mockups/CrmApp.svelte";
 	import SettingsPanel from "./mockups/SettingsPanel.svelte";
 	import DashboardApp from "./mockups/DashboardApp.svelte";
-	import { AppShell, Badge, Button, Switch, Tabs, Toolbar } from "@xoji/svelte";
+	import { AppShell, Badge, Button, Switch, Tabs, Toolbar } from "@xtyle/svelte";
 	import { loadHostedAlgorithms } from "./hosted.js";
 	import type { BenchState } from "./state.js";
 	import {
@@ -78,7 +78,7 @@
 
 	const baseAlgorithm = $derived<Algorithm>(
 		state.algorithm === CUSTOM_ALGORITHM || state.algorithm === CUSTOM_CODE_ALGORITHM
-			? getAlgorithm("xoji-default")
+			? getAlgorithm("xtyle-default")
 			: (hosted?.get(state.algorithm) ?? getAlgorithm(state.algorithm)),
 	);
 
@@ -121,22 +121,22 @@
 	/**
 	 * Build the on-site authored algorithm from its taste-vector spec (throws on invalid JSON).
 	 * `customSpec` is a Tier-1 spec — pure data, no code body — so it derives in-process safely:
-	 * the only consumer is `makeXojiAlgorithm`, a data→tokens transform, never `eval`. A Tier-2
+	 * the only consumer is `makeXtyleAlgorithm`, a data→tokens transform, never `eval`. A Tier-2
 	 * authored algorithm (an arbitrary `derive` body) is foreign code even when self-authored and
 	 * must arrive in its own field and run through the hosted sandbox (`loadAlgorithm`), never this
 	 * baked path — so a shared link carrying code can't ride Tier-1's in-process assumption.
 	 */
 	function buildCustomAlgorithm(): Algorithm {
 		const spec = JSON.parse(state.customSpec ?? "{}") as Record<string, unknown>;
-		return makeXojiAlgorithm(toPreset({ id: "custom", ...spec } as XojiAlgorithmSpec));
+		return makeXtyleAlgorithm(toPreset({ id: "custom", ...spec } as XtyleAlgorithmSpec));
 	}
 
-	const initialRegister: TokenRegister = derive(getAlgorithm("xoji-default"), {
+	const initialRegister: TokenRegister = derive(getAlgorithm("xtyle-default"), {
 		knobs: toDeriveKnobs(defaultState().knobs),
 		constraints: anchorsToConstraints(defaultState().anchors),
 	});
 	let lastGood = $state<TokenRegister>(initialRegister);
-	let lastGoodAlgorithm = $state<Algorithm>(getAlgorithm("xoji-default"));
+	let lastGoodAlgorithm = $state<Algorithm>(getAlgorithm("xtyle-default"));
 
 	interface DeriveResult {
 		algorithm: Algorithm;
@@ -370,7 +370,7 @@
 		if (editingDoc) exportDoc(editingDoc, register);
 	}
 
-	const SITE_SYNC_KEY = "xoji.bench.site-sync";
+	const SITE_SYNC_KEY = "xtyle.bench.site-sync";
 
 	function loadSiteSync(): boolean {
 		if (typeof localStorage === "undefined") return false;
@@ -442,7 +442,7 @@
 			buildThemeFile({
 				meta: {
 					name: editingDoc?.meta.name ?? "Untitled",
-					generator: "@xoji/core",
+					generator: "@xtyle/core",
 				},
 				recipe: state,
 				register,
@@ -702,12 +702,12 @@
 									</div>
 									{#if importOpen}
 										<div class="bench__import">
-											<label class="bench__import-label" for="bench-import">Paste a <code>.xoji.json</code> theme (or a raw token map) to load it into this theme</label>
+											<label class="bench__import-label" for="bench-import">Paste a <code>.xtyle.json</code> theme (or a raw token map) to load it into this theme</label>
 											<textarea
 												id="bench-import"
 												class="bench__export-area"
 												spellcheck="false"
-												placeholder={'{ "format": "xoji-theme", … }'}
+												placeholder={'{ "format": "xtyle-theme", … }'}
 												bind:value={importText}
 											></textarea>
 											<div class="bench__import-actions">
@@ -731,7 +731,7 @@
 										<p class="bench__help-text">
 											Pick an algorithm and you have a working theme. From there set as little
 											or as much as you want: a few anchor colors, the knobs, or any of the
-											{tokenCount} derived tokens directly. <code>@xoji/core</code> re-derives the
+											{tokenCount} derived tokens directly. <code>@xtyle/core</code> re-derives the
 											whole register in your browser on every change; the mockups, the report,
 											and the export all read straight from it.
 										</p>
@@ -904,7 +904,7 @@
 		.bench__rail {
 			position: absolute;
 			inset: 0 0 0 auto;
-			width: var(--xoji-app-right, 368px);
+			width: var(--xtyle-app-right, 368px);
 			height: auto;
 		}
 	}

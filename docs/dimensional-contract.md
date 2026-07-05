@@ -1,4 +1,4 @@
-# xoji: dimensional token contract (working draft)
+# xtyle: dimensional token contract (working draft)
 
 This is a **starting point**, not a spec to conform to. It lifts the model that
 already got cycles in a prior in-house theme crate and its theme designer,
@@ -11,7 +11,7 @@ Nothing here is authority; it's where we start hashing.
 > algorithm's baseline floor, not a canon every theme conforms to; authors declare
 > new tokens and rewire derivations freely. (2) The filling and the invariants are
 > the **algorithm's**, not the engine's; there is no engine-level "every theme is
-> valid" gospel. The lists here are best read as the register `xoji-default` ships.
+> valid" gospel. The lists here are best read as the register `xtyle-default` ships.
 
 A theme is an **invocation of an algorithm**, materialized to a token set. The
 algorithm resolves every **dimension**: each dimension has the algorithm's
@@ -22,7 +22,7 @@ algorithm fills the rest; override any single token; or pick / write a different
 algorithm. (The color `generate`-fn was the embryo of the whole algorithm concept,
 now generalized to every dimension.)
 
-Legend: `[have]` already exists in the prior cycles · `[new]` net-new for xoji.
+Legend: `[have]` already exists in the prior cycles · `[new]` net-new for xtyle.
 
 ---
 
@@ -160,8 +160,8 @@ without the leading `--`.
 These are **per-algorithm policy, not engine gospel.** The gauntlet is
 parameterized by algorithm: it fires N extreme knob / anchor seeds at a *chosen*
 algorithm and asserts *that algorithm's declared invariants*. The list below is
-what a contrast-conscientious algorithm like `xoji-default` (or, more strictly,
-`xoji-hc`) chooses to guarantee; an algorithm that declares none has nothing to
+what a contrast-conscientious algorithm like `xtyle-default` (or, more strictly,
+`xtyle-hc`) chooses to guarantee; an algorithm that declares none has nothing to
 assert, and that's a legitimate choice. What such an algorithm guarantees for
 *any* anchors, asserted across N extreme seeds:
 

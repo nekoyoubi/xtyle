@@ -1,16 +1,16 @@
 ---
 import Base from "../layouts/Base.astro";
-import Panel from "@xoji/astro/Panel.astro";
-import Dock from "@xoji/astro/Dock.astro";
-import Toc from "@xoji/astro/Toc.astro";
-import Alert from "@xoji/astro/Alert.astro";
-import Link from "@xoji/astro/Link.astro";
-import Table from "@xoji/astro/Table.astro";
-import Code from "@xoji/astro/Code.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Eyebrow from "@xoji/astro/Eyebrow.astro";
+import Panel from "@xtyle/astro/Panel.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Toc from "@xtyle/astro/Toc.astro";
+import Alert from "@xtyle/astro/Alert.astro";
+import Link from "@xtyle/astro/Link.astro";
+import Table from "@xtyle/astro/Table.astro";
+import Code from "@xtyle/astro/Code.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Eyebrow from "@xtyle/astro/Eyebrow.astro";
 
 const sections = [
 	{ id: "why", label: "When to extend" },
@@ -29,11 +29,11 @@ const contractMembers = [
 	{ member: "reflectString(name, value)", type: "(string, string?) => void", note: "reflect a string prop, removing the attribute when empty" },
 ];
 
-const customSnippet = `import { XojiElement, define } from "@xoji/core/elements";
+const customSnippet = `import { XtyleElement, define } from "@xtyle/core/elements";
 
 // A small custom element: a click-to-increment tally, themed entirely from
 // the token register the active algorithm derives.
-class TallyChip extends XojiElement {
+class TallyChip extends XtyleElement {
   static get observedAttributes() {
     return ["count"];
   }
@@ -71,14 +71,14 @@ class TallyChip extends XojiElement {
   }
 }
 
-define("xoji-tally-chip", TallyChip);`;
+define("xtyle-tally-chip", TallyChip);`;
 
-const shippedSnippet = `import { XojiButton } from "@xoji/core/elements";
+const shippedSnippet = `import { XtyleButton } from "@xtyle/core/elements";
 
 // A controlled toggle built on the shipped button: it owns no new look, just
 // the behavior the base left to the consumer — a click flips \`pressed\`, which
 // the base already reflects to \`aria-pressed\` and paints as a sunken state.
-class ToggleButton extends XojiButton {
+class ToggleButton extends XtyleButton {
   static get observedAttributes() {
     return [...super.observedAttributes, "data-toggle"];
   }
@@ -103,8 +103,8 @@ protected styles(): string {
 ---
 
 <Base
-	title="Extending components: xoji"
-	description="Build on xoji's components instead of forking them: extend XojiElement for a fully custom element, or subclass a shipped element to add the behavior the base left to you. The shared token sheet and the coverage contract come with you."
+	title="Extending components: xtyle"
+	description="Build on xtyle's components instead of forking them: extend XtyleElement for a fully custom element, or subclass a shipped element to add the behavior the base left to you. The shared token sheet and the coverage contract come with you."
 >
 	<Dock slot="right" side="right" size="sm" label="On this page" hideHeader class="docs-toc-rail">
 		<Toc items={sections} />
@@ -116,7 +116,7 @@ protected styles(): string {
 				<Eyebrow>Extending components</Eyebrow>
 				<Heading level={1} size="3xl">Build on the components, don't fork them</Heading>
 				<Text size="lg" tone="muted">
-					Every xoji element extends one blessed base, <code>XojiElement</code>, and that
+					Every xtyle element extends one blessed base, <code>XtyleElement</code>, and that
 					base is the extension contract too. So when a component is close to what you need
 					but not quite (you need a control that is semantically a toggle, or an element
 					the set doesn't ship), you build on top instead of rebuilding bespoke. The shared
@@ -136,8 +136,8 @@ protected styles(): string {
 					</Text>
 					<Alert severity="info" variant="soft">
 						<span slot="title">Two paths, one base</span>
-						Extend <code>XojiElement</code> directly for a fully custom element, or
-						subclass a shipped element (<code>XojiButton</code>, <code>XojiField</code>, …)
+						Extend <code>XtyleElement</code> directly for a fully custom element, or
+						subclass a shipped element (<code>XtyleButton</code>, <code>XtyleField</code>, …)
 						to add behavior to what it already renders.
 					</Alert>
 				</Stack>
@@ -152,7 +152,7 @@ protected styles(): string {
 						root, so a subclass never re-implements theming, only its own markup and the
 						state that drives it.
 					</Text>
-					<Table aria-label="The XojiElement extension contract">
+					<Table aria-label="The XtyleElement extension contract">
 						<table>
 							<thead>
 								<tr><th>Member</th><th>Type</th><th>What it's for</th></tr>
@@ -174,7 +174,7 @@ protected styles(): string {
 			<Panel title="A custom element" id="custom" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						Extend <code>XojiElement</code>, declare the attributes you observe, override
+						Extend <code>XtyleElement</code>, declare the attributes you observe, override
 						<code>template()</code> and <code>styles()</code>, and call <code>render()</code>
 						on the state changes you care about. The markup reads straight from the token
 						register, so it re-themes with every other component when the theme changes.

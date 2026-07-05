@@ -1,9 +1,9 @@
 ---
-import Statusbar from "@xoji/astro/Statusbar.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
+import Statusbar from "@xtyle/astro/Statusbar.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
 import { getStats } from "../../data/stats";
 
 const { tokens } = await getStats();
@@ -14,20 +14,20 @@ const { tokens } = await getStats();
 		<Heading level={2} size="sm" tone="muted">Editor strip — left / center / right via spacers</Heading>
 		<div class="statusbar-demo__frame">
 			<Statusbar label="Editor status">
-				<button type="button" class="xoji-statusbar__item xoji-statusbar__item--strong">
+				<button type="button" class="xtyle-statusbar__item xtyle-statusbar__item--strong">
 					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 3v12" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="6" r="3" /><path d="M18 9a9 9 0 0 1-9 9" /></svg>
 					main
 				</button>
-				<span class="xoji-statusbar__item">
+				<span class="xtyle-statusbar__item">
 					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 12l2 2 4-4" /></svg>
 					0 errors
 				</span>
-				<span class="xoji-statusbar__spacer"></span>
-				<span class="xoji-statusbar__item">Ln 42, Col 7</span>
-				<span class="xoji-statusbar__item">UTF-8</span>
-				<span class="xoji-statusbar__spacer"></span>
-				<span class="xoji-statusbar__item">TypeScript</span>
-				<span class="xoji-statusbar__item xoji-statusbar__item--strong">Spaces: 2</span>
+				<span class="xtyle-statusbar__spacer"></span>
+				<span class="xtyle-statusbar__item">Ln 42, Col 7</span>
+				<span class="xtyle-statusbar__item">UTF-8</span>
+				<span class="xtyle-statusbar__spacer"></span>
+				<span class="xtyle-statusbar__item">TypeScript</span>
+				<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">Spaces: 2</span>
 			</Statusbar>
 		</div>
 	</Stack>
@@ -36,18 +36,18 @@ const { tokens } = await getStats();
 		<Heading level={2} size="sm" tone="muted">Inline glyphs — Badge dots for sync &amp; build</Heading>
 		<div class="statusbar-demo__frame">
 			<Statusbar>
-				<span class="xoji-statusbar__item">
+				<span class="xtyle-statusbar__item">
 					<Badge tone="success" variant="soft" dot size="sm">Synced</Badge>
 				</span>
-				<span class="xoji-statusbar__item">
+				<span class="xtyle-statusbar__item">
 					<Badge tone="info" variant="soft" dot size="sm">Build passing</Badge>
 				</span>
-				<span class="xoji-statusbar__spacer"></span>
-				<span class="xoji-statusbar__item">
+				<span class="xtyle-statusbar__spacer"></span>
+				<span class="xtyle-statusbar__item">
 					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" /></svg>
 					0.4.0
 				</span>
-				<span class="xoji-statusbar__item xoji-statusbar__item--strong">100% coverage</span>
+				<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">100% coverage</span>
 			</Statusbar>
 		</div>
 	</Stack>
@@ -56,13 +56,13 @@ const { tokens } = await getStats();
 		<Heading level={2} size="sm" tone="muted">Live region — announces changes politely</Heading>
 		<div class="statusbar-demo__frame">
 			<Statusbar live label="Activity">
-				<span class="xoji-statusbar__item xoji-statusbar__item--strong">
+				<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">
 					<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.5" /><path d="M21 4v5h-5" /></svg>
 					Deriving theme…
 				</span>
-				<span class="xoji-statusbar__spacer"></span>
-				<span class="xoji-statusbar__item">{tokens} tokens</span>
-				<span class="xoji-statusbar__item">OKLCH</span>
+				<span class="xtyle-statusbar__spacer"></span>
+				<span class="xtyle-statusbar__item">{tokens} tokens</span>
+				<span class="xtyle-statusbar__item">OKLCH</span>
 			</Statusbar>
 		</div>
 	</Stack>
@@ -79,14 +79,14 @@ const { tokens } = await getStats();
 					<Text size="xs" tone="muted"><code>overflow="{mode}"</code></Text>
 					<div class="statusbar-demo__frame">
 						<Statusbar overflow={mode} label={`Overflow ${mode}`}>
-							<span class="xoji-statusbar__item xoji-statusbar__item--strong">main.ts</span>
-							<span class="xoji-statusbar__item">UTF-8</span>
-							<span class="xoji-statusbar__item">Ln 42, Col 7</span>
-							<span class="xoji-statusbar__item">Spaces: 2</span>
-							<span class="xoji-statusbar__item">LF</span>
-							<span class="xoji-statusbar__item">TypeScript</span>
-							<span class="xoji-statusbar__item">Prettier</span>
-							<span class="xoji-statusbar__item xoji-statusbar__item--strong">0 errors</span>
+							<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">main.ts</span>
+							<span class="xtyle-statusbar__item">UTF-8</span>
+							<span class="xtyle-statusbar__item">Ln 42, Col 7</span>
+							<span class="xtyle-statusbar__item">Spaces: 2</span>
+							<span class="xtyle-statusbar__item">LF</span>
+							<span class="xtyle-statusbar__item">TypeScript</span>
+							<span class="xtyle-statusbar__item">Prettier</span>
+							<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">0 errors</span>
 						</Statusbar>
 					</div>
 				</div>
@@ -104,16 +104,16 @@ const { tokens } = await getStats();
 		</Text>
 		<div class="statusbar-demo__resizable">
 			<div class="statusbar-demo__frame">
-				<xoji-statusbar overflow="collapse" aria-label="Collapsing status">
-					<span class="xoji-statusbar__item xoji-statusbar__item--strong" data-required>main.ts</span>
-					<span class="xoji-statusbar__item" data-priority="90">0 errors</span>
-					<span class="xoji-statusbar__item" data-priority="20">Prettier</span>
-					<span class="xoji-statusbar__item" data-priority="30">LF</span>
-					<span class="xoji-statusbar__item" data-priority="60">UTF-8</span>
-					<span class="xoji-statusbar__item" data-priority="10">Spaces: 2</span>
-					<span class="xoji-statusbar__item" data-priority="40">Ln 42, Col 7</span>
-					<span class="xoji-statusbar__item xoji-statusbar__item--strong" data-priority="80">TypeScript</span>
-				</xoji-statusbar>
+				<xtyle-statusbar overflow="collapse" aria-label="Collapsing status">
+					<span class="xtyle-statusbar__item xtyle-statusbar__item--strong" data-required>main.ts</span>
+					<span class="xtyle-statusbar__item" data-priority="90">0 errors</span>
+					<span class="xtyle-statusbar__item" data-priority="20">Prettier</span>
+					<span class="xtyle-statusbar__item" data-priority="30">LF</span>
+					<span class="xtyle-statusbar__item" data-priority="60">UTF-8</span>
+					<span class="xtyle-statusbar__item" data-priority="10">Spaces: 2</span>
+					<span class="xtyle-statusbar__item" data-priority="40">Ln 42, Col 7</span>
+					<span class="xtyle-statusbar__item xtyle-statusbar__item--strong" data-priority="80">TypeScript</span>
+				</xtyle-statusbar>
 			</div>
 		</div>
 	</Stack>
@@ -128,14 +128,14 @@ const { tokens } = await getStats();
 		</Text>
 		<div class="statusbar-demo__resizable">
 			<div class="statusbar-demo__frame">
-				<xoji-statusbar overflow="collapse" manual-overflow aria-label="Manual collapsing status" id="manual-statusbar">
-					<span class="xoji-statusbar__item xoji-statusbar__item--strong" data-required>main.ts</span>
-					<button type="button" class="xoji-statusbar__item statusbar-demo__rich" data-priority="20">Errors: 0</button>
-					<button type="button" class="xoji-statusbar__item statusbar-demo__rich" data-priority="10">Warnings: 2</button>
-					<span class="xoji-statusbar__item" data-priority="60">UTF-8</span>
-					<span class="xoji-statusbar__item" data-priority="40">Ln 42, Col 7</span>
-					<span class="xoji-statusbar__item xoji-statusbar__item--strong" data-priority="80">TypeScript</span>
-				</xoji-statusbar>
+				<xtyle-statusbar overflow="collapse" manual-overflow aria-label="Manual collapsing status" id="manual-statusbar">
+					<span class="xtyle-statusbar__item xtyle-statusbar__item--strong" data-required>main.ts</span>
+					<button type="button" class="xtyle-statusbar__item statusbar-demo__rich" data-priority="20">Errors: 0</button>
+					<button type="button" class="xtyle-statusbar__item statusbar-demo__rich" data-priority="10">Warnings: 2</button>
+					<span class="xtyle-statusbar__item" data-priority="60">UTF-8</span>
+					<span class="xtyle-statusbar__item" data-priority="40">Ln 42, Col 7</span>
+					<span class="xtyle-statusbar__item xtyle-statusbar__item--strong" data-priority="80">TypeScript</span>
+				</xtyle-statusbar>
 				<div class="statusbar-demo__manual-pop" id="manual-statusbar-pop" hidden></div>
 			</div>
 		</div>
@@ -143,7 +143,7 @@ const { tokens } = await getStats();
 </Stack>
 
 <script>
-	import "@xoji/core/elements";
+	import "@xtyle/core/elements";
 
 	const bar = document.getElementById("manual-statusbar");
 	const pop = document.getElementById("manual-statusbar-pop");
@@ -163,7 +163,7 @@ const { tokens } = await getStats();
 		for (const cell of hidden) {
 			const echo = cell.cloneNode(true) as HTMLElement;
 			echo.style.removeProperty("display");
-			echo.removeAttribute("data-xoji-collapsed");
+			echo.removeAttribute("data-xtyle-collapsed");
 			pop.append(echo);
 		}
 	});
@@ -176,7 +176,7 @@ const { tokens } = await getStats();
 		overflow: hidden;
 		background: var(--bg-0);
 	}
-	.statusbar-demo__frame .xoji-statusbar__item svg {
+	.statusbar-demo__frame .xtyle-statusbar__item svg {
 		vertical-align: -0.15em;
 		margin-inline-end: 0.35em;
 	}

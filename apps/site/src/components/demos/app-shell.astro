@@ -1,17 +1,17 @@
 ---
-import AppShell from "@xoji/astro/AppShell.astro";
-import Toolbar from "@xoji/astro/Toolbar.astro";
-import Dock from "@xoji/astro/Dock.astro";
-import Statusbar from "@xoji/astro/Statusbar.astro";
-import Button from "@xoji/astro/Button.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Link from "@xoji/astro/Link.astro";
-import Card from "@xoji/astro/Card.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Grid from "@xoji/astro/Grid.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
+import AppShell from "@xtyle/astro/AppShell.astro";
+import Toolbar from "@xtyle/astro/Toolbar.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Statusbar from "@xtyle/astro/Statusbar.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Link from "@xtyle/astro/Link.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
 import { getStats } from "../../data/stats";
 
 const { tokens } = await getStats();
@@ -36,7 +36,7 @@ const { tokens } = await getStats();
 			rightMin={168}
 			rightMax={320}
 		>
-			<Toolbar slot="toolbar" heading="xoji" href="#" landmark>
+			<Toolbar slot="toolbar" heading="xtyle" href="#" landmark>
 				<Cluster slot="center" gap={1}>
 					<Link href="#" variant="quiet">Overview</Link>
 					<Link href="#" variant="quiet">Generator</Link>
@@ -92,7 +92,7 @@ const { tokens } = await getStats();
 				<Stack gap={3}>
 					<Stack gap={0}>
 						<Text size="xs" tone="muted">Algorithm</Text>
-						<Text weight="medium">xoji-default</Text>
+						<Text weight="medium">xtyle-default</Text>
 					</Stack>
 					<Stack gap={0}>
 						<Text size="xs" tone="muted">Contrast</Text>
@@ -106,11 +106,11 @@ const { tokens } = await getStats();
 			</Dock>
 
 			<Statusbar slot="statusbar" label="Shell status">
-				<span class="xoji-statusbar__item xoji-statusbar__item--strong">xoji-default</span>
-				<span class="xoji-statusbar__item">OKLCH</span>
-				<span class="xoji-statusbar__spacer"></span>
-				<span class="xoji-statusbar__item">{tokens} tokens</span>
-				<span class="xoji-statusbar__item xoji-statusbar__item--strong">100% coverage</span>
+				<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">xtyle-default</span>
+				<span class="xtyle-statusbar__item">OKLCH</span>
+				<span class="xtyle-statusbar__spacer"></span>
+				<span class="xtyle-statusbar__item">{tokens} tokens</span>
+				<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">100% coverage</span>
 			</Statusbar>
 		</AppShell>
 	</div>
@@ -127,11 +127,11 @@ const { tokens } = await getStats();
 		overflow: hidden;
 		box-shadow: var(--elevation-2);
 	}
-	.appshell-demo__device :global(.xoji-app) {
+	.appshell-demo__device :global(.xtyle-app) {
 		height: 30rem;
 	}
 	/* The rails are sized by the shell now, so the docks fill them instead of their default width. */
-	.appshell-demo__device :global(.xoji-dock) {
+	.appshell-demo__device :global(.xtyle-dock) {
 		width: 100%;
 	}
 </style>

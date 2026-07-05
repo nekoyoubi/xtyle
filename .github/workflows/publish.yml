@@ -23,7 +23,7 @@ jobs:
 
       - name: publish core
         continue-on-error: true
-        run: npm publish --workspace=packages/xoji --access public
+        run: npm publish --workspace=packages/xtyle --access public
 
       - name: publish svelte
         continue-on-error: true

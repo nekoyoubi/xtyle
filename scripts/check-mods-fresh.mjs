@@ -15,7 +15,7 @@ const generated = [
 	...readdirSync("algorithms")
 		.map((dir) => join("algorithms", dir, "src", "mod.js"))
 		.filter(existsSync),
-	"packages/xoji/src/host/authoring-prelude.generated.ts",
+	"packages/xtyle/src/host/authoring-prelude.generated.ts",
 ];
 
 const hashAll = () =>

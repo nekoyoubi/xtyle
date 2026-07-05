@@ -1,0 +1,801 @@
+{
+	"$schema": "https://xript.dev/schema/manifest/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-components",
+	"version": "0.0.1",
+	"title": "Xtyle components",
+	"description": "The host surface a xtyle component fragment fills: an inert template plus sandboxed hooks and handlers, rendered into the component's shadow root.",
+	"slots": [
+		{
+			"id": "component.tabs",
+			"description": "The built-in fill for the xtyle Tabs component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.tabs",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.accordion",
+			"description": "The built-in fill for the xtyle Accordion component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.accordion",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.button",
+			"description": "The built-in fill for the xtyle Button component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.button",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.switch",
+			"description": "The built-in fill for the xtyle Switch component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.switch",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.alert",
+			"description": "The built-in fill for the xtyle Alert component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.alert",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.app-shell",
+			"description": "The built-in fill for the xtyle App Shell component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.app-shell",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.avatar",
+			"description": "The built-in fill for the xtyle Avatar component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.avatar",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.avatar-group",
+			"description": "The built-in fill for the xtyle Avatar Group component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.avatar-group",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.badge",
+			"description": "The built-in fill for the xtyle Badge component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.badge",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.breadcrumb",
+			"description": "The built-in fill for the xtyle Breadcrumb component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.breadcrumb",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.card",
+			"description": "The built-in fill for the xtyle Card component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.card",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.card-link",
+			"description": "The built-in fill for the xtyle Card Link component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.card-link",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.checkbox",
+			"description": "The built-in fill for the xtyle Checkbox component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.checkbox",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.cluster",
+			"description": "The built-in fill for the xtyle Cluster component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.cluster",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.color-picker",
+			"description": "The built-in fill for the xtyle Color Picker component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.color-picker",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.dialog",
+			"description": "The built-in fill for the xtyle Dialog component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.dialog",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.dock",
+			"description": "The built-in fill for the xtyle Dock component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.dock",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.eyebrow",
+			"description": "The built-in fill for the xtyle Eyebrow component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.eyebrow",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.field",
+			"description": "The built-in fill for the xtyle Field component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.field",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.form-group",
+			"description": "The built-in fill for the xtyle Form Group component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.form-group",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.grid",
+			"description": "The built-in fill for the xtyle Grid component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.grid",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.heading",
+			"description": "The built-in fill for the xtyle Heading component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.heading",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.kbd",
+			"description": "The built-in fill for the xtyle Kbd component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.kbd",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.icon",
+			"description": "The built-in fill for the xtyle Icon component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.icon",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.image",
+			"description": "The built-in fill for the xtyle Image component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.image",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.bar",
+			"description": "The built-in fill for the xtyle Bar chart: the mod-zero SVG markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.bar",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.sparkline",
+			"description": "The built-in fill for the xtyle Sparkline: the mod-zero inline SVG markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.sparkline",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.heatmap",
+			"description": "The built-in fill for the xtyle Heatmap: the mod-zero SVG grid markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.heatmap",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.pie",
+			"description": "The built-in fill for the xtyle Pie chart: the mod-zero SVG markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.pie",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.link",
+			"description": "The built-in fill for the xtyle Link component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.link",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.menu",
+			"description": "The built-in fill for the xtyle Menu component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.menu",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.number-input",
+			"description": "The built-in fill for the xtyle Number Input component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.number-input",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.panel",
+			"description": "The built-in fill for the xtyle Panel component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.panel",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.progress",
+			"description": "The built-in fill for the xtyle Progress component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.progress",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.radio",
+			"description": "The built-in fill for the xtyle Radio component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.radio",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.section",
+			"description": "The built-in fill for the xtyle Section component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.section",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.segmented",
+			"description": "The built-in fill for the xtyle Segmented component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.segmented",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.select",
+			"description": "The built-in fill for the xtyle Select component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.select",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.separator",
+			"description": "The built-in fill for the xtyle Separator component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.separator",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.skeleton",
+			"description": "The built-in fill for the xtyle Skeleton component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.skeleton",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.slider",
+			"description": "The built-in fill for the xtyle Slider component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.slider",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.spinner",
+			"description": "The built-in fill for the xtyle Spinner component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.spinner",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.splitter",
+			"description": "The built-in fill for the xtyle Splitter component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.splitter",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.stack",
+			"description": "The built-in fill for the xtyle Stack component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.stack",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.stat",
+			"description": "The built-in fill for the xtyle Stat component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.stat",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.statusbar",
+			"description": "The built-in fill for the xtyle Statusbar component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.statusbar",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.swatch",
+			"description": "The built-in fill for the xtyle Swatch component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.swatch",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.text",
+			"description": "The built-in fill for the xtyle Text component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.text",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.textarea",
+			"description": "The built-in fill for the xtyle Textarea component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.textarea",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.toast",
+			"description": "The built-in fill for the xtyle Toast component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.toast",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.toc",
+			"description": "The built-in fill for the xtyle Toc component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.toc",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.toolbar",
+			"description": "The built-in fill for the xtyle Toolbar component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.toolbar",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.tooltip",
+			"description": "The built-in fill for the xtyle Tooltip component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.tooltip",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.tree",
+			"description": "The built-in fill for the xtyle Tree component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.tree",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.code",
+			"description": "The built-in fill for the xtyle Code component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.code",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.pagination",
+			"description": "The built-in fill for the xtyle Pagination component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.pagination",
+			"multiple": false,
+			"style": "inherit"
+		}
+	],
+	"capabilities": {
+		"xtyle.component.tabs": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Tabs component.",
+			"risk": "low"
+		},
+		"xtyle.component.accordion": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Accordion component.",
+			"risk": "low"
+		},
+		"xtyle.component.button": {
+			"description": "Permits a mod to provide the markup of the xtyle Button component.",
+			"risk": "low"
+		},
+		"xtyle.component.switch": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Switch component.",
+			"risk": "low"
+		},
+		"xtyle.component.alert": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Alert component.",
+			"risk": "low"
+		},
+		"xtyle.component.app-shell": {
+			"description": "Permits a mod to provide the markup of the xtyle App Shell component.",
+			"risk": "low"
+		},
+		"xtyle.component.avatar": {
+			"description": "Permits a mod to provide the markup of the xtyle Avatar component.",
+			"risk": "low"
+		},
+		"xtyle.component.avatar-group": {
+			"description": "Permits a mod to provide the markup of the xtyle Avatar Group component.",
+			"risk": "low"
+		},
+		"xtyle.component.badge": {
+			"description": "Permits a mod to provide the markup of the xtyle Badge component.",
+			"risk": "low"
+		},
+		"xtyle.component.breadcrumb": {
+			"description": "Permits a mod to provide the markup of the xtyle Breadcrumb component.",
+			"risk": "low"
+		},
+		"xtyle.component.card": {
+			"description": "Permits a mod to provide the markup of the xtyle Card component.",
+			"risk": "low"
+		},
+		"xtyle.component.card-link": {
+			"description": "Permits a mod to provide the markup of the xtyle Card Link component.",
+			"risk": "low"
+		},
+		"xtyle.component.checkbox": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Checkbox component.",
+			"risk": "low"
+		},
+		"xtyle.component.cluster": {
+			"description": "Permits a mod to provide the markup of the xtyle Cluster component.",
+			"risk": "low"
+		},
+		"xtyle.component.color-picker": {
+			"description": "Permits a mod to provide the markup of the xtyle Color Picker component.",
+			"risk": "low"
+		},
+		"xtyle.component.dialog": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Dialog component.",
+			"risk": "low"
+		},
+		"xtyle.component.dock": {
+			"description": "Permits a mod to provide the markup of the xtyle Dock component.",
+			"risk": "low"
+		},
+		"xtyle.component.eyebrow": {
+			"description": "Permits a mod to provide the markup of the xtyle Eyebrow component.",
+			"risk": "low"
+		},
+		"xtyle.component.field": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Field component.",
+			"risk": "low"
+		},
+		"xtyle.component.form-group": {
+			"description": "Permits a mod to provide the markup of the xtyle Form Group component.",
+			"risk": "low"
+		},
+		"xtyle.component.grid": {
+			"description": "Permits a mod to provide the markup of the xtyle Grid component.",
+			"risk": "low"
+		},
+		"xtyle.component.heading": {
+			"description": "Permits a mod to provide the markup of the xtyle Heading component.",
+			"risk": "low"
+		},
+		"xtyle.component.kbd": {
+			"description": "Permits a mod to provide the markup of the xtyle Kbd component.",
+			"risk": "low"
+		},
+		"xtyle.component.icon": {
+			"description": "Permits a mod to provide the markup of the xtyle Icon component.",
+			"risk": "low"
+		},
+		"xtyle.component.image": {
+			"description": "Permits a mod to provide the markup of the xtyle Image component.",
+			"risk": "low"
+		},
+		"xtyle.component.link": {
+			"description": "Permits a mod to provide the markup of the xtyle Link component.",
+			"risk": "low"
+		},
+		"xtyle.component.menu": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Menu component.",
+			"risk": "low"
+		},
+		"xtyle.component.number-input": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Number Input component.",
+			"risk": "low"
+		},
+		"xtyle.component.panel": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Panel component.",
+			"risk": "low"
+		},
+		"xtyle.component.progress": {
+			"description": "Permits a mod to provide the markup of the xtyle Progress component.",
+			"risk": "low"
+		},
+		"xtyle.component.radio": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Radio component.",
+			"risk": "low"
+		},
+		"xtyle.component.section": {
+			"description": "Permits a mod to provide the markup of the xtyle Section component.",
+			"risk": "low"
+		},
+		"xtyle.component.segmented": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Segmented component.",
+			"risk": "low"
+		},
+		"xtyle.component.select": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Select component.",
+			"risk": "low"
+		},
+		"xtyle.component.separator": {
+			"description": "Permits a mod to provide the markup of the xtyle Separator component.",
+			"risk": "low"
+		},
+		"xtyle.component.skeleton": {
+			"description": "Permits a mod to provide the markup of the xtyle Skeleton component.",
+			"risk": "low"
+		},
+		"xtyle.component.slider": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Slider component.",
+			"risk": "low"
+		},
+		"xtyle.component.spinner": {
+			"description": "Permits a mod to provide the markup of the xtyle Spinner component.",
+			"risk": "low"
+		},
+		"xtyle.component.splitter": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Splitter component.",
+			"risk": "low"
+		},
+		"xtyle.component.stack": {
+			"description": "Permits a mod to provide the markup of the xtyle Stack component.",
+			"risk": "low"
+		},
+		"xtyle.component.stat": {
+			"description": "Permits a mod to provide the markup of the xtyle Stat component.",
+			"risk": "low"
+		},
+		"xtyle.component.statusbar": {
+			"description": "Permits a mod to provide the markup of the xtyle Statusbar component.",
+			"risk": "low"
+		},
+		"xtyle.component.swatch": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Swatch component.",
+			"risk": "low"
+		},
+		"xtyle.component.text": {
+			"description": "Permits a mod to provide the markup of the xtyle Text component.",
+			"risk": "low"
+		},
+		"xtyle.component.textarea": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Textarea component.",
+			"risk": "low"
+		},
+		"xtyle.component.toast": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Toast component.",
+			"risk": "low"
+		},
+		"xtyle.component.toc": {
+			"description": "Permits a mod to provide the markup of the xtyle Toc component.",
+			"risk": "low"
+		},
+		"xtyle.component.toolbar": {
+			"description": "Permits a mod to provide the markup of the xtyle Toolbar component.",
+			"risk": "low"
+		},
+		"xtyle.component.tooltip": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Tooltip component.",
+			"risk": "low"
+		},
+		"xtyle.component.tree": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Tree component.",
+			"risk": "low"
+		},
+		"xtyle.component.code": {
+			"description": "Permits a mod to provide the markup of the xtyle Code component.",
+			"risk": "low"
+		},
+		"xtyle.component.pagination": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Pagination component.",
+			"risk": "low"
+		},
+		"xtyle.component.bar": {
+			"description": "Permits a mod to provide the markup of the xtyle Bar chart component.",
+			"risk": "low"
+		},
+		"xtyle.component.sparkline": {
+			"description": "Permits a mod to provide the markup of the xtyle Sparkline component.",
+			"risk": "low"
+		},
+		"xtyle.component.pie": {
+			"description": "Permits a mod to provide the markup of the xtyle Pie chart component.",
+			"risk": "low"
+		},
+		"xtyle.component.heatmap": {
+			"description": "Permits a mod to provide the markup of the xtyle Heatmap component.",
+			"risk": "low"
+		}
+	},
+	"limits": {
+		"timeout_ms": 2000,
+		"memory_mb": 16,
+		"max_stack_depth": 128
+	}
+}

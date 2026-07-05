@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { Size, FullTone as Tone } from "@xoji/core";
+	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	interface Props {
 		checked?: boolean;
@@ -49,7 +49,7 @@
 	}
 </script>
 
-<xoji-switch
+<xtyle-switch
 	{...rest}
 	checked={checked || undefined}
 	disabled={disabled || undefined}
@@ -66,4 +66,4 @@
 	{name}
 	{value}
 	onchange={handleChange}
-></xoji-switch>
+></xtyle-switch>

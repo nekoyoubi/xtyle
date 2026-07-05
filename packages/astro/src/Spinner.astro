@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as Tone } from "@xoji/core";
+import type { FullTone as Tone } from "@xtyle/core";
 type Size = "sm" | "md" | "lg";
 
 interface Props {
@@ -32,6 +32,6 @@ const bindings = {
 const composed = await renderFragmentLight("spinner", bindings);
 ---
 
-<xoji-spinner tone={tone} size={size} aria-label={ariaLabel} class={extra} set:html={composed} {...rest} />
+<xtyle-spinner tone={tone} size={size} aria-label={ariaLabel} class={extra} set:html={composed} {...rest} />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

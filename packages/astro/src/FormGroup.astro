@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -32,10 +32,10 @@ const {
 } = Astro.props;
 
 const seed = Math.random().toString(36).slice(2, 9);
-const labelId = `xoji-form-group-label-${seed}`;
-const descriptionId = `xoji-form-group-desc-${seed}`;
-const errorId = `xoji-form-group-error-${seed}`;
-const controlId = `xoji-form-group-control-${seed}`;
+const labelId = `xtyle-form-group-label-${seed}`;
+const descriptionId = `xtyle-form-group-desc-${seed}`;
+const errorId = `xtyle-form-group-error-${seed}`;
+const controlId = `xtyle-form-group-control-${seed}`;
 
 const bindings = {
 	label,
@@ -55,7 +55,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-form-group
+<xtyle-form-group
 	label={label}
 	description={description}
 	error={error}
@@ -68,4 +68,4 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

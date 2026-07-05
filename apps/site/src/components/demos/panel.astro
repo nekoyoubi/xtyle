@@ -1,12 +1,12 @@
 ---
-import Panel from "@xoji/astro/Panel.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Grid from "@xoji/astro/Grid.astro";
-import Text from "@xoji/astro/Text.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Button from "@xoji/astro/Button.astro";
-import Separator from "@xoji/astro/Separator.astro";
+import Panel from "@xtyle/astro/Panel.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Separator from "@xtyle/astro/Separator.astro";
 import { getStats } from "../../data/stats";
 
 const { components, tokens, coverage } = await getStats();
@@ -90,7 +90,7 @@ const logLines = [
 		padding: 0.08em 0.32em;
 		border-radius: var(--radius-sm);
 	}
-	.demo-panel__log :global(.xoji-text) {
+	.demo-panel__log :global(.xtyle-text) {
 		white-space: nowrap;
 	}
 </style>

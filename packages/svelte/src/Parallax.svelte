@@ -14,6 +14,6 @@
 	let { minHeight, amplitude, mode, children, ...rest }: Props = $props();
 </script>
 
-<xoji-parallax {...rest} min-height={minHeight} amplitude={amplitude} mode={mode}>
+<xtyle-parallax {...rest} min-height={minHeight} amplitude={amplitude} mode={mode}>
 	{@render children?.()}
-</xoji-parallax>
+</xtyle-parallax>

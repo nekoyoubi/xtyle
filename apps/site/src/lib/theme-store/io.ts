@@ -1,5 +1,5 @@
-import type { TokenRegister } from "@xoji/core";
-import { buildThemeFile, serializeThemeFile, type ThemeFileMeta } from "@xoji/core";
+import type { TokenRegister } from "@xtyle/core";
+import { buildThemeFile, serializeThemeFile, type ThemeFileMeta } from "@xtyle/core";
 import { normalizeRecipe } from "./recipe.js";
 import type { ThemeDoc, ThemeMeta } from "./types.js";
 import { CURRENT_SCHEMA_VERSION } from "./types.js";
@@ -37,7 +37,7 @@ function normalizeMeta(raw: unknown): ThemeMeta {
 }
 
 function themeFileMeta(meta: ThemeMeta): ThemeFileMeta {
-	const out: ThemeFileMeta = { name: meta.name, generator: "@xoji/core" };
+	const out: ThemeFileMeta = { name: meta.name, generator: "@xtyle/core" };
 	if (meta.description) out.description = meta.description;
 	if (meta.tags && meta.tags.length) out.tags = [...meta.tags];
 	return out;
@@ -57,7 +57,7 @@ export function exportDoc(doc: ThemeDoc, register: TokenRegister): void {
 	const url = URL.createObjectURL(blob);
 	const anchor = document.createElement("a");
 	anchor.href = url;
-	anchor.download = `${slug(doc.meta.name)}.xoji.json`;
+	anchor.download = `${slug(doc.meta.name)}.xtyle.json`;
 	document.body.appendChild(anchor);
 	anchor.click();
 	anchor.remove();
@@ -124,7 +124,7 @@ export function parseImport(text: string): ImportResult {
 
 function isImportable(name: string): boolean {
 	const lower = name.toLowerCase();
-	return lower.endsWith(".xoji.json") || lower.endsWith(".json");
+	return lower.endsWith(".xtyle.json") || lower.endsWith(".json");
 }
 
 export async function readDroppedFiles(files: FileList): Promise<ImportResult> {

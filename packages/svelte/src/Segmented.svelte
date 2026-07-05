@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size, FullTone as Tone } from "@xoji/core";
+	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	type SegmentOption = { value: string; label?: string; disabled?: boolean; badge?: string };
 
@@ -49,7 +49,7 @@
 	}
 </script>
 
-<xoji-segmented
+<xtyle-segmented
 	bind:this={host}
 	{...rest}
 	value={value || undefined}
@@ -61,4 +61,4 @@
 	labelledby={labelledby || undefined}
 	{name}
 	onchange={handleChange}
->{@render children?.()}</xoji-segmented>
+>{@render children?.()}</xtyle-segmented>

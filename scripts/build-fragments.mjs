@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const fragmentsDir = join(root, "packages", "xoji", "src", "elements", "fragments");
+const fragmentsDir = join(root, "packages", "xtyle", "src", "elements", "fragments");
 
 if (!existsSync(fragmentsDir)) process.exit(0);
 

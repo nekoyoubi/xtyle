@@ -1,0 +1,28 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-badge-default",
+	"version": "0.0.1",
+	"title": "Xtyle Badge (default)",
+	"description": "The built-in fill for the xtyle Badge component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.badge"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.badge": [
+			{
+				"id": "badge",
+				"format": "text/html+jsml",
+				"source": "badge.html",
+				"meta": {
+					"tokens": [
+						"--neutral-bg",
+						"--neutral-text",
+						"--state-hover",
+						"--state-press",
+						"--ring"
+					]
+				}
+			}
+		]
+	}
+}

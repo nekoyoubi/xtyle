@@ -60,7 +60,7 @@
 	}
 </script>
 
-<xoji-color-picker
+<xtyle-color-picker
 	{...rest}
 	{value}
 	format={format || undefined}
@@ -79,4 +79,4 @@
 	{name}
 	oninput={handleInput}
 	onchange={handleChange}
-></xoji-color-picker>
+></xtyle-color-picker>

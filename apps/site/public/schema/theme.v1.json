@@ -1,14 +1,14 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://xoji.dev/schema/theme.v1.json",
-	"title": "xoji theme file",
-	"description": "A self-describing, re-derivable xoji theme: provenance plus the recipe that prints it plus the materialized token register.",
+	"$id": "https://xtyle.dev/schema/theme.v1.json",
+	"title": "xtyle theme file",
+	"description": "A self-describing, re-derivable xtyle theme: provenance plus the recipe that prints it plus the materialized token register.",
 	"type": "object",
 	"required": ["format", "version", "meta", "recipe", "tokens"],
 	"additionalProperties": true,
 	"properties": {
 		"$schema": { "type": "string" },
-		"format": { "const": "xoji-theme" },
+		"format": { "const": "xtyle-theme" },
 		"version": { "type": "integer", "minimum": 1 },
 		"meta": {
 			"type": "object",

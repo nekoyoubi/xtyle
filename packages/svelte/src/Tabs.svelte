@@ -1,8 +1,8 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xoji/core";
-	import type { TabItemData, TabsVariant, TabsActivation } from "@xoji/core/markup";
+	import type { Size } from "@xtyle/core";
+	import type { TabItemData, TabsVariant, TabsActivation } from "@xtyle/core/markup";
 
 	interface Props {
 		items?: TabItemData[];
@@ -52,7 +52,7 @@
 	});
 
 	function handleChange(event: Event) {
-		// `xoji-tabs` dispatches `change` with `composed: true`, so a nested Tabs' change
+		// `xtyle-tabs` dispatches `change` with `composed: true`, so a nested Tabs' change
 		// bubbles up to an outer one. Only act on changes from this element, not descendants.
 		if (event.target !== event.currentTarget) return;
 		const next = (event as CustomEvent<{ value: string }>).detail?.value;
@@ -62,7 +62,7 @@
 	}
 </script>
 
-<xoji-tabs
+<xtyle-tabs
 	{...rest}
 	{variant}
 	{size}
@@ -81,4 +81,4 @@
 			<div slot="panel">{#if !lazy || shownKeys.includes(key)}{@render panel?.(key)}{/if}</div>
 		{/if}
 	{/each}
-</xoji-tabs>
+</xtyle-tabs>

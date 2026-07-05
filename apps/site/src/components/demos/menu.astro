@@ -1,10 +1,10 @@
 ---
-import Menu from "@xoji/astro/Menu.astro";
-import Card from "@xoji/astro/Card.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import type { MenuItem } from "@xoji/core/markup";
+import Menu from "@xtyle/astro/Menu.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import type { MenuItem } from "@xtyle/core/markup";
 
 const fileItems: MenuItem[] = [
 	{ heading: "File" },
@@ -39,7 +39,7 @@ const editItems: MenuItem[] = [
 </Stack>
 
 <script>
-	import "@xoji/core/elements";
+	import "@xtyle/core/elements";
 
 	document.addEventListener("select", (event) => {
 		const detail = (event as CustomEvent).detail;
@@ -49,6 +49,6 @@ const editItems: MenuItem[] = [
 	});
 
 	requestAnimationFrame(() => {
-		document.querySelector("xoji-menu")?.setAttribute("open", "");
+		document.querySelector("xtyle-menu")?.setAttribute("open", "");
 	});
 </script>

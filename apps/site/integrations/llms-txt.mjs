@@ -1,9 +1,9 @@
 import { writeFile } from "node:fs/promises";
 
-const SITE_FALLBACK = "https://xoji.dev";
+const SITE_FALLBACK = "https://xtyle.dev";
 
 const SUMMARY =
-	"xoji is a themable-derivation engine and component contract. A named, swappable algorithm maps a small set of overridable anchors plus a few knobs into a full, internally-consistent design-token set, co-designed against a component library so any valid theme renders well out of the box. The algorithm is the durable asset; a theme is a materialized invocation of one.";
+	"xtyle is a themable-derivation engine and component contract. A named, swappable algorithm maps a small set of overridable anchors plus a few knobs into a full, internally-consistent design-token set, co-designed against a component library so any valid theme renders well out of the box. The algorithm is the durable asset; a theme is a materialized invocation of one.";
 
 const GUIDES = [
 	{
@@ -24,7 +24,7 @@ const GUIDES = [
 	{
 		slug: "mcp",
 		title: "MCP Server",
-		description: "Run `xoji mcp` to hand an agent the engine over stdio: derive, coverage, components, and gauntlet tools, plus docs and manifests as resources.",
+		description: "Run `xtyle mcp` to hand an agent the engine over stdio: derive, coverage, components, and gauntlet tools, plus docs and manifests as resources.",
 	},
 	{
 		slug: "generator",
@@ -34,7 +34,7 @@ const GUIDES = [
 	{
 		slug: "changelog",
 		title: "Changelog",
-		description: "What changed in each xoji release.",
+		description: "What changed in each xtyle release.",
 	},
 ];
 
@@ -109,23 +109,23 @@ function componentSection(component, url) {
 export function llmsTxt() {
 	let site = SITE_FALLBACK;
 	return {
-		name: "xoji-llms-txt",
+		name: "xtyle-llms-txt",
 		hooks: {
 			"astro:config:done": ({ config }) => {
 				if (config.site) site = config.site.replace(/\/$/, "");
 			},
 			"astro:build:done": async ({ dir, logger }) => {
-				const { listComponents } = await import("@xoji/core");
-				const { listConcepts } = await import("@xoji/core/concepts");
+				const { listComponents } = await import("@xtyle/core");
+				const { listConcepts } = await import("@xtyle/core/concepts");
 				const components = listComponents().slice().sort((a, b) => a.name.localeCompare(b.name));
 				const concepts = listConcepts();
 
 				const guideUrl = (slug) => `${site}/${slug}/`;
 				const componentUrl = (id) => `${site}/components/${id}/`;
 
-				const index = [`# xoji`, "", `> ${SUMMARY}`, ""];
+				const index = [`# xtyle`, "", `> ${SUMMARY}`, ""];
 				index.push(
-					"xoji separates the reusable engine (an **algorithm**) from any one materialized **theme**. The token register is open: authors declare new tokens and rewire derivation, held by a single hard contract, a coverage check between what components consume and what an algorithm produces. A derived theme is just CSS custom properties; the runtime is optional.",
+					"xtyle separates the reusable engine (an **algorithm**) from any one materialized **theme**. The token register is open: authors declare new tokens and rewire derivation, held by a single hard contract, a coverage check between what components consume and what an algorithm produces. A derived theme is just CSS custom properties; the runtime is optional.",
 					"",
 				);
 
@@ -148,7 +148,7 @@ export function llmsTxt() {
 
 				index.push("## Full text", "", `- [Full documentation](${site}/llms-full.txt): every concept and component reference inlined.`, "");
 
-				const full = [`# xoji: Full Documentation`, "", `> ${SUMMARY}`, "", `Source: ${site}`, ""];
+				const full = [`# xtyle: Full Documentation`, "", `> ${SUMMARY}`, "", `Source: ${site}`, ""];
 				full.push("", "## Concepts", "");
 				for (const concept of concepts) {
 					full.push("", "----------------------------------------", "", `# ${concept.title}`, "", concept.body, "");
@@ -160,7 +160,7 @@ export function llmsTxt() {
 
 				await writeFile(new URL("./llms.txt", dir), `${index.join("\n").replace(/\n{3,}/g, "\n\n").trim()}\n`, "utf-8");
 				await writeFile(new URL("./llms-full.txt", dir), `${full.join("\n").replace(/\n{4,}/g, "\n\n\n").trim()}\n`, "utf-8");
-				logger.info(`xoji-llms-txt: wrote llms.txt and llms-full.txt (${concepts.length} concepts, ${components.length} components)`);
+				logger.info(`xtyle-llms-txt: wrote llms.txt and llms-full.txt (${concepts.length} concepts, ${components.length} components)`);
 			},
 		},
 	};

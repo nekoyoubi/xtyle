@@ -1,7 +1,7 @@
 {
-	"name": "@xoji/svelte",
-	"version": "0.4.0",
-	"description": "Thin Svelte wrappers over the @xoji/core/elements custom elements.",
+	"name": "@xtyle/svelte",
+	"version": "0.5.0",
+	"description": "Thin Svelte wrappers over the @xtyle/core/elements custom elements.",
 	"type": "module",
 	"license": "MIT",
 	"svelte": "./dist/index.js",
@@ -21,7 +21,7 @@
 		"build": "svelte-package -i src -o dist"
 	},
 	"dependencies": {
-		"@xoji/core": "^0.4.0"
+		"@xtyle/core": "^0.5.0"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
@@ -35,7 +35,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/nekoyoubi/xoji.git",
+		"url": "git+https://github.com/nekoyoubi/xtyle.git",
 		"directory": "packages/svelte"
 	}
 }

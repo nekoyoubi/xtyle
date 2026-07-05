@@ -1,5 +1,5 @@
-import { derive, seriesPalette, seriesColorsFor, rampColor, glowFilter, resolveIconMark, composeIconThemed, type SeriesScheme, type RampScheme } from "@xoji/core";
-import { resolveAlgorithm } from "@xoji/core/host";
+import { derive, seriesPalette, seriesColorsFor, rampColor, glowFilter, resolveIconMark, composeIconThemed, type SeriesScheme, type RampScheme } from "@xtyle/core";
+import { resolveAlgorithm } from "@xtyle/core/host";
 
 function matrixCeiling(matrix: number[][], explicit?: number): number {
 	if (explicit && explicit > 0) return explicit;
@@ -10,7 +10,7 @@ function matrixCeiling(matrix: number[][], explicit?: number): number {
  * default one and the upgraded element re-resolves against the live cascade. Memoized per build. */
 let cached: Promise<Record<string, string>> | null = null;
 async function defaultRegister(): Promise<Record<string, string>> {
-	cached ??= (async () => derive(await resolveAlgorithm("xoji-default"), {}))();
+	cached ??= (async () => derive(await resolveAlgorithm("xtyle-default"), {}))();
 	return cached;
 }
 

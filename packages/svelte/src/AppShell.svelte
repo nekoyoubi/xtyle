@@ -49,7 +49,7 @@
 	const flag = (v: boolean | undefined) => (v ? "" : undefined);
 </script>
 
-<xoji-app-shell
+<xtyle-app-shell
 	{...rest}
 	skip-link={skipAttr}
 	left-size={railAttr(leftSize)}
@@ -66,4 +66,4 @@
 	{@render children?.()}
 	{#if right}<div slot="right">{@render right()}</div>{/if}
 	{#if statusbar}<div slot="statusbar">{@render statusbar()}</div>{/if}
-</xoji-app-shell>
+</xtyle-app-shell>

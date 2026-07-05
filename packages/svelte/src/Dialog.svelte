@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	interface Props {
 		open?: boolean;
@@ -42,7 +42,7 @@
 	}
 </script>
 
-<xoji-dialog
+<xtyle-dialog
 	{...rest}
 	open={open || undefined}
 	{size}
@@ -57,4 +57,4 @@
 	{#if header}<span slot="header">{@render header()}</span>{/if}
 	{@render children?.()}
 	{#if footer}<span slot="footer">{@render footer()}</span>{/if}
-</xoji-dialog>
+</xtyle-dialog>

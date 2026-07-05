@@ -1,12 +1,12 @@
 ---
-import Dialog from "@xoji/astro/Dialog.astro";
-import Button from "@xoji/astro/Button.astro";
-import Card from "@xoji/astro/Card.astro";
-import Field from "@xoji/astro/Field.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
+import Dialog from "@xtyle/astro/Dialog.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Field from "@xtyle/astro/Field.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
 ---
 
 <div class="dialog-demo" data-dialog-demo>
@@ -54,7 +54,7 @@ import Text from "@xoji/astro/Text.astro";
 
 	<Dialog id="terms" size="lg" label="Terms of service">
 		<Cluster slot="header" gap={2} align="center">
-			<span class="xoji-badge xoji-badge--soft xoji-badge--info">v3</span>
+			<span class="xtyle-badge xtyle-badge--soft xtyle-badge--info">v3</span>
 			<Heading level={2} size="lg">Terms of service</Heading>
 		</Cluster>
 		<Stack gap={3}>
@@ -93,7 +93,7 @@ import Text from "@xoji/astro/Text.astro";
 		root.querySelectorAll<HTMLElement>("[data-close]").forEach((trigger) => {
 			trigger.addEventListener("click", () => {
 				const dialog = trigger.closest<HTMLElement & { close?: () => void }>(
-					"xoji-dialog",
+					"xtyle-dialog",
 				);
 				dialog?.close?.();
 			});

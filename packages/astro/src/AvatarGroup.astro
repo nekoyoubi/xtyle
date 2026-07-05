@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type AvatarGroupSize = "sm" | "md" | "lg" | "xl";
 type AvatarGroupSpacing = "snug" | "normal" | "loose";
@@ -31,7 +31,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-avatar-group
+<xtyle-avatar-group
 	size={size}
 	spacing={spacing}
 	overflow={overflow ?? undefined}
@@ -41,4 +41,4 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

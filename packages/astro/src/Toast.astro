@@ -1,6 +1,6 @@
 ---
-import { renderFragmentLight, composeFallbackSlot } from "@xoji/core/elements/ssr";
-import type { FullTone } from "@xoji/core";
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+import type { FullTone } from "@xtyle/core";
 
 type ToastSeverity = "success" | "warn" | "danger" | "info";
 type ToastVariant = "soft" | "solid";
@@ -47,7 +47,7 @@ const messageHtml = Astro.slots.has("default") ? await Astro.slots.render("defau
 const composed = composeFallbackSlot(light, "icon", iconHtml).replace("<slot></slot>", () => messageHtml);
 ---
 
-<xoji-toast
+<xtyle-toast
 	tone={tone}
 	severity={severity}
 	variant={variant}
@@ -59,4 +59,4 @@ const composed = composeFallbackSlot(light, "icon", iconHtml).replace("<slot></s
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

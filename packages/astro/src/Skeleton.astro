@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type SkeletonShape = "text" | "line" | "block" | "circle";
 type Size = "sm" | "md" | "lg";
@@ -20,6 +20,6 @@ const bindings = { shape, size };
 const composed = await renderFragmentLight("skeleton", bindings);
 ---
 
-<xoji-skeleton shape={shape} size={size} class={extra} set:html={composed} {...rest} />
+<xtyle-skeleton shape={shape} size={size} class={extra} set:html={composed} {...rest} />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { TokenRegister } from "@xoji/core";
-	import { apply } from "@xoji/core/dom";
+	import type { TokenRegister } from "@xtyle/core";
+	import { apply } from "@xtyle/core/dom";
 	import {
 		Alert,
 		Avatar,
@@ -34,7 +34,7 @@
 		Textarea,
 		Tooltip,
 		Tree,
-	} from "@xoji/svelte";
+	} from "@xtyle/svelte";
 
 	interface Props {
 		register: TokenRegister;

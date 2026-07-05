@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { ButtonVariant, ButtonAlign, Size, FullTone } from "@xoji/core";
+	import type { ButtonVariant, ButtonAlign, Size, FullTone } from "@xtyle/core";
 
 	type ButtonSize = Size | "xs";
 
@@ -51,7 +51,7 @@
 	const blocked = $derived(disabled || loading);
 </script>
 
-<xoji-button
+<xtyle-button
 	{...rest}
 	{variant}
 	{tone}
@@ -71,4 +71,4 @@
 	{#if iconStart}<span slot="icon-start">{@render iconStart()}</span>{/if}
 	{@render children?.()}
 	{#if iconEnd}<span slot="icon-end">{@render iconEnd()}</span>{/if}
-</xoji-button>
+</xtyle-button>

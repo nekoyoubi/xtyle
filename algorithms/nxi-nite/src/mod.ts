@@ -1,5 +1,5 @@
-import { defineXojiAlgorithm } from "@xoji/core/authoring";
+import { defineXtyleAlgorithm } from "@xtyle/core/authoring";
 import { spec } from "./preset.js";
 import { nxiNitePasses } from "./passes.js";
 
-defineXojiAlgorithm({ ...spec, passes: nxiNitePasses });
+defineXtyleAlgorithm({ ...spec, passes: nxiNitePasses });

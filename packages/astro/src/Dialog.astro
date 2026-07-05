@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight, composeFallbackSlot } from "@xoji/core/elements/ssr";
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -33,7 +33,7 @@ const {
 
 const hasHeader = Astro.slots.has("header");
 const hasFooter = Astro.slots.has("footer");
-const elementId = `xoji-dialog-${Math.random().toString(36).slice(2, 8)}`;
+const elementId = `xtyle-dialog-${Math.random().toString(36).slice(2, 8)}`;
 
 const bindings = {
 	size,
@@ -53,7 +53,7 @@ const composed = composeFallbackSlot(light, "header", headerHtml)
 	.replace('<slot name="footer"></slot>', () => footerHtml);
 ---
 
-<xoji-dialog
+<xtyle-dialog
 	open={open || undefined}
 	size={size}
 	heading={heading}
@@ -66,4 +66,4 @@ const composed = composeFallbackSlot(light, "header", headerHtml)
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,4 +1,4 @@
-import type { ComponentCategory } from "@xoji/core";
+import type { ComponentCategory } from "@xtyle/core";
 
 export interface CategoryMeta {
 	id: ComponentCategory;

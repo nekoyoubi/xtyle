@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size, FullTone } from "@xoji/core";
+	import type { Size, FullTone } from "@xtyle/core";
 
 	interface BreadcrumbItem {
 		label: string;
@@ -28,6 +28,6 @@
 	const itemsAttr = $derived(items && items.length > 0 ? JSON.stringify(items) : undefined);
 </script>
 
-<xoji-breadcrumb {...rest} {tone} {size} {separator} {label} items={itemsAttr} {onselect}>
+<xtyle-breadcrumb {...rest} {tone} {size} {separator} {label} items={itemsAttr} {onselect}>
 	{@render children?.()}
-</xoji-breadcrumb>
+</xtyle-breadcrumb>

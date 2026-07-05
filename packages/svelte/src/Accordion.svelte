@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	interface AccordionItem {
 		value: string;
@@ -32,7 +32,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-accordion
+<xtyle-accordion
 	{...rest}
 	multiple={multiple || undefined}
 	{size}
@@ -47,4 +47,4 @@
 			disabled={section.disabled || undefined}>{section.header}</span>
 		<div slot="panel">{@render panel(section.value)}</div>
 	{/each}
-</xoji-accordion>
+</xtyle-accordion>

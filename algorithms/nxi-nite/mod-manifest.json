@@ -4,7 +4,7 @@
 	"name": "nxi-nite",
 	"version": "0.1.0",
 	"title": "Day/Night",
-	"family": "xoji",
+	"family": "xtyle",
 	"capabilities": ["color-math"],
 	"entry": {
 		"script": "src/mod.js",

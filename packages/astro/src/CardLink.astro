@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
 	href: string;
@@ -45,7 +45,7 @@ const composed = chrome
 	.replace("<slot></slot>", () => bodyHtml);
 ---
 
-<xoji-card-link
+<xtyle-card-link
 	href={href}
 	target={target}
 	rel={rel}
@@ -57,4 +57,4 @@ const composed = chrome
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

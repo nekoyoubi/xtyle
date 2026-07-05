@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { MenuItem } from "@xoji/core/elements";
+	import type { MenuItem } from "@xtyle/core/elements";
 
 	interface Props {
 		items?: MenuItem[];
@@ -31,4 +31,4 @@
 	});
 </script>
 
-<xoji-menu {...rest} bind:this={el} {label} {onselect}></xoji-menu>
+<xtyle-menu {...rest} bind:this={el} {label} {onselect}></xtyle-menu>

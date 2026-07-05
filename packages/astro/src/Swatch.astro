@@ -1,6 +1,6 @@
 ---
-import { formatColor, parseColor, type ColorFormat } from "@xoji/core";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { formatColor, parseColor, type ColorFormat } from "@xtyle/core";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type SwatchSize = "sm" | "md" | "lg";
 
@@ -32,7 +32,7 @@ const {
 	...rest
 } = Astro.props;
 
-const detailsId = `xoji-swatch-details-${crypto.randomUUID().slice(0, 8)}`;
+const detailsId = `xtyle-swatch-details-${crypto.randomUUID().slice(0, 8)}`;
 
 const DETAIL_FORMATS: ColorFormat[] = ["hex", "rgb", "hsl", "oklch"];
 const rgb = details ? parseColor(color ?? "") : null;
@@ -53,7 +53,7 @@ const bindings = {
 const light = await renderFragmentLight("swatch", bindings);
 ---
 
-<xoji-swatch
+<xtyle-swatch
 	color={color}
 	label={label ?? undefined}
 	value={value ?? undefined}
@@ -66,4 +66,4 @@ const light = await renderFragmentLight("swatch", bindings);
 	set:html={light}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

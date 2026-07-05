@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Algorithm } from "@xoji/core";
+	import type { Algorithm } from "@xtyle/core";
 	import { themeStore } from "../../lib/theme-store/store.svelte.js";
 	import {
 		readDroppedFiles,
@@ -204,19 +204,19 @@
 		{/if}
 
 		{#if dragActive}
-			<div class="library__dropzone" aria-hidden="true">Drop <code>.xoji.json</code> to import</div>
+			<div class="library__dropzone" aria-hidden="true">Drop <code>.xtyle.json</code> to import</div>
 		{/if}
 	</div>
 
 	<footer class="library__foot">
-		<span class="library__foot-hint">Drop a <code>.xoji.json</code> file here to import</span>
+		<span class="library__foot-hint">Drop a <code>.xtyle.json</code> file here to import</span>
 		{#if importNotice}
 			<span class="library__notice" role="status">{importNotice}</span>
 		{/if}
 		<input
 			bind:this={fileInput}
 			type="file"
-			accept=".xoji.json,application/json"
+			accept=".xtyle.json,application/json"
 			multiple
 			class="library__file"
 			onchange={onFilePicked}

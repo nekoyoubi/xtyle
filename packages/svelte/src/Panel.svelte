@@ -37,7 +37,7 @@
 	}
 </script>
 
-<xoji-panel
+<xtyle-panel
 	{...rest}
 	{title}
 	level={level}
@@ -49,4 +49,4 @@
 	{#if actions}<span slot="actions">{@render actions()}</span>{/if}
 	{@render children?.()}
 	{#if footer}<span slot="footer">{@render footer()}</span>{/if}
-</xoji-panel>
+</xtyle-panel>

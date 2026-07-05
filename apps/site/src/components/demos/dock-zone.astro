@@ -1,9 +1,9 @@
 ---
-import Card from "@xoji/astro/Card.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import DockZone from "@xoji/astro/DockZone.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import DockZone from "@xtyle/astro/DockZone.astro";
 
 const initialLayout = {
 	kind: "split",
@@ -148,7 +148,7 @@ const initialLayout = {
 </Stack>
 
 <script>
-	import "@xoji/core/elements";
+	import "@xtyle/core/elements";
 
 	// Listen on document, not the element: Astro's ClientRouter remounts the zone on navigation,
 	// which would detach a zone-scoped listener. The event bubbles and composes, so document catches it.

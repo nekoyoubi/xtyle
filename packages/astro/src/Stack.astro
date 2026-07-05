@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";
 type StackJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
@@ -29,7 +29,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-stack
+<xtyle-stack
 	gap={gap}
 	align={align}
 	justify={justify}
@@ -39,4 +39,4 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
 	live?: boolean;
@@ -27,7 +27,7 @@ const {
 	...rest
 } = Astro.props;
 
-const elementId = `xoji-statusbar-${Math.random().toString(36).slice(2, 8)}`;
+const elementId = `xtyle-statusbar-${Math.random().toString(36).slice(2, 8)}`;
 
 const bindings = {
 	live,
@@ -42,7 +42,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = light.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-statusbar
+<xtyle-statusbar
 	live={live || undefined}
 	label={label}
 	overflow={overflow}
@@ -53,4 +53,4 @@ const composed = light.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

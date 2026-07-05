@@ -1,0 +1,39 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-dock-default",
+	"version": "0.0.1",
+	"title": "Xtyle Dock (default)",
+	"description": "The built-in fill for the xtyle Dock component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.dock"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.dock": [
+			{
+				"id": "dock",
+				"format": "text/html+jsml",
+				"source": "dock.html",
+				"meta": {
+					"tokens": [
+						"--font-sans",
+						"--text-body",
+						"--text-xs",
+						"--weight-semibold",
+						"--leading-normal",
+						"--leading-tight",
+						"--fg-1",
+						"--fg-2",
+						"--bg-1",
+						"--line",
+						"--border-thin",
+						"--space-0",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-4"
+					]
+				}
+			}
+		]
+	}
+}

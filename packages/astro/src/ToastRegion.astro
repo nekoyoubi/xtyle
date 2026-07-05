@@ -1,6 +1,6 @@
 ---
-import { toastRegionMarkup, toastRegionHostCss } from "@xoji/core/markup";
-import { toastCss } from "@xoji/core/css";
+import { toastRegionMarkup, toastRegionHostCss } from "@xtyle/core/markup";
+import { toastCss } from "@xtyle/core/css";
 
 interface Props {
 	placement?: string;
@@ -25,7 +25,7 @@ const {
 const shadow = `<style>${toastRegionHostCss}${toastCss}</style>${toastRegionMarkup({ placement, label })}`;
 ---
 
-<xoji-toast-region
+<xtyle-toast-region
 	placement={placement}
 	max={max}
 	label={label}
@@ -34,6 +34,6 @@ const shadow = `<style>${toastRegionHostCss}${toastCss}</style>${toastRegionMark
 >
 	<template shadowrootmode="open" set:html={shadow}></template>
 	<slot />
-</xoji-toast-region>
+</xtyle-toast-region>
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

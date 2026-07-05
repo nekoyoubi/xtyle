@@ -19,6 +19,6 @@
 	let { gap = 2, align, justify, nowrap = false, inline = false, children, ...rest }: Props = $props();
 </script>
 
-<xoji-cluster {...rest} {gap} {align} {justify} nowrap={nowrap || undefined} inline={inline || undefined}>
+<xtyle-cluster {...rest} {gap} {align} {justify} nowrap={nowrap || undefined} inline={inline || undefined}>
 	{@render children?.()}
-</xoji-cluster>
+</xtyle-cluster>

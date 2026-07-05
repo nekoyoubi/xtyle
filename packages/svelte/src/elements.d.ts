@@ -1,15 +1,15 @@
 import type { HTMLAttributes } from "svelte/elements";
 
-type XojiAttributes<T extends EventTarget = HTMLElement> = HTMLAttributes<T>;
+type XtyleAttributes<T extends EventTarget = HTMLElement> = HTMLAttributes<T>;
 
-interface XojiButtonAttributes extends XojiAttributes {
+interface XtyleButtonAttributes extends XtyleAttributes {
 	variant?: "accent" | "neutral" | "danger";
 	size?: "sm" | "md" | "lg";
 	type?: "button" | "submit" | "reset";
 	disabled?: boolean;
 }
 
-interface XojiFieldAttributes extends XojiAttributes {
+interface XtyleFieldAttributes extends XtyleAttributes {
 	label?: string;
 	placeholder?: string;
 	value?: string;
@@ -20,32 +20,32 @@ interface XojiFieldAttributes extends XojiAttributes {
 	error?: string;
 }
 
-interface XojiCardAttributes extends XojiAttributes {
+interface XtyleCardAttributes extends XtyleAttributes {
 	overlay?: boolean;
 }
 
-interface XojiBadgeAttributes extends XojiAttributes {
+interface XtyleBadgeAttributes extends XtyleAttributes {
 	tone?: string;
 }
 
-interface XojiSwitchAttributes extends XojiAttributes {
+interface XtyleSwitchAttributes extends XtyleAttributes {
 	checked?: boolean;
 	disabled?: boolean;
 	label?: string;
 	labelledby?: string;
 }
 
-interface XojiAlertAttributes extends XojiAttributes {
+interface XtyleAlertAttributes extends XtyleAttributes {
 	tone?: "success" | "warn" | "danger" | "info";
 }
 
-interface XojiLinkAttributes extends XojiAttributes {
+interface XtyleLinkAttributes extends XtyleAttributes {
 	href?: string;
 	target?: string;
 	rel?: string;
 }
 
-interface XojiCodeAttributes extends XojiAttributes {
+interface XtyleCodeAttributes extends XtyleAttributes {
 	lang?: string;
 	code?: string;
 	preload?: boolean;
@@ -53,13 +53,13 @@ interface XojiCodeAttributes extends XojiAttributes {
 
 declare module "svelte/elements" {
 	interface SvelteHTMLElements {
-		"xoji-button": XojiButtonAttributes;
-		"xoji-field": XojiFieldAttributes;
-		"xoji-card": XojiCardAttributes;
-		"xoji-badge": XojiBadgeAttributes;
-		"xoji-switch": XojiSwitchAttributes;
-		"xoji-alert": XojiAlertAttributes;
-		"xoji-link": XojiLinkAttributes;
-		"xoji-code": XojiCodeAttributes;
+		"xtyle-button": XtyleButtonAttributes;
+		"xtyle-field": XtyleFieldAttributes;
+		"xtyle-card": XtyleCardAttributes;
+		"xtyle-badge": XtyleBadgeAttributes;
+		"xtyle-switch": XtyleSwitchAttributes;
+		"xtyle-alert": XtyleAlertAttributes;
+		"xtyle-link": XtyleLinkAttributes;
+		"xtyle-code": XtyleCodeAttributes;
 	}
 }

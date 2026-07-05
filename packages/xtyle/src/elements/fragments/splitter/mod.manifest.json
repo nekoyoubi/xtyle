@@ -1,0 +1,41 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-splitter-default",
+	"version": "0.0.1",
+	"title": "Xtyle Splitter (default)",
+	"description": "The built-in fill for the xtyle Splitter component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.splitter"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.splitter": [
+			{
+				"id": "splitter",
+				"format": "text/html+jsml",
+				"source": "splitter.html",
+				"handlers": [
+					{ "selector": ".xtyle-splitter", "on": "keydown", "handler": "keydown" },
+					{ "selector": ".xtyle-splitter", "on": "dblclick", "handler": "reset" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--border-normal",
+						"--border-thick",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--line",
+						"--radius-sm",
+						"--ring",
+						"--space-2",
+						"--space-3",
+						"--space-5",
+						"--space-6",
+						"--space-8"
+					]
+				}
+			}
+		]
+	}
+}

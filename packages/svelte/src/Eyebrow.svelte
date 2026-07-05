@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone } from "@xoji/core";
+	import type { FullTone } from "@xtyle/core";
 
 	type EyebrowTag = "p" | "span" | "div";
 	type EyebrowTone = "muted" | "subtle" | FullTone;
@@ -19,6 +19,6 @@
 	let { as = "p", tone = "accent", tracking = "normal", children, ...rest }: Props = $props();
 </script>
 
-<xoji-eyebrow {...rest} {as} {tone} {tracking}>
+<xtyle-eyebrow {...rest} {as} {tone} {tracking}>
 	{@render children?.()}
-</xoji-eyebrow>
+</xtyle-eyebrow>

@@ -1,0 +1,53 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-tree-default",
+	"version": "0.0.1",
+	"title": "Xtyle Tree (default)",
+	"description": "The built-in fill for the xtyle Tree component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.tree"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.tree": [
+			{
+				"id": "tree",
+				"format": "text/html+jsml",
+				"source": "tree.html",
+				"handlers": [
+					{ "selector": ".xtyle-tree__action", "on": "click", "handler": "rowAction" },
+					{ "selector": ".xtyle-tree__twisty:not(.xtyle-tree__twisty--leaf)", "on": "click", "handler": "toggleTwisty" },
+					{ "selector": ".xtyle-tree__row", "on": "click", "handler": "selectRow" },
+					{ "selector": "[role=\"treeitem\"]", "on": "keydown", "handler": "navKeydown" }
+				],
+				"meta": {
+					"tokens": [
+						"--font-sans",
+						"--text-sm",
+						"--text-body",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--fg-3",
+						"--fg-disabled",
+						"--space-0",
+						"--space-1",
+						"--space-2",
+						"--space-4",
+						"--text-xs",
+						"--radius-sm",
+						"--duration-fast",
+						"--ease-standard",
+						"--state-hover",
+						"--border-normal",
+						"--border-thick",
+						"--ring",
+						"--accent-bg",
+						"--accent-text",
+						"--weight-medium",
+						"--selection-cue"
+					]
+				}
+			}
+		]
+	}
+}

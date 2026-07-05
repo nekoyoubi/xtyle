@@ -1,7 +1,7 @@
 ---
-import { type BreadcrumbItem } from "@xoji/core/markup";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
-import type { Size, FullTone } from "@xoji/core";
+import { type BreadcrumbItem } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { Size, FullTone } from "@xtyle/core";
 
 interface Props {
 	items?: BreadcrumbItem[];
@@ -40,7 +40,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = light.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-breadcrumb
+<xtyle-breadcrumb
 	items={items ? JSON.stringify(items) : undefined}
 	separator={separator}
 	tone={tone}
@@ -51,4 +51,4 @@ const composed = light.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

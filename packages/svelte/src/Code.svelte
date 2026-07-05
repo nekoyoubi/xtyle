@@ -24,6 +24,6 @@
 	let { lang, code, preload = false, copy = true, wrap = false, lineNumbers = false, highlight, caption, children, ...rest }: Props = $props();
 </script>
 
-<xoji-code {...rest} {lang} {code} {preload} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlight || undefined} caption={caption || undefined}>
+<xtyle-code {...rest} {lang} {code} {preload} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlight || undefined} caption={caption || undefined}>
 	{@render children?.()}
-</xoji-code>
+</xtyle-code>

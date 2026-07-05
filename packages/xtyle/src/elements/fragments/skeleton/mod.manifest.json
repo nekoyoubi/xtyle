@@ -1,0 +1,39 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-skeleton-default",
+	"version": "0.0.1",
+	"title": "Xtyle Skeleton (default)",
+	"description": "The built-in fill for the xtyle Skeleton component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.skeleton"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.skeleton": [
+			{
+				"id": "skeleton",
+				"format": "text/html+jsml",
+				"source": "skeleton.html",
+				"meta": {
+					"tokens": [
+						"--bg-2",
+						"--bg-3",
+						"--radius-sm",
+						"--radius-md",
+						"--radius-full",
+						"--duration-slow",
+						"--ease-standard",
+						"--text-body",
+						"--text-sm",
+						"--text-lg",
+						"--border-normal",
+						"--border-thick",
+						"--space-1",
+						"--space-6",
+						"--space-7",
+						"--space-8"
+					]
+				}
+			}
+		]
+	}
+}

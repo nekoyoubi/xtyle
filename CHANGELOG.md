@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.5.0: The xtyle Rename
+
+### Renamed: xoji is now xtyle
+
+- **The engine is renamed from `xoji` to `xtyle`.** `xtyle` — *style* — is the truer name for what it is: the tokens, themes, and component derivation the engine has always produced. The code, the algorithms, and the token contract are unchanged; only the name is.
+  - **Packages:** `@xoji/core` → `@xtyle/core`, alongside `@xtyle/astro` and `@xtyle/svelte`; the CLI is now `xtyle` (`xtyle derive`, `xtyle gauntlet`, `xtyle coverage`, …)
+  - **Tokens & markup:** the custom-property prefix `--xoji-*` → `--xtyle-*`, component tags `<xoji-*>` → `<xtyle-*>`, and the BEM classes and `data-` attributes with them
+  - **API surface:** `makeXojiAlgorithm` / `defineXojiAlgorithm` → `makeXtyleAlgorithm` / `defineXtyleAlgorithm`, the `XojiElement` base and every element class, and the `Xoji*Algorithm` types
+  - **Batteries:** the four built-in algorithms `xoji-default` / `-hc` / `-quiet` / `-loud` → `xtyle-*` (the `nxi-nite` battery keeps its own name)
+  - **The rest:** the MCP server and its `xtyle_*` tools and `xtyle://` URIs, capability ids, storage and event keys, and the `.xtyle.json` manifest suffix
+  - **Home:** the site and docs moved to `xtyle.dev`
+- **Migrating off the pre-release `@xoji` line:** swap `@xoji/` → `@xtyle/` in imports, `--xoji-` → `--xtyle-` in any hand-written CSS overrides, and `<xoji-*>` → `<xtyle-*>` in markup. The old `@xoji/*` packages (0.1–0.4) are superseded by `@xtyle/*`; their notes below stay as they shipped.
+- **[xript](https://xript.dev) is untouched** — the extensibility protocol the algorithm mods run on is a separate product and keeps its name.
+
 ## v0.4.0: Icons & Media
 
 ### Icon builder

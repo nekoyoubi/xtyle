@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size, FullTone as Tone } from "@xoji/core";
+	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	interface Props {
 		tone?: Tone;
@@ -54,7 +54,7 @@
 	}
 </script>
 
-<xoji-radio
+<xtyle-radio
 	{...rest}
 	{tone}
 	{size}
@@ -69,4 +69,4 @@
 	onchange={handleChange}
 >
 	{@render children?.()}
-</xoji-radio>
+</xtyle-radio>

@@ -36,6 +36,6 @@
 	}: Props = $props();
 </script>
 
-<xoji-stat {...rest} {label} {delta} {trend} {sentiment} {caption} {size} {align} inline={inline || undefined}>
+<xtyle-stat {...rest} {label} {delta} {trend} {sentiment} {caption} {size} {align} inline={inline || undefined}>
 	{@render children?.()}
-</xoji-stat>
+</xtyle-stat>

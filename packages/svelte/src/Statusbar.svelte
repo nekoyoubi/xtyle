@@ -37,7 +37,7 @@
 	});
 </script>
 
-<xoji-statusbar
+<xtyle-statusbar
 	{...rest}
 	bind:this={host}
 	live={live || undefined}
@@ -47,4 +47,4 @@
 	separated={separated || undefined}
 >
 	{@render children?.()}
-</xoji-statusbar>
+</xtyle-statusbar>

@@ -35,7 +35,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-swatch
+<xtyle-swatch
 	{...rest}
 	{color}
 	{label}
@@ -45,4 +45,4 @@
 	selected={selected || undefined}
 	details={details || undefined}
 	onselect={onselect as EventListener | undefined}
-></xoji-swatch>
+></xtyle-swatch>

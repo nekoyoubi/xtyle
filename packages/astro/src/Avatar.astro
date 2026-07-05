@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-import type { Tone, FullTone as BadgeTone } from "@xoji/core";
+import type { Tone, FullTone as BadgeTone } from "@xtyle/core";
 type AvatarSize = "sm" | "md" | "lg" | "xl";
 type AvatarShape = "circle" | "square";
 
@@ -54,7 +54,7 @@ const composed = chrome
 	.replace("<slot></slot>", () => bodyHtml);
 ---
 
-<xoji-avatar
+<xtyle-avatar
 	src={src ?? undefined}
 	alt={alt}
 	tone={tone}
@@ -68,4 +68,4 @@ const composed = chrome
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

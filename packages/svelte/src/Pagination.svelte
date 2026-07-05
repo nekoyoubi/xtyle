@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { FullTone, Size } from "@xoji/core";
+	import type { FullTone, Size } from "@xtyle/core";
 
 	type PageChange = CustomEvent<{ page: number }>;
 
@@ -42,7 +42,7 @@
 	});
 </script>
 
-<xoji-pagination
+<xtyle-pagination
 	{...rest}
 	bind:this={host}
 	page={page}
@@ -53,4 +53,4 @@
 	tone={tone}
 	size={size}
 	label={label}
-></xoji-pagination>
+></xtyle-pagination>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	type TextareaResize = "none" | "vertical" | "horizontal" | "both";
 
@@ -54,7 +54,7 @@
 	}
 </script>
 
-<xoji-textarea
+<xtyle-textarea
 	{...rest}
 	{label}
 	{value}
@@ -71,4 +71,4 @@
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	oninput={handleInput}
 	onchange={handleChange}
-></xoji-textarea>
+></xtyle-textarea>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone as Tone, Size } from "@xoji/core";
+	import type { FullTone as Tone, Size } from "@xtyle/core";
 
 	interface Props {
 		label?: string;
@@ -32,7 +32,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-checkbox-group
+<xtyle-checkbox-group
 	{...rest}
 	{label}
 	labelledby={labelledby || undefined}
@@ -44,4 +44,4 @@
 	{onchange}
 >
 	{@render children?.()}
-</xoji-checkbox-group>
+</xtyle-checkbox-group>

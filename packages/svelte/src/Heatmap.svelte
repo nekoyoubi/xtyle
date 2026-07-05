@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { HeatmapScheme } from "@xoji/core";
+	import type { HeatmapScheme } from "@xtyle/core";
 
 	interface Props {
 		values?: number[][];
@@ -82,7 +82,7 @@
 	});
 </script>
 
-<xoji-heatmap
+<xtyle-heatmap
 	bind:this={host}
 	{...rest}
 	reverse={reverse || undefined}
@@ -97,4 +97,4 @@
 	selectable={selectable || undefined}
 	{onselect}
 	{label}
-></xoji-heatmap>
+></xtyle-heatmap>

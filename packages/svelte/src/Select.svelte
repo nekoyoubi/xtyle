@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	interface Props {
 		label?: string;
@@ -40,7 +40,7 @@
 	}
 </script>
 
-<xoji-select
+<xtyle-select
 	{...rest}
 	{label}
 	{value}
@@ -54,4 +54,4 @@
 	onchange={handleChange}
 >
 	{@render children?.()}
-</xoji-select>
+</xtyle-select>

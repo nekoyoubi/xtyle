@@ -1,6 +1,6 @@
 ---
-import { renderFragmentLight, composeFallbackSlot } from "@xoji/core/elements/ssr";
-import type { FullTone } from "@xoji/core";
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+import type { FullTone } from "@xtyle/core";
 
 type AlertSeverity = "success" | "warn" | "danger" | "info";
 type AlertVariant = "soft" | "solid";
@@ -43,7 +43,7 @@ const composed = composeFallbackSlot(light, "icon", iconHtml)
 	.replace("<slot></slot>", () => messageHtml);
 ---
 
-<xoji-alert
+<xtyle-alert
 	tone={tone}
 	severity={severity}
 	variant={variant}
@@ -54,4 +54,4 @@ const composed = composeFallbackSlot(light, "icon", iconHtml)
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

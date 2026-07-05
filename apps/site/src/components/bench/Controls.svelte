@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { TokenRegister } from "@xoji/core";
-	import { HUES, schemeOf } from "@xoji/core";
+	import type { TokenRegister } from "@xtyle/core";
+	import { HUES, schemeOf } from "@xtyle/core";
 	import type {
 		BenchState,
 		ContrastBandKnob,
@@ -15,7 +15,7 @@
 		CUSTOM_SPEC_SEED,
 		KNOB_SEEDS,
 	} from "./state.js";
-	import { Accordion, ColorPicker } from "@xoji/svelte";
+	import { Accordion, ColorPicker } from "@xtyle/svelte";
 	import { isColorToken, allGroups, contrastRefFor, tokenSearchTerms, tokenMeta } from "./tokens.js";
 
 	interface Props {
@@ -214,7 +214,7 @@
 		{#if bench.algorithm === CUSTOM_ALGORITHM}
 			<div class="bench-spec">
 				<label class="bench-field__label" for="bench-spec-editor">Algorithm spec</label>
-				<p class="bench-layer__note x-caption">A <code>defineXojiAlgorithm</code> spec; edit the JSON and the algorithm rebuilds live. Anchors and knobs below still layer on top.</p>
+				<p class="bench-layer__note x-caption">A <code>defineXtyleAlgorithm</code> spec; edit the JSON and the algorithm rebuilds live. Anchors and knobs below still layer on top.</p>
 				<textarea
 					id="bench-spec-editor"
 					class="bench-spec__editor"
@@ -229,7 +229,7 @@
 		{#if bench.algorithm === CUSTOM_CODE_ALGORITHM}
 			<div class="bench-spec">
 				<label class="bench-field__label" for="bench-code-editor">Algorithm code</label>
-				<p class="bench-layer__note x-caption">Import-free <code>defineAlgorithm</code> / <code>defineXojiAlgorithm</code> source; runs in the xript sandbox and rebuilds the theme a beat after you stop typing. Anchors and knobs below still layer on top.</p>
+				<p class="bench-layer__note x-caption">Import-free <code>defineAlgorithm</code> / <code>defineXtyleAlgorithm</code> source; runs in the xript sandbox and rebuilds the theme a beat after you stop typing. Anchors and knobs below still layer on top.</p>
 				<textarea
 					id="bench-code-editor"
 					class="bench-spec__editor bench-spec__editor--tall"
@@ -495,11 +495,11 @@
 		gap: var(--space-2);
 	}
 
-	.bench-palette__edit :global(xoji-color-picker) {
+	.bench-palette__edit :global(xtyle-color-picker) {
 		flex: none;
 	}
 
-	.bench-palette__edit :global(xoji-color-picker::part(trigger)) {
+	.bench-palette__edit :global(xtyle-color-picker::part(trigger)) {
 		width: 2.2rem;
 		height: 2.2rem;
 	}
@@ -832,12 +832,12 @@
 		background: var(--accent-bg, color-mix(in oklab, var(--accent) 12%, transparent));
 	}
 
-	.bench-token :global(xoji-color-picker) {
+	.bench-token :global(xtyle-color-picker) {
 		flex: none;
 		width: 1.5rem;
 	}
 
-	.bench-token :global(xoji-color-picker::part(trigger)) {
+	.bench-token :global(xtyle-color-picker::part(trigger)) {
 		width: 1.5rem;
 		height: 1.5rem;
 		border-radius: var(--radius-sm);

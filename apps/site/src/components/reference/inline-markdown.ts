@@ -10,9 +10,9 @@
  * general-purpose sanitizer.
  */
 
-const CODE_SENTINEL_OPEN = "@@XOJICODE@@";
-const CODE_SENTINEL_CLOSE = "@@/XOJICODE@@";
-const CODE_TOKEN = /@@XOJICODE@@(\d+)@@\/XOJICODE@@/g;
+const CODE_SENTINEL_OPEN = "@@XTYLECODE@@";
+const CODE_SENTINEL_CLOSE = "@@/XTYLECODE@@";
+const CODE_TOKEN = /@@XTYLECODE@@(\d+)@@\/XTYLECODE@@/g;
 
 function escapeHtml(text: string): string {
 	return text

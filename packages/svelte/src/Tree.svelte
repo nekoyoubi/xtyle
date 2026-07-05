@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	interface TreeNode {
 		label: string;
@@ -40,7 +40,7 @@
 	});
 </script>
 
-<xoji-tree
+<xtyle-tree
 	{...rest}
 	bind:this={el}
 	{size}
@@ -48,4 +48,4 @@
 	labelledby={labelledby || undefined}
 	{onselect}
 	{ontoggle}
-></xoji-tree>
+></xtyle-tree>

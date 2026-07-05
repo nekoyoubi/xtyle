@@ -1,6 +1,6 @@
 ---
-import { type AccordionSection } from "@xoji/core/markup";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { type AccordionSection } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -27,7 +27,7 @@ const {
 } = Astro.props;
 
 const sections = items ?? [];
-const uid = `xoji-accordion-${Math.random().toString(36).slice(2, 9)}`;
+const uid = `xtyle-accordion-${Math.random().toString(36).slice(2, 9)}`;
 
 const openKeys: string[] = [];
 sections.forEach((section, i) => {
@@ -59,7 +59,7 @@ const light = useItems ? await renderFragmentLight("accordion", bindings) : "";
 ---
 
 {useItems ? (
-	<xoji-accordion
+	<xtyle-accordion
 		multiple={multiple || undefined}
 		size={size}
 		heading-level={headingLevel}
@@ -69,11 +69,11 @@ const light = useItems ? await renderFragmentLight("accordion", bindings) : "";
 		{...rest}
 	/>
 ) : (
-	<xoji-accordion multiple={multiple || undefined} size={size} heading-level={headingLevel} class={extra} {...rest}>
+	<xtyle-accordion multiple={multiple || undefined} size={size} heading-level={headingLevel} class={extra} {...rest}>
 		<slot name="header" />
 		<slot name="panel" />
 		<slot />
-	</xoji-accordion>
+	</xtyle-accordion>
 )}
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as BadgeTone } from "@xoji/core";
+import type { FullTone as BadgeTone } from "@xtyle/core";
 type Size = "sm" | "md" | "lg";
 type BadgeVariant = "solid" | "soft" | "outline";
 
@@ -56,7 +56,7 @@ const chrome = await renderFragmentLight("badge", bindings);
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-badge
+<xtyle-badge
 	variant={variant}
 	tone={tone}
 	size={size}
@@ -70,4 +70,4 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

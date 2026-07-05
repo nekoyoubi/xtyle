@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	interface Props {
 		heading?: string;
@@ -33,7 +33,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-toolbar
+<xtyle-toolbar
 	{...rest}
 	{heading}
 	{href}
@@ -46,4 +46,4 @@
 	{@render children?.()}
 	{#if center}<span slot="center">{@render center()}</span>{/if}
 	{#if end}<span slot="end">{@render end()}</span>{/if}
-</xoji-toolbar>
+</xtyle-toolbar>

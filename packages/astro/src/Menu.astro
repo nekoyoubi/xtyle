@@ -1,6 +1,6 @@
 ---
-import { type MenuItem } from "@xoji/core/markup";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { type MenuItem } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
 	items?: MenuItem[];
@@ -15,7 +15,7 @@ interface Props {
 
 const { items = [], label, open = false, static: isStatic = false, class: extra, ...rest } = Astro.props;
 
-const popupId = `xoji-menu-${Math.random().toString(36).slice(2, 9)}-popup`;
+const popupId = `xtyle-menu-${Math.random().toString(36).slice(2, 9)}-popup`;
 
 const bindings = {
 	items,
@@ -26,7 +26,7 @@ const bindings = {
 const light = await renderFragmentLight("menu", bindings);
 ---
 
-<xoji-menu
+<xtyle-menu
 	items={items && items.length > 0 ? JSON.stringify(items) : undefined}
 	label={label}
 	open={open || undefined}
@@ -35,4 +35,4 @@ const light = await renderFragmentLight("menu", bindings);
 	set:html={light}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,0 +1,60 @@
+{
+	"name": "@xtyle/core",
+	"version": "0.5.0",
+	"description": "A themable-derivation engine: an algorithm plus a few anchors derive a full register of CSS-ready tokens.",
+	"type": "module",
+	"license": "MIT",
+	"bin": {
+		"xtyle": "dist/cli.js"
+	},
+	"exports": {
+		".": "./dist/index.js",
+		"./elements": "./dist/elements/index.js",
+		"./elements/ssr": "./dist/elements/fragment-ssr.js",
+		"./elements/code-highlight": "./dist/elements/code-highlight.js",
+		"./algorithms": {
+			"types": "./algorithms.d.ts",
+			"default": "./dist/batteries.js"
+		},
+		"./authoring": "./dist/authoring.js",
+		"./concepts": "./dist/concepts.js",
+		"./dom": "./dist/dom.js",
+		"./css": "./dist/css/index.js",
+		"./markup": "./dist/markup/index.js",
+		"./host": "./dist/host/registry.js",
+		"./host/load": "./dist/host/index.js",
+		"./host/bundle": "./dist/host/bundle.js"
+	},
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist",
+		"concepts",
+		"algorithms.d.ts",
+		"manifest.json",
+		"README.md"
+	],
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.12.0",
+		"@xriptjs/runtime": "^0.7.0",
+		"culori": "^4.0.2",
+		"prism-svelte": "^0.5.0",
+		"prismjs": "^1.29.0",
+		"zod": "^3.23.8"
+	},
+	"devDependencies": {
+		"@types/culori": "^4.0.1",
+		"@types/node": "^22.0.0",
+		"@types/prismjs": "^1.26.0",
+		"typescript": "^5.5.0",
+		"vitest": "^2.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nekoyoubi/xtyle.git",
+		"directory": "packages/xtyle"
+	}
+}

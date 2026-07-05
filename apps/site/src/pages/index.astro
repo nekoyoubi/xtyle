@@ -1,27 +1,27 @@
 ---
 import { getStats, displayStats, SITE_ANCHORS } from "../data/stats";
 import Base from "../layouts/Base.astro";
-import Button from "@xoji/astro/Button.astro";
-import Card from "@xoji/astro/Card.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Alert from "@xoji/astro/Alert.astro";
-import Field from "@xoji/astro/Field.astro";
-import Switch from "@xoji/astro/Switch.astro";
-import Progress from "@xoji/astro/Progress.astro";
-import Spinner from "@xoji/astro/Spinner.astro";
-import Avatar from "@xoji/astro/Avatar.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Grid from "@xoji/astro/Grid.astro";
-import Separator from "@xoji/astro/Separator.astro";
-import Section from "@xoji/astro/Section.astro";
-import Eyebrow from "@xoji/astro/Eyebrow.astro";
-import Checkbox from "@xoji/astro/Checkbox.astro";
-import Radio from "@xoji/astro/Radio.astro";
-import Segmented from "@xoji/astro/Segmented.astro";
-import Slider from "@xoji/astro/Slider.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Alert from "@xtyle/astro/Alert.astro";
+import Field from "@xtyle/astro/Field.astro";
+import Switch from "@xtyle/astro/Switch.astro";
+import Progress from "@xtyle/astro/Progress.astro";
+import Spinner from "@xtyle/astro/Spinner.astro";
+import Avatar from "@xtyle/astro/Avatar.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Separator from "@xtyle/astro/Separator.astro";
+import Section from "@xtyle/astro/Section.astro";
+import Eyebrow from "@xtyle/astro/Eyebrow.astro";
+import Checkbox from "@xtyle/astro/Checkbox.astro";
+import Radio from "@xtyle/astro/Radio.astro";
+import Segmented from "@xtyle/astro/Segmented.astro";
+import Slider from "@xtyle/astro/Slider.astro";
 
 const site = await getStats();
 const anchors = SITE_ANCHORS;
@@ -58,13 +58,13 @@ const pillars = [
 	},
 	{
 		title: "One contract, every binding.",
-		body: "A manifest-driven component library (HTML custom elements, a Svelte wrapper, and Astro) all honoring the same derived tokens. This whole site is one xoji theme.",
+		body: "A manifest-driven component library (HTML custom elements, a Svelte wrapper, and Astro) all honoring the same derived tokens. This whole site is one xtyle theme.",
 	},
 ];
 ---
 
 <Base
-	title="xoji: an algorithmic theming and component engine"
+	title="xtyle: an algorithmic theming and component engine"
 	description={`Derive a complete, internally-consistent token set from an algorithm you control, then build against a ${componentCount}-component contract made to honor it. The engine for consistent, accessible, extensible apps and sites.`}
 >
 	<Stack gap={8}>
@@ -129,13 +129,13 @@ const pillars = [
 					<Stack gap={2}>
 						<Heading level={2} size="2xl">Watch the whole system render together</Heading>
 						<Text size="lg" tone="muted">
-							Everything below is live: real <code>@xoji/astro</code> components,
+							Everything below is live: real <code>@xtyle/astro</code> components,
 							rendered from the same register as the rest of the page.
 						</Text>
 					</Stack>
 				</div>
 
-				<Section variant="stage" as="div" label="live · xoji-default" class="stage">
+				<Section variant="stage" as="div" label="live · xtyle-default" class="stage">
 					<Grid columns={2} gap={6}>
 						<Stack gap={4}>
 							<Cluster gap={3} align="center">
@@ -144,7 +144,7 @@ const pillars = [
 									<Text as="span" weight="semibold">Live sampler</Text>
 									<Text as="span" size="xs" tone="muted">rendered from the active theme</Text>
 								</Stack>
-								<Badge tone="info">xoji-default</Badge>
+								<Badge tone="info">xtyle-default</Badge>
 							</Cluster>
 
 							<Field
@@ -213,7 +213,7 @@ const pillars = [
 			</Stack>
 		</section>
 
-		<Section as="section" tone="quiet" bordered class="numbers" aria-label="xoji by the numbers">
+		<Section as="section" tone="quiet" bordered class="numbers" aria-label="xtyle by the numbers">
 			<Stack gap={5} align="center">
 				<Eyebrow>By the numbers</Eyebrow>
 				<Grid columns={4} gap={5} class="numbers__grid">

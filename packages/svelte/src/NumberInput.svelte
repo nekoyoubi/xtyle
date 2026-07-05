@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	interface Props {
 		value?: number | string;
@@ -56,7 +56,7 @@
 	}
 </script>
 
-<xoji-number-input
+<xtyle-number-input
 	{...rest}
 	value={value === "" ? undefined : String(value)}
 	min={min}
@@ -73,4 +73,4 @@
 	{placeholder}
 	oninput={handleInput}
 	onchange={handleChange}
-></xoji-number-input>
+></xtyle-number-input>

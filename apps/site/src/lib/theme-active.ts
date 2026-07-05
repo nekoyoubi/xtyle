@@ -1,22 +1,22 @@
-import { apply } from "@xoji/core/dom";
-import { getAlgorithm } from "@xoji/core/algorithms";
-import type { TokenRegister } from "@xoji/core";
+import { apply } from "@xtyle/core/dom";
+import { getAlgorithm } from "@xtyle/core/algorithms";
+import type { TokenRegister } from "@xtyle/core";
 import { deriveRegister } from "./theme-store/recipe.js";
 import { migrateEnvelope } from "./theme-store/migrate.js";
 import type { StoreEnvelope, ThemeDoc } from "./theme-store/types.js";
 import { STORAGE_KEY } from "./theme-store/types.js";
 
-export const ACTIVE_VARS_KEY = "xoji.theme.active-vars";
+export const ACTIVE_VARS_KEY = "xtyle.theme.active-vars";
 
 /** Fired on `window` whenever the active site theme changes, so same-tab islands (the toolbar dropdown and the bench) can mirror each other — `storage` events don't fire within one tab. */
-export const ACTIVE_CHANGED_EVENT = "xoji:theme-active-changed";
+export const ACTIVE_CHANGED_EVENT = "xtyle:theme-active-changed";
 
 export function broadcastActiveTheme(id: string | null): void {
 	if (typeof window === "undefined") return;
 	window.dispatchEvent(new CustomEvent(ACTIVE_CHANGED_EVENT, { detail: { id } }));
 }
 
-const APPLIED_KEYS: unique symbol = Symbol.for("xoji.themeActive.appliedKeys");
+const APPLIED_KEYS: unique symbol = Symbol.for("xtyle.themeActive.appliedKeys");
 
 interface AppliedKeyHolder {
 	[APPLIED_KEYS]?: string[];
@@ -123,7 +123,7 @@ function clearActiveVarsCache(): void {
 /**
  * Syncs the toolbar/statusbar theme labels to the active theme. Each target
  * carries its baseline in `data-default`, so passing `null` restores the site's
- * shipped identity (the SSR-rendered xoji-default dark) when no theme is active.
+ * shipped identity (the SSR-rendered xtyle-default dark) when no theme is active.
  */
 function updateThemeLabels(
 	algorithm: string | null,

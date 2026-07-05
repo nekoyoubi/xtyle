@@ -1,11 +1,11 @@
 ---
-import Button from "@xoji/astro/Button.astro";
-import Card from "@xoji/astro/Card.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import { ACCENT_VARIANTS, HUES } from "@xoji/core";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
 
 const variants = ["solid", "outline", "ghost", "subtle", "link"] as const;
 const tones = ["accent", "neutral", "danger", "success", "warn", "info"] as const;
@@ -241,11 +241,11 @@ const TONE_GROUPS = [
 		display: flex;
 		justify-content: center;
 	}
-	.button-demo__matrix-cell :global(.xoji-button) {
+	.button-demo__matrix-cell :global(.xtyle-button) {
 		width: 100%;
 		justify-content: center;
 	}
-	.button-demo__rows :global(.xoji-button__label) {
+	.button-demo__rows :global(.xtyle-button__label) {
 		margin-right: auto;
 	}
 </style>

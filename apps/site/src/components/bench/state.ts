@@ -1,4 +1,4 @@
-import type { Knobs, TokenRegister } from "@xoji/core";
+import type { Knobs, TokenRegister } from "@xtyle/core";
 
 export type SchemeKnob = "dark" | "light";
 export type ContrastBandKnob = "aa" | "aaa";
@@ -39,7 +39,7 @@ export interface BenchState {
 	knobs: BenchKnobs;
 	overrides: TokenRegister;
 	/**
-	 * The source for an on-site authored algorithm — a `defineXojiAlgorithm` taste vector as
+	 * The source for an on-site authored algorithm — a `defineXtyleAlgorithm` taste vector as
 	 * editable JSON. Only consulted when `algorithm === CUSTOM_ALGORITHM`; the Bench builds a
 	 * live `Algorithm` from it. Stored as text so the editor keeps the author's formatting and
 	 * in-progress edits intact.
@@ -47,7 +47,7 @@ export interface BenchState {
 	customSpec?: string;
 	/**
 	 * The source for an on-site authored *code* algorithm — import-free `defineAlgorithm` /
-	 * `defineXojiAlgorithm` source. Only consulted when `algorithm === CUSTOM_CODE_ALGORITHM`; the
+	 * `defineXtyleAlgorithm` source. Only consulted when `algorithm === CUSTOM_CODE_ALGORITHM`; the
 	 * Bench loads it through the hosted xript sandbox (`loadAuthoredAlgorithm`), never the in-process
 	 * path the Tier-1 `customSpec` uses, because this is arbitrary code. Deliberately NOT serialized
 	 * into the share-link — a code payload must not travel to another viewer until the link schema
@@ -62,10 +62,10 @@ export const CUSTOM_ALGORITHM = "custom";
 export const CUSTOM_CODE_ALGORITHM = "custom-code";
 
 export const ALGORITHMS: { id: string; label: string; blurb: string }[] = [
-	{ id: "xoji-default", label: "Default", blurb: "Balanced neutral baseline" },
-	{ id: "xoji-hc", label: "High Contrast", blurb: "Maximum legibility, AAA floors" },
-	{ id: "xoji-quiet", label: "Quiet", blurb: "Low chroma, gentle elevation" },
-	{ id: "xoji-loud", label: "Loud", blurb: "Saturated, punchy, dramatic" },
+	{ id: "xtyle-default", label: "Default", blurb: "Balanced neutral baseline" },
+	{ id: "xtyle-hc", label: "High Contrast", blurb: "Maximum legibility, AAA floors" },
+	{ id: "xtyle-quiet", label: "Quiet", blurb: "Low chroma, gentle elevation" },
+	{ id: "xtyle-loud", label: "Loud", blurb: "Saturated, punchy, dramatic" },
 	{ id: "nxi-nite", label: "Day/Night", blurb: "Shifts warm + dim toward night, cool + bright toward day" },
 	{ id: CUSTOM_ALGORITHM, label: "Custom", blurb: "Author a taste-vector algorithm inline" },
 	{ id: CUSTOM_CODE_ALGORITHM, label: "Custom code", blurb: "Author an algorithm in code, run it sandboxed" },
@@ -85,7 +85,7 @@ export const CUSTOM_SPEC_SEED = `{
 }`;
 
 /**
- * A starting source for the code editor. The same `defineXojiAlgorithm` as the taste-vector tier,
+ * A starting source for the code editor. The same `defineXtyleAlgorithm` as the taste-vector tier,
  * but expressed as code that runs in the sandbox — so an author can compute fields, branch, or drop
  * to `defineAlgorithm({ derive })` for a from-scratch derivation. Import-free: the helpers are
  * supplied by the host's authoring prelude.
@@ -93,7 +93,7 @@ export const CUSTOM_SPEC_SEED = `{
 export const CUSTOM_CODE_SEED = `// Author an algorithm in code. It runs in xript's zero-authority sandbox.
 // This is the same shape as the taste-vector tier, but you can compute
 // fields or drop to defineAlgorithm({ derive }) for a from-scratch build.
-defineXojiAlgorithm({
+defineXtyleAlgorithm({
   id: "custom-code",
   anchors: { bg: "#0d1117", accent: "#58a6ff" },
   vibrancy: 0.6,
@@ -114,7 +114,7 @@ export const KNOB_SEEDS = {
 
 export function defaultState(): BenchState {
 	return {
-		algorithm: "xoji-default",
+		algorithm: "xtyle-default",
 		anchors: {},
 		knobs: {},
 		overrides: {},
@@ -200,7 +200,7 @@ export function toInvocation(state: BenchState): string {
 	if (state.algorithm === CUSTOM_CODE_ALGORITHM) {
 		const codeBody = (state.customCode ?? "").trim();
 		return [
-			`import { derive, loadAuthoredAlgorithm } from "@xoji/core";`,
+			`import { derive, loadAuthoredAlgorithm } from "@xtyle/core";`,
 			``,
 			`const algorithm = await loadAuthoredAlgorithm(\``,
 			codeBody,
@@ -211,18 +211,18 @@ export function toInvocation(state: BenchState): string {
 	if (state.algorithm === CUSTOM_ALGORITHM) {
 		const specBody = (state.customSpec ?? "{}").trim();
 		return [
-			`import { derive } from "@xoji/core";`,
-			`import { makeXojiAlgorithm, toPreset } from "@xoji/core/authoring";`,
+			`import { derive } from "@xtyle/core";`,
+			`import { makeXtyleAlgorithm, toPreset } from "@xtyle/core/authoring";`,
 			``,
-			`const algorithm = makeXojiAlgorithm(`,
+			`const algorithm = makeXtyleAlgorithm(`,
 			`\ttoPreset({ id: "custom", ...${specBody} }),`,
 			`);`,
 			`const register = derive(algorithm${options});`,
 		].join("\n");
 	}
 	return [
-		`import { derive } from "@xoji/core";`,
-		`import { getAlgorithm } from "@xoji/core/algorithms";`,
+		`import { derive } from "@xtyle/core";`,
+		`import { getAlgorithm } from "@xtyle/core/algorithms";`,
 		``,
 		`const register = derive(getAlgorithm(${JSON.stringify(state.algorithm)})${options});`,
 	].join("\n");

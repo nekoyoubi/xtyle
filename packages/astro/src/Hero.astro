@@ -12,8 +12,8 @@ interface Props {
 const { align = "center", split = false, class: extra, ...rest } = Astro.props;
 ---
 
-<xoji-hero align={align !== "center" ? align : undefined} split={split ? "" : undefined} class={extra} {...rest}>
+<xtyle-hero align={align !== "center" ? align : undefined} split={split ? "" : undefined} class={extra} {...rest}>
 	<slot />
-</xoji-hero>
+</xtyle-hero>
 
-<script>import "@xoji/core/elements";</script>
+<script>import "@xtyle/core/elements";</script>

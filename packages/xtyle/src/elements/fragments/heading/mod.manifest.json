@@ -1,0 +1,19 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-heading-default",
+	"version": "0.0.1",
+	"title": "Xtyle Heading (default)",
+	"description": "The built-in fill for the xtyle Heading component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.heading"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.heading": [
+			{
+				"id": "heading",
+				"format": "text/html+jsml",
+				"source": "heading.html"
+			}
+		]
+	}
+}

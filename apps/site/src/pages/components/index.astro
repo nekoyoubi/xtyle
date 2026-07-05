@@ -1,16 +1,16 @@
 ---
-import { listComponents, coverComponent } from "@xoji/core";
+import { listComponents, coverComponent } from "@xtyle/core";
 import { getStats, displayStats } from "../../data/stats";
 import Base from "../../layouts/Base.astro";
-import Card from "@xoji/astro/Card.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Link from "@xoji/astro/Link.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Grid from "@xoji/astro/Grid.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Eyebrow from "@xoji/astro/Eyebrow.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Link from "@xtyle/astro/Link.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Eyebrow from "@xtyle/astro/Eyebrow.astro";
 import CoverageBadge from "../../components/reference/CoverageBadge.astro";
 import {
 	categoryOrder,
@@ -18,7 +18,7 @@ import {
 } from "../../components/reference/categories.ts";
 import { renderMarkdownInline } from "../../components/reference/inline-markdown.ts";
 import { isNewComponent } from "../../data/newness.ts";
-import type { ComponentManifest } from "@xoji/core";
+import type { ComponentManifest } from "@xtyle/core";
 
 const site = await getStats();
 const register = site.register;
@@ -47,11 +47,11 @@ function coverageFor(component: ComponentManifest) {
 
 const stats = displayStats(site).map((s) => ({ num: `${s.value}`, label: s.label }));
 
-const metaDescription = `The xoji component contract: ${total} components across ${grouped.length} categories, each rendered live from the active xoji-default theme with a live token-coverage check.`;
+const metaDescription = `The xtyle component contract: ${total} components across ${grouped.length} categories, each rendered live from the active xtyle-default theme with a live token-coverage check.`;
 ---
 
 <Base
-	title="Components: xoji"
+	title="Components: xtyle"
 	description={metaDescription}
 >
 	<header class="cx-head">
@@ -59,8 +59,8 @@ const metaDescription = `The xoji component contract: ${total} components across
 			<Eyebrow tracking="wide">Reference</Eyebrow>
 			<Heading level={1} size="3xl">Components</Heading>
 			<Text size="lg" tone="muted" class="cx-lede">
-				The whole <code>@xoji/astro</code> contract, rendered from the live
-				<code>xoji-default</code> theme. Nothing on this page is a mockup.
+				The whole <code>@xtyle/astro</code> contract, rendered from the live
+				<code>xtyle-default</code> theme. Nothing on this page is a mockup.
 				The manifest is the source of truth: every card, every reference page,
 				every swatch below is generated from it. The coverage badge isn't a
 				promise, it's a measurement: a per-component check that the algorithm

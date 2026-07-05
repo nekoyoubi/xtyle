@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
-import { windowedPlot } from "@xoji/core";
-import type { SparklineVariant, SparklineTone, TimeSample } from "@xoji/core";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { windowedPlot } from "@xtyle/core";
+import type { SparklineVariant, SparklineTone, TimeSample } from "@xtyle/core";
 
 interface Props {
 	values?: number[];
@@ -59,7 +59,7 @@ const bindings = {
 const chrome = await renderFragmentLight("sparkline", bindings);
 ---
 
-<xoji-sparkline
+<xtyle-sparkline
 	values={JSON.stringify(values)}
 	points={points ? JSON.stringify(points) : undefined}
 	window={windowMs ?? undefined}
@@ -76,4 +76,4 @@ const chrome = await renderFragmentLight("sparkline", bindings);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

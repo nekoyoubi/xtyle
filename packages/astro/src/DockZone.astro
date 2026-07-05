@@ -8,10 +8,10 @@ interface Props {
 const { class: extra, ...rest } = Astro.props;
 ---
 
-<xoji-dock-zone class:list={[extra]} {...rest}>
+<xtyle-dock-zone class:list={[extra]} {...rest}>
 	<slot />
-</xoji-dock-zone>
+</xtyle-dock-zone>
 
 <script>
-	import "@xoji/core/elements";
+	import "@xtyle/core/elements";
 </script>

@@ -2,7 +2,7 @@ import type { BenchState } from "../../components/bench/state.js";
 
 export const CURRENT_SCHEMA_VERSION = 1 as const;
 
-export const STORAGE_KEY = "xoji.themes.v1";
+export const STORAGE_KEY = "xtyle.themes.v1";
 
 export type ThemeRecipe = BenchState;
 

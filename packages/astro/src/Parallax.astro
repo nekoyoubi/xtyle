@@ -11,8 +11,8 @@ interface Props {
 const { minHeight, amplitude, mode, class: extra, ...rest } = Astro.props;
 ---
 
-<xoji-parallax min-height={minHeight} amplitude={amplitude} mode={mode} class={extra} {...rest}>
+<xtyle-parallax min-height={minHeight} amplitude={amplitude} mode={mode} class={extra} {...rest}>
 	<slot />
-</xoji-parallax>
+</xtyle-parallax>
 
-<script>import "@xoji/core/elements";</script>
+<script>import "@xtyle/core/elements";</script>

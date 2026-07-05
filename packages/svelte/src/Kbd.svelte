@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone as KbdTone } from "@xoji/core";
+	import type { FullTone as KbdTone } from "@xtyle/core";
 
 	type KbdSize = "sm" | "md" | "lg";
 
@@ -16,6 +16,6 @@
 	let { size = "md", tone, children, ...rest }: Props = $props();
 </script>
 
-<xoji-kbd {...rest} {size} {tone}>
+<xtyle-kbd {...rest} {size} {tone}>
 	{@render children?.()}
-</xoji-kbd>
+</xtyle-kbd>

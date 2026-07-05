@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight, composeFallbackSlot } from "@xoji/core/elements/ssr";
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -53,9 +53,9 @@ const {
 } = Astro.props;
 
 const uid = Math.random().toString(36).slice(2, 8);
-const inputId = `xoji-field-${uid}`;
-const descriptionId = `xoji-field-desc-${uid}`;
-const errorId = `xoji-field-error-${uid}`;
+const inputId = `xtyle-field-${uid}`;
+const descriptionId = `xtyle-field-desc-${uid}`;
+const errorId = `xtyle-field-error-${uid}`;
 
 const hasPrefix = Astro.slots.has("prefix");
 const hasSuffix = Astro.slots.has("suffix");
@@ -92,7 +92,7 @@ const composed = composeFallbackSlot(composeFallbackSlot(light, "reveal-icon", r
 	.replace('<slot name="suffix"></slot>', () => suffixHtml);
 ---
 
-<xoji-field
+<xtyle-field
 	label={label}
 	name={name}
 	type={type}
@@ -114,4 +114,4 @@ const composed = composeFallbackSlot(composeFallbackSlot(light, "reveal-icon", r
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

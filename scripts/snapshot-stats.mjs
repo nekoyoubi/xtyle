@@ -1,14 +1,14 @@
 import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { listComponents, derive, ICON_PRIMITIVE_NAMES } from "@xoji/core";
-import { resolveAlgorithm } from "@xoji/core/host";
+import { listComponents, derive, ICON_PRIMITIVE_NAMES } from "@xtyle/core";
+import { resolveAlgorithm } from "@xtyle/core/host";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
 
 const anchors = { bg: "#0b0d12", fg: "#e6e9ef", accent: "#6ea8fe" };
-const algorithm = await resolveAlgorithm("xoji-default");
+const algorithm = await resolveAlgorithm("xtyle-default");
 const register = derive(algorithm, { anchors });
 const components = listComponents();
 
@@ -31,4 +31,4 @@ const outDir = resolve(root, "apps/site/src/data");
 mkdirSync(outDir, { recursive: true });
 const out = resolve(outDir, "stats-baseline.json");
 writeFileSync(out, `${JSON.stringify(baseline, null, "\t")}\n`);
-console.log(`xoji: wrote stats baseline for v${baseline.version}`, baseline);
+console.log(`xtyle: wrote stats baseline for v${baseline.version}`, baseline);

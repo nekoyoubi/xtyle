@@ -1,0 +1,48 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-progress-default",
+	"version": "0.0.1",
+	"title": "Xtyle Progress (default)",
+	"description": "The built-in fill for the xtyle Progress component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.progress"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.progress": [
+			{
+				"id": "progress",
+				"format": "text/html+jsml",
+				"source": "progress.html",
+				"meta": {
+					"tokens": [
+						"--font-sans",
+						"--fg-1",
+						"--fg-2",
+						"--neutral-bg",
+						"--accent",
+						"--neutral",
+						"--danger",
+						"--success",
+						"--warn",
+						"--info",
+						"--space-1",
+						"--space-2",
+						"--space-6",
+						"--space-8",
+						"--radius-full",
+						"--radius-sm",
+						"--duration-base",
+						"--duration-slow",
+						"--ease-emphasized",
+						"--ease-standard",
+						"--text-sm",
+						"--text-xs",
+						"--border-normal",
+						"--border-thick",
+						"--ring"
+					]
+				}
+			}
+		]
+	}
+}

@@ -1,7 +1,7 @@
 {
-	"name": "@xoji/astro",
-	"version": "0.4.0",
-	"description": "Zero-JS Astro components that emit semantic HTML against the xoji component classes; the SSR binding of the component contract.",
+	"name": "@xtyle/astro",
+	"version": "0.5.0",
+	"description": "Zero-JS Astro components that emit semantic HTML against the xtyle component classes; the SSR binding of the component contract.",
 	"type": "module",
 	"license": "MIT",
 	"exports": {
@@ -12,14 +12,14 @@
 		"README.md"
 	],
 	"dependencies": {
-		"@xoji/core": "^0.4.0"
+		"@xtyle/core": "^0.5.0"
 	},
 	"peerDependencies": {
 		"astro": "^6.0.0"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/nekoyoubi/xoji.git",
+		"url": "git+https://github.com/nekoyoubi/xtyle.git",
 		"directory": "packages/astro"
 	}
 }
