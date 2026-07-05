@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getComponent, coverComponent, derive } from "../src/index.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
-import { imageCss } from "../src/css/components/image.js";
+import { imageCss, imageLightboxCss } from "../src/css/components/image.js";
 import { xtyleDefault } from "../src/batteries.js";
 
 const register = derive(xtyleDefault, {
@@ -78,6 +78,15 @@ describe("image", () => {
 		expect(fullBlock).toContain("height: 100%");
 		expect(fullBlock).toContain("object-fit: contain");
 		expect(fullBlock).toContain("pointer-events: none");
+	});
+
+	it("carries the lightbox styling as a standalone sheet the portalled dialog can adopt", () => {
+		// The portalled dialog lives outside the shadow root, so it carries its own <style>: the exported
+		// subset must stand alone and stay composed into imageCss for the coverage lint.
+		expect(imageLightboxCss).toContain(".xtyle-image__lightbox::backdrop { background: var(--scrim); }");
+		expect(imageLightboxCss).toContain(".xtyle-image__close {");
+		expect(imageLightboxCss).toContain("width: 92vw");
+		expect(imageCss).toContain(imageLightboxCss);
 	});
 
 	it("escapes a hostile src, alt, and caption so they can't break out", async () => {

@@ -1,5 +1,6 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { imageHostCss, escapeAttr } from "../markup/index.js";
+import { imageLightboxCss } from "../css/components/image.js";
 import type { ImageFit, ImageRadius, ImageLoading } from "../markup/image.js";
 import { renderIcon } from "../icons.js";
 import { FragmentHost } from "./fragment-host.js";
@@ -190,17 +191,32 @@ export class XtyleImage extends XtyleElement {
 		const alt = escapeAttr(this.alt);
 		const dialog = document.createElement("dialog");
 		dialog.className = "xtyle-image__lightbox";
-		dialog.setAttribute("part", "lightbox");
+		// No `part` hooks: the dialog mounts on document.body (see the portal below), outside any shadow
+		// tree, so `::part()` can't reach it. It's themed by its `.xtyle-image__*` classes in every mode.
 		dialog.innerHTML =
-			`<button type="button" class="xtyle-image__close" part="close" aria-label="Close">${renderIcon("close")}</button>` +
-			`<img class="xtyle-image__full" part="full" src="${src}" alt="${alt}" />`;
+			`<style>${imageLightboxCss}</style>` +
+			`<button type="button" class="xtyle-image__close" aria-label="Close">${renderIcon("close")}</button>` +
+			`<img class="xtyle-image__full" src="${src}" alt="${alt}" />`;
 		dialog.querySelector(".xtyle-image__close")?.addEventListener("click", () => dialog.close());
 		dialog.addEventListener("click", (event) => {
 			if (event.target === dialog) dialog.close();
 		});
-		this.root.appendChild(dialog);
+		// Portal to document.body, not the element's own root: an ancestor with transform, filter,
+		// backdrop-filter, will-change, or contain establishes a containing block that a modal
+		// <dialog> anchors to instead of the viewport, so a lightbox inside a frosted or transformed
+		// surface mispositions. Mounting on the body escapes any such ancestor.
+		document.body.appendChild(dialog);
 		this.lightboxEl = dialog;
 		return dialog;
+	}
+
+	disconnectedCallback(): void {
+		// The portalled dialog lives on document.body, not under this element, so it won't be
+		// removed with the host — tear it down explicitly to avoid orphaning it.
+		if (this.lightboxEl) {
+			this.lightboxEl.remove();
+			this.lightboxEl = null;
+		}
 	}
 }
 

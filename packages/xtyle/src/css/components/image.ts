@@ -1,4 +1,4 @@
-export const imageCss = `
+const imageFrameCss = `
 [data-image] { display: contents; }
 .xtyle-image {
 	display: block;
@@ -62,6 +62,24 @@ export const imageCss = `
 	font-size: var(--text-sm);
 	line-height: var(--leading-normal);
 }
+@keyframes xtyle-image-shimmer {
+	from { background-position: 100% 0; }
+	to { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.xtyle-image__placeholder { animation: none; }
+	.xtyle-image__img { transition: none; }
+}
+`.trim();
+
+/**
+ * The lightbox subtree, kept separate so the element can carry it as a self-contained `<style>`
+ * inside the portalled `<dialog>`. The dialog mounts on `document.body` (to escape an ancestor
+ * containing block), which puts it outside the element's shadow root and its adopted sheet — so
+ * these rules travel with it. Composed back into `imageCss` below, so the shared component sheet
+ * and the coverage lint still see every lightbox token.
+ */
+export const imageLightboxCss = `
 .xtyle-image__lightbox {
 	padding: 0;
 	border: 0;
@@ -106,12 +124,6 @@ export const imageCss = `
 	outline: var(--border-thick) solid var(--ring);
 	outline-offset: 2px;
 }
-@keyframes xtyle-image-shimmer {
-	from { background-position: 100% 0; }
-	to { background-position: -100% 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-	.xtyle-image__placeholder { animation: none; }
-	.xtyle-image__img { transition: none; }
-}
 `.trim();
+
+export const imageCss = `${imageFrameCss}\n${imageLightboxCss}`.trim();

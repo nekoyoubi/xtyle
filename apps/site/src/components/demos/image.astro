@@ -35,6 +35,16 @@ const square = "data:image/svg+xml," + encodeURIComponent(squareSvg);
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Lightbox in a frosted panel</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">The lightbox opens against the viewport, so it stays centered even inside a panel whose <code>backdrop-filter</code> or <code>transform</code> would otherwise pin a modal to its own box.</Text>
+			<div style="transform: translateZ(0); backdrop-filter: blur(8px); border: var(--border-thin) solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); background: var(--bg-2); max-width: 22rem;">
+				<Image src={scene} alt="An abstract gradient landscape" ratio="16/9" lightbox />
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Fit and radius</Heading>
 		<Grid minColWidth="12rem" gap={4}>
 			<Stack gap={1}>
