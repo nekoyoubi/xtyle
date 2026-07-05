@@ -43,7 +43,6 @@ ${solidRules}
 	margin-top: var(--space-0);
 }
 .xtyle-alert--noicon .xtyle-alert__icon { display: none; }
-:host(:has([slot="icon"])) .xtyle-alert__icon { display: inline-flex; }
 .xtyle-alert__body {
 	display: flex;
 	flex-direction: column;

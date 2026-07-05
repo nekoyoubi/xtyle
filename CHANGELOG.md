@@ -18,6 +18,7 @@
 
 ### Fixes
 
+- **A color-only `Alert` / `Toast` hides its icon in both render modes.** A shadow-only `:host(:has([slot="icon"]))` rule quietly re-showed the icon when an icon-suppressed alert also carried an explicit slotted icon, a contradictory pair that behaved differently on the site (where the rule can't match); dropped it, so an icon-suppressed banner stays icon-free everywhere. The suppression is automatic: a notice with no `severity` (a color-only `tone`) carries no icon, slotted or not. To show a custom icon, give the alert or toast a `severity` (or a severity-matching `tone`) and project it into the `icon` slot
 - **`wrap`, `line-numbers`, and `highlight` work on server-rendered `Code` again.** Their CSS keyed on `:host([…])`, which only matches a shadow host, so on the site (the light-DOM path) a `wrap` block didn't wrap, the line-number gutter stayed empty, and `highlight` did nothing. Each state selector now carries a light-DOM twin, so the three land in both render modes, and the copy button reveals on hover on the site too
 
 ## v0.5.0: The xtyle Rename

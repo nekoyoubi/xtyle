@@ -79,7 +79,6 @@ ${solidRules}
 	font-size: var(--text-lg);
 }
 .xtyle-toast--noicon .xtyle-toast__icon { display: none; }
-:host(:has([slot="icon"])) .xtyle-toast__icon { display: inline-flex; }
 .xtyle-toast__body {
 	display: flex;
 	flex-direction: column;

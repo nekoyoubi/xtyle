@@ -80,7 +80,7 @@ export const alertManifest: ComponentManifest = {
 		},
 		{
 			name: "icon",
-			description: "The leading status glyph, shown when a `severity` is set, drawn in the banner color and hidden from assistive tech. Project an `icon` slot to override it (the slot shows even on a severity-less banner).",
+			description: "The leading status glyph, shown when a `severity` is set, drawn in the banner color and hidden from assistive tech. Project an `icon` slot to override it when a severity is present; a color-only banner shows no icon.",
 			selector: ".xtyle-alert__icon",
 			tokens: ["--text-lg", "--space-0"],
 		},
@@ -205,7 +205,7 @@ export const alertManifest: ComponentManifest = {
 		},
 		{
 			name: "icon",
-			description: "Overrides the built-in severity glyph; fill it to show your own icon (or to mark a severity-less notice).",
+			description: "Overrides the built-in severity glyph; fill it to show your own icon when a `severity` is set.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -237,7 +237,7 @@ export const alertManifest: ComponentManifest = {
 	composition: [
 		"Drop Button components into the `actions` slot for primary/secondary responses; match the button tone to the alert tone.",
 		"For transient, auto-dismissing notices use Toast instead; Alert is for persistent inline messages.",
-		"The leading icon is built in per `severity`; project your own into the `icon` slot to override it, or to mark a color-only notice that carries no severity.",
+		"The leading icon is built in per `severity`; project your own into the `icon` slot to override it. A color-only notice that carries no severity shows no icon at all.",
 	],
 	a11y: [
 		"Live-region semantics follow `severity`, not color: danger/warn render `role=\"alert\"` with `aria-live=\"assertive\"`, success/info render `role=\"status\"` with `aria-live=\"polite\"`, and a severity-less notice is polite `role=\"status\"`.",
