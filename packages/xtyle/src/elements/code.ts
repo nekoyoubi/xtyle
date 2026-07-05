@@ -30,7 +30,10 @@ export class XtyleCode extends XtyleElement {
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "code", {
 		applyIntent: () => {},
+		afterApply: () => this.armScrollAffordance(),
 	});
+
+	private overflowObserver: ResizeObserver | null = null;
 
 	static get observedAttributes(): string[] {
 		return ["language", "code", "preload", "copy", "line-numbers", "highlight", "caption"];
@@ -158,6 +161,7 @@ export class XtyleCode extends XtyleElement {
 			{ "copy-source": { enabled: this.copy, run: () => this.copySource() } },
 			this.wiredControls,
 		);
+		this.armScrollAffordance();
 	}
 
 	/** Write the raw source to the clipboard and flash a `Copied` state, reverting after a beat. */
@@ -219,6 +223,34 @@ export class XtyleCode extends XtyleElement {
 	private seedCaption(): void {
 		const caption = this.root.querySelector("[data-caption]");
 		if (caption instanceof HTMLElement) caption.textContent = this.caption ?? "";
+	}
+
+	/** A long line makes the block scroll horizontally, so make it keyboard-reachable only when it
+	 * actually overflows. Runs synchronously from `render()` for the first paint, and again from
+	 * `afterApply` for a free recheck after each later content update (a recolor, a re-render). */
+	private armScrollAffordance(): void {
+		const pre = this.root.querySelector<HTMLElement>(".xtyle-code");
+		if (!pre) return;
+		this.updateScrollAffordance(pre);
+		if (typeof ResizeObserver !== "undefined" && !this.overflowObserver) {
+			this.overflowObserver = new ResizeObserver(() => this.updateScrollAffordance(pre));
+			this.overflowObserver.observe(pre);
+		}
+	}
+
+	private updateScrollAffordance(pre: HTMLElement): void {
+		// A `wrap` block soft-wraps rather than scrolls sideways, so it is never a horizontal scroll region.
+		const scrolls = !this.hasAttribute("wrap") && pre.scrollWidth > pre.clientWidth + 1;
+		if (scrolls) {
+			if (!pre.hasAttribute("tabindex")) pre.setAttribute("tabindex", "0");
+		} else if (pre.getAttribute("tabindex") === "0") {
+			pre.removeAttribute("tabindex");
+		}
+	}
+
+	disconnectedCallback(): void {
+		this.overflowObserver?.disconnect();
+		this.overflowObserver = null;
 	}
 }
 

@@ -11,6 +11,12 @@ export const codeCss = `
 	line-height: var(--leading-normal);
 	tab-size: 2;
 }
+/* A block wide enough to scroll horizontally is made tabbable (see the element); an outline sits
+   outside the border box, so the scrolled code can't cover it. */
+.xtyle-code:focus-visible {
+	outline: var(--border-thick) solid var(--ring);
+	outline-offset: 2px;
+}
 :host([wrap]) .xtyle-code {
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
