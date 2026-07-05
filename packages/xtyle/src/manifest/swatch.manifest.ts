@@ -190,7 +190,9 @@ export const swatchManifest: ComponentManifest = {
 		"--border-thick",
 		"--ring",
 		"--bg-1",
+		"--fg-0",
 		"--accent",
+		"--selection-cue",
 		"--space-1",
 		"--space-2",
 		"--space-8",
@@ -210,6 +212,7 @@ export const swatchManifest: ComponentManifest = {
 		"Always provide a `label` (and ideally a `value`) when the color is meaningful, so the chip is announced by name, not by an invisible swatch.",
 		"An `interactive` chip is a real `<button>`, so Enter and Space activate it and Tab reaches it for free; when it carries no visible label it borrows its `value` or `color` as an `aria-label`.",
 		"`selected` reflects to `aria-pressed`, so a picked chip announces its chosen state to assistive tech, not just its accent ring. Each chip is an independent toggle; if a rail is single-choice, the consumer enforces that by clearing the others on `select`.",
+		"Selection carries a non-color channel on demand: when the theme sets `--selection-cue: marker` (a high-contrast or redundant-cues algorithm), the picked chip keeps its accent ring and gains a second bold neutral `--fg-0` outline around it, so a color-deficient user reads the selection by that added ring, not the accent hue alone, satisfying WCAG 1.4.1.",
 		"A `details` chip is keyboard-reachable even when it isn't `interactive`: it takes `tabindex` and points `aria-describedby` at the popover, so the color readout is available on focus, not hover alone.",
 	],
 	examples: [

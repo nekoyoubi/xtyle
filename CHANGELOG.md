@@ -2,6 +2,10 @@
 
 ## v0.6.0: TBD
 
+### Accessibility
+
+- **The non-color selection cue reaches `Swatch`.** When a theme sets `--selection-cue: marker` (a high-contrast or redundant-cues algorithm), a picked swatch keeps its accent ring and gains a second neutral outline around it, so selection reads by an added ring rather than the accent hue alone (WCAG 1.4.1). It joins `Tree`, `Tabs`, `Segmented`, and `Pagination`, which already honor the cue
+
 ### Image
 
 - **The lightbox opens against the viewport, not its container.** `<xtyle-image lightbox>` now builds its modal on `document.body` instead of inside the element, so an ancestor with `transform`, `filter`, `backdrop-filter`, `will-change`, or `contain` (a frosted panel, an animated card) can no longer become the dialog's containing block and drag it off-center. The dialog carries its own styling, so it stays themed outside the shadow root, and it tears down with its host

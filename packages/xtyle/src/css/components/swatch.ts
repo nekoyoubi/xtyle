@@ -51,6 +51,17 @@ export const swatchCss = `
 		0 0 0 var(--border-thin) var(--bg-1),
 		0 0 0 calc(var(--border-thin) + var(--border-thick)) var(--accent);
 }
+@container style(--selection-cue: marker) {
+	.xtyle-swatch--selected .xtyle-swatch__dot { position: relative; }
+	.xtyle-swatch--selected .xtyle-swatch__dot::after {
+		content: "";
+		position: absolute;
+		inset: calc(-1 * var(--space-1) - var(--border-thick));
+		border-radius: var(--radius-md);
+		box-shadow: 0 0 0 var(--border-normal) var(--fg-0);
+		pointer-events: none;
+	}
+}
 .xtyle-swatch__details {
 	position: absolute;
 	z-index: 1;

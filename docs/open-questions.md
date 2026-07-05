@@ -384,10 +384,12 @@ Open sub-forks:
     under the same `marker` value: `Pagination`'s current page now grows a non-color underline bar (a
     bare number can't host a leading `✓` without reading as content), so it honors the cue too. This
     keeps the mechanism/policy/render split clean, the engine carries the intent, the algorithm sets it,
-    the component owns *how*. Remaining candidates are the ones whose selected surface is genuinely
-    un-styleable or absent: a `Swatch`'s dot is an arbitrary consumer color (a shape ring is the likely
-    fit, contrast permitting), a native `Select`'s option list is browser chrome, and a `Menu` carries
-    actions, not a persistent checked state.
+    the component owns *how*. `Swatch` now joins them with the shape-ring this note predicted, and stays
+    additive like the rest: a picked chip keeps its accent selection ring and, under `marker`, *gains* a
+    second neutral `--fg-0` outline ring around it (a `::after`, not a recolor), so a color-deficient user
+    reads the selection by that added ring rather than the accent hue, on an arbitrary consumer chip color.
+    The genuinely un-styleable holdouts remain: a native `Select`'s option list is browser chrome, and a
+    `Menu` carries actions, not a persistent checked state.
 - **Render helpers.** Should the contract ship canonical recipes (a blessed "invert" or "glyph"
   treatment) so components don't each reinvent them, or is that the component library's job?
 
