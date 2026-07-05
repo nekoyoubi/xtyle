@@ -1,5 +1,7 @@
 # Changelog
 
+## v0.6.0: TBD
+
 ## v0.5.0: The xtyle Rename
 
 ### Renamed: xoji is now xtyle

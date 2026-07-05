@@ -1,6 +1,6 @@
 {
 	"name": "@xtyle/core",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"description": "A themable-derivation engine: an algorithm plus a few anchors derive a full register of CSS-ready tokens.",
 	"type": "module",
 	"license": "MIT",
