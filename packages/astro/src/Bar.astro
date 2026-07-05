@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { resolveSeriesColorsFor } from "./internal/palette.ts";
-import type { BarSeries, BarScheme } from "@xoji/core";
+import type { BarSeries, BarScheme } from "@xtyle/core";
 
 interface Props {
 	series?: BarSeries[];
@@ -62,7 +62,7 @@ const bindings = {
 const chrome = await renderFragmentLight("bar", bindings);
 ---
 
-<xoji-bar
+<xtyle-bar
 	series={JSON.stringify(series)}
 	categories={JSON.stringify(categories)}
 	scheme={Array.isArray(scheme) ? JSON.stringify(scheme) : scheme}
@@ -80,4 +80,4 @@ const chrome = await renderFragmentLight("bar", bindings);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

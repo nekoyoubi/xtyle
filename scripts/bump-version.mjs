@@ -30,7 +30,7 @@ for (const abs of files) {
 		const deps = pkg[field];
 		if (!deps) continue;
 		for (const name of Object.keys(deps)) {
-			if ((name === "xoji" || name.startsWith("@xoji/")) && /^[\d^~]/.test(deps[name])) {
+			if ((name === "xtyle" || name.startsWith("@xtyle/")) && /^[\d^~]/.test(deps[name])) {
 				deps[name] = `^${version}`;
 			}
 		}

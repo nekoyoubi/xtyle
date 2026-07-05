@@ -1,0 +1,53 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-color-picker-default",
+	"version": "0.0.1",
+	"title": "Xtyle Color Picker (default)",
+	"description": "The built-in fill for the xtyle Color Picker component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.color-picker"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.color-picker": [
+			{
+				"id": "color-picker",
+				"format": "text/html+jsml",
+				"source": "color-picker.html",
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--bg-0",
+						"--bg-2",
+						"--border-normal",
+						"--border-thick",
+						"--border-thin",
+						"--danger-text",
+						"--duration-fast",
+						"--ease-standard",
+						"--elevation-1",
+						"--elevation-3",
+						"--fg-0",
+						"--fg-1",
+						"--fg-disabled",
+						"--font-mono",
+						"--font-sans",
+						"--line-2",
+						"--radius-full",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-4",
+						"--space-6",
+						"--state-hover",
+						"--success-text",
+						"--text-sm",
+						"--text-xs",
+						"--weight-medium"
+					]
+				}
+			}
+		]
+	}
+}

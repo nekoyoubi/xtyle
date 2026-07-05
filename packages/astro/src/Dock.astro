@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight, composeFallbackSlot } from "@xoji/core/elements/ssr";
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as Tone } from "@xoji/core";
+import type { FullTone as Tone } from "@xtyle/core";
 type DockSide = "left" | "right";
 type Size = "sm" | "md" | "lg";
 
@@ -61,7 +61,7 @@ const composed = composeFallbackSlot(light, "header", headerHtml)
 	.replace('<slot name="footer"></slot>', () => footerHtml);
 ---
 
-<xoji-dock
+<xtyle-dock
 	side={side}
 	size={size}
 	tone={tone}
@@ -76,4 +76,4 @@ const composed = composeFallbackSlot(light, "header", headerHtml)
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

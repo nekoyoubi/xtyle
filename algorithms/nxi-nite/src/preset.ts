@@ -1,5 +1,5 @@
 /**
- * The Day/Night xoji taste — pure data, no imports (see xoji-default's preset).
+ * The Day/Night xtyle taste — pure data, no imports (see xtyle-default's preset).
  * `hour` is the extra knob the day/night passes read; the passes themselves are
  * logic, so they live beside this in `passes.ts`, not here.
  */

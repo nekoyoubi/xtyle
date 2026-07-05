@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { resolveHeatmapColors, resolveHeatmapGlows, resolveHeatmapScale } from "./internal/palette.ts";
-import type { HeatmapScheme } from "@xoji/core";
+import type { HeatmapScheme } from "@xtyle/core";
 
 interface Props {
 	values?: number[][];
@@ -89,7 +89,7 @@ const bindings = {
 const chrome = await renderFragmentLight("heatmap", bindings);
 ---
 
-<xoji-heatmap
+<xtyle-heatmap
 	values={JSON.stringify(values)}
 	glow={glow.length ? JSON.stringify(glow) : undefined}
 	rows={JSON.stringify(rows)}
@@ -113,4 +113,4 @@ const chrome = await renderFragmentLight("heatmap", bindings);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

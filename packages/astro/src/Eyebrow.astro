@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type EyebrowTag = "p" | "span" | "div";
 type EyebrowTone = "accent" | "muted" | "subtle";
@@ -25,6 +25,6 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-eyebrow as={as} tone={tone} tracking={tracking} class={extra} set:html={composed} {...rest} />
+<xtyle-eyebrow as={as} tone={tone} tracking={tracking} class={extra} set:html={composed} {...rest} />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

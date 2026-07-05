@@ -19,6 +19,6 @@
 	let { gap = 4, columns, minColWidth, align, justify, inline = false, children, ...rest }: Props = $props();
 </script>
 
-<xoji-grid {...rest} {gap} {columns} min-col-width={minColWidth} {align} {justify} inline={inline || undefined}>
+<xtyle-grid {...rest} {gap} {columns} min-col-width={minColWidth} {align} {justify} inline={inline || undefined}>
 	{@render children?.()}
-</xoji-grid>
+</xtyle-grid>

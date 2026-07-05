@@ -19,4 +19,4 @@
 	const itemsJson = $derived(JSON.stringify(items));
 </script>
 
-<xoji-toc {...rest} items={itemsJson} {label} sticky={sticky || undefined}></xoji-toc>
+<xtyle-toc {...rest} items={itemsJson} {label} sticky={sticky || undefined}></xtyle-toc>

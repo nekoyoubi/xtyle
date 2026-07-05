@@ -27,20 +27,20 @@ const {
 } = Astro.props;
 ---
 
-<xoji-table
+<xtyle-table
 	variant={variant}
 	size={size}
 	hover={hover ? "" : undefined}
 	sticky={sticky ? "" : undefined}
 	max-height={maxHeight || undefined}
-	style={maxHeight ? `--xoji-table-max-height: ${maxHeight}` : undefined}
+	style={maxHeight ? `--xtyle-table-max-height: ${maxHeight}` : undefined}
 	aria-label={ariaLabel || undefined}
-	class:list={["xoji-table-wrap", extra]}
+	class:list={["xtyle-table-wrap", extra]}
 	{...rest}
 >
 	<slot />
-</xoji-table>
+</xtyle-table>
 
 <script>
-	import "@xoji/core/elements";
+	import "@xtyle/core/elements";
 </script>

@@ -1,6 +1,6 @@
 ---
-import { formatChannelValue, namedSnapLabel, PLANE_H, PLANE_W } from "@xoji/core/markup";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { formatChannelValue, namedSnapLabel, PLANE_H, PLANE_W } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import {
 	channelModels,
 	channelsOf,
@@ -15,7 +15,7 @@ import {
 	type ChannelModel,
 	type ColorFormat,
 	type HarmonyScheme,
-} from "@xoji/core";
+} from "@xtyle/core";
 
 interface Props {
 	value?: string;
@@ -61,7 +61,7 @@ const {
 	...rest
 } = Astro.props;
 
-const elementId = `xoji-color-picker-${Math.random().toString(36).slice(2, 8)}`;
+const elementId = `xtyle-color-picker-${Math.random().toString(36).slice(2, 8)}`;
 
 // Resolve the markup props exactly as the custom element's getters do, so the SSR
 // declarative shadow is byte-identical to the post-hydration client re-render.
@@ -160,7 +160,7 @@ const bindings = {
 const light = await renderFragmentLight("color-picker", bindings);
 ---
 
-<xoji-color-picker
+<xtyle-color-picker
 	value={value}
 	format={format}
 	modes={modes}
@@ -181,4 +181,4 @@ const light = await renderFragmentLight("color-picker", bindings);
 	set:html={light}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

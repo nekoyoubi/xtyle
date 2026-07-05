@@ -26,7 +26,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-carousel
+<xtyle-carousel
 	{...rest}
 	{label}
 	{interval}
@@ -36,4 +36,4 @@
 	dots={dots ? undefined : "false"}
 >
 	{@render children?.()}
-</xoji-carousel>
+</xtyle-carousel>

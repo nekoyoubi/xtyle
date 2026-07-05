@@ -1,6 +1,6 @@
 ---
-import { listComponents } from "@xoji/core";
-import Tree from "@xoji/astro/Tree.astro";
+import { listComponents } from "@xtyle/core";
+import Tree from "@xtyle/astro/Tree.astro";
 import { categoryOrder, categoryMeta } from "./reference/categories.ts";
 import { isNewComponent } from "../data/newness.ts";
 import { BENCH_TOOLS } from "../data/bench-tools.ts";
@@ -80,7 +80,7 @@ const items = [
 </nav>
 
 <style>
-	.x-sitenav :global(.xoji-tree__badge) {
+	.x-sitenav :global(.xtyle-tree__badge) {
 		color: var(--accent-text);
 		background: var(--accent-bg);
 		font-size: var(--text-xs);

@@ -1,0 +1,43 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-stat-default",
+	"version": "0.0.1",
+	"title": "Xtyle Stat (default)",
+	"description": "The built-in fill for the xtyle Stat component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.stat"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.stat": [
+			{
+				"id": "stat",
+				"format": "text/html+jsml",
+				"source": "stat.html",
+				"meta": {
+					"tokens": [
+						"--font-sans",
+						"--font-display",
+						"--text-xs",
+						"--text-sm",
+						"--text-xl",
+						"--text-2xl",
+						"--text-3xl",
+						"--weight-semibold",
+						"--weight-bold",
+						"--leading-normal",
+						"--leading-tight",
+						"--fg-0",
+						"--fg-2",
+						"--fg-3",
+						"--neutral-text",
+						"--success-vivid",
+						"--danger-vivid",
+						"--neutral-vivid",
+						"--space-1",
+						"--space-2"
+					]
+				}
+			}
+		]
+	}
+}

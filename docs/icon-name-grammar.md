@@ -12,7 +12,7 @@ with the active theme for free; the native win over a hashed-identicon library.
 
 ## Resolution cascade
 
-`<xoji-icon name="…">` resolves a name in order:
+`<xtyle-icon name="…">` resolves a name in order:
 
 1. **Known glyph:** the name is an entry in the functional set (`search`, `check`,
    `chevron-right`, …) → render that glyph.
@@ -174,7 +174,7 @@ the blessed *default* generator, not engine law.
 
 A generator is a pure `name → IconComposition` function. Alternatives (a hashed-identicon mode over
 a seed, a domain-specific mark set) `registerIconGenerator(...)` and are tried after the default, so
-one claims only the names the default declines; `<xoji-icon>` resolves a name through that registry,
+one claims only the names the default declines; `<xtyle-icon>` resolves a name through that registry,
 never through a hardwired parser. A variant vocabulary (different keywords, a different ladder) is a
 whole new generator, not a knob on this one; the grammar's vocabulary is deliberately the default
 generator's own, not a configurable surface. The default grammar above is one generator; it is not

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xoji/core";
-	import { auditRegister, clampToGamut, coverComponents, toOklchColor } from "@xoji/core";
+	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xtyle/core";
+	import { auditRegister, clampToGamut, coverComponents, toOklchColor } from "@xtyle/core";
 	import { isColorToken } from "./tokens.js";
 	import type { BenchState } from "./state.js";
 	import { anchorsToConstraints, toDeriveKnobs } from "./state.js";
@@ -77,8 +77,8 @@
 	<div class="bench-insp__body">
 		{#if panel === "contrast"}
 			<p class="bench-insp__lead x-caption">
-				<code>auditRegister()</code> grades xoji's canonical text/fill pairs:
-				<strong class:xoji-text-success-text={audit.passes} class:xoji-text-warn-text={!audit.passes}>{audit.tallies.AAA} AAA · {audit.tallies.AA} AA · {audit.tallies.fail} fail</strong>,
+				<code>auditRegister()</code> grades xtyle's canonical text/fill pairs:
+				<strong class:xtyle-text-success-text={audit.passes} class:xtyle-text-warn-text={!audit.passes}>{audit.tallies.AAA} AAA · {audit.tallies.AA} AA · {audit.tallies.fail} fail</strong>,
 				weakest {audit.worst.toFixed(2)}.
 			</p>
 			<ul class="bench-contrast">
@@ -94,7 +94,7 @@
 			</ul>
 		{:else if panel === "coverage"}
 			<p class="bench-insp__lead x-caption">
-				<strong class:xoji-text-success-text={coveredCount === coverage.length} class:xoji-text-warn-text={coveredCount !== coverage.length}>{coveredCount}/{coverage.length}</strong>
+				<strong class:xtyle-text-success-text={coveredCount === coverage.length} class:xtyle-text-warn-text={coveredCount !== coverage.length}>{coveredCount}/{coverage.length}</strong>
 				components fully covered by this register.
 			</p>
 			<ul class="bench-coverage">

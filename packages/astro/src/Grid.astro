@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type GridAlign = "start" | "center" | "end" | "stretch";
 
@@ -42,7 +42,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-grid
+<xtyle-grid
 	gap={gap}
 	columns={columns ?? undefined}
 	min-col-width={minColWidth ?? undefined}
@@ -54,4 +54,4 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,8 +1,8 @@
 ---
-import Badge from "@xoji/astro/Badge.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Text from "@xoji/astro/Text.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Text from "@xtyle/astro/Text.astro";
 import TokenList from "./TokenList.astro";
 
 interface Props {
@@ -37,8 +37,8 @@ const have = consumed.length - missing.length;
 		</Text>
 	</Cluster>
 	<Text size="sm" tone="muted" class="coverage-panel__note">
-		Live coverage check against the <code>xoji-default</code> register
-		(<code>derive(xojiDefault, &#123; anchors &#125;)</code> →
+		Live coverage check against the <code>xtyle-default</code> register
+		(<code>derive(xtyleDefault, &#123; anchors &#125;)</code> →
 		<code>coverComponent(manifest, register)</code>). Every token this component
 		consumes must be a key the algorithm produces.
 	</Text>

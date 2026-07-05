@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Orientation = "horizontal" | "vertical";
 type SeparatorVariant = "default" | "with-label";
@@ -31,6 +31,6 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-separator orientation={orientation} variant={variant} size={size} class={extra} set:html={composed} {...rest} />
+<xtyle-separator orientation={orientation} variant={variant} size={size} class={extra} set:html={composed} {...rest} />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

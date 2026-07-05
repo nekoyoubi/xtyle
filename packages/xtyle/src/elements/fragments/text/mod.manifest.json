@@ -1,0 +1,40 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-text-default",
+	"version": "0.0.1",
+	"title": "Xtyle Text (default)",
+	"description": "The built-in fill for the xtyle Text component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.text"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.text": [
+			{
+				"id": "text",
+				"format": "text/html+jsml",
+				"source": "text.html",
+				"meta": {
+					"tokens": [
+						"--font-sans",
+						"--font-mono",
+						"--text-xs",
+						"--text-sm",
+						"--text-body",
+						"--text-lg",
+						"--weight-normal",
+						"--weight-medium",
+						"--weight-semibold",
+						"--weight-bold",
+						"--leading-tight",
+						"--leading-normal",
+						"--leading-loose",
+						"--fg-0",
+						"--fg-2",
+						"--fg-3",
+						"--accent-text"
+					]
+				}
+			}
+		]
+	}
+}

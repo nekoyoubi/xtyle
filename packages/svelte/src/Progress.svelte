@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone as Tone } from "@xoji/core";
+	import type { FullTone as Tone } from "@xtyle/core";
 
 	type ProgressVariant = "linear" | "circular";
 	type ProgressSize = "sm" | "md" | "lg";
@@ -48,7 +48,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-progress
+<xtyle-progress
 	{...rest}
 	{variant}
 	{tone}
@@ -65,4 +65,4 @@
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 >
 	{@render children?.()}
-</xoji-progress>
+</xtyle-progress>

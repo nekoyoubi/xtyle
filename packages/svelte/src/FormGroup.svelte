@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	interface Props {
 		label?: string;
@@ -29,7 +29,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-form-group
+<xtyle-form-group
 	{...rest}
 	{label}
 	{description}
@@ -40,4 +40,4 @@
 	for={htmlFor || undefined}
 >
 	{@render children?.()}
-</xoji-form-group>
+</xtyle-form-group>

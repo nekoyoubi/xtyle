@@ -1,15 +1,15 @@
-# xoji
+# xtyle
 
 [![built with xript](https://img.shields.io/badge/built%20with-xript-e02e81)](https://xript.dev)
-[![npm](https://img.shields.io/npm/v/@xoji/core?label=npm)](https://www.npmjs.com/package/@xoji/core)
-[![docs](https://img.shields.io/badge/docs-xoji.dev-blue)](https://xoji.dev)
+[![npm](https://img.shields.io/npm/v/@xtyle/core?label=npm)](https://www.npmjs.com/package/@xtyle/core)
+[![docs](https://img.shields.io/badge/docs-xtyle.dev-blue)](https://xtyle.dev)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A **themable-derivation engine and component contract**. A small set of pinned colors
 propagates algorithmically into a full, internally-consistent design-token set,
 co-designed against a component library so that any valid theme renders well out of the box.
 
-`xoji.dev` · a standalone design-token and theming product · not a brand spec, not
+`xtyle.dev` · a standalone design-token and theming product · not a brand spec, not
 framework infra, its own thing, consumed by desktop apps and websites alike.
 
 ## The shape
@@ -34,14 +34,14 @@ Three layers over that spine:
    they consume; an algorithm or theme declares what it produces; the engine checks coverage.
    Any app, site, or canvas reads the tokens without a framework, and the register is open,
    so authors declare new tokens and rewire derivations.
-3. **Components (optional)**: single-layer raw custom elements (`@xoji/core/elements`). The
+3. **Components (optional)**: single-layer raw custom elements (`@xtyle/core/elements`). The
    element *is* the component, no headless tier beneath it, styled *only* against tokens it
-   declares it consumes. Thin framework wrappers (`@xoji/svelte`, `@xoji/astro`, and more)
+   declares it consumes. Thin framework wrappers (`@xtyle/svelte`, `@xtyle/astro`, and more)
    skin them. Optional sugar; the CSS artifact is the real minimum an app consumes.
 
 **The runtime is optional.** Once an algorithm has run, a theme is just CSS custom
 properties and the browser cascade does the rest; nothing has to be running to use it.
-Pre-bake a bounded theme set to CSS (switching is a `data-theme` swap), and run `@xoji/core`
+Pre-bake a bounded theme set to CSS (switching is a `data-theme` swap), and run `@xtyle/core`
 live in the browser only when you actually need novel-at-runtime inputs (user-authored
 themes, continuous day/night, live preview). See [`docs/repo-layout.md`](docs/repo-layout.md).
 
@@ -52,7 +52,7 @@ choice each *algorithm* makes. The taste lives in the algorithm:
 
 - Components reference **only** declared tokens, no raw colors, no magic numbers, so a good
   algorithm's discipline reaches the whole catalog.
-- A **contrast-conscientious algorithm** (e.g. `xoji-hc`) guarantees every token it derives
+- A **contrast-conscientious algorithm** (e.g. `xtyle-hc`) guarantees every token it derives
   is perceptually valid for any inputs: contrast floors, state deltas, disabled muting,
   border separation. OKLCH makes the contrast-preserving math trustworthy. A permissive
   algorithm may honor a garish input verbatim; that is its own call.
@@ -62,15 +62,15 @@ choice each *algorithm* makes. The taste lives in the algorithm:
 
 ## The algorithm set
 
-`@xoji/core` ships five algorithms over one preset-parameterized core (`makeXojiAlgorithm`),
+`@xtyle/core` ships five algorithms over one preset-parameterized core (`makeXtyleAlgorithm`),
 each its own xript module with its own declared invariants the gauntlet holds it to:
 
-- **`xoji-default`**: the neutral, readability-conscientious baseline; AA contrast floors,
+- **`xtyle-default`**: the neutral, readability-conscientious baseline; AA contrast floors,
   balanced vibrancy.
-- **`xoji-hc`**: high-contrast. Clamps derived text toward AAA (`>= 7` where the fill allows,
+- **`xtyle-hc`**: high-contrast. Clamps derived text toward AAA (`>= 7` where the fill allows,
   AA minimum everywhere) and declares that stricter floor as its invariant.
-- **`xoji-quiet`**: low vibrancy, muted chroma, soft elevation, gentle accents; still AA.
-- **`xoji-loud`**: high vibrancy, saturated accents and palette, punchier elevation; still AA.
+- **`xtyle-quiet`**: low vibrancy, muted chroma, soft elevation, gentle accents; still AA.
+- **`xtyle-loud`**: high vibrancy, saturated accents and palette, punchier elevation; still AA.
 - **`nxi-nite`**: time-aware day/night. Folds the time of day into the derivation through its
   own passes, beyond the posture scalars the others vary.
 
@@ -79,9 +79,9 @@ the same core math. The first four differ only in posture; `nxi-nite` adds its o
 passes on top. Drive any of them from the CLI:
 
 ```sh
-xoji list                       # the five algorithm ids
-xoji derive -a xoji-loud --bg "#0f1115" --accent "#5b8cff"
-xoji gauntlet -a xoji-hc --runs 250
+xtyle list                       # the five algorithm ids
+xtyle derive -a xtyle-loud --bg "#0f1115" --accent "#5b8cff"
+xtyle gauntlet -a xtyle-hc --runs 250
 ```
 
 ## The dimensional contract
@@ -94,16 +94,16 @@ token register and [`docs/open-questions.md`](docs/open-questions.md) for the fo
 
 ## Lineage
 
-xoji extracts and generalizes a theme engine proved out in a prior in-house project (a shared
+xtyle extracts and generalizes a theme engine proved out in a prior in-house project (a shared
 theme crate plus a theme designer), which already shipped the color, type, geometry, and
-motion dimensions but only lifted color into the shared lib. xoji is where the whole
+motion dimensions but only lifted color into the shared lib. xtyle is where the whole
 dimensional model becomes a standalone, consumable contract, plus the elevation and spacing
 dimensions and the expanded component-facing verbs the existing system left as ad-hoc `extras`.
 
 ## Status
 
 Pre-alpha. Engine language is settled (**TS-core**; see
-[`docs/open-questions.md`](docs/open-questions.md) #1). The `@xoji/core` engine is live: the
+[`docs/open-questions.md`](docs/open-questions.md) #1). The `@xtyle/core` engine is live: the
 full register derives over an open token graph, five algorithms ship over a shared
 preset-parameterized core, and the dimension-aware gauntlet holds each algorithm to its own
 declared invariants. Algorithms run as xript modules through the zero-authority sandbox, the

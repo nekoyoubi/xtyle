@@ -1,4 +1,4 @@
-# xoji: the derivation model
+# xtyle: the derivation model
 
 This is the spine. The README calls the derivation engine "the crown jewel"; this
 doc is what the crown jewel actually *is*, and it's an architecture, not a
@@ -11,7 +11,7 @@ token lists are read as **one algorithm's baseline register**, not a fixed canon
 ## The inversion: the algorithm is the asset
 
 Every theming system that exists treats the **theme** as the artifact and the
-engine as plumbing. xoji inverts that. The durable, shareable, composable,
+engine as plumbing. xtyle inverts that. The durable, shareable, composable,
 posture-encoding asset is the **algorithm**; a **theme** is a
 materialization that falls out of one.
 
@@ -35,21 +35,21 @@ the algorithm level at all.
 
 A named, first-class **xript plugin (addon)** that owns the rules, the math, and
 the defaults *for everything*. It is not "the color resolver"; it resolves every
-dimension. Two algorithms (`xoji-default`, `xoji-hc`) are two worldviews doing
+dimension. Two algorithms (`xtyle-default`, `xtyle-hc`) are two worldviews doing
 the same job with different posture. Being literally a xript plugin is the
 keystone: knobs are its declared inputs, it's sandboxed by xript's capability
 model, and it distributes like any addon, so xript's toolchain (validate /
-typegen / docgen / init) and sandbox come free, and xoji builds none of it.
+typegen / docgen / init) and sandbox come free, and xtyle builds none of it.
 
 An algorithm:
 
 - **Declares its exposed knobs**: the curated, high-level intents it offers
   (`scheme`, `contrast-band`, `vibrancy`, `edge`, `density`, `anchors`, …). The
   knobs *are* its parameter signature.
-- **Composes / inherits**: `xoji-loud` extends `xoji-default`; `xoji-hc` is
-  a sibling. A custom algorithm can be a **functional superset of xoji**.
-- **Owns its own invariant policy.** `xoji-hc` clamps for contrast no matter the
-  inputs; `xoji-default` may honor a garish accent verbatim. There is **no
+- **Composes / inherits**: `xtyle-loud` extends `xtyle-default`; `xtyle-hc` is
+  a sibling. A custom algorithm can be a **functional superset of xtyle**.
+- **Owns its own invariant policy.** `xtyle-hc` clamps for contrast no matter the
+  inputs; `xtyle-default` may honor a garish accent verbatim. There is **no
   engine-level "can't look bad" gospel**: whether themes can look bad is a choice
   each algorithm makes.
 - **Owns its refit policy**: how a pinned member of a generated family reshapes
@@ -68,14 +68,14 @@ code. You don't slide a theme up a continuum into an algorithm; you refactor it
 into one deliberately.
 
 **The theme file makes that materialization portable.** A theme serializes to a
-self-describing `xoji-theme` artifact: `meta` · `recipe` · `tokens`. The `recipe`
+self-describing `xtyle-theme` artifact: `meta` · `recipe` · `tokens`. The `recipe`
 is the binding itself (the algorithm plus its `anchors` / `knobs` / `overrides`),
 the re-derivable source of truth; `tokens` is the materialized register, a cache so
 a consumer applies the theme without ever running the engine. One contract keeps
 the two honest: re-deriving the `recipe` reproduces the `tokens` byte-for-byte. The
 engine carries it (`buildThemeFile` / `serializeThemeFile` / `parseThemeFile` from
-`@xoji/core`), the schema is published at `xoji.dev/schema/theme.v1.json`, and
-`xoji derive --format theme` emits one straight from the CLI.
+`@xtyle/core`), the schema is published at `xtyle.dev/schema/theme.v1.json`, and
+`xtyle derive --format theme` emits one straight from the CLI.
 
 ### Generation tooling: the bridge
 
@@ -146,12 +146,12 @@ component needs to render. That's a **coverage check**, not a schema:
 - **Algorithms / themes declare what they produce.**
 - **The engine verifies the produced set covers the consumed set.**
 
-"Functional superset of xoji" is exactly this: satisfy the floor, then add as much
+"Functional superset of xtyle" is exactly this: satisfy the floor, then add as much
 as you want on top. The contract is coverage, never a fixed vocabulary.
 
 **The gauntlet is parameterized by algorithm.** It fires N extreme knob / anchor
 sets at a *chosen* algorithm, materializes its register, and asserts *that
-algorithm's declared invariants* hold. `xoji-hc` declares strict contrast and
+algorithm's declared invariants* hold. `xtyle-hc` declares strict contrast and
 must survive the gauntlet; an algorithm that declares no invariants has nothing to
 assert and that's a legitimate choice. The gauntlet validates the *covered*
 tokens under the *algorithm's* policy; it is not a universal floor.
@@ -195,8 +195,8 @@ graph.** It deliberately owns *less* than it sounds:
   invariant policy, refit policy.
 - **The theme owns:** knob bindings, token overrides, register extensions.
 
-*Engine* here names a layer, not the npm package. `@xoji/core` is
-batteries-included: it ships the blessed `xoji-*` algorithms' vocabulary, math, and
+*Engine* here names a layer, not the npm package. `@xtyle/core` is
+batteries-included: it ships the blessed `xtyle-*` algorithms' vocabulary, math, and
 invariants (the house-algorithm SDK) alongside the engine mechanism, so the
 built-in set bundles without a separate install. The split still holds where it
 counts: a third-party algorithm (a Tier-2 `defineAlgorithm` run through the sandbox)

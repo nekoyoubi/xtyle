@@ -1,16 +1,16 @@
 ---
 import Base from "../layouts/Base.astro";
-import Panel from "@xoji/astro/Panel.astro";
-import Dock from "@xoji/astro/Dock.astro";
-import Toc from "@xoji/astro/Toc.astro";
-import Alert from "@xoji/astro/Alert.astro";
-import Link from "@xoji/astro/Link.astro";
-import Table from "@xoji/astro/Table.astro";
-import Code from "@xoji/astro/Code.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Eyebrow from "@xoji/astro/Eyebrow.astro";
+import Panel from "@xtyle/astro/Panel.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Toc from "@xtyle/astro/Toc.astro";
+import Alert from "@xtyle/astro/Alert.astro";
+import Link from "@xtyle/astro/Link.astro";
+import Table from "@xtyle/astro/Table.astro";
+import Code from "@xtyle/astro/Code.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Eyebrow from "@xtyle/astro/Eyebrow.astro";
 
 const sections = [
 	{ id: "run", label: "Run it" },
@@ -20,28 +20,28 @@ const sections = [
 ];
 
 const tools = [
-	{ name: "xoji_derive", note: "Run an algorithm over seed colors or pinned tokens and emit the register (css, json, theme, prism, monaco)." },
-	{ name: "xoji_coverage", note: "Check that a derived register covers a component's consumedTokens, an explicit token list, or every shipped component." },
-	{ name: "xoji_audit", note: "Grade a derived theme against xoji's canonical text/fill pairs at the WCAG floors: a per-pair AAA/AA/fail tier plus tallies." },
-	{ name: "xoji_components", note: "List every component, or describe one's full manifest: props, variants, states, slots, consumedTokens, a11y, examples." },
-	{ name: "xoji_gauntlet", note: "Prove an algorithm's invariants across randomized inputs (one algorithm or all)." },
-	{ name: "xoji_list_algorithms", note: "List the algorithm ids and the emit formats." },
-	{ name: "xoji_server_info", note: "Report the running server's name, version, and build timestamp." },
+	{ name: "xtyle_derive", note: "Run an algorithm over seed colors or pinned tokens and emit the register (css, json, theme, prism, monaco)." },
+	{ name: "xtyle_coverage", note: "Check that a derived register covers a component's consumedTokens, an explicit token list, or every shipped component." },
+	{ name: "xtyle_audit", note: "Grade a derived theme against xtyle's canonical text/fill pairs at the WCAG floors: a per-pair AAA/AA/fail tier plus tallies." },
+	{ name: "xtyle_components", note: "List every component, or describe one's full manifest: props, variants, states, slots, consumedTokens, a11y, examples." },
+	{ name: "xtyle_gauntlet", note: "Prove an algorithm's invariants across randomized inputs (one algorithm or all)." },
+	{ name: "xtyle_list_algorithms", note: "List the algorithm ids and the emit formats." },
+	{ name: "xtyle_server_info", note: "Report the running server's name, version, and build timestamp." },
 ];
 
 const configSnippet = `{
   "mcpServers": {
-    "xoji": {
+    "xtyle": {
       "command": "npx",
-      "args": ["-y", "@xoji/core", "xoji", "mcp"]
+      "args": ["-y", "@xtyle/core", "xtyle", "mcp"]
     }
   }
 }`;
 ---
 
 <Base
-	title="MCP server: xoji"
-	description="xoji mcp hands an agent the same engine the CLI hands a human, over one stdio connection: derive, coverage, audit, components, and gauntlet as tools, plus the concept docs and every component manifest as resources."
+	title="MCP server: xtyle"
+	description="xtyle mcp hands an agent the same engine the CLI hands a human, over one stdio connection: derive, coverage, audit, components, and gauntlet as tools, plus the concept docs and every component manifest as resources."
 >
 	<Dock slot="right" side="right" size="sm" label="On this page" hideHeader class="docs-toc-rail">
 		<Toc items={sections} />
@@ -53,8 +53,8 @@ const configSnippet = `{
 				<Eyebrow>MCP server</Eyebrow>
 				<Heading level={1} size="3xl">The same engine, handed to an agent</Heading>
 				<Text size="lg" tone="muted">
-					<code>xoji mcp</code> is a <Link href="https://modelcontextprotocol.io">Model Context
-					Protocol</Link> server built into <code>@xoji/core</code>. It hands an agent the same
+					<code>xtyle mcp</code> is a <Link href="https://modelcontextprotocol.io">Model Context
+					Protocol</Link> server built into <code>@xtyle/core</code>. It hands an agent the same
 					capabilities the CLI hands a human, over one stdio connection: every derivation and
 					proof as a callable tool, the concept docs and every component manifest as resources.
 					Each tool runs the same code its CLI counterpart runs, so the two can't drift.
@@ -64,10 +64,10 @@ const configSnippet = `{
 			<Panel title="Run it" id="run" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						The server is a subcommand of the <code>xoji</code> bin. Configure your MCP client
+						The server is a subcommand of the <code>xtyle</code> bin. Configure your MCP client
 						to launch it over stdio. The <code>npx</code> form needs no global install.
 					</Text>
-					<Code lang="sh" code="xoji mcp" />
+					<Code lang="sh" code="xtyle mcp" />
 					<Code lang="json" code={configSnippet} />
 				</Stack>
 			</Panel>
@@ -75,11 +75,11 @@ const configSnippet = `{
 			<Panel title="Tools" id="tools" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						<code>xoji_components</code> is the one to reach for first when building against
-						xoji: it returns token names and prop shapes from the manifest, so an agent works
+						<code>xtyle_components</code> is the one to reach for first when building against
+						xtyle: it returns token names and prop shapes from the manifest, so an agent works
 						from what ships rather than a guess.
 					</Text>
-					<Table aria-label="The xoji MCP tools">
+					<Table aria-label="The xtyle MCP tools">
 						<table>
 							<thead>
 								<tr><th>Tool</th><th>What it does</th></tr>
@@ -100,21 +100,21 @@ const configSnippet = `{
 			<Panel title="Resources" id="resources" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						It serves xoji's own docs and contracts straight from the package, so an
+						It serves xtyle's own docs and contracts straight from the package, so an
 						agent's answers track what ships rather than its training memory.
 					</Text>
-					<Table aria-label="The xoji MCP resources">
+					<Table aria-label="The xtyle MCP resources">
 						<table>
 							<thead>
 								<tr><th>Resource</th><th>What it serves</th></tr>
 							</thead>
 							<tbody>
 								<tr>
-									<td><code>xoji://concept/&#123;id&#125;</code></td>
+									<td><code>xtyle://concept/&#123;id&#125;</code></td>
 									<td>The concept narrative: <code>overview</code>, <code>open-register</code>, <code>algorithms</code>, <code>consuming</code>.</td>
 								</tr>
 								<tr>
-									<td><code>xoji://component/&#123;id&#125;</code></td>
+									<td><code>xtyle://component/&#123;id&#125;</code></td>
 									<td>Every component manifest as JSON, the same data the reference pages render.</td>
 								</tr>
 							</tbody>
@@ -126,7 +126,7 @@ const configSnippet = `{
 			<Panel title="Why it matters" id="why" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						Agents are first-class consumers of xoji. Without the server an agent guesses at
+						Agents are first-class consumers of xtyle. Without the server an agent guesses at
 						token names, can't check coverage without a human at a terminal, and answers
 						theory questions from stale memory. The MCP closes that loop: derive, check, and
 						introspect the contract in one place, grounded in what the package actually ships.

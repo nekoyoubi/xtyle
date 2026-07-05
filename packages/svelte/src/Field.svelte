@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	type FieldOption = { value: string; label?: string };
 
@@ -66,7 +66,7 @@
 	}
 </script>
 
-<xoji-field
+<xtyle-field
 	bind:this={host}
 	{...rest}
 	{label}
@@ -89,4 +89,4 @@
 >
 	{#if prefix}<span slot="prefix">{@render prefix()}</span>{/if}
 	{#if suffix}<span slot="suffix">{@render suffix()}</span>{/if}
-</xoji-field>
+</xtyle-field>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone } from "@xoji/core";
+	import type { FullTone } from "@xtyle/core";
 
 	type TextAs = "p" | "span";
 	type TextSize = "xs" | "sm" | "body" | "lg";
@@ -33,6 +33,6 @@
 	}: Props = $props();
 </script>
 
-<xoji-text {...rest} {as} {size} {weight} {leading} {tone} mono={mono || undefined}>
+<xtyle-text {...rest} {as} {size} {weight} {leading} {tone} mono={mono || undefined}>
 	{@render children?.()}
-</xoji-text>
+</xtyle-text>

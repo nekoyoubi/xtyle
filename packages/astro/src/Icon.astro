@@ -1,8 +1,8 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { bakeIconMark } from "./internal/palette.ts";
-import { ICON_NAMES, iconClass } from "@xoji/core";
-import type { FullTone, IconName, IconSize, SeriesScheme } from "@xoji/core";
+import { ICON_NAMES, iconClass } from "@xtyle/core";
+import type { FullTone, IconName, IconSize, SeriesScheme } from "@xtyle/core";
 
 interface Props {
 	name: IconName | (string & {});
@@ -38,7 +38,7 @@ const composed =
 	mark != null ? `<span data-root data-icon>${mark}</span>` : await renderFragmentLight("icon", { name, size, tone, label, spin });
 ---
 
-<xoji-icon
+<xtyle-icon
 	name={name}
 	size={size}
 	tone={tone}
@@ -50,4 +50,4 @@ const composed =
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

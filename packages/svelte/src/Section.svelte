@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone } from "@xoji/core";
+	import type { FullTone } from "@xtyle/core";
 
 	type SectionTag = "section" | "div" | "header" | "footer";
 	type SectionVariant = "band" | "stage";
@@ -32,6 +32,6 @@
 	}: Props = $props();
 </script>
 
-<xoji-section {...rest} {as} {variant} {tone} {padding} {label} bordered={bordered || undefined}>
+<xtyle-section {...rest} {as} {variant} {tone} {padding} {label} bordered={bordered || undefined}>
 	{@render children?.()}
-</xoji-section>
+</xtyle-section>

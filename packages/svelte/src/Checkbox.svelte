@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size, FullTone as Tone } from "@xoji/core";
+	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	interface Props {
 		checked?: boolean;
@@ -42,7 +42,7 @@
 	}
 </script>
 
-<xoji-checkbox
+<xtyle-checkbox
 	{...rest}
 	checked={checked || undefined}
 	indeterminate={indeterminate || undefined}
@@ -56,4 +56,4 @@
 	onchange={handleChange}
 >
 	{@render children?.()}
-</xoji-checkbox>
+</xtyle-checkbox>

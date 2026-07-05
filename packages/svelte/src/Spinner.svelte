@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { Size, FullTone as Tone } from "@xoji/core";
+	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	interface Props {
 		tone?: Tone;
@@ -13,4 +13,4 @@
 	let { tone = "accent", size = "md", ariaLabel = "Loading", ...rest }: Props = $props();
 </script>
 
-<xoji-spinner {...rest} {tone} {size} aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}></xoji-spinner>
+<xtyle-spinner {...rest} {tone} {size} aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}></xtyle-spinner>

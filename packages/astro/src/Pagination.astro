@@ -1,6 +1,6 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
-import type { FullTone, Size } from "@xoji/core";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { FullTone, Size } from "@xtyle/core";
 
 interface Props {
 	page?: number;
@@ -36,7 +36,7 @@ const bindings = { page, total, siblings, boundaries, href, tone, size, label };
 const light = await renderFragmentLight("pagination", bindings);
 ---
 
-<xoji-pagination
+<xtyle-pagination
 	page={page}
 	total={total}
 	siblings={siblings}
@@ -50,4 +50,4 @@ const light = await renderFragmentLight("pagination", bindings);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

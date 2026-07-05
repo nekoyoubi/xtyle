@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { Size, FullTone as Tone } from "@xoji/core";
+	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	interface Props {
 		value?: number;
@@ -62,7 +62,7 @@
 	}
 </script>
 
-<xoji-slider
+<xtyle-slider
 	bind:this={host}
 	{...rest}
 	{value}
@@ -79,4 +79,4 @@
 	hide-label={hideLabel || undefined}
 	oninput={handleInput}
 	onchange={handleChange}
-></xoji-slider>
+></xtyle-slider>

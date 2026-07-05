@@ -1,6 +1,6 @@
 ---
-import { type TocItem } from "@xoji/core/markup";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { type TocItem } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
 	items: TocItem[];
@@ -23,7 +23,7 @@ const bindings = {
 const light = await renderFragmentLight("toc", bindings);
 ---
 
-<xoji-toc
+<xtyle-toc
 	items={items ? JSON.stringify(items) : undefined}
 	label={label}
 	sticky={sticky || undefined}
@@ -32,4 +32,4 @@ const light = await renderFragmentLight("toc", bindings);
 	set:html={light}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

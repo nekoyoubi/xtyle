@@ -5,8 +5,8 @@ import {
 	toOklchColor,
 	withLightness,
 	type OklchColor,
-} from "@xoji/core/authoring";
-import type { DeriveOptions, Knobs, Pass, PassContext, TokenName, TokenRegister } from "@xoji/core";
+} from "@xtyle/core/authoring";
+import type { DeriveOptions, Knobs, Pass, PassContext, TokenName, TokenRegister } from "@xtyle/core";
 import {
 	borderForContrast,
 	BORDER_SEPARATION,
@@ -16,7 +16,7 @@ import {
 	settlePass,
 	TOKEN_CATEGORIES,
 	type PresetDefaults,
-} from "@xoji/core/authoring";
+} from "@xtyle/core/authoring";
 
 const DEFAULT_HOUR = 12;
 const FLOOR = 4.5 + 0.2;
@@ -374,9 +374,9 @@ export function contrastRestorePass(): Pass {
 }
 
 /**
- * The Day/Night pipeline: settle the full xoji-default register, warm + dim the ambient
+ * The Day/Night pipeline: settle the full xtyle-default register, warm + dim the ambient
  * surfaces and inks toward the fed hour, then restore the contrast floor. settlePass
- * reuses the shared xoji derivation verbatim, so the only aesthetic policy nxi-nite adds
+ * reuses the shared xtyle derivation verbatim, so the only aesthetic policy nxi-nite adds
  * lives in this module — and because both the baked algorithm and the hosted mod import
  * this same module, the two derive byte-identically.
  */

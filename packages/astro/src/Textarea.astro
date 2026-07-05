@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 type TextareaResize = "none" | "vertical" | "horizontal" | "both";
@@ -44,8 +44,8 @@ const {
 } = Astro.props;
 
 const seed = Math.random().toString(36).slice(2, 9);
-const fieldId = `xoji-textarea-${seed}`;
-const errorId = `xoji-textarea-error-${seed}`;
+const fieldId = `xtyle-textarea-${seed}`;
+const errorId = `xtyle-textarea-error-${seed}`;
 
 const bindings = {
 	fieldId,
@@ -60,7 +60,7 @@ const bindings = {
 const light = await renderFragmentLight("textarea", bindings);
 ---
 
-<xoji-textarea
+<xtyle-textarea
 	label={label}
 	value={value}
 	rows={rows}
@@ -78,4 +78,4 @@ const light = await renderFragmentLight("textarea", bindings);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

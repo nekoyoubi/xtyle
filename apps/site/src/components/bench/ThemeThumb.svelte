@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Algorithm } from "@xoji/core";
+	import type { Algorithm } from "@xtyle/core";
 	import { deriveRegister } from "../../lib/theme-store/recipe.js";
 	import { renderThumbnailSvg } from "../../lib/theme-store/thumbnail.js";
 	import type { ThemeDoc } from "../../lib/theme-store/types.js";

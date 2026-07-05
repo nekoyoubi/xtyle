@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { PieDatum, PieScheme, PieVariant } from "@xoji/core";
+	import type { PieDatum, PieScheme, PieVariant } from "@xtyle/core";
 
 	interface Props {
 		data?: PieDatum[];
@@ -36,7 +36,7 @@
 	});
 </script>
 
-<xoji-pie
+<xtyle-pie
 	bind:this={host}
 	{...rest}
 	{variant}
@@ -45,4 +45,4 @@
 	legend={legend ? undefined : "false"}
 	{size}
 	{label}
-></xoji-pie>
+></xtyle-pie>

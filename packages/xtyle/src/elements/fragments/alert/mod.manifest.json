@@ -1,0 +1,47 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-alert-default",
+	"version": "0.0.1",
+	"title": "Xtyle Alert (default)",
+	"description": "The built-in fill for the xtyle Alert component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.alert"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.alert": [
+			{
+				"id": "alert",
+				"format": "text/html+jsml",
+				"source": "alert.html",
+				"handlers": [
+					{ "selector": ".xtyle-alert__dismiss", "on": "click", "handler": "dismiss" },
+					{ "selector": ".xtyle-alert", "on": "keydown", "handler": "keyDismiss" }
+				],
+				"meta": {
+					"tokens": [
+						"--success",
+						"--success-bg",
+						"--success-text",
+						"--success-fg",
+						"--warn",
+						"--warn-bg",
+						"--warn-text",
+						"--warn-fg",
+						"--danger",
+						"--danger-bg",
+						"--danger-text",
+						"--danger-fg",
+						"--info",
+						"--info-bg",
+						"--info-text",
+						"--info-fg",
+						"--fg-0",
+						"--ring",
+						"--state-hover",
+						"--state-press"
+					]
+				}
+			}
+		]
+	}
+}

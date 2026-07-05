@@ -1,10 +1,10 @@
 ---
-import Table from "@xoji/astro/Table.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Card from "@xoji/astro/Card.astro";
-import Stack from "@xoji/astro/Stack.astro";
+import Table from "@xtyle/astro/Table.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
 
 type Row = {
 	algorithm: string;
@@ -15,10 +15,10 @@ type Row = {
 };
 
 const rows: Row[] = [
-	{ algorithm: "xoji-default", tone: "accent", tokens: 142, coverage: 100, status: "Blessed" },
-	{ algorithm: "xoji-quiet", tone: "info", tokens: 138, coverage: 98, status: "Blessed" },
-	{ algorithm: "xoji-loud", tone: "warn", tokens: 151, coverage: 96, status: "Draft" },
-	{ algorithm: "xoji-hc", tone: "success", tokens: 147, coverage: 100, status: "Blessed" },
+	{ algorithm: "xtyle-default", tone: "accent", tokens: 142, coverage: 100, status: "Blessed" },
+	{ algorithm: "xtyle-quiet", tone: "info", tokens: 138, coverage: 98, status: "Blessed" },
+	{ algorithm: "xtyle-loud", tone: "warn", tokens: 151, coverage: 96, status: "Draft" },
+	{ algorithm: "xtyle-hc", tone: "success", tokens: 147, coverage: 100, status: "Blessed" },
 	{ algorithm: "aurora", tone: "info", tokens: 129, coverage: 91, status: "Community" },
 ];
 
@@ -35,7 +35,7 @@ const statusTone: Record<Row["status"], "success" | "warn" | "neutral"> = {
 		<Text slot="header" size="xs" tone="muted">
 			Click a sortable column header (or focus it and press Enter) to re-order the rows.
 		</Text>
-		<Table variant="default" hover sticky maxHeight="12rem" ariaLabel="Built-in xoji algorithms">
+		<Table variant="default" hover sticky maxHeight="12rem" ariaLabel="Built-in xtyle algorithms">
 				<table>
 					<thead>
 						<tr>

@@ -1,0 +1,51 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-slider-default",
+	"version": "0.0.1",
+	"title": "Xtyle Slider (default)",
+	"description": "The built-in fill for the xtyle Slider component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.slider"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.slider": [
+			{
+				"id": "slider",
+				"format": "text/html+jsml",
+				"source": "slider.html",
+				"handlers": [{ "selector": ".xtyle-slider__thumb", "on": "keydown", "handler": "keyAdjust" }],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--bg-0",
+						"--border-normal",
+						"--border-thin",
+						"--border-thick",
+						"--duration-fast",
+						"--ease-standard",
+						"--elevation-1",
+						"--fg-0",
+						"--fg-1",
+						"--fg-disabled",
+						"--font-sans",
+						"--leading-tight",
+						"--line-2",
+						"--neutral-bg",
+						"--radius-full",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-4",
+						"--space-5",
+						"--space-6",
+						"--state-disabled",
+						"--state-hover",
+						"--state-press",
+						"--text-body",
+						"--text-sm"
+					]
+				}
+			}
+		]
+	}
+}

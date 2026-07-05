@@ -1,12 +1,12 @@
-# Contributing to xoji
+# Contributing to xtyle
 
-xoji is open to contributions. Here is what you need to get started.
+xtyle is open to contributions. Here is what you need to get started.
 
 ## Development Setup
 
 ```sh
-git clone https://github.com/nekoyoubi/xoji.git
-cd xoji
+git clone https://github.com/nekoyoubi/xtyle.git
+cd xtyle
 npm install
 ```
 
@@ -15,13 +15,13 @@ A monorepo managed via npm workspaces; the install wires every package.
 ## Repository Structure
 
 ```
-xoji/
-├── packages/xoji/    # the engine + raw custom elements, published as `@xoji/core`
-│                     #   (elements imported from `@xoji/core/elements`)
-├── packages/svelte/  # @xoji/svelte — thin Svelte wrapper
-├── packages/astro/   # @xoji/astro — Astro components
-├── algorithms/       # built-in xript-plugin algorithms (xoji-default, …)
-├── apps/site/        # xoji.dev (Astro)
+xtyle/
+├── packages/xtyle/    # the engine + raw custom elements, published as `@xtyle/core`
+│                     #   (elements imported from `@xtyle/core/elements`)
+├── packages/svelte/  # @xtyle/svelte — thin Svelte wrapper
+├── packages/astro/   # @xtyle/astro — Astro components
+├── algorithms/       # built-in xript-plugin algorithms (xtyle-default, …)
+├── apps/site/        # xtyle.dev (Astro)
 └── docs/             # design record
 ```
 
@@ -31,8 +31,8 @@ xoji/
 npm run build                            # all packages
 npm test                                 # all tests (incl. the gauntlet)
 
-npm run build --workspace=packages/xoji  # just the engine
-npm test --workspace=packages/xoji
+npm run build --workspace=packages/xtyle  # just the engine
+npm test --workspace=packages/xtyle
 ```
 
 The site runs locally with `npm run dev` (when `apps/site` exists).

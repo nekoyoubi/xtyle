@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { Size } from "@xoji/core";
+	import type { Size } from "@xtyle/core";
 
 	type SkeletonShape = "text" | "line" | "block" | "circle";
 
@@ -16,4 +16,4 @@
 	let { shape = "text", size = "md", class: extra, style, ...rest }: Props = $props();
 </script>
 
-<xoji-skeleton {...rest} {shape} {size} class={extra} {style}></xoji-skeleton>
+<xtyle-skeleton {...rest} {shape} {size} class={extra} {style}></xtyle-skeleton>

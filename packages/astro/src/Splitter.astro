@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type SplitterOrientation = "vertical" | "horizontal";
 type SplitterSize = "sm" | "md" | "lg";
@@ -64,7 +64,7 @@ const bindings = {
 const light = await renderFragmentLight("splitter", bindings);
 ---
 
-<xoji-splitter
+<xtyle-splitter
 	orientation={orientation}
 	size={size}
 	line={line || undefined}
@@ -84,4 +84,4 @@ const light = await renderFragmentLight("splitter", bindings);
 	set:html={light}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

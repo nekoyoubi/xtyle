@@ -1,6 +1,6 @@
-import type { Algorithm, TokenRegister } from "@xoji/core";
-import { derive } from "@xoji/core";
-import { hostedAlgorithm } from "@xoji/core/algorithms";
+import type { Algorithm, TokenRegister } from "@xtyle/core";
+import { derive } from "@xtyle/core";
+import { hostedAlgorithm } from "@xtyle/core/algorithms";
 import type { BenchState } from "../../components/bench/state.js";
 import { anchorsToConstraints, defaultState, toDeriveKnobs } from "../../components/bench/state.js";
 import type { ThemeRecipe } from "./types.js";
@@ -44,7 +44,7 @@ export function deriveRegister(
 		algorithm =
 			algos?.get(recipe.algorithm) ?? hostedAlgorithm(recipe.algorithm);
 	} catch {
-		algorithm = hostedAlgorithm("xoji-default");
+		algorithm = hostedAlgorithm("xtyle-default");
 	}
 	try {
 		const register = derive(algorithm, {

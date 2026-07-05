@@ -18,6 +18,6 @@
 	let { orientation = "horizontal", variant = "default", size = "normal", children, ...rest }: Props = $props();
 </script>
 
-<xoji-separator {...rest} {orientation} {variant} {size}>
+<xtyle-separator {...rest} {orientation} {variant} {size}>
 	{@render children?.()}
-</xoji-separator>
+</xtyle-separator>

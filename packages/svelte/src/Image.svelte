@@ -31,7 +31,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-image
+<xtyle-image
 	{...rest}
 	{src}
 	{alt}
@@ -41,4 +41,4 @@
 	{loading}
 	{caption}
 	lightbox={lightbox ? "" : undefined}
-></xoji-image>
+></xtyle-image>

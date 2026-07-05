@@ -1,16 +1,16 @@
 ---
 import Base from "../layouts/Base.astro";
-import Panel from "@xoji/astro/Panel.astro";
-import Dock from "@xoji/astro/Dock.astro";
-import Toc from "@xoji/astro/Toc.astro";
-import Alert from "@xoji/astro/Alert.astro";
-import Link from "@xoji/astro/Link.astro";
-import Table from "@xoji/astro/Table.astro";
-import Code from "@xoji/astro/Code.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Eyebrow from "@xoji/astro/Eyebrow.astro";
+import Panel from "@xtyle/astro/Panel.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Toc from "@xtyle/astro/Toc.astro";
+import Alert from "@xtyle/astro/Alert.astro";
+import Link from "@xtyle/astro/Link.astro";
+import Table from "@xtyle/astro/Table.astro";
+import Code from "@xtyle/astro/Code.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Eyebrow from "@xtyle/astro/Eyebrow.astro";
 
 const sections = [
 	{ id: "what", label: "What an algorithm is" },
@@ -24,10 +24,10 @@ const sections = [
 ];
 
 const builtIns = [
-	{ id: "xoji-default", note: "the neutral default; the shared taste with nothing turned up" },
-	{ id: "xoji-quiet", note: "restrained; muted chroma, soft elevation" },
-	{ id: "xoji-loud", note: "vibrant; boosted chroma and punchier depth" },
-	{ id: "xoji-hc", note: "high contrast; an AAA floor for accessibility" },
+	{ id: "xtyle-default", note: "the neutral default; the shared taste with nothing turned up" },
+	{ id: "xtyle-quiet", note: "restrained; muted chroma, soft elevation" },
+	{ id: "xtyle-loud", note: "vibrant; boosted chroma and punchier depth" },
+	{ id: "xtyle-hc", note: "high contrast; an AAA floor for accessibility" },
 	{ id: "nxi-nite", note: "Day/Night; a time-of-day pass layered on the base" },
 ];
 
@@ -46,7 +46,7 @@ const anatomySnippet = `algorithms/sunrise/
 ├─ mod-manifest.json   # declares the mod: name, capabilities, entry
 └─ src/
    ├─ preset.ts        # the taste, as pure data
-   └─ mod.ts           # defineXojiAlgorithm(spec)`;
+   └─ mod.ts           # defineXtyleAlgorithm(spec)`;
 
 const manifestSnippet = `{
   "$schema": "https://xript.dev/schema/mod-manifest/v0.7.json",
@@ -54,22 +54,22 @@ const manifestSnippet = `{
   "name": "sunrise",
   "version": "0.1.0",
   "title": "Sunrise",
-  "family": "xoji",
+  "family": "xtyle",
   "capabilities": ["color-math"],
   "entry": { "script": "src/mod.js", "format": "script" }
 }`;
 
 const presetSnippet = `// src/mod.ts
-import { defineXojiAlgorithm } from "@xoji/core/authoring";
+import { defineXtyleAlgorithm } from "@xtyle/core/authoring";
 
-defineXojiAlgorithm({
+defineXtyleAlgorithm({
   id: "sunrise",
   anchors: { bg: "#1a1410", accent: "#ff9e5e" },
   vibrancy: 0.7,
   chroma: { accent: 1.4, palette: 1.3 },
 });`;
 
-const scratchSnippet = `import { defineAlgorithm } from "@xoji/core/authoring";
+const scratchSnippet = `import { defineAlgorithm } from "@xtyle/core/authoring";
 
 defineAlgorithm({
   id: "mono",
@@ -89,32 +89,32 @@ defineAlgorithm({
   },
 });`;
 
-const passesSnippet = `import { defineXojiAlgorithm, settlePass } from "@xoji/core/authoring";
+const passesSnippet = `import { defineXtyleAlgorithm, settlePass } from "@xtyle/core/authoring";
 
-defineXojiAlgorithm({
+defineXtyleAlgorithm({
   id: "day-cycle",
   passes: (preset, input) => [
-    settlePass(preset, input),   // the shared xoji derivation
+    settlePass(preset, input),   // the shared xtyle derivation
     timeOfDayShift(input),       // a register → register transform
   ],
 });`;
 
 const proveSnippet = `# prove the invariants across extremes + random anchor sets
-npx xoji gauntlet -a sunrise --mode hosted --depth full
+npx xtyle gauntlet -a sunrise --mode hosted --depth full
 
 # confirm a component's consumed tokens are all produced
-npx xoji coverage -a sunrise --consumed --bg-0,--fg-0,--accent
+npx xtyle coverage -a sunrise --consumed --bg-0,--fg-0,--accent
 
 # grade a derived theme against the canonical WCAG text/fill pairs
-npx xoji audit -a sunrise`;
+npx xtyle audit -a sunrise`;
 
 const loadSnippet = `npm run build:mods            # bundles src/mod.ts → src/mod.js
-npx xoji derive -a sunrise    # loads by id, derives a theme`;
+npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 ---
 
 <Base
-	title="Writing algorithms: xoji"
-	description="Author your own xoji algorithm: a xript mod that maps anchors and knobs into a full token register. Build on the shared derivation or write one from scratch."
+	title="Writing algorithms: xtyle"
+	description="Author your own xtyle algorithm: a xript mod that maps anchors and knobs into a full token register. Build on the shared derivation or write one from scratch."
 >
 	<Dock slot="right" side="right" size="sm" label="On this page" hideHeader class="docs-toc-rail">
 		<Toc items={sections} />
@@ -138,7 +138,7 @@ npx xoji derive -a sunrise    # loads by id, derives a theme`;
 			<Panel title="What an algorithm is" id="what" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						The engine (<code>@xoji/core</code>) is mechanism: the open token register,
+						The engine (<code>@xtyle/core</code>) is mechanism: the open token register,
 						the dependency graph, the contrast math, the coverage contract, emit. It holds
 						no opinion about how a ramp should look. The <strong>algorithm is the
 						opinion</strong>: how <em>this one</em> derives. A theme is just one
@@ -148,7 +148,7 @@ npx xoji derive -a sunrise    # loads by id, derives a theme`;
 					<Alert severity="info" variant="soft">
 						<span slot="title">Mechanism stays in the engine</span>
 						If a derivation choice would only ever make sense for one algorithm, it
-						belongs in the algorithm, not in <code>@xoji/core</code>. That split is what
+						belongs in the algorithm, not in <code>@xtyle/core</code>. That split is what
 						lets many algorithms share one engine.
 					</Alert>
 				</Stack>
@@ -193,14 +193,14 @@ npx xoji derive -a sunrise    # loads by id, derives a theme`;
 			<Panel title="Tier 1: a family preset" id="preset" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						The fast path. <code>defineXojiAlgorithm</code> takes a taste vector and runs
-						the shared xoji derivation for everything you do not override.
-						<code>xoji-default</code>'s entire definition is
-						<code>{"{ id: \"xoji-default\" }"}</code>; from there you turn knobs up or down.
+						The fast path. <code>defineXtyleAlgorithm</code> takes a taste vector and runs
+						the shared xtyle derivation for everything you do not override.
+						<code>xtyle-default</code>'s entire definition is
+						<code>{"{ id: \"xtyle-default\" }"}</code>; from there you turn knobs up or down.
 					</Text>
 					<Code lang="typescript" code={presetSnippet} />
 					<Text tone="muted">Every field is optional but <code>id</code>; the rest fall through to the shared defaults.</Text>
-					<Table aria-label="defineXojiAlgorithm spec fields">
+					<Table aria-label="defineXtyleAlgorithm spec fields">
 						<table>
 							<thead>
 								<tr><th>field</th><th>type</th><th>what it sets</th></tr>
@@ -256,8 +256,8 @@ npx xoji derive -a sunrise    # loads by id, derives a theme`;
 						checks every invariant it declares: contrast floors held, no token collapsed,
 						nothing parsed to <code>NaN</code>. Run it hosted to prove the sandboxed mod
 						that actually ships. The coverage check confirms a component's consumed tokens
-						are all in what you produce, and <code>xoji audit</code> grades a materialized
-						theme against xoji's canonical text/fill pairs at the WCAG floors: the
+						are all in what you produce, and <code>xtyle audit</code> grades a materialized
+						theme against xtyle's canonical text/fill pairs at the WCAG floors: the
 						register-level complement to the gauntlet's algorithm-level sweep, so you can
 						read a specific theme's contrast per pair.
 					</Text>
@@ -281,7 +281,7 @@ npx xoji derive -a sunrise    # loads by id, derives a theme`;
 					<Code lang="bash" code={loadSnippet} />
 					<Text size="sm" tone="subtle">
 						Questions or contributions live on
-						<Link href="https://github.com/nekoyoubi/xoji" target="_blank">GitHub</Link>.
+						<Link href="https://github.com/nekoyoubi/xtyle" target="_blank">GitHub</Link>.
 					</Text>
 				</Stack>
 			</Panel>

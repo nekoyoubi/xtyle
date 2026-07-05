@@ -1,7 +1,7 @@
 ---
-import { plainCodeHtml, splitCodeLines, codeGutterWidth, parseLineSpec } from "@xoji/core/markup";
-import { highlight } from "@xoji/core/elements/code-highlight";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { plainCodeHtml, splitCodeLines, codeGutterWidth, parseLineSpec } from "@xtyle/core/markup";
+import { highlight } from "@xtyle/core/elements/code-highlight";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
 	lang?: string;
@@ -32,11 +32,11 @@ const base = result.language === null ? plainCodeHtml(code) : result.html;
 const litSet = highlightSpec ? parseLineSpec(highlightSpec) : undefined;
 const split = lineNumbers || litSet ? splitCodeLines(base, litSet) : null;
 const inner = split ? split.html : base;
-const gutter = split && lineNumbers ? `--xoji-code-gutter: ${codeGutterWidth(split.lines)}` : undefined;
+const gutter = split && lineNumbers ? `--xtyle-code-gutter: ${codeGutterWidth(split.lines)}` : undefined;
 const bindings = { html: inner, language: result.language, caption: caption ?? null };
 const light = await renderFragmentLight("code", bindings);
 ---
 
-<xoji-code language={lang ?? undefined} code={code} preload={preload || undefined} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlightSpec || undefined} caption={caption || undefined} style={gutter} class={extra} set:html={light} {...rest} />
+<xtyle-code language={lang ?? undefined} code={code} preload={preload || undefined} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlightSpec || undefined} caption={caption || undefined} style={gutter} class={extra} set:html={light} {...rest} />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

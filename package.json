@@ -1,5 +1,5 @@
 {
-	"name": "xoji-workspace",
+	"name": "xtyle-workspace",
 	"version": "0.4.0",
 	"private": true,
 	"type": "module",
@@ -8,13 +8,13 @@
 		"apps/*"
 	],
 	"scripts": {
-		"build": "node scripts/build-fragments.mjs && npm run build -w @xoji/core && node scripts/build-mods.mjs && npm run build --workspaces --if-present",
+		"build": "node scripts/build-fragments.mjs && npm run build -w @xtyle/core && node scripts/build-mods.mjs && npm run build --workspaces --if-present",
 		"build:fragments": "node scripts/build-fragments.mjs",
 		"build:mods": "node scripts/build-mods.mjs",
 		"check:mods": "node scripts/check-mods-fresh.mjs",
 		"pretest": "node scripts/check-mods-fresh.mjs",
 		"test": "npm run test --workspaces --if-present",
-		"dev": "npm run dev --workspace=@xoji/site --if-present",
+		"dev": "npm run dev --workspace=@xtyle/site --if-present",
 		"version:bump": "node scripts/bump-version.mjs",
 		"stats:snapshot": "node scripts/snapshot-stats.mjs",
 		"release": "node scripts/release.mjs"

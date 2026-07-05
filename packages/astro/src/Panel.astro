@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type PanelVariant = "default" | "collapsible";
 
@@ -31,7 +31,7 @@ const {
 } = Astro.props;
 
 const hasActions = Astro.slots.has("actions");
-const titleId = `xoji-panel-${Math.random().toString(36).slice(2, 9)}`;
+const titleId = `xtyle-panel-${Math.random().toString(36).slice(2, 9)}`;
 
 const bindings = {
 	title: title ?? null,
@@ -53,7 +53,7 @@ const composed = chrome
 	.replace("<slot></slot>", () => bodyHtml);
 ---
 
-<xoji-panel
+<xtyle-panel
 	title={title}
 	label={label}
 	level={level}
@@ -65,4 +65,4 @@ const composed = chrome
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

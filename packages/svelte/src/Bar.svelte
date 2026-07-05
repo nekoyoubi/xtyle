@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { BarSeries, BarScheme } from "@xoji/core";
+	import type { BarSeries, BarScheme } from "@xtyle/core";
 
 	interface Props {
 		series?: BarSeries[];
@@ -53,7 +53,7 @@
 	});
 </script>
 
-<xoji-bar
+<xtyle-bar
 	bind:this={host}
 	{...rest}
 	reverse={reverse || undefined}
@@ -66,4 +66,4 @@
 	{onselect}
 	{height}
 	{label}
-></xoji-bar>
+></xtyle-bar>

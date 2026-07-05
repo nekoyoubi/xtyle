@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as Tone } from "@xoji/core";
+import type { FullTone as Tone } from "@xtyle/core";
 
 interface Props {
 	overlay?: boolean;
@@ -30,7 +30,7 @@ const composed = chrome
 	.replace("<slot></slot>", () => bodyHtml);
 ---
 
-<xoji-card
+<xtyle-card
 	overlay={overlay || undefined}
 	interactive={interactive || undefined}
 	action={action || undefined}
@@ -41,4 +41,4 @@ const composed = chrome
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

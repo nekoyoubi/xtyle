@@ -1,6 +1,6 @@
 ---
-import { type TabItemData } from "@xoji/core/markup";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { type TabItemData } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 type TabsVariant = "underline" | "pill" | "enclosed";
@@ -42,7 +42,7 @@ const {
 } = Astro.props;
 
 const tabItems = items ?? [];
-const uid = `xoji-tabs-${Math.random().toString(36).slice(2, 9)}`;
+const uid = `xtyle-tabs-${Math.random().toString(36).slice(2, 9)}`;
 
 const bindings = {
 	tabs: tabItems.map((item, i) => ({
@@ -69,7 +69,7 @@ const light = useItems ? await renderFragmentLight("tabs", bindings) : "";
 ---
 
 {useItems ? (
-	<xoji-tabs
+	<xtyle-tabs
 		variant={variant}
 		size={size}
 		activation={activation}
@@ -84,11 +84,11 @@ const light = useItems ? await renderFragmentLight("tabs", bindings) : "";
 		{...rest}
 	/>
 ) : (
-	<xoji-tabs variant={variant} size={size} activation={activation} value={value} label={label} labelledby={labelledby} sticky={sticky} tablist={tablist || undefined} class={extra} {...rest}>
+	<xtyle-tabs variant={variant} size={size} activation={activation} value={value} label={label} labelledby={labelledby} sticky={sticky} tablist={tablist || undefined} class={extra} {...rest}>
 		<slot name="tab" />
 		<slot name="panel" />
 		<slot />
-	</xoji-tabs>
+	</xtyle-tabs>
 )}
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

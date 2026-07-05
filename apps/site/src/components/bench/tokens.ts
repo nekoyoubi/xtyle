@@ -1,5 +1,5 @@
-import type { TokenRegister } from "@xoji/core";
-import { tokenMeta, tokenSearchText } from "@xoji/core";
+import type { TokenRegister } from "@xtyle/core";
+import { tokenMeta, tokenSearchText } from "@xtyle/core";
 
 export { tokenMeta };
 
@@ -156,7 +156,7 @@ export function contrastRefFor(token: string, register: TokenRegister): string |
 }
 
 /** The full searchable text for a token — name, group title, description, and tags — sourced from the
- * engine's token catalog (`@xoji/core`), so the filter matches on meaning, not just the literal name. */
+ * engine's token catalog (`@xtyle/core`), so the filter matches on meaning, not just the literal name. */
 export function tokenSearchTerms(token: string, groupTitle: string): string {
 	return tokenSearchText(token, groupTitle);
 }

@@ -1,0 +1,54 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-number-input-default",
+	"version": "0.0.1",
+	"title": "Xtyle Number Input (default)",
+	"description": "The built-in fill for the xtyle Number Input component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.number-input"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.number-input": [
+			{
+				"id": "number-input",
+				"format": "text/html+jsml",
+				"source": "number-input.html",
+				"handlers": [
+					{ "selector": ".xtyle-number__step--dec", "on": "click", "handler": "dec" },
+					{ "selector": ".xtyle-number__step--inc", "on": "click", "handler": "inc" },
+					{ "selector": ".xtyle-number__input", "on": "change", "handler": "commit" },
+					{ "selector": ".xtyle-number__input", "on": "keydown", "handler": "keydown" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--bg-0",
+						"--border-thick",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--fg-0",
+						"--fg-1",
+						"--fg-disabled",
+						"--font-sans",
+						"--line-2",
+						"--neutral-bg",
+						"--radius-md",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-5",
+						"--space-6",
+						"--space-7",
+						"--state-disabled",
+						"--state-hover",
+						"--state-press",
+						"--text-body",
+						"--text-sm"
+					]
+				}
+			}
+		]
+	}
+}

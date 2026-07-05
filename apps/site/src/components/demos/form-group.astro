@@ -1,8 +1,8 @@
 ---
-import FormGroup from "@xoji/astro/FormGroup.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Grid from "@xoji/astro/Grid.astro";
-import Heading from "@xoji/astro/Heading.astro";
+import FormGroup from "@xtyle/astro/FormGroup.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
 ---
 
 <Stack gap={6} class="demo">
@@ -15,10 +15,10 @@ import Heading from "@xoji/astro/Heading.astro";
 				for="fg-name"
 				required
 			>
-				<input id="fg-name" class="xoji-control" type="text" value="ada-l" />
+				<input id="fg-name" class="xtyle-control" type="text" value="ada-l" />
 			</FormGroup>
 			<FormGroup label="Visibility" description="Who can find this project." for="fg-vis">
-				<select id="fg-vis" name="fg-vis" class="xoji-control">
+				<select id="fg-vis" name="fg-vis" class="xtyle-control">
 					<option selected>Public</option>
 					<option>Unlisted</option>
 					<option>Private</option>
@@ -36,7 +36,7 @@ import Heading from "@xoji/astro/Heading.astro";
 				invalid
 				error="That slug is already taken."
 			>
-				<input id="fg-slug" class="xoji-control" type="text" value="xoji" aria-invalid="true" />
+				<input id="fg-slug" class="xtyle-control" type="text" value="xtyle" aria-invalid="true" />
 			</FormGroup>
 			<FormGroup
 				label="Seat count"
@@ -44,7 +44,7 @@ import Heading from "@xoji/astro/Heading.astro";
 				for="fg-seats"
 				required
 			>
-				<input id="fg-seats" class="xoji-control" type="number" value="5" />
+				<input id="fg-seats" class="xtyle-control" type="number" value="5" />
 			</FormGroup>
 		</Grid>
 	</section>
@@ -53,13 +53,13 @@ import Heading from "@xoji/astro/Heading.astro";
 		<Heading level={3} size="sm" tone="muted">Sizes</Heading>
 		<Grid minColWidth="13rem" gap={5} align="start">
 			<FormGroup label="Small" description="size=sm" for="fg-s" size="sm">
-				<input id="fg-s" class="xoji-control" type="text" value="sm" />
+				<input id="fg-s" class="xtyle-control" type="text" value="sm" />
 			</FormGroup>
 			<FormGroup label="Medium" description="size=md" for="fg-m" size="md">
-				<input id="fg-m" class="xoji-control" type="text" value="md" />
+				<input id="fg-m" class="xtyle-control" type="text" value="md" />
 			</FormGroup>
 			<FormGroup label="Large" description="size=lg" for="fg-l" size="lg">
-				<input id="fg-l" class="xoji-control" type="text" value="lg" />
+				<input id="fg-l" class="xtyle-control" type="text" value="lg" />
 			</FormGroup>
 		</Grid>
 	</section>

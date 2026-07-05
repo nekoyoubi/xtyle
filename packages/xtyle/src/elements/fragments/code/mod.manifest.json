@@ -1,0 +1,57 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-code-default",
+	"version": "0.0.1",
+	"title": "Xtyle Code (default)",
+	"description": "The built-in fill for the xtyle Code component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.code"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.code": [
+			{
+				"id": "code",
+				"format": "text/html+jsml",
+				"source": "code.html",
+				"meta": {
+					"tokens": [
+						"--code-fg",
+						"--code-bg",
+						"--code-selection",
+						"--code-line-highlight",
+						"--code-comment",
+						"--code-punctuation",
+						"--code-tag",
+						"--code-number",
+						"--code-string",
+						"--code-attr",
+						"--code-operator",
+						"--code-keyword",
+						"--code-function",
+						"--code-type",
+						"--code-regexp",
+						"--code-variable",
+						"--neutral",
+						"--neutral-bg",
+						"--neutral-fg",
+						"--neutral-text",
+						"--field-border",
+						"--border-thin",
+						"--radius-sm",
+						"--font-sans",
+						"--text-xs",
+						"--space-1",
+						"--space-2",
+						"--duration-fast",
+						"--ease-standard",
+						"--success",
+						"--success-vivid"
+					]
+				},
+				"hostControls": [
+					{ "marker": "data-copy", "capability": "clipboard", "behavior": "copy-source" }
+				]
+			}
+		]
+	}
+}

@@ -1,4 +1,4 @@
-# `<xoji-code>` — themed code block (design)
+# `<xtyle-code>` — themed code block (design)
 
 A turnkey, read-only, syntax-highlighted code block that colors itself entirely
 from the `--code-*` token family. It is the first in-app consumer of the §14
@@ -6,10 +6,10 @@ syntax-highlighting tokens (those tokens and the Prism/Monaco emitters already
 exist; nothing in the component set reads them yet).
 
 Distinct from the emitters: an **emitter** themes a highlighter you already run
-(your Prism, your Monaco/CodeMirror); **`<xoji-code>`** is xoji's own block, with
+(your Prism, your Monaco/CodeMirror); **`<xtyle-code>`** is xtyle's own block, with
 the tokenizer included. They coexist.
 
-Build this **after** the de-orgy rework lands — it lives at `@xoji/core/elements`
+Build this **after** the de-orgy rework lands — it lives at `@xtyle/core/elements`
 (the post-fold home) and leans on the `--code-*` family + the Prism emitter that
 already ship.
 
@@ -17,7 +17,7 @@ already ship.
 
 ### Tokenizer: Prism (MIT)
 Chosen because Prism's output is **class-based** (`.token.keyword`, …), which the
-existing xoji Prism-theme CSS already colors through `var(--code-*)`. So a block
+existing xtyle Prism-theme CSS already colors through `var(--code-*)`. So a block
 **re-themes live** the moment the theme changes — the colors are just cascading
 CSS variables. The theme side is already done (the Prism emitter).
 
@@ -25,12 +25,12 @@ Rejected:
 - **Rolling our own** — a grammar engine is a multi-year, per-language tarpit and
   off-mission.
 - **Shiki** — best grammar fidelity, but it bakes colors inline and is heavy
-  (oniguruma WASM), which fights xoji's live-CSS-variable re-theming and the
+  (oniguruma WASM), which fights xtyle's live-CSS-variable re-theming and the
   runtime path. Great if fidelity beat live-re-theme and weight; for us it doesn't.
 - **highlight.js** (BSD-3) is the fallback if Prism's slow maintenance (v2 alpha)
   becomes a problem — it would need a new emitter (we have Prism's, not hljs's).
 
-### Render split (mirrors the rest of xoji)
+### Render split (mirrors the rest of xtyle)
 - **Astro (build-time):** tokenize in Node at build → static `.token.*` spans →
   colored by the `--code-*` CSS. Zero JS, zero grammar bytes in the browser,
   re-themes live, no flash.
@@ -43,7 +43,7 @@ Rejected:
 ### Language loading: fully lazy, per-language
 Full support is *available* (any of Prism's ~290 grammars, via a generated
 lang→`import()` map plus aliases like `ts`→`typescript`), but nothing is eager:
-- a page with no `<xoji-code>` loads nothing;
+- a page with no `<xtyle-code>` loads nothing;
 - a page with 1–3 langs loads Prism core once + only those grammar chunks.
 
 No default bundled set — eager-bundling even js/ts wastes bytes on the
@@ -55,20 +55,20 @@ zero-block majority. Mechanics:
 
 ### Preload controls (default stays lazy)
 To kill even the minor recolor flash on known-code-heavy or desktop pages:
-- **`preload` attribute** on `<xoji-code>` — warm *this* block's grammar eagerly
+- **`preload` attribute** on `<xtyle-code>` — warm *this* block's grammar eagerly
   (and emit a `modulepreload` hint);
-- **`XojiCode.warm(["ts", "rust"])`** static — page-level "load these now";
+- **`XtyleCode.warm(["ts", "rust"])`** static — page-level "load these now";
 - the attribute and `warm()` share one internal warm path (no divergence).
 
 ### Custom grammars
-`XojiCode.registerLanguage(name, grammar)` — escape hatch for a language Prism
+`XtyleCode.registerLanguage(name, grammar)` — escape hatch for a language Prism
 doesn't ship.
 
 ### API home
-- `XojiCode` element class lives in `@xoji/core/elements`.
-- `warm` and `registerLanguage` are **statics on `XojiCode`** (discoverable right
+- `XtyleCode` element class lives in `@xtyle/core/elements`.
+- `warm` and `registerLanguage` are **statics on `XtyleCode`** (discoverable right
   where the component is).
-- `@xoji/svelte` re-exports `XojiCode` so framework users don't reach across.
+- `@xtyle/svelte` re-exports `XtyleCode` so framework users don't reach across.
 - Astro mostly needs none of this (build-time tokenized), but `preload` can still
   emit the `modulepreload` hint.
 
@@ -100,8 +100,8 @@ makes §14 a consumed contract, not just produced tokens.
   the next host-wired control is a manifest row, not a new hardcoded element branch.
 
 ## Still open
-- `warm`/`registerLanguage` as statics on `XojiCode` — leaning yes; the alternative
-  is a `code` namespace object (`import { code } from "@xoji/core/elements"`).
-- Ship in `@xoji/core/elements` (leaning yes; the class is tiny, only Prism is
+- `warm`/`registerLanguage` as statics on `XtyleCode` — leaning yes; the alternative
+  is a `code` namespace object (`import { code } from "@xtyle/core/elements"`).
+- Ship in `@xtyle/core/elements` (leaning yes; the class is tiny, only Prism is
   deferred) vs. its own opt-in subpath.
 - Whether Prism's maintenance status warrants the hljs fallback up front.

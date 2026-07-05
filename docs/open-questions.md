@@ -1,4 +1,4 @@
-# xoji: open questions
+# xtyle: open questions
 
 Live forks, roughly in the order they gate other work. Several have since settled as the
 engine and component set got built. Those carry an inline `DECIDED`/`RESOLVED`/`DONE` marker
@@ -32,7 +32,7 @@ The derivation engine is **TypeScript**, shipped as the npm source of truth.
 contrast-safe pairs → ~80 tokens, once per theme load/switch), so perf is a
 non-factor and Rust's speed/size edge buys nothing perceptible. That leaves one
 question (where does friction hurt?) and it hurts most on the web, which is the
-bigger audience and the whole reason xoji is standalone. TS-core is frictionless
+bigger audience and the whole reason xtyle is standalone. TS-core is frictionless
 on web (`npm install`, no WASM, no async init, identical in browser / SSR /
 Astro-build / edge, debuggable, KBs) and runs in the Tauri apps through the
 QuickJS the xript runtime already embeds. One codebase everywhere; engine and
@@ -62,10 +62,10 @@ artifact.
 ## 2. Packaging / monorepo layout (DECIDED: single repo, npm workspaces)
 
 Single repo, npm workspaces. The engine + raw custom elements ship as one
-`@xoji/core` (with `@xoji/core/elements`, `/markup`, `/css`, `/authoring`, `/elements/ssr`
-subpaths); thin `@xoji/svelte` and `@xoji/astro` bindings wrap it; the algorithms live as
+`@xtyle/core` (with `@xtyle/core/elements`, `/markup`, `/css`, `/authoring`, `/elements/ssr`
+subpaths); thin `@xtyle/svelte` and `@xtyle/astro` bindings wrap it; the algorithms live as
 xript mods under `algorithms/`; the site is `apps/site`. (The early sketch's separate
-`engine` / `contract` / `headless` / `preact` packages collapsed into `@xoji/core` + the two
+`engine` / `contract` / `headless` / `preact` packages collapsed into `@xtyle/core` + the two
 bindings.)
 
 ## 3. Palette specifics: largely RESOLVED
@@ -95,8 +95,8 @@ library's call, not a derived token. All blessed algorithms produce the full set
 ## 6. brand-token seam
 
 Exact push (brand anchors in) and pull (derived tokens out) surface for an
-external brand-identity token system. What format does it hand xoji, and what
-does xoji expose back?
+external brand-identity token system. What format does it hand xtyle, and what
+does xtyle expose back?
 
 ## 7. Component catalog scope: RESOLVED (growing as designed)
 
@@ -111,7 +111,7 @@ next component is a registration checklist, not an architecture decision.
 The thin `-tauri` edge: theme persistence, OS dark/light detection, window-chrome
 theming, live-switch IPC. Confirm the boundary so it never leaks into the core.
 
-A working reference shape already exists in a shipping Tauri + xoji consumer, worth
+A working reference shape already exists in a shipping Tauri + xtyle consumer, worth
 mirroring rather than redesigning from scratch:
 
 - **persistence**: the active theme id lives in a small key-value store (a `ui.theme`
@@ -125,7 +125,7 @@ mirroring rather than redesigning from scratch:
 - **window chrome**: the OS titlebar and frame read the same register, so the native
   chrome stays coherent with the webview content.
 
-The boundary to confirm: this all lives in a `@xoji/tauri` edge package, never the
+The boundary to confirm: this all lives in a `@xtyle/tauri` edge package, never the
 environment-neutral core. The package itself is a deliberate, user-owned call.
 
 ## 9. Knob vocabulary: the next load-bearing fork
@@ -136,7 +136,7 @@ that surface is the input-side mirror of the open-register decision. Two poles:
 - **Freeform**: every algorithm declares whatever bespoke knobs it wants. Max
   expressivity, but every algorithm needs a custom UI and you can't meaningfully
   swap one algorithm for another or compare them.
-- **Blessed-core-plus-extension** *(current lean)*: xoji blesses a standard intent
+- **Blessed-core-plus-extension** *(current lean)*: xtyle blesses a standard intent
   vocabulary (`scheme`, `contrast-band`, `vibrancy`, `edge`, `density`, `anchors`,
   …) the generation tooling renders consistently, plus freeform extension for the
   weird stuff. Lets "swap the algorithm, keep my cyan + orange and my mid-high
@@ -158,12 +158,12 @@ author shorthand. The open details:
   for the author-profile index, `@scope/pkg` for npm. Confirm no edge cases bite.
 - **Index source**: npm-derived (keyword / scope / maintainer queries) vs an
   author-published **profile manifest** vs both. Where the profile lives (served by
-  xoji.dev? a `<owner>/xoji-profile` repo?) and how cross-scope / GitHub packs
+  xtyle.dev? a `<owner>/xtyle-profile` repo?) and how cross-scope / GitHub packs
   aggregate.
-- **Pack manifest schema**: the exact `xoji` field / `xoji.json` shape that
+- **Pack manifest schema**: the exact `xtyle` field / `xtyle.json` shape that
   enumerates `{ algorithms, themes }` (names, kinds, entry points, version pins).
 - **Install-time trust for CLI `add`**: npm install runs unsandboxed postinstall;
-  decide whether xoji leans on plain npm trust or adds any vetting / lockfile
+  decide whether xtyle leans on plain npm trust or adds any vetting / lockfile
   discipline. (Run-time is already safe via the xript sandbox.)
 
 ## 11. Derivation quality under real-world anchors: sub-forks
@@ -234,7 +234,7 @@ not architecture:
   status roles and the `--code-*` scopes each carry an OKLab-distance *distinguishability invariant*;
   the twelve named hues do not, and dogfooding shows they need one. Measured nearest-pair OKLab
   distance across themes: `orange`/`brown` is consistently the closest, at `0.060` (default dark),
-  `0.023` (default light), `0.021` (quiet), `0.019` (loud), far under the status floor (`xoji-quiet`'s
+  `0.023` (default light), `0.021` (quiet), `0.019` (loud), far under the status floor (`xtyle-quiet`'s
   nearest status pair sits `≈0.044`). Root cause: `brown` is *defined* as a low-chroma orange
   (`{h:50, c:0.08}` vs orange `{h:55, c:0.18}`), but the shared chroma scaling + per-stop gamut clamp
   erases that: in `loud` mode `brown` derives **more** chroma (`0.180`) than `orange` (`0.168`), an
@@ -323,7 +323,7 @@ by color alone"), and no *color* the engine derives can fix it. The fix isn't a 
 it's a different *render*: invert the row, add a glyph, add a border (a **redundant, non-color
 cue**).
 
-The proposed mechanism, and it fits xoji cleanly: a **non-color intent token** the algorithm
+The proposed mechanism, and it fits xtyle cleanly: a **non-color intent token** the algorithm
 sets and the component reads to change *how* it renders, e.g. `--selection-indicator: color |
 invert | glyph`, or a boolean `--redundant-status-cues`. The high-contrast algorithm sets it
 ("selection must not be color-only"); the Tree reads it and swaps its strategy. Same shape as
@@ -393,7 +393,7 @@ Open sub-forks:
 
 ## 13. Statusbar overflow: the containment model
 
-Today `.xoji-statusbar` is a plain flex row (gap, a `flex:1` spacer, items `white-space: nowrap`,
+Today `.xtyle-statusbar` is a plain flex row (gap, a `flex:1` spacer, items `white-space: nowrap`,
 no `flex-wrap` / `overflow` / `min-width:0`), so when content exceeds the width it just **spills**.
 The question: what *should* it do, and where does the responsibility sit? Two layers, both needed:
 
@@ -423,14 +423,14 @@ A proposed token family (`--code-comment / -keyword / -string / -number / -funct
 / -selection`) so a code editor (CodeMirror / Monaco / Prism / Shiki) themes from the **same anchors
 and algorithm** as the rest of the chrome: change the accent, the highlighting re-themes
 coherently, no app-vs-editor clash. A flagship "look what this derives" demo, and immediately useful
-(the site's own code blocks; any editor surface that consumes xoji).
+(the site's own code blocks; any editor surface that consumes xtyle).
 
-Why it's xoji-shaped: syntax colors are *a set of mutually-distinguishable hues at controlled
+Why it's xtyle-shaped: syntax colors are *a set of mutually-distinguishable hues at controlled
 contrast on the editor bg*, exactly OKLCH derivation. The design:
 
 - A **declared token family**, a canonical ~12–16 scopes, *not* every TextMate scope (adapters
   fold the long tail onto the core set), derived by the algorithm or a blessed `code` extension
-  module so `@xoji/core` stays neutral.
+  module so `@xtyle/core` stays neutral.
 - **The hard invariant is mutual distinguishability**: single-token contrast is already proven; a
   code palette also needs *inter-token* distance (comment ≠ keyword ≠ string at a glance), readable
   on `--code-bg`, ideally colorblind-safe. The generalization of the §11 "soft-status minimum
@@ -441,15 +441,15 @@ contrast on the editor bg*, exactly OKLCH derivation. The design:
 A real swing (token family + distinguishability invariant + emitters + a code algorithm/module),
 multi-pass. **Status: DONE.** The canonical `--code-*` family derives off the accent with a
 mutual-distinguishability invariant in the gauntlet (perceptual OKLab distance, not luminance-only);
-`prism` and `monaco` emitters sit beside `css`/`json` (`xoji derive --format prism|monaco`); and the
-`<xoji-code>` component consumes it: Prism tokenization that re-themes live, plus `copy`, `wrap`,
+`prism` and `monaco` emitters sit beside `css`/`json` (`xtyle derive --format prism|monaco`); and the
+`<xtyle-code>` component consumes it: Prism tokenization that re-themes live, plus `copy`, `wrap`,
 `line-numbers`, and `highlight` (the last finally rendering the derived `--code-line-highlight`).
 Dogfooded on real blocks across the site.
 
 ## 15. Hosted-canonical derivation & the browser runtime
 
 Every algorithm runs two ways, proven byte-identical: **baked** (the synchronous `getAlgorithm`
-registry compiled into `@xoji/core`) and **hosted** (the algorithm's xript mod run through the
+registry compiled into `@xtyle/core`) and **hosted** (the algorithm's xript mod run through the
 zero-authority sandbox via `resolveAlgorithm`). Hosted is the thesis: an algorithm is a real xript
 plugin, so the sandboxed mod that ships is the one that derives. It is already the canonical path
 everywhere it can be, the CLI (`derive` / `coverage`), the MCP tools, and the site's SSR all resolve
@@ -475,10 +475,10 @@ role permanent, or does a future self-verifying mod retire even that?
 browser generator flips its live derivation to the hosted mod once warm (`hosted?.get(id) ?? baked`), so
 baked serves only the synchronous first-paint frame and the byte-identical test oracle. The filesystem-free
 core resolver landed too: `loadAlgorithm` was already environment-neutral, so a build-time mod bundle
-(`algorithms-bundle.generated.ts`) plus `resolveBundledAlgorithm` (at `@xoji/core/host/bundle`) run the
+(`algorithms-bundle.generated.ts`) plus `resolveBundledAlgorithm` (at `@xtyle/core/host/bundle`) run the
 canonical mod client-side, byte-identical to baked, and the site's bench now consumes it in place of its own
 `?raw` loader. The **snapshot fast-path** for the imperative surfaces landed too: `hostedAlgorithm(id)` (on
-`@xoji/core/algorithms`) returns the resolved hosted mod once warm and bridges the cold first call on the
+`@xtyle/core/algorithms`) returns the resolved hosted mod once warm and bridges the cold first call on the
 byte-identical baked oracle while it kicks off the resolve, so a synchronous non-reactive caller is canonical
 from the next call on with no await. The site's imperative theme derivation (applying a saved theme,
 rendering theme thumbnails) now derives through it instead of `getAlgorithm`. Baked is thus down to two
@@ -491,8 +491,8 @@ retire even the reactive first-paint frame, and decide whether the oracle role i
 Dogfooding real palettes surfaced this. `--link-hover` derives as the accent shifted ±0.08 in lightness,
 then run through the same panel-contrast enforcement as `--link`. Two problems fall out:
 
-- **The delta is near-imperceptible even on the flagship.** `xoji-default` emits `--link` `#40a0fa` and
-  `--link-hover` `#42a3fd`: a lightness step so small the hover reads as no change. The default `<xoji-link>`
+- **The delta is near-imperceptible even on the flagship.** `xtyle-default` emits `--link` `#40a0fa` and
+  `--link-hover` `#42a3fd`: a lightness step so small the hover reads as no change. The default `<xtyle-link>`
   is underlined at rest and changes *only* its color on hover, so that near-zero color delta is the entire
   hover affordance.
 - **For a low-chroma accent it collapsed to nothing (FIXED).** A near-gray accent (say `#808080`) has no hue to
@@ -510,7 +510,7 @@ only the degenerate collapse changes (`#808080` now emits `--link` `#9b9b9b` / `
 step; the whole gauntlet stays green).
 
 **The comprehensive guard is now RESOLVED, and it needed no pole exception.** The earlier attempt at a
-`link hover distinct from link` invariant failed the full `XOJI_GAUNTLET_DEPTH=full` battery on chromatic accents
+`link hover distinct from link` invariant failed the full `XTYLE_GAUNTLET_DEPTH=full` battery on chromatic accents
 enforced to a lightness extreme (a light pink `#ffcfe1` at L≈0.88, a light yellow `#fefea4` at L≈0.96, a near-black
 `#020100`), where a single fixed toward-the-pole step is *erased by gamut clamping* (both lightnesses clamp to one
 displayable hex). The fix replaced that one step with a search that forces a distinct emitted value, re-enforcing
@@ -528,13 +528,13 @@ the `enforceOnPanels` fallback, which desaturates to a true pole (`#000000` / `#
 only one direction (toward mid) and every step there drops below the floor, so no distinct readable hover exists
 and the collapse is genuinely unavoidable, readability over hover delta. The invariant therefore treats a
 pure-pole `--link` collapse as acceptable and fails only an *avoidable* one. Green under the full
-`XOJI_GAUNTLET_DEPTH=full` battery. (The deeper cause, a mid-gray surface ramp whose panels can't clear a text
+`XTYLE_GAUNTLET_DEPTH=full` battery. (The deeper cause, a mid-gray surface ramp whose panels can't clear a text
 floor, is the §11 surface-minimum-step territory, not a link concern.)
 
 **Still open (the taste call).** The delta stays near-imperceptible even after the collapse fix: that
-`#40a0fa` → `#42a3fd` step on the flagship reads as no change, and since the default `<xoji-link>` rides its
+`#40a0fa` → `#42a3fd` step on the flagship reads as no change, and since the default `<xtyle-link>` rides its
 entire hover on that color delta, the affordance is effectively invisible. Strengthening it is a design decision,
 not a bug fix, and it can go two ways: widen the derived link/link-hover delta across all themes, or give
-`<xoji-link>` a non-color hover affordance the way the `muted` variant already does (thicken the underline, or a
+`<xtyle-link>` a non-color hover affordance the way the `muted` variant already does (thicken the underline, or a
 faint tint) so hover never rides on color alone. Both reshape the flagship's link feel site-wide, so they wait on
 a design eye and your taste.

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone } from "@xoji/core";
+	import type { FullTone } from "@xtyle/core";
 	type ToastSeverity = "success" | "warn" | "danger" | "info";
 
 	type ToastVariant = "soft" | "solid";
@@ -39,7 +39,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-toast
+<xtyle-toast
 	{...rest}
 	{tone}
 	{severity}
@@ -52,4 +52,4 @@
 >
 	{#if icon}<span slot="icon">{@render icon()}</span>{/if}
 	{@render children?.()}
-</xoji-toast>
+</xtyle-toast>

@@ -64,7 +64,7 @@
 	}
 </script>
 
-<xoji-splitter
+<xtyle-splitter
 	{...rest}
 	{orientation}
 	{size}
@@ -82,4 +82,4 @@
 	{labelledby}
 	onresize={handleResize}
 	onresizeend={handleResizeEnd}
-></xoji-splitter>
+></xtyle-splitter>

@@ -20,7 +20,7 @@
 	let { size, spacing, overflow, label, children, ...rest }: Props = $props();
 </script>
 
-<xoji-avatar-group
+<xtyle-avatar-group
 	{...rest}
 	{size}
 	{spacing}
@@ -28,4 +28,4 @@
 	{label}
 >
 	{@render children?.()}
-</xoji-avatar-group>
+</xtyle-avatar-group>

@@ -27,7 +27,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-table
+<xtyle-table
 	{...rest}
 	{variant}
 	{size}
@@ -36,4 +36,4 @@
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 >
 	{@render children?.()}
-</xoji-table>
+</xtyle-table>

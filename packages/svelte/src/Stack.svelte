@@ -18,6 +18,6 @@
 	let { gap = 4, align, justify, inline = false, children, ...rest }: Props = $props();
 </script>
 
-<xoji-stack {...rest} {gap} {align} {justify} inline={inline || undefined}>
+<xtyle-stack {...rest} {gap} {align} {justify} inline={inline || undefined}>
 	{@render children?.()}
-</xoji-stack>
+</xtyle-stack>

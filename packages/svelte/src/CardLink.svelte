@@ -30,7 +30,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-card-link
+<xtyle-card-link
 	{...rest}
 	{href}
 	{target}
@@ -42,4 +42,4 @@
 	{#if header}<span slot="header">{@render header()}</span>{/if}
 	{@render children?.()}
 	{#if footer}<span slot="footer">{@render footer()}</span>{/if}
-</xoji-card-link>
+</xtyle-card-link>

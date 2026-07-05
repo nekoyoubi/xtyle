@@ -1,7 +1,7 @@
 ---
-import Tree from "@xoji/astro/Tree.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Heading from "@xoji/astro/Heading.astro";
+import Tree from "@xtyle/astro/Tree.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Heading from "@xtyle/astro/Heading.astro";
 
 const docs = [
 	{
@@ -93,7 +93,7 @@ const binder = [
 </Stack>
 
 <script>
-	import "@xoji/core/elements";
+	import "@xtyle/core/elements";
 	// Row actions fire tree-action; a real app would rename/delete here. Flash the row for the demo.
 	document.addEventListener("tree-action", (event) => {
 		const tree = event.target as HTMLElement | null;
@@ -101,7 +101,7 @@ const binder = [
 		const { value } = (event as CustomEvent<{ value: string; action: string }>).detail;
 		// Light-DOM (Astro) mode has no shadow root; the rows live directly under the element.
 		const root: ParentNode = tree.shadowRoot ?? tree;
-		const row = root.querySelector(`[data-value="${value}"] .xoji-tree__row`) as HTMLElement | null;
+		const row = root.querySelector(`[data-value="${value}"] .xtyle-tree__row`) as HTMLElement | null;
 		if (row) {
 			row.animate([{ background: "var(--accent-bg)" }, { background: "transparent" }], { duration: 500 });
 		}

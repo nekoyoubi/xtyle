@@ -1,18 +1,18 @@
 ---
 import { ClientRouter } from "astro:transitions";
-import { emit } from "@xoji/core";
-import { utilitiesCss, componentsCss } from "@xoji/core/css";
+import { emit } from "@xtyle/core";
+import { utilitiesCss, componentsCss } from "@xtyle/core/css";
 import { getStats, displayStats, benchStats } from "../data/stats";
-import AppShell from "@xoji/astro/AppShell.astro";
-import Toolbar from "@xoji/astro/Toolbar.astro";
-import Dock from "@xoji/astro/Dock.astro";
-import Panel from "@xoji/astro/Panel.astro";
-import Statusbar from "@xoji/astro/Statusbar.astro";
-import Splitter from "@xoji/astro/Splitter.astro";
-import Stat from "@xoji/astro/Stat.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Text from "@xoji/astro/Text.astro";
+import AppShell from "@xtyle/astro/AppShell.astro";
+import Toolbar from "@xtyle/astro/Toolbar.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Panel from "@xtyle/astro/Panel.astro";
+import Statusbar from "@xtyle/astro/Statusbar.astro";
+import Splitter from "@xtyle/astro/Splitter.astro";
+import Stat from "@xtyle/astro/Stat.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Text from "@xtyle/astro/Text.astro";
 import SiteNav from "../components/SiteNav.astro";
 import ThemeReapply from "../components/ThemeReapply.astro";
 import Logo from "../components/Logo.astro";
@@ -36,7 +36,7 @@ const SITE_TAGLINE = "A themable-derivation engine and component contract.";
 const ogDescription = description ?? SITE_TAGLINE;
 const canonicalUrl = new URL(
 	Astro.url.pathname,
-	Astro.site ?? "https://xoji.dev",
+	Astro.site ?? "https://xtyle.dev",
 ).href;
 
 const site = await getStats();
@@ -68,7 +68,7 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		<meta name="description" content={ogDescription} />
 		<link rel="canonical" href={canonicalUrl} />
 		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content="xoji" />
+		<meta property="og:site_name" content="xtyle" />
 		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={ogDescription} />
@@ -78,7 +78,7 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		<script is:inline>
 			(function () {
 				try {
-					var raw = localStorage.getItem("xoji.theme.active-vars");
+					var raw = localStorage.getItem("xtyle.theme.active-vars");
 					if (!raw) return;
 					var vars = JSON.parse(raw);
 					var root = document.documentElement;
@@ -98,9 +98,9 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 	<body>
 		<AppShell skipLink leftSize={288}>
 			<Toolbar slot="toolbar">
-				<a slot="start" class="x-brand" href="/" aria-label="xoji home">
+				<a slot="start" class="x-brand" href="/" aria-label="xtyle home">
 					<Logo size={22} />
-					<span class="x-brand__word">xoji</span>
+					<span class="x-brand__word">xtyle</span>
 				</a>
 				<Cluster slot="end" gap={3} align="center">
 					<a
@@ -115,10 +115,10 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 					</a>
 					<a
 						class="x-iconlink"
-						href="https://www.npmjs.com/package/@xoji/core"
+						href="https://www.npmjs.com/package/@xtyle/core"
 						target="_blank"
 						rel="noopener noreferrer"
-						aria-label="@xoji/core on npm"
+						aria-label="@xtyle/core on npm"
 						title="npm"
 					>
 						<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
@@ -127,10 +127,10 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 					</a>
 					<a
 						class="x-iconlink"
-						href="https://github.com/nekoyoubi/xoji"
+						href="https://github.com/nekoyoubi/xtyle"
 						target="_blank"
 						rel="noopener noreferrer"
-						aria-label="xoji on GitHub"
+						aria-label="xtyle on GitHub"
 						title="GitHub"
 					>
 						<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true">
@@ -154,14 +154,14 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 							<Text size="sm" tone="muted">
 								A themable-derivation engine and component contract. A named algorithm
 								maps a few anchors into a full token set; the components honor it. No
-								hand-tuning every variable. This whole app runs on one xoji theme, built
+								hand-tuning every variable. This whole app runs on one xtyle theme, built
 								from the very components it ships.
 							</Text>
 						</Panel>
 					</Stack>
 				</Dock>
 				<Splitter
-					var="--xoji-app-left"
+					var="--xtyle-app-left"
 					value={288}
 					min={208}
 					max={440}
@@ -182,7 +182,7 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 
 			<Statusbar slot="statusbar" live separated label="Site status" overflow="collapse">
 				{numberStats.map((s) => (
-					<span class="xoji-statusbar__item" data-priority={s.label === "components" ? "9" : "6"}>
+					<span class="xtyle-statusbar__item" data-priority={s.label === "components" ? "9" : "6"}>
 						<Stat
 							label={s.label}
 							inline
@@ -192,9 +192,9 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						>{s.value}</Stat>
 					</span>
 				))}
-				<span class="xoji-statusbar__spacer"></span>
-				<span class="xoji-statusbar__item" data-priority="3"><Stat label="version" inline class="x-status-stat"><a class="x-status-link" href="/changelog">v{site.version}</a></Stat></span>
-				<span class="xoji-statusbar__item" data-priority="2"><Stat label="updated" inline class="x-status-stat"><a class="x-status-link" href="/changelog"><span id="x-build-rel" data-build={buildIso} title={buildLabel}>{buildLabel}</span></a></Stat></span>
+				<span class="xtyle-statusbar__spacer"></span>
+				<span class="xtyle-statusbar__item" data-priority="3"><Stat label="version" inline class="x-status-stat"><a class="x-status-link" href="/changelog">v{site.version}</a></Stat></span>
+				<span class="xtyle-statusbar__item" data-priority="2"><Stat label="updated" inline class="x-status-stat"><a class="x-status-link" href="/changelog"><span id="x-build-rel" data-build={buildIso} title={buildLabel}>{buildLabel}</span></a></Stat></span>
 			</Statusbar>
 		</AppShell>
 		<script>

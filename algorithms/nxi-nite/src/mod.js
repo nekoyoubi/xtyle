@@ -3543,7 +3543,7 @@
   var xyz65 = useMode(definition_default27);
   var yiq = useMode(definition_default28);
 
-  // packages/xoji/dist/color.js
+  // packages/xtyle/dist/color.js
   var toOklch = converter_default("oklch");
   var DEFAULT_OKLCH = { l: 0, c: 0, h: 0, alpha: 1 };
   function toOklchColor(input) {
@@ -3551,10 +3551,10 @@
       return input;
     const parsed = parse_default(input);
     if (!parsed)
-      throw new Error(`xoji: unparseable color "${input}"`);
+      throw new Error(`xtyle: unparseable color "${input}"`);
     const o = toOklch(parsed);
     if (!o)
-      throw new Error(`xoji: cannot convert color "${input}" to oklch`);
+      throw new Error(`xtyle: cannot convert color "${input}" to oklch`);
     return {
       l: clamp01(o.l ?? 0),
       c: Math.max(0, o.c ?? 0),
@@ -3631,10 +3631,10 @@
     return Math.min(1, Math.max(0, value));
   }
 
-  // packages/xoji/dist/graph.js
+  // packages/xtyle/dist/graph.js
   var CycleError = class extends Error {
     constructor(cycle) {
-      super(`xoji: cycle detected in token graph: ${cycle.join(" -> ")}`);
+      super(`xtyle: cycle detected in token graph: ${cycle.join(" -> ")}`);
       __publicField(this, "cycle");
       this.cycle = cycle;
       this.name = "CycleError";
@@ -3685,7 +3685,7 @@
     return resolved;
   }
 
-  // packages/xoji/dist/vocab.js
+  // packages/xtyle/dist/vocab.js
   var TONES = ["accent", "neutral", "danger", "success", "warn", "info"];
   var ACCENT_VARIANTS = ["accent-2", "accent-3", "accent-4"];
   var HUES = [
@@ -3704,7 +3704,7 @@
   ];
   var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
 
-  // packages/xoji/dist/algorithms/factory.js
+  // packages/xtyle/dist/algorithms/factory.js
   var AA = 4.5;
   var AAA = 7;
   var ENFORCE = AA + 0.2;
@@ -5557,7 +5557,7 @@
     fg: "#e8eaed"
   };
 
-  // packages/xoji/dist/authoring.js
+  // packages/xtyle/dist/authoring.js
   function toLineage(nodes) {
     return nodes.map(({ name, value, refs }) => refs && refs.length ? { name, value, refs } : { name, value });
   }
@@ -5596,7 +5596,7 @@
       preset.extreme = true;
     return preset;
   }
-  function defineXojiAlgorithm(spec2) {
+  function defineXtyleAlgorithm(spec2) {
     const preset = toPreset(spec2);
     const buildPasses = spec2.passes ?? ((p4, input) => [settlePass(p4, input)]);
     const singlePass = buildPasses(preset, {}).length === 1;
@@ -5848,5 +5848,5 @@
   }
 
   // algorithms/nxi-nite/src/mod.ts
-  defineXojiAlgorithm({ ...spec, passes: nxiNitePasses });
+  defineXtyleAlgorithm({ ...spec, passes: nxiNitePasses });
 })();

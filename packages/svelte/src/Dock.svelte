@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size, FullTone as Tone } from "@xoji/core";
+	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	type DockSide = "left" | "right";
 
@@ -39,7 +39,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-dock
+<xtyle-dock
 	{...rest}
 	{side}
 	{size}
@@ -54,4 +54,4 @@
 	{#if header}<span slot="header">{@render header()}</span>{/if}
 	{@render children?.()}
 	{#if footer}<span slot="footer">{@render footer()}</span>{/if}
-</xoji-dock>
+</xtyle-dock>

@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -35,12 +35,12 @@ const {
 	...rest
 } = Astro.props;
 
-const fieldId = `xoji-select-${Math.random().toString(36).slice(2, 9)}`;
+const fieldId = `xtyle-select-${Math.random().toString(36).slice(2, 9)}`;
 const errorId = `${fieldId}-error`;
 
 // The consumer's `<option>`/`<optgroup>` children populate the rendered `<select>` (via
 // `bindings.optionsHtml`) AND ride along as hidden light-DOM children after the chrome, so the
-// element can re-read them on a rebuild. `xoji-select > option` is `display:none` (see
+// element can re-read them on a rebuild. `xtyle-select > option` is `display:none` (see
 // `hostDisplayCss`), so the bare copies never show.
 const optionsHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 
@@ -61,7 +61,7 @@ const light = await renderFragmentLight("select", bindings);
 const composed = light + optionsHtml;
 ---
 
-<xoji-select
+<xtyle-select
 	label={label}
 	value={value}
 	size={size}
@@ -76,4 +76,4 @@ const composed = light + optionsHtml;
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

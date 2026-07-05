@@ -1,20 +1,20 @@
 ---
 import Base from "../layouts/Base.astro";
-import Panel from "@xoji/astro/Panel.astro";
-import Dock from "@xoji/astro/Dock.astro";
-import Toc from "@xoji/astro/Toc.astro";
-import Alert from "@xoji/astro/Alert.astro";
-import Link from "@xoji/astro/Link.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Card from "@xoji/astro/Card.astro";
-import Button from "@xoji/astro/Button.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Grid from "@xoji/astro/Grid.astro";
-import Table from "@xoji/astro/Table.astro";
-import Eyebrow from "@xoji/astro/Eyebrow.astro";
-import Code from "@xoji/astro/Code.astro";
+import Panel from "@xtyle/astro/Panel.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Toc from "@xtyle/astro/Toc.astro";
+import Alert from "@xtyle/astro/Alert.astro";
+import Link from "@xtyle/astro/Link.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Table from "@xtyle/astro/Table.astro";
+import Eyebrow from "@xtyle/astro/Eyebrow.astro";
+import Code from "@xtyle/astro/Code.astro";
 import { getStats } from "../data/stats";
 
 const { tokens } = await getStats();
@@ -29,10 +29,10 @@ const sections = [
 ];
 
 const algorithms = [
-	{ name: "xojiDefault", id: "xoji-default", note: "the neutral default" },
-	{ name: "xojiHc", id: "xoji-hc", note: "high contrast" },
-	{ name: "xojiQuiet", id: "xoji-quiet", note: "restrained" },
-	{ name: "xojiLoud", id: "xoji-loud", note: "vibrant" },
+	{ name: "xtyleDefault", id: "xtyle-default", note: "the neutral default" },
+	{ name: "xtyleHc", id: "xtyle-hc", note: "high contrast" },
+	{ name: "xtyleQuiet", id: "xtyle-quiet", note: "restrained" },
+	{ name: "xtyleLoud", id: "xtyle-loud", note: "vibrant" },
 	{ name: "nxiNite", id: "nxi-nite", note: "Day/Night, time-aware" },
 ];
 
@@ -44,16 +44,16 @@ const knobs = [
 	{ name: "typeScale · radiusScale · accentShiftStep · fonts", desc: "finer control" },
 ];
 
-const installSnippet = `npm install @xoji/core
+const installSnippet = `npm install @xtyle/core
 
 # optional framework bindings
-npm install @xoji/svelte
-npm install @xoji/astro`;
+npm install @xtyle/svelte
+npm install @xtyle/astro`;
 
-const deriveSnippet = `import { derive, emit } from "@xoji/core";
-import { xojiDefault } from "@xoji/core/algorithms";
+const deriveSnippet = `import { derive, emit } from "@xtyle/core";
+import { xtyleDefault } from "@xtyle/core/algorithms";
 
-const register = derive(xojiDefault, {
+const register = derive(xtyleDefault, {
   constraints: { "--bg-0": "#0b0d12", "--fg-0": "#e6e9ef", "--accent": "#6ea8fe" },
   knobs: { scheme: "dark", contrastBand: "aa", vibrancy: 0.5 },
 });
@@ -61,23 +61,23 @@ const register = derive(xojiDefault, {
 const css = emit(register, "css");    // a :root { … } block
 const json = emit(register, "json");  // a flat token map`;
 
-const cliSnippet = `npx xoji derive --bg "#0b0d12" --accent "#6ea8fe" --format css > theme.css`;
+const cliSnippet = `npx xtyle derive --bg "#0b0d12" --accent "#6ea8fe" --format css > theme.css`;
 
-const applySnippet = `import { apply } from "@xoji/core/dom";
+const applySnippet = `import { apply } from "@xtyle/core/dom";
 
 apply(register);                          // write onto :root
 apply(register, { target: previewEl });   // scope to one element
 apply(register, { persistKey: "theme" }); // and persist it`;
 
-const elementsSnippet = `import "@xoji/core/elements";   // registers <xoji-button>, <xoji-card>, …`;
+const elementsSnippet = `import "@xtyle/core/elements";   // registers <xtyle-button>, <xtyle-card>, …`;
 
-const svelteSnippet = `import { Button, Card } from "@xoji/svelte";`;
+const svelteSnippet = `import { Button, Card } from "@xtyle/svelte";`;
 
 const algorithmSnippet = `// algorithms/sunrise/mod-manifest.json declares the mod;
 // algorithms/sunrise/src/mod.ts defines it:
-import { defineXojiAlgorithm } from "@xoji/core/authoring";
+import { defineXtyleAlgorithm } from "@xtyle/core/authoring";
 
-defineXojiAlgorithm({
+defineXtyleAlgorithm({
   id: "sunrise",
   anchors: { bg: "#1a1410", accent: "#ff9e5e" },
   vibrancy: 0.7,
@@ -85,8 +85,8 @@ defineXojiAlgorithm({
 ---
 
 <Base
-	title="Getting started: xoji"
-	description="Install xoji, derive a theme from an algorithm and a few anchor colors, and use it with or without a framework."
+	title="Getting started: xtyle"
+	description="Install xtyle, derive a theme from an algorithm and a few anchor colors, and use it with or without a framework."
 >
 	<Dock slot="right" side="right" size="sm" label="On this page" hideHeader class="docs-toc-rail">
 		<Toc items={sections} />
@@ -98,7 +98,7 @@ defineXojiAlgorithm({
 				<Eyebrow>Getting started</Eyebrow>
 				<Heading level={1} size="3xl">Install, derive, and use a theme</Heading>
 				<Text size="lg" tone="muted">
-					xoji derives a complete, internally consistent set of {tokens} design tokens
+					xtyle derives a complete, internally consistent set of {tokens} design tokens
 					(surfaces, text, accents, type, spacing, and more) from an
 					algorithm and a few anchor colors. This page covers installing it, deriving a
 					theme, using the result with or without a framework, and writing your own
@@ -109,18 +109,18 @@ defineXojiAlgorithm({
 			<Panel title="Install" id="install" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						xoji is three packages. <code>@xoji/core</code> is the engine: the
-						derivation, the <code>xoji</code> command line, and the web components
-						(behind the <code>@xoji/core/elements</code> entry). Add a binding only if
+						xtyle is three packages. <code>@xtyle/core</code> is the engine: the
+						derivation, the <code>xtyle</code> command line, and the web components
+						(behind the <code>@xtyle/core/elements</code> entry). Add a binding only if
 						you build with that framework.
 					</Text>
 					<Code lang="bash" code={installSnippet} />
 					<Alert tone="info" variant="soft">
 						<span slot="title">The engine runs anywhere</span>
-						<code>@xoji/core</code>'s main entry has no <code>node:*</code> or DOM
+						<code>@xtyle/core</code>'s main entry has no <code>node:*</code> or DOM
 						dependencies, so it runs in the browser, in Node, and inside xript's
 						sandbox. The DOM-bound pieces sit behind their own entries
-						(<code>@xoji/core/dom</code>, <code>@xoji/core/elements</code>).
+						(<code>@xtyle/core/dom</code>, <code>@xtyle/core/elements</code>).
 					</Alert>
 				</Stack>
 			</Panel>
@@ -131,7 +131,7 @@ defineXojiAlgorithm({
 						<Text tone="muted">
 							An algorithm maps your anchors and knobs to a full token register. The
 							built-in algorithms ship with the engine under
-							<code>@xoji/core/algorithms</code>; import one and call
+							<code>@xtyle/core/algorithms</code>; import one and call
 							<code>derive</code>.
 						</Text>
 						<Code lang="typescript" code={deriveSnippet} />
@@ -197,7 +197,7 @@ defineXojiAlgorithm({
 					<Text tone="muted">
 						A derived theme is plain CSS custom properties. Write the emitted CSS into
 						your page and the cascade applies it; nothing has to be running at view
-						time. In the browser, <code>@xoji/core/dom</code> writes a register straight
+						time. In the browser, <code>@xtyle/core/dom</code> writes a register straight
 						onto a live element.
 					</Text>
 					<Code lang="typescript" code={applySnippet} />
@@ -220,8 +220,8 @@ defineXojiAlgorithm({
 					<Code lang="typescript" code={elementsSnippet} />
 					<Code lang="typescript" code={svelteSnippet} />
 					<Text tone="muted">
-						<code>@xoji/svelte</code> and <code>@xoji/astro</code> wrap the same elements;
-						each depends only on <code>@xoji/core</code>.
+						<code>@xtyle/svelte</code> and <code>@xtyle/astro</code> wrap the same elements;
+						each depends only on <code>@xtyle/core</code>.
 					</Text>
 				</Stack>
 			</Panel>
@@ -230,8 +230,8 @@ defineXojiAlgorithm({
 				<Stack gap={4}>
 					<Text tone="muted">
 						An algorithm is a xript mod: a directory with a <code>mod-manifest.json</code>
-						and code. Build on the shared xoji derivation with
-						<code>defineXojiAlgorithm</code> (declare taste; the house derivation does the
+						and code. Build on the shared xtyle derivation with
+						<code>defineXtyleAlgorithm</code> (declare taste; the house derivation does the
 						rest), or write one from scratch with <code>defineAlgorithm</code>.
 					</Text>
 					<Code lang="typescript" code={algorithmSnippet} />
@@ -262,7 +262,7 @@ defineXojiAlgorithm({
 
 			<Text size="sm" tone="subtle">
 				Questions or contributions live on
-				<Link href="https://github.com/nekoyoubi/xoji" target="_blank">GitHub</Link>.
+				<Link href="https://github.com/nekoyoubi/xtyle" target="_blank">GitHub</Link>.
 			</Text>
 		</Stack>
 	</div>

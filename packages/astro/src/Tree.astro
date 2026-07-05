@@ -1,6 +1,6 @@
 ---
-import { firstSelectedValue } from "@xoji/core/markup";
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { firstSelectedValue } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -65,7 +65,7 @@ const bindings = {
 const light = await renderFragmentLight("tree", bindings);
 ---
 
-<xoji-tree
+<xtyle-tree
 	items={items ? JSON.stringify(items) : undefined}
 	size={size}
 	label={label}
@@ -75,4 +75,4 @@ const light = await renderFragmentLight("tree", bindings);
 	set:html={light}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

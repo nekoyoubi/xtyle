@@ -1,0 +1,23 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-switch-default",
+	"version": "0.0.1",
+	"title": "Xtyle Switch (default)",
+	"description": "The built-in fill for the xtyle Switch component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.switch"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.switch": [
+			{
+				"id": "switch",
+				"format": "text/html+jsml",
+				"source": "switch.html",
+				"handlers": [
+					{ "selector": ".xtyle-switch__track", "on": "click", "handler": "toggle" },
+					{ "selector": ".xtyle-switch__track", "on": "keydown", "handler": "keyToggle" }
+				]
+			}
+		]
+	}
+}

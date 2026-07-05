@@ -22,7 +22,7 @@
 		$props();
 </script>
 
-<xoji-tooltip {...rest} {text} {placement} open={open || undefined} {tone} {variant} {mode} {size}>
+<xtyle-tooltip {...rest} {text} {placement} open={open || undefined} {tone} {variant} {mode} {size}>
 	{@render children?.()}
 	{#if content}<span slot="content">{@render content()}</span>{/if}
-</xoji-tooltip>
+</xtyle-tooltip>

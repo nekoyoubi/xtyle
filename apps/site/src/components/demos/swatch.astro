@@ -1,10 +1,10 @@
 ---
-import Swatch from "@xoji/astro/Swatch.astro";
-import Card from "@xoji/astro/Card.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
+import Swatch from "@xtyle/astro/Swatch.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
 
 const palette = [
 	{ color: "#ef4444", label: "Red" },
@@ -83,7 +83,7 @@ const palette = [
 	const picked = document.querySelector(".demo-picked");
 	palette?.addEventListener("select", (event) => {
 		const detail = (event as CustomEvent<{ color: string; label: string }>).detail;
-		for (const chip of palette.querySelectorAll("xoji-swatch")) {
+		for (const chip of palette.querySelectorAll("xtyle-swatch")) {
 			(chip as HTMLElement & { selected: boolean }).selected = chip === event.target;
 		}
 		if (picked) picked.textContent = detail.label ?? detail.color;

@@ -16,7 +16,7 @@
 
 	// `slot` rides in a spread object, not a literal `slot="segment"` attribute: Svelte statically
 	// rejects a literal `slot` on a component root (it can't prove the parent is a custom element),
-	// but this span always lands inside `<xoji-segmented>` at runtime, where the slot is valid.
+	// but this span always lands inside `<xtyle-segmented>` at runtime, where the slot is valid.
 	const attrs = $derived({ slot: "segment", value, label, disabled: disabled || undefined, ...rest });
 </script>
 

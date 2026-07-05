@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-import type { FullTone, ButtonAlign } from "@xoji/core";
+import type { FullTone, ButtonAlign } from "@xtyle/core";
 
 type ButtonVariant = "solid" | "outline" | "ghost" | "subtle" | "link";
 type Size = "xs" | "sm" | "md" | "lg";
@@ -70,7 +70,7 @@ const composed = chrome
 	.replace("<slot></slot>", () => labelHtml);
 ---
 
-<xoji-button
+<xtyle-button
 	variant={variant}
 	tone={tone}
 	size={size}
@@ -88,4 +88,4 @@ const composed = chrome
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

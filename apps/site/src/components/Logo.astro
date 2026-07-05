@@ -20,31 +20,31 @@ const cells = [
 ] as const;
 ---
 <svg
-	class:list={["xoji-logo", extra]}
+	class:list={["xtyle-logo", extra]}
 	viewBox="0 0 24 24"
 	width={size}
 	height={size}
 	role={decorative ? undefined : "img"}
-	aria-label={decorative ? undefined : "xoji"}
+	aria-label={decorative ? undefined : "xtyle"}
 	aria-hidden={decorative ? "true" : undefined}
 >
 	<g transform="translate(12 12) scale(-.9 1) translate(-12 -12)">
 		{cells.map((c) => (
-			<path class:list={["xoji-logo__panel", `xoji-logo__panel--${c.tone}`]} d={c.d} />
+			<path class:list={["xtyle-logo__panel", `xtyle-logo__panel--${c.tone}`]} d={c.d} />
 		))}
 	</g>
 </svg>
 
 <style>
-	.xoji-logo__panel {
+	.xtyle-logo__panel {
 		stroke: var(--bg-0);
 		stroke-width: 0.25px;
 		vector-effect: non-scaling-stroke;
 	}
-	.xoji-logo__panel--outer {
+	.xtyle-logo__panel--outer {
 		fill: var(--fg-1);
 	}
-	.xoji-logo__panel--inner {
+	.xtyle-logo__panel--inner {
 		fill: var(--fg-2);
 	}
 </style>

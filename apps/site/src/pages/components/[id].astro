@@ -4,24 +4,24 @@ import {
 	getComponent,
 	coverComponent,
 	derive,
-} from "@xoji/core";
-import { resolveAlgorithm } from "@xoji/core/host";
-import { listLanguages } from "@xoji/core/elements/code-highlight";
-import type { ComponentManifest } from "@xoji/core";
+} from "@xtyle/core";
+import { resolveAlgorithm } from "@xtyle/core/host";
+import { listLanguages } from "@xtyle/core/elements/code-highlight";
+import type { ComponentManifest } from "@xtyle/core";
 import Base from "../../layouts/Base.astro";
-import Card from "@xoji/astro/Card.astro";
-import CardLink from "@xoji/astro/CardLink.astro";
-import Toc from "@xoji/astro/Toc.astro";
-import Dock from "@xoji/astro/Dock.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Link from "@xoji/astro/Link.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Separator from "@xoji/astro/Separator.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Alert from "@xoji/astro/Alert.astro";
-import Breadcrumb from "@xoji/astro/Breadcrumb.astro";
+import Card from "@xtyle/astro/Card.astro";
+import CardLink from "@xtyle/astro/CardLink.astro";
+import Toc from "@xtyle/astro/Toc.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Link from "@xtyle/astro/Link.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Separator from "@xtyle/astro/Separator.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Alert from "@xtyle/astro/Alert.astro";
+import Breadcrumb from "@xtyle/astro/Breadcrumb.astro";
 import CodeTabs from "../../components/reference/CodeTabs.astro";
 import PropTable from "../../components/reference/PropTable.astro";
 import CoveragePanel from "../../components/reference/CoveragePanel.astro";
@@ -41,7 +41,7 @@ export function getStaticPaths() {
 const { id } = Astro.params;
 const component = getComponent(id!) as ComponentManifest;
 
-const algorithm = await resolveAlgorithm("xoji-default");
+const algorithm = await resolveAlgorithm("xtyle-default");
 const register = derive(algorithm, {
 	constraints: { "--bg-0": "#0b0d12", "--fg-0": "#e6e9ef", "--accent": "#6ea8fe" },
 });
@@ -112,7 +112,7 @@ const crumbs = [
 ---
 
 <Base
-	title={`${component.name}: xoji components`}
+	title={`${component.name}: xtyle components`}
 	description={component.summary}
 >
 	{sections.length > 1 && (
@@ -151,7 +151,7 @@ const crumbs = [
 			<Card overlay class="ref-stage-card">
 				<Cluster slot="header" justify="between" align="center" gap={2}>
 					<Text size="xs" mono tone="subtle" class="ref-stage-card__label">
-						live · @xoji/astro
+						live · @xtyle/astro
 					</Text>
 					<Text size="xs" mono tone="subtle">{component.name}</Text>
 				</Cluster>
@@ -440,14 +440,14 @@ const crumbs = [
 						</Text>
 					</Stack>
 					<Stack gap={2}>
-						<Text size="sm" weight="semibold">Added by xoji</Text>
+						<Text size="sm" weight="semibold">Added by xtyle</Text>
 						<Cluster gap={1}>
 							{languages.custom.map((l) => (
 								<Badge tone="info" size="sm">{l}</Badge>
 							))}
 						</Cluster>
 						<Text size="sm" tone="muted">
-							Prism ships neither; xoji adds them. Everything else is Prism's canonical
+							Prism ships neither; xtyle adds them. Everything else is Prism's canonical
 							set.
 						</Text>
 					</Stack>
@@ -576,7 +576,7 @@ const crumbs = [
 		min-width: 0;
 		max-width: 100%;
 	}
-	.ref-selector :global(.xoji-badge__label) {
+	.ref-selector :global(.xtyle-badge__label) {
 		white-space: normal;
 		overflow-wrap: anywhere;
 	}

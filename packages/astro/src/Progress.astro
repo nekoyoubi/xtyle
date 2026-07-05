@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight, composeFallbackSlot } from "@xoji/core/elements/ssr";
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as Tone } from "@xoji/core";
+import type { FullTone as Tone } from "@xtyle/core";
 type ProgressVariant = "linear" | "circular";
 type ProgressSize = "sm" | "md" | "lg";
 
@@ -74,7 +74,7 @@ const thresholdHtml = Astro.slots.has("default") ? await Astro.slots.render("def
 const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
 ---
 
-<xoji-progress
+<xtyle-progress
 	variant={variant}
 	tone={tone}
 	size={size}
@@ -93,4 +93,4 @@ const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

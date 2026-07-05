@@ -1,0 +1,96 @@
+{
+	"$schema": "https://xript.dev/schema/manifest/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle",
+	"version": "0.0.1",
+	"title": "Xtyle",
+	"description": "The host surface a xtyle algorithm runs against: token-lineage derivation in a zero-authority sandbox.",
+	"bindings": {
+		"log": {
+			"description": "Writes a diagnostic message to the host console.",
+			"params": [{ "name": "message", "type": "string" }]
+		},
+		"cuti": {
+			"description": "Color primitives shared by the engine and every algorithm — one OKLCH implementation, so a token a mod derives is identical to one the engine derives. Colors cross as `#rrggbb`, `#rrggbbaa`, or `oklch(L C H[/A])`; coordinates cross as `{ l, c, h, alpha }`.",
+			"members": {
+				"lighten": { "description": "Add `amount` (0–1) to OKLCH lightness, clamped.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"darken": { "description": "Subtract `amount` (0–1) from OKLCH lightness, clamped.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"saturate": { "description": "Push chroma outward by `amount`; out-of-gamut clamps to sRGB.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"desaturate": { "description": "Pull chroma inward by `amount`, floored at 0.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"shiftHue": { "description": "Rotate the OKLCH hue by `degrees` (wraps at 360°).", "params": [{ "name": "color", "type": "string" }, { "name": "degrees", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"complement": { "description": "180° rotation around the OKLCH hue wheel.", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" },
+				"mix": { "description": "Interpolate two colors in OKLCH; `t=0` is `a`, `t=1` is `b`, hue takes the shorter path.", "params": [{ "name": "a", "type": "string" }, { "name": "b", "type": "string" }, { "name": "t", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"alpha": { "description": "Replace the alpha channel with `a` (0–1).", "params": [{ "name": "color", "type": "string" }, { "name": "a", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"fade": { "description": "Subtract `amount` from alpha (0–1).", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"fadeIn": { "description": "Add `amount` to alpha (0–1).", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"fadeOut": { "description": "Alias for `fade` — subtract `amount` from alpha.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"scaleLuminance": { "description": "Scale OKLCH lightness by `factor`.", "params": [{ "name": "color", "type": "string" }, { "name": "factor", "type": "number" }], "returns": "string", "capability": "color-math" },
+				"contrast": { "description": "WCAG contrast ratio between two colors (1–21; alpha ignored).", "params": [{ "name": "a", "type": "string" }, { "name": "b", "type": "string" }], "returns": "number", "capability": "color-math" },
+				"isDark": { "description": "Whether the color is closer to black by WCAG luminance.", "params": [{ "name": "color", "type": "string" }], "returns": "boolean", "capability": "color-math" },
+				"isLight": { "description": "Whether the color is closer to white by WCAG luminance.", "params": [{ "name": "color", "type": "string" }], "returns": "boolean", "capability": "color-math" },
+				"scheme": { "description": "Returns `\"dark\"` or `\"light\"` for the color's luminance.", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" },
+				"hueDelta": { "description": "Signed shortest-path hue difference `to - from`, normalized to (-180, 180].", "params": [{ "name": "from", "type": "number" }, { "name": "to", "type": "number" }], "returns": "number", "capability": "color-math" },
+				"pickReadable": { "description": "Pick the first option clearing `floor` (default 4.5) contrast against `fill`, else the highest-contrast option.", "params": [{ "name": "fill", "type": "string" }, { "name": "options", "type": { "array": "string" } }, { "name": "floor", "type": "number", "required": false }], "returns": "string", "capability": "color-math" },
+				"toOklch": { "description": "Project a color to OKLCH coordinates.", "params": [{ "name": "color", "type": "string" }], "returns": "OklchColor", "capability": "color-math" },
+				"fromOklch": { "description": "Project OKLCH coordinates to a canonical color string.", "params": [{ "name": "l", "type": "number" }, { "name": "c", "type": "number" }, { "name": "h", "type": "number" }, { "name": "alpha", "type": "number", "required": false }], "returns": "string", "capability": "color-math" },
+				"clampGamut": { "description": "Clamp OKLCH coordinates into the sRGB gamut.", "params": [{ "name": "l", "type": "number" }, { "name": "c", "type": "number" }, { "name": "h", "type": "number" }, { "name": "alpha", "type": "number", "required": false }], "returns": "OklchColor", "capability": "color-math" },
+				"toHex": { "description": "Canonical `#rrggbb` form (alpha stripped).", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" },
+				"toArgb": { "description": "Canonical `#rrggbbaa` form (alpha kept).", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" }
+			}
+		}
+	},
+	"capabilities": {
+		"color-math": {
+			"description": "Permits the algorithm to run OKLCH color math while deriving token values.",
+			"risk": "low"
+		}
+	},
+	"types": {
+		"DeriveInput": {
+			"description": "The anchors, knobs, and pinned constraints a derivation consumes.",
+			"fields": {
+				"anchors": { "type": "map", "description": "Overridable color anchors keyed by role." },
+				"knobs": { "type": "map", "description": "Algorithm knobs keyed by name." },
+				"constraints": { "type": "map", "description": "Author-pinned token values honored verbatim.", "optional": true }
+			}
+		},
+		"TokenNode": {
+			"description": "A value-bearing lineage node naming what it derives from.",
+			"fields": {
+				"name": { "type": "string", "description": "The token name, e.g. --bg-0." },
+				"value": { "type": "string", "description": "The resolved token value.", "optional": true },
+				"refs": { "type": { "array": "string" }, "description": "Names of the tokens this node derives from.", "optional": true }
+			}
+		},
+		"AlgorithmManifest": {
+			"description": "What an algorithm produces, the category of each token, and its knobs.",
+			"fields": {
+				"produces": { "type": { "array": "string" }, "description": "Every token name the algorithm emits." },
+				"categories": { "type": "map", "description": "Token name to category." },
+				"knobs": { "type": { "array": "string" }, "description": "Declared knob names." }
+			}
+		},
+		"InvariantResult": {
+			"description": "The outcome of a single per-algorithm invariant.",
+			"fields": {
+				"name": { "type": "string", "description": "The invariant's name." },
+				"ok": { "type": "boolean", "description": "Whether the invariant held." },
+				"detail": { "type": "string", "description": "A human-readable failure detail.", "optional": true }
+			}
+		},
+		"OklchColor": {
+			"description": "OKLCH coordinates: perceptual lightness, chroma, hue, and alpha.",
+			"fields": {
+				"l": { "type": "number", "description": "Perceptual lightness, 0–1." },
+				"c": { "type": "number", "description": "Chroma, 0+." },
+				"h": { "type": "number", "description": "Hue angle in degrees, 0–360." },
+				"alpha": { "type": "number", "description": "Opacity, 0–1." }
+			}
+		}
+	},
+	"limits": {
+		"timeout_ms": 5000,
+		"memory_mb": 16,
+		"max_stack_depth": 128
+	}
+}

@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://xoji.dev/sitemap-index.xml
+Sitemap: https://xtyle.dev/sitemap-index.xml
 
-# LLM-readable docs: https://xoji.dev/llms.txt (index) and https://xoji.dev/llms-full.txt (full text)
+# LLM-readable docs: https://xtyle.dev/llms.txt (index) and https://xtyle.dev/llms-full.txt (full text)

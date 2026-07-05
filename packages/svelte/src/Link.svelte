@@ -20,7 +20,7 @@
 	let { variant = "default", href, target, rel, externalIcon, ariaLabel, onclick, children, ...rest }: Props = $props();
 </script>
 
-<xoji-link
+<xtyle-link
 	{...rest}
 	{variant}
 	{href}
@@ -31,4 +31,4 @@
 	{onclick}
 >
 	{@render children?.()}
-</xoji-link>
+</xtyle-link>

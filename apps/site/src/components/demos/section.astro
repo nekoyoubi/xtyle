@@ -1,13 +1,13 @@
 ---
-import Section from "@xoji/astro/Section.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Grid from "@xoji/astro/Grid.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Button from "@xoji/astro/Button.astro";
-import Stat from "@xoji/astro/Stat.astro";
-import { ACCENT_VARIANTS, HUES } from "@xoji/core";
+import Section from "@xtyle/astro/Section.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Stat from "@xtyle/astro/Stat.astro";
+import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
 
 const TONE_GROUPS = [
 	{ label: "Accents", tones: ["accent", ...ACCENT_VARIANTS, "neutral"] },
@@ -45,7 +45,7 @@ const TONE_GROUPS = [
 		</Section>
 	</Stack>
 
-	<Section variant="stage" as="div" label="live · @xoji/astro">
+	<Section variant="stage" as="div" label="live · @xtyle/astro">
 		<Cluster gap={3} align="center">
 			<Button variant="solid" tone="accent">Primary</Button>
 			<Button variant="subtle" tone="neutral">Secondary</Button>

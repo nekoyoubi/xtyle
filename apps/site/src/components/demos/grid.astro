@@ -1,10 +1,10 @@
 ---
-import Grid from "@xoji/astro/Grid.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Card from "@xoji/astro/Card.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import Badge from "@xoji/astro/Badge.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Badge from "@xtyle/astro/Badge.astro";
 
 const cells = Array.from({ length: 8 }, (_, i) => i + 1);
 const stats = [
@@ -63,7 +63,7 @@ const stats = [
 				</Text>
 			</div>
 			<Grid minColWidth="13rem" gap={4}>
-				{["xoji-default", "xoji-hc", "xoji-quiet"].map((algo) => (
+				{["xtyle-default", "xtyle-hc", "xtyle-quiet"].map((algo) => (
 					<Card compact>
 						<Stack gap={2}>
 							<Heading level={4} size="md">{algo}</Heading>
@@ -107,7 +107,7 @@ const stats = [
 		border: var(--border-thin) solid var(--line);
 		border-radius: var(--radius-md);
 	}
-	.demo-grid__stat :global(.xoji-heading) {
+	.demo-grid__stat :global(.xtyle-heading) {
 		margin: var(--space-1) 0 0;
 	}
 </style>

@@ -1,0 +1,47 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-toc-default",
+	"version": "0.0.1",
+	"title": "Xtyle Toc (default)",
+	"description": "The built-in fill for the xtyle Toc component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.toc"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.toc": [
+			{
+				"id": "toc",
+				"format": "text/html+jsml",
+				"source": "toc.html",
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-bg",
+						"--accent-text",
+						"--bg-1",
+						"--border-normal",
+						"--border-thick",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--fg-0",
+						"--fg-2",
+						"--font-sans",
+						"--line",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-5",
+						"--text-sm",
+						"--text-xs",
+						"--weight-medium",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

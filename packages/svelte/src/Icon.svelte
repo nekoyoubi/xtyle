@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { FullTone, IconName, IconSize, SeriesScheme } from "@xoji/core";
+	import type { FullTone, IconName, IconSize, SeriesScheme } from "@xtyle/core";
 
 	interface Props {
 		name: IconName | (string & {});
@@ -17,4 +17,4 @@
 	let { name, size = "md", tone, colors, label, spin = false, ...rest }: Props = $props();
 </script>
 
-<xoji-icon {...rest} {name} {size} {tone} {colors} {label} spin={spin ? "" : undefined}></xoji-icon>
+<xtyle-icon {...rest} {name} {size} {tone} {colors} {label} spin={spin ? "" : undefined}></xtyle-icon>

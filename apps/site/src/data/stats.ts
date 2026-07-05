@@ -1,11 +1,11 @@
-import { listComponents, coverComponents, derive, ICON_PRIMITIVE_NAMES } from "@xoji/core";
-import { resolveAlgorithm } from "@xoji/core/host";
+import { listComponents, coverComponents, derive, ICON_PRIMITIVE_NAMES } from "@xtyle/core";
+import { resolveAlgorithm } from "@xtyle/core/host";
 import baseline from "./stats-baseline.json";
 import { BENCH_TOOLS } from "./bench-tools";
 import pkg from "../../package.json";
 
 export const SITE_ANCHORS = { bg: "#0b0d12", fg: "#e6e9ef", accent: "#6ea8fe" } as const;
-export const SITE_ALGORITHM = "xoji-default";
+export const SITE_ALGORITHM = "xtyle-default";
 export const SITE_FONTS = {
 	sans: '"Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
 	display: '"REM Variable", system-ui, -apple-system, "Segoe UI", sans-serif',

@@ -1,0 +1,46 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-statusbar-default",
+	"version": "0.0.1",
+	"title": "Xtyle Statusbar (default)",
+	"description": "The built-in fill for the xtyle Statusbar component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.statusbar"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.statusbar": [
+			{
+				"id": "statusbar",
+				"format": "text/html+jsml",
+				"source": "statusbar.html",
+				"meta": {
+					"tokens": [
+						"--font-mono",
+						"--text-xs",
+						"--weight-medium",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--bg-1",
+						"--bg-2",
+						"--line",
+						"--ring",
+						"--border-thin",
+						"--border-normal",
+						"--border-thick",
+						"--radius-sm",
+						"--radius-md",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--elevation-3",
+						"--space-1",
+						"--space-2",
+						"--space-4",
+						"--space-6",
+						"--space-8"
+					]
+				}
+			}
+		]
+	}
+}

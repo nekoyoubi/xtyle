@@ -1,4 +1,4 @@
-import type { TokenRegister } from "@xoji/core";
+import type { TokenRegister } from "@xtyle/core";
 
 export interface ThumbnailOptions {
 	width?: number;

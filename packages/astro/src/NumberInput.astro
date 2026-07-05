@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -45,7 +45,7 @@ const {
 } = Astro.props;
 
 const valueStr = value === undefined || value === "" ? undefined : String(value);
-const elementId = `xoji-number-${Math.random().toString(36).slice(2, 8)}`;
+const elementId = `xtyle-number-${Math.random().toString(36).slice(2, 8)}`;
 
 const numeric = valueStr !== undefined && !Number.isNaN(Number(valueStr)) ? Number(valueStr) : (min ?? 0);
 const bindings = {
@@ -64,7 +64,7 @@ const bindings = {
 const light = await renderFragmentLight("number-input", bindings);
 ---
 
-<xoji-number-input
+<xtyle-number-input
 	value={valueStr}
 	min={min}
 	max={max}
@@ -83,4 +83,4 @@ const light = await renderFragmentLight("number-input", bindings);
 	set:html={light}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

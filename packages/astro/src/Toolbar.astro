@@ -1,5 +1,5 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
 
@@ -53,7 +53,7 @@ const composed = light
 	.replace("<slot></slot>", () => defaultHtml);
 ---
 
-<xoji-toolbar
+<xtyle-toolbar
 	heading={heading}
 	href={href}
 	size={size}
@@ -65,4 +65,4 @@ const composed = light
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

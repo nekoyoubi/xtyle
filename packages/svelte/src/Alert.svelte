@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone } from "@xoji/core";
+	import type { FullTone } from "@xtyle/core";
 	type AlertSeverity = "success" | "warn" | "danger" | "info";
 
 	type AlertVariant = "soft" | "solid";
@@ -39,7 +39,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-alert
+<xtyle-alert
 	{...rest}
 	{tone}
 	{severity}
@@ -52,4 +52,4 @@
 	{#if title}<span slot="title">{@render title()}</span>{/if}
 	{@render children?.()}
 	{#if actions}<span slot="actions">{@render actions()}</span>{/if}
-</xoji-alert>
+</xtyle-alert>

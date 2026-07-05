@@ -6,7 +6,7 @@ import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 
-const pkg = JSON.parse(readFileSync(resolve(root, "packages/xoji/package.json"), "utf8"));
+const pkg = JSON.parse(readFileSync(resolve(root, "packages/xtyle/package.json"), "utf8"));
 const version = pkg.version;
 const tag = `v${version}`;
 
@@ -46,7 +46,7 @@ const theme = match[1].replace(/^\s*[—:]\s*/, "").trim();
 const title = theme ? `${tag}: ${theme}` : tag;
 
 console.log(`Releasing ${title}`);
-console.log(`  version: ${version} (from packages/xoji)`);
+console.log(`  version: ${version} (from packages/xtyle)`);
 console.log(`  body:    ${body.split("\n").length} lines from CHANGELOG.md\n`);
 
 const tagExists = spawnSync("git", ["rev-parse", "-q", "--verify", `refs/tags/${tag}`], { cwd: root }).status === 0;
@@ -63,4 +63,4 @@ spawnSync("gh", ["release", "create", tag, "--title", title, "--notes-file", "-"
 });
 
 console.log(`\nRelease ${tag} created. Publish workflows should fire momentarily.`);
-console.log(`View at: https://github.com/nekoyoubi/xoji/releases/tag/${tag}`);
+console.log(`View at: https://github.com/nekoyoubi/xtyle/releases/tag/${tag}`);

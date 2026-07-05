@@ -1,6 +1,6 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
-import type { FullTone } from "@xoji/core";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { FullTone } from "@xtyle/core";
 
 type SectionTag = "section" | "div" | "header" | "footer";
 type SectionVariant = "band" | "stage";
@@ -46,7 +46,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = chrome.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-section
+<xtyle-section
 	as={as}
 	variant={variant}
 	tone={tone}
@@ -58,4 +58,4 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,0 +1,52 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-menu-default",
+	"version": "0.0.1",
+	"title": "Xtyle Menu (default)",
+	"description": "The built-in fill for the xtyle Menu component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.menu"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.menu": [
+			{
+				"id": "menu",
+				"format": "text/html+jsml",
+				"source": "menu.html",
+				"handlers": [
+					{ "selector": ".xtyle-menu__trigger", "on": "keydown", "handler": "triggerKeydown" },
+					{ "selector": ".xtyle-menu__item", "on": "click", "handler": "itemClick" },
+					{ "selector": ".xtyle-menu__item", "on": "keydown", "handler": "itemKeydown" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent-bg",
+						"--accent-text",
+						"--bg-1",
+						"--border-thick",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--elevation-3",
+						"--fg-0",
+						"--fg-1",
+						"--fg-disabled",
+						"--font-sans",
+						"--line",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--state-hover",
+						"--state-selected",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--text-sm"
+					]
+				}
+			}
+		]
+	}
+}

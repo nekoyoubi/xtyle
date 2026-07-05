@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { TokenRegister } from "@xoji/core";
-	import { Button, Field, Icon, Segmented, Select, Slider, Switch, Radio } from "@xoji/svelte";
+	import type { TokenRegister } from "@xtyle/core";
+	import { Button, Field, Icon, Segmented, Select, Slider, Switch, Radio } from "@xtyle/svelte";
 	import MockFrame from "./MockFrame.svelte";
 
 	interface Props {

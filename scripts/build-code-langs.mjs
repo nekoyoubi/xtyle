@@ -63,6 +63,6 @@ ${requireEntries}
 };
 `;
 
-const target = join(root, "packages", "xoji", "src", "elements", "code-langs.generated.ts");
+const target = join(root, "packages", "xtyle", "src", "elements", "code-langs.generated.ts");
 writeFileSync(target, out, "utf8");
-console.log(`generated ${canonical.length} grammar loaders -> packages/xoji/src/elements/code-langs.generated.ts`);
+console.log(`generated ${canonical.length} grammar loaders -> packages/xtyle/src/elements/code-langs.generated.ts`);

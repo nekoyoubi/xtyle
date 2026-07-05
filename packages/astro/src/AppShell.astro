@@ -1,11 +1,11 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
 	skipLink?: string | boolean;
-	/** Initial width of the left rail; sets `--xoji-app-left` server-side so the grid doesn't reflow on hydration. Number → px. */
+	/** Initial width of the left rail; sets `--xtyle-app-left` server-side so the grid doesn't reflow on hydration. Number → px. */
 	leftSize?: number | string;
-	/** Initial width of the right rail; sets `--xoji-app-right` server-side so the grid doesn't reflow on hydration. Number → px. */
+	/** Initial width of the right rail; sets `--xtyle-app-right` server-side so the grid doesn't reflow on hydration. Number → px. */
 	rightSize?: number | string;
 	/** Make the left / right rail user-resizable: a drag handle, arrow-key nudges, and a double-click reset to `leftSize` / `rightSize`. Needs the hydrated runtime. */
 	leftResizable?: boolean;
@@ -50,8 +50,8 @@ const skipText = typeof skipLink === "string" && skipLink.length > 0 ? skipLink 
 const railSize = (v: number | string): string => (typeof v === "number" ? `${v}px` : v);
 const bodyStyle =
 	[
-		leftSize !== undefined ? `--xoji-app-left: ${railSize(leftSize)}` : null,
-		rightSize !== undefined ? `--xoji-app-right: ${railSize(rightSize)}` : null,
+		leftSize !== undefined ? `--xtyle-app-left: ${railSize(leftSize)}` : null,
+		rightSize !== undefined ? `--xtyle-app-right: ${railSize(rightSize)}` : null,
 	]
 		.filter(Boolean)
 		.join("; ") || null;
@@ -78,7 +78,7 @@ const composed = light
 	.replace("<slot></slot>", () => defaultHtml);
 ---
 
-<xoji-app-shell
+<xtyle-app-shell
 	skip-link={typeof skipLink === "string" ? skipLink : showSkip ? "" : undefined}
 	left-size={leftSize === undefined ? undefined : String(leftSize)}
 	right-size={rightSize === undefined ? undefined : String(rightSize)}
@@ -94,4 +94,4 @@ const composed = light
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

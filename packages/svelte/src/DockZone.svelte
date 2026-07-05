@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { DockNode, DockLayout, FloatRect } from "@xoji/core/elements";
+	import type { DockNode, DockLayout, FloatRect } from "@xtyle/core/elements";
 
 	type LayoutChange = CustomEvent<{ layout: DockLayout | null }>;
 	type PanelClose = CustomEvent<{ panelId: string }>;
@@ -69,6 +69,6 @@
 	forward<PanelAction>("panel-action", () => onPanelAction);
 </script>
 
-<xoji-dock-zone {...rest} bind:this={host}>
+<xtyle-dock-zone {...rest} bind:this={host}>
 	{@render children?.()}
-</xoji-dock-zone>
+</xtyle-dock-zone>

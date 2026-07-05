@@ -1,14 +1,14 @@
 ---
-import Dock from "@xoji/astro/Dock.astro";
-import Button from "@xoji/astro/Button.astro";
-import Badge from "@xoji/astro/Badge.astro";
-import Avatar from "@xoji/astro/Avatar.astro";
-import Separator from "@xoji/astro/Separator.astro";
-import Stack from "@xoji/astro/Stack.astro";
-import Cluster from "@xoji/astro/Cluster.astro";
-import Heading from "@xoji/astro/Heading.astro";
-import Text from "@xoji/astro/Text.astro";
-import { ACCENT_VARIANTS, HUES } from "@xoji/core";
+import Dock from "@xtyle/astro/Dock.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Avatar from "@xtyle/astro/Avatar.astro";
+import Separator from "@xtyle/astro/Separator.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
 
 const TONE_GROUPS = [
 	{ label: "Accents", tones: ["accent", ...ACCENT_VARIANTS, "neutral"] },
@@ -182,7 +182,7 @@ const TONE_GROUPS = [
 	}
 	/* The dock's :host width (18rem) overflows the tile and clips its toned divider edge —
 	   let it fill the tile so the colored edge actually shows. */
-	.dock-demo__toned-tile :global(xoji-dock) {
+	.dock-demo__toned-tile :global(xtyle-dock) {
 		width: 100%;
 	}
 	/* Block buttons center their content; a nav rail reads better left-aligned. The button

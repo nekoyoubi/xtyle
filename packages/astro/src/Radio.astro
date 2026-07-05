@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as Tone } from "@xoji/core";
+import type { FullTone as Tone } from "@xtyle/core";
 type Size = "sm" | "md" | "lg";
 
 interface Props {
@@ -53,7 +53,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = slotHtml !== null ? light.replace(/<slot>[\s\S]*?<\/slot>/, () => slotHtml) : light.replace(/<slot>([\s\S]*?)<\/slot>/, "$1");
 ---
 
-<xoji-radio
+<xtyle-radio
 	tone={tone}
 	size={size}
 	name={name}
@@ -68,4 +68,4 @@ const composed = slotHtml !== null ? light.replace(/<slot>[\s\S]*?<\/slot>/, () 
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

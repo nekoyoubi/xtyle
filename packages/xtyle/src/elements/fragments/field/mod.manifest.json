@@ -1,0 +1,25 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-field-default",
+	"version": "0.0.1",
+	"title": "Xtyle Field (default)",
+	"description": "The built-in fill for the xtyle Field component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.field"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.field": [
+			{
+				"id": "field",
+				"format": "text/html+jsml",
+				"source": "field.html",
+				"handlers": [
+					{ "selector": ".xtyle-field__input", "on": "input", "handler": "onInput" },
+					{ "selector": ".xtyle-field__input", "on": "change", "handler": "onChange" },
+					{ "selector": "[data-action=\"clear\"]", "on": "click", "handler": "clear" },
+					{ "selector": "[data-action=\"reveal\"]", "on": "click", "handler": "reveal" }
+				]
+			}
+		]
+	}
+}

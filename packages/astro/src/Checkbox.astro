@@ -1,7 +1,7 @@
 ---
-import { renderFragmentLight } from "@xoji/core/elements/ssr";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as Tone } from "@xoji/core";
+import type { FullTone as Tone } from "@xtyle/core";
 type Size = "sm" | "md" | "lg";
 
 interface Props {
@@ -50,7 +50,7 @@ const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default"
 const composed = light.replace("<slot></slot>", () => slotHtml);
 ---
 
-<xoji-checkbox
+<xtyle-checkbox
 	checked={checked || undefined}
 	indeterminate={indeterminate || undefined}
 	disabled={disabled || undefined}
@@ -65,4 +65,4 @@ const composed = light.replace("<slot></slot>", () => slotHtml);
 	{...rest}
 />
 
-{!isStatic && <script>import "@xoji/core/elements";</script>}
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

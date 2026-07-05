@@ -1,7 +1,7 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone as BadgeTone, Size } from "@xoji/core";
+	import type { FullTone as BadgeTone, Size } from "@xtyle/core";
 
 	type BadgeVariant = "solid" | "soft" | "outline";
 
@@ -35,7 +35,7 @@
 	}: Props = $props();
 </script>
 
-<xoji-badge
+<xtyle-badge
 	{...rest}
 	{variant}
 	{tone}
@@ -48,9 +48,9 @@
 	onclick={onremove
 		? (event: MouseEvent) => {
 				const target = event.target as HTMLElement;
-				if (target.closest(".xoji-badge__remove")) onremove(event);
+				if (target.closest(".xtyle-badge__remove")) onremove(event);
 			}
 		: undefined}
 >
 	{@render children?.()}
-</xoji-badge>
+</xtyle-badge>
