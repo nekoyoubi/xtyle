@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { derive } from "../index.js";
+import { auditRegister } from "../audit.js";
 import { emit, emitters } from "../emit/index.js";
 import { coverage, coverComponent, coverComponents } from "../coverage.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "../gauntlet.js";
@@ -182,6 +183,35 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 				}
 				const ok = reports.every((r) => r.ok);
 				return json({ mode: resolvedMode, depth: resolvedDepth, runs: runCount, ok, reports }, !ok);
+			} catch (error) {
+				return text(error instanceof Error ? error.message : String(error), true);
+			}
+		},
+	);
+
+	register(
+		"xoji_audit",
+		{
+			title: "Audit a theme's contrast",
+			description:
+				"Grade a derived register against xoji's canonical text/fill pairs (body tiers, link, and every semantic tone's readable-on-base and text-on-fill variants) at the WCAG floors, returning a per-pair AAA/AA/fail tier plus tallies. The register-level complement to the gauntlet: the gauntlet proves an algorithm is safe across random seeds, this reports a specific theme's contrast.",
+			inputSchema: {
+				algorithm: z.string().optional().describe("Algorithm id. Defaults to xoji-default."),
+				bg: z.string().optional().describe("Background seed color."),
+				fg: z.string().optional().describe("Foreground seed color."),
+				accent: z.string().optional().describe("Accent seed color."),
+				overrides: z.record(z.string(), z.string()).optional().describe("Pin tokens directly before auditing."),
+				level: z.enum(["AA", "AAA"]).optional().describe("The floor a pair must clear to pass. Defaults to AA."),
+				largeText: z.boolean().optional().describe("Grade against the large-text WCAG floors (AA 3.0 / AAA 4.5)."),
+			},
+		},
+		async ({ algorithm, bg, fg, accent, overrides, level, largeText }) => {
+			const id = algorithm ?? "xoji-default";
+			try {
+				const resolved = await resolveAlgorithm(id);
+				const register = derive(resolved, { constraints: constraintsFrom({ bg, fg, accent, overrides }) });
+				const result = auditRegister(register, { level, largeText });
+				return json({ algorithm: id, ...result }, !result.passes);
 			} catch (error) {
 				return text(error instanceof Error ? error.message : String(error), true);
 			}

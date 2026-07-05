@@ -1,7 +1,34 @@
+import { constraintsFrom } from "./constraints.js";
 import type { Algorithm, DeriveOptions, DeriveTrace, TokenRegister } from "./types.js";
 
+const KNOWN_DERIVE_OPTS = new Set<keyof DeriveOptions>(["knobs", "constraints", "anchors"]);
+
+/**
+ * Normalize a derive request: reject an unknown option key loudly, and fold the
+ * friendly `anchors` seed shape down into `constraints` so the algorithm sees one
+ * channel. A seed passed through a shape the engine doesn't read (`{ seeds: … }`,
+ * `{ inputs: … }`) would otherwise be silently dropped and return a register built
+ * from the default accent — a plausible-looking wrong result — so an unknown key
+ * throws instead. An explicit `constraints` entry wins over an `anchors` value for
+ * the same token.
+ */
+function resolveDeriveOpts(opts: DeriveOptions): DeriveOptions {
+	const unknown = Object.keys(opts).filter((k) => !KNOWN_DERIVE_OPTS.has(k as keyof DeriveOptions));
+	if (unknown.length > 0) {
+		throw new TypeError(
+			`derive: unknown option ${unknown.map((k) => `"${k}"`).join(", ")}. ` +
+				`Seed a theme through \`anchors\` ({ anchors: { accent: "#7c5cff" } }) or ` +
+				`\`constraints\` ({ constraints: { "--accent": "#7c5cff" } }). ` +
+				`Valid options: ${[...KNOWN_DERIVE_OPTS].join(", ")}.`,
+		);
+	}
+	if (!opts.anchors) return opts;
+	const { anchors, constraints, ...rest } = opts;
+	return { ...rest, constraints: { ...constraintsFrom(anchors), ...constraints } };
+}
+
 export function derive(algorithm: Algorithm, opts: DeriveOptions = {}): TokenRegister {
-	return algorithm.derive(opts);
+	return algorithm.derive(resolveDeriveOpts(opts));
 }
 
 /**
@@ -11,17 +38,23 @@ export function derive(algorithm: Algorithm, opts: DeriveOptions = {}): TokenReg
  * synthesizes a one-snapshot trace from `derive`. The last snapshot equals `derive(opts)`.
  */
 export function deriveTraced(algorithm: Algorithm, opts: DeriveOptions = {}): DeriveTrace {
-	if (algorithm.deriveTraced) return algorithm.deriveTraced(opts);
-	const register = algorithm.derive(opts);
+	const resolved = resolveDeriveOpts(opts);
+	if (algorithm.deriveTraced) return algorithm.deriveTraced(resolved);
+	const register = algorithm.derive(resolved);
 	return { register, trace: [{ name: "derive", register }] };
 }
 
 export * from "./types.js";
 export * from "./vocab.js";
+export * from "./icons.js";
+export * from "./icon-builder.js";
 export * from "./token-meta.js";
 export * from "./color.js";
+export * from "./audit.js";
 export * from "./convert.js";
 export * from "./series.js";
+export * from "./timeseries.js";
+export { constraintsFrom } from "./constraints.js";
 export * from "./graph.js";
 export {
 	emit,

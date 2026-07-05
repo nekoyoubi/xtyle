@@ -42,7 +42,7 @@ import Kbd from "@xoji/astro/Kbd.astro";
 export const kbdManifest: ComponentManifest = {
 	id: "kbd",
 	name: "Kbd",
-	category: "data-display",
+	category: "content",
 	summary: "A keycap for the keys in a shortcut.",
 	description:
 		"Kbd renders a single key as a physical keycap: a mono-faced label on a raised surface, the depth read from a heavier bottom edge rather than a drop shadow, so it sits cleanly inline in running text. It carries no layout of its own: set a few side by side in a `Cluster` to spell a chord (`Ctrl` `+` `K`). Everything about its look is derived chrome: the surface, the edge, the radius all come from the same tokens the rest of the theme does, so a keycap matches the UI it documents. The `size` prop steps it with the surrounding type from `sm` to `lg`, and an optional `tone` tints the whole keycap (face, edge, and label) to any of the semantic roles or named hues for a primary-chord or status key.",

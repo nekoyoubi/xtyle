@@ -14,7 +14,8 @@ export const categoryOrder: ComponentCategory[] = [
 	"navigation",
 	"feedback",
 	"overlay",
-	"data-display",
+	"content",
+	"media",
 	"metrics",
 ];
 
@@ -54,10 +55,15 @@ export const categoryMeta: Record<ComponentCategory, CategoryMeta> = {
 		label: "Overlay",
 		blurb: "The layers above the page: dialogs, tooltips, toasts.",
 	},
-	"data-display": {
-		id: "data-display",
-		label: "Display",
-		blurb: "The shapes that surface structured content: tables, avatars, badges.",
+	content: {
+		id: "content",
+		label: "Content",
+		blurb: "The shapes that carry words and structured detail: headings, prose, code, keycaps, tables.",
+	},
+	media: {
+		id: "media",
+		label: "Media",
+		blurb: "The purely visual pieces: icons, images, avatars, badges, and banner canvases.",
 	},
 	metrics: {
 		id: "metrics",

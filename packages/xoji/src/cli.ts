@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
+import { auditRegister } from "./audit.js";
 import { coverage } from "./coverage.js";
 import { derive } from "./index.js";
 import { emit, emitters } from "./emit/index.js";
@@ -114,6 +115,7 @@ function usage(): void {
 			"  xoji derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--set <token>=<value>]... [--format css|json|theme|prism|monaco] [--name <s>] [--out <file>]",
 			"  xoji gauntlet [-a <algorithm>|all] [--mode baked|hosted] [--depth quick|standard|full] [--runs <n>]",
 			"  xoji coverage --consumed <a,b,c> [-a <algorithm>] [--bg <c>] [--accent <c>] [--set <token>=<value>]...",
+			"  xoji audit [-a <algorithm>] [--bg <c>] [--accent <c>] [--set <token>=<value>]... [--level AA|AAA] [--large-text]",
 			"",
 			"  --set pins any token (repeatable): --set --accent-2=#7c3aed --set font-sans='Inter, sans-serif'",
 			"        the leading -- is optional (--set radius-md=10px). Alias: --constraint.",
@@ -148,7 +150,7 @@ async function main(): Promise<void> {
 					"xoji mcp: start the MCP server (stdio transport)",
 					"",
 					"Exposes the engine the CLI runs to MCP clients: tools for derive, coverage,",
-					"components, gauntlet, and list-algorithms, plus the concept docs and every",
+					"audit, components, gauntlet, and list-algorithms, plus the concept docs and every",
 					"component manifest as resources.",
 					"",
 					"Configure your client to run: xoji mcp (or npx -y @xoji/core xoji mcp)",
@@ -211,6 +213,17 @@ async function main(): Promise<void> {
 		const result = coverage(consumed, register);
 		process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 		process.exitCode = result.covered ? 0 : 1;
+		return;
+	}
+
+	if (args.command === "audit") {
+		const algorithm = await resolveAlgorithm(args.algorithm);
+		const register = derive(algorithm, { constraints: constraintsFrom(args) });
+		const levelIndex = argv.indexOf("--level");
+		const level = levelIndex >= 0 && argv[levelIndex + 1] === "AAA" ? "AAA" : "AA";
+		const result = auditRegister(register, { level, largeText: argv.includes("--large-text") });
+		process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+		process.exitCode = result.passes ? 0 : 1;
 		return;
 	}
 

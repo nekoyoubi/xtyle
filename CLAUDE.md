@@ -47,6 +47,7 @@ npx xoji derive --bg <c> --accent <c> --format css   # derive a theme + emit (cs
 npx xoji gauntlet -a all --depth quick                # fast baked spot-check across all algorithms (default mode: baked)
 npx xoji gauntlet -a all --mode hosted --depth full   # prove invariants against the shipped sandboxed mods
 npx xoji coverage --consumed a,b,c                    # check a component's consumed tokens
+npx xoji audit -a <algorithm> [--level AA|AAA]        # grade a theme's contrast against the canonical WCAG text/fill pairs
 npx xoji mcp                                          # start the MCP server (the CLI + engine, for agents) over stdio
 # planned (next build): `xoji add <pack>` / `xoji search <query>`, the discovery surface
 ```

@@ -1,0 +1,19 @@
+---
+type HeroAlign = "center" | "start";
+
+interface Props {
+	align?: HeroAlign;
+	split?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { align = "center", split = false, class: extra, ...rest } = Astro.props;
+---
+
+<xoji-hero align={align !== "center" ? align : undefined} split={split ? "" : undefined} class={extra} {...rest}>
+	<slot />
+</xoji-hero>
+
+<script>import "@xoji/core/elements";</script>

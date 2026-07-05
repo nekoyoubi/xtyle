@@ -11,10 +11,18 @@ export interface AvatarMarkupProps {
 	shape?: AvatarShape;
 	status?: Tone | null;
 	statusLabel?: string | null;
+	pulse?: boolean | "slow" | "fast" | null;
 }
 
 /** The host-layout rule for an avatar — the one `:host` rule, shared by the element's `styles()` and the SSR declarative shadow root. */
 export const avatarHostCss = ":host { display: inline-flex; }";
+
+/** The pulse class for a live status dot: a bare / truthy `pulse` breathes at the slow cadence,
+ * `"fast"` at the quick one. A no-op without a `status` dot to animate. */
+export function avatarPulseClass(pulse: AvatarMarkupProps["pulse"], hasStatus: boolean): string | false {
+	if (!hasStatus || pulse == null || pulse === false) return false;
+	return pulse === "fast" ? "xoji-avatar--pulse-fast" : "xoji-avatar--pulse-slow";
+}
 
 export function avatarClass(props: AvatarMarkupProps): string {
 	const tone = props.tone ?? "neutral";
@@ -26,6 +34,7 @@ export function avatarClass(props: AvatarMarkupProps): string {
 		size !== "md" && `xoji-avatar--${size}`,
 		shape === "square" && "xoji-avatar--square",
 		props.status && `xoji-avatar--status-${props.status}`,
+		avatarPulseClass(props.pulse, Boolean(props.status)),
 	]
 		.filter(Boolean)
 		.join(" ");

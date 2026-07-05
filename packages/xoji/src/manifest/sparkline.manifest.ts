@@ -42,14 +42,36 @@ const inlineAstroExample = `<p>
 	up 34%.
 </p>`;
 
+const timeHtmlExample = `<xoji-sparkline window="300000" variant="area" tone="info" label="Signal, last 5m"></xoji-sparkline>
+<script>
+	const spark = document.querySelector("xoji-sparkline");
+	// irregular samples over real time: { at: epoch ms | ISO string, value }
+	spark.points = history;
+</script>`;
+
+const timeSvelteExample = `<script lang="ts">
+	import { Sparkline } from "@xoji/svelte";
+	// { at: epoch ms | ISO string, value }[]
+	const history = readSignalHistory();
+</script>
+
+<Sparkline points={history} window={300000} variant="area" tone="info" label="Signal, last 5m" />`;
+
+const timeAstroExample = `---
+import { Sparkline } from "@xoji/astro";
+const history = readSignalHistory(); // { at: epoch ms | ISO string, value }[]
+---
+
+<Sparkline points={history} window={300000} variant="area" tone="info" label="Signal, last 5m" />`;
+
 export const sparklineManifest: ComponentManifest = {
 	id: "sparkline",
 	name: "Sparkline",
 	since: "0.3.0",
 	category: "metrics",
-	summary: "A tiny, word-sized trend line, area, or bar chart, single-tone and axis-free, for inline use.",
+	summary: "A tiny, word-sized trend line, area, or bar chart, single-tone and axis-free, for inline use or a live time-series.",
 	description:
-		"Sparkline draws a single series of numbers as a small, axis-free SVG that reads as a trend at a glance, sized to sit inline in a sentence, a table cell, or beside a `Stat`. Three shapes: a `line`, a filled `area`, or a mini `bar` run. It takes one `tone` from the theme roster (any semantic role or named hue) and marks the latest point with an end dot. It's interactive: sweeping across it floats a marker and the value at the nearest point. Size it with the `--spark-width` and `--spark-height` custom properties; give it a `label` for an accessible name. Auto-ranged from the data, or pin `min` / `max` to share a baseline across a column of sparklines.",
+		"Sparkline draws a single series of numbers as a small, axis-free SVG that reads as a trend at a glance, sized to sit inline in a sentence, a table cell, or beside a `Stat`. Three shapes: a `line`, a filled `area`, or a mini `bar` run. Feed it evenly-spaced `values`, or switch to `points` (timestamped samples) for a real time-series: they map onto a sliding `window` (or an explicit `domain`), so irregular samples sit at their true position and slide left over real time. Add `step` to hold each value for an on/off signal. It takes one `tone` from the theme roster (any semantic role or named hue) and marks the latest point with an end dot. It's interactive: sweeping across it floats a marker and the value at the nearest point. Size it with the `--spark-width` and `--spark-height` custom properties; give it a `label` for an accessible name. Auto-ranged from the data, or pin `min` / `max` to share a baseline across a column of sparklines. An empty series shows a muted `No data` label instead of a blank box.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -80,7 +102,34 @@ export const sparklineManifest: ComponentManifest = {
 		{
 			name: "values",
 			type: "number[]",
-			description: "The data series. JS property in html/svelte, a JSON or comma list attribute, or a prop in astro.",
+			description: "The data series, evenly spaced. JS property in html/svelte, a JSON or comma list attribute, or a prop in astro.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "points",
+			type: "{ at: number | string; value: number }[]",
+			description:
+				"Time-windowed mode: timestamped samples (`at` is epoch ms or a date string) placed on a real time axis instead of even spacing, so irregular samples read at their true position and slide left over time. JS property in html/svelte, JSON attribute or prop in astro. Pair with `window` or `domain`; overrides `values` when set.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "window",
+			type: "number",
+			default: "300000",
+			description: "The sliding time window in ms (default 5 minutes), ending at now; samples older than it drop off the left. Used only in `points` mode, and ignored when `domain` is set.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "domain",
+			type: "[number | string, number | string]",
+			description: "An explicit `[start, end]` time span (epoch ms or date strings) for the x-axis, instead of the sliding `window`. JSON attribute or prop.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "step",
+			type: "boolean",
+			default: "false",
+			description: "Draws the line as a sample-and-hold step, so an on/off or discrete series reads as held levels rather than diagonal ramps.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -148,6 +197,7 @@ export const sparklineManifest: ComponentManifest = {
 		"--text-xs",
 		"--leading-normal",
 		"--fg-0",
+		"--fg-2",
 		"--space-1",
 		"--space-2",
 		"--radius-md",
@@ -178,6 +228,12 @@ export const sparklineManifest: ComponentManifest = {
 			title: "Inline in text",
 			description: "Sized down with `--spark-width` / `--spark-height` to sit word-height in a sentence.",
 			source: { html: inlineHtmlExample, svelte: inlineSvelteExample, astro: inlineAstroExample },
+		},
+		{
+			id: "timeseries",
+			title: "Time-windowed series",
+			description: "`points` with timestamps on a sliding `window` place irregular samples at their true position over real time, so a live signal reads honestly instead of assuming even spacing. Add `step` for a held on/off series.",
+			source: { html: timeHtmlExample, svelte: timeSvelteExample, astro: timeAstroExample },
 		},
 	],
 };

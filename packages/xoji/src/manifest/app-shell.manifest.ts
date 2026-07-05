@@ -49,6 +49,43 @@ import { AppShell } from "@xoji/astro";
 	<footer slot="statusbar" class="xoji-statusbar">Ready</footer>
 </AppShell>`;
 
+const htmlResizableExample = `<xoji-app-shell right-size="344" right-resizable right-min="288" right-max="560">
+	<header slot="toolbar" class="xoji-toolbar">Editor</header>
+
+	<h1>Canvas</h1>
+
+	<!-- Drag the rail's inner edge to resize; double-click it to reset to 344. -->
+	<aside slot="right" class="xoji-panel">Inspector</aside>
+</xoji-app-shell>`;
+
+const svelteResizableExample = `<script lang="ts">
+	import { AppShell } from "@xoji/svelte";
+</script>
+
+<AppShell rightSize={344} rightResizable rightMin={288} rightMax={560}>
+	{#snippet toolbar()}
+		<header class="xoji-toolbar">Editor</header>
+	{/snippet}
+
+	<h1>Canvas</h1>
+
+	{#snippet right()}
+		<aside class="xoji-panel">Inspector</aside>
+	{/snippet}
+</AppShell>`;
+
+const astroResizableExample = `---
+import { AppShell } from "@xoji/astro";
+---
+
+<AppShell rightSize={344} rightResizable rightMin={288} rightMax={560}>
+	<header slot="toolbar" class="xoji-toolbar">Editor</header>
+
+	<h1>Canvas</h1>
+
+	<aside slot="right" class="xoji-panel">Inspector</aside>
+</AppShell>`;
+
 export const appShellManifest: ComponentManifest = {
 	id: "app-shell",
 	name: "AppShell",
@@ -82,6 +119,12 @@ export const appShellManifest: ComponentManifest = {
 			tokens: ["--space-5"],
 		},
 		{
+			name: "rail-handle",
+			description: "The drag handle on a resizable rail's inner edge (when `leftResizable` / `rightResizable` is set); a hairline that thickens to the accent on hover, keyboard focus, and drag.",
+			selector: ".xoji-app__resizer",
+			tokens: ["--line", "--accent", "--border-thin", "--border-normal", "--ring", "--duration-fast", "--ease-standard"],
+		},
+		{
 			name: "skip-link",
 			description: "The keyboard-only jump link, off-screen until focused, sliding into the top-left when it is.",
 			selector: ".xoji-app__skip-link",
@@ -108,6 +151,47 @@ export const appShellManifest: ComponentManifest = {
 			type: "string | boolean",
 			description:
 				"Renders a skip link targeting the main region. `true` uses the default label; a string overrides it. The Astro binding also accepts a `skip-link` slot for richer content.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "leftSize",
+			type: "number | string",
+			description: "Width of the left rail column. A bare number is treated as px; a string passes through (`18rem`, `20%`). Omit to size the rail to its content.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "rightSize",
+			type: "number | string",
+			description: "Width of the right rail column, same rules as `leftSize`. When `rightResizable` is set this is the rail's starting width and its double-click reset target.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "leftResizable",
+			type: "boolean",
+			default: "false",
+			description:
+				"Makes the left rail user-resizable: a drag handle on the rail's inner edge, arrow-key nudges (`Shift` for a larger step, `Home`/`End` to jump to the bounds), and a double-click reset to `leftSize`. The main column reflows live as the rail changes. The element emits `resize` / `resize-end` events with the side and size.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "rightResizable",
+			type: "boolean",
+			default: "false",
+			description: "Makes the right rail user-resizable, mirroring `leftResizable` with a double-click reset to `rightSize`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "leftMin / leftMax",
+			type: "number",
+			default: "160 / 720",
+			description: "Clamp, in px, for the resizable left rail (`left-min` / `left-max`).",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "rightMin / rightMax",
+			type: "number",
+			default: "160 / 720",
+			description: "Clamp, in px, for the resizable right rail (`right-min` / `right-max`).",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -170,6 +254,7 @@ export const appShellManifest: ComponentManifest = {
 		"--weight-medium",
 		"--accent",
 		"--accent-fg",
+		"--line",
 		"--border-thin",
 		"--border-normal",
 		"--border-thick",
@@ -193,6 +278,7 @@ export const appShellManifest: ComponentManifest = {
 		"The skip link is positioned off-screen and only slides into view on `:focus-visible`, so it stays out of the visual layout until needed.",
 		"`<main>` receives a focus ring when the skip link moves focus to it, confirming the landing point.",
 		"The custom element host is `display: contents`, so it adds no box and never disturbs the landmark or grid structure.",
+		"A resizable rail's handle is a `role=\"separator\"` with `aria-orientation=\"vertical\"` and `aria-valuenow`/`min`/`max`, is keyboard-focusable, and drives the width with the arrow keys, so the rail resizes without a pointer.",
 	],
 	examples: [
 		{
@@ -200,6 +286,13 @@ export const appShellManifest: ComponentManifest = {
 			title: "Full application scaffold",
 			description: "Toolbar, left and right rails, scrollable main, a status bar, and a skip link.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "resizable-rail",
+			title: "Resizable right rail",
+			description:
+				"An editor with a user-resizable inspector: drag the rail's inner edge (or arrow-key the handle) and the main column reflows; double-click to reset. `leftResizable` mirrors it.",
+			source: { html: htmlResizableExample, svelte: svelteResizableExample, astro: astroResizableExample },
 		},
 	],
 };

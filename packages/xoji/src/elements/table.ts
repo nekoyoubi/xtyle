@@ -39,15 +39,31 @@ export class XojiTable extends HTMLElement {
 	}
 
 	private overflowObserver: ResizeObserver | null = null;
+	private contentObserver: MutationObserver | null = null;
 
 	connectedCallback(): void {
 		this.decorate();
 		this.observeOverflow();
+		this.observeContent();
 	}
 
 	disconnectedCallback(): void {
 		this.overflowObserver?.disconnect();
 		this.overflowObserver = null;
+		this.contentObserver?.disconnect();
+		this.contentObserver = null;
+	}
+
+	/** `decorate()` classes the light-DOM `<table>` once. A reactive framework recreating rows
+	 * (a new keyed `{#each}` page, appended columns, live rows) leaves them undecorated, so watch
+	 * the subtree and re-decorate when it changes. `decorate()` disconnects this while it runs, so
+	 * its own class/attribute writes and the header-wrapper append can't re-trigger the observer. */
+	private observeContent(): void {
+		if (typeof MutationObserver === "undefined" || this.contentObserver) return;
+		this.contentObserver = new MutationObserver(() => {
+			if (this.isConnected) this.decorate();
+		});
+		this.contentObserver.observe(this, { childList: true, subtree: true });
 	}
 
 	attributeChangedCallback(): void {
@@ -94,6 +110,17 @@ export class XojiTable extends HTMLElement {
 	}
 
 	private decorate(): void {
+		this.contentObserver?.disconnect();
+		try {
+			this.decorateTable();
+		} finally {
+			if (this.contentObserver && this.isConnected) {
+				this.contentObserver.observe(this, { childList: true, subtree: true });
+			}
+		}
+	}
+
+	private decorateTable(): void {
 		this.classList.add("xoji-table-wrap");
 		this.setAttribute("part", "wrap");
 

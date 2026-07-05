@@ -1,0 +1,56 @@
+---
+import { renderFragmentLight } from "@xoji/core/elements/ssr";
+
+type ImageFit = "cover" | "contain";
+type ImageRadius = "none" | "sm" | "md" | "lg";
+type ImageLoading = "lazy" | "eager";
+
+interface Props {
+	src?: string;
+	alt?: string;
+	ratio?: string;
+	fit?: ImageFit;
+	radius?: ImageRadius;
+	loading?: ImageLoading;
+	lightbox?: boolean;
+	caption?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	src,
+	alt = "",
+	ratio,
+	fit = "cover",
+	radius = "md",
+	loading = "lazy",
+	lightbox = false,
+	caption,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const bindings = { src, alt, ratio, fit, radius, loading, caption };
+const composed = await renderFragmentLight("image", bindings);
+---
+
+<xoji-image
+	src={src}
+	alt={alt}
+	ratio={ratio}
+	fit={fit}
+	radius={radius}
+	loading={loading}
+	caption={caption}
+	lightbox={lightbox ? "" : undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xoji/core/elements";</script>}

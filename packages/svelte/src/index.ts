@@ -25,6 +25,7 @@ export { default as Cluster } from "./Cluster.svelte";
 export { default as Grid } from "./Grid.svelte";
 export { default as Spinner } from "./Spinner.svelte";
 export { default as Avatar } from "./Avatar.svelte";
+export { default as AvatarGroup } from "./AvatarGroup.svelte";
 export { default as Tooltip } from "./Tooltip.svelte";
 export { default as Tabs } from "./Tabs.svelte";
 export { default as Breadcrumb } from "./Breadcrumb.svelte";
@@ -37,14 +38,24 @@ export { default as Slider } from "./Slider.svelte";
 export { default as ColorPicker } from "./ColorPicker.svelte";
 export { default as NumberInput } from "./NumberInput.svelte";
 export { default as Segmented } from "./Segmented.svelte";
+export { default as Segment } from "./Segment.svelte";
 export { default as Accordion } from "./Accordion.svelte";
 export { default as Tree } from "./Tree.svelte";
 export { default as Stat } from "./Stat.svelte";
+export { default as Bar } from "./Bar.svelte";
+export { default as Pie } from "./Pie.svelte";
+export { default as Sparkline } from "./Sparkline.svelte";
+export { default as Heatmap } from "./Heatmap.svelte";
 export { default as Section } from "./Section.svelte";
 export { default as Eyebrow } from "./Eyebrow.svelte";
 export { default as CardLink } from "./CardLink.svelte";
 export { default as Toc } from "./Toc.svelte";
 export { default as Kbd } from "./Kbd.svelte";
+export { default as Icon } from "./Icon.svelte";
+export { default as Image } from "./Image.svelte";
+export { default as Carousel } from "./Carousel.svelte";
+export { default as Parallax } from "./Parallax.svelte";
+export { default as Hero } from "./Hero.svelte";
 export { default as Swatch } from "./Swatch.svelte";
 export { default as Menu } from "./Menu.svelte";
 export { default as Splitter } from "./Splitter.svelte";
@@ -80,6 +91,7 @@ export {
 	XojiGrid,
 	XojiSpinner,
 	XojiAvatar,
+	XojiAvatarGroup,
 	XojiTooltip,
 	XojiTabs,
 	XojiBreadcrumb,
@@ -95,11 +107,20 @@ export {
 	XojiAccordion,
 	XojiTree,
 	XojiStat,
+	XojiBar,
+	XojiPie,
+	XojiSparkline,
+	XojiHeatmap,
 	XojiSection,
 	XojiEyebrow,
 	XojiCardLink,
 	XojiToc,
 	XojiKbd,
+	XojiIcon,
+	XojiImage,
+	XojiCarousel,
+	XojiParallax,
+	XojiHero,
 	XojiSwatch,
 	XojiMenu,
 	XojiSplitter,

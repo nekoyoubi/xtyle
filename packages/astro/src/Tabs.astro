@@ -48,7 +48,7 @@ const bindings = {
 	tabs: tabItems.map((item, i) => ({
 		key: item.value ?? String(i),
 		label: item.label,
-		panel: item.panel,
+		panel: item.panel ?? "",
 		disabled: item.disabled,
 	})),
 	activeId: value ?? null,

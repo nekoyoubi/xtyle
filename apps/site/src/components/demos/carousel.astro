@@ -1,0 +1,58 @@
+---
+import Carousel from "@xoji/astro/Carousel.astro";
+import Image from "@xoji/astro/Image.astro";
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+
+const hues = ["#6ea8fe", "#7c5cff", "#ff7ac6", "#4ade80", "#fbbf24"];
+const slide = (hue: string, label: string) =>
+	"data:image/svg+xml," +
+	encodeURIComponent(
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="' +
+			hue +
+			'"/><text x="320" y="200" font-family="sans-serif" font-size="48" fill="#0b0d12" text-anchor="middle">' +
+			label +
+			"</text></svg>",
+	);
+const shots = hues.map((h, i) => slide(h, `Slide ${i + 1}`));
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Image gallery</Heading>
+		<Carousel label="Product photos">
+			{shots.map((src, i) => <Image src={src} alt={`Photo ${i + 1}`} ratio="16/9" />)}
+		</Carousel>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Autoplay and loop</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">Advances every 4s, wraps at the ends, and pauses when you hover or focus it.</Text>
+			<Carousel label="Highlights" autoplay interval={4000} loop>
+				{
+					hues.map((hue, i) => (
+						<div style={`display:flex;align-items:center;justify-content:center;min-height:9rem;border-radius:var(--radius-md);background:${hue};color:#0b0d12;font-size:var(--text-lg);font-weight:var(--weight-bold);`}>
+							Highlight {i + 1}
+						</div>
+					))
+				}
+			</Carousel>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Content slides</Heading>
+		<Carousel label="Testimonials" controls={false}>
+			{
+				["“Ships beautifully out of the box.”", "“The theming just works.”", "“Every slide stays on-brand.”"].map((quote) => (
+					<Card>
+						<Text size="lg">{quote}</Text>
+					</Card>
+				))
+			}
+		</Carousel>
+	</Card>
+</Stack>

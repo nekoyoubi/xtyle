@@ -1,0 +1,11 @@
+---
+import IconBuilder from "../../components/bench/IconBuilder.svelte";
+import Base from "../../layouts/Base.astro";
+---
+
+<Base
+	title="Icon Builder: xoji"
+	description="Compose an icon from stacked primitives on the keypad grid, colored from the active theme's own series. Every mark is just a name string, baked or generated, and recolors with the theme for free."
+>
+	<IconBuilder client:only="svelte" />
+</Base>

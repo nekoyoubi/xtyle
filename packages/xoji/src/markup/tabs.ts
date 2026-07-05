@@ -4,8 +4,12 @@ export type TabsActivation = "automatic" | "manual";
 export interface TabItemData {
 	/** The tab trigger's label as raw HTML (an already-rendered tab's `innerHTML`). */
 	label: string;
-	/** The tab's panel body as raw HTML (an already-rendered panel's `innerHTML`). */
-	panel: string;
+	/**
+	 * The tab's panel body as raw HTML (an already-rendered panel's `innerHTML`).
+	 * Optional: in headless `tablist` mode the element owns no panels and the consumer
+	 * renders content itself, so a tablist item carries only `label` (and `value`/`disabled`).
+	 */
+	panel?: string;
 	/**
 	 * Project a live light-DOM panel through a named `<slot>` instead of baking its
 	 * `panel` HTML. The runtime element sets this for light-DOM panels so framework

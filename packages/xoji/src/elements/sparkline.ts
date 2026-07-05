@@ -2,6 +2,7 @@ import { XojiElement, define, type StyleMode } from "./base.js";
 import { sparklineHostCss, type SparklineVariant, type SparklineTone } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/sparkline/source.generated.js";
+import { windowedPlot, type TimeSample } from "../timeseries.js";
 
 export type { SparklineVariant, SparklineTone };
 
@@ -21,19 +22,29 @@ function parseValues(raw: string | null): number[] {
 	}
 }
 
+function parseJson<T>(raw: string | null): T | null {
+	if (!raw) return null;
+	try {
+		return JSON.parse(raw) as T;
+	} catch {
+		return null;
+	}
+}
+
 export class XojiSparkline extends XojiElement {
 	protected override get styleMode(): StyleMode {
 		return "auto";
 	}
 
 	private valuesProp: number[] | null = null;
+	private pointsProp: TimeSample[] | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "sparkline", {
 		applyIntent: () => {},
 		afterApply: () => this.wireInteraction(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["values", "variant", "tone", "show-end", "min", "max", "label"];
+		return ["values", "points", "window", "domain", "step", "variant", "tone", "show-end", "min", "max", "label"];
 	}
 
 	get values(): number[] {
@@ -41,6 +52,14 @@ export class XojiSparkline extends XojiElement {
 	}
 	set values(value: number[]) {
 		this.valuesProp = value;
+		if (this.root.firstChild) this.render();
+	}
+
+	get points(): TimeSample[] {
+		return this.pointsProp ?? parseJson<TimeSample[]>(this.getAttribute("points")) ?? [];
+	}
+	set points(value: TimeSample[]) {
+		this.pointsProp = value;
 		if (this.root.firstChild) this.render();
 	}
 
@@ -60,6 +79,7 @@ export class XojiSparkline extends XojiElement {
 
 	attributeChangedCallback(name: string): void {
 		if (name === "values") this.valuesProp = null;
+		if (name === "points") this.pointsProp = null;
 		if (this.root.firstChild) this.render();
 	}
 
@@ -68,12 +88,26 @@ export class XojiSparkline extends XojiElement {
 		return raw !== null && raw !== "" ? Number(raw) : undefined;
 	}
 
+	/** The time-windowed plot for `points` mode (samples placed by time against the live clock), or
+	 * `null` in plain `values` mode. Delegates the window math to the shared `windowedPlot` primitive. */
+	private plot(): { x: number; value: number }[] | null {
+		const points = this.points;
+		if (points.length === 0) return null;
+		return windowedPlot(points, {
+			window: this.num("window"),
+			domain: parseJson<[number | string, number | string]>(this.getAttribute("domain")),
+			now: Date.now(),
+		});
+	}
+
 	private get bindings(): Record<string, unknown> {
+		const plot = this.plot();
 		return {
-			values: this.values,
+			...(plot ? { plot } : { values: this.values }),
 			variant: this.variant,
 			tone: this.tone,
 			showEnd: this.getAttribute("show-end") !== "false",
+			step: this.hasAttribute("step"),
 			min: this.num("min"),
 			max: this.num("max"),
 			label: this.getAttribute("label"),
@@ -86,8 +120,10 @@ export class XojiSparkline extends XojiElement {
 		const marker = this.root.querySelector<SVGGElement>(".xoji-sparkline__marker");
 		const tooltip = this.root.querySelector<HTMLElement>(".xoji-sparkline__tooltip");
 		if (!spark || !svg || !marker || !tooltip) return;
-		const values = this.values;
+		const plot = this.plot();
+		const values = plot ? plot.map((p) => p.value) : this.values;
 		if (values.length === 0) return;
+		const xs = plot ? plot.map((p) => p.x) : null;
 		const guide = marker.querySelector<SVGLineElement>(".xoji-sparkline__guide");
 		const dot = marker.querySelector<SVGCircleElement>(".xoji-sparkline__dot");
 		const lo = this.num("min") ?? Math.min(...values);
@@ -98,8 +134,23 @@ export class XojiSparkline extends XojiElement {
 		const move = (event: PointerEvent): void => {
 			const box = svg.getBoundingClientRect();
 			const frac = box.width > 0 ? (event.clientX - box.left) / box.width : 0;
-			const i = Math.max(0, Math.min(values.length - 1, Math.round(frac * (values.length - 1))));
-			const vx = PAD + (values.length <= 1 ? innerW / 2 : (i / (values.length - 1)) * innerW);
+			let i: number;
+			if (xs) {
+				const target = Math.max(0, Math.min(1, frac));
+				i = 0;
+				let best = Infinity;
+				for (let k = 0; k < xs.length; k++) {
+					const d = Math.abs((xs[k] as number) - target);
+					if (d < best) {
+						best = d;
+						i = k;
+					}
+				}
+			} else {
+				i = Math.max(0, Math.min(values.length - 1, Math.round(frac * (values.length - 1))));
+			}
+			const nx = xs ? (xs[i] as number) : values.length <= 1 ? 0.5 : i / (values.length - 1);
+			const vx = PAD + nx * innerW;
 			const vy = PAD + (1 - ((values[i] as number) - lo) / span) * (32 - PAD * 2);
 			guide?.setAttribute("x1", String(vx));
 			guide?.setAttribute("x2", String(vx));

@@ -14,6 +14,12 @@
 		legend?: boolean;
 		height?: number;
 		label?: string;
+		/** Make bars actionable: each becomes a `role="button"` that fires `select` on click or Enter/Space. */
+		selectable?: boolean;
+		/** Fired when a bar is activated (only when `selectable`), carrying the series, category, value, and indices. */
+		onselect?: (
+			event: CustomEvent<{ series: string; category: string; value: number; seriesIndex: number; categoryIndex: number }>,
+		) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
@@ -30,6 +36,8 @@
 		legend = true,
 		height = 320,
 		label,
+		selectable = false,
+		onselect,
 		...rest
 	}: Props = $props();
 
@@ -54,6 +62,8 @@
 	stacked={stacked || undefined}
 	show-values={showValues || undefined}
 	legend={legend ? undefined : "false"}
+	selectable={selectable || undefined}
+	{onselect}
 	{height}
 	{label}
 ></xoji-bar>

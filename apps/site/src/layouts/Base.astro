@@ -2,7 +2,7 @@
 import { ClientRouter } from "astro:transitions";
 import { emit } from "@xoji/core";
 import { utilitiesCss, componentsCss } from "@xoji/core/css";
-import { getStats, displayStats } from "../data/stats";
+import { getStats, displayStats, benchStats } from "../data/stats";
 import AppShell from "@xoji/astro/AppShell.astro";
 import Toolbar from "@xoji/astro/Toolbar.astro";
 import Dock from "@xoji/astro/Dock.astro";
@@ -42,7 +42,7 @@ const canonicalUrl = new URL(
 const site = await getStats();
 const themeCss = emit(site.register, "css");
 const baseCss = `${utilitiesCss(site.algorithm.produces, site.algorithm.categories)}\n${componentsCss}`;
-const numberStats = displayStats(site).map((s) => ({
+const numberStats = [...displayStats(site), ...benchStats(site)].map((s) => ({
 	label: s.label,
 	value: s.value,
 	delta: site.delta(s.key),
@@ -180,10 +180,7 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 				<Fragment slot="right"><slot name="right" /></Fragment>
 			)}
 
-			<Statusbar slot="statusbar" live separated label="Theme status" overflow="collapse">
-				<span class="xoji-statusbar__item" data-priority="8"><Stat label="algorithm" inline class="x-status-stat"><span id="x-status-algo" data-default="xoji-default">xoji-default</span></Stat></span>
-				<span class="xoji-statusbar__item" data-priority="4"><Stat label="scheme" inline class="x-status-stat"><span id="x-status-scheme" data-default="dark">dark</span></Stat></span>
-				<span class="xoji-statusbar__spacer"></span>
+			<Statusbar slot="statusbar" live separated label="Site status" overflow="collapse">
 				{numberStats.map((s) => (
 					<span class="xoji-statusbar__item" data-priority={s.label === "components" ? "9" : "6"}>
 						<Stat
@@ -195,7 +192,8 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						>{s.value}</Stat>
 					</span>
 				))}
-				<span class="xoji-statusbar__item" data-priority="3"><Stat label="license" inline class="x-status-stat">MIT</Stat></span>
+				<span class="xoji-statusbar__spacer"></span>
+				<span class="xoji-statusbar__item" data-priority="3"><Stat label="version" inline class="x-status-stat"><a class="x-status-link" href="/changelog">v{site.version}</a></Stat></span>
 				<span class="xoji-statusbar__item" data-priority="2"><Stat label="updated" inline class="x-status-stat"><a class="x-status-link" href="/changelog"><span id="x-build-rel" data-build={buildIso} title={buildLabel}>{buildLabel}</span></a></Stat></span>
 			</Statusbar>
 		</AppShell>
@@ -231,6 +229,10 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 				if (!el || !iso) return;
 				const rel = relativeTime(iso);
 				if (rel) el.textContent = rel;
+				el.title = new Date(iso).toLocaleString(undefined, {
+					dateStyle: "medium",
+					timeStyle: "short",
+				});
 			}
 
 			syncBuildTime();

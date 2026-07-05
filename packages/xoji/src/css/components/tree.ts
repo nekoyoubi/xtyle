@@ -31,6 +31,13 @@ export const treeCss = `
 	background: var(--state-hover);
 	color: var(--fg-0);
 }
+.xoji-tree__row--static {
+	cursor: default;
+}
+.xoji-tree__row--static:hover {
+	background: transparent;
+	color: var(--fg-2);
+}
 .xoji-tree__item:focus { outline: none; }
 .xoji-tree__item:focus-visible > .xoji-tree__row {
 	outline: var(--border-normal) solid transparent;

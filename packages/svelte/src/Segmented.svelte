@@ -1,5 +1,6 @@
 <script lang="ts">
 	import "./register.js";
+	import type { Snippet } from "svelte";
 	import type { Size, FullTone as Tone } from "@xoji/core";
 
 	type SegmentOption = { value: string; label?: string; disabled?: boolean; badge?: string };
@@ -14,6 +15,9 @@
 		labelledby?: string;
 		name?: string;
 		onchange?: (event: Event) => void;
+		/** `<Segment>` children for the rich-content mode (each holds an icon or other markup); they win
+		 * over `options` when both are given. Omit for the plain-text `options` bar. */
+		children?: Snippet;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
@@ -28,6 +32,7 @@
 		labelledby,
 		name,
 		onchange,
+		children,
 		...rest
 	}: Props = $props();
 
@@ -56,4 +61,4 @@
 	labelledby={labelledby || undefined}
 	{name}
 	onchange={handleChange}
-></xoji-segmented>
+>{@render children?.()}</xoji-segmented>

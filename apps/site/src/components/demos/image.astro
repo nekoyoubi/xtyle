@@ -1,0 +1,68 @@
+---
+import Image from "@xoji/astro/Image.astro";
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Grid from "@xoji/astro/Grid.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+
+const sceneSvg =
+	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8fe"/><stop offset="0.55" stop-color="#7c5cff"/><stop offset="1" stop-color="#ff7ac6"/></linearGradient></defs><rect width="640" height="360" fill="url(#g)"/><circle cx="500" cy="90" r="46" fill="#fff" opacity="0.85"/><path d="M0 300 L180 190 L320 260 L470 160 L640 250 L640 360 L0 360 Z" fill="#1c2333" opacity="0.55"/></svg>';
+
+const squareSvg =
+	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#11151f"/><rect x="46" y="46" width="108" height="108" rx="18" fill="#6ea8fe"/><circle cx="100" cy="100" r="30" fill="#0b0d12"/></svg>';
+
+const scene = "data:image/svg+xml," + encodeURIComponent(sceneSvg);
+const square = "data:image/svg+xml," + encodeURIComponent(squareSvg);
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Framed with a caption</Heading>
+		<Image src={scene} alt="An abstract gradient landscape" ratio="16/9" caption="A 16/9 frame that holds its space while the image loads" />
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Lightbox</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">Click or focus and press Enter to open the full image over a scrim; Escape or the backdrop closes it.</Text>
+			<Grid minColWidth="10rem" gap={3}>
+				<Image src={scene} alt="An abstract gradient landscape" ratio="1/1" lightbox />
+				<Image src={square} alt="A framed emblem" ratio="1/1" lightbox />
+				<Image src={scene} alt="An abstract gradient landscape" ratio="1/1" lightbox />
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Fit and radius</Heading>
+		<Grid minColWidth="12rem" gap={4}>
+			<Stack gap={1}>
+				<Image src={square} alt="Emblem, cover" ratio="16/9" fit="cover" />
+				<Text tone="muted" size="xs">cover</Text>
+			</Stack>
+			<Stack gap={1}>
+				<Image src={square} alt="Emblem, contain" ratio="16/9" fit="contain" />
+				<Text tone="muted" size="xs">contain</Text>
+			</Stack>
+			<Stack gap={1}>
+				<Image src={scene} alt="Scene, no radius" ratio="16/9" radius="none" />
+				<Text tone="muted" size="xs">radius none</Text>
+			</Stack>
+			<Stack gap={1}>
+				<Image src={scene} alt="Scene, large radius" ratio="16/9" radius="lg" />
+				<Text tone="muted" size="xs">radius lg</Text>
+			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Load failure</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">When the image fails to load, a muted frame with a warning glyph replaces it.</Text>
+			<div style="max-width: 20rem;">
+				<Image src="/does-not-exist.jpg" alt="A missing image" ratio="16/9" />
+			</div>
+		</Stack>
+	</Card>
+</Stack>

@@ -1,7 +1,7 @@
 import { XojiElement, define, type StyleMode } from "./base.js";
 import { breadcrumbHostCss, type BreadcrumbItem } from "../markup/index.js";
 import type { Size, FullTone } from "../index.js";
-import { FragmentHost } from "./fragment-host.js";
+import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/breadcrumb/source.generated.js";
 
 export class XojiBreadcrumb extends XojiElement {
@@ -10,8 +10,20 @@ export class XojiBreadcrumb extends XojiElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "breadcrumb", {
-		applyIntent: () => {},
+		applyIntent: (intent) => this.applyIntent(intent),
 	});
+
+	private applyIntent(intent: FragmentIntent): void {
+		if (intent.select === undefined) return;
+		const index = this.items.findIndex((item) => item.value === intent.select);
+		this.dispatchEvent(
+			new CustomEvent("select", {
+				detail: { value: intent.select, index },
+				bubbles: true,
+				composed: true,
+			}),
+		);
+	}
 
 	static get observedAttributes(): string[] {
 		return ["items", "separator", "tone", "size", "label"];
@@ -71,8 +83,6 @@ export class XojiBreadcrumb extends XojiElement {
 		};
 	}
 
-	/** A signature of the list structure the `update` hook can't patch — the items and their
-	 * separators. When the rows change, the list is rebuilt (a `mount`) rather than patched. */
 	private shapeSignature(): string {
 		return JSON.stringify({ items: this.items, separator: this.separator });
 	}

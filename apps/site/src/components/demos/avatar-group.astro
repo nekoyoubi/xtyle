@@ -1,0 +1,94 @@
+---
+import AvatarGroup from "@xoji/astro/AvatarGroup.astro";
+import Avatar from "@xoji/astro/Avatar.astro";
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Cluster from "@xoji/astro/Cluster.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+
+const team = [
+	{ name: "Ada Lovelace", initials: "AL", tone: "accent" as const },
+	{ name: "Alan Turing", initials: "AT", tone: "success" as const },
+	{ name: "Grace Hopper", initials: "GH", tone: "warn" as const },
+	{ name: "Katherine Johnson", initials: "KJ", tone: "info" as const },
+	{ name: "Edsger Dijkstra", initials: "ED", tone: "danger" as const },
+];
+const sizes = [
+	{ name: "sm" as const, label: "Small" },
+	{ name: "md" as const, label: "Medium (default)" },
+	{ name: "lg" as const, label: "Large" },
+	{ name: "xl" as const, label: "Extra large" },
+];
+const spacings = [
+	{ name: "snug" as const, label: "Snug" },
+	{ name: "normal" as const, label: "Normal (default)" },
+	{ name: "loose" as const, label: "Loose" },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">A contributor stack</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Slot the avatars to show and set <code>overflow</code> to the number of people beyond them; the
+				group overlaps the faces and caps the row with a <code>+N</code> chip. Each avatar keeps its own tone.
+				Hover a covered avatar to raise it to the front.
+			</Text>
+			<AvatarGroup label="Contributors" overflow={12}>
+				{team.map((p) => <Avatar alt={p.name} tone={p.tone}>{p.initials}</Avatar>)}
+			</AvatarGroup>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Sizes</Heading>
+		<Stack gap={4}>
+			{
+				sizes.map((s) => (
+					<Cluster gap={3} align="center" justify="between">
+						<AvatarGroup size={s.name} overflow={8} label={`${s.label} group`}>
+							{team.slice(0, 3).map((p) => (
+								<Avatar alt={p.name} tone={p.tone} size={s.name}>{p.initials}</Avatar>
+							))}
+						</AvatarGroup>
+						<Text as="span" size="xs" tone="subtle" mono>size="{s.name}"</Text>
+					</Cluster>
+				))
+			}
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Spacing</Heading>
+		<Stack gap={4}>
+			{
+				spacings.map((s) => (
+					<Cluster gap={3} align="center" justify="between">
+						<AvatarGroup spacing={s.name} label={`${s.label} spacing`}>
+							{team.map((p) => (
+								<Avatar alt={p.name} tone={p.tone}>{p.initials}</Avatar>
+							))}
+						</AvatarGroup>
+						<Text as="span" size="xs" tone="subtle" mono>spacing="{s.name}"</Text>
+					</Cluster>
+				))
+			}
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">No overflow</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Omit <code>overflow</code> (or set it to zero) and the group is just the overlapping faces, no chip.
+			</Text>
+			<AvatarGroup label="Reviewers">
+				{team.slice(0, 3).map((p) => (
+					<Avatar alt={p.name} tone={p.tone}>{p.initials}</Avatar>
+				))}
+			</AvatarGroup>
+		</Stack>
+	</Card>
+</Stack>

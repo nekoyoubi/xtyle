@@ -96,5 +96,17 @@ ${toneFallback}
 	inset-inline-end: 0;
 	transform: translate(25%, 25%);
 }
+.xoji-avatar--pulse-slow .xoji-avatar__status-dot {
+	animation: xoji-badge-pulse 1.8s var(--ease-standard) infinite;
+}
+.xoji-avatar--pulse-fast .xoji-avatar__status-dot {
+	animation: xoji-badge-pulse 0.9s var(--ease-standard) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.xoji-avatar--pulse-slow .xoji-avatar__status-dot,
+	.xoji-avatar--pulse-fast .xoji-avatar__status-dot {
+		animation: none;
+	}
+}
 ${statusTones}
 `.trim();

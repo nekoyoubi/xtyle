@@ -39,6 +39,9 @@ export const segmentedCss = `
 	position: relative;
 	isolation: isolate;
 	white-space: nowrap;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	transition:
 		color var(--duration-fast) var(--ease-standard),
 		background-color var(--duration-fast) var(--ease-standard);
@@ -86,6 +89,26 @@ export const segmentedCss = `
 .xoji-segmented--lg .xoji-segmented__option {
 	padding: var(--space-2) var(--space-4);
 	font-size: var(--text-body);
+}
+/* Icon segments carry no text, so grow the glyph and square the padding: a prominent mark in a
+   snug box, rather than a tiny icon lost in text-sized padding. */
+.xoji-segmented__option--icon {
+	font-size: 1.35em;
+	padding: var(--space-2);
+}
+.xoji-segmented--sm .xoji-segmented__option--icon {
+	padding: var(--space-1);
+}
+.xoji-segmented--lg .xoji-segmented__option--icon {
+	font-size: 1.5em;
+	padding: var(--space-2);
+}
+/* Collapse the projected segment's own line box so an icon's inline baseline can't leave it sitting
+   a pixel high inside the flex-centered option. ::slotted reaches the light-DOM child from the
+   shadow sheet, which a document-level selector on the host's children can't. */
+.xoji-segmented__option ::slotted(*) {
+	display: inline-flex;
+	align-items: center;
 }
 .xoji-segmented--disabled {
 	opacity: 0.6;

@@ -49,9 +49,9 @@ export const paginationManifest: ComponentManifest = {
 		},
 		{
 			name: "current",
-			description: "The current page: a filled pill in the tone color, carrying `aria-current`.",
+			description: "The current page: a filled pill in the tone color, carrying `aria-current`. When the theme's `--selection-cue` resolves to `marker` (a high-contrast or redundant-cues algorithm), a non-color underline bar is added so the current page never rests on color alone.",
 			selector: ".xoji-pagination__page--current",
-			tokens: ["--accent", "--accent-fg", "--weight-medium"],
+			tokens: ["--accent", "--accent-fg", "--selection-cue", "--weight-medium"],
 		},
 		{
 			name: "control",
@@ -187,6 +187,7 @@ export const paginationManifest: ComponentManifest = {
 		"--leading-normal",
 		"--radius-sm",
 		"--ring",
+		"--selection-cue",
 		"--space-0",
 		"--space-1",
 		"--text-body",

@@ -1,0 +1,47 @@
+---
+import Hero from "@xoji/astro/Hero.astro";
+import Card from "@xoji/astro/Card.astro";
+import Eyebrow from "@xoji/astro/Eyebrow.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+import Cluster from "@xoji/astro/Cluster.astro";
+import Button from "@xoji/astro/Button.astro";
+import Image from "@xoji/astro/Image.astro";
+import Stack from "@xoji/astro/Stack.astro";
+
+const shot =
+	"data:image/svg+xml," +
+	encodeURIComponent(
+		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8fe"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><rect x="40" y="60" width="320" height="40" rx="8" fill="#ffffff" opacity="0.9"/><rect x="40" y="120" width="220" height="24" rx="6" fill="#ffffff" opacity="0.6"/><rect x="40" y="160" width="260" height="24" rx="6" fill="#ffffff" opacity="0.6"/></svg>',
+	);
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Centered hero</Heading>
+		<Hero>
+			<Eyebrow>Now in beta</Eyebrow>
+			<Heading level={2}>Theme anything, instantly</Heading>
+			<Text size="lg">A derivation engine that turns a few colors into a whole, coherent design.</Text>
+			<Cluster gap={3}>
+				<Button variant="solid">Get started</Button>
+				<Button variant="subtle">Read the docs</Button>
+			</Cluster>
+		</Hero>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Split hero</Heading>
+		<Hero split align="start">
+			<Stack gap={3}>
+				<Eyebrow>For builders</Eyebrow>
+				<Heading level={2}>Ship a themed app today</Heading>
+				<Text>Compose the hero from the primitives you already have, no bespoke layout required.</Text>
+				<Cluster gap={3}>
+					<Button variant="solid">Start building</Button>
+				</Cluster>
+			</Stack>
+			<Image src={shot} alt="The app in action" ratio="4/3" />
+		</Hero>
+	</Card>
+</Stack>

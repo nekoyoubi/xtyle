@@ -4,12 +4,23 @@ import { toOklchColor, oklch, formatCss, clampToGamut, hueDelta } from "./color.
 /**
  * A named way to color N chart series off the derived register, so any theme charts
  * coherently out of the box. Categorical schemes hand back visually separated hues from
- * the theme's own palette; sequential schemes interpolate a scale in OKLCH. An explicit
- * `string[]` overrides all of this with the caller's own colors.
+ * the theme's own palette; sequential schemes interpolate a scale in OKLCH. `statuses` is
+ * the categorical semantic set, one distinct tone per outcome, for discrete-status charts.
+ * An explicit `string[]` overrides all of this with the caller's own colors; because those
+ * strings land straight into the SVG `fill`, `var(--token)` references survive verbatim and
+ * resolve against `:root` at paint time, so exact or theme-token colors pin cleanly. For `statuses`
+ * on a dataset where a category can be absent, prefer `seriesColorsFor` with a per-datum `tone`: the
+ * positional scheme pins by index, so a filtered-out category shifts every survivor's tone.
  */
-export type SeriesScheme = "accents" | "skittles" | "thermal" | "status";
+export type SeriesScheme = "accents" | "skittles" | "statuses" | "thermal" | "status";
 
-export const SERIES_SCHEMES: readonly SeriesScheme[] = ["accents", "skittles", "thermal", "status"];
+export const SERIES_SCHEMES: readonly SeriesScheme[] = [
+	"accents",
+	"skittles",
+	"statuses",
+	"thermal",
+	"status",
+];
 
 /** Every register token the built-in schemes read. A browser consumer that only has the applied
  * CSS custom properties (no derived register) reads these off the document to reconstruct the
@@ -19,6 +30,11 @@ export const SERIES_TOKENS: readonly string[] = [
 	"--accent-2",
 	"--accent-3",
 	"--accent-4",
+	"--success",
+	"--warn",
+	"--danger",
+	"--info",
+	"--neutral",
 	"--red",
 	"--orange",
 	"--yellow",
@@ -27,18 +43,49 @@ export const SERIES_TOKENS: readonly string[] = [
 	"--blue",
 	"--purple",
 	"--pink",
-	"--success",
-	"--warn",
-	"--danger",
 ];
 
-/** Categorical schemes: a set of distinct hues, taken in order (accents) or evenly sampled for
- * maximum separation (skittles). `ordered` keeps a ranked palette in its authored order. */
-const CATEGORICAL: Record<"accents" | "skittles", { tokens: string[]; ordered: boolean }> = {
-	accents: { tokens: ["--accent", "--accent-2", "--accent-3", "--accent-4"], ordered: true },
+/**
+ * The semantic status tones behind the `statuses` scheme: the outcome→register-token map, named so a
+ * discrete-status chart can pin each datum to its meaning *by name* rather than by position. The
+ * positional scheme mis-colors the moment a category is absent (a filtered zero-value slice shifts
+ * every survivor down a tone); a `tone` key resolved through this map is stable under filtering.
+ */
+export const STATUS_TONES = {
+	success: "--success",
+	failed: "--danger",
+	warn: "--warn",
+	info: "--info",
+	skipped: "--neutral",
+	live: "--accent",
+} as const;
+
+/** A named outcome in the `statuses` scheme, usable as a datum's `tone` for by-name coloring. */
+export type StatusTone = keyof typeof STATUS_TONES;
+
+export const STATUS_TONE_KEYS: readonly StatusTone[] = Object.keys(STATUS_TONES) as StatusTone[];
+
+/** Resolves the register color for a named status `tone`; `undefined` for an unknown key. The by-name
+ * companion to the positional `statuses` scheme. */
+export function statusToneColor(tone: string, register: TokenRegister): string | undefined {
+	const token = STATUS_TONES[tone as StatusTone];
+	return token ? register[token] : undefined;
+}
+
+/** Categorical schemes: a set of distinct hues, taken in order (accents, statuses) or evenly
+ * sampled for maximum separation (skittles). `ordered` keeps a ranked palette in its authored
+ * order. `statuses` pins each outcome to its own semantic tone (success / failed / warn / info /
+ * skipped / live) so a discrete-status chart reads by meaning, not an arbitrary ramp; its token order
+ * is `STATUS_TONES`, the single source the by-name `seriesColorsFor` path shares. */
+const CATEGORICAL: Record<"accents" | "skittles" | "statuses", { tokens: string[]; ordered: boolean }> = {
+	accents: { tokens: ["--accent", "--accent-2", "--accent-3", "--accent-4", "--neutral"], ordered: true },
 	skittles: {
 		tokens: ["--red", "--orange", "--yellow", "--green", "--cyan", "--blue", "--purple", "--pink"],
 		ordered: false,
+	},
+	statuses: {
+		tokens: [...Object.values(STATUS_TONES)],
+		ordered: true,
 	},
 };
 
@@ -95,6 +142,74 @@ export interface SeriesPaletteOptions {
 	reverse?: boolean;
 }
 
+const RAMP_ANCHORS: Record<"accent" | "thermal" | "status", string[]> = {
+	accent: ["--bg-2", "--accent"],
+	thermal: SEQUENTIAL.thermal,
+	status: SEQUENTIAL.status,
+};
+
+export type RampScheme = keyof typeof RAMP_ANCHORS;
+export const RAMP_SCHEMES: readonly RampScheme[] = ["accent", "thermal", "status"];
+
+/** Every register token a built-in ramp reads, so a browser consumer with only the applied CSS
+ * custom properties can reconstruct the minimal register `rampColor` needs. */
+export const RAMP_TOKENS: readonly string[] = [
+	"--bg-2",
+	"--accent",
+	"--blue",
+	"--cyan",
+	"--yellow",
+	"--red",
+	"--success",
+	"--warn",
+	"--danger",
+];
+
+function clamp01(t: number): number {
+	return t < 0 ? 0 : t > 1 ? 1 : Number.isFinite(t) ? t : 0;
+}
+
+/**
+ * Resolves a single color at normalized position `t` (0..1) along a ramp: a built-in `RampScheme`
+ * (a faint-to-accent wash or a sequential scale) derived off the register, or an explicit list of
+ * stop colors, interpolated in OKLCH. `reverse` flips the ramp. The continuous sibling of
+ * `seriesPalette`, for a scalar intensity rather than N discrete series.
+ */
+export function rampColor(
+	scheme: RampScheme | string[],
+	t: number,
+	register: TokenRegister,
+	options: SeriesPaletteOptions = {},
+): string {
+	const stops = Array.isArray(scheme) ? scheme : resolve(RAMP_ANCHORS[scheme] ?? RAMP_ANCHORS.accent, register);
+	if (stops.length === 0) return "currentColor";
+	if (stops.length === 1) return stops[0] as string;
+	const clamped = clamp01(t);
+	const tt = options.reverse ? 1 - clamped : clamped;
+	const segments = stops.length - 1;
+	const pos = tt * segments;
+	const seg = Math.min(Math.floor(pos), segments - 1);
+	return lerpOklch(stops[seg] as string, stops[seg + 1] as string, pos - seg);
+}
+
+/** The default drop-shadow blur (in px) a full-strength glow cell reaches. */
+export const GLOW_MAX_BLUR = 7;
+
+/**
+ * The drop-shadow `filter` value for a heatmap cell's secondary glow channel at normalized
+ * intensity `t` (0..1), rendered in `color` with a full-strength blur of `maxBlur` px. Returns
+ * `null` at or below zero so a cell with no glow renders no filter at all. The visual sibling of
+ * `rampColor`: where the ramp drives a cell's fill by one metric, the glow drives a halo around it
+ * by a second, so one grid can carry two signals. `maxBlur` tunes the halo's reach so it reads on a
+ * dense grid without bleeding into neighbors on a sparse one.
+ */
+export function glowFilter(t: number, color: string, maxBlur: number = GLOW_MAX_BLUR): string | null {
+	const clamped = clamp01(t);
+	if (clamped <= 0) return null;
+	const blur = (clamped * maxBlur).toFixed(1);
+	return `drop-shadow(0 0 ${blur}px ${color})`;
+}
+
 /**
  * Resolves `count` series colors for a chart. Pass a built-in `SeriesScheme` to derive them
  * from the active theme's register, or a `string[]` to use explicit colors (cycled to `count`).
@@ -110,10 +225,31 @@ export function seriesPalette(
 	let colors: string[];
 	if (Array.isArray(scheme)) colors = categorical(scheme, count, true);
 	else if (scheme in CATEGORICAL) {
-		const spec = CATEGORICAL[scheme as "accents" | "skittles"];
+		const spec = CATEGORICAL[scheme as "accents" | "skittles" | "statuses"];
 		colors = categorical(resolve(spec.tokens, register), count, spec.ordered);
 	} else {
 		colors = sequential(resolve(SEQUENTIAL[scheme as "thermal" | "status"], register), count);
 	}
 	return options.reverse ? colors.reverse() : colors;
+}
+
+/**
+ * Resolves a color per data item, honoring an optional semantic `tone` key when the scheme supports
+ * by-name mapping. Under `statuses`, an item carrying a known `tone` pins to that outcome's token
+ * directly, so filtering an absent category out never shifts the meaning→tone mapping (the positional
+ * scheme's failure mode). Items without a `tone`, an explicit `string[]`, and every other scheme fall
+ * back to positional `seriesPalette`; the count-based call stays right when items carry no semantics.
+ */
+export function seriesColorsFor(
+	scheme: SeriesScheme | string[],
+	items: readonly { tone?: string }[],
+	register: TokenRegister,
+	options: SeriesPaletteOptions = {},
+): string[] {
+	const positional = seriesPalette(scheme, items.length, register, options);
+	if (Array.isArray(scheme) || scheme !== "statuses") return positional;
+	return items.map((item, i) => {
+		const named = item.tone ? statusToneColor(item.tone, register) : undefined;
+		return named ?? positional[i] ?? "currentColor";
+	});
 }

@@ -103,7 +103,10 @@ const proveSnippet = `# prove the invariants across extremes + random anchor set
 npx xoji gauntlet -a sunrise --mode hosted --depth full
 
 # confirm a component's consumed tokens are all produced
-npx xoji coverage -a sunrise --consumed --bg-0,--fg-0,--accent`;
+npx xoji coverage -a sunrise --consumed --bg-0,--fg-0,--accent
+
+# grade a derived theme against the canonical WCAG text/fill pairs
+npx xoji audit -a sunrise`;
 
 const loadSnippet = `npm run build:mods            # bundles src/mod.ts → src/mod.js
 npx xoji derive -a sunrise    # loads by id, derives a theme`;
@@ -253,7 +256,10 @@ npx xoji derive -a sunrise    # loads by id, derives a theme`;
 						checks every invariant it declares: contrast floors held, no token collapsed,
 						nothing parsed to <code>NaN</code>. Run it hosted to prove the sandboxed mod
 						that actually ships. The coverage check confirms a component's consumed tokens
-						are all in what you produce.
+						are all in what you produce, and <code>xoji audit</code> grades a materialized
+						theme against xoji's canonical text/fill pairs at the WCAG floors: the
+						register-level complement to the gauntlet's algorithm-level sweep, so you can
+						read a specific theme's contrast per pair.
 					</Text>
 					<Code lang="bash" code={proveSnippet} />
 					<Text tone="muted">

@@ -71,6 +71,51 @@ const data = [
 
 <Pie data={data} variant="donut" scheme="accents" label="Budget" />`;
 
+const outcomeHtmlExample = `<xoji-pie variant="donut" scheme="statuses" label="Runs"></xoji-pie>
+<script>
+	// Give each slice a semantic \`tone\` so it colors by meaning: a run where nothing
+	// failed drops the failed slice without shifting the others' colors.
+	document.querySelector("xoji-pie").data = [
+		{ label: "Passed", value: 128, tone: "success" },
+		{ label: "Failed", value: 14, tone: "failed" },
+		{ label: "Flaky", value: 9, tone: "warn" },
+		{ label: "Skipped", value: 21, tone: "skipped" },
+		{ label: "Running", value: 6, tone: "live" },
+		{ label: "Queued", value: 11, tone: "info" },
+	];
+</script>`;
+
+const outcomeSvelteExample = `<script lang="ts">
+	import { Pie } from "@xoji/svelte";
+
+	// A semantic \`tone\` per slice colors by meaning, stable even if a category is absent.
+	const data = [
+		{ label: "Passed", value: 128, tone: "success" },
+		{ label: "Failed", value: 14, tone: "failed" },
+		{ label: "Flaky", value: 9, tone: "warn" },
+		{ label: "Skipped", value: 21, tone: "skipped" },
+		{ label: "Running", value: 6, tone: "live" },
+		{ label: "Queued", value: 11, tone: "info" },
+	];
+</script>
+
+<Pie {data} variant="donut" scheme="statuses" label="Runs" />`;
+
+const outcomeAstroExample = `---
+import { Pie } from "@xoji/astro";
+// A semantic \`tone\` per slice colors by meaning, stable even if a category is absent.
+const data = [
+	{ label: "Passed", value: 128, tone: "success" },
+	{ label: "Failed", value: 14, tone: "failed" },
+	{ label: "Flaky", value: 9, tone: "warn" },
+	{ label: "Skipped", value: 21, tone: "skipped" },
+	{ label: "Running", value: 6, tone: "live" },
+	{ label: "Queued", value: 11, tone: "info" },
+];
+---
+
+<Pie data={data} variant="donut" scheme="statuses" label="Runs" />`;
+
 export const pieManifest: ComponentManifest = {
 	id: "pie",
 	name: "Pie",
@@ -78,7 +123,7 @@ export const pieManifest: ComponentManifest = {
 	category: "metrics",
 	summary: "A pie or donut chart of parts against a whole, colored from a theme-derived palette, with an interactive readout.",
 	description:
-		"Pie plots a set of labelled values as wedges of a circle, each a share of the whole. Each slice takes its color from a `scheme` resolved off the live theme (`skittles` by default, so the parts read as distinct), or pass explicit colors and `reverse`. Set `variant=\"donut\"` for a ring with the total in its center. It's interactive: hovering or focusing a slice dims the rest and floats its value and share, and the chart is mirrored into a visually-hidden table so assistive tech reads the numbers. A legend names each slice; optional `showValues` prints the percentage on each wedge. Size it with `size`; zero and negative values drop out.",
+		"Pie plots a set of labelled values as wedges of a circle, each a share of the whole. Each slice takes its color from a `scheme` resolved off the live theme (`skittles` by default, so the parts read as distinct), or pass explicit colors and `reverse`. Set `variant=\"donut\"` for a ring with the total in its center. It's interactive: hovering or focusing a slice dims the rest and floats its value and share, and the chart is mirrored into a visually-hidden table so assistive tech reads the numbers. A legend names each slice; optional `showValues` prints the percentage on each wedge. Size it with `size`; zero and negative values drop out, and a chart with nothing left to plot shows a muted `No data` message in place of the wedges.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -115,8 +160,9 @@ export const pieManifest: ComponentManifest = {
 	props: [
 		{
 			name: "data",
-			type: "{ label: string; value: number }[]",
-			description: "The slices: a label and a value each. JS property in html/svelte, JSON attribute or prop in astro. Zero and negative values drop out.",
+			type: "{ label: string; value: number; tone?: StatusTone }[]",
+			description:
+				"The slices: a label and a value each. JS property in html/svelte, JSON attribute or prop in astro. Zero and negative values drop out. Under `scheme=\"statuses\"`, an optional `tone` (`success` / `failed` / `warn` / `info` / `skipped` / `live`) colors a slice by meaning, so a dropped zero-value category never shifts the rest.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -196,6 +242,7 @@ export const pieManifest: ComponentManifest = {
 		"--bg-1",
 		"--fg-0",
 		"--fg-1",
+		"--fg-2",
 		"--text-xs",
 		"--text-sm",
 		"--text-lg",
@@ -217,7 +264,8 @@ export const pieManifest: ComponentManifest = {
 		"--elevation-3",
 	],
 	composition: [
-		"Colors come from the theme register, so the slices match the surrounding UI. `skittles` (the default) keeps the parts distinct; pass an explicit array to pin brand colors.",
+		"Colors come from the theme register, so the slices match the surrounding UI. `skittles` (the default) keeps the parts distinct; `statuses` pins each slice to a semantic tone (success, failed, warn, info, skipped, live) for discrete-outcome charts, distinct from the sequential `status` severity ramp; pass an explicit array to pin brand colors, and a `var(--token)` string in that array lands straight in the fill and resolves against the theme.",
+		"Under `statuses`, give each slice an explicit `tone` when a category can be absent: without one, colors are assigned by position, so a run where nothing failed drops the failed slice and shifts every survivor to the wrong tone. A `tone` pins each slice to its meaning regardless of which categories are present.",
 		"Reach for a `donut` when you want a headline total in the middle; a full `pie` when the parts are the whole story.",
 		"Pair with a `Stat` or a `Bar` in the Metrics family for a composition-plus-trend view.",
 	],
@@ -237,6 +285,12 @@ export const pieManifest: ComponentManifest = {
 			title: "Donut",
 			description: "`variant=\"donut\"` opens the center for the total; here on the `accents` scheme.",
 			source: { html: donutHtmlExample, svelte: donutSvelteExample, astro: donutAstroExample },
+		},
+		{
+			id: "statuses",
+			title: "Discrete outcomes",
+			description: "`scheme=\"statuses\"` colors each slice by a semantic `tone` (success, failed, warn, info, skipped, live) so a run-outcome chart reads by meaning, and stays right even when a category is absent.",
+			source: { html: outcomeHtmlExample, svelte: outcomeSvelteExample, astro: outcomeAstroExample },
 		},
 	],
 };

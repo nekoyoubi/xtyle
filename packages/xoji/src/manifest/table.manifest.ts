@@ -97,7 +97,7 @@ import { Table } from "@xoji/astro";
 export const tableManifest: ComponentManifest = {
 	id: "table",
 	name: "Table",
-	category: "data-display",
+	category: "content",
 	summary: "A styled data table around native `<table>`: zebra, bordered, hover, sticky header, and a sortable-header affordance.",
 	description:
 		"Table dresses a native `<table>` in xoji styling without taking over its markup. The binding is a thin wrapper that relays consumer-authored rows: you write the real `<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>` and tag them with the `xoji-table__*` part classes, and the wrapper supplies the scroll container, variant, size, hover, and sticky behavior. Variants `default`/`striped`/`bordered` set the row and cell chrome; `compact`/`normal` sizes set the cell padding. The sortable-header affordance renders a sort glyph and exposes an `aria-sort` hook on the header cell; the engine is presentation-only, so the consumer wires the actual sort and toggles `aria-sort` (`ascending`/`descending`/`none`), and the glyph rotates to match. `scope` belongs on every header cell so screen readers associate it with its row or column.",

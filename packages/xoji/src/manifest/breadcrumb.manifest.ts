@@ -49,13 +49,85 @@ const trail = [
 
 <Breadcrumb tone="neutral" separator="›" items={trail} />`;
 
+const interactiveHtmlExample = `<xoji-breadcrumb id="tree-trail" label="Node ancestry" items='[
+	{"label":"root","value":"0"},
+	{"label":"window","value":"1"},
+	{"label":"toolbar"}
+]'></xoji-breadcrumb>
+<script>
+	// a valued crumb drives app state instead of navigating
+	document.querySelector("#tree-trail").addEventListener("select", (e) => {
+		selectNode(e.detail.value); // { value, index }
+	});
+</script>`;
+
+const interactiveSvelteExample = `<script lang="ts">
+	import { Breadcrumb } from "@xoji/svelte";
+
+	const ancestry = [
+		{ label: "root", value: "0" },
+		{ label: "window", value: "1" },
+		{ label: "toolbar" }, // the current node: no value, not clickable
+	];
+</script>
+
+<Breadcrumb label="Node ancestry" items={ancestry} onselect={(e) => selectNode(e.detail.value)} />`;
+
+const interactiveAstroExample = `---
+import { Breadcrumb } from "@xoji/astro";
+
+const ancestry = [
+	{ label: "root", value: "0" },
+	{ label: "window", value: "1" },
+	{ label: "toolbar" },
+];
+---
+
+<Breadcrumb label="Node ancestry" items={ancestry} />
+<script>
+	document.querySelector("xoji-breadcrumb").addEventListener("select", (e) => {
+		selectNode(e.detail.value);
+	});
+</script>`;
+
+const titleHtmlExample = `<!-- a title reveals the full value behind a shortened crumb -->
+<xoji-breadcrumb items='[
+	{"label":"~","href":"/","title":"/home/ada"},
+	{"label":"…","href":"/p","title":"projects/2026/q3"},
+	{"label":"report.md","title":"projects/2026/q3/report.md"}
+]'></xoji-breadcrumb>`;
+
+const titleSvelteExample = `<script lang="ts">
+	import { Breadcrumb } from "@xoji/svelte";
+
+	const path = [
+		{ label: "~", href: "/", title: "/home/ada" },
+		{ label: "…", href: "/p", title: "projects/2026/q3" }, // middle-truncated, full path on hover
+		{ label: "report.md", title: "projects/2026/q3/report.md" },
+	];
+</script>
+
+<Breadcrumb items={path} />`;
+
+const titleAstroExample = `---
+import { Breadcrumb } from "@xoji/astro";
+
+const path = [
+	{ label: "~", href: "/", title: "/home/ada" },
+	{ label: "…", href: "/p", title: "projects/2026/q3" },
+	{ label: "report.md", title: "projects/2026/q3/report.md" },
+];
+---
+
+<Breadcrumb items={path} />`;
+
 export const breadcrumbManifest: ComponentManifest = {
 	id: "breadcrumb",
 	name: "Breadcrumb",
 	category: "navigation",
 	summary: "A hierarchy trail showing where a page sits, with linked ancestors and a marked current location.",
 	description:
-		"Breadcrumb renders a location trail: an ordered list of ancestor links ending in the current page, with a separator glyph between each step. It is a `<nav>` landmark labeled \"Breadcrumb\" wrapping an `<ol>`; ancestors render as anchors and the final crumb renders as plain text carrying `aria-current=\"page\"`. Pass the trail declaratively via the `items` array (each entry is `{ label, href?, current? }`) and the engine builds the list, injects the separators, and marks the last item current. The separator glyph defaults to `/` and is purely decorative. A `tone` tints the ancestor links and three `size`s scale the type. For fully custom crumbs, omit `items` and provide your own `<li>` markup in the default slot.",
+		"Breadcrumb renders a location trail: an ordered list of ancestor links ending in the current page, with a separator glyph between each step. It is a `<nav>` landmark labeled \"Breadcrumb\" wrapping an `<ol>`; ancestors render as anchors and the final crumb renders as plain text carrying `aria-current=\"page\"`. Pass the trail declaratively via the `items` array (each entry is `{ label, href?, value?, title?, current? }`) and the engine builds the list, injects the separators, and marks the last item current. For an in-app trail where a crumb drives state instead of navigating (selecting an ancestor node, not following a URL), give the item a `value` and no `href`: it renders as a real button and fires a `select` event carrying `{ value, index }` on click or Enter/Space, so interactive crumbs never have to drop to the slot. `href` wins when both are set. The separator glyph defaults to `/` and is purely decorative. A `tone` tints the ancestor links and three `size`s scale the type. For fully custom crumbs, omit `items` and provide your own `<li>` markup in the default slot.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -88,7 +160,7 @@ export const breadcrumbManifest: ComponentManifest = {
 			name: "items",
 			type: "BreadcrumbItem[]",
 			description:
-				"The trail, ordered root → current. Each item is `{ label, href?, current? }`. Items with an `href` (and not current) render as links; the last item, or any item with `current: true`, renders as the current page. In the HTML binding this is a JSON-string attribute.",
+				"The trail, ordered root → current. Each item is `{ label, href?, value?, title?, current? }`. Items with an `href` (and not current) render as links; a non-current item with a `value` and no `href` renders as a button that fires `select`; the last item, or any item with `current: true`, renders as the current page. An optional `title` becomes the crumb's hover tooltip (and its accessible description), for an abbreviated or truncated label whose full value should still be reachable. In the HTML binding this is a JSON-string attribute.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -185,6 +257,8 @@ export const breadcrumbManifest: ComponentManifest = {
 		"Place at the top of a page or panel, above the Heading, to anchor where the user is.",
 		"Pair with a Link or Button `home` action for the root crumb when you need richer affordances than a plain anchor.",
 		"For app chrome, sits naturally inside a Toolbar's start group.",
+		"For an in-app trail (a crumb selects a node rather than navigating), give items a `value` instead of an `href` and listen for `select` (`detail: { value, index }`); the valued crumb is a keyboard-accessible button, so interactive breadcrumbs never need the slot.",
+		"Slotted crumbs (the `items`-less default slot) are styled by the component in light-DOM mode, but in shadow mode `::slotted()` reaches only the top-level `<li>` (its layout), not the `<a>`/`<span>` inside; carry the trail in `items` when you want the component's link and current styling to reach every crumb.",
 	],
 	a11y: [
 		"Renders a `<nav>` landmark with an accessible name (`aria-label`, default \"Breadcrumb\") so screen readers can jump to and announce the trail.",
@@ -192,6 +266,8 @@ export const breadcrumbManifest: ComponentManifest = {
 		"The current page is plain text marked `aria-current=\"page\"`, not a link. It is the destination, not a navigation target.",
 		"Separators are decorative and `aria-hidden`, so they are never read aloud between crumbs.",
 		"Link focus is shown with a token ring plus a transparent outline that the forced-colors base rule promotes to a real system outline.",
+		"An interactive crumb (an item with a `value`) is a real `<button>`, so it is a keyboard tab stop and activates on Enter and Space, not a `<span>` with a mouse-only handler.",
+		"An item's `title` is a hover tooltip and the crumb's accessible description, so a shortened or glyph label keeps its full value reachable without changing the crumb's accessible name.",
 	],
 	examples: [
 		{
@@ -199,6 +275,18 @@ export const breadcrumbManifest: ComponentManifest = {
 			title: "A location trail",
 			description: "An ordered trail of linked ancestors ending in the current page; tone and separator are adjustable.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "interactive",
+			title: "In-app crumbs (select, not navigate)",
+			description: "Give a crumb a `value` instead of an `href` and it becomes a keyboard-accessible button that fires `select` with `{ value, index }`, so clicking an ancestor drives app state rather than following a URL.",
+			source: { html: interactiveHtmlExample, svelte: interactiveSvelteExample, astro: interactiveAstroExample },
+		},
+		{
+			id: "titles",
+			title: "Shortened crumbs with hover detail",
+			description: "A `title` on an item reveals the full value behind an abbreviated, truncated, or glyph label on hover, and carries it to assistive tech as the crumb's accessible description.",
+			source: { html: titleHtmlExample, svelte: titleSvelteExample, astro: titleAstroExample },
 		},
 	],
 };

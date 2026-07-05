@@ -14,6 +14,8 @@
 		shape?: AvatarShape;
 		status?: Tone;
 		statusLabel?: string;
+		/** Breathe the status dot for a live / online presence: a bare `true` pulses slow, `"fast"` quick. */
+		pulse?: boolean | "slow" | "fast";
 		icon?: Snippet;
 		children?: Snippet;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -28,6 +30,7 @@
 		shape = "circle",
 		status,
 		statusLabel,
+		pulse,
 		icon,
 		children,
 		...rest
@@ -43,6 +46,7 @@
 	{shape}
 	{status}
 	status-label={statusLabel}
+	pulse={pulse === true ? "" : pulse || undefined}
 >
 	{#if icon}<span slot="icon">{@render icon()}</span>{/if}
 	{@render children?.()}

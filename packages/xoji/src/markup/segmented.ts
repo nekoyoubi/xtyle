@@ -5,6 +5,10 @@ export interface Segment {
 	disabled?: boolean;
 	/** Trailing text after the label (a count or status), shown inside the segment. */
 	badge?: string;
+	/** Project a live light-DOM child through this named `<slot>` instead of rendering `label` as text —
+	 * the rich-content mode where a segment holds an icon or other framework-owned markup. The element
+	 * sets it for `[slot="segment"]` children; the `options` shorthand never carries it. */
+	slot?: string;
 }
 
 /** The host-layout rule for a segmented control: the one `:host` rule, shared by the element's scaffold and the SSR declarative shadow root. */

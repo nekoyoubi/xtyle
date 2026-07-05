@@ -19,6 +19,24 @@ const budget = [
 	{ label: "Transit", value: 300 },
 	{ label: "Fun", value: 400 },
 ];
+
+const outcomes = [
+	{ label: "Passed", value: 128, tone: "success" as const },
+	{ label: "Failed", value: 14, tone: "failed" as const },
+	{ label: "Flaky", value: 9, tone: "warn" as const },
+	{ label: "Skipped", value: 21, tone: "skipped" as const },
+	{ label: "Running", value: 6, tone: "live" as const },
+	{ label: "Queued", value: 11, tone: "info" as const },
+];
+
+// A clean run: nothing failed or flaked, so those categories are absent. Because each slice
+// carries a semantic `tone`, the survivors keep their own colors (Passed stays success-green,
+// Skipped stays neutral) instead of shifting down the scheme.
+const cleanRun = [
+	{ label: "Passed", value: 152, tone: "success" as const },
+	{ label: "Skipped", value: 18, tone: "skipped" as const },
+	{ label: "Queued", value: 7, tone: "info" as const },
+];
 ---
 
 <Stack gap={6}>
@@ -34,7 +52,7 @@ const budget = [
 	</Card>
 
 	<Card>
-		<Heading slot="header" level={3} size="sm">One data set, four schemes</Heading>
+		<Heading slot="header" level={3} size="sm">One data set, five schemes</Heading>
 		<Grid minColWidth="12rem" gap={4}>
 			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">skittles</Text>
@@ -45,6 +63,10 @@ const budget = [
 				<Pie data={traffic} variant="donut" scheme="accents" label="Accents scheme" size={150} legend={false} />
 			</Stack>
 			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">statuses</Text>
+				<Pie data={traffic} variant="donut" scheme="statuses" label="Statuses scheme" size={150} legend={false} />
+			</Stack>
+			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">thermal, reversed</Text>
 				<Pie data={traffic} scheme="thermal" reverse label="Thermal reversed scheme" size={150} legend={false} />
 			</Stack>
@@ -52,6 +74,38 @@ const budget = [
 				<Text size="xs" tone="subtle" weight="semibold">status</Text>
 				<Pie data={traffic} variant="donut" scheme="status" label="Status scheme" size={150} legend={false} />
 			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Discrete outcomes</Heading>
+		<Text tone="muted" size="sm">
+			The statuses scheme colors each slice by a semantic <code>tone</code> (success, failed, warn, info,
+			skipped, live), so a run-outcome breakdown reads by meaning. The right chart is a clean run with no
+			failures or flakes: because each slice pins to its tone, the survivors keep their own colors instead
+			of shifting down the scheme when categories drop out.
+		</Text>
+		<Grid minColWidth="15rem" gap={4}>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">full breakdown</Text>
+				<Pie data={outcomes} variant="donut" scheme="statuses" label="Test runs" showValues size={220} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">clean run (no failures)</Text>
+				<Pie data={cleanRun} variant="donut" scheme="statuses" label="Clean run" showValues size={220} />
+			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Empty state</Heading>
+		<Text tone="muted" size="sm">
+			A chart with nothing to plot (an empty set, or all-zero values) shows a muted <code>No data</code>
+			message in place of the wedges, so a no-data period reads as intentional rather than broken.
+		</Text>
+		<Grid minColWidth="15rem" gap={4}>
+			<Pie data={[]} label="Requests by region" size={200} />
+			<Pie data={[]} variant="donut" label="Test runs" size={200} />
 		</Grid>
 	</Card>
 </Stack>

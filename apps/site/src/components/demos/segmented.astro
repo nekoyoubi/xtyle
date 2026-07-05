@@ -1,5 +1,7 @@
 ---
 import Segmented from "@xoji/astro/Segmented.astro";
+import Segment from "@xoji/astro/Segment.astro";
+import Icon from "@xoji/astro/Icon.astro";
 import Stack from "@xoji/astro/Stack.astro";
 import Cluster from "@xoji/astro/Cluster.astro";
 import Heading from "@xoji/astro/Heading.astro";
@@ -27,6 +29,7 @@ const TONE_GROUPS = [
 		<Heading level={2} size="sm" tone="muted">Sizes &amp; disabled</Heading>
 		<Stack gap={4} align="start">
 			<Segmented size="sm" label="Small" options="One,Two,Three" value="Two" />
+			<Segmented label="Medium (default)" options="One,Two,Three" value="Two" />
 			<Segmented size="lg" label="Large" options="One,Two,Three" value="Two" />
 			<Segmented label="Locked" options="One,Two,Three" value="Two" disabled />
 		</Stack>
@@ -67,6 +70,31 @@ const TONE_GROUPS = [
 					{ value: "log", label: "Log", disabled: true },
 				]}
 			/>
+		</Stack>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Icon segments</Heading>
+		<Stack gap={2}>
+			<Text size="sm" tone="muted">
+				Drop <code>{`<Segment>`}</code> children holding an <code>{`<Icon>`}</code> in place of text
+				labels. Each carries a <code>value</code> and an accessible <code>label</code>; selection,
+				roving focus, and the form value work exactly as with <code>options</code>. The option owns
+				its name and tooltip (hover a segment), so the icon stays decorative. Drop the visible
+				heading with <code>aria-label</code> for a bare toolbar bar, as in the Playback control.
+			</Text>
+			<Cluster gap={4} align="end">
+				<Segmented label="Severity" value="info">
+					<Segment value="info" label="Info"><Icon name="info" /></Segment>
+					<Segment value="warn" label="Warnings"><Icon name="warning" /></Segment>
+					<Segment value="error" label="Errors"><Icon name="error" /></Segment>
+				</Segmented>
+				<Segmented tone="success" aria-label="Playback" value="play">
+					<Segment value="play" label="Play"><Icon name="play" /></Segment>
+					<Segment value="pause" label="Pause"><Icon name="pause" /></Segment>
+					<Segment value="stop" label="Stop"><Icon name="stop" /></Segment>
+				</Segmented>
+			</Cluster>
 		</Stack>
 	</section>
 

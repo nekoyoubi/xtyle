@@ -1,5 +1,14 @@
 "use strict";
 (() => {
+  // packages/xoji/src/elements/fragments/selector-escape.ts
+  var BACKSLASH = /\\/g;
+  var DQUOTE = /"/g;
+  var NEWLINE = /\n/g;
+  var CR = /\r/g;
+  function escapeSelectorValue(value) {
+    return value.replace(BACKSLASH, "\\\\").replace(DQUOTE, '\\"').replace(NEWLINE, "\\A ").replace(CR, "\\D ");
+  }
+
   // packages/xoji/src/elements/fragments/segmented/mod.ts
   function selectedValue(bindings) {
     const segments = bindings.segments ?? [];
@@ -33,14 +42,18 @@
       const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
       const disabledAttr = segDisabled ? " disabled" : "";
       const badge = seg.badge ? `<span class="xoji-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
-      return `<button class="xoji-segmented__option" part="option" type="button" role="radio" aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${disabledAttr}>${escapeHtml(seg.label)}${badge}</button>`;
+      const named = seg.slot ? ` aria-label="${escapeAttr(seg.label)}" title="${escapeAttr(seg.label)}"` : "";
+      const body = seg.slot ? `<slot name="${escapeAttr(seg.slot)}"></slot>` : escapeHtml(seg.label);
+      const optionClass = seg.slot ? "xoji-segmented__option xoji-segmented__option--icon" : "xoji-segmented__option";
+      return `<button class="${optionClass}" part="option" type="button" role="radio" aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${named}${disabledAttr}>${body}${badge}</button>`;
     }).join("");
   }
   function fieldInner(bindings, selected) {
     const labelText = bindings.label ?? null;
     const labelledby = bindings.labelledby ?? null;
+    const ariaLabel = bindings.ariaLabel ?? null;
     const labelId = `${bindings.elementId ?? "xoji-segmented"}-label`;
-    const groupName = labelledby ? ` aria-labelledby="${labelledby}"` : labelText ? ` aria-labelledby="${labelId}"` : "";
+    const groupName = labelledby ? ` aria-labelledby="${labelledby}"` : labelText ? ` aria-labelledby="${labelId}"` : ariaLabel ? ` aria-label="${escapeAttr(ariaLabel)}"` : "";
     const label = labelText ? `<span class="xoji-segmented__label" part="label" id="${labelId}">${labelText}</span>` : "";
     return `${label}<div class="${rootClass(bindings)}" part="segmented" role="radiogroup"${groupName}>${options(bindings, selected)}</div>`;
   }
@@ -55,8 +68,9 @@
     for (const seg of bindings.segments ?? []) {
       const segDisabled = groupDisabled || !!seg.disabled;
       const isOn = seg.value === selected;
-      ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "aria-checked", String(isOn));
-      ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
+      const sel = `[role="radio"][data-value="${escapeSelectorValue(seg.value)}"]`;
+      ops.setAttr(sel, "aria-checked", String(isOn));
+      ops.setAttr(sel, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
     }
   });
   xript.exports.register("selectOption", (payload) => {

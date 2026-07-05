@@ -39,6 +39,13 @@ export const breadcrumbCss = `
 		color var(--duration-fast) var(--ease-standard),
 		box-shadow var(--duration-fast) var(--ease-standard);
 }
+button.xoji-breadcrumb__link {
+	background: none;
+	border: 0;
+	margin: 0;
+	font: inherit;
+	cursor: pointer;
+}
 ${toneRules}
 .xoji-breadcrumb__link:hover {
 	text-decoration: underline;
@@ -70,5 +77,16 @@ ${toneRules}
 }
 .xoji-breadcrumb--lg {
 	font-size: var(--text-body);
+}
+::slotted(.xoji-breadcrumb__item) {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+::slotted(.xoji-breadcrumb__separator) {
+	display: inline-flex;
+	align-items: center;
+	color: var(--fg-3);
+	user-select: none;
 }
 `.trim();

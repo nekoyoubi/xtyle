@@ -31,10 +31,11 @@
   }
   function barClass(b) {
     const horizontal = b.orientation === "horizontal";
-    return ["xoji-bar", horizontal && "xoji-bar--horizontal", b.stacked && "xoji-bar--stacked"].filter(Boolean).join(" ");
+    return ["xoji-bar", horizontal && "xoji-bar--horizontal", b.stacked && "xoji-bar--stacked", b.selectable && "xoji-bar--selectable"].filter(Boolean).join(" ");
   }
-  function rect(x, y, w, h, fill, si, ci, label) {
-    return `<rect class="xoji-bar__bar" part="bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0, w).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" fill="${esc(fill)}" data-si="${si}" data-ci="${ci}" tabindex="0" role="img" aria-label="${esc(label)}"></rect>`;
+  function rect(x, y, w, h, fill, si, ci, label, selectable) {
+    const role = selectable ? "button" : "img";
+    return `<rect class="xoji-bar__bar" part="bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0, w).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" fill="${esc(fill)}" data-si="${si}" data-ci="${ci}" tabindex="0" role="${role}" aria-label="${esc(label)}"></rect>`;
   }
   function legendHtml(series, colors) {
     const items = series.map(
@@ -53,6 +54,7 @@
   function verticalPlot(b, series, colors, height) {
     const categories = b.categories ?? [];
     const stacked = !!b.stacked;
+    const selectable = !!b.selectable;
     const pad = { top: 12, right: 12, bottom: 30, left: 44 };
     const plotX0 = pad.left;
     const plotX1 = IW - pad.right;
@@ -87,7 +89,7 @@
           const v = Math.max(0, series[si]?.values[ci] ?? 0);
           if (v <= 0) continue;
           const yTop = yOf(acc + v);
-          rects.push(rect(x, yTop, barW, yOf(acc) - yTop, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`));
+          rects.push(rect(x, yTop, barW, yOf(acc) - yTop, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`, selectable));
           acc += v;
         }
       } else {
@@ -98,7 +100,7 @@
           const v = Math.max(0, series[si]?.values[ci] ?? 0);
           const x = groupX0 + si * barW;
           const yTop = yOf(v);
-          rects.push(rect(x + barW * 0.08, yTop, barW * 0.84, plotY1 - yTop, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`));
+          rects.push(rect(x + barW * 0.08, yTop, barW * 0.84, plotY1 - yTop, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`, selectable));
           if (b.showValues && v > 0) {
             valueLabels.push(
               `<text class="xoji-bar__value" x="${(x + barW / 2).toFixed(1)}" y="${(yTop - 4).toFixed(1)}" text-anchor="middle">${esc(formatTick(v))}</text>`
@@ -113,6 +115,7 @@
   function horizontalPlot(b, series, colors, height) {
     const categories = b.categories ?? [];
     const stacked = !!b.stacked;
+    const selectable = !!b.selectable;
     const pad = { top: 12, right: 16, bottom: 28, left: 76 };
     const plotX0 = pad.left;
     const plotX1 = IW - pad.right;
@@ -147,7 +150,7 @@
           const v = Math.max(0, series[si]?.values[ci] ?? 0);
           if (v <= 0) continue;
           const xStart = xOf(acc);
-          rects.push(rect(xStart, y, xOf(acc + v) - xStart, barH, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`));
+          rects.push(rect(xStart, y, xOf(acc + v) - xStart, barH, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`, selectable));
           acc += v;
         }
       } else {
@@ -158,7 +161,7 @@
           const v = Math.max(0, series[si]?.values[ci] ?? 0);
           const y = groupY0 + si * barH;
           const w = xOf(v) - plotX0;
-          rects.push(rect(plotX0, y + barH * 0.08, w, barH * 0.84, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`));
+          rects.push(rect(plotX0, y + barH * 0.08, w, barH * 0.84, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`, selectable));
           if (b.showValues && v > 0) {
             valueLabels.push(
               `<text class="xoji-bar__value" x="${(plotX0 + w + 4).toFixed(1)}" y="${(y + barH / 2).toFixed(1)}" dy="0.32em" text-anchor="start">${esc(formatTick(v))}</text>`
@@ -176,6 +179,11 @@
     const colors = b.colors ?? [];
     const height = Math.max(160, b.height ?? 320);
     const horizontal = b.orientation === "horizontal";
+    if (categories.length === 0 || series.length === 0) {
+      const label = b.title ?? b.ariaLabel ?? "";
+      const emptySvg = `<svg class="xoji-bar__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${label ? esc(label) : "No data"}"><text class="xoji-bar__empty" x="${IW / 2}" y="${height / 2}" text-anchor="middle" dy="0.32em">No data</text></svg>`;
+      return `<figure part="chart" class="${barClass(b)}" style="--bar-height:${height}px">${emptySvg}</figure>`;
+    }
     const plot = horizontal ? horizontalPlot(b, series, colors, height) : verticalPlot(b, series, colors, height);
     const svg = `<svg class="xoji-bar__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${plot}</svg>`;
     const legend = b.legend !== false && series.length > 1 ? legendHtml(series, colors) : "";

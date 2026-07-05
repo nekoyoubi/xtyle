@@ -1,3 +1,5 @@
+import { escapeSelectorValue } from "../selector-escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -100,12 +102,31 @@ function isExpanded(node: TreeNode, hasChildren: boolean, expanded: Set<string>)
 	return expanded.has(nodeKey(node));
 }
 
+/** A locked branch with no route: rendered as a section header, but not interactive — not a link,
+ * not selectable, not a keyboard-focus stop. (Locked *with* an href stays a navigable header.) */
+function isStaticNode(node: TreeNode): boolean {
+	const hasChildren = !!(node.children && node.children.length);
+	const locked = (node.locked ?? false) && hasChildren;
+	return locked && !node.href;
+}
+
+/** The first keyboard-focusable row in pre-order: a static header is skipped for its (always-open)
+ * children, so the roving tab stop never lands on a non-interactive header. */
+function firstFocusableKey(nodes: TreeNode[]): string | null {
+	for (const node of nodes) {
+		if (!isStaticNode(node)) return nodeKey(node);
+		if (node.children && node.children.length) {
+			const child = firstFocusableKey(node.children);
+			if (child) return child;
+		}
+	}
+	return null;
+}
+
 function rovingTarget(bindings: TreeBindings): string | null {
 	if (bindings.rovingValue) return bindings.rovingValue;
 	if (bindings.selectedValue) return bindings.selectedValue;
-	const items = bindings.items ?? [];
-	const first = items[0];
-	return first ? nodeKey(first) : null;
+	return firstFocusableKey(bindings.items ?? []);
 }
 
 function treeTrailing(node: TreeNode, value: string, isLink: boolean): string {
@@ -144,9 +165,12 @@ function buildNodes(
 					: `<span class="xoji-tree__twisty xoji-tree__twisty--leaf" aria-hidden="true"></span>`;
 			const label = `<span class="xoji-tree__label">${escapeHtml(node.label)}</span>`;
 			const isLink = !!node.href;
+			const isStatic = locked && !isLink;
+			const staticData = isStatic ? ` data-static="true"` : "";
+			const rowClass = isStatic ? "xoji-tree__row xoji-tree__row--static" : "xoji-tree__row";
 			const rowOpen = isLink
 				? `<a class="xoji-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">`
-				: `<div class="xoji-tree__row" part="row" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">`;
+				: `<div class="${rowClass}" part="row" data-value="${escapeAttr(value)}"${disabledData}${staticData} style="--tree-level: ${level}">`;
 			const rowClose = isLink ? "</a>" : "</div>";
 			const trailing = treeTrailing(node, value, isLink);
 			const group = hasChildren
@@ -156,7 +180,7 @@ function buildNodes(
 			const disabledAttr = disabled ? ` aria-disabled="true"` : "";
 			const lockedAttr = locked ? ` data-locked="true"` : "";
 			const itemClass = locked ? "xoji-tree__item xoji-tree__item--locked" : "xoji-tree__item";
-			const tabindex = value === roving ? "0" : "-1";
+			const tabindex = !isStatic && value === roving ? "0" : "-1";
 			return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
 		})
 		.join("");
@@ -186,7 +210,7 @@ hooks.fragment.update("tree", (bindings, ops) => {
 		for (const node of nodes) {
 			const hasChildren = !!(node.children && node.children.length);
 			const value = nodeKey(node);
-			const sel = `[role="treeitem"][data-value="${value}"]`;
+			const sel = `[role="treeitem"][data-value="${escapeSelectorValue(value)}"]`;
 			ops.setAttr(sel, "aria-selected", String(value === selected));
 			ops.setAttr(sel, "tabindex", value === roving ? "0" : "-1");
 			if (hasChildren) {
@@ -203,7 +227,7 @@ hooks.fragment.update("tree", (bindings, ops) => {
 
 xript.exports.register("selectRow", (payload: unknown): Intent => {
 	const e = payload as EventPayload;
-	if (e.dataset?.disabled === "true") return {};
+	if (e.dataset?.disabled === "true" || e.dataset?.static === "true") return {};
 	const key = e.dataset?.value;
 	if (!key) return {};
 	const isLink = e.tagName === "A";
@@ -237,15 +261,23 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 	const here = rows.findIndex((r) => r.key === current);
 	const row = here >= 0 ? rows[here] : undefined;
 	if (!row) return {};
+	// A locked branch with no route is a section header, skipped by roving focus.
+	const isStatic = (r: NavRow): boolean => r.locked && !r.isLink;
+	const step = (from: number, dir: number): NavRow | undefined => {
+		for (let i = from + dir; i >= 0 && i < rows.length; i += dir) {
+			if (!isStatic(rows[i])) return rows[i];
+		}
+		return undefined;
+	};
 	switch (k) {
 		case "ArrowDown": {
-			const next = rows[here + 1];
+			const next = step(here, 1);
 			return next
 				? { focus: next.key, preventDefault: true, stopPropagation: true }
 				: { preventDefault: true, stopPropagation: true };
 		}
 		case "ArrowUp": {
-			const prev = rows[here - 1];
+			const prev = step(here, -1);
 			return prev
 				? { focus: prev.key, preventDefault: true, stopPropagation: true }
 				: { preventDefault: true, stopPropagation: true };
@@ -254,7 +286,7 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 			if (row.expandable && !row.expanded)
 				return { expandKey: row.key, expand: true, focus: row.key, preventDefault: true, stopPropagation: true };
 			if (row.expandable && row.expanded) {
-				const child = rows.find((r) => r.parent === row.key);
+				const child = rows.find((r) => r.parent === row.key && !isStatic(r));
 				return child
 					? { focus: child.key, preventDefault: true, stopPropagation: true }
 					: { preventDefault: true, stopPropagation: true };
@@ -264,17 +296,24 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 		case "ArrowLeft": {
 			if (row.expandable && row.expanded && !row.locked)
 				return { expandKey: row.key, expand: false, focus: row.key, preventDefault: true, stopPropagation: true };
-			if (row.parent !== null) return { focus: row.parent, preventDefault: true, stopPropagation: true };
+			if (row.parent !== null) {
+				const parent = rows.find((r) => r.key === row.parent);
+				// Skip a static-header parent — hop to the nearest focusable row above it instead.
+				if (parent && !isStatic(parent)) return { focus: row.parent, preventDefault: true, stopPropagation: true };
+				const parentIdx = rows.findIndex((r) => r.key === row.parent);
+				const above = parentIdx >= 0 ? step(parentIdx, -1) : undefined;
+				if (above) return { focus: above.key, preventDefault: true, stopPropagation: true };
+			}
 			return { preventDefault: true, stopPropagation: true };
 		}
 		case "Home": {
-			const first = rows[0];
+			const first = rows.find((r) => !isStatic(r));
 			return first
 				? { focus: first.key, preventDefault: true, stopPropagation: true }
 				: { preventDefault: true, stopPropagation: true };
 		}
 		case "End": {
-			const last = rows[rows.length - 1];
+			const last = step(rows.length, -1);
 			return last
 				? { focus: last.key, preventDefault: true, stopPropagation: true }
 				: { preventDefault: true, stopPropagation: true };
@@ -282,7 +321,7 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 		case "Enter":
 		case " ":
 		case "Spacebar": {
-			if (row.disabled) return { preventDefault: true, stopPropagation: true };
+			if (row.disabled || isStatic(row)) return { preventDefault: true, stopPropagation: true };
 			if (row.isLink) return { select: row.key, activate: row.key, preventDefault: true, stopPropagation: true };
 			if (row.expandable) return { select: row.key, expandKey: row.key, preventDefault: true, stopPropagation: true };
 			return { select: row.key, preventDefault: true, stopPropagation: true };

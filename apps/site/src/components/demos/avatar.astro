@@ -85,6 +85,24 @@ const statuses = ["success", "warn", "danger", "neutral"] as const;
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Live presence</Heading>
+		<Cluster gap={4} align="center">
+			<Stack gap={2} align="center">
+				<Avatar size="lg" tone="neutral" status="success" statusLabel="Online" pulse alt="Grace Hopper">GH</Avatar>
+				<Text size="xs" tone="muted" mono>pulse</Text>
+			</Stack>
+			<Stack gap={2} align="center">
+				<Avatar size="lg" tone="neutral" status="warn" statusLabel="Streaming" pulse="fast" alt="Ada Lovelace">AL</Avatar>
+				<Text size="xs" tone="muted" mono>pulse="fast"</Text>
+			</Stack>
+			<Stack gap={2} align="center">
+				<Avatar size="lg" tone="neutral" status="neutral" statusLabel="Idle" alt="Katherine Johnson">KJ</Avatar>
+				<Text size="xs" tone="muted" mono>static</Text>
+			</Stack>
+		</Cluster>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Icon fallback and stacked group</Heading>
 		<Stack gap={4}>
 			<Cluster gap={3} align="center">

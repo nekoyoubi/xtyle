@@ -143,7 +143,16 @@ export class XojiButton extends XojiElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (this.iconOnly && !this.ariaLabelValue && !this.ariaLabelledbyValue) {
+		// The name may still be on the host as an unprocessed attribute: on upgrade the attributes
+		// fire in DOM order, so a render (and this check) can run before `aria-label` (spread last by
+		// the bindings) has been captured onto `ariaLabelValue` and stripped. Honor the live attribute
+		// too, or a correctly-labelled icon-only button warns spuriously mid-upgrade.
+		const named =
+			this.ariaLabelValue ||
+			this.ariaLabelledbyValue ||
+			this.getAttribute("aria-label") ||
+			this.getAttribute("aria-labelledby");
+		if (this.iconOnly && !named) {
 			console.warn(
 				"xoji-button: an icon-only button has no accessible name. Provide an `aria-label` so it is announced.",
 			);

@@ -155,4 +155,16 @@ ${toneOutline}
 	height: var(--space-3);
 }
 ${TONES.map((t) => `.xoji-dot--${t} { background: var(--${t}); }`).join("\n")}
+.xoji-dot--pulse-slow {
+	animation: xoji-badge-pulse 1.8s var(--ease-standard) infinite;
+}
+.xoji-dot--pulse-fast {
+	animation: xoji-badge-pulse 0.9s var(--ease-standard) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.xoji-dot--pulse-slow,
+	.xoji-dot--pulse-fast {
+		animation: none;
+	}
+}
 `.trim();

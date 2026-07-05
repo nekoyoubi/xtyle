@@ -56,6 +56,13 @@ const DERIVED_ACCENT_C = 0.16;
 const ACCENT_RAMP_L_MIN = 0.1;
 const ACCENT_RAMP_L_MAX = 0.95;
 const HUE_STABLE_CHROMA = 0.1;
+// The fan (accent-2/3/4) varies hue at the accent's L/C, which collapses to identical grays when the
+// accent has near-zero chroma. Floor the fan's *base* chroma (not the primary accent) so a near-gray
+// accent still fans into distinct faint tints instead of four identical grays. Above the floor the
+// base is the accent unchanged, so every chromatic theme derives byte-identically. Must stay below
+// HUE_STABLE_CHROMA: the constant-L/C fan invariant exempts accents under that line, and the floored
+// fan has to land inside that exempted band or it would trip the very invariant it derives under.
+const FAN_MIN_CHROMA = 0.045;
 const HUE_TOLERANCE = 8;
 const LIGHTNESS_TOLERANCE = 0.05;
 
@@ -1208,35 +1215,51 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 		return formatCss({ ...color, c: Math.min(color.c, maxC) });
 	};
 	const a1 = accentDisplay;
+	const fanBase: OklchColor = { ...a1, c: Math.max(a1.c, FAN_MIN_CHROMA) };
 	const rotate = (deg: number): AccentDelta => ({ dL: 0, dC: 0, dH: deg });
 	const fanned = (n: string, derived: OklchColor): OklchColor =>
 		pinned[`--accent-${n}`] ? toOklchColor(pinned[`--accent-${n}`] as string) : derived;
 	let a2: OklchColor;
 	let a3: OklchColor;
 	let a4: OklchColor;
+	// The lineage edges differ per fan: a split-complement's 2/3 flank the accent and 4 is its
+	// complement (all off `--accent`, so a pinned flank pulls its mirror in), while a wheel chains
+	// 3 off 2 and 4 off 3. Declared per-branch so `lineage()` names what each token actually reads.
+	let a2Refs: TokenName[];
+	let a3Refs: TokenName[];
+	let a4Refs: TokenName[];
 	if (ACCENT_FAN === "split-complement") {
 		// The two flanks are symmetric either way: pin either wing and the other mirrors its hue
 		// across the accent, so the fan stays balanced around the author's choice. With neither
 		// pinned it's the default ∓split; with both pinned each holds its own value. Lightness and
-		// chroma stay the accent's throughout, per the constant-L/C fan.
-		const mirrorOf = (c: OklchColor): OklchColor => applyAccentDelta(a1, rotate(-hueDelta(a1.h, c.h)));
+		// chroma stay the fan base's throughout, per the constant-L/C fan.
+		const mirrorOf = (c: OklchColor): OklchColor => applyAccentDelta(fanBase, rotate(-hueDelta(a1.h, c.h)));
 		const a2Pin = pinned["--accent-2"];
 		const a3Pin = pinned["--accent-3"];
-		let a2Derived = applyAccentDelta(a1, rotate(-accentSplit));
-		let a3Derived = applyAccentDelta(a1, rotate(accentSplit));
+		let a2Derived = applyAccentDelta(fanBase, rotate(-accentSplit));
+		let a3Derived = applyAccentDelta(fanBase, rotate(accentSplit));
 		if (a2Pin && !a3Pin) a3Derived = mirrorOf(toOklchColor(a2Pin as string));
 		else if (a3Pin && !a2Pin) a2Derived = mirrorOf(toOklchColor(a3Pin as string));
 		a2 = fanned("2", a2Derived);
 		a3 = fanned("3", a3Derived);
-		a4 = fanned("4", applyAccentDelta(a1, rotate(180)));
+		a4 = fanned("4", applyAccentDelta(fanBase, rotate(180)));
+		a2Refs = a3Pin && !a2Pin ? ["--accent", "--accent-3"] : ["--accent"];
+		a3Refs = a2Pin && !a3Pin ? ["--accent", "--accent-2"] : ["--accent"];
+		a4Refs = ["--accent"];
 	} else {
-		a2 = fanned("2", applyAccentDelta(a1, rotate(shiftStep)));
-		a3 = fanned("3", applyAccentDelta(a2, accentDelta(a1, a2)));
+		// Each accent is one hue-step past the last. Chaining off `fanBase` (not `a1`) keeps the whole
+		// wheel at the floored chroma for a near-gray accent instead of escalating it down the chain; a
+		// chromatic accent has `fanBase === a1`, so the step stays byte-identical.
+		a2 = fanned("2", applyAccentDelta(fanBase, rotate(shiftStep)));
+		a3 = fanned("3", applyAccentDelta(a2, accentDelta(fanBase, a2)));
 		a4 = fanned("4", applyAccentDelta(a3, accentDelta(a2, a3)));
+		a2Refs = ["--accent", "--accent-shift-step"];
+		a3Refs = ["--accent-2", "--accent"];
+		a4Refs = ["--accent-3", "--accent-2"];
 	}
-	lit("--accent-2", emitAccent(a2), ["--accent", "--accent-shift-step"]);
-	lit("--accent-3", emitAccent(a3), ["--accent-2", "--accent"]);
-	lit("--accent-4", emitAccent(a4), ["--accent-3", "--accent-2"]);
+	lit("--accent-2", emitAccent(a2), a2Refs);
+	lit("--accent-3", emitAccent(a3), a3Refs);
+	lit("--accent-4", emitAccent(a4), a4Refs);
 	lit("--accent-shift-step", String(shiftStep));
 
 	// Give each accent-ramp variant the same four-token family the primary accent has, so an
@@ -1319,16 +1342,37 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 		),
 	);
 
-	lit("--link", formatCss(enforceChromaticOnPanels(accent)), ["--accent", ...refIfPinned("--bg-0")]);
-	lit(
-		"--link-hover",
-		formatCss(
-			enforceChromaticOnPanels(
-				withLightness(accent, accent.l + (scheme === "dark" ? 0.08 : -0.08)),
-			),
-		),
-		["--link", ...refIfPinned("--bg-0")],
-	);
+	const linkColor = enforceChromaticOnPanels(accent);
+	const linkCss = formatCss(linkColor);
+	let linkHoverColor = enforceChromaticOnPanels(withLightness(accent, accent.l + (scheme === "dark" ? 0.08 : -0.08)));
+	if (formatCss(linkHoverColor) === linkCss) {
+		// The base hover step collapsed onto the link. Two causes: a low-chroma accent has no hue to
+		// keep them apart once enforcement pulls both to the same readable lightness; a high-chroma
+		// accent pinned near a lightness pole has its step erased by gamut clamping (both lightnesses
+		// clamp to one displayable hex). Force a distinct emitted value, re-enforcing each candidate so
+		// it always lands readable: grow the step toward the readable pole (the natural hover feel);
+		// if the pole clamps every step to one hex, nudge the other way (there is headroom off an
+		// extreme); if lightness is pinned at a pole for this hue, drop chroma so the value shifts.
+		const pole = textLight ? 1 : 0;
+		const toward = linkColor.l < pole ? 1 : -1;
+		const distinctHover = (candidate: OklchColor): OklchColor | undefined => {
+			const enforced = enforceChromaticOnPanels(candidate);
+			return formatCss(enforced) === linkCss ? undefined : enforced;
+		};
+		let hover: OklchColor | undefined;
+		for (let step = 0.1; step <= 0.6 && !hover; step += 0.05) {
+			hover = distinctHover(withLightness(linkColor, linkColor.l + toward * step));
+		}
+		for (let step = 0.1; step <= 0.6 && !hover; step += 0.05) {
+			hover = distinctHover(withLightness(linkColor, linkColor.l - toward * step));
+		}
+		for (let cut = 0.7; cut >= 0.05 && !hover; cut -= 0.15) {
+			hover = distinctHover(oklch(linkColor.l, linkColor.c * cut, linkColor.h));
+		}
+		linkHoverColor = hover ?? linkHoverColor;
+	}
+	lit("--link", formatCss(linkColor), ["--accent", ...refIfPinned("--bg-0")]);
+	lit("--link-hover", formatCss(linkHoverColor), ["--link", ...refIfPinned("--bg-0")]);
 
 	for (const [hue, spec] of Object.entries(PALETTE_HUES)) {
 		// Pinning the tone solid (or its swatch base) re-hues the whole derived family around it,
@@ -2066,6 +2110,23 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 				}
 			}
 			return { name: linkName, ok: true };
+		},
+		(ctx: InvariantContext): InvariantResult => {
+			const name = "link hover distinct from link";
+			const link = ctx.register["--link"];
+			const hover = ctx.register["--link-hover"];
+			if (!link || !hover) return { name, ok: true };
+			// A user pinning either token owns the collapse; the guard only governs derived values.
+			if (ctx.constraints["--link"] || ctx.constraints["--link-hover"]) return { name, ok: true };
+			if (link === hover) {
+				// A `--link` forced to a pure pole to clear contrast against an un-clearable same-side
+				// panel (a mid-gray page whose panels sit too close to it) has no distinct *readable*
+				// neighbor: any different hover would drop below the floor. That genuine-pole collapse is
+				// acceptable — readability wins over a hover delta — but every other collapse is a bug.
+				if (link === "#000000" || link === "#ffffff") return { name, ok: true };
+				return { name, ok: false, detail: `--link and --link-hover both ${link}` };
+			}
+			return { name, ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
 			const name = "unpinned accent ramp holds its fan at constant L/C";

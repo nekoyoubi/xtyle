@@ -1,0 +1,143 @@
+---
+import Heatmap from "@xoji/astro/Heatmap.astro";
+import Card from "@xoji/astro/Card.astro";
+import Stack from "@xoji/astro/Stack.astro";
+import Heading from "@xoji/astro/Heading.astro";
+import Text from "@xoji/astro/Text.astro";
+
+const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const hours = Array.from({ length: 24 }, (_, h) => (h % 3 === 0 ? String(h) : ""));
+const activity = days.map((_, d) =>
+	Array.from({ length: 24 }, (_, h) => {
+		const workday = d < 5;
+		const peak = h >= 9 && h <= 18;
+		const base = workday ? (peak ? 42 : 8) : h >= 11 && h <= 23 ? 22 : 4;
+		return Math.max(0, Math.round(base + (Math.sin(d * 2 + h) + 1) * 8));
+	}),
+);
+
+const hosts = ["web-1", "web-2", "db-1"];
+const resources = ["CPU", "Mem", "Net", "Disk"];
+const load = [
+	[42, 30, 18, 9],
+	[26, 55, 22, 14],
+	[12, 40, 8, 61],
+];
+
+const wdays = ["Mon", "Tue", "Wed"];
+const buckets = ["AM", "PM", "Night"];
+const runs = [
+	[3, 8, 1],
+	[5, 2, 0],
+	[0, 6, 4],
+];
+
+const gdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const gbuckets = ["Morning", "Midday", "Evening", "Night"];
+const runCount = gdays.map((_, d) =>
+	gbuckets.map((_, b) => Math.max(0, Math.round(6 + Math.sin(d * 1.7 + b) * 5 + (b === 1 ? 6 : 0)))),
+);
+const totalRuntime = gdays.map((_, d) =>
+	gbuckets.map((_, b) => Math.max(0, Math.round(40 + Math.cos(d + b * 1.3) * 35 + (b === 3 ? 45 : 0)))),
+);
+
+const nowCell: [number, number][] = [[2, 1]];
+const runTitles = gdays.map((day, d) =>
+	gbuckets.map((bucket, b) => `${day} ${bucket}: ${runCount[d][b]} runs, ${totalRuntime[d][b]}m total`),
+);
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Activity grid</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Runs per hour across a week on the default <code>accent</code> ramp, the
+				contribution-graph shape. The <code>scale</code> key reads a cell's shade as a
+				magnitude at a glance; hover or focus a cell for its exact value.
+			</Text>
+			<Heatmap rows={days} cols={hours} values={activity} scale label="Activity by day and hour" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Thermal scale with values</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>scheme="thermal"</code> runs cells cool to hot, and <code>showValues</code>
+				prints each number in its cell.
+			</Text>
+			<Heatmap rows={hosts} cols={resources} values={load} scheme="thermal" showValues label="Load by host and resource" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Selectable cells</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>selectable</code> makes each cell a button that fires <code>select</code> on click
+				or Enter/Space, carrying <code>{"{ row, col, value, … }"}</code> for a drill-in.
+			</Text>
+			<Heatmap id="runs-grid" rows={wdays} cols={buckets} values={runs} scheme="accent" selectable showValues label="Runs per bucket" />
+			<Text size="sm" tone="muted">Selected: <Text as="span" mono size="xs" id="runs-grid-readout">(click a cell)</Text></Text>
+		</Stack>
+		<script is:inline>
+			const grid = document.getElementById("runs-grid");
+			const out = document.getElementById("runs-grid-readout");
+			grid?.addEventListener("select", (e) => {
+				out.textContent = `${e.detail.row} · ${e.detail.col} = ${e.detail.value}`;
+			});
+		</script>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Two-channel glow</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A second <code>glow</code> matrix carries a second metric as a per-cell halo: the fill
+				reads run count while the glow reads total runtime, so a bucket can be dim-but-glowing
+				(few long runs) or bright-but-quiet (many short ones).
+			</Text>
+			<Heatmap
+				rows={gdays}
+				cols={gbuckets}
+				values={runCount}
+				glow={totalRuntime}
+				glowLabel="runtime"
+				scheme="accent"
+				label="Runs (fill) and total runtime (glow) by day and bucket"
+			/>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Current-cell marker and per-cell titles</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>current</code> rings the live cell (<code>currentPulse</code> breathes it), the
+				"you are here" on a time grid, and <code>titles</code> gives each cell a fuller hover
+				readout that doubles as its accessible name. Hover the grid to read a cell's detail;
+				the pulsing ring marks Wed / Midday as now.
+			</Text>
+			<Heatmap
+				rows={gdays}
+				cols={gbuckets}
+				values={runCount}
+				current={nowCell}
+				currentPulse
+				titles={runTitles}
+				scheme="accent"
+				label="Runs per bucket, this week (Wed Midday is now)"
+			/>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Empty state</Heading>
+		<Text tone="muted" size="sm">
+			An empty matrix shows a muted <code>No data</code> message in place of the grid, so a
+			no-activity window reads as intentional rather than a broken render.
+		</Text>
+		<Heatmap values={[]} label="Activity by day and hour" />
+	</Card>
+</Stack>

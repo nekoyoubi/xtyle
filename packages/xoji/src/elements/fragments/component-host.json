@@ -8,6 +8,7 @@
 	"slots": [
 		{
 			"id": "component.tabs",
+			"description": "The built-in fill for the xoji Tabs component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -17,6 +18,7 @@
 		},
 		{
 			"id": "component.accordion",
+			"description": "The built-in fill for the xoji Accordion component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -26,6 +28,7 @@
 		},
 		{
 			"id": "component.button",
+			"description": "The built-in fill for the xoji Button component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -35,6 +38,7 @@
 		},
 		{
 			"id": "component.switch",
+			"description": "The built-in fill for the xoji Switch component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -44,6 +48,7 @@
 		},
 		{
 			"id": "component.alert",
+			"description": "The built-in fill for the xoji Alert component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -53,6 +58,7 @@
 		},
 		{
 			"id": "component.app-shell",
+			"description": "The built-in fill for the xoji App Shell component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -62,6 +68,7 @@
 		},
 		{
 			"id": "component.avatar",
+			"description": "The built-in fill for the xoji Avatar component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -70,7 +77,18 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.avatar-group",
+			"description": "The built-in fill for the xoji Avatar Group component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xoji.component.avatar-group",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.badge",
+			"description": "The built-in fill for the xoji Badge component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -80,6 +98,7 @@
 		},
 		{
 			"id": "component.breadcrumb",
+			"description": "The built-in fill for the xoji Breadcrumb component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -89,6 +108,7 @@
 		},
 		{
 			"id": "component.card",
+			"description": "The built-in fill for the xoji Card component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -98,6 +118,7 @@
 		},
 		{
 			"id": "component.card-link",
+			"description": "The built-in fill for the xoji Card Link component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -107,6 +128,7 @@
 		},
 		{
 			"id": "component.checkbox",
+			"description": "The built-in fill for the xoji Checkbox component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -116,6 +138,7 @@
 		},
 		{
 			"id": "component.cluster",
+			"description": "The built-in fill for the xoji Cluster component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -125,6 +148,7 @@
 		},
 		{
 			"id": "component.color-picker",
+			"description": "The built-in fill for the xoji Color Picker component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -134,6 +158,7 @@
 		},
 		{
 			"id": "component.dialog",
+			"description": "The built-in fill for the xoji Dialog component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -143,6 +168,7 @@
 		},
 		{
 			"id": "component.dock",
+			"description": "The built-in fill for the xoji Dock component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -152,6 +178,7 @@
 		},
 		{
 			"id": "component.eyebrow",
+			"description": "The built-in fill for the xoji Eyebrow component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -161,6 +188,7 @@
 		},
 		{
 			"id": "component.field",
+			"description": "The built-in fill for the xoji Field component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -170,6 +198,7 @@
 		},
 		{
 			"id": "component.form-group",
+			"description": "The built-in fill for the xoji Form Group component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -179,6 +208,7 @@
 		},
 		{
 			"id": "component.grid",
+			"description": "The built-in fill for the xoji Grid component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -188,6 +218,7 @@
 		},
 		{
 			"id": "component.heading",
+			"description": "The built-in fill for the xoji Heading component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -197,6 +228,7 @@
 		},
 		{
 			"id": "component.kbd",
+			"description": "The built-in fill for the xoji Kbd component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -205,7 +237,28 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.icon",
+			"description": "The built-in fill for the xoji Icon component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xoji.component.icon",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.image",
+			"description": "The built-in fill for the xoji Image component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xoji.component.image",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.bar",
+			"description": "The built-in fill for the xoji Bar chart: the mod-zero SVG markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -215,6 +268,7 @@
 		},
 		{
 			"id": "component.sparkline",
+			"description": "The built-in fill for the xoji Sparkline: the mod-zero inline SVG markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -223,7 +277,18 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.heatmap",
+			"description": "The built-in fill for the xoji Heatmap: the mod-zero SVG grid markup every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xoji.component.heatmap",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.pie",
+			"description": "The built-in fill for the xoji Pie chart: the mod-zero SVG markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -233,6 +298,7 @@
 		},
 		{
 			"id": "component.link",
+			"description": "The built-in fill for the xoji Link component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -242,6 +308,7 @@
 		},
 		{
 			"id": "component.menu",
+			"description": "The built-in fill for the xoji Menu component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -251,6 +318,7 @@
 		},
 		{
 			"id": "component.number-input",
+			"description": "The built-in fill for the xoji Number Input component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -260,6 +328,7 @@
 		},
 		{
 			"id": "component.panel",
+			"description": "The built-in fill for the xoji Panel component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -269,6 +338,7 @@
 		},
 		{
 			"id": "component.progress",
+			"description": "The built-in fill for the xoji Progress component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -278,6 +348,7 @@
 		},
 		{
 			"id": "component.radio",
+			"description": "The built-in fill for the xoji Radio component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -287,6 +358,7 @@
 		},
 		{
 			"id": "component.section",
+			"description": "The built-in fill for the xoji Section component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -296,6 +368,7 @@
 		},
 		{
 			"id": "component.segmented",
+			"description": "The built-in fill for the xoji Segmented component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -305,6 +378,7 @@
 		},
 		{
 			"id": "component.select",
+			"description": "The built-in fill for the xoji Select component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -314,6 +388,7 @@
 		},
 		{
 			"id": "component.separator",
+			"description": "The built-in fill for the xoji Separator component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -323,6 +398,7 @@
 		},
 		{
 			"id": "component.skeleton",
+			"description": "The built-in fill for the xoji Skeleton component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -332,6 +408,7 @@
 		},
 		{
 			"id": "component.slider",
+			"description": "The built-in fill for the xoji Slider component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -341,6 +418,7 @@
 		},
 		{
 			"id": "component.spinner",
+			"description": "The built-in fill for the xoji Spinner component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -350,6 +428,7 @@
 		},
 		{
 			"id": "component.splitter",
+			"description": "The built-in fill for the xoji Splitter component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -359,6 +438,7 @@
 		},
 		{
 			"id": "component.stack",
+			"description": "The built-in fill for the xoji Stack component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -368,6 +448,7 @@
 		},
 		{
 			"id": "component.stat",
+			"description": "The built-in fill for the xoji Stat component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -377,6 +458,7 @@
 		},
 		{
 			"id": "component.statusbar",
+			"description": "The built-in fill for the xoji Statusbar component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -386,6 +468,7 @@
 		},
 		{
 			"id": "component.swatch",
+			"description": "The built-in fill for the xoji Swatch component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -395,6 +478,7 @@
 		},
 		{
 			"id": "component.text",
+			"description": "The built-in fill for the xoji Text component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -404,6 +488,7 @@
 		},
 		{
 			"id": "component.textarea",
+			"description": "The built-in fill for the xoji Textarea component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -413,6 +498,7 @@
 		},
 		{
 			"id": "component.toast",
+			"description": "The built-in fill for the xoji Toast component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -422,6 +508,7 @@
 		},
 		{
 			"id": "component.toc",
+			"description": "The built-in fill for the xoji Toc component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -431,6 +518,7 @@
 		},
 		{
 			"id": "component.toolbar",
+			"description": "The built-in fill for the xoji Toolbar component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -440,6 +528,7 @@
 		},
 		{
 			"id": "component.tooltip",
+			"description": "The built-in fill for the xoji Tooltip component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -449,6 +538,7 @@
 		},
 		{
 			"id": "component.tree",
+			"description": "The built-in fill for the xoji Tree component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -458,6 +548,7 @@
 		},
 		{
 			"id": "component.code",
+			"description": "The built-in fill for the xoji Code component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -467,6 +558,7 @@
 		},
 		{
 			"id": "component.pagination",
+			"description": "The built-in fill for the xoji Pagination component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
@@ -502,6 +594,10 @@
 		},
 		"xoji.component.avatar": {
 			"description": "Permits a mod to provide the markup of the xoji Avatar component.",
+			"risk": "low"
+		},
+		"xoji.component.avatar-group": {
+			"description": "Permits a mod to provide the markup of the xoji Avatar Group component.",
 			"risk": "low"
 		},
 		"xoji.component.badge": {
@@ -562,6 +658,14 @@
 		},
 		"xoji.component.kbd": {
 			"description": "Permits a mod to provide the markup of the xoji Kbd component.",
+			"risk": "low"
+		},
+		"xoji.component.icon": {
+			"description": "Permits a mod to provide the markup of the xoji Icon component.",
+			"risk": "low"
+		},
+		"xoji.component.image": {
+			"description": "Permits a mod to provide the markup of the xoji Image component.",
 			"risk": "low"
 		},
 		"xoji.component.link": {
@@ -682,6 +786,10 @@
 		},
 		"xoji.component.pie": {
 			"description": "Permits a mod to provide the markup of the xoji Pie chart component.",
+			"risk": "low"
+		},
+		"xoji.component.heatmap": {
+			"description": "Permits a mod to provide the markup of the xoji Heatmap component.",
 			"risk": "low"
 		}
 	},

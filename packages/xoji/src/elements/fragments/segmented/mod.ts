@@ -1,3 +1,5 @@
+import { escapeSelectorValue } from "../selector-escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -8,6 +10,7 @@ interface Segment {
 	label: string;
 	disabled?: boolean;
 	badge?: string;
+	slot?: string;
 }
 
 interface SegmentedBindings {
@@ -18,6 +21,7 @@ interface SegmentedBindings {
 	tone?: string;
 	label?: string | null;
 	labelledby?: string | null;
+	ariaLabel?: string | null;
 	elementId?: string;
 }
 
@@ -82,9 +86,15 @@ function options(bindings: SegmentedBindings, selected: string): string {
 			const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
 			const disabledAttr = segDisabled ? " disabled" : "";
 			const badge = seg.badge ? `<span class="xoji-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
+			// A slotted segment carries framework-owned content (an icon), so the radio itself owns the
+			// option's name and tooltip — `aria-label` and `title` from `label` — while its body is the
+			// live `<slot>`, not baked text. A text segment shows its label, so it needs neither.
+			const named = seg.slot ? ` aria-label="${escapeAttr(seg.label)}" title="${escapeAttr(seg.label)}"` : "";
+			const body = seg.slot ? `<slot name="${escapeAttr(seg.slot)}"></slot>` : escapeHtml(seg.label);
+			const optionClass = seg.slot ? "xoji-segmented__option xoji-segmented__option--icon" : "xoji-segmented__option";
 			return (
-				`<button class="xoji-segmented__option" part="option" type="button" role="radio" ` +
-				`aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${disabledAttr}>${escapeHtml(seg.label)}${badge}</button>`
+				`<button class="${optionClass}" part="option" type="button" role="radio" ` +
+				`aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${named}${disabledAttr}>${body}${badge}</button>`
 			);
 		})
 		.join("");
@@ -93,12 +103,17 @@ function options(bindings: SegmentedBindings, selected: string): string {
 function fieldInner(bindings: SegmentedBindings, selected: string): string {
 	const labelText = bindings.label ?? null;
 	const labelledby = bindings.labelledby ?? null;
+	const ariaLabel = bindings.ariaLabel ?? null;
 	const labelId = `${bindings.elementId ?? "xoji-segmented"}-label`;
+	// An external id wins, then a visible label, then a bare `aria-label` that names the group with no
+	// visible text (an icon bar in a toolbar where the label would just be noise).
 	const groupName = labelledby
 		? ` aria-labelledby="${labelledby}"`
 		: labelText
 			? ` aria-labelledby="${labelId}"`
-			: "";
+			: ariaLabel
+				? ` aria-label="${escapeAttr(ariaLabel)}"`
+				: "";
 	const label = labelText
 		? `<span class="xoji-segmented__label" part="label" id="${labelId}">${labelText}</span>`
 		: "";
@@ -119,8 +134,9 @@ hooks.fragment.update("segmented", (bindings, ops) => {
 	for (const seg of bindings.segments ?? []) {
 		const segDisabled = groupDisabled || !!seg.disabled;
 		const isOn = seg.value === selected;
-		ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "aria-checked", String(isOn));
-		ops.setAttr(`[role="radio"][data-value="${seg.value}"]`, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
+		const sel = `[role="radio"][data-value="${escapeSelectorValue(seg.value)}"]`;
+		ops.setAttr(sel, "aria-checked", String(isOn));
+		ops.setAttr(sel, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
 	}
 });
 

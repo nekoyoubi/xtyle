@@ -11,11 +11,17 @@ interface AvatarBindings {
 	shape?: string;
 	status?: string | null;
 	statusLabel?: string | null;
+	pulse?: boolean | string | null;
 }
 
 declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: AvatarBindings, ops: OpsBuilder) => void) => void };
 };
+
+function avatarPulseClass(pulse: boolean | string | null | undefined, hasStatus: boolean): string | false {
+	if (!hasStatus || pulse == null || pulse === false) return false;
+	return pulse === "fast" ? "xoji-avatar--pulse-fast" : "xoji-avatar--pulse-slow";
+}
 
 function avatarClass(b: AvatarBindings): string {
 	const tone = b.tone ?? "neutral";
@@ -27,6 +33,7 @@ function avatarClass(b: AvatarBindings): string {
 		size !== "md" && `xoji-avatar--${size}`,
 		shape === "square" && "xoji-avatar--square",
 		b.status && `xoji-avatar--status-${b.status}`,
+		avatarPulseClass(b.pulse, Boolean(b.status)),
 	]
 		.filter(Boolean)
 		.join(" ");

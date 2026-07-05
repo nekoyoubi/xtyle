@@ -73,7 +73,10 @@ const bindingOrder = ["html", "svelte", "astro"] as const;
 		font-weight: var(--weight-semibold);
 	}
 	.prop-type {
-		white-space: nowrap;
+		display: inline-block;
+		max-width: 22rem;
+		white-space: normal;
+		overflow-wrap: anywhere;
 	}
 	.prop-option-row {
 		margin-top: var(--space-1);

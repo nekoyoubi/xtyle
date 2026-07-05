@@ -100,8 +100,8 @@ does xoji expose back?
 
 ## 7. Component catalog scope: RESOLVED (growing as designed)
 
-The first cut landed and kept growing: ~50 components across shell, layout, forms,
-navigation, feedback, and data-display, each a xript fragment whose `consumedTokens`
+The first cut landed and kept growing: ~60 components across shell, layout, forms,
+navigation, feedback, content, media, and metrics, each a xript fragment whose `consumedTokens`
 the coverage lint verifies. The premise held: the catalog grows freely because every
 component speaks only contract verbs; no fixed scope, no engine coupling. Adding the
 next component is a registration checklist, not an architecture decision.
@@ -205,6 +205,28 @@ not architecture:
   question (split-complement vs shade-ladder, §11 first bullet), and whether the fan should borrow the
   status chroma-floor so a muted brand's accents stay mutually distinguishable. That's a look call, not
   a safety one; surface, don't force.
+- **Bare `--accent` as a non-text affordance: the fill floor (1.5:1) is below the WCAG non-text floor (3:1).**
+  The safety floor above guarantees a solid fill *separates* from `--bg-0` (≥1.5:1, so it can't vanish), tuned
+  for `--accent` as a **fill** with `--accent-fg` on top. But dogfooding a *derived-accent* sweep (bg only, no
+  accent pin) shows ~15 components consume **bare `--accent` as a non-text affordance**, not a fill: a
+  focus-state `border-color` (`field` / `number-input` / `checkbox` / `radio`), an active edge (`tabs`
+  bottom-border, `toc` left-border, `section` border, `dock-zone` active border/box-shadow, `swatch` ring), and
+  as ink (`select` focus-chevron `color`, `spinner` `color`, `sparkline`/`segmented`/`switch` fills). WCAG 1.4.11
+  wants **3:1** for those graphical/focus uses, but the token only promises 1.5:1, so on a **mid-tone** page the
+  derived accent clears the fill floor yet fails 3:1: at `--bg-0: #444` the derived `--accent` (`#2389e2`) reads
+  `2.67:1`; `#3a3a3a`→`3.11`, `#e8e8ea`→`2.99`, `#2e2e33`→`3.70`. So a focus ring, a select chevron, or a spinner
+  is under-legible on a slate-gray theme even though the fill (with `--accent-fg`) and `--accent-vivid` (the ink,
+  6–7:1 there) are both fine. The fork, and why it isn't a rush-fix: **(a)** raise the accent/bg floor to 3:1,
+  but `--accent` is the *fill* and a pinned accent is honored verbatim, so forcing 3:1 distorts the brand fill on
+  mid-tone pages; **(b)** re-point the non-text consumers at a contrast-tuned token, but `--accent-vivid` /
+  `--accent-text` change the focus-ring/edge color system-wide on *every* theme (a look change, not a mid-tone
+  one); **(c)** add a derived `--accent-edge` floored at 3:1-vs-`--bg-0` (hue/chroma of `--accent`, lightness
+  nudged) for exactly the border/ring/graphical-accent role, leaving the fill and the ink tokens untouched.
+  Option (c) fits the open-register + contract-tuned-variant precedent (`--accent-bg`/`--accent-text` already
+  exist as "≠ fill") and confines the change to the affordances that need it, but it's a new token + a
+  distinguishability invariant + re-pointing the consumers, i.e. a real algorithm pass. A per-algorithm
+  `--accent`-vs-`--bg-0` ≥ 3:1 non-text invariant would guard whichever branch lands. Look-affecting and
+  user-owned: surfaced with the measurements, not forced.
 - **Accent↔danger collision guard.** When the brand accent hue lands in the red
   family, solid primary and solid destructive read identical. Nudge danger, warn, or
   leave it?
@@ -355,6 +377,17 @@ Open sub-forks:
   check glyph through a CSS `@container style()` query; the coverage lint now understands
   style-query consumption. What remains is growing the vocabulary (above) and carrying the cue into
   the remaining selection-bearing surfaces (status redundancy, focus emphasis).
+  - **The cue value is one; the cue *form* is the component's.** `marker` means "add a redundant
+    non-color cue," and each surface renders the form its medium allows, no second token value needed.
+    A *text-context* selection (a labelled row / tab / pill) draws a `✓` beside the label in the row's
+    own foreground; those three are done. A surface with no legible-glyph home draws a **shape** instead
+    under the same `marker` value: `Pagination`'s current page now grows a non-color underline bar (a
+    bare number can't host a leading `✓` without reading as content), so it honors the cue too. This
+    keeps the mechanism/policy/render split clean, the engine carries the intent, the algorithm sets it,
+    the component owns *how*. Remaining candidates are the ones whose selected surface is genuinely
+    un-styleable or absent: a `Swatch`'s dot is an arbitrary consumer color (a shape ring is the likely
+    fit, contrast permitting), a native `Select`'s option list is browser chrome, and a `Menu` carries
+    actions, not a persistent checked state.
 - **Render helpers.** Should the contract ship canonical recipes (a blessed "invert" or "glyph"
   treatment) so components don't each reinvent them, or is that the component library's job?
 
@@ -444,5 +477,64 @@ baked serves only the synchronous first-paint frame and the byte-identical test 
 core resolver landed too: `loadAlgorithm` was already environment-neutral, so a build-time mod bundle
 (`algorithms-bundle.generated.ts`) plus `resolveBundledAlgorithm` (at `@xoji/core/host/bundle`) run the
 canonical mod client-side, byte-identical to baked, and the site's bench now consumes it in place of its own
-`?raw` loader. What's genuinely left is small and optional: retire the sync-first-paint baked frame (a
-snapshot fast-path, if it's worth the complexity) and decide whether the oracle role is permanent.
+`?raw` loader. The **snapshot fast-path** for the imperative surfaces landed too: `hostedAlgorithm(id)` (on
+`@xoji/core/algorithms`) returns the resolved hosted mod once warm and bridges the cold first call on the
+byte-identical baked oracle while it kicks off the resolve, so a synchronous non-reactive caller is canonical
+from the next call on with no await. The site's imperative theme derivation (applying a saved theme,
+rendering theme thumbnails) now derives through it instead of `getAlgorithm`. Baked is thus down to two
+frames: the *reactive* live-preview's synchronous first paint (where a reactive resolved-map is the right
+shape, not a plain accessor) and the byte-identical test oracle. What's genuinely left is small and optional:
+retire even the reactive first-paint frame, and decide whether the oracle role is permanent.
+
+## 16. Link hover feedback: weak by default, absent for low-chroma accents
+
+Dogfooding real palettes surfaced this. `--link-hover` derives as the accent shifted ±0.08 in lightness,
+then run through the same panel-contrast enforcement as `--link`. Two problems fall out:
+
+- **The delta is near-imperceptible even on the flagship.** `xoji-default` emits `--link` `#40a0fa` and
+  `--link-hover` `#42a3fd`: a lightness step so small the hover reads as no change. The default `<xoji-link>`
+  is underlined at rest and changes *only* its color on hover, so that near-zero color delta is the entire
+  hover affordance.
+- **For a low-chroma accent it collapsed to nothing (FIXED).** A near-gray accent (say `#808080`) has no hue to
+  keep the base and the shifted version apart once the panel-contrast enforcement pulls both to the same readable
+  lightness, so `--link-hover` came out byte-identical to `--link` and the link's hover was a literal no-op.
+
+**The collapse is resolved (the derivation branch).** When the resolved `--link` and `--link-hover` emit an
+identical value, the factory now steps the resolved link toward the contrast pole and re-runs
+`enforceChromaticOnPanels` on it. Re-enforcing measures contrast at each step, so the result always lands on the
+readable side of the floor, sidestepping the trap that broke a first attempt: a naive raw lightness step off the
+resolved link **breaks the `links clear AA on bg-0` gauntlet invariant** for high-chroma accents on extreme
+backgrounds, because gamut-clamping a darkened saturated color can *raise* its luminance back below the floor.
+The step is gated on the emitted values being identical, so chromatic accents are byte-identical to before and
+only the degenerate collapse changes (`#808080` now emits `--link` `#9b9b9b` / `--link-hover` `#bababa`, a clear
+step; the whole gauntlet stays green).
+
+**The comprehensive guard is now RESOLVED, and it needed no pole exception.** The earlier attempt at a
+`link hover distinct from link` invariant failed the full `XOJI_GAUNTLET_DEPTH=full` battery on chromatic accents
+enforced to a lightness extreme (a light pink `#ffcfe1` at L≈0.88, a light yellow `#fefea4` at L≈0.96, a near-black
+`#020100`), where a single fixed toward-the-pole step is *erased by gamut clamping* (both lightnesses clamp to one
+displayable hex). The fix replaced that one step with a search that forces a distinct emitted value, re-enforcing
+each candidate so it always lands readable: grow the lightness step toward the readable pole (the natural hover
+feel, and what non-degenerate collapses take on the first iteration); if the pole clamps every step to one hex,
+nudge the *other* way, where an accent already over-contrasted at an extreme has headroom; and if lightness is
+pinned at a pole for that hue, drop chroma so the emitted value shifts. That separates every case where a distinct
+*readable* neighbor exists (dogfood-verified: `#ffcfe1`→`#fff6f9`, `#fefea4`→`#ffffff`, `#020100`→`#98938a`/
+`#99948b`, pure `#000000`/`#ffffff` as an accent).
+
+The invariant landed **with exactly the genuine-pole exception the carryover predicted**, and no wider. The full
+battery surfaced the residual: a mid-gray page (`bg`/`accent` both near `#808080`) whose same-side panels sit too
+close to it makes the panel-contrast floor *unachievable*, so `--link` falls through `enforceChromaticOnPanels` to
+the `enforceOnPanels` fallback, which desaturates to a true pole (`#000000` / `#ffffff`). At a pure pole there is
+only one direction (toward mid) and every step there drops below the floor, so no distinct readable hover exists
+and the collapse is genuinely unavoidable, readability over hover delta. The invariant therefore treats a
+pure-pole `--link` collapse as acceptable and fails only an *avoidable* one. Green under the full
+`XOJI_GAUNTLET_DEPTH=full` battery. (The deeper cause, a mid-gray surface ramp whose panels can't clear a text
+floor, is the §11 surface-minimum-step territory, not a link concern.)
+
+**Still open (the taste call).** The delta stays near-imperceptible even after the collapse fix: that
+`#40a0fa` → `#42a3fd` step on the flagship reads as no change, and since the default `<xoji-link>` rides its
+entire hover on that color delta, the affordance is effectively invisible. Strengthening it is a design decision,
+not a bug fix, and it can go two ways: widen the derived link/link-hover delta across all themes, or give
+`<xoji-link>` a non-color hover affordance the way the `muted` variant already does (thicken the underline, or a
+faint tint) so hover never rides on color alone. Both reshape the flagship's link feel site-wide, so they wait on
+a design eye and your taste.

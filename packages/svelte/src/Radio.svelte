@@ -9,6 +9,8 @@
 		name?: string;
 		value?: string;
 		checked?: boolean;
+		/** The selected value of the radio group, for `bind:group` across radios that share a `value`. */
+		group?: string;
 		disabled?: boolean;
 		invalid?: boolean;
 		label?: string;
@@ -26,6 +28,7 @@
 		name,
 		value,
 		checked = $bindable(false),
+		group = $bindable<string | undefined>(undefined),
 		disabled = false,
 		invalid = false,
 		label,
@@ -36,9 +39,17 @@
 		...rest
 	}: Props = $props();
 
+	// With `bind:group`, the group's selected value drives checked (native radio-group semantics); a
+	// standalone radio keeps its own two-way `checked`.
+	const isChecked = $derived(group !== undefined ? group === value : checked);
+
 	function handleChange(event: Event) {
 		const target = event.target as HTMLElement & { checked: boolean };
-		checked = target.checked;
+		if (group !== undefined) {
+			if (target.checked && value !== undefined) group = value;
+		} else {
+			checked = target.checked;
+		}
 		onchange?.(event);
 	}
 </script>
@@ -49,7 +60,7 @@
 	{size}
 	{name}
 	{value}
-	checked={checked || undefined}
+	checked={isChecked || undefined}
 	disabled={disabled || undefined}
 	invalid={invalid || undefined}
 	{label}

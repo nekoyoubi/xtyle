@@ -42,6 +42,10 @@ export const pieCss = `
 	font-size: var(--text-lg);
 	font-weight: var(--weight-bold);
 }
+.xoji-pie__empty {
+	fill: var(--fg-2);
+	font-size: var(--text-sm);
+}
 .xoji-pie__legend {
 	display: flex;
 	flex-wrap: wrap;

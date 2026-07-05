@@ -63,7 +63,7 @@ import { Badge } from "@xoji/astro";
 export const badgeManifest: ComponentManifest = {
 	id: "badge",
 	name: "Badge",
-	category: "data-display",
+	category: "media",
 	summary: "A compact label, tag, or status chip: three fills across six semantic tones and twelve named hues, optionally removable.",
 	description:
 		"Badge labels, tags, counts, and statuses inline. Fill treatment (`variant`) and color (`tone`) are independent axes: each of the three fills (solid, soft, outline) can carry any of the six semantic tones (accent, neutral, danger, success, warn, info) or any of the twelve named hues (red … black). It adds a leading status dot (which can `pulse` to read as live), a tabular count affordance, and a `removable` form whose `×` is a real focusable `<button>` that emits a `remove` event. That's the removable tag you build a filter row or token input from. A standalone `.xoji-dot` indicator covers the bare-dot case. Status tones (success, warn, danger, info) emit a screen-reader-only tone word so meaning never rides on color alone.",
@@ -111,9 +111,10 @@ export const badgeManifest: ComponentManifest = {
 		},
 		{
 			name: "indicator",
-			description: "A standalone dot indicator independent of any chip, tonable and sizable on its own.",
+			description:
+				"A standalone dot indicator independent of any chip, tonable and sizable on its own, and pulsable (`.xoji-dot--pulse-slow` / `--pulse-fast`) to read as live without a chip around it.",
 			selector: ".xoji-dot",
-			tokens: ["--space-1", "--space-2", "--space-3", "--radius-full", "--neutral"],
+			tokens: ["--space-1", "--space-2", "--space-3", "--radius-full", "--neutral", "--ease-standard"],
 		},
 	],
 	props: [
@@ -265,7 +266,7 @@ export const badgeManifest: ComponentManifest = {
 	],
 	composition: [
 		"Pair with a list or tag input as removable chips; wire `onremove` (svelte) or the `.xoji-badge__remove` click (html/astro) to drop the item.",
-		"Use the standalone `.xoji-dot` indicator next to avatars or rows for presence without a full chip.",
+		"Use the standalone `.xoji-dot` indicator next to avatars or rows for presence without a full chip; add `.xoji-dot--pulse-slow` or `--pulse-fast` to make a chip-less dot read as live (a connection light, a per-row streaming pip), the same breathe the badge dot uses and equally held still under reduced-motion.",
 		"The `count` affordance pairs with nav items and tabs for unread counts.",
 	],
 	a11y: [

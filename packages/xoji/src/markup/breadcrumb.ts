@@ -4,6 +4,14 @@ import { escapeHtml, escapeAttr } from "./escape.js";
 export interface BreadcrumbItem {
 	label: string;
 	href?: string;
+	/** An opaque value for an in-app crumb: a non-current item with a `value` and no `href` renders as a
+	 * button that fires the breadcrumb's `select` event instead of navigating, so a crumb can drive app
+	 * state (select an ancestor node) rather than follow a URL. `href` wins when both are set. */
+	value?: string;
+	/** Hover text for the crumb, rendered as the cell's `title`: the fuller identity behind an
+	 * abbreviated, truncated, or glyph label. It's the accessible description too (the visible label
+	 * stays the accessible name), so the detail reaches assistive tech without renaming the crumb. */
+	title?: string;
 	current?: boolean;
 }
 
@@ -30,6 +38,17 @@ function separatorMarkup(separator: string): string {
 	return `<li class="xoji-breadcrumb__separator" part="separator" aria-hidden="true">${escapeHtml(separator)}</li>`;
 }
 
+/** One crumb's inner cell: the current crumb is plain text, an `href` crumb is a link, a valued crumb
+ * (no `href`, not current) is a button that fires `select`, and anything else is plain text. */
+function crumbCell(item: BreadcrumbItem, isCurrent: boolean, label: string): string {
+	const title = item.title ? ` title="${escapeAttr(item.title)}"` : "";
+	if (isCurrent) return `<span class="xoji-breadcrumb__current" part="item" aria-current="page"${title}>${label}</span>`;
+	if (item.href) return `<a class="xoji-breadcrumb__link" part="item" href="${escapeAttr(item.href)}"${title}>${label}</a>`;
+	if (item.value !== undefined)
+		return `<button type="button" class="xoji-breadcrumb__link" part="item" data-value="${escapeAttr(item.value)}"${title}>${label}</button>`;
+	return `<span class="xoji-breadcrumb__current" part="item"${title}>${label}</span>`;
+}
+
 function inner(props: BreadcrumbMarkupProps): string {
 	const items = props.items ?? [];
 	if (items.length === 0) {
@@ -40,12 +59,7 @@ function inner(props: BreadcrumbMarkupProps): string {
 	const rows = items.map((item, index) => {
 		const isCurrent = item.current === true || (item.current === undefined && index === lastIndex);
 		const label = escapeHtml(item.label ?? "");
-		const cell =
-			item.href && !isCurrent
-				? `<a class="xoji-breadcrumb__link" part="item" href="${escapeAttr(item.href)}">${label}</a>`
-				: isCurrent
-					? `<span class="xoji-breadcrumb__current" part="item" aria-current="page">${label}</span>`
-					: `<span class="xoji-breadcrumb__current" part="item">${label}</span>`;
+		const cell = crumbCell(item, isCurrent, label);
 		const row = `<li class="xoji-breadcrumb__item" part="item-wrap">${cell}</li>`;
 		return index < lastIndex ? `${row}${separatorMarkup(separator)}` : row;
 	});

@@ -13,6 +13,7 @@
 				"id": "breadcrumb",
 				"format": "text/html+jsml",
 				"source": "breadcrumb.html",
+				"handlers": [{ "selector": "[data-value]", "on": "click", "handler": "selectCrumb" }],
 				"meta": {
 					"tokens": [
 						"--accent-text",
