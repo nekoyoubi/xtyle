@@ -248,6 +248,12 @@ export const tableManifest: ComponentManifest = {
 			selector: ".xtyle-table__header-cell--sortable:focus-visible",
 			tokens: ["--border-normal", "--border-thick", "--ring"],
 		},
+		{
+			name: "scroll-focus",
+			description: "Keyboard focus on the scrollable wrap, which turns tabbable only when the table overflows: an outline sitting outside the border box, so the scrolled table can't cover it.",
+			selector: ".xtyle-table-wrap:focus-visible",
+			tokens: ["--border-thick", "--ring"],
+		},
 	],
 	slots: [
 		{
@@ -296,6 +302,7 @@ export const tableManifest: ComponentManifest = {
 		"A table with no `<caption>` needs an `aria-label`; the binding warns at runtime when both are missing.",
 		"Sortable headers expose state via `aria-sort` (`ascending`/`descending`/`none`), not via the glyph, which is `aria-hidden`.",
 		"The sortable header is keyboard-focusable; focus shows a token ring plus a transparent outline the forced-colors base rule promotes to a real system outline.",
+		"A table wide or tall enough to scroll becomes a keyboard-scrollable region (a `tabindex` stop only while it overflows), and focus on it shows an outline, so a keyboard user can see they've landed there before arrowing through it (WCAG 2.4.7).",
 	],
 	examples: [
 		{

@@ -4,6 +4,7 @@
 
 ### Accessibility
 
+- **The scrollable `Table` region shows a focus ring.** A table wide or tall enough to scroll turns keyboard-focusable so arrow keys can pan it; it now paints a focus outline when focused, so a keyboard user can see where they've landed (WCAG 2.4.7). Before, the region took focus silently
 - **The non-color selection cue reaches `Swatch`.** When a theme sets `--selection-cue: marker` (a high-contrast or redundant-cues algorithm), a picked swatch keeps its accent ring and gains a second neutral outline around it, so selection reads by an added ring rather than the accent hue alone (WCAG 1.4.1). It joins `Tree`, `Tabs`, `Segmented`, and `Pagination`, which already honor the cue
 
 ### Image
