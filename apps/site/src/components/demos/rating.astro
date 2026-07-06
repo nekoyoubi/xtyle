@@ -1,0 +1,28 @@
+---
+import Rating from "@xtyle/astro/Rating.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Text from "@xtyle/astro/Text.astro";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Product rating</Heading>
+		<Cluster gap={3}>
+			<Rating value={4.5} size="lg" label="4.5 out of 5 stars" />
+			<Text tone="muted">4.5 · 1,204 reviews</Text>
+		</Cluster>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Sizes and values</Heading>
+		<Stack gap={3}>
+			<Rating value={5} label="5 out of 5 stars" />
+			<Rating value={3.5} label="3.5 out of 5 stars" />
+			<Rating value={2} size="sm" label="2 out of 5 stars" />
+			<Rating value={7} max={10} label="7 out of 10 stars" />
+		</Stack>
+	</Card>
+</Stack>

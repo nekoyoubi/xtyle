@@ -1,0 +1,26 @@
+---
+interface Props {
+	value?: number;
+	max?: number;
+	size?: "sm" | "md" | "lg";
+	/** Accessible label (also the no-JS fallback text). */
+	label?: string;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { value = 0, max = 5, size, label, class: extra, ...rest } = Astro.props;
+---
+
+<xtyle-rating
+	value={value}
+	max={max}
+	size={size}
+	label={label}
+	class:list={["xtyle-rating", extra]}
+	{...rest}>{label ?? `${value} out of ${max} stars`}</xtyle-rating>
+
+<script>
+	import "@xtyle/core/elements";
+</script>

@@ -10,6 +10,7 @@ export { imageCss } from "./components/image.js";
 export { carouselCss } from "./components/carousel.js";
 export { timelineCss } from "./components/timeline.js";
 export { stepsCss } from "./components/steps.js";
+export { ratingCss } from "./components/rating.js";
 export { parallaxCss } from "./components/parallax.js";
 export { heroCss } from "./components/hero.js";
 export { barCss } from "./components/bar.js";
