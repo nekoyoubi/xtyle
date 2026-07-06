@@ -375,8 +375,10 @@ Open sub-forks:
   `--selection-cue` token (`tint | marker`), high-contrast emits `marker` by default, any
   algorithm opts in via the knob, and **Tree, Tabs, and Segmented** each honor it with a non-color
   check glyph through a CSS `@container style()` query; the coverage lint now understands
-  style-query consumption. What remains is growing the vocabulary (above) and carrying the cue into
-  the remaining selection-bearing surfaces (status redundancy, focus emphasis).
+  style-query consumption. The *selection* axis is now covered across every surface that rested on color
+  alone (Tree, Tabs, Segmented, Pagination, Swatch, Carousel; see the sub-note for the reasoned holdouts);
+  what remains is growing the *vocabulary* beyond selection, the status-redundancy and focus-emphasis cues
+  noted above.
   - **The cue value is one; the cue *form* is the component's.** `marker` means "add a redundant
     non-color cue," and each surface renders the form its medium allows, no second token value needed.
     A *text-context* selection (a labelled row / tab / pill) draws a `✓` beside the label in the row's
@@ -388,7 +390,17 @@ Open sub-forks:
     additive like the rest: a picked chip keeps its accent selection ring and, under `marker`, *gains* a
     second neutral `--fg-0` outline ring around it (a `::after`, not a recolor), so a color-deficient user
     reads the selection by that added ring rather than the accent hue, on an arbitrary consumer chip color.
-    The genuinely un-styleable holdouts remain: a native `Select`'s option list is browser chrome, and a
+    `Carousel` joins the shape-cue set too: its pagination dots signalled the current slide by fill color
+    alone (accent vs a muted dot at an identical size), so under `marker` the active dot elongates into a
+    pill, a pure size change no color-deficient viewer can miss. With it the clean *color-only-among-peers*
+    surfaces are complete: every selection-bearing surface that rested on color alone now carries a
+    redundant channel, a `✓` where a label hosts one and a shape where it doesn't. The remaining candidates
+    were weighed and left by design, not oversight: `toc`'s active section and `dock-zone`'s active tab
+    already pair the accent with a non-color cue (a medium-weight label, a raised and underlined surface),
+    so neither rests on color alone; a `button`'s `aria-selected` / `aria-pressed` tint does, but a marker
+    there lands on every variant and size at once (a per-variant design call, not the isolated additive the
+    others were), so it waits for a deliberate pass rather than riding this thread. The genuinely
+    un-styleable holdouts remain: a native `Select`'s option list is browser chrome, and a
     `Menu` carries actions, not a persistent checked state.
 - **Render helpers.** Should the contract ship canonical recipes (a blessed "invert" or "glyph"
   treatment) so components don't each reinvent them, or is that the component library's job?
