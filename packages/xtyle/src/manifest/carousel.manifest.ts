@@ -73,9 +73,10 @@ export const carouselManifest: ComponentManifest = {
 		},
 		{
 			name: "dots",
-			description: "The pagination dots; the active one takes the accent.",
+			description:
+				"The pagination dots; the active one takes the accent. When the theme's `--selection-cue` resolves to `marker`, the active dot also elongates into a pill so the current slide reads by shape, not color alone.",
 			selector: ".xtyle-carousel__dot",
-			tokens: ["--bg-3", "--accent"],
+			tokens: ["--bg-3", "--accent", "--selection-cue"],
 		},
 	],
 	props: [
@@ -143,6 +144,7 @@ export const carouselManifest: ComponentManifest = {
 		"--border-thin",
 		"--border-thick",
 		"--ring",
+		"--selection-cue",
 		"--space-2",
 		"--space-3",
 		"--space-6",
@@ -160,6 +162,7 @@ export const carouselManifest: ComponentManifest = {
 		"The track is focusable and scrolls with the arrow keys and Home/End; the prev/next buttons and dots are labelled controls.",
 		"Autoplay pauses on hover and focus, and stops entirely under `prefers-reduced-motion`, so motion never runs against a user's stated preference.",
 		"With no JavaScript the slides remain visible and the track stays natively scrollable, so no content is trapped behind the enhancement.",
+		"The current slide carries a non-color channel on demand: when the theme sets `--selection-cue: marker`, the active dot elongates into a pill alongside the accent color, so which slide is current never rests on color alone (WCAG 1.4.1). High-contrast emits `marker` by default, and any algorithm can opt in via the `cues` knob.",
 	],
 	examples: [
 		{

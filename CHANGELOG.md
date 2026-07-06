@@ -7,6 +7,7 @@
 - **The scrollable `Code` block shows a focus ring too.** A code block whose lines run wider than the frame becomes keyboard-scrollable and paints a focus outline, the same treatment `Table` got, so arrow keys can pan it (WCAG 2.1.1 / 2.4.7); a `wrap` block soft-wraps instead and is never a scroll stop
 - **The scrollable `Table` region shows a focus ring.** A table wide or tall enough to scroll turns keyboard-focusable so arrow keys can pan it; it now paints a focus outline when focused, so a keyboard user can see where they've landed (WCAG 2.4.7). Before, the region took focus silently
 - **The non-color selection cue reaches `Swatch`.** When a theme sets `--selection-cue: marker` (a high-contrast or redundant-cues algorithm), a picked swatch keeps its accent ring and gains a second neutral outline around it, so selection reads by an added ring rather than the accent hue alone (WCAG 1.4.1). It joins `Tree`, `Tabs`, `Segmented`, and `Pagination`, which already honor the cue
+- **The non-color selection cue reaches `Carousel`.** Under the same `--selection-cue: marker`, the active pagination dot elongates into a pill beside its accent fill, so which slide is current reads by shape and not the accent hue alone (WCAG 1.4.1). A dot has no room for a check glyph, so it takes the shape-cue treatment `Pagination` uses; it rounds out the selection-bearing set alongside `Tree`, `Tabs`, `Segmented`, `Pagination`, and `Swatch`
 
 ### Image
 
