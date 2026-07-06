@@ -2,8 +2,10 @@
 
 ## v0.6.0: TBD
 
-### New component: Timeline
+### New components
 
+- **`Steps`**, a horizontal step indicator for a linear flow (checkout, onboarding, a multi-part form). It decorates a semantic `<ol>` of steps and splits them by a `current` index: everything before it is done (an accent-filled marker with a check), the step at it is current (an accent-outlined marker flagged with `aria-current="step"`), and everything after is upcoming (a muted, numbered marker), with a connector track that fills in behind the markers up to the current step
+  - state never rests on color alone: a done step shows a check glyph and the current step is outlined and emphasized, so progress reads for a color-deficient user (WCAG 1.4.1). Standalone like `Table`, shipped across `@xtyle/core/elements`, `@xtyle/svelte`, and `@xtyle/astro`
 - **`Timeline`**, a vertical activity feed. Wrap a semantic `<ol>` of `<li>` events and it decorates them: each item grows a themed dot on a connector rail that runs from one event to the next and stops at the last. It renders no markup of its own beyond the classes it adds, so the list stays the source of truth for order and content, and assistive tech hears a plain ordered list
   - inside an item a `<strong>` reads as the title, a `<time>` as the timestamp, and a `<p>` as the body (or the matching `xtyle-timeline__title` / `__meta` / `__body` classes), so a consumer writes ordinary semantic HTML and the dots, rail, and type hierarchy all draw from the derived register
   - standalone like `Table` (no runtime needed to render), shipped across `@xtyle/core/elements`, `@xtyle/svelte`, and `@xtyle/astro`

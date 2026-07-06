@@ -1,0 +1,32 @@
+---
+import Steps from "@xtyle/astro/Steps.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Checkout</Heading>
+		<Steps current={1}>
+			<ol>
+				<li>Cart</li>
+				<li>Shipping</li>
+				<li>Payment</li>
+				<li>Review</li>
+			</ol>
+		</Steps>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Nearly done</Heading>
+		<Steps current={3}>
+			<ol>
+				<li>Account</li>
+				<li>Profile</li>
+				<li>Preferences</li>
+				<li>Confirm</li>
+			</ol>
+		</Steps>
+	</Card>
+</Stack>
