@@ -1,0 +1,17 @@
+---
+interface Props {
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { class: extra, ...rest } = Astro.props;
+---
+
+<xtyle-empty class:list={["xtyle-empty", extra]} {...rest}>
+	<slot />
+</xtyle-empty>
+
+<script>
+	import "@xtyle/core/elements";
+</script>

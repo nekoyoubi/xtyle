@@ -38,6 +38,7 @@ export {
 	XtyleSteps,
 	XtyleRating,
 	XtyleMeter,
+	XtyleEmpty,
 	XtyleProgress,
 	XtyleSlider,
 	XtyleColorPicker,

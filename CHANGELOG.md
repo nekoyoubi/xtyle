@@ -4,6 +4,7 @@
 
 ### New components
 
+- **`Empty`**, a centered placeholder for a no-data state (no results, an empty inbox, a fresh list). It frames whatever you put in it: an icon in `.xtyle-empty__media` sits muted and enlarged at the top, the first heading reads as the title, a `<p>` as the muted body, and buttons in `.xtyle-empty__actions` line up beneath, all from the derived register. It renders no markup and adds no roles of its own, so the heading and the action keep their semantics
 - **`Meter`**, a scalar gauge with semantic zones, mirroring the native `<meter>` (a standing measurement) rather than `<progress>` (a task advancing). Give it `low` / `high` / `optimum` thresholds and the fill judges itself: success in the preferred region, a warning one region off, danger at the wrong extreme, so a 93%-full disk reads red with no per-value wiring. Without thresholds it is a plain accent gauge
   - it exposes `role="meter"` with `aria-valuenow` / `min` / `max`, and carries the reading in a text label (its own content is the no-JS fallback), so the judgment never rests on the fill color alone. Standalone, shipped across `@xtyle/core/elements`, `@xtyle/svelte`, and `@xtyle/astro`
 - **`Rating`**, a read-only star rating. It draws `max` stars and overlays a filled copy clipped to `value / max`, so a fractional score like 4.5 shows an exact half star instead of rounding. Sizes `sm` / `md` / `lg`; the filled stars take the accent and the empty ones a muted surface, both from the derived register

@@ -1,0 +1,29 @@
+---
+import Empty from "@xtyle/astro/Empty.astro";
+import Icon from "@xtyle/astro/Icon.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Empty>
+			<div class="xtyle-empty__media"><Icon name="search" /></div>
+			<h3>No results found</h3>
+			<p>Try adjusting your filters or searching for something else.</p>
+			<div class="xtyle-empty__actions">
+				<Button variant="subtle">Clear filters</Button>
+				<Button variant="solid">New search</Button>
+			</div>
+		</Empty>
+	</Card>
+
+	<Card>
+		<Empty>
+			<div class="xtyle-empty__media"><Icon name="check" /></div>
+			<h3>Inbox zero</h3>
+			<p>You're all caught up. Nothing needs your attention right now.</p>
+		</Empty>
+	</Card>
+</Stack>
