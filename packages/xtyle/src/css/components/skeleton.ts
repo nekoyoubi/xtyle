@@ -52,4 +52,7 @@ export const skeletonCss = `
 	width: var(--space-8);
 	height: var(--space-8);
 }
+@media (prefers-reduced-motion: reduce) {
+	.xtyle-skeleton { animation: none; }
+}
 `.trim();

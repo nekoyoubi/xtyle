@@ -33,4 +33,7 @@ ${toneRules}
 @keyframes xtyle-spinner-spin {
 	to { transform: rotate(360deg); }
 }
+@media (prefers-reduced-motion: reduce) {
+	.xtyle-spinner { animation: none; }
+}
 `.trim();
