@@ -37,6 +37,7 @@ export {
 	XtyleTimeline,
 	XtyleSteps,
 	XtyleRating,
+	XtyleMeter,
 	XtyleProgress,
 	XtyleSlider,
 	XtyleColorPicker,

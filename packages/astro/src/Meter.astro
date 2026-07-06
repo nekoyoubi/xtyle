@@ -1,0 +1,32 @@
+---
+interface Props {
+	value?: number;
+	max?: number;
+	low?: number;
+	high?: number;
+	optimum?: number;
+	unit?: string;
+	/** Label text and accessible name (also the no-JS fallback). */
+	label?: string;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { value = 0, max = 100, low, high, optimum, unit, label, class: extra, ...rest } = Astro.props;
+---
+
+<xtyle-meter
+	value={value}
+	max={max}
+	low={low}
+	high={high}
+	optimum={optimum}
+	unit={unit}
+	label={label}
+	class:list={["xtyle-meter", extra]}
+	{...rest}>{label ?? ""}</xtyle-meter>
+
+<script>
+	import "@xtyle/core/elements";
+</script>
