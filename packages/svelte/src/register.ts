@@ -34,6 +34,7 @@ export {
 	XtyleDialog,
 	XtyleToast,
 	XtyleTable,
+	XtyleTimeline,
 	XtyleProgress,
 	XtyleSlider,
 	XtyleColorPicker,

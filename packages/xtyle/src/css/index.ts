@@ -8,6 +8,7 @@ export { kbdCss } from "./components/kbd.js";
 export { iconCss } from "./components/icon.js";
 export { imageCss } from "./components/image.js";
 export { carouselCss } from "./components/carousel.js";
+export { timelineCss } from "./components/timeline.js";
 export { parallaxCss } from "./components/parallax.js";
 export { heroCss } from "./components/hero.js";
 export { barCss } from "./components/bar.js";

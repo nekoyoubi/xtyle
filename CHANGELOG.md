@@ -2,6 +2,12 @@
 
 ## v0.6.0: TBD
 
+### New component: Timeline
+
+- **`Timeline`**, a vertical activity feed. Wrap a semantic `<ol>` of `<li>` events and it decorates them: each item grows a themed dot on a connector rail that runs from one event to the next and stops at the last. It renders no markup of its own beyond the classes it adds, so the list stays the source of truth for order and content, and assistive tech hears a plain ordered list
+  - inside an item a `<strong>` reads as the title, a `<time>` as the timestamp, and a `<p>` as the body (or the matching `xtyle-timeline__title` / `__meta` / `__body` classes), so a consumer writes ordinary semantic HTML and the dots, rail, and type hierarchy all draw from the derived register
+  - standalone like `Table` (no runtime needed to render), shipped across `@xtyle/core/elements`, `@xtyle/svelte`, and `@xtyle/astro`
+
 ### Accessibility
 
 - **The scrollable `Code` block shows a focus ring too.** A code block whose lines run wider than the frame becomes keyboard-scrollable and paints a focus outline, the same treatment `Table` got, so arrow keys can pan it (WCAG 2.1.1 / 2.4.7); a `wrap` block soft-wraps instead and is never a scroll stop
