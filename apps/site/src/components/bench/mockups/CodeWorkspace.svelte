@@ -95,6 +95,7 @@ export const css = emitCss(theme);`,
 	.ide {
 		display: grid;
 		grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+		container-type: inline-size;
 		width: 100%;
 		min-height: 22rem;
 	}
