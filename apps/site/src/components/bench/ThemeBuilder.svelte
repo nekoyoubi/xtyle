@@ -14,6 +14,7 @@
 	import SettingsPanel from "./mockups/SettingsPanel.svelte";
 	import DashboardApp from "./mockups/DashboardApp.svelte";
 	import CodeWorkspace from "./mockups/CodeWorkspace.svelte";
+	import OrderStatus from "./mockups/OrderStatus.svelte";
 	import { AppShell, Badge, Button, Switch, Tabs, Toolbar } from "@xtyle/svelte";
 	import { loadHostedAlgorithms } from "./hosted.js";
 	import type { BenchState } from "./state.js";
@@ -533,6 +534,7 @@
 		{ value: "settings", label: "Settings" },
 		{ value: "dashboard", label: "Dashboard" },
 		{ value: "code", label: "Code Workspace" },
+		{ value: "order", label: "Order Status" },
 	];
 	let mockupTab = $state("email");
 
@@ -667,8 +669,10 @@
 										<SettingsPanel {register} />
 									{:else if scene === "dashboard"}
 										<DashboardApp {register} />
-									{:else}
+									{:else if scene === "code"}
 										<CodeWorkspace {register} />
+									{:else}
+										<OrderStatus {register} />
 									{/if}
 								</div>
 							{/snippet}
