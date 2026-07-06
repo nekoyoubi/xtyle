@@ -4,7 +4,7 @@ export const ratingCss = `
 	position: relative;
 	font-size: var(--text-lg);
 	line-height: 1;
-	color: var(--bg-3);
+	color: var(--fg-disabled);
 }
 .xtyle-rating__row {
 	display: inline-flex;

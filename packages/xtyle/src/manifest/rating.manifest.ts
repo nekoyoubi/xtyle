@@ -28,7 +28,7 @@ export const ratingManifest: ComponentManifest = {
 			name: "row",
 			description: "The base row of empty stars; sets the muted color and the overall size.",
 			selector: ".xtyle-rating__row",
-			tokens: ["--bg-3", "--text-lg"],
+			tokens: ["--fg-disabled", "--text-lg"],
 		},
 		{
 			name: "fill",
@@ -81,7 +81,7 @@ export const ratingManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
-	consumedTokens: ["--accent", "--bg-3", "--text-lg", "--text-sm", "--text-2xl"],
+	consumedTokens: ["--accent", "--fg-disabled", "--text-lg", "--text-sm", "--text-2xl"],
 	composition: [
 		"Put it beside a product title with the numeric score and review count for a summary row.",
 		"Use `size=\"sm\"` inside a dense list of results, `lg` for a hero or a single featured review.",
