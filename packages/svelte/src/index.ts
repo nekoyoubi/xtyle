@@ -35,9 +35,7 @@ export { default as Toast } from "./Toast.svelte";
 export { default as Table } from "./Table.svelte";
 export { default as Timeline } from "./Timeline.svelte";
 export { default as Steps } from "./Steps.svelte";
-export { default as Rating } from "./Rating.svelte";
-export { default as Meter } from "./Meter.svelte";
-export { default as Empty } from "./Empty.svelte";
+export { default as Rating } from "./Rating.svelte";export { default as Empty } from "./Empty.svelte";
 export { default as Progress } from "./Progress.svelte";
 export { default as Slider } from "./Slider.svelte";
 export { default as ColorPicker } from "./ColorPicker.svelte";
@@ -106,9 +104,7 @@ export {
 	XtyleTable,
 	XtyleTimeline,
 	XtyleSteps,
-	XtyleRating,
-	XtyleMeter,
-	XtyleEmpty,
+	XtyleRating,	XtyleEmpty,
 	XtyleProgress,
 	XtyleSlider,
 	XtyleColorPicker,

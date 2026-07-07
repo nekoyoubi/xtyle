@@ -19,7 +19,7 @@ export class XtyleProgress extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "colorize-value", "value-position", "meter", "aria-label"];
+		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "aria-label"];
 	}
 
 	get variant(): ProgressVariant {
@@ -84,6 +84,14 @@ export class XtyleProgress extends XtyleElement {
 	}
 	set valueFormat(value: ProgressValueFormat) {
 		this.setAttribute("value-format", value);
+	}
+
+	/** A unit appended to the `value` / `value-max` readout (e.g. `GB`); the `percent` format ignores it. */
+	get unit(): string {
+		return this.getAttribute("unit") ?? "";
+	}
+	set unit(value: string) {
+		this.setAttribute("unit", value);
 	}
 
 	get colorizeValue(): boolean {
@@ -172,6 +180,7 @@ export class XtyleProgress extends XtyleElement {
 			indeterminate: this.indeterminate,
 			showValue: this.showValue,
 			valueFormat: this.valueFormat,
+			unit: this.getAttribute("unit") ?? undefined,
 			colorizeValue: this.colorizeValue,
 			valuePosition: this.valuePosition,
 			pulse: this.effectivePulse(),

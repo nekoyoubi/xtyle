@@ -42,11 +42,12 @@
     const min = b.min ?? 0;
     const max = b.max ?? 100;
     const value = Math.min(Math.max(b.value ?? 0, min), max);
+    const unit = b.unit ?? "";
     switch (b.valueFormat ?? "percent") {
       case "value":
-        return `${value}`;
+        return `${value}${unit}`;
       case "value-max":
-        return `${value}/${max}`;
+        return `${value}/${max}${unit}`;
       default:
         return `${Math.round(fraction(b) * 100)}%`;
     }

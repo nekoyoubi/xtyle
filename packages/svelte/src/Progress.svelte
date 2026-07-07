@@ -17,6 +17,8 @@
 		showValue?: boolean;
 		/** How `showValue` reads: `percent` (`80%`), `value` (the raw number), or `value-max` (`80/100`). */
 		valueFormat?: "percent" | "value" | "value-max";
+		/** A unit appended to the `value` / `value-max` readout (e.g. `GB`); the `percent` format ignores it. */
+		unit?: string;
 		/** Where the `showValue` readout sits: after the bar (`end`) or laid over the fill (`inset`). */
 		valuePosition?: "end" | "inset";
 		/** Tint the `showValue` readout with the active tone. */
@@ -39,6 +41,7 @@
 		indeterminate = false,
 		showValue = false,
 		valueFormat = "percent",
+		unit,
 		valuePosition = "end",
 		colorizeValue = false,
 		meter = false,
@@ -59,6 +62,7 @@
 	indeterminate={indeterminate || undefined}
 	show-value={showValue || undefined}
 	value-format={valueFormat !== "percent" ? valueFormat : undefined}
+	unit={unit || undefined}
 	value-position={valuePosition !== "end" ? valuePosition : undefined}
 	colorize-value={colorizeValue || undefined}
 	meter={meter || undefined}

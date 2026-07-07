@@ -35,19 +35,19 @@ import { Progress } from "@xtyle/astro";
 
 <Progress variant="circular" indeterminate aria-label="Loading" />`;
 
-const meterHtmlExample = `<xtyle-progress meter value="910" max="1000" show-value colorize-value aria-label="System capacity">
+const meterHtmlExample = `<xtyle-progress meter value="910" max="1000" show-value value-format="value-max" unit=" GB" colorize-value aria-label="Disk usage">
 	<threshold below="75" tone="success"></threshold>
 	<threshold below="90" tone="warn"></threshold>
 	<threshold below="101" tone="danger" pulse="fast"></threshold>
 </xtyle-progress>`;
 
-const meterSvelteExample = `<Progress meter value={910} max={1000} showValue colorizeValue ariaLabel="System capacity">
+const meterSvelteExample = `<Progress meter value={910} max={1000} showValue valueFormat="value-max" unit=" GB" colorizeValue ariaLabel="Disk usage">
 	<threshold below="75" tone="success" />
 	<threshold below="90" tone="warn" />
 	<threshold below="101" tone="danger" pulse="fast" />
 </Progress>`;
 
-const meterAstroExample = `<Progress meter value={910} max={1000} showValue colorizeValue aria-label="System capacity">
+const meterAstroExample = `<Progress meter value={910} max={1000} showValue valueFormat="value-max" unit=" GB" colorizeValue aria-label="Disk usage">
 	<threshold below="75" tone="success" />
 	<threshold below="90" tone="warn" />
 	<threshold below="101" tone="danger" pulse="fast" />
@@ -60,6 +60,7 @@ export const progressManifest: ComponentManifest = {
 	summary: "A progress bar or capacity meter: a linear bar or circular ring with value thresholds that recolor and pulse.",
 	description:
 		"Progress shows how far along a task is, or how full a capacity is. The `variant` axis picks the shape (a horizontal `linear` bar or a circular `svg` ring) and the `tone` axis picks the color from the full roster (the six semantic roles, the accent variants, the twelve named hues). A determinate bar fills to `value` between `min` and `max`; an `indeterminate` mode animates a moving sweep when the amount of work is unknown. Declarative `<threshold below tone pulse>` children turn it into a self-coloring meter: each band names a percentage ceiling, and the active band (the first the current value falls under) overrides the tone and can `pulse` the fill (`slow` or `fast`) to flag a critical level, the pulse routed through motion tokens so the reduced-motion base rule stills it. Set `meter` to report `role=\"meter\"` (a measurement against a capacity, like disk used) instead of the default `role=\"progressbar\"` (a task advancing); either way it carries `aria-valuenow`/`aria-valuemin`/`aria-valuemax`. An optional inline readout (`show-value`) shows the percentage, the raw value, or `value/max` (`value-format`), sits at the end or inset over the bar (`value-position`), and can take the active tone (`colorize-value`).",
+	keywords: ["meter", "gauge", "capacity", "threshold", "disk", "battery", "usage", "quota", "score"],
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -154,6 +155,12 @@ export const progressManifest: ComponentManifest = {
 			description: "How `show-value` reads: `percent` (`80%`), `value` (the raw number), or `value-max` (`80/100`).",
 			bindings: ["html", "svelte", "astro"],
 			options: ["percent", "value", "value-max"],
+		},
+		{
+			name: "unit",
+			type: "string",
+			description: "A unit appended to the `value` / `value-max` readout (e.g. ` GB`); the `percent` format ignores it (the `%` is the unit).",
+			bindings: ["html", "svelte", "astro"],
 		},
 		{
 			name: "valuePosition",
@@ -289,7 +296,7 @@ export const progressManifest: ComponentManifest = {
 		{
 			id: "capacity-meter",
 			title: "A capacity meter with thresholds",
-			description: "Set `meter` for the measurement role and add `<threshold below tone pulse>` children: the bar greens under 75%, ambers past it, and reds and pulses once it crosses 90% full.",
+			description: "Set `meter` for the measurement role and add `<threshold below tone pulse>` children: the bar greens under 75%, ambers past it, and reds and pulses once it crosses 90% full, the `value/max` readout carrying its `unit`. This is the gauge use once served by a separate Meter.",
 			source: { html: meterHtmlExample, svelte: meterSvelteExample, astro: meterAstroExample },
 		},
 	],

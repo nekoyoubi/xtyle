@@ -109,7 +109,7 @@ const TONE_GROUPS = [
 							<Text as="span" size="sm" weight="medium">{drive.name}</Text>
 							<Text as="span" size="xs" tone="muted">{drive.free}</Text>
 						</Cluster>
-						<Progress meter value={drive.used} max={drive.total} aria-label={`${drive.name} capacity`} class="demo-progress-bar">
+						<Progress meter value={drive.used} max={drive.total} showValue valueFormat="value-max" unit=" GB" colorizeValue aria-label={`${drive.name} capacity`} class="demo-progress-bar">
 							<threshold below="75" tone="success" />
 							<threshold below="90" tone="warn" />
 							<threshold below="101" tone="danger" pulse="fast" />

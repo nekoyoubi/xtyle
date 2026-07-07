@@ -64,6 +64,12 @@ export interface ComponentManifest {
 	since?: string;
 	summary: string;
 	description: string;
+	/** Discovery aliases: capability words a searcher (human or agent) might reach for that aren't the
+	 * component's own name, so `Progress` surfaces on "meter", "gauge", "capacity". Kept structured (not
+	 * buried in prose) so `xtyle_components` and the reference site can search them and overlap is visible. */
+	keywords?: string[];
+	/** Related component ids to cross-reference, so an overlapping capability is one hop away instead of a rediscovery. */
+	seeAlso?: string[];
 	bindings: Binding[];
 	anatomy: AnatomyPart[];
 	props: PropDef[];
