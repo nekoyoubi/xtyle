@@ -39,10 +39,11 @@ export const SERIES_TOKENS: readonly string[] = [
 	"--orange",
 	"--yellow",
 	"--green",
-	"--cyan",
 	"--blue",
 	"--purple",
+	"--brown",
 	"--pink",
+	"--cyan",
 ];
 
 /**
@@ -80,7 +81,7 @@ export function statusToneColor(tone: string, register: TokenRegister): string |
 const CATEGORICAL: Record<"accents" | "skittles" | "statuses", { tokens: string[]; ordered: boolean }> = {
 	accents: { tokens: ["--accent", "--accent-2", "--accent-3", "--accent-4", "--neutral"], ordered: true },
 	skittles: {
-		tokens: ["--red", "--orange", "--yellow", "--green", "--cyan", "--blue", "--purple", "--pink"],
+		tokens: ["--red", "--orange", "--yellow", "--green", "--blue", "--purple", "--brown", "--pink", "--cyan"],
 		ordered: false,
 	},
 	statuses: {

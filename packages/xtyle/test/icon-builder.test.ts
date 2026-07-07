@@ -223,12 +223,19 @@ describe("icon-builder", () => {
 		expect(svg).toMatch(/fill="#[0-9a-fA-F]{3,8}"/);
 	});
 
-	it("maps the color ladder: 0 transparent, 1 fg, 2 bg, 3+ series", () => {
-		expect(colorSlot(0)).toBe("transparent");
-		expect(colorSlot(1)).toBe("--fg-0");
-		expect(colorSlot(2)).toBe("--bg-0");
-		expect(colorSlot(3)).toBe("series:0");
-		expect(colorSlot(5)).toBe("series:2");
+	it("wraps a palette nibble as a deferred slot spec the ladder resolves at compose time", () => {
+		expect(colorSlot(0)).toBe("slot:0");
+		expect(colorSlot(1)).toBe("slot:1");
+		expect(colorSlot(11)).toBe("slot:11");
+		expect(colorSlot(15)).toBe("slot:15");
+		const bake = (slot: number) =>
+			composeIconThemed({ layers: [{ primitive: "shape-square", fill: colorSlot(slot) }] }, { register, scheme: "accents" });
+		// nibbles 1–9 are the nine series colors: they bake to concrete hex under the active scheme
+		expect(bake(1)).toMatch(/fill="#[0-9a-fA-F]{3,8}"/);
+		expect(bake(1)).not.toContain("slot:");
+		// `b` is --bg-0 and `f` is --fg-0: token fills stay live as custom properties
+		expect(bake(11)).toContain('fill="var(--bg-0)"');
+		expect(bake(15)).toContain('fill="var(--fg-0)"');
 	});
 });
 
@@ -244,8 +251,8 @@ describe("parseIconName", () => {
 		expect(parsed?.label).toBe("dice-3");
 		expect(parsed?.composition.label).toBe("dice 3");
 		expect(parsed?.composition.layers).toHaveLength(4);
-		// the face is the first scheme color; keyword resolves to the library name
-		expect(parsed?.composition.layers[0]).toMatchObject({ primitive: "shape-square", fill: "series:0" });
+		// the face color is the `c3` nibble as a deferred slot spec; keyword resolves to the library name
+		expect(parsed?.composition.layers[0]).toMatchObject({ primitive: "shape-square", fill: "slot:3" });
 		// a pip sized to 10% and centered by default (p5)
 		expect(parsed?.composition.layers[2]).toMatchObject({ primitive: "shape-circle", scale: 0.1 });
 		expect(parsed?.composition.layers[2].x ?? 0).toBe(0);
@@ -254,7 +261,7 @@ describe("parseIconName", () => {
 	it("reads a `d…` drop shadow from the `---` finish and ignores lock flags there", () => {
 		const shadow = parseIconName("crest--shield-c3---d2p8s3t80")?.composition.dropShadow;
 		expect(shadow).toBeDefined();
-		expect(shadow?.color).toBe("--bg-0");
+		expect(shadow?.color).toBe("slot:2");
 		expect(shadow?.dx).toBeCloseTo(0);
 		expect(shadow?.dy).toBeCloseTo(3.3);
 		expect(shadow?.blur).toBeCloseTo(2);
@@ -317,8 +324,8 @@ describe("parseIconName", () => {
 
 	it("parses the compound outline token without eating the standalone fill", () => {
 		const layer = parseObjectLayer("square-c3-o1c2");
-		expect(layer.fill).toBe("series:0");
-		expect(layer.outline).toEqual({ size: 1, color: "--bg-0" });
+		expect(layer.fill).toBe("slot:3");
+		expect(layer.outline).toEqual({ size: 1, color: "slot:2" });
 	});
 
 	it("reads flips and opacity", () => {

@@ -37,30 +37,30 @@ import Icon from "@xtyle/astro/Icon.astro";
 <Icon name="check" />`;
 
 const genHtmlExample = `<!-- a name carrying a spec is composed, not looked up -->
-<xtyle-icon name="crest--shield-c3--star-s45-c1" size="xl"></xtyle-icon>
+<xtyle-icon name="crest--shield-c1--star-s45-cf" size="xl"></xtyle-icon>
 
 <!-- a functional glyph rides as a charge by its bare name -->
-<xtyle-icon name="check-badge--circle-c5--check-s55-c1" size="xl"></xtyle-icon>
+<xtyle-icon name="check-badge--circle-c3--check-s55-cf" size="xl"></xtyle-icon>
 
 <!-- a negative-space die: three pips knocked out of a rounded face -->
-<xtyle-icon name="dice-3--square3-c3--dot-p7-s14-ko--dot-s14-ko--dot-p3-s14-ko" size="xl"></xtyle-icon>
+<xtyle-icon name="dice-3--square3-c1--dot-p7-s14-ko--dot-s14-ko--dot-p3-s14-ko" size="xl"></xtyle-icon>
 
 <!-- the same spec re-skinned by scheme -->
-<xtyle-icon name="chip--hex-c3--dot-s30-c4" colors="statuses" size="xl"></xtyle-icon>`;
+<xtyle-icon name="chip--hex-c1--dot-s30-c2" colors="statuses" size="xl"></xtyle-icon>`;
 
 const genSvelteExample = `<script lang="ts">
 	import { Icon } from "@xtyle/svelte";
 </script>
 
-<Icon name="crest--shield-c3--star-s45-c1" size="xl" />
-<Icon name="chip--hex-c3--dot-s30-c4" colors="statuses" size="xl" />`;
+<Icon name="crest--shield-c1--star-s45-cf" size="xl" />
+<Icon name="chip--hex-c1--dot-s30-c2" colors="statuses" size="xl" />`;
 
 const genAstroExample = `---
 import Icon from "@xtyle/astro/Icon.astro";
 ---
 
-<Icon name="crest--shield-c3--star-s45-c1" size="xl" />
-<Icon name="chip--hex-c3--dot-s30-c4" colors="statuses" size="xl" />`;
+<Icon name="crest--shield-c1--star-s45-cf" size="xl" />
+<Icon name="chip--hex-c1--dot-s30-c2" colors="statuses" size="xl" />`;
 
 const toneAstroExample = `---
 import Icon from "@xtyle/astro/Icon.astro";
@@ -91,7 +91,7 @@ export const iconManifest: ComponentManifest = {
 			name: "name",
 			type: "IconName | string",
 			description:
-				"A functional-set glyph name, or a generated-mark spec (a name carrying a `--` grammar, e.g. `crest--shield-c3--star-s45-c1`). A plain name that is neither renders a visible placeholder box.",
+				"A functional-set glyph name, or a generated-mark spec (a name carrying a `--` grammar, e.g. `crest--shield-c1--star-s45-cf`). A plain name that is neither renders a visible placeholder box.",
 			bindings: ["html", "svelte", "astro"],
 			options: [...ICON_NAMES],
 		},

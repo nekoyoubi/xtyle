@@ -49,7 +49,7 @@ A primitive keyword followed by any number of flags, **in any order** (only the 
 positional):
 
 ```
-{primitive}  p{1-9}  x{±%}  y{±%}  s{%}  r{±deg}  c{N}  o{1-3}[c{N}]  a{%}  fh  fv  ko  i
+{primitive}  p{1-9}  x{±%}  y{±%}  s{%}  r{±deg}  c{0-f}  o{1-3}[c{0-f}]  a{%}  fh  fv  ko  i
 ```
 
 | flag | meaning | default |
@@ -58,8 +58,8 @@ positional):
 | `x{±%}` `y{±%}` | fine offset from the cell anchor, % of the grid | `0` |
 | `s{%}` | size, % of the full 24-unit grid | `100` |
 | `r{±deg}` | rotation about the object's own center | `0` |
-| `c{N}` | fill color (see the ladder) | `currentColor` |
-| `o{1-3}[c{N}]` | outline: `1`/`2`/`3` = thin/medium/thick stroke, optional trailing `c{N}` stroke color | no outline; stroke `currentColor` |
+| `c{0-f}` | fill color (see the palette) | `currentColor` |
+| `o{1-3}[c{0-f}]` | outline: `1`/`2`/`3` = thin/medium/thick stroke, optional trailing `c{0-f}` stroke color | no outline; stroke `currentColor` |
 | `a{%}` | opacity | `100` |
 | `fh` / `fv` | flip horizontal / vertical | none |
 | `ko` | knockout (subtract this shape from the art beneath it; see below) | paint |
@@ -71,23 +71,26 @@ Primitive keywords are single tokens (`square`, `circle`, `triangle`, `hex`, `di
 `r90`). A trailing index selects a variant where the library ships one: `square` is a sharp square,
 `square1` / `square2` / `square3` its small / medium / large rounded corners. The single-token
 functional glyphs are reachable as symbols by their bare name too (`check`, `close`, `search`,
-`warning`, … → `symbol-check`, …), so a check badge is `badge--circle-c4--check-s55-c1`. Multi-token
+`warning`, … → `symbol-check`, …), so a check badge is `badge--circle-c2--check-s55-cf`. Multi-token
 glyph names (`chevron-right`) have no keyword, since a keyword is one token by rule; they stay
 glyph-only.
 
-### color ladder
+### color palette
 
-`c{N}` is one ladder; the `colors="…"` attribute (a series scheme: `accents`, `skittles`,
-`statuses`, `thermal`, `status`) picks what the top of it draws from.
+`c{n}` takes one **hex nibble** `0`–`f` into a 16-slot palette. Slots `1`–`9` are the nine **series
+colors**; the `colors="…"` attribute (a scheme: `accents`, `skittles`, `statuses`, `thermal`,
+`status`) picks what they draw from — `skittles` fills all nine with the crayon box, a smaller scheme
+cycles its own colors across the nine slots. The high nibbles are theme chrome.
 
 | slot | resolves to |
 |------|-------------|
 | `c0` | transparent |
-| `c1` | `--fg-0` |
-| `c2` | `--bg-0` |
-| `c3` | scheme color 1 |
-| `c4` | scheme color 2 |
-| `cN` (N≥3) | scheme color (N − 2) |
+| `c1`–`c9` | series colors 1–9 (drawn from `colors`) |
+| `ca` | `currentColor` — the active ink |
+| `cb` | `--bg-0` — background |
+| `cc` | transparent |
+| `cd` / `ce` | reserved (inert) |
+| `cf` | `--fg-0` — foreground |
 
 An object with no `c` inherits `currentColor`, so an un-colored spec renders like a flat
 functional glyph and tints with surrounding text.
@@ -103,9 +106,11 @@ composite:
 
 | flag | meaning | default |
 |------|---------|---------|
-| `d{c}p{1-9}s{1-5}t{%}` | **drop shadow**: a colored, offset, blurred copy cast behind the mark. `d{c}` shadow color (the ladder), `p{1-9}` cast direction (keypad; `5` = straight down/no offset), `s{1-5}` cast distance, `t{%}` softness (blur). Sub-params optional, default `d1p8s2t50`. | no shadow |
+| `d{c}p{1-9}s{1-5}t{%}` | **drop shadow**: a colored, offset, blurred copy cast behind the mark. `d{c}` shadow color (a palette nibble), `p{1-9}` cast direction (keypad; `5` = straight down/no offset), `s{1-5}` cast distance, `t{%}` softness (blur). Sub-params optional, default `dfp8s2t50`. | no shadow |
+| `pc{n}-{hex}` | **palette override**: repaint one slot for this mark. `pc3-ff00ff` forces slot 3 to magenta. | none |
+| `pc-{hex}` | **silhouette**: force every painting slot to one color (transparent/reserved slots stay clear). `pc-424242` flattens the whole mark to one grey. | none |
 
-A future whole-composite modifier (`mono` collapse to one color, etc.) slots in the same way.
+A future whole-composite modifier slots in the same way.
 
 **Lock flags** (`l{index}{codes}`) are **authoring metadata the renderer ignores**: they pin an
 object's props against the icon builder's Randomize, so a *template* name carries its own re-roll
@@ -151,16 +156,16 @@ Objects paint **back-to-front**. Two ways to make emptiness:
 
 ```
 search                                                              a known functional glyph
-dice-3--square3-c3--square-s80-ko--dot-p7-s10--dot-s10--dot-p3-s10   rounded face (square3),
+dice-3--square3-c1--square-s80-ko--dot-p7-s10--dot-s10--dot-p3-s10   rounded face (square3),
                                                                     recessed window, solid pips on top
-dice-3--square3-c3--dot-p7-s10-ko--dot-s10-ko--dot-p3-s10-ko        negative-space pips
-badge--hex-c4--star-s55-c1--circle-i-ko                            a hex badge clipped to a circle
-badge--circle-c4--star-s55-c1                                          a filled circle with a
+dice-3--square3-c1--dot-p7-s10-ko--dot-s10-ko--dot-p3-s10-ko        negative-space pips
+badge--hex-c2--star-s55-cf--circle-i-ko                            a hex badge clipped to a circle
+badge--circle-c2--star-s55-cf                                          a filled circle with a
                                                                        centered fg star
-crest--shield-c3-o1--star-s45-c1---l1o-l2*                          a re-rollable template: layer 1's
+crest--shield-c1-o1--star-s45-cf---l1o-l2*                          a re-rollable template: layer 1's
                                                                     outline and all of layer 2 hold
                                                                     while the builder randomizes the rest
-badge--circle-c4--bolt-s52-c2---d1p8s3t60                            a bolt badge lifted off the page by
+badge--circle-c2--bolt-s52-cb---dfp8s3t60                            a bolt badge lifted off the page by
                                                                     a soft shadow cast down and behind
 ```
 
