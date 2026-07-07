@@ -69,6 +69,8 @@ export const sparklineManifest: ComponentManifest = {
 	name: "Sparkline",
 	since: "0.3.0",
 	category: "metrics",
+	keywords: ["mini chart", "trend line", "inline chart", "time series", "micro chart"],
+	seeAlso: ["stat", "bar", "heatmap"],
 	summary: "A tiny, word-sized trend line, area, or bar chart, single-tone and axis-free, for inline use or a live time-series.",
 	description:
 		"Sparkline draws a single series of numbers as a small, axis-free SVG that reads as a trend at a glance, sized to sit inline in a sentence, a table cell, or beside a `Stat`. Three shapes: a `line`, a filled `area`, or a mini `bar` run. Feed it evenly-spaced `values`, or switch to `points` (timestamped samples) for a real time-series: they map onto a sliding `window` (or an explicit `domain`), so irregular samples sit at their true position and slide left over real time. Add `step` to hold each value for an on/off signal. It takes one `tone` from the theme roster (any semantic role or named hue) and marks the latest point with an end dot. It's interactive: sweeping across it floats a marker and the value at the nearest point. Size it with the `--spark-width` and `--spark-height` custom properties; give it a `label` for an accessible name. Auto-ranged from the data, or pin `min` / `max` to share a baseline across a column of sparklines. An empty series shows a muted `No data` label instead of a blank box.",

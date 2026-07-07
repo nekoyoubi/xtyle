@@ -314,8 +314,12 @@ export function iconClass(opts: { size?: string; tone?: string | null; spin?: bo
 }
 
 function resolveColor(spec: string | undefined, opts: ComposeIconOptions): string {
-	// A `---pc-{hex}` silhouette flattens the implicit ink (no fill / `currentColor`) too, not just slots.
-	if (!spec || spec === "currentColor") return opts.palette?.["*"] ?? "currentColor";
+	// A `---pc-…` silhouette flattens the implicit ink (no fill / `currentColor`) too, not just slots;
+	// resolve the override through the same path so a token or nibble silhouette works, not only a hex.
+	if (!spec || spec === "currentColor") {
+		const star = opts.palette?.["*"];
+		return star && star !== "currentColor" ? resolveColor(star, opts) : "currentColor";
+	}
 	if (spec.startsWith("slot:")) {
 		return resolveColor(resolveSlot(Number(spec.slice(5)), opts.palette), opts);
 	}
@@ -568,14 +572,33 @@ function parseDropShadow(token: string): IconDropShadow | null {
 	};
 }
 
-const PC_OVERRIDE = /pc([0-9a-f])?-([0-9a-f]{3,8})/g;
+const PC_OVERRIDE = /pc([0-9a-f])?-([0-9a-z]+)/g;
+
+/** Token-name aliases for a `---pc` override: bare `fg`/`bg` mean the base ink / base surface. */
+const PC_TOKEN_ALIAS: Record<string, string> = { fg: "fg-0", bg: "bg-0" };
+
+/**
+ * Resolve a `---pc` override value to a color spec that flows through `resolveColor`. Three shapes, so an
+ * override can stay theme-reactive instead of baking a literal color: a **hex** (`3`/`4`/`6`/`8` digits)
+ * is a fixed color; a single **nibble** (`0`–`f`) borrows that palette slot's canonical color (a series
+ * color or a token, so it tracks the theme); a **token name** (`accent`, `success`, a named hue, or the
+ * `fg`/`bg` aliases) resolves to `--{token}` off the live register. Returns null for an unparseable value.
+ * Hyphenated tokens (`accent-2`, `fg-1`) can't ride the `-`-delimited finish; reach them with a nibble or hex.
+ */
+function pcOverrideSpec(raw: string): string | null {
+	if (/^[0-9a-f]$/.test(raw)) return SLOT_TABLE[parseInt(raw, 16)] ?? null;
+	if (/^(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(raw)) return `#${raw}`;
+	if (/^[a-z][a-z0-9]*$/.test(raw)) return `--${PC_TOKEN_ALIAS[raw] ?? raw}`;
+	return null;
+}
 
 /**
  * The `---` finish grammar: whole-icon metadata after the last object. Three kinds of token coexist and
  * each reader skips the others' — render finishes the mark acts on (`d…` drop shadow, `pc…` palette
  * override), and `l…` lock flags that are authoring metadata for the builder's Randomize, invisible to
- * the rendered mark. A `pc{nibble}-{hex}` repaints that one palette slot; a bare `pc-{hex}` silhouettes
- * every painting slot to one color (the transparent/reserved slots stay clear).
+ * the rendered mark. A `pc{nibble}-{value}` repaints that one palette slot; a bare `pc-{value}` silhouettes
+ * every painting slot to one color (the transparent/reserved slots stay clear). The value is a hex color, a
+ * palette nibble (`0`–`f`, theme-reactive), or a token name (`accent`, `success`, a hue, `fg`/`bg`).
  */
 function parseFinish(segment: string): Partial<IconComposition> {
 	const out: Partial<IconComposition> = {};
@@ -583,9 +606,11 @@ function parseFinish(segment: string): Partial<IconComposition> {
 	PC_OVERRIDE.lastIndex = 0;
 	let pc: RegExpExecArray | null;
 	while ((pc = PC_OVERRIDE.exec(segment))) {
-		const hex = `#${pc[2]}`;
-		if (pc[1] != null) palette[String(parseInt(pc[1], 16))] = hex;
-		else palette["*"] = hex;
+		const raw = pc[2];
+		const spec = raw == null ? null : pcOverrideSpec(raw);
+		if (spec == null) continue;
+		if (pc[1] != null) palette[String(parseInt(pc[1], 16))] = spec;
+		else palette["*"] = spec;
 	}
 	for (const token of segment.replace(PC_OVERRIDE, "").split("-")) {
 		if (token.startsWith("d")) {

@@ -40,6 +40,8 @@ export const radioManifest: ComponentManifest = {
 	id: "radio",
 	name: "Radio",
 	category: "control",
+	keywords: ["radio group", "single choice", "option", "choice"],
+	seeAlso: ["checkbox", "segmented", "select"],
 	summary: "A single-choice input: a styled native radio plus a group that manages roving focus and arrow-key navigation.",
 	description:
 		"Radio is a styled native `<input type=\"radio\">`: the real input drives state and keyboard semantics while a custom indicator paints the selected dot in any of the six semantic tones. RadioGroup wraps a set of radios in a `role=\"radiogroup\"`, lays them out vertically or horizontally, and owns the WAI-ARIA roving-tabindex pattern: the group is a single Tab stop and arrow keys move selection between options, wrapping at the ends. Each radio carries its own label (via the `label` attribute or default-slot text), an invalid state, and a disabled state; the group can disable as a whole. State lives on the native input, so form participation and submission come for free.",

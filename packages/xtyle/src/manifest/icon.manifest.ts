@@ -75,6 +75,8 @@ export const iconManifest: ComponentManifest = {
 	name: "Icon",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["glyph", "symbol", "svg", "pictogram", "mark"],
+	seeAlso: ["swatch", "avatar", "rating"],
 	summary: "A functional glyph, or a mark generated from a name, drawn in the current text color.",
 	description:
 		"Icon renders one glyph from a small functional set (chevrons, arrows, close, check, the status marks, a spinner, the menu dots, and the media-transport family: play, pause, stop, skip-forward, skip-back) as inline SVG. It carries no color of its own: the glyph is drawn in `currentColor`, so it inherits the text color around it and matches the derived theme with nothing to wire. It sizes off the surrounding type by default, so an icon set beside a word lines up with it; `size` steps it in fixed `em` for a standalone glyph. An optional `tone` tints it to a semantic role or named hue, `spin` turns it into a loading affordance, and a `label` promotes it from decorative to a named image for assistive tech. Beyond the lookup, a `name` can carry a spec: a terse grammar (`shield--star-s45-c1`) the engine parses into a layered mark and composes on the fly, placing primitives on a grid, sizing, rotating, outlining, or knocking them out, and coloring them from the theme's own series via `colors` so a generated mark recolors with the theme. Lookup for the common glyph, generation for everything else, one element for both.",

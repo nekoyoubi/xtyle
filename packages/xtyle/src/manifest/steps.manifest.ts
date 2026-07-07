@@ -40,6 +40,8 @@ export const stepsManifest: ComponentManifest = {
 	name: "Steps",
 	since: "0.6.0",
 	category: "navigation",
+	keywords: ["stepper", "wizard", "progress steps", "checkout", "onboarding", "flow"],
+	seeAlso: ["tabs", "breadcrumb", "progress", "timeline"],
 	summary: "A horizontal step indicator for a linear flow: done, current, and upcoming at a glance.",
 	description:
 		"Steps shows where a user is in a linear process: a checkout, an onboarding wizard, a multi-part form. It decorates a semantic ordered list of `<li>` steps and splits them by the `current` index: everything before it is done (a filled marker with a check), the one at it is current (an outlined marker, flagged with `aria-current`), and everything after is upcoming (a muted, numbered marker). A connector track fills in behind the markers up to the current step. It renders no markup of its own beyond the classes and the `aria-current` it sets, so the ordered list stays the source of truth and screen readers hear the steps in order. Standalone like `Table` and `Timeline`, it needs no runtime, only the derived register the markers and track draw from.",

@@ -61,6 +61,8 @@ export const panelManifest: ComponentManifest = {
 	id: "panel",
 	name: "Panel",
 	category: "layout",
+	keywords: ["pane", "collapsible", "titled region", "section", "card"],
+	seeAlso: ["card", "accordion", "dock"],
 	summary: "A titled content region: a header with a configurable heading and actions, a body, an optional footer, and an optional collapsible or scrollable form.",
 	description:
 		"Panel frames a labelled section of content. Its header carries a title (rendered at a configurable heading `level` for a correct document outline), an actions slot pushed to the trailing edge by a spacer, and the body it labels via `aria-labelledby`. The `default` variant is a static `<section>`; the `collapsible` variant is a native `<details>`/`<summary>` disclosure that needs no JavaScript in markup. The custom element drives it with `aria-expanded`. A `footer` slot adds a quiet trailing row, and the `scroll` flag turns the body into a focusable, keyboard-scrollable region capped at a fixed height.",

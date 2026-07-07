@@ -46,6 +46,8 @@ export const textManifest: ComponentManifest = {
 	id: "text",
 	name: "Text",
 	category: "content",
+	keywords: ["paragraph", "body text", "copy", "prose", "span", "typography"],
+	seeAlso: ["heading", "eyebrow", "link"],
 	summary: "A body-text primitive: paragraph or inline span across four sizes, four weights, three leadings, and four tones.",
 	description:
 		"Text is the primitive for running copy. It renders a block `<p>` by default or an inline `<span>` via the `as` prop, then tunes appearance along four independent axes: `size` (xs, sm, body, lg), `weight` (normal, medium, semibold, bold), `leading` (tight, snug, loose), and `tone`. A `mono` flag swaps the family to the monospace stack for inline code and tabular figures. Every axis maps to a design token, so a paragraph picks up the active theme's type scale and ink ladder without any local color: the `default`/`muted`/`subtle` emphasis tones read as `--fg-0`/`--fg-2`/`--fg-3`, and the full color roster (every semantic role, accent variant, or named hue) paints the copy in that tone's on-surface ink, derived to stay legible against the page.",

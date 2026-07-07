@@ -54,6 +54,8 @@ export const carouselManifest: ComponentManifest = {
 	name: "Carousel",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["slideshow", "gallery", "slides", "swiper", "scroll snap", "slider"],
+	seeAlso: ["image", "hero", "tabs"],
 	summary: "A scroll-snap track of slides with prev/next controls, dots, keyboard, and opt-in autoplay.",
 	description:
 		"Carousel lays its slotted children out as a horizontal scroll-snap track: each child is a slide, and the browser's own scrolling does the paging, so the track is swipeable and keyboard-scrollable with no JavaScript at all. When the runtime is present it grows a control bar, prev and next buttons (drawn with the chevron icons), a row of pagination dots that track and drive the active slide, and arrow-key and Home/End navigation, all wired over the same native scroll. An opt-in `autoplay` advances the track on an `interval`, pausing on hover and focus and standing still entirely under `prefers-reduced-motion`; `loop` wraps the ends. It is content-agnostic: the slides can be `Image`s, `Card`s, or any markup, and it exposes itself as a labelled carousel region with each slide named for assistive tech.",

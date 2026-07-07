@@ -85,6 +85,8 @@ export const cardManifest: ComponentManifest = {
 	id: "card",
 	name: "Card",
 	category: "layout",
+	keywords: ["surface", "container", "tile", "box", "panel"],
+	seeAlso: ["card-link", "panel", "section"],
 	summary: "A surface container that groups related content, with optional header and footer regions.",
 	description:
 		"Card is the workhorse surface: a bordered, elevated panel that frames related content as one unit. It lays its three regions (header, body, footer) out in a column with consistent spacing; the header and footer are real light-DOM parts (`.xtyle-card__header` / `.xtyle-card__footer`), so the same structure renders identically across every binding. An `overlay` variant swaps the surface for the translucent treatment used inside popovers and menus; a `compact` size tightens the padding; an `interactive` variant adds a hover elevation lift plus a focus-within ring for cards that act as a single clickable target. That last one is presentational only: it styles the surface but adds no behavior, so the consumer wraps the clickable content in a real `<button>` or `<a>` for keyboard and screen-reader semantics.",

@@ -45,6 +45,8 @@ export const timelineManifest: ComponentManifest = {
 	name: "Timeline",
 	since: "0.6.0",
 	category: "content",
+	keywords: ["activity feed", "history", "log", "event list", "changelog", "feed"],
+	seeAlso: ["steps", "tree", "stat"],
 	summary: "A vertical activity feed: an ordered list drawn as a connected rail of dots.",
 	description:
 		"Timeline turns a semantic ordered list into a vertical activity feed. It wraps an `<ol>` of `<li>` events and decorates them: each item grows a themed dot on a connector rail that runs from one event to the next and stops at the last. It renders no markup of its own beyond the classes it adds, so the list stays the source of truth for order and content, and screen readers hear a plain ordered list. Inside an item, a `<strong>` reads as the event title, a `<time>` as its timestamp, and a `<p>` as the body; the same styling is available through `xtyle-timeline__title` / `__meta` / `__body` classes if the markup can't use those elements. Being standalone (like `Table`), it needs no runtime to render, only the derived token register the rail and dots draw from.",

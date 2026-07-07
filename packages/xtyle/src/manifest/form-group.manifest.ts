@@ -53,6 +53,8 @@ export const formGroupManifest: ComponentManifest = {
 	id: "form-group",
 	name: "FormGroup",
 	category: "form",
+	keywords: ["label", "field wrapper", "form field", "helper text", "error text", "validation"],
+	seeAlso: ["field", "textarea", "checkbox", "radio"],
 	summary: "A label / description / error scaffold that wraps any slotted control and wires the accessibility plumbing.",
 	description:
 		"FormGroup is the presentational scaffolding around a form control you bring yourself: a Select, Textarea, Checkbox, Radio, or a bare native input. It renders the `label`, an optional `description`, and an `error` region, and wires the accessibility plumbing: it associates the label with the slotted control, builds `aria-describedby` from whichever of the description and error are showing, and reflects `invalid` / `required` onto the control as `aria-invalid` / `aria-required`. Unlike Field, it owns no input of its own; it is the reusable wrapper that gives every other control the same labelled, described, error-aware shell. Two variants (default, invalid) and the shared three-step size scale keep it in lockstep with the rest of the form family.",

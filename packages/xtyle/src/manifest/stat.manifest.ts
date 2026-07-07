@@ -45,6 +45,8 @@ export const statManifest: ComponentManifest = {
 	id: "stat",
 	name: "Stat",
 	category: "metrics",
+	keywords: ["metric", "kpi", "number", "figure", "trend", "delta", "big number"],
+	seeAlso: ["sparkline", "bar", "badge"],
 	summary: "A single metric: a prominent value with its label, optional trend delta, and caption.",
 	description:
 		"Stat presents one figure at a glance: a large `value` (the default slot) under a small uppercase `label`, with an optional `delta` carrying a `trend` (up / down / flat) and an optional `caption` for context. The value and delta render in tabular figures so columns of stats align digit-for-digit. `trend` picks the delta's directional arrow; a separate `sentiment` (positive / negative / neutral) picks its color and defaults to the trend's own reading (up→positive/green, down→negative/red, flat→neutral). Splitting the axes lets an up-is-bad metric (a rising error rate) paint red on an up-arrow, or a sentiment-neutral metric show a direction in a muted tint, while the color is always paired with the arrow so meaning never rides on color alone. Pure presentation: compose several in a `Grid` or `Cluster` for a dashboard strip, or drop one into a `Card` header.",

@@ -56,6 +56,8 @@ export const numberInputManifest: ComponentManifest = {
 	id: "number-input",
 	name: "Number Input",
 	category: "form",
+	keywords: ["stepper", "spinner input", "numeric field", "quantity", "increment", "counter"],
+	seeAlso: ["field", "slider"],
 	summary: "A numeric field with stepper buttons, bounds, and step snapping, driven by pointer or keyboard.",
 	description:
 		"Number Input edits a single number. A `role=\"spinbutton\"` text field sits between decrease and increase buttons; the buttons, the up/down arrow keys, and direct typing all change the value, which snaps to `step` and clamps to `[min, max]` on commit. It is form-associated; give it a `name` and its value submits with the form. It accepts decimals (e.g. a `0.01` step for currency). Set `step=\"any\"` for a free-form field: typed values commit verbatim with no grid snap and no precision cap (a graph literal, a coordinate, a scientific value), while the steppers fall back to a whole-number nudge; with no `min`/`max` the value is unbounded, exactly the native `<input type=\"number\" step=\"any\">` contract. A second granularity rides alongside `step`: holding the `modifier` (Shift by default) on a click or arrow applies `altStep`, ten times `step` out of the box, while `PageUp`/`PageDown` always jump by it, and `altDefault` flips which one is primary. Out-of-range typing reverts on commit, and the stepper buttons disable at the bounds. Three sizes: `sm`, the default `md`, and `lg`.",

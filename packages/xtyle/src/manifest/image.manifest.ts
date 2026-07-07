@@ -63,6 +63,8 @@ export const imageManifest: ComponentManifest = {
 	name: "Image",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["picture", "photo", "img", "figure", "lightbox", "aspect ratio"],
+	seeAlso: ["avatar", "carousel", "skeleton"],
 	summary: "A responsive image in an aspect-ratio frame, with a loading shimmer and an opt-in lightbox.",
 	description:
 		"Image wraps a picture in a frame that holds its shape while it loads: give it a `ratio` and the box reserves the space so the page never reflows when the pixels arrive, and a shimmer placeholder fills the frame until they do, fading the image in on load. It stays honest with JavaScript off; the image renders at full opacity with no shimmer to hide it, and the blur-up is a progressive enhancement layered on top, never a curtain that traps the image behind a script that failed to run. `fit` chooses cover or contain, `radius` rounds the frame off the scale, an optional `caption` renders a `figcaption`, and native `loading=\"lazy\"` defers off-screen images for free. Set `lightbox` and the frame becomes a control that opens the full image in a top-layer dialog: a scrim, a close button, backdrop and Escape to dismiss, and focus handled by the platform, all wired only when the runtime is present so the static markup stays inert and safe. By default the whole frame is the zoom target; where that sits next to selectable prose, `trigger=\"button\"` moves the affordance onto a dedicated zoom button that reveals on hover and focus, so a click meant for the surrounding text never trips the modal.",

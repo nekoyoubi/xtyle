@@ -236,6 +236,41 @@ describe("registry token contract", () => {
 	});
 });
 
+describe("keywords and seeAlso discovery metadata", () => {
+	const manifests = listComponents();
+	const ids = new Set(manifests.map((m) => m.id));
+
+	it("every registered component declares a non-empty keywords list", () => {
+		const missing = manifests.filter((m) => !m.keywords || m.keywords.length === 0).map((m) => m.id);
+		expect(missing, `components missing keywords: ${JSON.stringify(missing)}`).toEqual([]);
+	});
+
+	it("keywords are lowercase, trimmed, unique, and never restate the component's own name", () => {
+		for (const m of manifests) {
+			const kws = m.keywords ?? [];
+			for (const kw of kws) {
+				expect(kw, `${m.id}: "${kw}" is not trimmed-lowercase`).toBe(kw.trim().toLowerCase());
+				expect(kw.length, `${m.id}: empty keyword`).toBeGreaterThan(0);
+			}
+			expect(new Set(kws).size, `${m.id}: duplicate keyword`).toBe(kws.length);
+			const own = new Set([m.id.toLowerCase(), m.name.toLowerCase()]);
+			const redundant = kws.filter((kw) => own.has(kw));
+			expect(redundant, `${m.id}: keyword restates its own id/name`).toEqual([]);
+		}
+	});
+
+	it("every seeAlso id resolves to another registered component, with no self-reference or dupes", () => {
+		for (const m of manifests) {
+			const refs = m.seeAlso ?? [];
+			for (const ref of refs) {
+				expect(ids.has(ref), `${m.id}: seeAlso "${ref}" is not a registered component id`).toBe(true);
+				expect(ref, `${m.id}: seeAlso points at itself`).not.toBe(m.id);
+			}
+			expect(new Set(refs).size, `${m.id}: duplicate seeAlso`).toBe(refs.length);
+		}
+	});
+});
+
 describe("coverComponent / coverComponents", () => {
 	const manifest: ComponentManifest = {
 		id: "probe",

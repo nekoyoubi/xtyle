@@ -48,6 +48,8 @@ export const dockManifest: ComponentManifest = {
 	id: "dock",
 	name: "Dock",
 	category: "shell",
+	keywords: ["side rail", "sidebar", "side panel", "rail", "drawer"],
+	seeAlso: ["app-shell", "dock-zone", "panel"],
 	summary: "The side rail: a vertical panel pinned to the left or right edge of the shell.",
 	description:
 		"Dock is the application's side rail: a flex column pinned to an edge, sized to one of three widths, holding navigation, an inspector, a tool palette, or any other persistent panel. It renders a complementary `<aside>` by default and a `<nav>` when `nav` is set, so a navigation rail carries the right landmark role. A `label` names the landmark (applied as `aria-label` and shown as an optional uppercase header), so multiple docks on a page stay distinguishable to assistive technology. Header, body, and footer parts give the rail a stable internal rhythm; the footer pins to the bottom.",

@@ -65,6 +65,8 @@ export const toolbarManifest: ComponentManifest = {
 	id: "toolbar",
 	name: "Toolbar",
 	category: "shell",
+	keywords: ["header", "top bar", "app bar", "menu bar", "action bar"],
+	seeAlso: ["app-shell", "statusbar", "cluster"],
 	summary: "The header bar: a title plus structured start, center, and end regions for actions and navigation.",
 	description:
 		"Toolbar is the chrome bar that runs across the top of an app, a page, or a panel. It carries an optional `heading` (a plain title, or a link when given an `href`) and three layout regions (start, center, and end) that flex apart so leading controls sit left, primary content centers, and trailing actions push right. It adds layout, not semantics: by default it renders a neutral `<div>` with no landmark role, and opts into a page-banner `<header>` only when you ask for it with `landmark`, since whether a given bar is *the* page banner is the consumer's call. A `bare` mode drops the surface fill and divider for nesting inside another container, `sticky` pins it to the top of its scroll area, and the size scale tightens or loosens its padding.",

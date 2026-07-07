@@ -40,6 +40,8 @@ export const headingManifest: ComponentManifest = {
 	id: "heading",
 	name: "Heading",
 	category: "content",
+	keywords: ["title", "headline", "h1", "h2", "display text"],
+	seeAlso: ["text", "eyebrow", "hero"],
 	summary: "A semantic section heading whose visual size is decoupled from its document level.",
 	description:
 		"Heading renders a native `<h1>`–`<h6>` chosen by `level`, while `size` sets the visual scale independently across seven steps (xs, sm, body, lg, xl, 2xl, 3xl). That split lets the document outline stay correct (an `<h2>` deep in a page) while the type still reads at whatever weight the layout wants (small label, or a hero at 3xl), so a site can stop faking type with raw tags and ad-hoc font sizes. The `tone` axis sets the ink: `default`, `muted`, and `subtle` walk down the foreground ramp for primary titles, secondary headings, and quiet labels; the full color roster (every semantic role, accent variant, or named hue) paints a colored heading in that tone's on-surface ink, derived to stay legible against the page. The display font carries every step.",

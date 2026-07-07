@@ -95,6 +95,15 @@ cycles its own colors across the nine slots. The high nibbles are theme chrome.
 An object with no `c` inherits `currentColor`, so an un-colored spec renders like a flat
 functional glyph and tints with surrounding text.
 
+**Nine fixed slots.** Every `colors` scheme resolves to exactly nine evenly-spread colors
+(`ICON_SERIES_COUNT`), so slots `1`–`9` are always full and stable no matter the scheme: a nine-hue
+scheme (`skittles`) fills them with the whole box, a shorter one spreads its own colors across all nine.
+The count is fixed rather than sized to the highest slot a mark references — sizing to `index + 1` made
+each slot take the *last* color of its own little palette, collapsing a sequential scheme (`thermal`) to
+its endpoint and a sampled categorical (`skittles`) to its last color. A fixed nine keeps each slot a
+distinct, evenly-spread color, so `c1`…`c5` span the whole scheme and a slot addresses the same way in
+any theme.
+
 ### finish
 
 Everything after `---`, any order. Two kinds of token share this tail, and each reader ignores the
@@ -107,10 +116,13 @@ composite:
 | flag | meaning | default |
 |------|---------|---------|
 | `d{c}p{1-9}s{1-5}t{%}` | **drop shadow**: a colored, offset, blurred copy cast behind the mark. `d{c}` shadow color (a palette nibble), `p{1-9}` cast direction (keypad; `5` = straight down/no offset), `s{1-5}` cast distance, `t{%}` softness (blur). Sub-params optional, default `dfp8s2t50`. | no shadow |
-| `pc{n}-{hex}` | **palette override**: repaint one slot for this mark. `pc3-ff00ff` forces slot 3 to magenta. | none |
-| `pc-{hex}` | **silhouette**: force every painting slot to one color (transparent/reserved slots stay clear). `pc-424242` flattens the whole mark to one grey. | none |
+| `pc{n}-{value}` | **palette override**: repaint one slot for this mark. The value is a **hex** (`pc3-ff00ff` forces slot 3 to magenta), a single **nibble** `0`–`f` (`pc3-1` borrows slot 1's series color), or a **token name** (`pc3-accent` → `--accent`; also `success`, a named hue, or the `fg`/`bg` aliases). | none |
+| `pc-{value}` | **silhouette**: force every painting slot to one color (transparent/reserved slots stay clear). Same three value shapes: `pc-424242` (fixed grey), `pc-fg` (the foreground token), `pc-a` (the active ink). | none |
 
-A future whole-composite modifier slots in the same way.
+A `pc` value stays **theme-reactive** when it's a nibble or a token — it resolves off the live register
+at paint time, so the override tracks the theme instead of baking a dead color; a hex value is fixed.
+Hyphenated tokens (`accent-2`, `fg-1`) can't ride the `-`-delimited finish; reach a ramped shade with the
+nearest nibble or a hex. A future whole-composite modifier slots in the same way.
 
 **Lock flags** (`l{index}{codes}`) are **authoring metadata the renderer ignores**: they pin an
 object's props against the icon builder's Randomize, so a *template* name carries its own re-roll

@@ -59,6 +59,8 @@ export const alertManifest: ComponentManifest = {
 	id: "alert",
 	name: "Alert",
 	category: "feedback",
+	keywords: ["banner", "notice", "message", "callout", "warning", "error", "notification"],
+	seeAlso: ["toast", "empty"],
 	summary: "An inline message banner with an optional severity glyph, a title, actions, and a dismissible form; color and meaning on independent axes.",
 	description:
 		"Alert presents a persistent, inline message. Two axes drive it independently. `severity` (success, warn, danger, info) carries the *meaning*: the leading status glyph and the live-region politeness. `tone` carries the *color*, drawn from the full palette (semantic roles, accent variants, or named hues). By default a severity paints itself its standard color (danger reads red), but a `tone` overrides that, so a `danger` can be repainted pink and still announce as danger, while a color-only notice (a pink awareness banner with no `severity`) shows no glyph and announces politely. A `soft` variant tints the banner; a `solid` variant fills it for higher emphasis. An optional title sits above the message, an actions footer holds buttons, and a `dismissible` form adds a close button (also closable with Escape) that emits a `dismiss` event before removing the banner.",

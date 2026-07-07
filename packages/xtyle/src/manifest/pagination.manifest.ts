@@ -30,6 +30,8 @@ export const paginationManifest: ComponentManifest = {
 	id: "pagination",
 	name: "Pagination",
 	category: "navigation",
+	keywords: ["pager", "page nav", "paging", "next previous", "page numbers"],
+	seeAlso: ["table", "breadcrumb", "carousel"],
 	summary: "A page navigator: previous/next controls around a windowed list of page numbers with ellipses.",
 	description:
 		'Pagination walks a reader through a paged collection. It is a `<nav>` landmark wrapping previous and next controls and an ordered list of page numbers; the current page is marked `aria-current="page"`, and a sibling window around it keeps the control compact, collapsing the gaps to an ellipsis when there are more pages than fit. The visible range is computed from `page` and `total` plus two knobs: `siblings` (links on each side of the current page) and `boundaries` (links pinned at each end). Give it an `href` template containing `{page}` and every page renders as a real link, so the control navigates with zero JavaScript and works on the static Astro path; omit the template and the pages render as buttons that emit a `page-change` event carrying the chosen page. A `tone` colors the current-page pill and three `size`s scale the type.',

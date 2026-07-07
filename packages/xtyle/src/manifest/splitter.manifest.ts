@@ -37,6 +37,8 @@ export const splitterManifest: ComponentManifest = {
 	id: "splitter",
 	name: "Splitter",
 	category: "shell",
+	keywords: ["resizer", "resize handle", "gutter", "pane divider", "drag handle", "divider"],
+	seeAlso: ["dock-zone", "separator", "panel"],
 	summary: "A draggable divider that resizes an adjacent pane, with configurable bounds and steps.",
 	description:
 		"Splitter is the handle between two panes: drag it (or arrow it with the keyboard) and the neighboring pane grows or shrinks. It is a `role=\"separator\"` control, so it announces its current, minimum, and maximum size and takes the full keyboard. The size it manages is _data_ the consumer owns: the splitter clamps a `value` (in px) to `min`/`max`, snaps it to an integral `step`, writes it into a CSS custom property (`var`) on a target so a grid or flex track resizes declaratively, and fires `resize` (live, during the drag) and `resize-end` (on release) so the consumer can react or persist. `orientation` picks the axis (`vertical` resizes width, `horizontal` resizes height), and `reversed` flips the direction for a trailing-edge pane like a right rail. Its own chrome is derived: the grip and its focus ring read from the same tokens the rest of the UI does.",

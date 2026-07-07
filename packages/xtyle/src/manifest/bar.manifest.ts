@@ -150,6 +150,8 @@ export const barManifest: ComponentManifest = {
 	name: "Bar",
 	since: "0.3.0",
 	category: "metrics",
+	keywords: ["bar chart", "column chart", "histogram", "graph", "stacked bar"],
+	seeAlso: ["pie", "sparkline", "heatmap", "stat"],
 	summary: "A grouped or stacked bar chart, colored from a theme-derived series palette, with an interactive value readout and opt-in clickable bars.",
 	description:
 		"Bar plots one or more numeric series across a set of categories as an SVG chart that renders from data alone. Each series takes its color from a `scheme` resolved off the live theme (the `accents` fan, the `skittles` hue ring, a `thermal` cold-to-hot scale, or the `status` roster), so a chart is coherent with the rest of the UI out of the box; pass an explicit color array for full control, and `reverse` to flip any scheme. Bars sit side by side by default or stack with `stacked`, and run vertically or horizontally (`orientation`) for long category labels. It's interactive: hovering or focusing a bar dims the rest and floats a value readout, and the whole chart is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: each bar becomes a button that fires a `select` event with its series, category, and value, so a click filters, navigates, or drills into that data. A value axis with gridlines and category labels come derived; a legend appears for multi-series data. Set `height` for the plot area; the chart fills its container's width. With no categories or series to plot, it shows a muted `No data` message in place of the axes.",

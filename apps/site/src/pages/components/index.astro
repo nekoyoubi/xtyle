@@ -77,13 +77,26 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		</Grid>
 	</header>
 
+	<div class="cx-search">
+		<label class="cx-search__label" for="cx-q">Search components</label>
+		<input
+			id="cx-q"
+			type="search"
+			class="cx-search__input xtyle-control"
+			placeholder="Search by name, purpose, or capability — try “meter”, “dropdown”, “modal”…"
+			autocomplete="off"
+			data-search-input
+		/>
+		<p class="cx-search__status" data-search-status aria-live="polite" role="status"></p>
+	</div>
+
 	{grouped.map((group, gi) => {
 		const groupCovered = group.items.filter(
 			(c) => coverageFor(c).covered,
 		).length;
 		const groupHealthy = groupCovered === group.items.length;
 		return (
-		<section class="cx-section" id={group.meta.id} data-density={gi % 2 === 0 ? "roomy" : "tight"}>
+		<section class="cx-section" id={group.meta.id} data-density={gi % 2 === 0 ? "roomy" : "tight"} data-section>
 			<div class={`cx-section__head ${groupHealthy ? "is-healthy" : "has-gaps"}`}>
 				<span class="cx-section__stripe" aria-hidden="true"></span>
 				<Heading level={2} size="lg">{group.meta.label}</Heading>
@@ -106,6 +119,8 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 						<a
 							class={`cx-card-link ${cov.covered ? "is-covered" : "has-gaps"}`}
 							href={`/components/${component.id}`}
+							data-cx-card
+							data-search={`${component.name} ${component.summary} ${(component.keywords ?? []).join(" ")} ${(component.seeAlso ?? []).join(" ")}`.toLowerCase()}
 						>
 							<Card interactive class="cx-card">
 								<Cluster justify="between" align="start" gap={2} class="cx-card__top">
@@ -146,7 +161,47 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		</section>
 		);
 	})}
+
+	<p class="cx-search__empty" data-search-empty hidden>
+		No components match that search. Try a capability word like
+		<code>meter</code>, <code>dropdown</code>, or <code>modal</code>.
+	</p>
 </Base>
+
+<script>
+	const input = document.querySelector("[data-search-input]") as HTMLInputElement | null;
+	const status = document.querySelector("[data-search-status]") as HTMLElement | null;
+	const empty = document.querySelector("[data-search-empty]") as HTMLElement | null;
+	const sections = Array.from(document.querySelectorAll("[data-section]")) as HTMLElement[];
+	const cards = Array.from(document.querySelectorAll("[data-cx-card]")) as HTMLElement[];
+	const total = cards.length;
+
+	function apply(raw: string) {
+		const q = raw.trim().toLowerCase();
+		let visible = 0;
+		for (const card of cards) {
+			const match = q === "" || (card.dataset.search ?? "").includes(q);
+			card.hidden = !match;
+			if (match) visible++;
+		}
+		for (const section of sections) {
+			section.hidden = !section.querySelector("[data-cx-card]:not([hidden])");
+		}
+		if (empty) empty.hidden = visible !== 0;
+		if (status) {
+			status.textContent = q === "" ? "" : `${visible} of ${total} match`;
+		}
+	}
+
+	if (input) {
+		input.addEventListener("input", () => apply(input.value));
+		const initial = new URLSearchParams(location.search).get("q");
+		if (initial) {
+			input.value = initial;
+			apply(initial);
+		}
+	}
+</script>
 
 <style>
 	.cx-head {
@@ -167,7 +222,8 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		max-width: 44rem;
 	}
 	.cx-lede code,
-	.cx-card__summary code {
+	.cx-card__summary code,
+	.cx-search__empty code {
 		font-family: var(--font-mono);
 		font-size: 0.9em;
 		background: var(--bg-2);
@@ -192,6 +248,36 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		letter-spacing: 0.06em;
 		margin: var(--space-1) 0 0;
 	}
+	.cx-search {
+		margin-bottom: var(--space-8);
+	}
+	.cx-search__label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+		border: 0;
+	}
+	.cx-search__input {
+		width: 100%;
+		font-size: var(--text-base);
+	}
+	.cx-search__status {
+		margin: var(--space-2) 0 0;
+		min-height: 1.2em;
+		font-size: var(--text-sm);
+		color: var(--fg-2);
+	}
+	.cx-search__empty {
+		text-align: center;
+		color: var(--fg-2);
+		padding: var(--space-8) 0;
+	}
+
 	.cx-section {
 		margin-bottom: var(--space-8);
 		scroll-margin-top: var(--space-6);

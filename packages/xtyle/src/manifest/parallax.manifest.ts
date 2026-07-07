@@ -51,6 +51,8 @@ export const parallaxManifest: ComponentManifest = {
 	name: "Parallax",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["layered banner", "scroll effect", "depth", "hero banner"],
+	seeAlso: ["hero", "image", "section"],
 	summary: "A layered banner whose layers drift on scroll or follow the cursor, static with no JS or reduced motion.",
 	description:
 		"Parallax stacks its children into one banner: CSS lays every child in the same grid cell, so the layers overlay and the content centers over the background with no JavaScript at all. Give a layer a `data-speed` and the runtime shifts it (the faster the speed, the deeper the drift), while a layer with no `data-speed` (the content) holds still on top. In the default `scroll` mode the shift is scroll-linked as the banner passes through the viewport; set `mode=\"cursor\"` and the layers follow the pointer instead. Each moving layer picks its own travel axis with `data-direction` (a compass token like `n`/`se`, or an angle in degrees clockwise from north), so layers can drift up, sideways, diagonally, or opposite one another; a cursor-mode layer with no direction follows the pointer in full 2D. The whole effect is an enhancement: with JavaScript off the layers sit at rest, and under `prefers-reduced-motion` the runtime leaves them alone, so the banner is always a legible layered composition and never depends on the motion to make sense. `min-height` sizes the band and `amplitude` scales how far the layers travel.",

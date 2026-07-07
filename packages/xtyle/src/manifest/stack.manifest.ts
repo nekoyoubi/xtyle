@@ -57,6 +57,8 @@ export const stackManifest: ComponentManifest = {
 	id: "stack",
 	name: "Stack",
 	category: "layout",
+	keywords: ["vstack", "column", "vertical layout", "spacing", "flex column"],
+	seeAlso: ["cluster", "grid", "section"],
 	summary: "A vertical flex column with a token-driven gap, the primitive for stacking content.",
 	description:
 		"Stack lays its children out in a flex column with a consistent gap drawn from the `--space` scale. The `gap` prop (0–8) selects the spacing step, while `align` and `justify` control the cross- and main-axis distribution. It carries no visual chrome of its own (no background, border, or color), so it composes cleanly inside cards, panels, and page shells. An `inline` flag switches it to an inline-flex column for embedding in running text or alongside other inline boxes.",

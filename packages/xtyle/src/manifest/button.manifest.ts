@@ -92,6 +92,8 @@ export const buttonManifest: ComponentManifest = {
 	id: "button",
 	name: "Button",
 	category: "control",
+	keywords: ["cta", "action", "submit", "link button", "icon button", "toggle"],
+	seeAlso: ["link", "segmented", "card-link"],
 	summary: "A clickable action: five variants across six semantic tones.",
 	description:
 		"Button triggers an action or navigates. Visual treatment (`variant`) and semantic color (`tone`) are independent axes: any of the five variants (solid, outline, ghost, subtle, link) can carry any of the six tones (accent, neutral, danger, success, warn, info). It renders a native `<button>` by default and an `<a>` when given an `href`, so the same component covers both actions and links. Icon slots, an icon-only square form, a loading state with an inline accessible spinner, and a full-width block mode round out the surface.",

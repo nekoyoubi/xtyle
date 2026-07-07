@@ -80,6 +80,8 @@ export const treeManifest: ComponentManifest = {
 	id: "tree",
 	name: "Tree",
 	category: "navigation",
+	keywords: ["tree view", "file tree", "nested list", "hierarchy", "explorer", "outline"],
+	seeAlso: ["toc", "accordion", "table"],
 	summary: "A hierarchical, keyboard-navigable list of expandable nodes built from a data array.",
 	description:
 		"Tree renders a nested hierarchy from an `items` array. Each node carries a `label`, an optional `value`, `href`, and `children`, plus flags for `expanded`, `selected`, and `disabled`. It builds the WAI-ARIA tree pattern: a `role=\"tree\"` with nested `role=\"group\"` levels and `role=\"treeitem\"` nodes carrying `aria-level`, `aria-expanded`, and `aria-selected`, with a single roving tab stop so the whole tree is one Tab stop and the arrow keys walk it. A twisty rotates on expand. A node with an `href` renders its row as a link whether or not it has children, so a branch can be both navigable and a group; the row navigates while the twisty (and Left/Right) work the children. A branch without an `href` is a pure container that toggles on click. A node also carries per-row trailing content: a `badge` (a count or status after the label) and `actions` (hover-revealed row buttons that fire a `tree-action` event), the file-tree-with-inline-controls shape. Being data-driven keeps it robust across the bindings and a natural fit for a file or navigation tree. Three sizes (`sm`, `md`, `lg`) scale the row density.",

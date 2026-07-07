@@ -239,6 +239,54 @@ describe("icon-builder", () => {
 	});
 });
 
+describe("---pc palette overrides (hex, nibble, token)", () => {
+	const pal = (name: string) => parseIconName(name)?.composition.palette ?? {};
+
+	it("reads a literal hex into a per-slot or whole-palette override", () => {
+		expect(pal("x--shape-square---pc1-ff0000")).toEqual({ "1": "#ff0000" });
+		expect(pal("x--shape-square---pc-abc")).toEqual({ "*": "#abc" });
+	});
+
+	it("reads a single nibble as that slot's canonical, theme-reactive color", () => {
+		expect(pal("x--shape-square---pc1-3")).toEqual({ "1": "series:2" });
+		expect(pal("x--shape-square---pc2-b")).toEqual({ "2": "--bg-0" });
+		expect(pal("x--shape-square---pc-a")).toEqual({ "*": "currentColor" });
+	});
+
+	it("reads a token name as a live --token, with fg/bg aliases", () => {
+		expect(pal("x--shape-square---pc1-accent")).toEqual({ "1": "--accent" });
+		expect(pal("x--shape-square---pc3-success")).toEqual({ "3": "--success" });
+		expect(pal("x--shape-square---pc-fg")).toEqual({ "*": "--fg-0" });
+		expect(pal("x--shape-square---pc-bg")).toEqual({ "*": "--bg-0" });
+	});
+
+	it("does not eat an adjacent finish token: a token override then a drop shadow coexist", () => {
+		const c = parseIconName("x--shape-square---pc1-accent-d2p8s3t80")?.composition;
+		expect(c?.palette).toEqual({ "1": "--accent" });
+		expect(c?.dropShadow).toBeDefined();
+	});
+
+	it("resolves a per-slot token override to a live custom property at compose time", () => {
+		const svg = composeIcon({ layers: [{ primitive: "shape-square", fill: colorSlot(1) }], palette: { "1": "--accent" } });
+		expect(svg).toContain("var(--accent)");
+	});
+
+	it("resolves a token silhouette on the implicit ink, not only on slots", () => {
+		const svg = composeIcon({ layers: [{ primitive: "symbol-star" }], palette: { "*": "--accent" } });
+		expect(svg).toContain("var(--accent)");
+		expect(svg).not.toMatch(/"--accent"/);
+	});
+
+	it("bakes a nibble-derived series slot to a concrete hex under composeIconThemed", () => {
+		const svg = composeIconThemed(
+			{ layers: [{ primitive: "shape-square", fill: colorSlot(1) }], palette: { "1": "series:0" } },
+			{ register, scheme: "accents" },
+		);
+		expect(svg).toMatch(/fill="#[0-9a-fA-F]{3,8}"/);
+		expect(svg).not.toContain("series:0");
+	});
+});
+
 describe("parseIconName", () => {
 	it("returns null for a bare lookup name with no spec", () => {
 		expect(parseIconName("search")).toBe(null);

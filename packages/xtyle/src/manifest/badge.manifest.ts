@@ -64,6 +64,8 @@ export const badgeManifest: ComponentManifest = {
 	id: "badge",
 	name: "Badge",
 	category: "media",
+	keywords: ["tag", "chip", "pill", "label", "status", "count", "counter", "dot"],
+	seeAlso: ["swatch", "stat"],
 	summary: "A compact label, tag, or status chip: three fills across six semantic tones and twelve named hues, optionally removable.",
 	description:
 		"Badge labels, tags, counts, and statuses inline. Fill treatment (`variant`) and color (`tone`) are independent axes: each of the three fills (solid, soft, outline) can carry any of the six semantic tones (accent, neutral, danger, success, warn, info) or any of the twelve named hues (red … black). It adds a leading status dot (which can `pulse` to read as live), a tabular count affordance, and a `removable` form whose `×` is a real focusable `<button>` that emits a `remove` event. That's the removable tag you build a filter row or token input from. A standalone `.xtyle-dot` indicator covers the bare-dot case. Status tones (success, warn, danger, info) emit a screen-reader-only tone word so meaning never rides on color alone.",

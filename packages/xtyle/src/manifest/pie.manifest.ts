@@ -121,6 +121,8 @@ export const pieManifest: ComponentManifest = {
 	name: "Pie",
 	since: "0.3.0",
 	category: "metrics",
+	keywords: ["pie chart", "donut", "doughnut", "parts of a whole", "share", "distribution"],
+	seeAlso: ["bar", "sparkline", "stat"],
 	summary: "A pie or donut chart of parts against a whole, colored from a theme-derived palette, with an interactive readout.",
 	description:
 		"Pie plots a set of labelled values as wedges of a circle, each a share of the whole. Each slice takes its color from a `scheme` resolved off the live theme (`skittles` by default, so the parts read as distinct), or pass explicit colors and `reverse`. Set `variant=\"donut\"` for a ring with the total in its center. It's interactive: hovering or focusing a slice dims the rest and floats its value and share, and the chart is mirrored into a visually-hidden table so assistive tech reads the numbers. A legend names each slice; optional `showValues` prints the percentage on each wedge. Size it with `size`; zero and negative values drop out, and a chart with nothing left to plot shows a muted `No data` message in place of the wedges.",

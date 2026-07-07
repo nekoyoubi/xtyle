@@ -46,6 +46,8 @@ export const ratingManifest: ComponentManifest = {
 	name: "Rating",
 	since: "0.6.0",
 	category: "control",
+	keywords: ["stars", "star rating", "score", "review", "vote", "rank"],
+	seeAlso: ["icon", "slider"],
 	summary: "A rating control — interactive or read-only — that scores with any icon and shows fractional values as a partial icon.",
 	description:
 		"Rating draws `max` icons and overlays a colored copy clipped to `value / max`, so a fractional value like 4.5 shows an exact partial icon rather than rounding. It renders two rows: a neutral **base** row (the icon silhouetted to a muted track color) and a **filled** row (the icon in full color) clipped to the value fraction. Any icon works: the default `star`, any functional glyph (`heart`, `bolt`, …), or a composed colorful mark spec (`taco--…`), drawn through the icon system. A monochrome glyph takes its fill from `tone` (a register hue), a colorful mark draws its palette from `colors`. By default it is an interactive slider — focusable, `role=\"slider\"`, driven by pointer drag, click, and Arrow/Home/End keys, with a hover preview, firing `input` and `change` and posting through a hidden input when `name` is set. Add `readonly` and it becomes a fixed `role=\"img\"` display for an average score, a product rating, a survey result. The element's own text is the no-JS fallback and the accessible label. Override `--rating-track` (base color, defaults to `--fg-disabled`) or `--rating-fill` (fill color, defaults to `--accent`) per instance to retune it.",

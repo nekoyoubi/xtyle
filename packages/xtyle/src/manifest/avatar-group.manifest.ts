@@ -70,6 +70,8 @@ export const avatarGroupManifest: ComponentManifest = {
 	name: "Avatar Group",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["avatar stack", "face pile", "overlapping avatars", "contributors", "overflow"],
+	seeAlso: ["avatar", "badge"],
 	summary: "A row of overlapping avatars with a trailing `+N` overflow chip, for a contributor, attendee, or reviewer stack.",
 	description:
 		"Avatar Group overlaps a set of `Avatar` children into a compact stack, the shape a contributor list, an attendee row, or a \"who's viewing\" strip takes. Each avatar carries a ring in the page background so the overlap reads as distinct faces rather than a blur, and later avatars sit over earlier ones. Slot the avatars you want shown and set `overflow` to the number of people beyond them, and the group renders a trailing `+N` chip in the neutral tone (its accessible name reads \"N more\"). `size` matches the chip to the avatars you used, and `spacing` tightens or loosens the overlap. It's a `role=\"group\"`; give it a `label` to name the set. The overflow count is explicit rather than auto-counted so the stack renders identically with no JavaScript, on the server, and in the browser.",

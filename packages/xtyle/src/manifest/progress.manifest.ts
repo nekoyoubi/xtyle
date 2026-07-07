@@ -57,6 +57,7 @@ export const progressManifest: ComponentManifest = {
 	id: "progress",
 	name: "Progress",
 	category: "feedback",
+	seeAlso: ["spinner", "stat", "steps", "slider"],
 	summary: "A progress bar or capacity meter: a linear bar or circular ring with value thresholds that recolor and pulse.",
 	description:
 		"Progress shows how far along a task is, or how full a capacity is. The `variant` axis picks the shape (a horizontal `linear` bar or a circular `svg` ring) and the `tone` axis picks the color from the full roster (the six semantic roles, the accent variants, the twelve named hues). A determinate bar fills to `value` between `min` and `max`; an `indeterminate` mode animates a moving sweep when the amount of work is unknown. Declarative `<threshold below tone pulse>` children turn it into a self-coloring meter: each band names a percentage ceiling, and the active band (the first the current value falls under) overrides the tone and can `pulse` the fill (`slow` or `fast`) to flag a critical level, the pulse routed through motion tokens so the reduced-motion base rule stills it. Set `meter` to report `role=\"meter\"` (a measurement against a capacity, like disk used) instead of the default `role=\"progressbar\"` (a task advancing); either way it carries `aria-valuenow`/`aria-valuemin`/`aria-valuemax`. An optional inline readout (`show-value`) shows the percentage, the raw value, or `value/max` (`value-format`), sits at the end or inset over the bar (`value-position`), and can take the active tone (`colorize-value`).",

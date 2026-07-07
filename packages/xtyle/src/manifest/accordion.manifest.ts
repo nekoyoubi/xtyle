@@ -44,6 +44,8 @@ export const accordionManifest: ComponentManifest = {
 	id: "accordion",
 	name: "Accordion",
 	category: "control",
+	keywords: ["collapse", "expander", "disclosure", "faq", "collapsible sections"],
+	seeAlso: ["panel", "tabs", "tree"],
 	summary: "A stack of collapsible sections, one or many open at a time, driven by pointer or keyboard.",
 	description:
 		"Accordion stacks a set of disclosure sections that expand and collapse. Each section pairs a `[slot=\"header\"]` header with the `[slot=\"panel\"]` that follows it; the component wraps every header in a heading and a `role=\"button\"` trigger carrying `aria-expanded` and `aria-controls`, and turns each panel into a labelled `role=\"region\"` that hides when collapsed. By default it is single-open: opening one section closes the rest. `multiple` lets several stay open at once. Mark a header `open` to expand its section initially, or `disabled` to lock it. The heading level is `h3` by default and settable with `headingLevel`, and three sizes (`sm`, `md`, `lg`) scale the trigger density. A chevron rotates with the open state, and pointer, Enter/Space, and the arrow/Home/End keys all drive it.",

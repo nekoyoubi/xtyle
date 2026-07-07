@@ -42,6 +42,8 @@ export const emptyManifest: ComponentManifest = {
 	name: "Empty",
 	since: "0.6.0",
 	category: "feedback",
+	keywords: ["empty state", "no data", "placeholder", "zero state", "blank slate"],
+	seeAlso: ["skeleton", "alert"],
 	summary: "A centered placeholder for a no-data state: an icon, a message, and an action.",
 	description:
 		"Empty is the placeholder a surface shows when it has nothing to show: no search results, an empty inbox, a list before its first item. It is a centered column that styles whatever you put in it, so it renders no markup of its own: an icon in `.xtyle-empty__media` sits muted and enlarged at the top, the first heading reads as the title, a `<p>` as the muted body, and buttons in `.xtyle-empty__actions` line up beneath. Everything draws from the derived register, and because it only frames content it carries no semantics of its own, so the heading and the action keep theirs. Standalone like `Stack`, it needs no runtime to render.",

@@ -39,6 +39,8 @@ export const linkManifest: ComponentManifest = {
 	id: "link",
 	name: "Link",
 	category: "navigation",
+	keywords: ["anchor", "hyperlink", "href", "external link"],
+	seeAlso: ["button", "breadcrumb", "card-link"],
 	summary: "A text hyperlink: the anchor primitive, in three emphasis variants with an automatic external-link affordance.",
 	description:
 		"Link is the styled `<a>` primitive: inline text that navigates, drawn in the link color with an offset underline and a token-colored focus ring. Three variants tune emphasis: `default` is the full-strength link, `muted` recedes into body text (underline only on hover) for in-prose and secondary nav, and `quiet` is the lowest-key treatment for dense footers and utility nav. When `target=\"_blank\"`, Link automatically appends an external-link glyph, adds a screen-reader-only \"(opens in a new tab)\" hint, and sets `rel=\"noopener noreferrer\"`, handling security and accessibility without ceremony. Given no `href`, it degrades to inert text rather than rendering a broken anchor.",

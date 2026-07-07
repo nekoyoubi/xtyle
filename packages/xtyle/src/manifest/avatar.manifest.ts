@@ -51,6 +51,8 @@ export const avatarManifest: ComponentManifest = {
 	id: "avatar",
 	name: "Avatar",
 	category: "media",
+	keywords: ["profile picture", "user photo", "identity", "initials", "gravatar"],
+	seeAlso: ["avatar-group", "badge"],
 	summary: "An identity chip: a photo when one loads, a tinted initials-or-icon fallback when it doesn't.",
 	description:
 		"Avatar presents a person or entity as a compact square or circle. Given a `src`, it shows the image, cover-cropped to fill; if the image is absent or fails to load, it falls back to the slotted content (initials as text, or an icon via the `icon` slot) on a soft, hue-tinted background. The fallback tint follows `tone`, which accepts any of the six semantic roles or the twelve named hues, so a deterministic per-user color is a one-attribute choice. Four sizes (sm, md, lg, xl), two shapes (circle, square), and an optional corner status dot in any semantic tone round out the surface. `alt` names the image; the fallback text stays in the accessibility tree so the avatar is announced either way.",
