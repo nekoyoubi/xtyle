@@ -24,6 +24,13 @@ export const appShellCss = `
 .xtyle-app__rail {
 	min-width: 0;
 }
+/* A dock's host element carries a standalone default width (14/18/22rem by size); in a rail it must
+   fill the shell-sized track instead, or its edge border overhangs the rail and bleeds into main. */
+.xtyle-app .xtyle-app__rail xtyle-dock,
+.xtyle-app .xtyle-app__rail xtyle-dock-zone {
+	width: 100%;
+	box-sizing: border-box;
+}
 .xtyle-app__rail--left {
 	grid-column: 1;
 }
