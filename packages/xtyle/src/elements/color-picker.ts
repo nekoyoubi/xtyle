@@ -629,9 +629,15 @@ export class XtyleColorPicker extends XtyleElement {
 				if (!open) return;
 				const rect = trigger.getBoundingClientRect();
 				const width = popover.offsetWidth || 256;
+				const height = popover.offsetHeight || 256;
 				const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+				// Open below the trigger, but flip above when there isn't room (a picker near the fold),
+				// then clamp into the viewport so the popover is never cut off.
+				const below = rect.bottom + 6;
+				const above = rect.top - height - 6;
+				const top = below + height <= window.innerHeight - 8 || above < 8 ? below : above;
 				popover.style.left = `${Math.round(left)}px`;
-				popover.style.top = `${Math.round(rect.bottom + 6)}px`;
+				popover.style.top = `${Math.round(Math.max(8, Math.min(top, window.innerHeight - height - 8)))}px`;
 				window.addEventListener("scroll", () => popover.hidePopover(), { passive: true, capture: true, once: true });
 			});
 		}
