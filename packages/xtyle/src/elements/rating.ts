@@ -1,19 +1,47 @@
 import { define } from "./base.js";
+import { composeIcon, composeIconThemed, resolveIconMark, resolvePrimitiveName, type IconComposition } from "../icon-builder.js";
+import { readLiveRegister } from "./live-register.js";
+import { SERIES_TOKENS, type SeriesScheme } from "../series.js";
 
-const STAR = `<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path fill="currentColor" d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+/** The neutral base layer's color; also every register token the icon marks read, so a browser-only
+ * consumer can reconstruct the minimal register the silhouette + series colors need. */
+const RATING_TOKENS: readonly string[] = ["--fg-disabled", ...SERIES_TOKENS];
+
+/** Resolve an icon name to a composition: a `--` spec composes through the mark grammar (so a colorful
+ * taco works), a bare name is a single-layer primitive (`star` → `symbol-star`, any functional glyph by
+ * its own name). An unknown name falls through to the primitive library's placeholder. */
+function ratingComposition(name: string): IconComposition {
+	if (name.includes("--")) {
+		const parsed = resolveIconMark(name);
+		if (parsed) return parsed.composition;
+	}
+	return { layers: [{ primitive: resolvePrimitiveName(name) }] };
+}
+
+function clamp(min: number, max: number, v: number): number {
+	return v < min ? min : v > max ? max : v;
+}
 
 /**
- * A read-only star rating. It renders a row of stars with a filled overlay clipped to `value / max`,
- * so a fractional value shows a partial star exactly. Client-rendered (like `Spinner`): the element's
- * text content is the no-JS fallback and becomes the accessible label once it upgrades to stars.
+ * A rating control. It draws `max` icons and overlays a colored copy clipped to `value / max`, so a
+ * fractional value shows an exact partial icon. The base layer is the same icon forced to a neutral
+ * track color (a `---pc` silhouette for a colorful mark, `currentColor` for a monochrome glyph), the
+ * overlay is the icon in full color. Read-only by opt-in (`readonly`) it is a display; interactive (the
+ * default) it is a real slider — focusable, arrow-key and pointer driven, emitting `input` / `change`
+ * and syncing a hidden input when `name` is set. Client-rendered: the element's text is the no-JS
+ * fallback and the accessible label.
  */
 export class XtyleRating extends HTMLElement {
 	static get observedAttributes(): string[] {
-		return ["value", "max", "size", "label"];
+		return ["value", "max", "size", "icon", "colors", "tone", "readonly", "allowhalf", "name", "label"];
 	}
 
 	private captured = false;
 	private fallbackLabel = "";
+	private filledRow: HTMLElement | null = null;
+	private hiddenInput: HTMLInputElement | null = null;
+	private dragging = false;
+	private bound = false;
 
 	get value(): number {
 		const parsed = Number.parseFloat(this.getAttribute("value") ?? "0");
@@ -31,6 +59,22 @@ export class XtyleRating extends HTMLElement {
 		this.setAttribute("max", String(value));
 	}
 
+	get readonly(): boolean {
+		return this.hasAttribute("readonly");
+	}
+	get allowHalf(): boolean {
+		return this.hasAttribute("allowhalf");
+	}
+	private get icon(): string {
+		return this.getAttribute("icon") || "star";
+	}
+	private get scheme(): SeriesScheme {
+		return (this.getAttribute("colors") as SeriesScheme) ?? "accents";
+	}
+	private get step(): number {
+		return this.allowHalf ? 0.5 : 1;
+	}
+
 	connectedCallback(): void {
 		if (!this.captured) {
 			this.fallbackLabel = (this.textContent ?? "").trim();
@@ -39,21 +83,170 @@ export class XtyleRating extends HTMLElement {
 		this.render();
 	}
 
+	disconnectedCallback(): void {
+		this.unbind();
+	}
+
 	attributeChangedCallback(): void {
 		if (this.captured) this.render();
 	}
 
+	private register(): Record<string, string> {
+		return readLiveRegister(this, RATING_TOKENS, () => {
+			if (this.captured) this.render();
+		});
+	}
+
+	private label(value: number): string {
+		return this.getAttribute("label") || this.fallbackLabel || `${value} out of ${this.max} stars`;
+	}
+
 	private render(): void {
-		this.classList.add("xtyle-rating");
+		const max = this.max;
+		const value = clamp(0, max, this.value);
+		const register = this.register();
+		const trackHex = register["--fg-disabled"];
+		const comp = ratingComposition(this.icon);
+		const filled = composeIconThemed(comp, { register, scheme: this.scheme });
+		// A colorful mark silhouettes to the track color via a `*` palette override; a monochrome glyph
+		// keeps `currentColor` and takes the track color from the row's CSS instead.
+		const emptyComp: IconComposition = trackHex ? { ...comp, palette: { "*": trackHex } } : comp;
+		const empty = composeIcon(emptyComp, { register, scheme: this.scheme });
+
+		this.className = "xtyle-rating";
 		this.classList.toggle("xtyle-rating--sm", this.getAttribute("size") === "sm");
 		this.classList.toggle("xtyle-rating--lg", this.getAttribute("size") === "lg");
-		const max = this.max;
-		const value = Math.max(0, Math.min(max, this.value));
+		this.classList.toggle("xtyle-rating--interactive", !this.readonly);
+		const tone = this.getAttribute("tone");
+		this.style.setProperty("--rating-fill", tone ? `var(--${tone})` : "");
+
 		const pct = max > 0 ? (value / max) * 100 : 0;
-		const stars = STAR.repeat(max);
-		this.setAttribute("role", "img");
-		this.setAttribute("aria-label", this.getAttribute("label") || this.fallbackLabel || `${value} out of ${max} stars`);
-		this.innerHTML = `<span class="xtyle-rating__row xtyle-rating__row--empty" aria-hidden="true">${stars}</span><span class="xtyle-rating__row xtyle-rating__row--filled" aria-hidden="true" style="width: ${pct}%">${stars}</span>`;
+		this.innerHTML =
+			`<span class="xtyle-rating__row xtyle-rating__row--empty" aria-hidden="true">${empty.repeat(max)}</span>` +
+			`<span class="xtyle-rating__row xtyle-rating__row--filled" aria-hidden="true" style="width: ${pct}%">${filled.repeat(max)}</span>`;
+		this.filledRow = this.querySelector(".xtyle-rating__row--filled");
+
+		this.applyA11y(value);
+		this.syncHidden(value);
+		if (this.readonly) this.unbind();
+		else this.bind();
+	}
+
+	private applyA11y(value: number): void {
+		if (this.readonly) {
+			this.removeAttribute("tabindex");
+			this.removeAttribute("aria-valuemin");
+			this.removeAttribute("aria-valuemax");
+			this.removeAttribute("aria-valuenow");
+			this.removeAttribute("aria-valuetext");
+			this.setAttribute("role", "img");
+			this.setAttribute("aria-label", this.label(value));
+		} else {
+			this.setAttribute("role", "slider");
+			this.setAttribute("tabindex", "0");
+			this.setAttribute("aria-valuemin", "0");
+			this.setAttribute("aria-valuemax", String(this.max));
+			this.setAttribute("aria-valuenow", String(value));
+			this.setAttribute("aria-valuetext", `${value} out of ${this.max}`);
+			this.setAttribute("aria-label", this.label(value));
+		}
+	}
+
+	private syncHidden(value: number): void {
+		const name = this.getAttribute("name");
+		if (!name || this.readonly) {
+			this.hiddenInput?.remove();
+			this.hiddenInput = null;
+			return;
+		}
+		if (!this.hiddenInput) {
+			this.hiddenInput = document.createElement("input");
+			this.hiddenInput.type = "hidden";
+		}
+		this.hiddenInput.name = name;
+		this.hiddenInput.value = String(value);
+		this.appendChild(this.hiddenInput);
+	}
+
+	/** Set the filled overlay to a preview fraction without committing the value. */
+	private preview(value: number | null): void {
+		if (!this.filledRow) return;
+		const shown = value ?? clamp(0, this.max, this.value);
+		this.filledRow.style.width = `${this.max > 0 ? (shown / this.max) * 100 : 0}%`;
+	}
+
+	/** Snap a raw position up to the unit it lands in: anywhere on the Nth icon rates N (a half step
+	 * rates the near half). `ceil`, not `round`, so the left edge of an icon still counts that whole icon. */
+	private snap(raw: number): number {
+		return clamp(0, this.max, Math.ceil(raw / this.step) * this.step);
+	}
+
+	/** Commit a value: snap to step, reflect it, and fire `input` (always) and `change` (on commit). */
+	private commit(raw: number, changed: boolean): void {
+		const value = this.snap(raw);
+		this.value = value; // reflects to the attribute → re-render
+		this.dispatchEvent(new CustomEvent("input", { detail: { value }, bubbles: true }));
+		if (changed) this.dispatchEvent(new CustomEvent("change", { detail: { value }, bubbles: true }));
+	}
+
+	/** The value a pointer x maps to, off the icon row's box. */
+	private valueAt(clientX: number): number {
+		const rect = this.getBoundingClientRect();
+		if (rect.width === 0) return 0;
+		const ratio = clamp(0, 1, (clientX - rect.left) / rect.width);
+		return ratio * this.max;
+	}
+
+	private onPointerDown = (e: PointerEvent): void => {
+		if (this.readonly) return;
+		this.dragging = true;
+		this.setPointerCapture(e.pointerId);
+		this.commit(this.valueAt(e.clientX), true);
+	};
+	private onPointerMove = (e: PointerEvent): void => {
+		if (this.readonly) return;
+		if (this.dragging) this.commit(this.valueAt(e.clientX), false);
+		else this.preview(this.snap(this.valueAt(e.clientX)));
+	};
+	private onPointerUp = (e: PointerEvent): void => {
+		if (!this.dragging) return;
+		this.dragging = false;
+		this.releasePointerCapture(e.pointerId);
+		this.dispatchEvent(new CustomEvent("change", { detail: { value: this.value }, bubbles: true }));
+	};
+	private onPointerLeave = (): void => {
+		if (!this.dragging) this.preview(null);
+	};
+	private onKeyDown = (e: KeyboardEvent): void => {
+		if (this.readonly) return;
+		const v = clamp(0, this.max, this.value);
+		let next: number | null = null;
+		if (e.key === "ArrowRight" || e.key === "ArrowUp") next = v + this.step;
+		else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = v - this.step;
+		else if (e.key === "Home") next = 0;
+		else if (e.key === "End") next = this.max;
+		if (next === null) return;
+		e.preventDefault();
+		this.commit(next, true);
+	};
+
+	private bind(): void {
+		if (this.bound) return;
+		this.bound = true;
+		this.addEventListener("pointerdown", this.onPointerDown);
+		this.addEventListener("pointermove", this.onPointerMove);
+		this.addEventListener("pointerup", this.onPointerUp);
+		this.addEventListener("pointerleave", this.onPointerLeave);
+		this.addEventListener("keydown", this.onKeyDown);
+	}
+	private unbind(): void {
+		if (!this.bound) return;
+		this.bound = false;
+		this.removeEventListener("pointerdown", this.onPointerDown);
+		this.removeEventListener("pointermove", this.onPointerMove);
+		this.removeEventListener("pointerup", this.onPointerUp);
+		this.removeEventListener("pointerleave", this.onPointerLeave);
+		this.removeEventListener("keydown", this.onKeyDown);
 	}
 }
 

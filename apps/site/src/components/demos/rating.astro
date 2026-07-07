@@ -10,19 +10,40 @@ import Text from "@xtyle/astro/Text.astro";
 <Stack gap={6}>
 	<Card>
 		<Heading slot="header" level={3} size="sm">Product rating</Heading>
-		<Cluster gap={3}>
-			<Rating value={4.5} size="lg" label="4.5 out of 5 stars" />
+		<Cluster gap={3} align="center">
+			<Rating value={4.5} size="lg" readonly label="4.5 out of 5 stars" />
 			<Text tone="muted">4.5 · 1,204 reviews</Text>
 		</Cluster>
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Interactive</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">Click, drag, or focus and use the arrow keys.</Text>
+			<Cluster gap={5} align="center">
+				<Rating value={3} size="lg" label="Rate this product" />
+				<Rating value={2.5} size="lg" allowHalf label="Rate this stay (half steps)" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Any icon, any tone</Heading>
+		<Stack gap={3}>
+			<Cluster gap={5} align="center">
+				<Rating value={4} size="lg" icon="heart" tone="red" label="Rate this recipe" />
+				<Rating value={3} size="lg" icon="bolt" tone="warn" label="Rate the intensity" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Sizes and values</Heading>
 		<Stack gap={3}>
-			<Rating value={5} label="5 out of 5 stars" />
-			<Rating value={3.5} label="3.5 out of 5 stars" />
-			<Rating value={2} size="sm" label="2 out of 5 stars" />
-			<Rating value={7} max={10} label="7 out of 10 stars" />
+			<Rating value={5} readonly label="5 out of 5 stars" />
+			<Rating value={3.5} readonly label="3.5 out of 5 stars" />
+			<Rating value={2} size="sm" readonly label="2 out of 5 stars" />
+			<Rating value={7} max={10} readonly label="7 out of 10 stars" />
 		</Stack>
 	</Card>
 </Stack>
