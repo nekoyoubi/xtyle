@@ -260,7 +260,7 @@ export const ICON_SERIES_COUNT = 9;
 /** The palette-nibble map, addressed `0`–`f`: `0` transparent, `1`–`9` the nine series colors,
  * `a` `currentColor` (the "active" ink), `b` `--bg-0`, `c` transparent, `f` `--fg-0`; `d`/`e` reserved
  * (inert). Every color flag (`c{n}`, an outline's `c{n}`, a drop shadow's color) is a nibble into this. */
-const SLOT_TABLE: Record<number, string> = {
+export const SLOT_TABLE: Record<number, string> = {
 	0: "transparent",
 	1: "series:0",
 	2: "series:1",
