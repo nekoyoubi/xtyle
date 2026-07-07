@@ -285,6 +285,13 @@ function slotPaints(slot: number): boolean {
 	return (slot >= 1 && slot <= 11) || slot === 15;
 }
 
+/** Resolve a palette nibble to its color spec: a per-slot `---pc{n}` override wins, then a
+ * whole-palette `---pc-{hex}` silhouette on a painting slot, then the canonical nibble map. */
+function resolveSlot(slot: number, palette: Record<string, string> | undefined): string {
+	const override = palette?.[slot] ?? (slotPaints(slot) ? palette?.["*"] : undefined);
+	return override ?? SLOT_TABLE[slot] ?? "transparent";
+}
+
 /** Wraps a palette nibble as a deferred `slot:{n}` spec, resolved at compose time so a `---pc`
  * override (a single slot, or a whole-palette silhouette) can rewrite it before it lands. */
 export function colorSlot(slot: number): string {
@@ -310,11 +317,7 @@ function resolveColor(spec: string | undefined, opts: ComposeIconOptions): strin
 	// A `---pc-{hex}` silhouette flattens the implicit ink (no fill / `currentColor`) too, not just slots.
 	if (!spec || spec === "currentColor") return opts.palette?.["*"] ?? "currentColor";
 	if (spec.startsWith("slot:")) {
-		const slot = Number(spec.slice(5));
-		// A per-slot `---pc{n}` override wins; a whole-palette `---pc-{hex}` silhouette repaints every
-		// painting slot; otherwise the canonical nibble map decides. Resolve the result the normal way.
-		const override = opts.palette?.[slot] ?? (slotPaints(slot) ? opts.palette?.["*"] : undefined);
-		return resolveColor(override ?? SLOT_TABLE[slot] ?? "transparent", opts);
+		return resolveColor(resolveSlot(Number(spec.slice(5)), opts.palette), opts);
 	}
 	if (spec === "transparent" || spec === "none") return spec;
 	if (spec.startsWith("series:")) {
@@ -412,8 +415,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 	const defs: string[] = [];
 	let body = "";
 	let holes = 0;
-	// Carry the composition's `---pc` overrides into every color resolution below.
-	const ropts: ComposeIconOptions = composition.palette ? { ...opts, palette: composition.palette } : opts;
+	const paletteOpts: ComposeIconOptions = composition.palette ? { ...opts, palette: composition.palette } : opts;
 
 	for (const layer of composition.layers) {
 		const primitive = ICON_PRIMITIVES[layer.primitive] ?? MISSING;
@@ -433,7 +435,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				`<mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${GRID}" height="${GRID}"><rect width="${GRID}" height="${GRID}" fill="${fieldFill}"/>${cut}</mask>`,
 			);
 			body = `<g mask="url(#${maskId})">${body}</g>`;
-			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, transform, ropts);
+			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, transform, paletteOpts);
 		} else if (layer.invert) {
 			// Paint the fill everywhere *except* the shape — a filled field with a shape-hole.
 			const maskId = `xi-${id}-${holes++}`;
@@ -442,9 +444,9 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				`<mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${GRID}" height="${GRID}"><rect width="${GRID}" height="${GRID}" fill="#fff"/>${cut}</mask>`,
 			);
 			const alpha = layer.opacity != null && layer.opacity !== 1 ? ` fill-opacity="${n(layer.opacity)}"` : "";
-			body += `<g mask="url(#${maskId})"><rect width="${GRID}" height="${GRID}" fill="${resolveColor(layer.fill, ropts)}"${alpha}/></g>`;
+			body += `<g mask="url(#${maskId})"><rect width="${GRID}" height="${GRID}" fill="${resolveColor(layer.fill, paletteOpts)}"${alpha}/></g>`;
 		} else {
-			body += paintGroup(primitive.body, resolveColor(layer.fill, ropts), layer, transform, ropts);
+			body += paintGroup(primitive.body, resolveColor(layer.fill, paletteOpts), layer, transform, paletteOpts);
 		}
 	}
 
@@ -453,7 +455,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 	let overflow = "";
 	if (composition.dropShadow) {
 		const ds = composition.dropShadow;
-		const color = resolveColor(ds.color, ropts);
+		const color = resolveColor(ds.color, paletteOpts);
 		const filterId = `xds-${id}`;
 		defs.push(
 			`<filter id="${filterId}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="${n(ds.dx)}" dy="${n(ds.dy)}" stdDeviation="${n(ds.blur)}" flood-opacity="0.5" style="flood-color:${color}"/></filter>`,
@@ -483,12 +485,7 @@ export function composeIconThemed(composition: IconComposition, opts: ComposeIco
 	const bake = (spec: string | undefined): string | undefined => {
 		// implicit ink (no fill / currentColor) also takes the `*` silhouette
 		if (!spec || spec === "currentColor") return palette?.["*"] ?? spec;
-		let s = spec;
-		if (s.startsWith("slot:")) {
-			const slot = Number(s.slice(5));
-			const override = palette?.[slot] ?? (slotPaints(slot) ? palette?.["*"] : undefined);
-			s = override ?? SLOT_TABLE[slot] ?? "transparent";
-		}
+		const s = spec.startsWith("slot:") ? resolveSlot(Number(spec.slice(5)), palette) : spec;
 		return s.startsWith("series:") ? resolveColor(s, opts) : s;
 	};
 	const layers = composition.layers.map((layer) => ({
