@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { SERIES_SCHEMES } from "../series.js";
 
 const htmlExample = `<xtyle-rating value="3" label="Rate this product"></xtyle-rating>
 
@@ -120,6 +121,7 @@ export const ratingManifest: ComponentManifest = {
 			default: "accents",
 			description: "The series scheme a colorful mark spec draws its palette from (`accents`, `skittles`, …).",
 			bindings: ["html", "svelte", "astro"],
+			options: [...SERIES_SCHEMES],
 		},
 		{
 			name: "size",

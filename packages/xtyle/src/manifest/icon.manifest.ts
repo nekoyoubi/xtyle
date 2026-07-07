@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { SERIES_SCHEMES } from "../series.js";
 import { FULL_TONES } from "../vocab.js";
 import { ICON_NAMES } from "../icons.js";
 
@@ -102,7 +103,7 @@ export const iconManifest: ComponentManifest = {
 			description:
 				"For a generated mark, the series scheme its `c3+` color slots draw from (`accents`, `skittles`, `statuses`, …), so one spec re-skins across schemes. Ignored for a functional glyph.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["accents", "skittles", "statuses", "thermal", "status"],
+			options: [...SERIES_SCHEMES],
 		},
 		{
 			name: "size",
