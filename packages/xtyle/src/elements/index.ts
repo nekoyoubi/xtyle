@@ -106,6 +106,8 @@ export type { TocItem } from "./toc.js";
 export { XtyleKbd } from "./kbd.js";
 export { XtyleIcon } from "./icon.js";
 export { XtyleImage } from "./image.js";
+export { XtyleLightbox, openLightbox, closeLightbox } from "./lightbox.js";
+export type { LightboxOptions } from "./lightbox.js";
 export { XtyleCarousel } from "./carousel.js";
 export { XtyleParallax } from "./parallax.js";
 export { XtyleHero } from "./hero.js";

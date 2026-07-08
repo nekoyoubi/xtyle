@@ -142,6 +142,19 @@ export const imageLightboxCss = `
 	justify-content: center;
 }
 .xtyle-image__lightbox::backdrop { background: var(--scrim); }
+.xtyle-image__lightbox-figure {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	width: 100%;
+	height: 100%;
+	/* Clicks on the empty column (around the letterboxed image or beside the caption) fall through
+	   to the dialog's self-click close; the caption re-enables pointer events on itself for select. */
+	pointer-events: none;
+}
 .xtyle-image__full {
 	display: block;
 	width: 100%;
@@ -150,6 +163,22 @@ export const imageLightboxCss = `
 	/* The image is letterboxed inside the full-size frame, so a click on the empty area falls
 	   through to the dialog (which closes on a self-click), keeping click-outside-to-dismiss. */
 	pointer-events: none;
+}
+.xtyle-image__lightbox-figure:has(.xtyle-image__lightbox-caption:not([hidden])) .xtyle-image__full {
+	flex: 1 1 auto;
+	min-height: 0;
+	height: auto;
+}
+.xtyle-image__lightbox-caption {
+	flex: none;
+	max-width: 72ch;
+	margin: 0;
+	color: var(--fg-1);
+	font-size: var(--text-sm);
+	line-height: var(--leading-normal);
+	text-align: center;
+	/* Re-enable selection on the caption itself; the figure around it stays click-through. */
+	pointer-events: auto;
 }
 .xtyle-image__close {
 	${cornerButton}

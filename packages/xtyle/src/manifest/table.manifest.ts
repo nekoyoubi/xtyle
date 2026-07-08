@@ -94,6 +94,37 @@ import { Table } from "@xtyle/astro";
 	</table>
 </Table>`;
 
+const tablePartsExample = `<script lang="ts">
+	import { Table } from "@xtyle/svelte";
+	import { tableParts } from "@xtyle/core";
+
+	let rows = $state([
+		{ id: "#1024", customer: "Ada Lovelace", total: "$42.00" },
+		{ id: "#1025", customer: "Alan Turing", total: "$17.50" },
+	]);
+</script>
+
+<Table variant="striped" hover ariaLabel="Recent orders">
+	<table>
+		<thead class={tableParts.head}>
+			<tr class={tableParts.row}>
+				<th class={tableParts.headerCell} scope="col">Order</th>
+				<th class={tableParts.headerCell} scope="col">Customer</th>
+				<th class={tableParts.headerCell} scope="col">Total</th>
+			</tr>
+		</thead>
+		<tbody class={tableParts.body}>
+			{#each rows as row (row.id)}
+				<tr class={tableParts.row}>
+					<td class={tableParts.cell}>{row.id}</td>
+					<td class={tableParts.cell}>{row.customer}</td>
+					<td class={tableParts.cell}>{row.total}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+</Table>`;
+
 export const tableManifest: ComponentManifest = {
 	id: "table",
 	name: "Table",
@@ -102,7 +133,7 @@ export const tableManifest: ComponentManifest = {
 	seeAlso: ["pagination", "tree"],
 	summary: "A styled data table around native `<table>`: zebra, bordered, hover, sticky header, and a sortable-header affordance.",
 	description:
-		"Table dresses a native `<table>` in xtyle styling without taking over its markup. The binding is a thin wrapper that relays consumer-authored rows: you write the real `<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>` and tag them with the `xtyle-table__*` part classes, and the wrapper supplies the scroll container, variant, size, hover, and sticky behavior. Variants `default`/`striped`/`bordered` set the row and cell chrome; `compact`/`normal` sizes set the cell padding. The sortable-header affordance renders a sort glyph and exposes an `aria-sort` hook on the header cell; the engine is presentation-only, so the consumer wires the actual sort and toggles `aria-sort` (`ascending`/`descending`/`none`), and the glyph rotates to match. `scope` belongs on every header cell so screen readers associate it with its row or column.",
+		"Table dresses a native `<table>` in xtyle styling without taking over its markup. The binding is a thin wrapper that relays consumer-authored rows: you write the real `<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>` and tag them with the `xtyle-table__*` part classes, and the wrapper supplies the scroll container, variant, size, hover, and sticky behavior. Rows you render after mount get decorated automatically by a subtree observer, so a keyed `{#each}` or a live feed needs no classing at all. A framework that would rather class rows at author time (skipping the observer entirely) can, and to keep that path from hard-coding magic strings, `@xtyle/core` exports the part-class names as the typed `tableParts` map (`tableParts.head`, `.row`, `.cell`, `.headerCell`, `.body`, …) — the same constants the decorator itself writes, so a part rename can't drift silently. Variants `default`/`striped`/`bordered` set the row and cell chrome; `compact`/`normal` sizes set the cell padding. The sortable-header affordance renders a sort glyph and exposes an `aria-sort` hook on the header cell; the engine is presentation-only, so the consumer wires the actual sort and toggles `aria-sort` (`ascending`/`descending`/`none`), and the glyph rotates to match. `scope` belongs on every header cell so screen readers associate it with its row or column.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -312,6 +343,13 @@ export const tableManifest: ComponentManifest = {
 			title: "Variants, sticky header, and a sortable column",
 			description: "Striped rows with hover and a sticky, sortable header; the consumer supplies rows and owns the sort.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "typed-part-classes",
+			title: "Author-time classing with the typed `tableParts`",
+			description:
+				"When you render rows yourself, class them from the exported `tableParts` map instead of string literals — a part rename is then a compile error, not a silent style regression.",
+			source: { svelte: tablePartsExample },
 		},
 	],
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { auditRegister, derive } from "../src/index.js";
+import { auditRegister, canonicalContrastPairs, derive } from "../src/index.js";
 import { xtyleDefault } from "../src/batteries.js";
 
 const register = derive(xtyleDefault, { constraints: { "--bg-0": "#0e1116", "--accent": "#6b5dd3" } });
@@ -70,5 +70,28 @@ describe("auditRegister", () => {
 		expect(empty.tallies.total).toBe(0);
 		expect(empty.worst).toBe(0);
 		expect(empty.passes).toBe(true);
+	});
+
+	it("exports the canonical pairs as data a consumer can read and extend", () => {
+		const pairs = canonicalContrastPairs();
+		expect(pairs).toHaveLength(36);
+		expect(pairs[0]).toEqual({ fg: "--fg-0", bg: "--bg-0" });
+		// the same list the audit grades, so the exported data and the audit can't drift
+		expect(auditRegister(register).tallies.total).toBe(pairs.length);
+	});
+
+	it("grades a consumer's own pair set when opts.pairs is passed, with a custom label", () => {
+		const audit = auditRegister(register, {
+			pairs: [
+				{ fg: "--danger-text", bg: "--bg-0", label: "danger ink on base" },
+				{ fg: "--success-text", bg: "--bg-0" },
+			],
+		});
+		expect(audit.tallies.total).toBe(2);
+		expect(audit.entries[0]?.pair).toBe("danger ink on base");
+		// falls back to the "<fg> on <bg>" label when none is given
+		expect(audit.entries[1]?.pair).toBe("--success-text on --bg-0");
+		// these are the consumer's pairs, not the canonical status-on-tint pairs
+		expect(audit.entries.some((e) => e.bg === "--danger-bg")).toBe(false);
 	});
 });

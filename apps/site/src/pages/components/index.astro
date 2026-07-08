@@ -12,6 +12,7 @@ import Cluster from "@xtyle/astro/Cluster.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Eyebrow from "@xtyle/astro/Eyebrow.astro";
 import CoverageBadge from "../../components/reference/CoverageBadge.astro";
+import CardPreview from "../../components/reference/CardPreview.astro";
 import {
 	categoryOrder,
 	categoryMeta,
@@ -45,7 +46,8 @@ function coverageFor(component: ComponentManifest) {
 	};
 }
 
-const stats = displayStats(site).map((s) => ({ num: `${s.value}`, label: s.label }));
+const stats = displayStats(site).map((s) => ({ num: `${s.value}`, label: s.label, delta: site.delta(s.key) }));
+const newThisCycle = all.filter((c) => isNewComponent(c.since));
 
 const metaDescription = `The xtyle component contract: ${total} components across ${grouped.length} categories, each rendered live from the active xtyle-default theme with a live token-coverage check.`;
 ---
@@ -72,6 +74,11 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 				<Card compact role="listitem" class="cx-stat">
 					<p class="cx-stat__num">{stat.num}</p>
 					<Text size="xs" tone="muted" class="cx-stat__label">{stat.label}</Text>
+					{stat.delta > 0 && (
+						<Badge tone="success" variant="soft" size="sm" class="cx-stat__delta">
+							+{stat.delta} since v{site.baseline.version}
+						</Badge>
+					)}
 				</Card>
 			))}
 		</Grid>
@@ -89,6 +96,36 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		/>
 		<p class="cx-search__status" data-search-status aria-live="polite" role="status"></p>
 	</div>
+
+	{newThisCycle.length > 0 && (
+		<section class="cx-new" aria-labelledby="cx-new-title" data-new-band>
+			<div class="cx-new__head">
+				<span class="cx-new__spark" aria-hidden="true">✦</span>
+				<Heading level={2} size="lg" id="cx-new-title">New in v{site.version}</Heading>
+				<Text size="sm" tone="muted" class="cx-new__blurb">
+					{newThisCycle.length} components landed this cycle. Each renders live below, from the same theme.
+				</Text>
+			</div>
+			<Grid minColWidth="15rem" gap={4} align="stretch" class="cx-new__grid">
+				{newThisCycle.map((component) => (
+					<article class="cx-new-card">
+						<Card class="cx-new-card__inner">
+							<Cluster gap={2} align="center" class="cx-new-card__title">
+								<Heading level={3} size="sm">
+									<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
+								</Heading>
+								<Badge variant="solid" tone="accent" size="sm">New</Badge>
+							</Cluster>
+							<div class="cx-card__preview" aria-hidden="true" inert>
+								<CardPreview id={component.id} />
+							</div>
+							<p class="cx-new-card__summary" set:html={renderMarkdownInline(component.summary)} />
+						</Card>
+					</article>
+				))}
+			</Grid>
+		</section>
+	)}
 
 	{grouped.map((group, gi) => {
 		const groupCovered = group.items.filter(
@@ -112,13 +149,12 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 					{groupCovered}/{group.items.length}
 				</Badge>
 			</div>
-			<Grid minColWidth="18rem" gap={4} class="cx-grid">
+			<Grid minColWidth="18rem" gap={4} align="stretch" class="cx-grid">
 				{group.items.map((component) => {
 					const cov = coverageFor(component);
 					return (
-						<a
+						<article
 							class={`cx-card-link ${cov.covered ? "is-covered" : "has-gaps"}`}
-							href={`/components/${component.id}`}
 							data-cx-card
 							data-search={`${component.name} ${component.summary} ${(component.keywords ?? []).join(" ")} ${(component.seeAlso ?? []).join(" ")}`.toLowerCase()}
 						>
@@ -126,10 +162,10 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 								<Cluster justify="between" align="start" gap={2} class="cx-card__top">
 									<Cluster gap={2} align="center" class="cx-card__title">
 										<Heading level={3} size="sm" class="cx-card__name">
-											{component.name}
+											<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
 										</Heading>
 										{isNewComponent(component.since) && (
-											<Badge variant="soft" tone="accent" size="sm">New</Badge>
+											<Badge variant="solid" tone="accent" size="sm">New</Badge>
 										)}
 									</Cluster>
 									<CoverageBadge
@@ -143,6 +179,9 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 									class="cx-card__summary"
 									set:html={renderMarkdownInline(component.summary)}
 								/>
+								<div class="cx-card__preview" aria-hidden="true" inert>
+									<CardPreview id={component.id} />
+								</div>
 								<Cluster justify="between" align="center" gap={2} class="cx-card__foot">
 									<Cluster gap={1} class="cx-card__bindings">
 										{bindingOrder
@@ -154,7 +193,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 									<span class="cx-card__more">Reference →</span>
 								</Cluster>
 							</Card>
-						</a>
+						</article>
 					);
 				})}
 			</Grid>
@@ -248,6 +287,61 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		letter-spacing: 0.06em;
 		margin: var(--space-1) 0 0;
 	}
+	.cx-stat :global(.cx-stat__delta) {
+		margin-top: var(--space-2);
+		align-self: start;
+	}
+
+	.cx-new {
+		margin-bottom: var(--space-8);
+		padding: var(--space-5);
+		border-radius: var(--radius-lg);
+		border: var(--border-thin) solid var(--accent);
+		background: linear-gradient(to bottom right, var(--accent-bg), transparent 72%);
+	}
+	.cx-new__head {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-3);
+		margin-bottom: var(--space-4);
+	}
+	.cx-new__spark {
+		color: var(--accent);
+		font-size: var(--text-xl);
+		line-height: 1;
+	}
+	.cx-new__blurb {
+		margin: 0;
+	}
+	.cx-new-card {
+		position: relative;
+		display: flex;
+	}
+	.cx-new-card :global(.cx-new-card__inner) {
+		position: relative;
+		flex: 1;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		box-shadow: var(--elevation-1);
+		transition:
+			box-shadow var(--duration-fast) var(--ease-standard),
+			transform var(--duration-fast) var(--ease-standard);
+	}
+	.cx-new-card:hover :global(.cx-new-card__inner) {
+		transform: translateY(-2px);
+		box-shadow: var(--elevation-3);
+	}
+	.cx-new-card :global(.cx-new-card__title) {
+		margin-bottom: var(--space-2);
+	}
+	.cx-new-card__summary {
+		color: var(--fg-1);
+		font-size: var(--text-sm);
+		line-height: var(--leading-normal);
+		margin: var(--space-3) 0 0;
+	}
 	.cx-search {
 		margin-bottom: var(--space-8);
 	}
@@ -330,12 +424,11 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 	.cx-card-link {
 		text-decoration: none;
 		color: inherit;
-		display: block;
-	}
-	.cx-card-link:hover {
-		text-decoration: none;
+		display: flex;
 	}
 	.cx-card-link :global(.cx-card) {
+		position: relative;
+		flex: 1;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
@@ -345,6 +438,34 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 			border-color var(--duration-fast) var(--ease-standard),
 			box-shadow var(--duration-fast) var(--ease-standard),
 			transform var(--duration-fast) var(--ease-standard);
+	}
+	/* Stretched link: the whole card navigates, but the title is the only anchor, so the live
+	   preview's controls are siblings (valid HTML) instead of interactive elements inside an <a>. */
+	.cx-card__link {
+		color: inherit;
+		text-decoration: none;
+	}
+	.cx-card__link::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		border-radius: var(--radius-md);
+	}
+	.cx-card__link:focus-visible {
+		outline: none;
+	}
+	.cx-card__link:focus-visible::after {
+		outline: var(--border-thick) solid var(--ring);
+		outline-offset: 2px;
+	}
+	.cx-card__preview {
+		position: relative;
+		z-index: 0;
+		pointer-events: none;
+		margin-top: var(--space-3);
+		padding-top: var(--space-3);
+		border-top: var(--border-thin) solid var(--line);
 	}
 	.cx-card-link.is-covered :global(.cx-card) {
 		border-inline-start-color: var(--success);

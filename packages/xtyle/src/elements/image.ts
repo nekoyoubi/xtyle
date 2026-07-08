@@ -1,9 +1,9 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { imageHostCss, escapeAttr } from "../markup/index.js";
-import { imageLightboxCss } from "../css/components/image.js";
+import { imageHostCss } from "../markup/index.js";
 import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger } from "../markup/image.js";
 import { renderIcon } from "../icons.js";
 import { FragmentHost } from "./fragment-host.js";
+import { openLightbox } from "./lightbox.js";
 import { manifest, fragmentSources } from "./fragments/image/source.generated.js";
 
 export class XtyleImage extends XtyleElement {
@@ -15,7 +15,6 @@ export class XtyleImage extends XtyleElement {
 	private wiredImg: HTMLImageElement | null = null;
 	private wiredFrame: HTMLElement | null = null;
 	private lightboxTrigger: AbortController | null = null;
-	private lightboxEl: HTMLDialogElement | null = null;
 
 	protected override get styleMode(): StyleMode {
 		return "auto";
@@ -216,48 +215,7 @@ export class XtyleImage extends XtyleElement {
 	}
 
 	private openLightbox(): void {
-		this.ensureLightbox().showModal();
-	}
-
-	private ensureLightbox(): HTMLDialogElement {
-		if (this.lightboxEl && this.lightboxEl.isConnected) {
-			const full = this.lightboxEl.querySelector<HTMLImageElement>(".xtyle-image__full");
-			if (full) {
-				full.setAttribute("src", this.src ?? "");
-				full.setAttribute("alt", this.alt);
-			}
-			return this.lightboxEl;
-		}
-		const src = escapeAttr(this.src ?? "");
-		const alt = escapeAttr(this.alt);
-		const dialog = document.createElement("dialog");
-		dialog.className = "xtyle-image__lightbox";
-		// No `part` hooks: the dialog mounts on document.body (see the portal below), outside any shadow
-		// tree, so `::part()` can't reach it. It's themed by its `.xtyle-image__*` classes in every mode.
-		dialog.innerHTML =
-			`<style>${imageLightboxCss}</style>` +
-			`<button type="button" class="xtyle-image__close" aria-label="Close">${renderIcon("close")}</button>` +
-			`<img class="xtyle-image__full" src="${src}" alt="${alt}" />`;
-		dialog.querySelector(".xtyle-image__close")?.addEventListener("click", () => dialog.close());
-		dialog.addEventListener("click", (event) => {
-			if (event.target === dialog) dialog.close();
-		});
-		// Portal to document.body, not the element's own root: an ancestor with transform, filter,
-		// backdrop-filter, will-change, or contain establishes a containing block that a modal
-		// <dialog> anchors to instead of the viewport, so a lightbox inside a frosted or transformed
-		// surface mispositions. Mounting on the body escapes any such ancestor.
-		document.body.appendChild(dialog);
-		this.lightboxEl = dialog;
-		return dialog;
-	}
-
-	disconnectedCallback(): void {
-		// The portalled dialog lives on document.body, not under this element, so it won't be
-		// removed with the host — tear it down explicitly to avoid orphaning it.
-		if (this.lightboxEl) {
-			this.lightboxEl.remove();
-			this.lightboxEl = null;
-		}
+		openLightbox(this.src ?? "", { alt: this.alt, caption: this.caption ?? undefined });
 	}
 }
 

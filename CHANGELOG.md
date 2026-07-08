@@ -30,6 +30,23 @@
 - **A `trigger` for where the zoom lives.** `trigger="frame"` (the default) keeps the whole image as the zoom target; `trigger="button"` moves it onto a dedicated zoom button that reveals on hover and focus, so click-to-zoom sits beside selectable text without fighting it
   - the button is a real `<button>` (keyboard-focusable, Enter or Space), stays visible on touch where there is no hover, and keeps a ring and a lift so it holds its edge over any image instead of dissolving into a dark photo
 - **A `maximize` glyph** joined the functional icon set, the diagonal-expand mark the zoom button draws; it rides as a `symbol-maximize` primitive in the icon builder too
+- **A standalone, delegated lightbox for images no component rendered.** The per-`<Image lightbox>` case only covers images the component drew; a `marked`/CMS body injected as `{@html}`, or a gallery of mixed sources, couldn't share it. Now one `<xtyle-lightbox>` mounted once opens any `[data-xtyle-lightbox]` element in its scope (the whole document, or a `scope` selector's subtree), and `openLightbox(src, { alt, caption })` from `@xtyle/core/elements` drives the same dialog from any handler. One controller, one dialog, every image source, and `<Image>` itself now routes through it instead of building its own
+  - a non-interactive trigger (a bare `<img data-xtyle-lightbox>`) is promoted to keyboard-operable (`role="button"`, a tab stop, an `aria-label` from the image `alt`) and opens on Enter or Space, so the delegated path is never mouse-only. `data-lightbox-src` / `-alt` / `-caption` override the resolved source for a full-res image behind a thumbnail, and the lightbox now renders an optional caption beneath the image
+
+### Metrics
+
+- **`Sparkline` gained kind-aware bounds so a typed metric ranges itself.** `bounds="percent"` pins `[0, 100]`, `bounds="unit"` pins `[0, 1]` (a fraction or a bool), and `bounds="duration"` caps at a rolling power of two so a latency spike lifts the ceiling instead of squashing the baseline. It's the per-kind range every consumer of a typed metric would otherwise re-derive by hand at each call site; an explicit `min`/`max` still overrides it, and the pure `resolveSparklineBounds` is exported for computing the same range yourself
+- **A filled `occupancy` variant for a binary series.** `variant="occupancy"` fills each "on" sample of a bool series as a solid block over a faint track, the uptime / presence / connection-state reading a 0/1 `step` line can't give; an all-off strip stays empty rather than collapsing to a solid block. Pair it with `bounds="unit"` for a clean threshold
+
+### Components
+
+- **The standalone status dot reads as live in three composable ways.** `.xtyle-dot` kept only an opacity breathe; it now also takes `--ping` (an expanding ring, a stronger status light), `--glow` (a soft halo), and an inline `--dot-color` escape hatch for an arbitrary per-state color the tone classes can't name. The three compose, and all hold still under `prefers-reduced-motion`
+- **`Table` exports its part-class names as the typed `tableParts` map.** A framework that classes its own rows at author time (skipping the runtime decorate) no longer hard-codes `"xtyle-table__row"` string literals: `tableParts.head` / `.row` / `.cell` / `.headerCell` / `.body` come from `@xtyle/core`, the same constants the decorator itself writes, so a part rename is a compile error instead of a silent style regression
+
+### Engine
+
+- **`auditRegister` takes a consumer's own contrast pairs.** A theme whose token contract differs from xtyle's canonical surfaces (status inks read on `--bg-0`, not each tone's soft tint) passes `opts.pairs` to grade what it actually renders, with an optional per-pair `label`. The canonical set is exported as data via `canonicalContrastPairs()` (and the `PairSpec` type), so a consumer extends it. A QuickJS/xript sandbox that can't `import` from `@xtyle/core` inlines the small list instead and pairs it with the equally-pure `contrast()` to run the same grade the frontend runs
+- **The chart component types resolve from the package root.** `SparklineVariant` / `SparklineTone` / `SparklineBounds`, `PieDatum` / `PieScheme` / `PieVariant`, `BarSeries` / `BarScheme`, `HeatmapScheme`, and `ImageFit` / `ImageRadius` / `ImageLoading` are now exported from `@xtyle/core` proper, not only its subpaths, so the Svelte and Astro wrappers (and any consumer) get real types for those props instead of a silent `any`
 
 ### Fixes
 

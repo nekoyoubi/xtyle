@@ -1,10 +1,16 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { sparklineHostCss, type SparklineVariant, type SparklineTone } from "../markup/index.js";
+import {
+	sparklineHostCss,
+	resolveSparklineBounds,
+	type SparklineVariant,
+	type SparklineTone,
+	type SparklineBounds,
+} from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/sparkline/source.generated.js";
 import { windowedPlot, type TimeSample } from "../timeseries.js";
 
-export type { SparklineVariant, SparklineTone };
+export type { SparklineVariant, SparklineTone, SparklineBounds };
 
 const VW = 100;
 const PAD = 3;
@@ -44,7 +50,7 @@ export class XtyleSparkline extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["values", "points", "window", "domain", "step", "variant", "tone", "show-end", "min", "max", "label"];
+		return ["values", "points", "window", "domain", "step", "variant", "tone", "show-end", "min", "max", "bounds", "label"];
 	}
 
 	get values(): number[] {
@@ -77,6 +83,15 @@ export class XtyleSparkline extends XtyleElement {
 		this.setAttribute("tone", value);
 	}
 
+	get bounds(): SparklineBounds | undefined {
+		const raw = this.getAttribute("bounds");
+		return raw === "percent" || raw === "unit" || raw === "duration" ? raw : undefined;
+	}
+	set bounds(value: SparklineBounds | undefined) {
+		if (value) this.setAttribute("bounds", value);
+		else this.removeAttribute("bounds");
+	}
+
 	attributeChangedCallback(name: string): void {
 		if (name === "values") this.valuesProp = null;
 		if (name === "points") this.pointsProp = null;
@@ -100,16 +115,25 @@ export class XtyleSparkline extends XtyleElement {
 		});
 	}
 
+	/** Effective `{ min, max }` for the current data: an explicit `min`/`max` attribute wins, else the
+	 * `bounds` kind picks a range. Computed once and shared by the render bindings and the marker math
+	 * so the plotted shape and the hover guide read the same scale. */
+	private resolvedBounds(values: number[]): { min?: number; max?: number } {
+		return resolveSparklineBounds(values, { bounds: this.bounds, min: this.num("min"), max: this.num("max") });
+	}
+
 	private get bindings(): Record<string, unknown> {
 		const plot = this.plot();
+		const values = plot ? plot.map((p) => p.value) : this.values;
+		const bounds = this.resolvedBounds(values);
 		return {
-			...(plot ? { plot } : { values: this.values }),
+			...(plot ? { plot } : { values }),
 			variant: this.variant,
 			tone: this.tone,
 			showEnd: this.getAttribute("show-end") !== "false",
 			step: this.hasAttribute("step"),
-			min: this.num("min"),
-			max: this.num("max"),
+			min: bounds.min,
+			max: bounds.max,
 			label: this.getAttribute("label"),
 		};
 	}
@@ -126,8 +150,9 @@ export class XtyleSparkline extends XtyleElement {
 		const xs = plot ? plot.map((p) => p.x) : null;
 		const guide = marker.querySelector<SVGLineElement>(".xtyle-sparkline__guide");
 		const dot = marker.querySelector<SVGCircleElement>(".xtyle-sparkline__dot");
-		const lo = this.num("min") ?? Math.min(...values);
-		const hi = this.num("max") ?? Math.max(...values);
+		const bounds = this.resolvedBounds(values);
+		const lo = bounds.min ?? Math.min(...values);
+		const hi = bounds.max ?? Math.max(...values);
 		const span = hi - lo || 1;
 		const innerW = VW - PAD * 2;
 

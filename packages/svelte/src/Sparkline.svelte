@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "./register.js";
-	import type { SparklineVariant, SparklineTone, TimeSample } from "@xtyle/core";
+	import type { SparklineVariant, SparklineTone, SparklineBounds, TimeSample } from "@xtyle/core";
 
 	interface Props {
 		values?: number[];
