@@ -98,7 +98,7 @@ export const sparklineManifest: ComponentManifest = {
 	seeAlso: ["stat", "bar", "heatmap"],
 	summary: "A tiny, word-sized trend line, area, bar, or occupancy chart, single-tone and axis-free, for inline use or a live time-series.",
 	description:
-		"Sparkline draws a single series of numbers as a small, axis-free SVG that reads as a trend at a glance, sized to sit inline in a sentence, a table cell, or beside a `Stat`. Four shapes: a `line`, a filled `area`, a mini `bar` run, or an `occupancy` strip that fills each \"on\" sample of a bool/binary series as a solid block (uptime, presence, connection state) rather than drawing a 0/1 line. Feed it evenly-spaced `values`, or switch to `points` (timestamped samples) for a real time-series: they map onto a sliding `window` (or an explicit `domain`), so irregular samples sit at their true position and slide left over real time. Add `step` to hold each value for an on/off signal. It takes one `tone` from the theme roster (any semantic role or named hue) and marks the latest point with an end dot. It's interactive: sweeping across it floats a marker and the value at the nearest point. Size it with the `--spark-width` and `--spark-height` custom properties; give it a `label` for an accessible name. Auto-ranged from the data, pinned with `min` / `max`, or ranged by kind with `bounds`: `percent` locks `[0, 100]`, `unit` locks `[0, 1]`, and `duration` caps at a rolling power of two so a latency spike lifts the ceiling instead of squashing the baseline — the per-kind range every consumer of a typed metric would otherwise re-derive by hand. An empty series shows a muted `No data` label instead of a blank box.",
+		"Sparkline draws a single series of numbers as a small, axis-free SVG that reads as a trend at a glance, sized to sit inline in a sentence, a table cell, or beside a `Stat`. Four shapes: a `line`, a filled `area`, a mini `bar` run, or an `occupancy` strip that fills each \"on\" sample of a bool/binary series as a solid block (uptime, presence, connection state) rather than drawing a 0/1 line. Feed it evenly-spaced `values`, or switch to `points` (timestamped samples) for a real time-series: they map onto a sliding `window` (or an explicit `domain`), so irregular samples sit at their true position and slide left over real time. Add `step` to hold each value for an on/off signal. It takes one `tone` from the theme roster (any semantic role or named hue) and marks the latest point with an end dot. It's interactive: sweeping across it floats a marker and the value at the nearest point. Size it with the `--spark-width` and `--spark-height` custom properties; give it a `label` for an accessible name. Auto-ranged from the data, pinned with `min` / `max`, or ranged by kind with `bounds`: `percent` locks `[0, 100]`, `unit` locks `[0, 1]`, and `duration` caps at a rolling power of two so a latency spike lifts the ceiling instead of squashing the baseline; the per-kind range every consumer of a typed metric would otherwise re-derive by hand. An empty series shows a muted `No data` label instead of a blank box.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -226,7 +226,7 @@ export const sparklineManifest: ComponentManifest = {
 		{ name: "bar", description: "A run of tiny bars, one per value.", className: "xtyle-sparkline--bar" },
 		{
 			name: "occupancy",
-			description: "A filled block per \"on\" sample of a bool/binary series over a faint track — the on/off reading a step line can't give.",
+			description: "A filled block per \"on\" sample of a bool/binary series over a faint track; the on/off reading a step line can't give.",
 			className: "xtyle-sparkline--occupancy",
 			tokens: ["--line"],
 		},
@@ -297,7 +297,7 @@ export const sparklineManifest: ComponentManifest = {
 		{
 			id: "occupancy",
 			title: "Occupancy strip for a bool series",
-			description: "`variant=\"occupancy\"` fills each \"on\" sample as a solid block over a faint track — the uptime/presence/connection reading a 0/1 step line can't give. Pair with `bounds=\"unit\"`.",
+			description: "`variant=\"occupancy\"` fills each \"on\" sample as a solid block over a faint track; the uptime/presence/connection reading a 0/1 step line can't give. Pair with `bounds=\"unit\"`.",
 			source: { html: occupancyHtmlExample, svelte: occupancySvelteExample },
 		},
 	],

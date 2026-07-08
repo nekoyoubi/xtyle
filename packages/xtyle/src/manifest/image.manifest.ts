@@ -71,8 +71,8 @@ const delegatedHtmlExample = `<!-- Mount the controller once, anywhere in the pa
 const imperativeSvelteExample = `<script lang="ts">
 	import { openLightbox } from "@xtyle/core/elements";
 
-	// Drive the same lightbox from any handler — a thumbnail grid, a keyboard
-	// shortcut, a router event — with no component wrapping the image.
+	// Drive the same lightbox from any handler (a thumbnail grid, a keyboard
+	// shortcut, a router event) with no component wrapping the image.
 	function view(src: string, alt: string) {
 		openLightbox(src, { alt, caption: alt });
 	}
@@ -91,7 +91,7 @@ export const imageManifest: ComponentManifest = {
 	seeAlso: ["avatar", "carousel", "skeleton"],
 	summary: "A responsive image in an aspect-ratio frame, with a loading shimmer and an opt-in lightbox.",
 	description:
-		"Image wraps a picture in a frame that holds its shape while it loads: give it a `ratio` and the box reserves the space so the page never reflows when the pixels arrive, and a shimmer placeholder fills the frame until they do, fading the image in on load. It stays honest with JavaScript off; the image renders at full opacity with no shimmer to hide it, and the blur-up is a progressive enhancement layered on top, never a curtain that traps the image behind a script that failed to run. `fit` chooses cover or contain, `radius` rounds the frame off the scale, an optional `caption` renders a `figcaption`, and native `loading=\"lazy\"` defers off-screen images for free. Set `lightbox` and the frame becomes a control that opens the full image in a top-layer dialog: a scrim, a close button, backdrop and Escape to dismiss, and focus handled by the platform, all wired only when the runtime is present so the static markup stays inert and safe. By default the whole frame is the zoom target; where that sits next to selectable prose, `trigger=\"button\"` moves the affordance onto a dedicated zoom button that reveals on hover and focus, so a click meant for the surrounding text never trips the modal. The per-`<Image>` lightbox is the common case; for images the component never rendered — a `marked`/CMS body injected as raw `{@html}`, a gallery of mixed sources — the same lightbox is available standalone: mount one `<xtyle-lightbox>` and it opens any `[data-xtyle-lightbox]` element in its scope (promoting non-interactive ones to keyboard-operable), or call the imperative `openLightbox(src, { alt, caption })` from `@xtyle/core/elements` from any click handler. One controller, one dialog, every image source.",
+		"Image wraps a picture in a frame that holds its shape while it loads: give it a `ratio` and the box reserves the space so the page never reflows when the pixels arrive, and a shimmer placeholder fills the frame until they do, fading the image in on load. It stays honest with JavaScript off; the image renders at full opacity with no shimmer to hide it, and the blur-up is a progressive enhancement layered on top, never a curtain that traps the image behind a script that failed to run. `fit` chooses cover or contain, `radius` rounds the frame off the scale, an optional `caption` renders a `figcaption`, and native `loading=\"lazy\"` defers off-screen images for free. Set `lightbox` and the frame becomes a control that opens the full image in a top-layer dialog: a scrim, a close button, backdrop and Escape to dismiss, and focus handled by the platform, all wired only when the runtime is present so the static markup stays inert and safe. By default the whole frame is the zoom target; where that sits next to selectable prose, `trigger=\"button\"` moves the affordance onto a dedicated zoom button that reveals on hover and focus, so a click meant for the surrounding text never trips the modal. The per-`<Image>` lightbox is the common case; for images the component never rendered (a `marked`/CMS body injected as raw `{@html}`, a gallery of mixed sources), the same lightbox is available standalone: mount one `<xtyle-lightbox>` and it opens any `[data-xtyle-lightbox]` element in its scope (promoting non-interactive ones to keyboard-operable), or call the imperative `openLightbox(src, { alt, caption })` from `@xtyle/core/elements` from any click handler. One controller, one dialog, every image source.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -233,7 +233,7 @@ export const imageManifest: ComponentManifest = {
 		"Give every content image a `ratio` so the frame reserves its space and the page doesn't reflow as images load.",
 		"Drop an Image into a `Card` media slot for a thumbnail with a caption, or into a `Grid` for a gallery.",
 		"Set `lightbox` on gallery thumbnails so a click opens the full image over a scrim; the close control uses the built-in `close` icon.",
-		"For images the component never rendered (a markdown/CMS body, a `{@html}` block, mixed sources), mount one `<xtyle-lightbox>` and tag images with `data-xtyle-lightbox`, or call `openLightbox(src, { alt, caption })` — one shared dialog, not a second bespoke lightbox.",
+		"For images the component never rendered (a markdown/CMS body, a `{@html}` block, mixed sources), mount one `<xtyle-lightbox>` and tag images with `data-xtyle-lightbox`, or call `openLightbox(src, { alt, caption })`; one shared dialog, not a second bespoke lightbox.",
 		"Pair `fit=\"contain\"` with a framed `ratio` for logos or art that must not be cropped.",
 	],
 	a11y: [
@@ -267,7 +267,7 @@ export const imageManifest: ComponentManifest = {
 			id: "standalone-controller",
 			title: "Standalone lightbox for any image source",
 			description:
-				"Mount one `<xtyle-lightbox>` and it opens any `[data-xtyle-lightbox]` in its scope — including raw `{@html}`/markdown images a component can't wrap — or call `openLightbox(src, { alt, caption })` imperatively. One controller and one dialog serve every image on the page.",
+				"Mount one `<xtyle-lightbox>` and it opens any `[data-xtyle-lightbox]` in its scope (including raw `{@html}`/markdown images a component can't wrap), or call `openLightbox(src, { alt, caption })` imperatively. One controller and one dialog serve every image on the page.",
 			source: { html: delegatedHtmlExample, svelte: imperativeSvelteExample },
 		},
 	],

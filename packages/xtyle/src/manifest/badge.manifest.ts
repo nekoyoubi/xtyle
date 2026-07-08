@@ -308,7 +308,7 @@ export const badgeManifest: ComponentManifest = {
 			id: "standalone-dot",
 			title: "Standalone status dot: breathe, ping, glow, custom color",
 			description:
-				"The chip-less `.xtyle-dot` reads as live three composable ways — opacity breathe, an expanding `--ping` ring, and a `--glow` halo — and takes an arbitrary color through the inline `--dot-color` escape hatch when the tone set can't name it.",
+				"The chip-less `.xtyle-dot` reads as live three composable ways (opacity breathe, an expanding `--ping` ring, and a `--glow` halo) and takes an arbitrary color through the inline `--dot-color` escape hatch when the tone set can't name it.",
 			source: { html: dotHtmlExample },
 		},
 	],
