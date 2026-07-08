@@ -151,7 +151,6 @@ export const imageLightboxCss = `
 	${cornerButton}
 	position: static;
 	cursor: pointer;
-	pointer-events: auto;
 }
 :host(.xtyle-lightbox) .xtyle-dialog__body {
 	padding: 0;

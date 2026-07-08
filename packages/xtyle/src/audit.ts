@@ -62,8 +62,7 @@ export interface ContrastAudit {
 	worst: number;
 }
 
-/** A text/fill token pair to grade for contrast. `fg` is the text (or foreground) token, `bg` the
- * surface it sits on; an optional `label` names the pair in the result (defaults to `"<fg> on <bg>"`). */
+/** A text/fill token pair to grade for contrast: `fg` is the text token, `bg` the surface it sits on. */
 export interface PairSpec {
 	fg: TokenName;
 	bg: TokenName;

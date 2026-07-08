@@ -122,7 +122,7 @@ export class XtyleLightbox extends HTMLElement {
 		this.observer = null;
 	}
 
-	/** Make every non-interactive trigger keyboard-operable; native `<a>`/`<button>` already are. */
+	/** Promote non-interactive triggers to keyboard-operable; native `<a>`/`<button>` are skipped. */
 	private promoteAll(root: Document | Element): void {
 		for (const trigger of Array.from(root.querySelectorAll(TRIGGER_SELECTOR))) {
 			if (trigger.matches("a, button")) continue;
@@ -136,23 +136,22 @@ export class XtyleLightbox extends HTMLElement {
 		}
 	}
 
-	private onClick = (event: MouseEvent): void => {
-		const trigger = (event.target as Element)?.closest?.(TRIGGER_SELECTOR);
-		if (!trigger) return;
+	private openFromTrigger(trigger: Element, event: Event): void {
 		const resolved = resolveTrigger(trigger);
 		if (!resolved) return;
 		event.preventDefault();
 		openLightbox(resolved.src, { alt: resolved.alt, caption: resolved.caption });
+	}
+
+	private onClick = (event: MouseEvent): void => {
+		const trigger = (event.target as Element)?.closest?.(TRIGGER_SELECTOR);
+		if (trigger) this.openFromTrigger(trigger, event);
 	};
 
 	private onKeydown = (event: KeyboardEvent): void => {
 		if (event.key !== "Enter" && event.key !== " ") return;
 		const trigger = (event.target as Element)?.closest?.(TRIGGER_SELECTOR);
-		if (!trigger || trigger.matches("a, button")) return;
-		const resolved = resolveTrigger(trigger);
-		if (!resolved) return;
-		event.preventDefault();
-		openLightbox(resolved.src, { alt: resolved.alt, caption: resolved.caption });
+		if (trigger && !trigger.matches("a, button")) this.openFromTrigger(trigger, event);
 	};
 }
 

@@ -3,10 +3,7 @@ import type { FullTone } from "../vocab.js";
 export type SparklineVariant = "line" | "area" | "bar" | "occupancy";
 export type SparklineTone = FullTone;
 
-/** Kind-aware auto y-bounds for a typed metric, so a consumer doesn't re-derive the same per-kind
- * range at every call site. `percent` pins `[0, 100]`; `unit` pins `[0, 1]` (a fraction or a bool);
- * `duration` pins `[0, rolling power-of-two cap]` so a latency spike doesn't squash the baseline.
- * An explicit `min`/`max` always wins over the kind. */
+/** Kind-aware auto y-bounds for a typed metric; see {@link resolveSparklineBounds} for the ranges. */
 export type SparklineBounds = "percent" | "unit" | "duration";
 
 /** The host-layout rule for a sparkline, shared by the element's scaffold and the SSR shadow root. */
