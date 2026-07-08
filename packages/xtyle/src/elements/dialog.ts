@@ -12,6 +12,7 @@ export class XtyleDialog extends XtyleElement {
 	private elementId = `xtyle-dialog-${Math.random().toString(36).slice(2, 8)}`;
 	private rootWired = false;
 	private wiredDialog: HTMLDialogElement | null = null;
+	private portalMarker: Comment | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "dialog", {
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => {
@@ -86,9 +87,34 @@ export class XtyleDialog extends XtyleElement {
 		const dialog = this.dialogEl;
 		if (!dialog) return;
 		if (this.open) {
+			this.portalToBody();
 			if (!dialog.open) dialog.showModal();
 		} else if (dialog.open) {
 			dialog.close();
+		}
+	}
+
+	/** Relocate the host to `document.body` while open. A modal `<dialog>` anchors to the nearest
+	 * ancestor that establishes a containing block (`transform`, `filter`, `backdrop-filter`,
+	 * `will-change`, `contain`), so a dialog inside a frosted or transformed panel mispositions.
+	 * Mounting on the body escapes any such ancestor; a marker holds its home for restore on close.
+	 * `connectedCallback` is idempotent (guarded by `hydrated`) and there is no teardown, so the move
+	 * neither re-renders nor drops wiring. Slotted light-DOM children travel with the host. */
+	private portalToBody(): void {
+		if (this.parentElement === document.body || !this.isConnected) return;
+		if (!this.portalMarker) {
+			this.portalMarker = document.createComment("xtyle-dialog");
+			this.before(this.portalMarker);
+		}
+		document.body.appendChild(this);
+	}
+
+	private restoreFromPortal(): void {
+		const marker = this.portalMarker;
+		this.portalMarker = null;
+		if (marker?.parentNode) {
+			marker.parentNode.insertBefore(this, marker);
+			marker.remove();
 		}
 	}
 
@@ -120,6 +146,7 @@ export class XtyleDialog extends XtyleElement {
 		this.wiredDialog = dialog;
 		dialog.addEventListener("close", () => {
 			if (this.open) this.open = false;
+			this.restoreFromPortal();
 			this.dispatchEvent(new Event("close", { bubbles: true, composed: true }));
 		});
 		dialog.addEventListener("cancel", () => {

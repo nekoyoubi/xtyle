@@ -1,7 +1,6 @@
 import { define } from "./base.js";
-import { escapeHtml } from "../markup/index.js";
-import { imageLightboxCss } from "../css/components/image.js";
-import { renderIcon } from "../icons.js";
+// Side-effect import: guarantees `<xtyle-dialog>` is defined so the lightbox can compose it.
+import "./dialog.js";
 
 export interface LightboxOptions {
 	/** Accessible name for the opened image. */
@@ -10,42 +9,40 @@ export interface LightboxOptions {
 	caption?: string;
 }
 
-let dialog: HTMLDialogElement | null = null;
+/** The `<xtyle-dialog>` the lightbox composes, narrowed to the two lifecycle methods it drives. */
+type DialogElement = HTMLElement & { showModal(): void; close(): void };
 
-function buildDialog(): HTMLDialogElement {
-	const el = document.createElement("dialog");
-	el.className = "xtyle-image__lightbox";
-	// No `part` hooks: the dialog mounts on document.body (see the portal below), outside any shadow
-	// tree, so `::part()` can't reach it. It's themed by its `.xtyle-image__*` classes in every mode.
+let dialog: DialogElement | null = null;
+
+/**
+ * The shared lightbox is an `<xtyle-dialog>` restyled by the `.xtyle-lightbox` host class, not a
+ * hand-rolled `<dialog>`: it inherits the dialog's overridable chrome, its `::part()` hooks, native
+ * focus trap, Escape, scrim, and backdrop-click-to-close, and its body-portal (so a lightbox opened
+ * from inside a transformed/frosted panel still centers on the viewport). The image slots into the
+ * body, the caption into the footer; the dialog supplies the close button.
+ */
+function buildDialog(): DialogElement {
+	const el = document.createElement("xtyle-dialog") as DialogElement;
+	el.className = "xtyle-lightbox";
+	el.setAttribute("label", "Image viewer");
 	el.innerHTML =
-		`<style>${imageLightboxCss}</style>` +
-		`<button type="button" class="xtyle-image__close" aria-label="Close">${renderIcon("close")}</button>` +
-		`<figure class="xtyle-image__lightbox-figure">` +
 		`<img class="xtyle-image__full" src="" alt="" />` +
-		`<figcaption class="xtyle-image__lightbox-caption" hidden></figcaption>` +
-		`</figure>`;
-	el.querySelector(".xtyle-image__close")?.addEventListener("click", () => el.close());
-	el.addEventListener("click", (event) => {
-		if (event.target === el) el.close();
-	});
-	// Portal to document.body, not any element's own root: an ancestor with transform, filter,
-	// backdrop-filter, will-change, or contain establishes a containing block that a modal
-	// <dialog> anchors to instead of the viewport, so a lightbox inside a frosted or transformed
-	// surface mispositions. Mounting on the body escapes any such ancestor.
+		`<figcaption slot="footer" class="xtyle-image__lightbox-caption" hidden></figcaption>`;
 	document.body.appendChild(el);
+	dialog = el;
 	return el;
 }
 
-function ensureDialog(): HTMLDialogElement {
+function ensureDialog(): DialogElement {
 	if (!dialog || !dialog.isConnected) dialog = buildDialog();
 	return dialog;
 }
 
 /**
- * Opens the shared lightbox on any image `src`, imperatively. One singleton `<dialog>` serves the
- * whole document, so a click handler over arbitrary DOM — a `marked`-rendered `{@html}` image, a CMS
- * body, a gallery of mixed sources — can drive the same lightbox the `<xtyle-image lightbox>`
- * component uses. The per-`<Image>` lightbox is the special case; this is the general controller.
+ * Opens the shared lightbox on any image `src`, imperatively. One singleton dialog serves the whole
+ * document, so a click handler over arbitrary DOM — a `marked`-rendered `{@html}` image, a CMS body,
+ * a gallery of mixed sources — can drive the same lightbox the `<xtyle-image lightbox>` component
+ * uses. The per-`<Image>` lightbox is the special case; this is the general controller.
  */
 export function openLightbox(src: string, opts: LightboxOptions = {}): void {
 	const el = ensureDialog();
@@ -56,13 +53,8 @@ export function openLightbox(src: string, opts: LightboxOptions = {}): void {
 	}
 	const caption = el.querySelector<HTMLElement>(".xtyle-image__lightbox-caption");
 	if (caption) {
-		if (opts.caption) {
-			caption.innerHTML = escapeHtml(opts.caption);
-			caption.hidden = false;
-		} else {
-			caption.textContent = "";
-			caption.hidden = true;
-		}
+		caption.textContent = opts.caption ?? "";
+		caption.hidden = !opts.caption;
 	}
 	el.showModal();
 }

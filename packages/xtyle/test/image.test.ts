@@ -65,35 +65,39 @@ describe("image", () => {
 		expect(html).toContain("xtyle-image__frame");
 	});
 
-	it("sizes the lightbox with a definite frame so an intrinsic-less image can't collapse it", () => {
+	it("sizes the lightbox dialog with a definite frame so an intrinsic-less image can't collapse it", () => {
 		// A shrink-to-fit modal collapses to 0 around an SVG that has a viewBox but no width/height,
-		// so the lightbox frame must be a definite viewport size (not just a max) and the image fills
-		// it with object-fit: contain. Guards the regression that rendered the lightbox at 0x0.
-		const lightbox = imageCss.slice(imageCss.indexOf(".xtyle-image__lightbox {"));
-		const block = lightbox.slice(0, lightbox.indexOf("}"));
+		// so the lightbox re-skins its <xtyle-dialog> to a definite viewport size (not just a max) and
+		// the slotted image fills it with object-fit: contain. Guards the 0x0 lightbox regression.
+		const dialog = imageCss.slice(imageCss.indexOf(":host(.xtyle-lightbox) .xtyle-dialog {"));
+		const block = dialog.slice(0, dialog.indexOf("}"));
 		expect(block).toContain("width: 92vw");
 		expect(block).toContain("height: 92vh");
-		const full = imageCss.slice(imageCss.indexOf(".xtyle-image__full {"));
+		const full = imageCss.slice(imageCss.indexOf("::slotted(.xtyle-image__full) {"));
 		const fullBlock = full.slice(0, full.indexOf("}"));
-		expect(fullBlock).toContain("width: 100%");
-		expect(fullBlock).toContain("height: 100%");
 		expect(fullBlock).toContain("object-fit: contain");
 		expect(fullBlock).toContain("pointer-events: none");
 	});
 
-	it("carries the lightbox styling as a standalone sheet the portalled dialog can adopt", () => {
-		// The portalled dialog lives outside the shadow root, so it carries its own <style>: the exported
-		// subset must stand alone and stay composed into imageCss for the coverage lint.
-		expect(imageLightboxCss).toContain(".xtyle-image__lightbox::backdrop { background: var(--scrim); }");
-		expect(imageLightboxCss).toContain(".xtyle-image__close {");
-		expect(imageLightboxCss).toContain("width: 92vw");
+	it("re-skins the shared xtyle-dialog through the .xtyle-lightbox host class, not a hand-rolled dialog", () => {
+		// The lightbox composes <xtyle-dialog>, so its styling rides the shared component sheet the dialog
+		// adopts (via :host()/::slotted()) rather than a standalone <style>. That's the override contract:
+		// it inherits the dialog's scrim, close button, focus trap, and body-portal instead of re-building them.
+		expect(imageLightboxCss).toContain(":host(.xtyle-lightbox) .xtyle-dialog");
+		expect(imageLightboxCss).toContain("::slotted(.xtyle-image__full)");
+		// no more hand-rolled chrome: the close button and backdrop are the dialog's now
+		expect(imageLightboxCss).not.toContain(".xtyle-image__close");
+		expect(imageLightboxCss).not.toContain("::backdrop");
 		expect(imageCss).toContain(imageLightboxCss);
 	});
 
-	it("hides the closed dialog so it can't intercept the page", () => {
-		// Author `display: flex` on the dialog beats the UA `dialog:not([open])` hide (author beats UA
-		// regardless of specificity), so without this a closed 92vw dialog covers the page and eats clicks.
-		expect(imageLightboxCss).toContain(".xtyle-image__lightbox:not([open]) { display: none; }");
+	it("lets clicks on the letterbox area fall through to the dialog's own close", () => {
+		// The dialog body is click-through and the image has pointer-events: none, so a click outside the
+		// image hits the <dialog> element and xtyle-dialog's backdrop-close fires. The close button and the
+		// caption re-enable pointer events so they stay clickable/selectable.
+		expect(imageLightboxCss).toContain(":host(.xtyle-lightbox) .xtyle-dialog__body");
+		const body = imageLightboxCss.slice(imageLightboxCss.indexOf(":host(.xtyle-lightbox) .xtyle-dialog__body {"));
+		expect(body.slice(0, body.indexOf("}"))).toContain("pointer-events: none");
 	});
 
 	it("offers a trigger prop with frame and button modes", () => {

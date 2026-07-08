@@ -114,9 +114,9 @@ export const imageManifest: ComponentManifest = {
 		},
 		{
 			name: "lightbox",
-			description: "The top-layer dialog that shows the full image, with its scrim and close button.",
-			selector: ".xtyle-image__lightbox",
-			tokens: ["--scrim", "--bg-1"],
+			description: "The full-image viewer: an `<xtyle-dialog>` restyled by the `.xtyle-lightbox` host class, so it inherits the dialog's scrim, close button, focus trap, Escape, and body-portal, and stays app-overridable.",
+			selector: ".xtyle-lightbox",
+			tokens: ["--bg-1"],
 		},
 		{
 			name: "zoom",
@@ -223,7 +223,6 @@ export const imageManifest: ComponentManifest = {
 		"--space-2",
 		"--space-3",
 		"--space-7",
-		"--scrim",
 		"--ring",
 		"--border-thin",
 		"--border-thick",

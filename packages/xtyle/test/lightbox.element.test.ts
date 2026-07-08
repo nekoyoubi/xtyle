@@ -18,17 +18,21 @@ afterEach(() => {
 	document.body.innerHTML = "";
 });
 
-function dialog(): HTMLDialogElement | null {
-	return document.body.querySelector<HTMLDialogElement>(".xtyle-image__lightbox");
+/** The lightbox composes `<xtyle-dialog class="xtyle-lightbox">`, mounted on the body. */
+function dialog(): HTMLElement | null {
+	return document.body.querySelector<HTMLElement>("xtyle-dialog.xtyle-lightbox");
 }
 
 describe("openLightbox", () => {
-	it("portals one dialog to the body with the image, alt, and caption", () => {
+	it("mounts one xtyle-dialog on the body with the slotted image, alt, caption, and opens it", () => {
 		openLightbox("/full.jpg", { alt: "A skyline", caption: "Downtown at dusk" });
+		expect(dialog()).not.toBeNull();
+		expect(dialog()?.hasAttribute("open")).toBe(true);
 		const full = dialog()?.querySelector<HTMLImageElement>(".xtyle-image__full");
 		expect(full?.getAttribute("src")).toBe("/full.jpg");
 		expect(full?.getAttribute("alt")).toBe("A skyline");
 		const caption = dialog()?.querySelector<HTMLElement>(".xtyle-image__lightbox-caption");
+		expect(caption?.getAttribute("slot")).toBe("footer");
 		expect(caption?.hidden).toBe(false);
 		expect(caption?.textContent).toBe("Downtown at dusk");
 	});
@@ -36,7 +40,7 @@ describe("openLightbox", () => {
 	it("reuses the single dialog and hides the caption when none is given", () => {
 		openLightbox("/a.jpg", { alt: "A", caption: "cap" });
 		openLightbox("/b.jpg", { alt: "B" });
-		expect(document.body.querySelectorAll(".xtyle-image__lightbox")).toHaveLength(1);
+		expect(document.body.querySelectorAll("xtyle-dialog.xtyle-lightbox")).toHaveLength(1);
 		const full = dialog()?.querySelector<HTMLImageElement>(".xtyle-image__full");
 		expect(full?.getAttribute("src")).toBe("/b.jpg");
 		expect(dialog()?.querySelector<HTMLElement>(".xtyle-image__lightbox-caption")?.hidden).toBe(true);

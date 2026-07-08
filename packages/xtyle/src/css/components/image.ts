@@ -116,77 +116,74 @@ const imageFrameCss = `
 `.trim();
 
 /**
- * The lightbox subtree, kept separate so the element can carry it as a self-contained `<style>`
- * inside the portalled `<dialog>`. The dialog mounts on `document.body` (to escape an ancestor
- * containing block), which puts it outside the element's shadow root and its adopted sheet — so
- * these rules travel with it. Composed back into `imageCss` below, so the shared component sheet
- * and the coverage lint still see every lightbox token.
+ * The lightbox variant of `<xtyle-dialog>`. The shared lightbox controller (`elements/lightbox.ts`)
+ * mounts an `<xtyle-dialog class="xtyle-lightbox">` on `document.body` and slots the image into the
+ * body and the caption into the footer; the dialog supplies the close button, scrim, focus trap,
+ * Escape, backdrop-click-to-close, and its own body-portal. These rules re-skin that dialog into an
+ * immersive viewer through the `.xtyle-lightbox` host class and `::part`-adjacent slot styling — the
+ * same override surface any app can use — so the lightbox is no longer a closed, hand-rolled box.
+ * They live in the shared component sheet the dialog's shadow adopts, so `:host()` and `::slotted()`
+ * resolve inside it; composed into `imageCss` below so the coverage lint still sees every token.
  */
 export const imageLightboxCss = `
-/* An author display:flex on the dialog beats the UA closed-dialog hide (author origin wins over UA
-   regardless of specificity), so a closed dialog would keep its 92vw box and intercept the whole
-   page. Re-assert the hidden state in author CSS. */
-.xtyle-image__lightbox:not([open]) { display: none; }
-.xtyle-image__lightbox {
-	padding: 0;
-	border: 0;
-	background: transparent;
+:host(.xtyle-lightbox) .xtyle-dialog {
 	/* A definite viewport-relative size, not a max: a shrink-to-fit modal collapses to 0 around an
 	   image with only an intrinsic ratio and no intrinsic size (an SVG with a viewBox but no
 	   width/height), so the frame fills the capped area and the image is contained within it. */
 	width: 92vw;
 	height: 92vh;
+	max-width: none;
+	max-height: none;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
 	overflow: visible;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 }
-.xtyle-image__lightbox::backdrop { background: var(--scrim); }
-.xtyle-image__lightbox-figure {
-	margin: 0;
+:host(.xtyle-lightbox) .xtyle-dialog__header {
+	position: absolute;
+	top: var(--space-2);
+	right: var(--space-2);
+	z-index: 1;
+	padding: 0;
+	border: 0;
+}
+:host(.xtyle-lightbox) .xtyle-dialog__close {
+	${cornerButton}
+	position: static;
+	cursor: pointer;
+	pointer-events: auto;
+}
+:host(.xtyle-lightbox) .xtyle-dialog__body {
+	padding: 0;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: var(--space-3);
-	width: 100%;
-	height: 100%;
-	/* Clicks on the empty column (around the letterboxed image or beside the caption) fall through
-	   to the dialog's self-click close; the caption re-enables pointer events on itself for select. */
+	/* The image is letterboxed inside the full-size frame, so a click on the empty area falls through
+	   to the dialog (which closes on a self-click), keeping click-outside-to-dismiss. */
 	pointer-events: none;
 }
-.xtyle-image__full {
+:host(.xtyle-lightbox) .xtyle-dialog__footer {
+	justify-content: center;
+	padding: var(--space-3) 0 0;
+	border: 0;
+	pointer-events: none;
+}
+:host(.xtyle-lightbox) ::slotted(.xtyle-image__full) {
 	display: block;
-	width: 100%;
-	height: 100%;
+	max-width: 100%;
+	max-height: 100%;
 	object-fit: contain;
-	/* The image is letterboxed inside the full-size frame, so a click on the empty area falls
-	   through to the dialog (which closes on a self-click), keeping click-outside-to-dismiss. */
 	pointer-events: none;
 }
-.xtyle-image__lightbox-figure:has(.xtyle-image__lightbox-caption:not([hidden])) .xtyle-image__full {
-	flex: 1 1 auto;
-	min-height: 0;
-	height: auto;
-}
-.xtyle-image__lightbox-caption {
-	flex: none;
+:host(.xtyle-lightbox) ::slotted(.xtyle-image__lightbox-caption) {
 	max-width: 72ch;
 	margin: 0;
 	color: var(--fg-1);
 	font-size: var(--text-sm);
 	line-height: var(--leading-normal);
 	text-align: center;
-	/* Re-enable selection on the caption itself; the figure around it stays click-through. */
+	/* Re-enable selection on the caption; the footer around it stays click-through. */
 	pointer-events: auto;
-}
-.xtyle-image__close {
-	${cornerButton}
-	cursor: pointer;
-}
-.xtyle-image__close:focus-visible {
-	outline: var(--border-thick) solid var(--ring);
-	outline-offset: 2px;
 }
 `.trim();
 
