@@ -268,6 +268,7 @@ export const cardManifest: ComponentManifest = {
 		"--bg-1",
 		"--line",
 		"--line-2",
+		"--elevation-0",
 		"--elevation-1",
 		"--elevation-2",
 		"--elevation-3",

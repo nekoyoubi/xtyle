@@ -20,7 +20,7 @@ export const cardCss = `
 }
 /* depthStrength: how far the surface lifts. The default (no class) is the eased md; sm is a
    whisper, lg keeps the heavier legacy elevation. An interactive card bumps one step on hover. */
-.xtyle-card--depth-sm { --card-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.35); --card-shadow-hover: var(--elevation-1); }
+.xtyle-card--depth-sm { --card-shadow: var(--elevation-0); --card-shadow-hover: var(--elevation-1); }
 .xtyle-card--depth-md { --card-shadow: var(--elevation-1); --card-shadow-hover: var(--elevation-2); }
 .xtyle-card--depth-lg { --card-shadow: var(--elevation-2); --card-shadow-hover: var(--elevation-3); }
 .xtyle-card--overlay {
