@@ -29,7 +29,7 @@
 	<div class="settings">
 		<nav class="settings__rail" aria-label="Settings sections">
 			<span class="settings__brand">
-				<Icon name="acct--shield-c3--star-s45-c1" colors="accents" size="lg" />
+				<Icon name="acct--shield-c1--star-s45-cf" colors="accents" size="lg" />
 				<span class="settings__brand-name">Account</span>
 			</span>
 			{#each sections as s (s.name)}

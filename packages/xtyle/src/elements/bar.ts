@@ -21,6 +21,10 @@ export class XtyleBar extends XtyleElement {
 		return "auto";
 	}
 
+	protected override get resolvesThemeAtRuntime(): boolean {
+		return true;
+	}
+
 	private seriesProp: BarSeries[] | null = null;
 	private categoriesProp: string[] | null = null;
 	private schemeProp: BarScheme | null = null;

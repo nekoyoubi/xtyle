@@ -35,6 +35,44 @@ const square = "data:image/svg+xml," + encodeURIComponent(squareSvg);
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Zoom button</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">With <code>trigger="button"</code> the frame stops being the click target; a zoom button reveals on hover and focus, so click-to-zoom sits beside selectable text without fighting it.</Text>
+			<Grid minColWidth="10rem" gap={3}>
+				<Image src={scene} alt="An abstract gradient landscape" ratio="1/1" lightbox trigger="button" />
+				<Image src={square} alt="A framed emblem" ratio="1/1" lightbox trigger="button" />
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Standalone lightbox for raw images</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				One <code>&lt;xtyle-lightbox&gt;</code> mounted in the card opens any <code>[data-xtyle-lightbox]</code>
+				in its scope, including plain <code>&lt;img&gt;</code> markup no component rendered (a markdown or
+				CMS body). Click a thumbnail, or focus it and press Enter, to open the shared dialog.
+			</Text>
+			<div id="delegated-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: var(--space-3);">
+				<xtyle-lightbox scope="#delegated-gallery"></xtyle-lightbox>
+				<img src={scene} alt="An abstract gradient landscape" data-xtyle-lightbox data-lightbox-caption="An abstract gradient landscape, full size" style="width: 100%; border-radius: var(--radius-md); cursor: zoom-in;" />
+				<img src={square} alt="A framed emblem" data-xtyle-lightbox data-lightbox-caption="The emblem, contained" style="width: 100%; border-radius: var(--radius-md); cursor: zoom-in;" />
+				<img src={scene} alt="An abstract gradient landscape" data-xtyle-lightbox style="width: 100%; border-radius: var(--radius-md); cursor: zoom-in;" />
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Lightbox in a frosted panel</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">The lightbox opens against the viewport, so it stays centered even inside a panel whose <code>backdrop-filter</code> or <code>transform</code> would otherwise pin a modal to its own box.</Text>
+			<div style="transform: translateZ(0); backdrop-filter: blur(8px); border: var(--border-thin) solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); background: var(--bg-2); max-width: 22rem;">
+				<Image src={scene} alt="An abstract gradient landscape" ratio="16/9" lightbox />
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Fit and radius</Heading>
 		<Grid minColWidth="12rem" gap={4}>
 			<Stack gap={1}>

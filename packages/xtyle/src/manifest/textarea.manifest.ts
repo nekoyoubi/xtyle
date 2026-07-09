@@ -37,6 +37,8 @@ export const textareaManifest: ComponentManifest = {
 	id: "textarea",
 	name: "Textarea",
 	category: "form",
+	keywords: ["multiline", "text area", "text input", "comment box"],
+	seeAlso: ["field", "form-group"],
 	summary: "A multi-line text input: styled, labelled, and resizable, in three sizes with an invalid state.",
 	description:
 		"Textarea is a styled multi-line text control. It renders a native `<textarea>` that inherits the shared `.xtyle-control` chrome, wrapped with an optional label and an error message slot. The `rows` attribute sets the initial visible height and `resize` controls the user's drag handle (vertical by default, or none / horizontal / both). It exposes the same `invalid` / `disabled` / `required` and `sm` / `md` / `lg` size surface as the rest of the form family, and the custom element is form-associated so its value participates in native form submission and reset.",

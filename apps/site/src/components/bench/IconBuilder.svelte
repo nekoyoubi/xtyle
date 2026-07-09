@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type SeriesScheme, composeIcon, primitiveSince, primitiveTags, resolveIconMark, seriesPalette, SERIES_TOKENS } from "@xtyle/core";
-	import { AppShell, Button, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xtyle/svelte";
+	import { AppShell, Button, ColorPicker, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xtyle/svelte";
 	import { isNewComponent } from "../../data/newness.ts";
 	import { ACTIVE_CHANGED_EVENT } from "../../lib/theme-active.ts";
 
@@ -28,7 +28,7 @@
 
 	// The properties a lock can pin against Randomize, in the order the layer lock aggregates them.
 	// Locks live on the layer at runtime and serialize into the name as a trailing `---` flags section
-	// (e.g. `crest--shield-c3--star-s45-c1---l1c-l2ws`), so a template name carries its pinned style and
+	// (e.g. `crest--shield-c1--star-s45-cf---l1c-l2ws`), so a template name carries its pinned style and
 	// export can trim everything from `---` on for a clean production name.
 	const LOCK_KEYS = ["keyword", "p", "s", "r", "x", "y", "a", "c", "outline", "fh", "fv", "ko", "invert"] as const;
 	const LOCK_CODE: Record<string, string> = {
@@ -49,7 +49,8 @@
 	const CODE_LOCK: Record<string, string> = Object.fromEntries(Object.entries(LOCK_CODE).map(([k, v]) => [v, k]));
 
 	const PRIMITIVE_GROUPS: { group: string; keywords: string[] }[] = [
-		{ group: "Shapes", keywords: ["circle", "square", "square1", "square2", "square3", "shield", "hex", "diamond", "triangle"] },
+		{ group: "Shapes", keywords: ["circle", "square", "square1", "square2", "square3", "shield", "hex", "diamond", "triangle", "pentagon", "oval", "pill", "half", "quarter", "wedge", "drop"] },
+		{ group: "Strokes", keywords: ["line", "arc", "corner", "vee"] },
 		{ group: "Frames", keywords: ["ring", "border", "divider"] },
 		{ group: "Bars", keywords: ["top", "row", "column", "diagonal", "cross"] },
 		{ group: "Symbols", keywords: ["star", "heart", "crescent", "bolt", "dot"] },
@@ -65,15 +66,19 @@
 	}
 
 	const COLOR_SLOTS: { value: string; label: string }[] = [
-		{ value: "inherit", label: "text" },
+		{ value: "1", label: "s1" },
+		{ value: "2", label: "s2" },
+		{ value: "3", label: "s3" },
+		{ value: "4", label: "s4" },
+		{ value: "5", label: "s5" },
+		{ value: "6", label: "s6" },
+		{ value: "7", label: "s7" },
+		{ value: "8", label: "s8" },
+		{ value: "9", label: "s9" },
+		{ value: "a", label: "active" },
+		{ value: "f", label: "fg" },
+		{ value: "b", label: "bg" },
 		{ value: "0", label: "clear" },
-		{ value: "1", label: "fg" },
-		{ value: "2", label: "bg" },
-		{ value: "3", label: "s1" },
-		{ value: "4", label: "s2" },
-		{ value: "5", label: "s3" },
-		{ value: "6", label: "s4" },
-		{ value: "7", label: "s5" },
 	];
 
 	const SCHEMES: { value: SeriesScheme; label: string }[] = [
@@ -96,10 +101,11 @@
 	];
 
 	// A 3x3 grid of series-colored cells: the same swatch under each palette makes the picker a live
-	// preview of what each scheme's `c0..c7` slots resolve to under the current theme. The leading `--`
-	// gives it an empty label so the mark is decorative; the segment owns the option's name and tooltip.
+	// preview of what each scheme's nine series slots (`c1..c9`) resolve to under the current theme —
+	// a whole crayon box under `skittles`. The leading `--` gives it an empty label so the mark is
+	// decorative; the segment owns the option's name and tooltip.
 	const GRID =
-		"--square1-p1-s35--square1-p2-s35-c0--square1-p3-s35-c1--square1-p4-s35-c2--square1-s35-c3--square1-p6-s35-c4--square1-p7-s35-c5--square1-p8-s35-c6--square1-p9-s35-c7";
+		"--square1-p1-s35-c1--square1-p2-s35-c2--square1-p3-s35-c3--square1-p4-s35-c4--square1-p5-s35-c5--square1-p6-s35-c6--square1-p7-s35-c7--square1-p8-s35-c8--square1-p9-s35-c9";
 
 	let nextId = 1;
 	function makeLayer(keyword: string, over: Partial<MarkLayer> = {}): MarkLayer {
@@ -127,37 +133,36 @@
 	// A browsable gallery of full marks, authored as icon-name strings so each is its own live preview.
 	// Clicking one loads it into the builder (label + layers), which is exactly what the name box parses.
 	const EXAMPLES: { name: string; scheme: SeriesScheme }[] = [
-		{ name: "Crest--shield-c3--star-s45-c1", scheme: "accents" },
-		{ name: "Bolt-badge--circle-c4--bolt-s52-c2", scheme: "accents" },
-		{ name: "dice-3--square3--dot-p7-x12-y-12-s20-c2--dot-s20-c2--dot-p3-x-12-y12-s20-c2", scheme: "accents" },
-		{ name: "dice-3-wrong--square3-c2--dot-p7-x12-y-12-s20-c1--dot-s20-c1--dot-p3-x-12-y12-s20-c1", scheme: "accents" },
-		{ name: "Target--ring-c3--dot-s28-c4", scheme: "statuses" },
-		{ name: "Heart-seal--circle-c5--heart-s48-c1", scheme: "skittles" },
-		{ name: "Star-hex--hex-c3--star-s50-c2", scheme: "accents" },
-		{ name: "Gear-badge--circle-c4--gear-s54-c2", scheme: "accents" },
-		{ name: "Eye-shield--shield-c6--eye-s46-c1", scheme: "skittles" },
-		{ name: "Check-ring--ring-c3--check-s40-c3", scheme: "statuses" },
-		{ name: "Warn-diamond--diamond-c4--warning-s44-c2", scheme: "statuses" },
-		{ name: "play-circle--circle-c3--play-s75-c2", scheme: "accents" },
-		{ name: "Moon--circle-c5--crescent-s60-c1", scheme: "skittles" },
-		{ name: "Cross-shield--shield-c3--cross-s70-c1", scheme: "accents" },
-		{ name: "Folder-tab--square-c4--folder-s52-c2", scheme: "accents" },
-		{ name: "Bookmark--square1-c5--bookmark-s50-c1", scheme: "skittles" },
-		{ name: "Palette-badge--circle-c6--palette-s50-c2", scheme: "skittles" },
-		{ name: "Search-lens--circle-c3--search-s44-c2", scheme: "accents" },
-		{ name: "Bolt-diamond--diamond-c7--bolt-s54-c1", scheme: "skittles" },
-		{ name: "Alert-triangle--triangle-c4--warning-s34-c2", scheme: "statuses" },
-		{ name: "Twin-star--star-c3--star-s55-r180-c4", scheme: "accents" },
-		{ name: "Pencil-note--square2-c5--pencil-s52-c1", scheme: "skittles" },
-		{ name: "Download-badge--circle-c3--download-s48-c2", scheme: "accents" },
-		{ name: "heartbeat--heart-c7--heart-s60-c2-ko---d7p8s1t60", scheme: "skittles" },
-		{ name: "Gear-hex--hex-c6--gear-s58-c1", scheme: "skittles" },
-		{ name: "Dot-grid--square-c3--dot-p1-s16-c1--dot-p3-s16-c1--dot-p7-s16-c1--dot-p9-s16-c1", scheme: "accents" },
-		{ name: "shield-column--shield-c3--column-s80-c1", scheme: "accents" },
-		{ name: "Thermal-ring--ring-c3--dot-s26-c7", scheme: "thermal" },
-		{ name: "Copy-badge--square3-c4--copy-s50-c2", scheme: "accents" },
-		{ name: "Crescent-star--circle-c6--crescent-s52-c1--star-p3-s18-c2", scheme: "skittles" },
-		{ name: "Trash-badge--circle-c4--trash-s50-c2", scheme: "statuses" },
+		{ name: "Crest--shield-c1--star-s45-cf", scheme: "accents" },
+		{ name: "Bolt-badge--circle-c2--bolt-s52-cb", scheme: "accents" },
+		{ name: "dice-3--square3-c1-o1c2--dot-p7-x12-y-12-s20-c2--dot-s20-c2--dot-p3-x-12-y12-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
+		{ name: "Target--ring-c1--dot-s28-c2", scheme: "statuses" },
+		{ name: "Heart-seal--circle-c3--heart-s48-cf", scheme: "skittles" },
+		{ name: "Star-hex--hex-c1--star-s50-cb", scheme: "accents" },
+		{ name: "Gear-badge--circle-c2--gear-s54-cb", scheme: "accents" },
+		{ name: "Eye-shield--shield-c4--eye-s46-cf", scheme: "skittles" },
+		{ name: "Check-ring--ring-c1--check-s40-c1", scheme: "statuses" },
+		{ name: "Warn-diamond--diamond-c2--warning-s44-cb", scheme: "statuses" },
+		{ name: "play-circle--circle-c1--play-s75-cb", scheme: "accents" },
+		{ name: "Moon--circle-c3--crescent-s60-cf", scheme: "skittles" },
+		{ name: "Cross-shield--shield-c1--cross-s70-cf", scheme: "accents" },
+		{ name: "Folder-tab--square-c2--folder-s52-cb", scheme: "accents" },
+		{ name: "Bookmark--square1-c3--bookmark-s50-cf", scheme: "skittles" },
+		{ name: "Palette-badge--circle-c4--palette-s50-cb", scheme: "skittles" },
+		{ name: "Search-lens--circle-c1--search-s44-cb", scheme: "accents" },
+		{ name: "Bolt-diamond--diamond-c5--bolt-s54-cf", scheme: "skittles" },
+		{ name: "Alert-triangle--triangle-c2--warning-s34-cb", scheme: "statuses" },
+		{ name: "Twin-star--star-c1--star-s55-r180-c2", scheme: "accents" },
+		{ name: "Pencil-note--square2-c3--pencil-s52-cf", scheme: "skittles" },
+		{ name: "Download-badge--circle-c1--download-s48-cb", scheme: "accents" },
+		{ name: "heartbeat--heart-c5--heart-s60-cb-ko---d5p8s1t60", scheme: "skittles" },
+		{ name: "Gear-hex--hex-c4--gear-s58-cf", scheme: "skittles" },
+		{ name: "Dot-grid--square-c1--dot-p1-s16-cf--dot-p3-s16-cf--dot-p7-s16-cf--dot-p9-s16-cf", scheme: "accents" },
+		{ name: "shield-column--shield-c1--column-s80-cf", scheme: "accents" },
+		{ name: "Thermal-ring--ring-c1--dot-s26-c5", scheme: "thermal" },
+		{ name: "Copy-badge--square3-c2--copy-s50-cb", scheme: "accents" },
+		{ name: "Crescent-star--circle-c4--crescent-s52-cf--star-p3-s18-cb", scheme: "skittles" },
+		{ name: "Trash-badge--circle-c2--trash-s50-cb", scheme: "statuses" },
 	];
 
 	function loadIcon(name: string, sch: SeriesScheme): void {
@@ -183,7 +188,7 @@
 		size: number;
 		soft: number;
 	}
-	const DEFAULT_SHADOW: DropShadow = { color: 1, pos: 8, size: 2, soft: 50 };
+	const DEFAULT_SHADOW: DropShadow = { color: 15, pos: 8, size: 2, soft: 50 };
 
 	let label = $state("Crest");
 	let scheme = $state<SeriesScheme>("accents");
@@ -191,6 +196,9 @@
 	let layers = $state<MarkLayer[]>([]);
 	let selectedId = $state<number | null>(null);
 	let dropShadow = $state<DropShadow | null>(null);
+	// A `---pc` palette override map (null = off): a nibble key (`"1"`..`"9"`) repaints that slot, `"*"`
+	// silhouettes the whole mark. Values are `#rrggbb`. Serializes into the finish, resolves in the preview.
+	let paletteOverrides = $state<Record<string, string> | null>(null);
 	type CopyState = "idle" | "done" | "fail";
 	let copyState = $state<CopyState>("idle");
 	let cleanState = $state<CopyState>("idle");
@@ -301,8 +309,8 @@
 		if (l.y) parts.push(`y${l.y}`);
 		if (l.s !== 100) parts.push(`s${l.s}`);
 		if (l.r) parts.push(`r${l.r}`);
-		if (l.c !== null) parts.push(`c${l.c}`);
-		if (l.outline > 0) parts.push(`o${l.outline}${l.outlineColor !== null ? `c${l.outlineColor}` : ""}`);
+		if (l.c !== null) parts.push(`c${l.c.toString(16)}`);
+		if (l.outline > 0) parts.push(`o${l.outline}${l.outlineColor !== null ? `c${l.outlineColor.toString(16)}` : ""}`);
 		if (l.a !== 100) parts.push(`a${l.a}`);
 		if (l.fh) parts.push("fh");
 		if (l.fv) parts.push("fv");
@@ -322,7 +330,12 @@
 	/** The `---` finish is whole-icon metadata: render tokens (`d…` drop shadow) first, then the `l…`
 	 * lock convenience-tokens, so an export can lift the locks and leave the render finish intact. */
 	function serializeShadow(ds: DropShadow): string {
-		return `d${ds.color}p${ds.pos}s${ds.size}t${ds.soft}`;
+		return `d${ds.color.toString(16)}p${ds.pos}s${ds.size}t${ds.soft}`;
+	}
+
+	/** Each set override as a `pc{nibble}-{hex}` token (`pc-{hex}` for the `*` silhouette). */
+	function serializePalette(pc: Record<string, string>): string[] {
+		return Object.entries(pc).map(([key, hex]) => `pc${key === "*" ? "" : key}-${hex.replace(/^#/, "")}`);
 	}
 
 	const iconName = $derived.by(() => {
@@ -330,8 +343,9 @@
 		const body = layers.map(serializeLayer).join("--");
 		const finish = [
 			...(dropShadow ? [serializeShadow(dropShadow)] : []),
+			...(paletteOverrides ? serializePalette(paletteOverrides) : []),
 			...layers.map(serializeLocks).filter(Boolean),
-		].join("-");
+		].join("--");
 		return `${slug(label)}--${body}${finish ? `---${finish}` : ""}`;
 	});
 
@@ -342,9 +356,9 @@
 		if (i < 0) return name;
 		const kept = name
 			.slice(i + 3)
-			.split("-")
+			.split("--")
 			.filter((token) => !/^l\d/.test(token));
-		return kept.length ? `${name.slice(0, i)}---${kept.join("-")}` : name.slice(0, i);
+		return kept.length ? `${name.slice(0, i)}---${kept.join("--")}` : name.slice(0, i);
 	}
 	const hasLocks = $derived(layers.some((l) => LOCK_KEYS.some((k) => l.locks[k])));
 
@@ -353,7 +367,7 @@
 		const keyword = /^[a-z]+[0-9]*/.exec(segment)?.[0];
 		if (!keyword) return null;
 		const over: Partial<MarkLayer> = {};
-		const token = /-(?:([pxysrca])(-?\d+)|o(\d+)(?:c(\d+))?|(fh|fv|ko|i))/g;
+		const token = /-(?:([pxysra])(-?\d+)|c([0-9a-f])|o(\d+)(?:c([0-9a-f]))?|(fh|fv|ko|i))/g;
 		let m: RegExpExecArray | null;
 		while ((m = token.exec(segment.slice(keyword.length))) !== null) {
 			if (m[1] === "p") over.p = Number(m[2]);
@@ -361,15 +375,15 @@
 			else if (m[1] === "y") over.y = Number(m[2]);
 			else if (m[1] === "s") over.s = Number(m[2]);
 			else if (m[1] === "r") over.r = Number(m[2]);
-			else if (m[1] === "c") over.c = Number(m[2]);
 			else if (m[1] === "a") over.a = Number(m[2]);
-			else if (m[3] != null) {
-				over.outline = Number(m[3]);
-				if (m[4] != null) over.outlineColor = Number(m[4]);
-			} else if (m[5] === "fh") over.fh = true;
-			else if (m[5] === "fv") over.fv = true;
-			else if (m[5] === "ko") over.ko = true;
-			else if (m[5] === "i") over.invert = true;
+			else if (m[3] != null) over.c = parseInt(m[3], 16);
+			else if (m[4] != null) {
+				over.outline = Number(m[4]);
+				if (m[5] != null) over.outlineColor = parseInt(m[5], 16);
+			} else if (m[6] === "fh") over.fh = true;
+			else if (m[6] === "fv") over.fv = true;
+			else if (m[6] === "ko") over.ko = true;
+			else if (m[6] === "i") over.invert = true;
 		}
 		return makeLayer(keyword, over);
 	}
@@ -394,9 +408,18 @@
 
 	/** Read a `d…` drop-shadow token from the finish tail back into builder state (null when absent). */
 	function parseShadow(flags: string): DropShadow | null {
-		const m = /d(\d+)p([1-9])s([1-9])t(\d{1,3})/.exec(flags);
+		const m = /d([0-9a-f])p([1-9])s([1-9])t(\d{1,3})/.exec(flags);
 		if (!m) return null;
-		return { color: Number(m[1]), pos: Number(m[2]), size: Number(m[3]), soft: Math.min(100, Number(m[4])) };
+		return { color: parseInt(m[1], 16), pos: Number(m[2]), size: Number(m[3]), soft: Math.min(100, Number(m[4])) };
+	}
+
+	/** Read every `pc…` palette-override token from the finish into the override map (null when absent). */
+	function parsePalette(flags: string): Record<string, string> | null {
+		const re = /pc([0-9a-f])?-([0-9a-f]{3,8})/g;
+		const out: Record<string, string> = {};
+		let m: RegExpExecArray | null;
+		while ((m = re.exec(flags)) !== null) out[m[1] ?? "*"] = `#${m[2]}`;
+		return Object.keys(out).length ? out : null;
 	}
 
 	/** Parse an edited icon name back into the builder: the label prefix, one layer per segment, and the
@@ -419,18 +442,21 @@
 		layers = next;
 		selectedId = next[0].id;
 		dropShadow = flags ? parseShadow(flags) : null;
+		paletteOverrides = flags ? parsePalette(flags) : null;
 	}
 
+	// `active` is `currentColor`, which is exactly what a layer with no `c` flag renders — so it maps to
+	// null (no slot) and drops out of the serialized name; an uncolored layer reads back as `active`.
 	function colorValue(c: number | null): string {
-		return c === null ? "inherit" : String(c);
+		return c === null ? "a" : c.toString(16);
 	}
 	function setColor(l: MarkLayer, v: string): void {
-		l.c = v === "inherit" ? null : Number(v);
+		l.c = v === "a" ? null : parseInt(v, 16);
 	}
 	function setOutlineColor(l: MarkLayer, v: string): void {
-		l.outlineColor = v === "inherit" ? null : Number(v);
+		l.outlineColor = v === "a" ? null : parseInt(v, 16);
 	}
-	/** The display label for a color-slot value (`3` → `s1`), shown in a field header as the selection. */
+	/** The display label for a color-slot value (`1` → `s1`), shown in a field header as the selection. */
 	function slotLabel(value: string): string {
 		return COLOR_SLOTS.find((s) => s.value === value)?.label ?? value;
 	}
@@ -454,22 +480,27 @@
 		}
 		const fg = cs.getPropertyValue("--fg-0").trim() || "#e6e9ef";
 		const bg = cs.getPropertyValue("--bg-0").trim() || "#0b0d12";
-		const series = seriesPalette(scheme, 5, register);
+		const series = seriesPalette(scheme, 9, register);
 		return {
 			inherit: fg,
 			"0": "transparent",
-			"1": fg,
-			"2": bg,
-			"3": series[0] ?? fg,
-			"4": series[1] ?? fg,
-			"5": series[2] ?? fg,
-			"6": series[3] ?? fg,
-			"7": series[4] ?? fg,
+			"1": series[0] ?? fg,
+			"2": series[1] ?? fg,
+			"3": series[2] ?? fg,
+			"4": series[3] ?? fg,
+			"5": series[4] ?? fg,
+			"6": series[5] ?? fg,
+			"7": series[6] ?? fg,
+			"8": series[7] ?? fg,
+			"9": series[8] ?? fg,
+			a: fg,
+			b: bg,
+			f: fg,
 		};
 	});
 
 	function addLayer(keyword: string): void {
-		const l = makeLayer(keyword, { c: layers.length === 0 ? 3 : null });
+		const l = makeLayer(keyword, { c: layers.length === 0 ? 1 : null });
 		layers = [...layers, l];
 		selectedId = l.id;
 		addOpen = false;
@@ -489,10 +520,10 @@
 		layers = next;
 	}
 
-	/** A compact readout of a layer's non-default settings for the layer chip, e.g. `c3 · s80 · r45 · ko`. */
+	/** A compact readout of a layer's non-default settings for the layer chip, e.g. `c1 · s80 · r45 · ko`. */
 	function layerSummary(l: MarkLayer): string {
 		const parts: string[] = [];
-		if (l.c !== null) parts.push(`c${l.c}`);
+		if (l.c !== null) parts.push(`c${l.c.toString(16)}`);
 		if (l.p !== 5) parts.push(`p${l.p}`);
 		if (l.s !== 100) parts.push(`s${l.s}`);
 		if (l.r) parts.push(`r${l.r}°`);
@@ -527,6 +558,7 @@
 		layers = [];
 		selectedId = null;
 		dropShadow = null;
+		paletteOverrides = null;
 	}
 
 	// Reset returns each layer's *unlocked* properties to their factory defaults, leaving locked props and
@@ -561,7 +593,7 @@
 			const free = (k: string): boolean => !l.locks[k];
 			if (i === 0) {
 				if (free("keyword")) n.keyword = pick(RANDOM_FIELDS);
-				if (free("c")) n.c = 3 + Math.floor(Math.random() * 3);
+				if (free("c")) n.c = 1 + Math.floor(Math.random() * 3);
 				if (free("s")) n.s = rint(90, 100, 2);
 				if (free("r")) n.r = chance(0.2) ? pick([-90, -45, 45, 90]) : 0;
 				if (free("p")) n.p = chance(0.15) ? rint(1, 9) : 5;
@@ -570,7 +602,7 @@
 				if (free("a")) n.a = chance(0.08) ? 85 : 100;
 				if (free("outline")) {
 					n.outline = chance(0.1) ? 1 : 0;
-					if (n.outline > 0 && n.outlineColor === null) n.outlineColor = 1;
+					if (n.outline > 0 && n.outlineColor === null) n.outlineColor = 15;
 				}
 				if (free("fh")) n.fh = chance(0.1);
 				if (free("fv")) n.fv = chance(0.1);
@@ -579,13 +611,13 @@
 				if (free("p")) n.p = rint(1, 9);
 				if (free("s")) n.s = rint(24, 70, 2);
 				if (free("r")) n.r = chance(0.3) ? pick([-135, -90, -45, 45, 90, 135, 180]) : 0;
-				if (free("c")) n.c = pick([1, 2, 4, 5, 6, 7]);
+				if (free("c")) n.c = pick([15, 11, 2, 3, 4, 5]);
 				if (free("x")) n.x = chance(0.2) ? rint(-16, 16, 2) : 0;
 				if (free("y")) n.y = chance(0.2) ? rint(-16, 16, 2) : 0;
 				if (free("a")) n.a = chance(0.15) ? pick([60, 75, 85]) : 100;
 				if (free("outline")) {
 					n.outline = chance(0.15) ? pick([1, 2]) : 0;
-					if (n.outline > 0 && n.outlineColor === null) n.outlineColor = 1;
+					if (n.outline > 0 && n.outlineColor === null) n.outlineColor = 15;
 				}
 				if (free("fh")) n.fh = chance(0.2);
 				if (free("fv")) n.fv = chance(0.2);
@@ -608,6 +640,18 @@
 
 	function toggleShadow(on: boolean): void {
 		dropShadow = on ? { ...DEFAULT_SHADOW } : null;
+	}
+	function togglePalette(on: boolean): void {
+		paletteOverrides = on ? {} : null;
+	}
+	function setOverride(key: string, hex: string): void {
+		paletteOverrides = { ...(paletteOverrides ?? {}), [key]: hex };
+	}
+	function clearOverride(key: string): void {
+		if (!paletteOverrides) return;
+		const next = { ...paletteOverrides };
+		delete next[key];
+		paletteOverrides = next;
 	}
 
 	// The export copy drops the `---` lock flags: the pinned style is authoring metadata, so a production
@@ -936,10 +980,10 @@
 						</div>
 					</div>
 
-					<div class="ib__prop">{@render propLock(l, "fh")}<Switch bind:checked={l.fh} label="Flip H" /></div>
-					<div class="ib__prop">{@render propLock(l, "fv")}<Switch bind:checked={l.fv} label="Flip V" /></div>
-					<div class="ib__prop">{@render propLock(l, "ko")}<Switch bind:checked={l.ko} label="Knockout" /></div>
-					<div class="ib__prop">{@render propLock(l, "invert")}<Switch bind:checked={l.invert} label="Invert" /></div>
+					<div class="ib__prop">{@render propLock(l, "fh")}<Switch bind:checked={l.fh} label="Flip H" labelSide="end" /></div>
+					<div class="ib__prop">{@render propLock(l, "fv")}<Switch bind:checked={l.fv} label="Flip V" labelSide="end" /></div>
+					<div class="ib__prop">{@render propLock(l, "ko")}<Switch bind:checked={l.ko} label="Knockout" labelSide="end" /></div>
+					<div class="ib__prop">{@render propLock(l, "invert")}<Switch bind:checked={l.invert} label="Invert" labelSide="end" /></div>
 				{:else}
 					<p class="ib__empty">Select a layer to edit its placement, color, and transform.</p>
 				{/if}
@@ -998,7 +1042,7 @@
 					<li>
 						<div class="ib__chip" class:ib__chip--on={l.id === selectedId}>
 							<button type="button" class="ib__chip-main" onclick={() => (selectedId = l.id)}>
-								{#key themeTick}<Icon name={`--${l.keyword}${l.c !== null ? `-c${l.c}` : ""}`} colors={scheme} size="sm" />{/key}
+								{#key themeTick}<Icon name={`--${l.keyword}${l.c !== null ? `-c${l.c.toString(16)}` : ""}`} colors={scheme} size="sm" />{/key}
 								<span class="ib__chip-name">{l.keyword}</span>
 								{#if layerSummary(l)}
 									<span class="ib__chip-meta">{layerSummary(l)}</span>
@@ -1042,7 +1086,7 @@
 
 		<section class="ib__finish" aria-label="Whole-icon finish">
 			<h4>Finish</h4>
-			<Switch checked={!!dropShadow} onchange={(e) => toggleShadow((e.target as HTMLInputElement).checked)} label="Drop shadow" />
+			<Switch checked={!!dropShadow} onchange={(e) => toggleShadow((e.target as HTMLInputElement).checked)} label="Drop shadow" labelSide="end" />
 			{#if dropShadow}
 				<div class="ib__field">
 					<span class="ib__field-label">Shadow color <span class="ib__field-pick">· {slotLabel(String(dropShadow.color))}</span></span>
@@ -1069,6 +1113,32 @@
 				</div>
 				<Slider label="Distance" bind:value={dropShadow.size} min={1} max={5} step={1} showValue />
 				<Slider label="Softness" bind:value={dropShadow.soft} min={0} max={100} step={5} showValue format={(v) => `${v}%`} />
+			{/if}
+
+			<Switch checked={!!paletteOverrides} onchange={(e) => togglePalette((e.target as HTMLInputElement).checked)} label="Palette overrides" labelSide="end" />
+			{#if paletteOverrides}
+				<div class="ib__field">
+					<span class="ib__field-label">Flatten to <span class="ib__field-pick">· {paletteOverrides["*"] ?? "off"}</span></span>
+					<div class="ib__pc-flatten">
+						<ColorPicker trigger format="hex" value={paletteOverrides["*"] ?? "#424242"} title="Silhouette color" aria-label="Silhouette color" oninput={(e) => setOverride("*", (e.target as HTMLInputElement).value)} onchange={(e) => setOverride("*", (e.target as HTMLInputElement).value)} />
+						{#if paletteOverrides["*"]}
+							<Button size="sm" variant="subtle" onclick={() => clearOverride("*")}>Clear</Button>
+						{/if}
+					</div>
+				</div>
+				<div class="ib__field">
+					<span class="ib__field-label">Per-slot</span>
+					<div class="ib__pc-slots">
+						{#each ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as n (n)}
+							<div class="ib__pc-slot" class:ib__pc-slot--on={!!paletteOverrides[n]}>
+								{#key themeTick}<ColorPicker trigger format="hex" value={paletteOverrides[n] ?? slotColors[n] ?? "#888888"} title={`Slot ${n}`} aria-label={`Slot ${n} color`} oninput={(e) => setOverride(n, (e.target as HTMLInputElement).value)} onchange={(e) => setOverride(n, (e.target as HTMLInputElement).value)} />{/key}
+								{#if paletteOverrides[n]}
+									<button type="button" class="ib__pc-clear" onclick={() => clearOverride(n)} aria-label={`Clear slot ${n} override`}>×</button>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</div>
 			{/if}
 		</section>
 
@@ -1288,8 +1358,9 @@
 		transition: background-color 0.15s ease;
 	}
 	.ib__canvas {
-		display: grid;
-		place-items: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		width: 100%;
 		max-width: 15rem;
 		aspect-ratio: 1;
@@ -1580,8 +1651,9 @@
 	}
 	.ib__example {
 		aspect-ratio: 1;
-		display: grid;
-		place-items: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		padding: var(--space-2);
 		background: var(--bg-1);
 		border: var(--border-thin) solid var(--line);
@@ -1728,8 +1800,9 @@
 		position: relative;
 		width: 2rem;
 		height: 2rem;
-		display: grid;
-		place-items: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		background: var(--bg-1);
 		border: var(--border-thin) solid var(--line);
 		border-radius: var(--radius-sm);
@@ -1761,6 +1834,52 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
+	}
+	.ib__pc-flatten {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.ib__pc-slots {
+		display: grid;
+		grid-template-columns: repeat(9, minmax(0, 1fr));
+		gap: var(--space-2) var(--space-1);
+	}
+	.ib__pc-slot {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.ib__pc-slot--on::after {
+		content: "";
+		position: absolute;
+		inset: -2px;
+		border: var(--border-normal) solid var(--accent);
+		border-radius: var(--radius-sm);
+		pointer-events: none;
+	}
+	.ib__pc-clear {
+		position: absolute;
+		top: -0.4rem;
+		right: -0.4rem;
+		width: 1rem;
+		height: 1rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		font-size: var(--text-xs);
+		line-height: 1;
+		color: var(--fg-1);
+		background: var(--bg-2);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-full);
+		cursor: pointer;
+	}
+	.ib__pc-clear:hover {
+		color: var(--danger);
+		border-color: var(--danger);
 	}
 	.ib__field > span {
 		font-size: var(--text-xs);

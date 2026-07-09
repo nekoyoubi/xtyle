@@ -34,6 +34,8 @@ export const tocManifest: ComponentManifest = {
 	id: "toc",
 	name: "Toc",
 	category: "navigation",
+	keywords: ["table of contents", "on this page", "outline", "anchor nav", "jump links"],
+	seeAlso: ["tree", "breadcrumb", "tabs"],
 	summary: "An on-this-page table of contents that highlights the section currently in view.",
 	description:
 		"Toc lists the sections of a page as in-page links and tracks which one the reader is looking at. Give it `items`: each is an `id` matching a section's element id plus a `label`, and it renders a labelled `nav` of anchor links. An `IntersectionObserver` then marks the active link as you scroll, setting `aria-current` and the accent rail. The links work as plain anchor jumps with no script, so the scrollspy is pure progressive enhancement. It reads as a vertical rail beside the content and folds into a wrapped row of chips on narrow screens. Pass `sticky` to keep it in view as the page scrolls.",

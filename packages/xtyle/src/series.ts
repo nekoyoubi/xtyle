@@ -39,10 +39,11 @@ export const SERIES_TOKENS: readonly string[] = [
 	"--orange",
 	"--yellow",
 	"--green",
-	"--cyan",
 	"--blue",
 	"--purple",
+	"--brown",
 	"--pink",
+	"--cyan",
 ];
 
 /**
@@ -80,7 +81,7 @@ export function statusToneColor(tone: string, register: TokenRegister): string |
 const CATEGORICAL: Record<"accents" | "skittles" | "statuses", { tokens: string[]; ordered: boolean }> = {
 	accents: { tokens: ["--accent", "--accent-2", "--accent-3", "--accent-4", "--neutral"], ordered: true },
 	skittles: {
-		tokens: ["--red", "--orange", "--yellow", "--green", "--cyan", "--blue", "--purple", "--pink"],
+		tokens: ["--red", "--orange", "--yellow", "--green", "--blue", "--purple", "--brown", "--pink", "--cyan"],
 		ordered: false,
 	},
 	statuses: {
@@ -190,6 +191,23 @@ export function rampColor(
 	const pos = tt * segments;
 	const seg = Math.min(Math.floor(pos), segments - 1);
 	return lerpOklch(stops[seg] as string, stops[seg + 1] as string, pos - seg);
+}
+
+/**
+ * The ordered stop list for a ramp as CSS values, for a pure-CSS `linear-gradient` sweep that needs
+ * no register: register token names become `var(--token)` references (resolved against the cascade at
+ * paint, so the gradient recolors with the theme and survives SSR with zero JS), explicit color
+ * strings pass through verbatim. `reverse` flips the order. The SSR-safe sibling of `rampColor`:
+ * where `rampColor` samples one color at a position (needing the resolved register), this hands back
+ * the whole scale for the browser to interpolate.
+ */
+export function rampGradientStops(
+	scheme: RampScheme | string[],
+	options: SeriesPaletteOptions = {},
+): string[] {
+	const raw = Array.isArray(scheme) ? scheme : RAMP_ANCHORS[scheme] ?? RAMP_ANCHORS.accent;
+	const stops = raw.map((s) => (s.startsWith("--") ? `var(${s})` : s));
+	return options.reverse ? [...stops].reverse() : stops;
 }
 
 /** The default drop-shadow blur (in px) a full-strength glow cell reaches. */

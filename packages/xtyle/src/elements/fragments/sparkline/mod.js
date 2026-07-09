@@ -55,7 +55,21 @@
     const pts = points(values, lo, hi, xs);
     const lineCoords = b.step === true ? stepCoords(pts) : pts.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
     let shape = "";
-    if (variant === "bar") {
+    if (variant === "occupancy") {
+      const n = values.length;
+      const innerW = VW - PAD * 2;
+      const on = (v) => hi > lo ? v >= (lo + hi) / 2 : v > 0;
+      const trackH = VH - PAD * 2;
+      const track = `<rect class="xtyle-sparkline__track" x="${PAD}" y="${PAD}" width="${innerW.toFixed(2)}" height="${trackH.toFixed(2)}" rx="1"></rect>`;
+      const blocks = values.map((v, i) => {
+        if (!on(v)) return "";
+        const x0 = xs ? PAD + (xs[i] ?? 0) * innerW : PAD + i / n * innerW;
+        const x1 = xs ? PAD + (i + 1 < n ? xs[i + 1] ?? 1 : 1) * innerW : PAD + (i + 1) / n * innerW;
+        const w = Math.max(0.5, x1 - x0 - 0.4);
+        return `<rect class="xtyle-sparkline__block" x="${x0.toFixed(2)}" y="${PAD}" width="${w.toFixed(2)}" height="${trackH.toFixed(2)}" rx="1"></rect>`;
+      }).join("");
+      shape = track + blocks;
+    } else if (variant === "bar") {
       const bandW = (VW - PAD * 2) / values.length;
       const barW = bandW * 0.7;
       const span = hi - lo || 1;
@@ -75,7 +89,7 @@
     } else {
       shape = `<polyline class="xtyle-sparkline__line" points="${lineCoords}" vector-effect="non-scaling-stroke"></polyline>`;
     }
-    const end = b.showEnd !== false && variant !== "bar" && pts.length > 0 ? `<circle class="xtyle-sparkline__end" cx="${pts[pts.length - 1].x.toFixed(2)}" cy="${pts[pts.length - 1].y.toFixed(2)}" r="2" vector-effect="non-scaling-stroke"></circle>` : "";
+    const end = b.showEnd !== false && variant !== "bar" && variant !== "occupancy" && pts.length > 0 ? `<circle class="xtyle-sparkline__end" cx="${pts[pts.length - 1].x.toFixed(2)}" cy="${pts[pts.length - 1].y.toFixed(2)}" r="2" vector-effect="non-scaling-stroke"></circle>` : "";
     const marker = `<g class="xtyle-sparkline__marker" hidden><line class="xtyle-sparkline__guide" y1="0" y2="${VH}" vector-effect="non-scaling-stroke"></line><circle class="xtyle-sparkline__dot" r="2.5" vector-effect="non-scaling-stroke"></circle></g>`;
     const tooltip = `<span class="xtyle-sparkline__tooltip" role="status" aria-hidden="true" hidden></span>`;
     return `<span class="${sparkClass(b)}"><svg class="xtyle-sparkline__svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none"${a11y}>${shape}${end}${marker}</svg>${tooltip}</span>`;

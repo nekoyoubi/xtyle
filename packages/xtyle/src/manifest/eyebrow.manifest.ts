@@ -34,6 +34,8 @@ export const eyebrowManifest: ComponentManifest = {
 	id: "eyebrow",
 	name: "Eyebrow",
 	category: "content",
+	keywords: ["kicker", "overline", "tagline", "pretitle", "label"],
+	seeAlso: ["heading", "text", "hero"],
 	summary: "The small uppercase kicker that sits above a heading.",
 	description:
 		"Eyebrow is the overline a section wears above its title: short, uppercase, tracked-out, and accent-toned by default. It is one element with no layout of its own: drop it as the first child of a `Stack` and the gap does the spacing. `tone` swaps the accent ink for a quieter `muted` or `subtle`, or for any tone in the full roster (every semantic role, accent variant, or named hue) so a kicker can carry a status color, in that tone's on-surface ink derived to stay legible against the page. `tracking` widens the letter-spacing for a more deliberate label. Choose the `as` element to match the surrounding flow: a `p` for a standalone kicker, a `span` for one inline with other text.",

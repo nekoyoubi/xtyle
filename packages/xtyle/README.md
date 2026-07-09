@@ -66,6 +66,7 @@ apply(register, { persistKey: "theme" });
 ```sh
 xtyle derive --bg "#0f1115" --accent "#5b8cff" --format css
 xtyle coverage --consumed "--bg-0,--fg-0,--accent" --bg "#0f1115"
+xtyle audit -a xtyle-default --level AA
 xtyle gauntlet --runs 200
 ```
 
@@ -198,7 +199,8 @@ Author your own with `defineXtyleAlgorithm` / `defineAlgorithm` from `@xtyle/cor
 engine the CLI hands a human. Point an MCP client at `xtyle mcp` (or `npx -y @xtyle/core xtyle
 mcp`).
 
-- **Tools**: `xtyle_derive`, `xtyle_coverage`, `xtyle_components` (list every component or
+- **Tools**: `xtyle_derive`, `xtyle_coverage`, `xtyle_audit` (grade a register's contrast
+  against the canonical WCAG text/fill pairs), `xtyle_components` (list every component or
   describe one's full manifest), `xtyle_gauntlet`, `xtyle_list_algorithms`, and
   `xtyle_server_info`; each runs the same code as its CLI counterpart, so the two can't drift.
 - **Resources**: `xtyle://concept/{id}` for the concept docs and `xtyle://component/{id}` for

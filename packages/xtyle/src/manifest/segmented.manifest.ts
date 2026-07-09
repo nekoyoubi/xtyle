@@ -109,6 +109,8 @@ export const segmentedManifest: ComponentManifest = {
 	id: "segmented",
 	name: "Segmented",
 	category: "control",
+	keywords: ["segmented control", "toggle group", "button group", "single select", "pills"],
+	seeAlso: ["tabs", "switch", "radio", "button"],
 	summary: "A single-select toggle bar: pick one of a few options from a connected button group.",
 	description:
 		"Segmented picks one option from a small, fixed set rendered as a connected button bar. It's the compact alternative to a radio group when the choices are few and worth showing at once. It is a `role=\"radiogroup\"` of `role=\"radio\"` buttons with roving tabindex: the selected segment is the tab stop, arrow keys move and select with wraparound, and Home/End jump to the ends. Options are declared as a comma-separated `options` string (bare labels, or `label:value` pairs), or as a structured `{ value, label }[]` when a label differs from its value or carries a comma or colon. For rich segments, drop in `<Segment value=\"…\" label=\"…\">` children holding an icon or other markup instead of a text label; they win over `options` when both are present. It's form-associated; give it a `name` and the chosen value submits. Three sizes: `sm`, `md`, `lg`.",

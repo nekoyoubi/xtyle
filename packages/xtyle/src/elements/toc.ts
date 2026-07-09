@@ -50,7 +50,8 @@ export class XtyleToc extends XtyleElement {
 		this.reflectBoolean("sticky", value);
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.observer?.disconnect();
 		this.observer = null;
 	}

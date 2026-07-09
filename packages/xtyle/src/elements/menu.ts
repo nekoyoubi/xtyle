@@ -67,7 +67,8 @@ export class XtyleMenu extends XtyleElement {
 		this.render();
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.teardown();
 	}
 

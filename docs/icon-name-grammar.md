@@ -33,6 +33,8 @@ on screen rather than vanishing.
 
 - Split on `---` (triple) first → `[head, finish]`.
 - Split `head` on `--` (double) → `[label, ...objects]`.
+- Split `finish` on `--` (double) → finish flags. A flag's value can carry single hyphens, so a
+  hyphenated token (`neutral-bg`, `accent-2`) rides the finish fine.
 
 ### label
 
@@ -49,7 +51,7 @@ A primitive keyword followed by any number of flags, **in any order** (only the 
 positional):
 
 ```
-{primitive}  p{1-9}  x{±%}  y{±%}  s{%}  r{±deg}  c{N}  o{1-3}[c{N}]  a{%}  fh  fv  ko  i
+{primitive}  p{1-9}  x{±%}  y{±%}  s{%}  r{±deg}  c{0-f}  o{1-3}[c{0-f}]  a{%}  fh  fv  ko  i
 ```
 
 | flag | meaning | default |
@@ -58,8 +60,8 @@ positional):
 | `x{±%}` `y{±%}` | fine offset from the cell anchor, % of the grid | `0` |
 | `s{%}` | size, % of the full 24-unit grid | `100` |
 | `r{±deg}` | rotation about the object's own center | `0` |
-| `c{N}` | fill color (see the ladder) | `currentColor` |
-| `o{1-3}[c{N}]` | outline: `1`/`2`/`3` = thin/medium/thick stroke, optional trailing `c{N}` stroke color | no outline; stroke `currentColor` |
+| `c{0-f}` | fill color (see the palette) | `currentColor` |
+| `o{1-3}[c{0-f}]` | outline: `1`/`2`/`3` = thin/medium/thick stroke, optional trailing `c{0-f}` stroke color | no outline; stroke `currentColor` |
 | `a{%}` | opacity | `100` |
 | `fh` / `fv` | flip horizontal / vertical | none |
 | `ko` | knockout (subtract this shape from the art beneath it; see below) | paint |
@@ -68,34 +70,52 @@ positional):
 Primitive keywords are single tokens (`square`, `circle`, `triangle`, `hex`, `diamond`, `shield`,
 `ring`, `divider`, `star`, `bolt`, `dot`, …) mapping to the primitive library (`square` →
 `shape-square`, `star` → `symbol-star`, `divider` → `divider-rule`, which rotates to vertical with
-`r90`). A trailing index selects a variant where the library ships one: `square` is a sharp square,
+`r90`). Beyond the stamped shapes and symbols, the library carries **draw-with primitives** you compose
+marks *from*: filled curves (`half` a semicircle, `quarter` a quarter-disc, `wedge` a pie sector,
+`oval`, `pill` a capsule, `drop` a teardrop, `pentagon`) and open pen-strokes (`line`, `arc` a
+semicircle curve, `corner` an L-bracket, `vee` a chevron) that take the layer's `c` color like any
+shape and rotate to any angle (a `wedge` spun around builds a pie; a `line-r45` is a diagonal rule).
+A trailing index selects a variant where the library ships one: `square` is a sharp square,
 `square1` / `square2` / `square3` its small / medium / large rounded corners. The single-token
 functional glyphs are reachable as symbols by their bare name too (`check`, `close`, `search`,
-`warning`, … → `symbol-check`, …), so a check badge is `badge--circle-c4--check-s55-c1`. Multi-token
+`warning`, … → `symbol-check`, …), so a check badge is `badge--circle-c2--check-s55-cf`. Multi-token
 glyph names (`chevron-right`) have no keyword, since a keyword is one token by rule; they stay
 glyph-only.
 
-### color ladder
+### color palette
 
-`c{N}` is one ladder; the `colors="…"` attribute (a series scheme: `accents`, `skittles`,
-`statuses`, `thermal`, `status`) picks what the top of it draws from.
+`c{n}` takes one **hex nibble** `0`–`f` into a 16-slot palette. Slots `1`–`9` are the nine **series
+colors**; the `colors="…"` attribute (a scheme: `accents`, `skittles`, `statuses`, `thermal`,
+`status`) picks what they draw from — `skittles` fills all nine with the crayon box, a smaller scheme
+cycles its own colors across the nine slots. The high nibbles are theme chrome.
 
 | slot | resolves to |
 |------|-------------|
 | `c0` | transparent |
-| `c1` | `--fg-0` |
-| `c2` | `--bg-0` |
-| `c3` | scheme color 1 |
-| `c4` | scheme color 2 |
-| `cN` (N≥3) | scheme color (N − 2) |
+| `c1`–`c9` | series colors 1–9 (drawn from `colors`) |
+| `ca` | `currentColor` — the **a**ctive ink |
+| `cb` | `--bg-0` — **b**ackground |
+| `cc` | transparent — **c**lear |
+| `cd` | reserved (inert) |
+| `ce` | `--neutral-bg` — **e**mpty: the neutral track an unfilled Rating mark or Progress groove shows |
+| `cf` | `--fg-0` — **f**oreground |
 
 An object with no `c` inherits `currentColor`, so an un-colored spec renders like a flat
 functional glyph and tints with surrounding text.
 
+**Nine fixed slots.** Every `colors` scheme resolves to exactly nine evenly-spread colors
+(`ICON_SERIES_COUNT`), so slots `1`–`9` are always full and stable no matter the scheme: a nine-hue
+scheme (`skittles`) fills them with the whole box, a shorter one spreads its own colors across all nine.
+The count is fixed rather than sized to the highest slot a mark references — sizing to `index + 1` made
+each slot take the *last* color of its own little palette, collapsing a sequential scheme (`thermal`) to
+its endpoint and a sampled categorical (`skittles`) to its last color. A fixed nine keeps each slot a
+distinct, evenly-spread color, so `c1`…`c5` span the whole scheme and a slot addresses the same way in
+any theme.
+
 ### finish
 
-Everything after `---`, any order. Two kinds of token share this tail, and each reader ignores the
-other's, so they coexist in one finish section:
+Everything after `---`, its flags `--`-separated (like objects), in any order. Two kinds of flag share
+this tail, and each reader ignores the other's, so they coexist in one finish section:
 
 **Render finish** modifies the whole mark. Per-shape rounding and silhouette clips are **layer** flags
 (an indexed `square1`, an inverted knockout `-i-ko`); the finish holds modifiers that act on the
@@ -103,9 +123,15 @@ composite:
 
 | flag | meaning | default |
 |------|---------|---------|
-| `d{c}p{1-9}s{1-5}t{%}` | **drop shadow**: a colored, offset, blurred copy cast behind the mark. `d{c}` shadow color (the ladder), `p{1-9}` cast direction (keypad; `5` = straight down/no offset), `s{1-5}` cast distance, `t{%}` softness (blur). Sub-params optional, default `d1p8s2t50`. | no shadow |
+| `d{c}p{1-9}s{1-5}t{%}` | **drop shadow**: a colored, offset, blurred copy cast behind the mark. `d{c}` shadow color (a palette nibble), `p{1-9}` cast direction (keypad; `5` = straight down/no offset), `s{1-5}` cast distance, `t{%}` softness (blur). Sub-params optional, default `dfp8s2t50`. | no shadow |
+| `pc{n}-{value}` | **palette override**: repaint one slot for this mark. The value is a **hex** (`pc3-ff00ff` forces slot 3 to magenta), a single **nibble** `0`–`f` (`pc3-1` borrows slot 1's series color), or a **token name** (`pc3-accent` → `--accent`; also `success`, a named hue, or the `fg`/`bg` aliases). | none |
+| `pc-{value}` | **silhouette**: force every painting slot to one color (transparent/reserved slots stay clear). Same three value shapes: `pc-424242` (fixed grey), `pc-fg` (the foreground token), `pc-a` (the active ink). | none |
 
-A future whole-composite modifier (`mono` collapse to one color, etc.) slots in the same way.
+A `pc` value stays **theme-reactive** when it's a nibble or a token — it resolves off the live register
+at paint time, so the override tracks the theme instead of baking a dead color; a hex value is fixed.
+Hyphenated tokens ride the finish directly (`pc-neutral-bg`, `pc3-accent-2`): finish flags are `--`-separated,
+so a value keeps its single hyphens. Combine finish flags with `--`: `pc1-accent--d2p8s3t80` overrides *and*
+casts a shadow. A future whole-composite modifier slots in the same way.
 
 **Lock flags** (`l{index}{codes}`) are **authoring metadata the renderer ignores**: they pin an
 object's props against the icon builder's Randomize, so a *template* name carries its own re-roll
@@ -151,16 +177,16 @@ Objects paint **back-to-front**. Two ways to make emptiness:
 
 ```
 search                                                              a known functional glyph
-dice-3--square3-c3--square-s80-ko--dot-p7-s10--dot-s10--dot-p3-s10   rounded face (square3),
+dice-3--square3-c1--square-s80-ko--dot-p7-s10--dot-s10--dot-p3-s10   rounded face (square3),
                                                                     recessed window, solid pips on top
-dice-3--square3-c3--dot-p7-s10-ko--dot-s10-ko--dot-p3-s10-ko        negative-space pips
-badge--hex-c4--star-s55-c1--circle-i-ko                            a hex badge clipped to a circle
-badge--circle-c4--star-s55-c1                                          a filled circle with a
+dice-3--square3-c1--dot-p7-s10-ko--dot-s10-ko--dot-p3-s10-ko        negative-space pips
+badge--hex-c2--star-s55-cf--circle-i-ko                            a hex badge clipped to a circle
+badge--circle-c2--star-s55-cf                                          a filled circle with a
                                                                        centered fg star
-crest--shield-c3-o1--star-s45-c1---l1o-l2*                          a re-rollable template: layer 1's
+crest--shield-c1-o1--star-s45-cf---l1o-l2*                          a re-rollable template: layer 1's
                                                                     outline and all of layer 2 hold
                                                                     while the builder randomizes the rest
-badge--circle-c4--bolt-s52-c2---d1p8s3t60                            a bolt badge lifted off the page by
+badge--circle-c2--bolt-s52-cb---dfp8s3t60                            a bolt badge lifted off the page by
                                                                     a soft shadow cast down and behind
 ```
 

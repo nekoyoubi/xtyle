@@ -1,8 +1,9 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { imageHostCss, escapeAttr } from "../markup/index.js";
-import type { ImageFit, ImageRadius, ImageLoading } from "../markup/image.js";
+import { imageHostCss } from "../markup/index.js";
+import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger } from "../markup/image.js";
 import { renderIcon } from "../icons.js";
 import { FragmentHost } from "./fragment-host.js";
+import { openLightbox } from "./lightbox.js";
 import { manifest, fragmentSources } from "./fragments/image/source.generated.js";
 
 export class XtyleImage extends XtyleElement {
@@ -14,14 +15,13 @@ export class XtyleImage extends XtyleElement {
 	private wiredImg: HTMLImageElement | null = null;
 	private wiredFrame: HTMLElement | null = null;
 	private lightboxTrigger: AbortController | null = null;
-	private lightboxEl: HTMLDialogElement | null = null;
 
 	protected override get styleMode(): StyleMode {
 		return "auto";
 	}
 
 	static get observedAttributes(): string[] {
-		return ["src", "alt", "ratio", "fit", "radius", "loading", "lightbox", "caption"];
+		return ["src", "alt", "ratio", "fit", "radius", "loading", "lightbox", "caption", "trigger"];
 	}
 
 	get src(): string | null {
@@ -75,6 +75,13 @@ export class XtyleImage extends XtyleElement {
 		this.toggleAttribute("lightbox", value);
 	}
 
+	get trigger(): ImageTrigger {
+		return this.getAttribute("trigger") === "button" ? "button" : "frame";
+	}
+	set trigger(value: ImageTrigger) {
+		this.setAttribute("trigger", value);
+	}
+
 	get caption(): string | null {
 		return this.getAttribute("caption");
 	}
@@ -125,35 +132,69 @@ export class XtyleImage extends XtyleElement {
 			}
 		}
 
-		if (this.lightbox) {
-			frame.setAttribute("role", "button");
-			frame.setAttribute("tabindex", "0");
-			frame.setAttribute("aria-label", this.alt ? `View image: ${this.alt}` : "View image");
-			if (this.wiredFrame !== frame) {
-				this.wiredFrame = frame;
-				this.lightboxTrigger?.abort();
-				this.lightboxTrigger = new AbortController();
-				const { signal } = this.lightboxTrigger;
-				frame.addEventListener("click", () => this.openLightbox(), { signal });
-				frame.addEventListener(
-					"keydown",
-					(event) => {
-						if (event.key === "Enter" || event.key === " ") {
-							event.preventDefault();
-							this.openLightbox();
-						}
-					},
-					{ signal },
-				);
-			}
-		} else {
-			this.lightboxTrigger?.abort();
-			this.lightboxTrigger = null;
-			this.wiredFrame = null;
-			frame.removeAttribute("role");
-			frame.removeAttribute("tabindex");
-			frame.removeAttribute("aria-label");
+		if (!this.lightbox) {
+			this.clearFrameTrigger(frame);
+			this.removeZoomButton(frame);
+			return;
 		}
+		const label = this.alt ? `View image: ${this.alt}` : "View image";
+		if (this.trigger === "button") {
+			// The frame is not the click target; a dedicated zoom button is, so a click meant for
+			// the surrounding prose (or a drag-select over the image) doesn't fire the modal.
+			this.clearFrameTrigger(frame);
+			this.ensureZoomButton(frame, label);
+		} else {
+			this.removeZoomButton(frame);
+			this.wireFrameTrigger(frame, label);
+		}
+	}
+
+	private wireFrameTrigger(frame: HTMLElement, label: string): void {
+		frame.setAttribute("role", "button");
+		frame.setAttribute("tabindex", "0");
+		frame.setAttribute("aria-label", label);
+		if (this.wiredFrame === frame) return;
+		this.wiredFrame = frame;
+		this.lightboxTrigger?.abort();
+		this.lightboxTrigger = new AbortController();
+		const { signal } = this.lightboxTrigger;
+		frame.addEventListener("click", () => this.openLightbox(), { signal });
+		frame.addEventListener(
+			"keydown",
+			(event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					this.openLightbox();
+				}
+			},
+			{ signal },
+		);
+	}
+
+	private clearFrameTrigger(frame: HTMLElement): void {
+		this.lightboxTrigger?.abort();
+		this.lightboxTrigger = null;
+		this.wiredFrame = null;
+		frame.removeAttribute("role");
+		frame.removeAttribute("tabindex");
+		frame.removeAttribute("aria-label");
+	}
+
+	private ensureZoomButton(frame: HTMLElement, label: string): void {
+		let button = frame.querySelector<HTMLButtonElement>(".xtyle-image__zoom");
+		if (!button) {
+			button = document.createElement("button");
+			button.type = "button";
+			button.className = "xtyle-image__zoom";
+			button.innerHTML = renderIcon("maximize");
+			button.addEventListener("click", () => this.openLightbox());
+			frame.appendChild(button);
+		}
+		button.setAttribute("aria-label", label);
+	}
+
+	private removeZoomButton(frame: HTMLElement): void {
+		frame.querySelector(".xtyle-image__zoom")?.remove();
 	}
 
 	private markLoaded(frame: HTMLElement): void {
@@ -174,33 +215,7 @@ export class XtyleImage extends XtyleElement {
 	}
 
 	private openLightbox(): void {
-		this.ensureLightbox().showModal();
-	}
-
-	private ensureLightbox(): HTMLDialogElement {
-		if (this.lightboxEl && this.lightboxEl.isConnected) {
-			const full = this.lightboxEl.querySelector<HTMLImageElement>(".xtyle-image__full");
-			if (full) {
-				full.setAttribute("src", this.src ?? "");
-				full.setAttribute("alt", this.alt);
-			}
-			return this.lightboxEl;
-		}
-		const src = escapeAttr(this.src ?? "");
-		const alt = escapeAttr(this.alt);
-		const dialog = document.createElement("dialog");
-		dialog.className = "xtyle-image__lightbox";
-		dialog.setAttribute("part", "lightbox");
-		dialog.innerHTML =
-			`<button type="button" class="xtyle-image__close" part="close" aria-label="Close">${renderIcon("close")}</button>` +
-			`<img class="xtyle-image__full" part="full" src="${src}" alt="${alt}" />`;
-		dialog.querySelector(".xtyle-image__close")?.addEventListener("click", () => dialog.close());
-		dialog.addEventListener("click", (event) => {
-			if (event.target === dialog) dialog.close();
-		});
-		this.root.appendChild(dialog);
-		this.lightboxEl = dialog;
-		return dialog;
+		openLightbox(this.src ?? "", { alt: this.alt, caption: this.caption ?? undefined });
 	}
 }
 

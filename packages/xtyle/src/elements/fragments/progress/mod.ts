@@ -14,12 +14,17 @@ interface ProgressBindings {
 	indeterminate?: boolean;
 	showValue?: boolean;
 	valueFormat?: string;
+	unit?: string;
 	colorizeValue?: boolean;
 	valuePosition?: string;
 	pulse?: string | null;
 	role?: string;
 	ariaLabel?: string | null;
 	ariaLabelledby?: string | null;
+	ramp?: boolean;
+	rampMode?: string;
+	rampColor?: string;
+	rampStops?: string[];
 }
 
 declare const hooks: {
@@ -74,11 +79,12 @@ function valueText(b: ProgressBindings): string {
 	const min = b.min ?? 0;
 	const max = b.max ?? 100;
 	const value = Math.min(Math.max(b.value ?? 0, min), max);
+	const unit = b.unit ?? "";
 	switch (b.valueFormat ?? "percent") {
 		case "value":
-			return `${value}`;
+			return `${value}${unit}`;
 		case "value-max":
-			return `${value}/${max}`;
+			return `${value}/${max}${unit}`;
 		default:
 			return `${Math.round(fraction(b) * 100)}%`;
 	}
@@ -88,19 +94,48 @@ function valueReadout(b: ProgressBindings): string {
 	return `<span class="xtyle-progress__value" part="value"><slot name="value"><span data-progress-value>${valueText(b)}</span></slot></span>`;
 }
 
-function linearHtml(b: ProgressBindings): string {
-	const percent = Math.round(fraction(b) * 100);
-	const width = b.indeterminate ? "" : ` style="width:${percent}%"`;
-	const readout = b.showValue ? valueReadout(b) : "";
-	return `<div part="progress" class="${progressClass(b)}" role="${b.role ?? "progressbar"}"${ariaAttrs(b)}><div class="xtyle-progress__track" part="track"><div class="xtyle-progress__indicator" part="indicator"${width}></div></div>${readout}</div>`;
+/** The linear indicator's inline style: its fill width, plus an optional value-driven ramp fill. A
+ * `gradient` ramp paints the scale's stops as a `linear-gradient` sized to the full track (so the
+ * visible slice always shows the scale from its cold end up to the current fraction), needing no JS.
+ * A `solid` ramp paints the single `rampColor` the host sampled off the live cascade. */
+function linearIndicatorStyle(b: ProgressBindings): string {
+	if (b.indeterminate) return "";
+	const parts = [`width:${Math.round(fraction(b) * 100)}%`];
+	if (b.ramp && b.rampMode === "gradient" && b.rampStops && b.rampStops.length) {
+		const f = fraction(b);
+		const size = f > 0 ? 100 / f : 100;
+		parts.push(
+			`background:linear-gradient(90deg, ${b.rampStops.join(", ")})`,
+			`background-size:${size.toFixed(2)}% 100%`,
+			"background-repeat:no-repeat",
+		);
+	} else if (b.ramp && b.rampColor) {
+		parts.push(`background:${b.rampColor}`);
+	}
+	return parts.join(";");
 }
 
-function circularHtml(b: ProgressBindings): string {
+/** The circular indicator's inline style: the arc geometry, plus an optional `solid` ramp stroke.
+ * Circular rings only take a solid ramp (a stroke gradient would need a per-instance SVG def). */
+function circularIndicatorStyle(b: ProgressBindings): string {
 	const dasharray = CIRCUMFERENCE.toFixed(3);
 	const offset = b.indeterminate
 		? (CIRCUMFERENCE * 0.7).toFixed(3)
 		: (CIRCUMFERENCE * (1 - fraction(b))).toFixed(3);
-	const dashStyle = ` style="stroke-dasharray:${dasharray};stroke-dashoffset:${offset}"`;
+	const parts = [`stroke-dasharray:${dasharray}`, `stroke-dashoffset:${offset}`];
+	if (b.ramp && b.rampColor && !b.indeterminate) parts.push(`stroke:${b.rampColor}`);
+	return parts.join(";");
+}
+
+function linearHtml(b: ProgressBindings): string {
+	const style = linearIndicatorStyle(b);
+	const styleAttr = style ? ` style="${style}"` : "";
+	const readout = b.showValue ? valueReadout(b) : "";
+	return `<div part="progress" class="${progressClass(b)}" role="${b.role ?? "progressbar"}"${ariaAttrs(b)}><div class="xtyle-progress__track" part="track"><div class="xtyle-progress__indicator" part="indicator"${styleAttr}></div></div>${readout}</div>`;
+}
+
+function circularHtml(b: ProgressBindings): string {
+	const dashStyle = ` style="${circularIndicatorStyle(b)}"`;
 	const readout = b.showValue && !b.indeterminate ? valueReadout(b) : "";
 	const size = b.size ?? "md";
 	const sw = size === "sm" ? 3 : size === "lg" ? 5 : 4;
@@ -122,13 +157,9 @@ hooks.fragment.update("progress", (bindings, ops) => {
 	ops.setAttr('[part="progress"]', "aria-valuemax", String(bindings.max ?? 100));
 	if (!bindings.indeterminate) ops.setAttr('[part="progress"]', "aria-valuenow", String(bindings.value ?? 0));
 	if ((bindings.variant ?? "linear") === "circular") {
-		const offset = bindings.indeterminate
-			? (CIRCUMFERENCE * 0.7).toFixed(3)
-			: (CIRCUMFERENCE * (1 - fraction(bindings))).toFixed(3);
-		const dasharray = CIRCUMFERENCE.toFixed(3);
-		ops.setAttr('[part="indicator"]', "style", `stroke-dasharray:${dasharray};stroke-dashoffset:${offset}`);
+		ops.setAttr('[part="indicator"]', "style", circularIndicatorStyle(bindings));
 	} else if (!bindings.indeterminate) {
-		ops.setAttr('[part="indicator"]', "style", `width:${Math.round(fraction(bindings) * 100)}%`);
+		ops.setAttr('[part="indicator"]', "style", linearIndicatorStyle(bindings));
 	}
 	if (bindings.showValue) ops.setText("[data-progress-value]", valueText(bindings));
 });

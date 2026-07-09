@@ -139,7 +139,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		{
 			title: "List or describe components",
 			description:
-				"Without an id, list every shipped component (id, name, category, summary, bindings). With an id, return that component's full manifest: props, variants, states, slots, consumedTokens, accessibility, and examples. Reach for this first when building against xtyle so token names and prop shapes come from the manifest, not a guess.",
+				"Without an id, list every shipped component (id, name, category, summary, keywords, seeAlso, bindings). With an id, return that component's full manifest: props, variants, states, slots, consumedTokens, accessibility, and examples. Reach for this first when building against xtyle so token names and prop shapes come from the manifest, not a guess. `keywords` are capability synonyms (a searcher's words, not the component's own name) and `seeAlso` cross-references overlapping components, so scan them to find the right component by what it does — e.g. `meter`/`gauge` lands on `progress`, `dropdown` on `select`, `modal` on `dialog`.",
 			inputSchema: {
 				id: z.string().optional().describe("A component id. Omit to list all components."),
 			},
@@ -147,7 +147,15 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		async ({ id }) => {
 			if (!id) {
 				return json(
-					listComponents().map((c) => ({ id: c.id, name: c.name, category: c.category, summary: c.summary, bindings: c.bindings })),
+					listComponents().map((c) => ({
+						id: c.id,
+						name: c.name,
+						category: c.category,
+						summary: c.summary,
+						keywords: c.keywords ?? [],
+						seeAlso: c.seeAlso ?? [],
+						bindings: c.bindings,
+					})),
 				);
 			}
 			const manifest = getComponent(id);

@@ -58,6 +58,8 @@ export const menuManifest: ComponentManifest = {
 	id: "menu",
 	name: "Menu",
 	category: "overlay",
+	keywords: ["dropdown menu", "context menu", "action menu", "kebab", "overflow menu", "popup menu"],
+	seeAlso: ["select", "tooltip", "dialog", "toolbar"],
 	summary: "A menu button: a trigger that opens an anchored popup list of actions.",
 	description:
 		"Menu is the app-menu shape: a labeled trigger (a File button, a kebab, a profile name) that opens a floating list of actions under it. It builds the WAI-ARIA menu button pattern: the trigger carries `aria-haspopup=\"menu\"` and `aria-expanded`, and the popup is a `role=\"menu\"` of `role=\"menuitem\"` actions with a single roving focus, so the keyboard walks it like a native menu. Like Tree, it is data-driven: an `items` array drives the markup. An action carries a `label` plus optional `value`, `disabled`, and a `hint` (a trailing muted/mono accelerator like `Ctrl+S`); a `{ separator: true }` entry renders a `role=\"separator\"` divider; and a `{ heading: string }` entry opens a labeled `role=\"group\"` the following actions sit under, so a real app menu can group its commands under \"File\" and \"Help\" headers. The popup uses the native Popover API, so it renders in the top layer and escapes any clipping or stacking context an ancestor would otherwise impose, positioned under the trigger (and flipped up when there is no room below). Choosing an action fires a `select` event with the item's `value`, `label`, and `index` and closes the menu; the engine never navigates, the consumer decides what an action does. Its chrome (the overlay surface, the elevation, the accent-tinted active row) is derived, so a menu frames its actions in the theme's own voice.",

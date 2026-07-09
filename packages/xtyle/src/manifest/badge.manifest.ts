@@ -60,10 +60,24 @@ import { Badge } from "@xtyle/astro";
 <Badge variant="soft" tone="success" dot pulse>Live</Badge>
 <Badge variant="soft" tone="danger" dot pulse="fast">Alert</Badge>`;
 
+const dotHtmlExample = `<!-- Tone-colored breathe (opacity loop) -->
+<span class="xtyle-dot xtyle-dot--success xtyle-dot--pulse-slow" role="img" aria-label="Connected"></span>
+
+<!-- Expanding ping ring for a live status light -->
+<span class="xtyle-dot xtyle-dot--danger xtyle-dot--ping" role="img" aria-label="Recording"></span>
+
+<!-- Ping + glow, larger -->
+<span class="xtyle-dot xtyle-dot--success xtyle-dot--ping xtyle-dot--glow xtyle-dot--lg" role="img" aria-label="Live"></span>
+
+<!-- Arbitrary color past the tone classes, via the --dot-color escape hatch -->
+<span class="xtyle-dot xtyle-dot--glow" style="--dot-color: var(--purple)" role="img" aria-label="Queued"></span>`;
+
 export const badgeManifest: ComponentManifest = {
 	id: "badge",
 	name: "Badge",
 	category: "media",
+	keywords: ["tag", "chip", "pill", "label", "status", "count", "counter", "dot"],
+	seeAlso: ["swatch", "stat"],
 	summary: "A compact label, tag, or status chip: three fills across six semantic tones and twelve named hues, optionally removable.",
 	description:
 		"Badge labels, tags, counts, and statuses inline. Fill treatment (`variant`) and color (`tone`) are independent axes: each of the three fills (solid, soft, outline) can carry any of the six semantic tones (accent, neutral, danger, success, warn, info) or any of the twelve named hues (red … black). It adds a leading status dot (which can `pulse` to read as live), a tabular count affordance, and a `removable` form whose `×` is a real focusable `<button>` that emits a `remove` event. That's the removable tag you build a filter row or token input from. A standalone `.xtyle-dot` indicator covers the bare-dot case. Status tones (success, warn, danger, info) emit a screen-reader-only tone word so meaning never rides on color alone.",
@@ -112,9 +126,9 @@ export const badgeManifest: ComponentManifest = {
 		{
 			name: "indicator",
 			description:
-				"A standalone dot indicator independent of any chip, tonable and sizable on its own, and pulsable (`.xtyle-dot--pulse-slow` / `--pulse-fast`) to read as live without a chip around it.",
+				"A standalone dot indicator independent of any chip, tonable and sizable on its own. It reads as live three ways, composable: `--pulse-slow` / `--pulse-fast` breathe its opacity, `--ping` radiates an expanding ring (a stronger, attention-grabbing status light), and `--glow` adds a soft halo. Its color comes from the tone class, or from an inline `--dot-color` custom property for an arbitrary per-state color the tone set can't name.",
 			selector: ".xtyle-dot",
-			tokens: ["--space-1", "--space-2", "--space-3", "--radius-full", "--neutral", "--ease-standard"],
+			tokens: ["--space-1", "--space-2", "--space-3", "--radius-full", "--border-thin", "--neutral", "--ease-standard"],
 		},
 	],
 	props: [
@@ -266,7 +280,7 @@ export const badgeManifest: ComponentManifest = {
 	],
 	composition: [
 		"Pair with a list or tag input as removable chips; wire `onremove` (svelte) or the `.xtyle-badge__remove` click (html/astro) to drop the item.",
-		"Use the standalone `.xtyle-dot` indicator next to avatars or rows for presence without a full chip; add `.xtyle-dot--pulse-slow` or `--pulse-fast` to make a chip-less dot read as live (a connection light, a per-row streaming pip), the same breathe the badge dot uses and equally held still under reduced-motion.",
+		"Use the standalone `.xtyle-dot` indicator next to avatars or rows for presence without a full chip; make a chip-less dot read as live with `--pulse-slow`/`--pulse-fast` (opacity breathe), `--ping` (an expanding ring for a stronger status light), and `--glow` (a soft halo), composable together and all held still under reduced-motion. Reach past the tone classes with an inline `--dot-color` when an app's per-state color map is wider than the tone set.",
 		"The `count` affordance pairs with nav items and tabs for unread counts.",
 	],
 	a11y: [
@@ -289,6 +303,13 @@ export const badgeManifest: ComponentManifest = {
 			title: "Live status",
 			description: "`pulse` breathes the dot so a chip reads as live, streaming, or connected, at Progress's two speeds (`slow` and `fast`); it holds still under reduced-motion.",
 			source: { html: pulseHtmlExample, svelte: pulseSvelteExample, astro: pulseAstroExample },
+		},
+		{
+			id: "standalone-dot",
+			title: "Standalone status dot: breathe, ping, glow, custom color",
+			description:
+				"The chip-less `.xtyle-dot` reads as live three composable ways (opacity breathe, an expanding `--ping` ring, and a `--glow` halo) and takes an arbitrary color through the inline `--dot-color` escape hatch when the tone set can't name it.",
+			source: { html: dotHtmlExample },
 		},
 	],
 };

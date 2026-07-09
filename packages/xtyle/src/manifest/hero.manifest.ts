@@ -83,6 +83,8 @@ export const heroManifest: ComponentManifest = {
 	name: "Hero",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["hero banner", "masthead", "landing", "jumbotron", "splash", "header"],
+	seeAlso: ["section", "heading", "eyebrow", "parallax"],
 	summary: "A top-of-page band that composes an eyebrow, heading, text, actions, and media into a hero.",
 	description:
 		"Hero is the top-of-page shape, assembled from the primitives you already have. Drop an `Eyebrow`, a `Heading`, a `Text`, a `Cluster` of `Button`s, and maybe an `Image` inside it, and they stack into a centered hero with a comfortable measure and generous spacing. It adds no behavior and no chrome of its own, so it inherits the page's surface and pairs cleanly over a `Parallax` band; the layout is pure CSS, so the hero renders the same with or without JavaScript. `align` switches the stack from centered to left-aligned, and `split` turns it into a two-column content-and-media band that folds back to one column on a narrow screen.",

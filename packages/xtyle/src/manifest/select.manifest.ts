@@ -82,6 +82,8 @@ export const selectManifest: ComponentManifest = {
 	id: "select",
 	name: "Select",
 	category: "form",
+	keywords: ["dropdown", "combobox", "picker", "options"],
+	seeAlso: ["menu", "field", "segmented"],
 	summary: "A styled native dropdown: `.xtyle-control` chrome, a custom chevron, and a label, with valid and invalid states across three sizes.",
 	description:
 		"Select is a thin, accessible skin over the native `<select>`. It inherits the shared `.xtyle-control` chrome (the same fill, border, radius, and focus ring as Field) so it sits flush beside other form controls, then hides the platform arrow and paints its own chevron, colored by focus, invalid, and disabled state. Options are plain `<option>` / `<optgroup>` children passed straight through to the native element, so keyboard navigation, type-ahead, and the OS picker all come for free. A `label` wires an accessible name, `invalid` plus `error` surface validation, and `sm` / `md` / `lg` tune the density.",

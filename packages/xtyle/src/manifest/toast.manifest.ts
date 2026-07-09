@@ -57,6 +57,8 @@ export const toastManifest: ComponentManifest = {
 	id: "toast",
 	name: "Toast",
 	category: "feedback",
+	keywords: ["notification", "snackbar", "flash", "transient message", "alert"],
+	seeAlso: ["alert", "dialog"],
 	summary: "A transient notification that announces itself and slips away; color and meaning on independent axes, in a live-region stack.",
 	description:
 		"Toast surfaces brief, transient feedback without stealing focus. Two axes drive it independently. `severity` (success, warn, danger, info) carries the *meaning*: the status glyph and the live-region politeness, so `danger`/`warn` announce assertively. `tone` carries the *color*, from the full palette. A severity paints its standard color by default (danger reads red), but a `tone` overrides it, and a color-only toast (a non-status `tone`, no `severity`) shows no glyph and announces politely. A `xtyle-toast-region` is a fixed live-region container with an imperative `toast(opts)` method that pushes cards; each carries one of two variants: `soft`, an overlay card with a colored edge, or `solid`, a fully filled card. Toasts enter and leave with a tokened transition, auto-dismiss after a configurable delay that pauses while the pointer or focus rests on them, and may carry a single action button and a close button. A standalone `xtyle-toast` element is also exposed for declarative, statically-placed notices.",

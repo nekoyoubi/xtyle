@@ -65,6 +65,8 @@ export const checkboxManifest: ComponentManifest = {
 	id: "checkbox",
 	name: "Checkbox",
 	category: "control",
+	keywords: ["tick", "check", "boolean", "indeterminate", "multi-select"],
+	seeAlso: ["radio", "switch"],
 	summary: "A styled native checkbox: checked, indeterminate, and disabled states.",
 	description:
 		"Checkbox stages a single boolean value: unlike a switch it doesn't apply on toggle, contributing its `value` to an enclosing form only on submit. It styles a native `<input type=\"checkbox\">` with `appearance: none` and overlays a custom indicator, so it keeps every native affordance (keyboard activation, form participation, label association) while looking the part. Beyond the on/off pair it carries a third visual state, `indeterminate`, for the classic select-all / partial-selection pattern; the indicator switches from a check mark to a dash, and any user interaction clears it. Two sizes, `sm` and `md`, cover compact and default density.",

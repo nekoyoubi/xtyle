@@ -55,6 +55,23 @@ export * from "./convert.js";
 export * from "./series.js";
 export * from "./timeseries.js";
 export { constraintsFrom } from "./constraints.js";
+export { tableParts } from "./markup/table.js";
+export type { TablePart } from "./markup/table.js";
+export { resolveSparklineBounds } from "./markup/sparkline.js";
+export type {
+	BarSeries,
+	BarScheme,
+	HeatmapScheme,
+	PieDatum,
+	PieScheme,
+	PieVariant,
+	SparklineVariant,
+	SparklineTone,
+	SparklineBounds,
+	ImageFit,
+	ImageRadius,
+	ImageLoading,
+} from "./markup/index.js";
 export * from "./graph.js";
 export {
 	emit,

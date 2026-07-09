@@ -36,6 +36,11 @@ export interface ContrastAuditOptions {
 	largeText?: boolean;
 	/** The floor a pair must clear to count toward `passes` / `tallies.pass` (default `"AA"`). */
 	level?: "AA" | "AAA";
+	/** Audit this consumer-supplied pair set instead of xtyle's canonical pairs. A consumer whose token
+	 * contract differs (its status inks read on `--bg-0`, not each tone's soft tint) passes its own pairs
+	 * so the audit grades what it actually renders, not xtyle's default surfaces. Reach for
+	 * {@link canonicalContrastPairs} to start from xtyle's list and extend it. Omit to audit the canonical set. */
+	pairs?: readonly PairSpec[];
 }
 
 export interface ContrastAuditTallies {
@@ -57,9 +62,12 @@ export interface ContrastAudit {
 	worst: number;
 }
 
-interface PairSpec {
+/** A text/fill token pair to grade for contrast: `fg` is the text token, `bg` the surface it sits on. */
+export interface PairSpec {
 	fg: TokenName;
 	bg: TokenName;
+	/** A human label for the pair in the audit result; defaults to `"<fg> on <bg>"`. */
+	label?: string;
 }
 
 /** Tones whose solid fill carries on-fill text via `--{tone}-fg`. */
@@ -78,7 +86,14 @@ const TINT_TEXT_TONES = ["success", "warn", "danger", "info"] as const;
  * both panel surfaces (so "does secondary text read on a card?" is a real check, not a false green);
  * the placeholder on the field surface; each tone's on-fill text (`-fg` on the solid fill); the accent
  * ramp's readable inks on the base; and the status readable inks on their soft tint. */
-function canonicalPairs(): PairSpec[] {
+/**
+ * xtyle's canonical text/fill pairs as data. Exported so a consumer can read the token contract
+ * directly — extend it with `opts.pairs`, or (for a QuickJS/xript sandbox that can't `import` from
+ * `@xtyle/core`) inline this small list and pair it with the equally-pure `contrast()` to run the
+ * same grade the frontend runs. That's the sandbox-reachable path: the audit is a pure function of a
+ * register plus this pair list, so the two surfaces agree by sharing the data, not the import.
+ */
+export function canonicalContrastPairs(): PairSpec[] {
 	const pairs: PairSpec[] = [{ fg: "--fg-0", bg: "--bg-0" }];
 	for (const ink of SURFACE_INKS) for (const surface of READING_SURFACES) pairs.push({ fg: ink, bg: surface });
 	pairs.push({ fg: "--placeholder", bg: "--field-bg" });
@@ -102,12 +117,12 @@ export function auditRegister(register: TokenRegister, opts: ContrastAuditOption
 	const clears = (tier: ContrastTier): boolean => (level === "AAA" ? tier === "AAA" : tier !== "fail");
 
 	const entries: ContrastAuditEntry[] = [];
-	for (const { fg, bg } of canonicalPairs()) {
+	for (const { fg, bg, label } of opts.pairs ?? canonicalContrastPairs()) {
 		const fgValue = register[fg];
 		const bgValue = register[bg];
 		if (fgValue == null || bgValue == null) continue;
 		const ratio = Math.round(contrast(fgValue, bgValue) * 100) / 100;
-		entries.push({ pair: `${fg} on ${bg}`, fg, bg, fgValue, bgValue, ratio, tier: tierFor(ratio, largeText) });
+		entries.push({ pair: label ?? `${fg} on ${bg}`, fg, bg, fgValue, bgValue, ratio, tier: tierFor(ratio, largeText) });
 	}
 
 	const tallies: ContrastAuditTallies = { total: entries.length, AAA: 0, AA: 0, fail: 0, pass: 0 };

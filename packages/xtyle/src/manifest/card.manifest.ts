@@ -85,6 +85,8 @@ export const cardManifest: ComponentManifest = {
 	id: "card",
 	name: "Card",
 	category: "layout",
+	keywords: ["surface", "container", "tile", "box", "panel"],
+	seeAlso: ["card-link", "panel", "section"],
 	summary: "A surface container that groups related content, with optional header and footer regions.",
 	description:
 		"Card is the workhorse surface: a bordered, elevated panel that frames related content as one unit. It lays its three regions (header, body, footer) out in a column with consistent spacing; the header and footer are real light-DOM parts (`.xtyle-card__header` / `.xtyle-card__footer`), so the same structure renders identically across every binding. An `overlay` variant swaps the surface for the translucent treatment used inside popovers and menus; a `compact` size tightens the padding; an `interactive` variant adds a hover elevation lift plus a focus-within ring for cards that act as a single clickable target. That last one is presentational only: it styles the surface but adds no behavior, so the consumer wraps the clickable content in a real `<button>` or `<a>` for keyboard and screen-reader semantics.",
@@ -103,7 +105,7 @@ export const cardManifest: ComponentManifest = {
 				"--border-thin",
 				"--line",
 				"--radius-lg",
-				"--elevation-2",
+				"--elevation-1",
 				"--space-5",
 				"--space-4",
 			],
@@ -166,13 +168,22 @@ export const cardManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 			options: [...FULL_TONES],
 		},
+		{
+			name: "depthStrength",
+			type: '"sm" | "md" | "lg"',
+			default: "md",
+			description:
+				"How far the surface lifts off the page: `sm` is a whisper, `md` (the default) an eased shadow, `lg` a pronounced lift. An interactive card bumps one step heavier on hover.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["sm", "md", "lg"],
+		},
 	],
 	variants: [
 		{
 			name: "default",
 			description: "The standard elevated surface on the raised background.",
 			className: "xtyle-card",
-			tokens: ["--bg-1", "--line", "--elevation-2"],
+			tokens: ["--bg-1", "--line", "--elevation-1"],
 		},
 		{
 			name: "overlay",
@@ -184,7 +195,7 @@ export const cardManifest: ComponentManifest = {
 			name: "interactive",
 			description: "Hover elevation lift plus a focus-within ring for a clickable card.",
 			className: "xtyle-card--interactive",
-			tokens: ["--elevation-4", "--line-2", "--state-hover", "--state-press", "--ring"],
+			tokens: ["--elevation-2", "--line-2", "--state-hover", "--state-press", "--ring"],
 		},
 	],
 	sizes: [
@@ -196,7 +207,7 @@ export const cardManifest: ComponentManifest = {
 			name: "hover",
 			description: "Pointer over an interactive card; the surface lifts and the overlay paints the hover tint.",
 			selector: ".xtyle-card--interactive:hover",
-			tokens: ["--elevation-4", "--line-2", "--state-hover"],
+			tokens: ["--elevation-2", "--line-2", "--state-hover"],
 		},
 		{
 			name: "active",
@@ -257,8 +268,10 @@ export const cardManifest: ComponentManifest = {
 		"--bg-1",
 		"--line",
 		"--line-2",
+		"--elevation-0",
+		"--elevation-1",
 		"--elevation-2",
-		"--elevation-4",
+		"--elevation-3",
 		"--surface-overlay",
 		"--surface-overlay-border",
 	],

@@ -7,6 +7,12 @@ export const tableCss = `
 	overflow: auto;
 	border-radius: var(--radius-lg);
 }
+/* The wrap becomes a tabbable scroll region only when it overflows (see the element's scroll
+   affordance); an outline sits outside the border box, so the scrolled table can't cover it. */
+.xtyle-table-wrap:focus-visible {
+	outline: var(--border-thick) solid var(--ring);
+	outline-offset: 2px;
+}
 .xtyle-table {
 	width: 100%;
 	border-collapse: separate;

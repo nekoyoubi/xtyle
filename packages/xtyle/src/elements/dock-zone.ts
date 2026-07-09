@@ -1,4 +1,4 @@
-import { define } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 import { resolveDrop, type DockRect, type DockRegion, type DropResolution } from "./dock-layout.js";
 import {
 	dockPanel,
@@ -62,7 +62,7 @@ const CLOSE_GLYPH = "✕";
  * action chrome always reflects the zone's active panel; a `data-badge` (trailing status text) rides
  * on every panel's own tab or stacked-section header, not just the active one.
  */
-export class XtyleDockZone extends HTMLElement {
+export class XtyleDockZone extends XtyleDecoratorElement {
 	private _layout: DockNode | null = null;
 	private _floating: FloatingPanel[] = [];
 	private panels = new Map<string, PanelMeta>();
@@ -113,12 +113,16 @@ export class XtyleDockZone extends HTMLElement {
 	}
 
 	connectedCallback(): void {
+		// Setup precedes `super.connectedCallback()` here (unlike the other elements): the base's first-connect
+		// render calls this override, and an un-collected, un-seeded render would `replaceChildren()` the panel
+		// children away before `collectPanels` could capture them. Seed first, then let the base render.
 		this.collectPanels();
 		if (!this._layout) {
 			const init = this.initialLayout();
 			this._layout = init.tree;
 			this._floating = init.floating;
 		}
+		super.connectedCallback();
 		this.render();
 	}
 
@@ -205,7 +209,7 @@ export class XtyleDockZone extends HTMLElement {
 		return `zone-${this.leafId}`;
 	}
 
-	private render(): void {
+	protected override render(): void {
 		if (!this._layout) {
 			this.replaceChildren();
 			return;

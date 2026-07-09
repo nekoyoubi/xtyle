@@ -54,6 +54,8 @@ export const carouselManifest: ComponentManifest = {
 	name: "Carousel",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["slideshow", "gallery", "slides", "swiper", "scroll snap", "slider"],
+	seeAlso: ["image", "hero", "tabs"],
 	summary: "A scroll-snap track of slides with prev/next controls, dots, keyboard, and opt-in autoplay.",
 	description:
 		"Carousel lays its slotted children out as a horizontal scroll-snap track: each child is a slide, and the browser's own scrolling does the paging, so the track is swipeable and keyboard-scrollable with no JavaScript at all. When the runtime is present it grows a control bar, prev and next buttons (drawn with the chevron icons), a row of pagination dots that track and drive the active slide, and arrow-key and Home/End navigation, all wired over the same native scroll. An opt-in `autoplay` advances the track on an `interval`, pausing on hover and focus and standing still entirely under `prefers-reduced-motion`; `loop` wraps the ends. It is content-agnostic: the slides can be `Image`s, `Card`s, or any markup, and it exposes itself as a labelled carousel region with each slide named for assistive tech.",
@@ -73,9 +75,10 @@ export const carouselManifest: ComponentManifest = {
 		},
 		{
 			name: "dots",
-			description: "The pagination dots; the active one takes the accent.",
+			description:
+				"The pagination dots; the active one takes the accent. When the theme's `--selection-cue` resolves to `marker`, the active dot also elongates into a pill so the current slide reads by shape, not color alone.",
 			selector: ".xtyle-carousel__dot",
-			tokens: ["--bg-3", "--accent"],
+			tokens: ["--bg-3", "--accent", "--selection-cue"],
 		},
 	],
 	props: [
@@ -143,6 +146,7 @@ export const carouselManifest: ComponentManifest = {
 		"--border-thin",
 		"--border-thick",
 		"--ring",
+		"--selection-cue",
 		"--space-2",
 		"--space-3",
 		"--space-6",
@@ -160,6 +164,7 @@ export const carouselManifest: ComponentManifest = {
 		"The track is focusable and scrolls with the arrow keys and Home/End; the prev/next buttons and dots are labelled controls.",
 		"Autoplay pauses on hover and focus, and stops entirely under `prefers-reduced-motion`, so motion never runs against a user's stated preference.",
 		"With no JavaScript the slides remain visible and the track stays natively scrollable, so no content is trapped behind the enhancement.",
+		"The current slide carries a non-color channel on demand: when the theme sets `--selection-cue: marker`, the active dot elongates into a pill alongside the accent color, so which slide is current never rests on color alone (WCAG 1.4.1). High-contrast emits `marker` by default, and any algorithm can opt in via the `cues` knob.",
 	],
 	examples: [
 		{

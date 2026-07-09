@@ -11,7 +11,17 @@ export const codeCss = `
 	line-height: var(--leading-normal);
 	tab-size: 2;
 }
-:host([wrap]) .xtyle-code {
+/* A block wide enough to scroll horizontally is made tabbable (see the element); an outline sits
+   outside the border box, so the scrolled code can't cover it. */
+.xtyle-code:focus-visible {
+	outline: var(--border-thick) solid var(--ring);
+	outline-offset: 2px;
+}
+/* Unlike the rest of the set (which keys state off .xtyle-x--variant classes), code drives state off
+   host attributes, so each state needs both a shadow (:host) and a light-DOM (xtyle-code) selector:
+   :host only matches a shadow host, and the element renders light DOM over Astro SSR. */
+:host([wrap]) .xtyle-code,
+xtyle-code[wrap] .xtyle-code {
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 }
@@ -21,17 +31,24 @@ export const codeCss = `
 	background: none;
 }
 .xtyle-code-line { display: block; }
-:host([highlight]) .xtyle-code code { display: block; width: max-content; min-width: 100%; }
-:host([highlight][wrap]) .xtyle-code code { width: auto; }
+:host([highlight]) .xtyle-code code,
+xtyle-code[highlight] .xtyle-code code { display: block; width: max-content; min-width: 100%; }
+:host([highlight][wrap]) .xtyle-code code,
+xtyle-code[highlight][wrap] .xtyle-code code { width: auto; }
 .xtyle-code-line[data-line-highlight] { background: var(--code-line-highlight); }
-:host([line-numbers]) { --xtyle-code-gutter: 2.5ch; }
-:host([line-numbers]) .xtyle-code { padding-left: 0; }
-:host([line-numbers]) .xtyle-code code { display: block; counter-reset: xtyle-code-line; }
-:host([line-numbers]) .xtyle-code-line {
+:host([line-numbers]),
+xtyle-code[line-numbers] { --xtyle-code-gutter: 2.5ch; }
+:host([line-numbers]) .xtyle-code,
+xtyle-code[line-numbers] .xtyle-code { padding-left: 0; }
+:host([line-numbers]) .xtyle-code code,
+xtyle-code[line-numbers] .xtyle-code code { display: block; counter-reset: xtyle-code-line; }
+:host([line-numbers]) .xtyle-code-line,
+xtyle-code[line-numbers] .xtyle-code-line {
 	display: flex;
 	counter-increment: xtyle-code-line;
 }
-:host([line-numbers]) .xtyle-code-line::before {
+:host([line-numbers]) .xtyle-code-line::before,
+xtyle-code[line-numbers] .xtyle-code-line::before {
 	content: counter(xtyle-code-line);
 	position: sticky;
 	left: 0;
@@ -46,7 +63,8 @@ export const codeCss = `
 	user-select: none;
 	-webkit-user-select: none;
 }
-:host([line-numbers]) .xtyle-code-line__text {
+:host([line-numbers]) .xtyle-code-line__text,
+xtyle-code[line-numbers] .xtyle-code-line__text {
 	flex: 1 1 auto;
 	min-width: 0;
 }
@@ -91,6 +109,7 @@ export const codeCss = `
 		border-color var(--duration-fast) var(--ease-standard);
 }
 :host(:hover) .xtyle-code-copy,
+xtyle-code:hover .xtyle-code-copy,
 .xtyle-code-copy:focus-visible { opacity: 1; }
 .xtyle-code-copy:hover { color: var(--neutral-fg); background: var(--neutral); }
 .xtyle-code-copy[data-copied] {

@@ -4,6 +4,7 @@ import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 type ImageFit = "cover" | "contain";
 type ImageRadius = "none" | "sm" | "md" | "lg";
 type ImageLoading = "lazy" | "eager";
+type ImageTrigger = "frame" | "button";
 
 interface Props {
 	src?: string;
@@ -13,6 +14,7 @@ interface Props {
 	radius?: ImageRadius;
 	loading?: ImageLoading;
 	lightbox?: boolean;
+	trigger?: ImageTrigger;
 	caption?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -29,6 +31,7 @@ const {
 	radius = "md",
 	loading = "lazy",
 	lightbox = false,
+	trigger = "frame",
 	caption,
 	static: isStatic = false,
 	class: extra,
@@ -48,6 +51,7 @@ const composed = await renderFragmentLight("image", bindings);
 	loading={loading}
 	caption={caption}
 	lightbox={lightbox ? "" : undefined}
+	trigger={trigger === "button" ? "button" : undefined}
 	class={extra}
 	set:html={composed}
 	{...rest}

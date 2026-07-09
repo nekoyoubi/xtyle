@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getComponent, coverComponent, derive, windowedPlot } from "../src/index.js";
+import { getComponent, coverComponent, derive, windowedPlot, resolveSparklineBounds } from "../src/index.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
 import { xtyleDefault } from "../src/batteries.js";
 
@@ -45,6 +45,30 @@ describe("sparkline", () => {
 	it("applies the tone class for its single color", async () => {
 		const html = await renderFragmentLight("sparkline", { values: [1, 2], tone: "success" });
 		expect(html).toContain("xtyle-sparkline--success");
+	});
+
+	it("fills a block per on-sample over a track for the occupancy variant, no end dot", async () => {
+		const html = await renderFragmentLight("sparkline", {
+			values: [1, 1, 0, 1, 0],
+			variant: "occupancy",
+			min: 0,
+			max: 1,
+		});
+		expect(html).toContain('class="xtyle-sparkline__track"');
+		const blocks = html.match(/class="xtyle-sparkline__block"/g) ?? [];
+		expect(blocks).toHaveLength(3); // three on-samples, the two off-samples leave gaps
+		expect(html).not.toContain("xtyle-sparkline__end");
+	});
+
+	it("leaves an all-off occupancy strip empty instead of a solid block", async () => {
+		const html = await renderFragmentLight("sparkline", {
+			values: [0, 0, 0],
+			variant: "occupancy",
+			min: 0,
+			max: 1,
+		});
+		expect(html).not.toContain("xtyle-sparkline__block");
+		expect(html).toContain("xtyle-sparkline__track");
 	});
 
 	it("places points-mode samples at their time position, not even spacing", async () => {
@@ -132,5 +156,24 @@ describe("windowedPlot", () => {
 		expect(html).toContain(">No data</span>");
 		expect(html).toContain('aria-label="No data"');
 		expect(html).not.toContain("<svg");
+	});
+});
+
+describe("resolveSparklineBounds", () => {
+	it("pins a percent series to [0, 100] and a unit series to [0, 1]", () => {
+		expect(resolveSparklineBounds([38, 71], { bounds: "percent" })).toEqual({ min: 0, max: 100 });
+		expect(resolveSparklineBounds([0, 1, 0], { bounds: "unit" })).toEqual({ min: 0, max: 1 });
+	});
+
+	it("caps a duration series at a rolling power of two above the peak", () => {
+		expect(resolveSparklineBounds([120, 90, 760, 150], { bounds: "duration" })).toEqual({ min: 0, max: 1024 });
+		// a low, flat series still gets a sane floor of 1
+		expect(resolveSparklineBounds([0.2, 0.3], { bounds: "duration" })).toEqual({ min: 0, max: 1 });
+	});
+
+	it("lets an explicit min/max override the kind, and passes through with no bounds", () => {
+		expect(resolveSparklineBounds([1, 2], { bounds: "percent", max: 50 })).toEqual({ min: 0, max: 50 });
+		expect(resolveSparklineBounds([1, 2], { min: 5, max: 9 })).toEqual({ min: 5, max: 9 });
+		expect(resolveSparklineBounds([1, 2], {})).toEqual({ min: undefined, max: undefined });
 	});
 });

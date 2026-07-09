@@ -21,6 +21,10 @@ export class XtyleIcon extends XtyleElement {
 		return "auto";
 	}
 
+	protected override get resolvesThemeAtRuntime(): boolean {
+		return true;
+	}
+
 	static get observedAttributes(): string[] {
 		return ["name", "size", "tone", "colors", "label", "spin"];
 	}

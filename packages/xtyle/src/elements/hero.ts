@@ -1,4 +1,4 @@
-import { define } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 
 type HeroAlign = "center" | "start";
 
@@ -9,7 +9,7 @@ type HeroAlign = "center" | "start";
  * `Cluster` of `Button`s, an `Image`). The layout is pure CSS keyed off the `align`
  * and `split` attributes, so the band renders with no JavaScript at all.
  */
-export class XtyleHero extends HTMLElement {
+export class XtyleHero extends XtyleDecoratorElement {
 	get align(): HeroAlign {
 		return (this.getAttribute("align") as HeroAlign) ?? "center";
 	}

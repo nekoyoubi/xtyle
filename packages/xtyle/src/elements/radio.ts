@@ -100,7 +100,8 @@ export class XtyleRadio extends XtyleElement {
 		this.addEventListener("click", this.onHostClick);
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.onHostClick);
 	}
 
@@ -217,7 +218,8 @@ export class XtyleRadioGroup extends XtyleElement {
 		queueMicrotask(() => this.updateRovingTabindex());
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.removeEventListener("keydown", this.onKeydown);
 		this.removeEventListener("change", this.onChange);
 	}

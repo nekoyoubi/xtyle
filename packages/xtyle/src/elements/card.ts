@@ -16,7 +16,7 @@ export class XtyleCard extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["overlay", "interactive", "action", "compact", "tone"];
+		return ["overlay", "interactive", "action", "compact", "tone", "depth-strength"];
 	}
 
 	get tone(): string | null {
@@ -24,6 +24,13 @@ export class XtyleCard extends XtyleElement {
 	}
 	set tone(value: string | null | undefined) {
 		this.reflectString("tone", value);
+	}
+
+	get depthStrength(): string | null {
+		return this.getAttribute("depth-strength");
+	}
+	set depthStrength(value: string | null | undefined) {
+		this.reflectString("depth-strength", value);
 	}
 
 	get overlay(): boolean {
@@ -65,6 +72,7 @@ export class XtyleCard extends XtyleElement {
 			action: this.action,
 			compact: this.compact,
 			tone: this.tone,
+			depthStrength: this.depthStrength,
 		};
 	}
 

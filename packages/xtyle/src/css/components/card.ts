@@ -14,10 +14,15 @@ export const cardCss = `
 	background: var(--bg-1);
 	border: var(--border-thin) solid var(--line);
 	border-radius: var(--radius-lg);
-	box-shadow: var(--elevation-2);
+	box-shadow: var(--card-shadow, var(--elevation-1));
 	padding: var(--space-5);
 	gap: var(--space-4);
 }
+/* depthStrength: how far the surface lifts. The default (no class) is the eased md; sm is a
+   whisper, lg keeps the heavier legacy elevation. An interactive card bumps one step on hover. */
+.xtyle-card--depth-sm { --card-shadow: var(--elevation-0); --card-shadow-hover: var(--elevation-1); }
+.xtyle-card--depth-md { --card-shadow: var(--elevation-1); --card-shadow-hover: var(--elevation-2); }
+.xtyle-card--depth-lg { --card-shadow: var(--elevation-2); --card-shadow-hover: var(--elevation-3); }
 .xtyle-card--overlay {
 	background: var(--surface-overlay);
 	border-color: var(--surface-overlay-border);
@@ -39,6 +44,10 @@ export const cardCss = `
 	padding-top: var(--space-3);
 	border-top: var(--border-thin) solid var(--line);
 	color: var(--fg-2);
+}
+.xtyle-card__header:empty,
+.xtyle-card__footer:empty {
+	display: none;
 }
 .xtyle-card--interactive {
 	position: relative;
@@ -71,7 +80,7 @@ export const cardCss = `
 }
 ${cardToneVars}
 .xtyle-card--interactive:hover {
-	box-shadow: var(--elevation-4);
+	box-shadow: var(--card-shadow-hover, var(--elevation-2));
 	border-color: var(--line-2);
 	transform: translateY(calc(-1 * var(--space-1)));
 }

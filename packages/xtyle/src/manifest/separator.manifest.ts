@@ -48,6 +48,8 @@ export const separatorManifest: ComponentManifest = {
 	id: "separator",
 	name: "Separator",
 	category: "layout",
+	keywords: ["divider", "hr", "rule", "hairline", "vertical rule"],
+	seeAlso: ["stack", "cluster"],
 	summary: "A hairline divider: horizontal or vertical, optionally with a centered label, in two weights.",
 	description:
 		"Separator draws a thin dividing rule between content. It runs `horizontal` (a full-width rule, the default) or `vertical` (a full-height rule for inline groups like toolbars and button clusters), in two weights: `normal` uses the standard line color and `thin` uses the fainter `--line-2`. The `with-label` variant centers a label over the rule, splitting it into two segments that flank the text (the classic \"OR\" divider), and works on both axes. A bare divider is decorative and `aria-hidden`; once it carries a label it becomes a real `role=\"separator\"` so assistive tech announces the section break.",

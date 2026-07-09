@@ -64,6 +64,8 @@ export const sliderManifest: ComponentManifest = {
 	id: "slider",
 	name: "Slider",
 	category: "control",
+	keywords: ["range", "range input", "track", "value picker", "volume", "brightness"],
+	seeAlso: ["number-input", "progress", "color-picker"],
 	summary: "A draggable range control for choosing a single value between a min and max, with full keyboard support.",
 	description:
 		"Slider picks one number across a range. It renders a rail with a fill showing the chosen portion and a `role=\"slider\"` thumb carrying `aria-valuemin`/`aria-valuemax`/`aria-valuenow`, so pointer drag, click-to-position, and the full arrow/Page/Home/End keyboard set all move it. Values snap to `step` and clamp to `[min, max]`. It is form-associated: give it a `name` and it contributes its current value to form data. Three sizes (`sm`, the default `md`, and `lg`) vary the thumb and rail thickness. It is the primitive the hue and alpha tracks of a color picker compose from.",

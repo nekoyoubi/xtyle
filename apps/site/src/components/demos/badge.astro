@@ -107,6 +107,26 @@ const TONE_GROUPS = [
 					<Text size="sm">Offline</Text>
 				</Cluster>
 			</Cluster>
+			<Text tone="muted" size="sm">
+				For a live status light that needs to grab the eye, <code>--ping</code> radiates an
+				expanding ring, <code>--glow</code> adds a soft halo, and an inline <code>--dot-color</code>
+				paints an arbitrary color past the tone classes (a per-state color from an app's own map).
+				All held still under reduced-motion.
+			</Text>
+			<Cluster gap={4} align="center">
+				<Cluster gap={2} align="center">
+					<span class="xtyle-dot xtyle-dot--danger xtyle-dot--ping" role="img" aria-label="Recording"></span>
+					<Text size="sm">Recording</Text>
+				</Cluster>
+				<Cluster gap={2} align="center">
+					<span class="xtyle-dot xtyle-dot--success xtyle-dot--ping xtyle-dot--glow xtyle-dot--lg" role="img" aria-label="Live"></span>
+					<Text size="sm">Live (ping + glow)</Text>
+				</Cluster>
+				<Cluster gap={2} align="center">
+					<span class="xtyle-dot xtyle-dot--glow" style="--dot-color: var(--purple)" role="img" aria-label="Queued"></span>
+					<Text size="sm">Custom color</Text>
+				</Cluster>
+			</Cluster>
 		</Stack>
 	</Card>
 </Stack>

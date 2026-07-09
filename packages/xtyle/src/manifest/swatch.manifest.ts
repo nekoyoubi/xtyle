@@ -50,6 +50,8 @@ export const swatchManifest: ComponentManifest = {
 	id: "swatch",
 	name: "Swatch",
 	category: "control",
+	keywords: ["color chip", "color swatch", "palette", "color sample", "token chip"],
+	seeAlso: ["color-picker", "badge", "icon"],
 	summary: "A color chip pairing a colored dot with an optional label and value.",
 	description:
 		"Swatch is the smallest way to show a color and say what it is. A filled dot beside an optional name and an optional value in mono; the shape every `label + value + dot` row and palette rail is built from. The color it shows is *data*, not theme: it comes in on the `color` prop and is painted straight onto the dot as an inline fill, so a swatch can carry any color a user hands it, including one nowhere in the current theme. Its own chrome is the derived part: the dot's hairline border, the label and value type, the corner radius all read from the same tokens the rest of the UI does, so the chip frames a foreign color in the theme's own voice. A thin border keeps even a near-background color legible against the surface. The `size` prop steps the whole chip with the surrounding type from `sm` to `lg`.",
@@ -190,7 +192,9 @@ export const swatchManifest: ComponentManifest = {
 		"--border-thick",
 		"--ring",
 		"--bg-1",
+		"--fg-0",
 		"--accent",
+		"--selection-cue",
 		"--space-1",
 		"--space-2",
 		"--space-8",
@@ -210,6 +214,7 @@ export const swatchManifest: ComponentManifest = {
 		"Always provide a `label` (and ideally a `value`) when the color is meaningful, so the chip is announced by name, not by an invisible swatch.",
 		"An `interactive` chip is a real `<button>`, so Enter and Space activate it and Tab reaches it for free; when it carries no visible label it borrows its `value` or `color` as an `aria-label`.",
 		"`selected` reflects to `aria-pressed`, so a picked chip announces its chosen state to assistive tech, not just its accent ring. Each chip is an independent toggle; if a rail is single-choice, the consumer enforces that by clearing the others on `select`.",
+		"Selection carries a non-color channel on demand: when the theme sets `--selection-cue: marker` (a high-contrast or redundant-cues algorithm), the picked chip keeps its accent ring and gains a second bold neutral `--fg-0` outline around it, so a color-deficient user reads the selection by that added ring, not the accent hue alone, satisfying WCAG 1.4.1.",
 		"A `details` chip is keyboard-reachable even when it isn't `interactive`: it takes `tabindex` and points `aria-describedby` at the popover, so the color readout is available on focus, not hover alone.",
 	],
 	examples: [

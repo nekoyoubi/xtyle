@@ -96,6 +96,8 @@ export const codeManifest: ComponentManifest = {
 	id: "code",
 	name: "Code",
 	category: "content",
+	keywords: ["code block", "syntax highlight", "snippet", "pre", "monospace", "highlighting"],
+	seeAlso: ["kbd", "text"],
 	summary: "A read-only, syntax-highlighted code block themed entirely from the code-token family.",
 	description:
 		"Code is a turnkey, read-only code block with the tokenizer built in; it's the first component to read the `--code-*` family. It tokenizes with Prism, whose output is class-based, so the block re-themes live the moment the theme changes: the colors are just cascading CSS variables, never baked inline. The `lang` prop names the language with aliases resolved (`ts` → `typescript`), and the source is the element's text content (or, for Astro, a `code` prop). Grammar loading is fully lazy and per-language. A page with no code block loads nothing; a page with a few languages loads Prism core once plus only those grammar chunks, walking each grammar's dependencies first. At runtime the block paints immediately as plain-but-themed text and recolors in place once the grammar resolves, so there is no flash and no layout shift; the Astro binding tokenizes at build and ships pre-colored with zero browser JS. `preload` warms a block's grammar eagerly to kill even the minor recolor flash, sharing one warm path with the page-level `XtyleCode.warm()` static. An unknown language falls back to plain-but-themed text rather than erroring.",
@@ -203,7 +205,14 @@ export const codeManifest: ComponentManifest = {
 	],
 	variants: [],
 	sizes: [],
-	states: [],
+	states: [
+		{
+			name: "scroll-focus",
+			description: "Keyboard focus on a block wide enough to scroll horizontally, which turns tabbable only when it overflows: an outline sitting outside the border box, so the scrolled code can't cover it.",
+			selector: ".xtyle-code:focus-visible",
+			tokens: ["--border-thick", "--ring"],
+		},
+	],
 	slots: [
 		{
 			name: "default",
@@ -241,6 +250,8 @@ export const codeManifest: ComponentManifest = {
 		"--neutral-text",
 		"--field-border",
 		"--border-thin",
+		"--border-thick",
+		"--ring",
 		"--radius-sm",
 		"--font-sans",
 		"--text-xs",
@@ -259,6 +270,7 @@ export const codeManifest: ComponentManifest = {
 		"Renders semantic `<pre><code>`, so assistive tech announces the block as preformatted code.",
 		"Coloring is presentational only: the token spans add no meaning, so the code reads identically with styles off.",
 		"The copy control is a real `<button>` with an accessible name, keyboard-operable, and reachable on touch where there is no hover; on a successful copy its name updates to `Copied` so the action is announced.",
+		"A block whose lines run wider than the frame scrolls horizontally and becomes a keyboard-scrollable region (a `tabindex` stop only while it overflows), with a focus outline so a keyboard user can see they've landed there before arrowing across it (WCAG 2.1.1 / 2.4.7). Set `wrap` to soft-wrap instead, and no scroll region appears.",
 	],
 	examples: [
 		{

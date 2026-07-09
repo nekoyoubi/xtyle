@@ -54,6 +54,8 @@ export const dialogManifest: ComponentManifest = {
 	id: "dialog",
 	name: "Dialog",
 	category: "overlay",
+	keywords: ["modal", "popup", "overlay", "lightbox", "confirm", "sheet"],
+	seeAlso: ["tooltip", "menu", "toast"],
 	summary: "A centered modal built on the native `<dialog>` element: scrim, focus trap, and Esc-to-close come for free.",
 	description:
 		"Dialog is a centered modal that wraps the platform `<dialog>` element, so the native modal machinery (the top-layer scrim, the focus trap, focus restore on close, `Escape` to dismiss, and the `role`/`aria-modal` semantics) all comes from the browser rather than re-implemented JavaScript. Open and close it imperatively with `showModal()` / `close()` (or the reactive `open` prop in the framework wrappers). It lays out a header, a scrolling body, and a footer via named slots, and ships a close button by default. The header is wired to the dialog with `aria-labelledby` whenever a `heading` (or explicit `labelledby`) is supplied; a dialog that brings its own `header` slot instead names itself with `label`, since `aria-labelledby` cannot reach a slotted title across the shadow boundary. Three sizes (sm, md, lg) cap its width while it stays responsive on small screens.",

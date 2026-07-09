@@ -1,11 +1,12 @@
-import { define } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
+import { tableParts } from "../markup/table.js";
 
 type TableVariant = "default" | "striped" | "bordered";
 type TableSize = "normal" | "compact";
 
-const SORT_GLYPH = `<span class="xtyle-table__sort" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em"><path fill="currentColor" d="M12 8l5 6H7l5-6Z" /></svg></span>`;
+const SORT_GLYPH = `<span class="${tableParts.sort}" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em"><path fill="currentColor" d="M12 8l5 6H7l5-6Z" /></svg></span>`;
 
-export class XtyleTable extends HTMLElement {
+export class XtyleTable extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
 		return ["variant", "size", "hover", "sticky", "max-height"];
 	}
@@ -42,12 +43,14 @@ export class XtyleTable extends HTMLElement {
 	private contentObserver: MutationObserver | null = null;
 
 	connectedCallback(): void {
+		super.connectedCallback();
 		this.decorate();
 		this.observeOverflow();
 		this.observeContent();
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.overflowObserver?.disconnect();
 		this.overflowObserver = null;
 		this.contentObserver?.disconnect();
@@ -94,14 +97,9 @@ export class XtyleTable extends HTMLElement {
 		}
 	}
 
-	private reflectBoolean(name: string, value: boolean): void {
-		if (value) this.setAttribute(name, "");
-		else this.removeAttribute(name);
-	}
-
 	private get computedTableClass(): string[] {
 		return [
-			"xtyle-table",
+			tableParts.table,
 			this.variant !== "default" && `xtyle-table--${this.variant}`,
 			this.size === "compact" && "xtyle-table--compact",
 			this.hover && "xtyle-table--hover",
@@ -121,7 +119,7 @@ export class XtyleTable extends HTMLElement {
 	}
 
 	private decorateTable(): void {
-		this.classList.add("xtyle-table-wrap");
+		this.classList.add(tableParts.wrap);
 		this.setAttribute("part", "wrap");
 
 		const maxHeight = this.getAttribute("max-height");
@@ -135,7 +133,7 @@ export class XtyleTable extends HTMLElement {
 			return;
 		}
 
-		table.classList.add("xtyle-table");
+		table.classList.add(tableParts.table);
 		for (const cls of this.computedTableClass) table.classList.add(cls);
 		table.setAttribute("part", "table");
 
@@ -148,32 +146,32 @@ export class XtyleTable extends HTMLElement {
 			table.setAttribute("aria-label", this.getAttribute("aria-label") as string);
 		}
 
-		table.querySelector("thead")?.classList.add("xtyle-table__head");
-		table.querySelector("tbody")?.classList.add("xtyle-table__body");
-		for (const row of Array.from(table.querySelectorAll("tr"))) row.classList.add("xtyle-table__row");
-		for (const cell of Array.from(table.querySelectorAll("td"))) cell.classList.add("xtyle-table__cell");
+		table.querySelector("thead")?.classList.add(tableParts.head);
+		table.querySelector("tbody")?.classList.add(tableParts.body);
+		for (const row of Array.from(table.querySelectorAll("tr"))) row.classList.add(tableParts.row);
+		for (const cell of Array.from(table.querySelectorAll("td"))) cell.classList.add(tableParts.cell);
 		for (const header of Array.from(table.querySelectorAll("th"))) {
-			header.classList.add("xtyle-table__header-cell");
+			header.classList.add(tableParts.headerCell);
 			this.decorateHeader(header);
 		}
 		for (const caption of Array.from(table.querySelectorAll("caption"))) {
-			caption.classList.add("xtyle-table__caption");
+			caption.classList.add(tableParts.caption);
 		}
 		for (const footCell of Array.from(table.querySelectorAll("tfoot td, tfoot th"))) {
-			footCell.classList.remove("xtyle-table__cell", "xtyle-table__header-cell");
-			footCell.classList.add("xtyle-table__footer-cell");
+			footCell.classList.remove(tableParts.cell, tableParts.headerCell);
+			footCell.classList.add(tableParts.footerCell);
 		}
 	}
 
 	private decorateHeader(header: Element): void {
 		const sortable = header.hasAttribute("data-sortable") || header.hasAttribute("aria-sort");
 		if (!sortable) return;
-		header.classList.add("xtyle-table__header-cell--sortable");
+		header.classList.add(tableParts.sortableHeaderCell);
 		if (!header.hasAttribute("tabindex")) header.setAttribute("tabindex", "0");
 		if (!header.hasAttribute("aria-sort")) header.setAttribute("aria-sort", "none");
-		if (!header.querySelector(".xtyle-table__header-content")) {
+		if (!header.querySelector(`.${tableParts.headerContent}`)) {
 			const content = document.createElement("span");
-			content.className = "xtyle-table__header-content";
+			content.className = tableParts.headerContent;
 			while (header.firstChild) content.appendChild(header.firstChild);
 			content.insertAdjacentHTML("beforeend", SORT_GLYPH);
 			header.appendChild(content);

@@ -125,6 +125,8 @@ export const breadcrumbManifest: ComponentManifest = {
 	id: "breadcrumb",
 	name: "Breadcrumb",
 	category: "navigation",
+	keywords: ["trail", "path", "hierarchy", "navigation trail", "crumbs"],
+	seeAlso: ["link", "pagination", "steps"],
 	summary: "A hierarchy trail showing where a page sits, with linked ancestors and a marked current location.",
 	description:
 		"Breadcrumb renders a location trail: an ordered list of ancestor links ending in the current page, with a separator glyph between each step. It is a `<nav>` landmark labeled \"Breadcrumb\" wrapping an `<ol>`; ancestors render as anchors and the final crumb renders as plain text carrying `aria-current=\"page\"`. Pass the trail declaratively via the `items` array (each entry is `{ label, href?, value?, title?, current? }`) and the engine builds the list, injects the separators, and marks the last item current. For an in-app trail where a crumb drives state instead of navigating (selecting an ancestor node, not following a URL), give the item a `value` and no `href`: it renders as a real button and fires a `select` event carrying `{ value, index }` on click or Enter/Space, so interactive crumbs never have to drop to the slot. `href` wins when both are set. The separator glyph defaults to `/` and is purely decorative. A `tone` tints the ancestor links and three `size`s scale the type. For fully custom crumbs, omit `items` and provide your own `<li>` markup in the default slot.",

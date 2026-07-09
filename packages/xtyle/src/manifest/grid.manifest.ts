@@ -60,6 +60,8 @@ export const gridManifest: ComponentManifest = {
 	id: "grid",
 	name: "Grid",
 	category: "layout",
+	keywords: ["columns", "layout grid", "auto-fit", "gallery", "masonry"],
+	seeAlso: ["stack", "cluster", "section"],
 	summary: "A two-dimensional CSS grid: fixed columns or responsive auto-fit, with a token-driven gap.",
 	description:
 		"Grid arranges its children in a CSS grid with a token-driven `gap` (0–8). Two sizing modes cover most needs: pass `columns` (1–12) for a fixed equal-width column count, or pass `minColWidth` for a responsive `auto-fit` track that packs as many columns as fit at or above that minimum and reflows as the container resizes. When both are set `minColWidth` wins. `align` and `justify` control how items sit within their cells. Like the other layout primitives it adds spacing and structure but no color or chrome of its own.",

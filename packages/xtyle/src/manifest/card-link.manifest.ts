@@ -30,6 +30,8 @@ export const cardLinkManifest: ComponentManifest = {
 	id: "card-link",
 	name: "Card Link",
 	category: "layout",
+	keywords: ["clickable card", "link card", "tile link", "whole-card link"],
+	seeAlso: ["card", "link", "button"],
 	summary: "A whole card that is a single link: the click target is the card, not a button inside it.",
 	description:
 		"Card Link is a `Card` that navigates. It renders one `<a>` carrying the card's surface, padding, and slots, so the entire card is the click target instead of a link buried in it. It composes the same `interactive`, `overlay`, and `compact` looks as `Card`, defaults to `interactive` (a link card invites the click), and resets the underline and ink so the card reads as a card, not a hyperlink. Pass `href` (plus optional `target`/`rel`); a keyboard `focus-visible` ring lands on the card itself. Reach for it wherever a card *is* a destination: a pager, a nav grid, a list of entries.",

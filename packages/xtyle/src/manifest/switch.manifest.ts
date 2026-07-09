@@ -76,6 +76,8 @@ export const switchManifest: ComponentManifest = {
 	id: "switch",
 	name: "Switch",
 	category: "control",
+	keywords: ["toggle", "on off", "boolean", "flip"],
+	seeAlso: ["checkbox", "segmented"],
 	summary: "An on/off toggle that applies immediately, with an accessible name and optional state labels.",
 	description:
 		"Switch is a `role=\"switch\"` toggle for a setting that takes effect immediately, distinct from a checkbox that stages a value until a form submit. It renders a native `<button>` track with a sliding thumb, so pointer, Space, and Enter all flip it and the state lives in `aria-checked`. An optional leading label and optional `on-label`/`off-label` state text make the toggle self-describing, and it is form-associated: give it a `name` (and optional `value`) and it contributes to form data only while on. Two sizes: the default `md` and a compact `sm`.",

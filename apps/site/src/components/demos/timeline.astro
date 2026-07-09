@@ -1,0 +1,45 @@
+---
+import Timeline from "@xtyle/astro/Timeline.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Release activity</Heading>
+		<Timeline>
+			<ol>
+				<li>
+					<strong>Shipped v0.6.0</strong>
+					<time>2 hours ago</time>
+					<p>The accessibility pass, the reduced-motion self-guards, and a new gallery mockup went live.</p>
+				</li>
+				<li>
+					<strong>Merged the release branch</strong>
+					<time>yesterday</time>
+					<p>Folded the cycle's commits into main and cut the changelog.</p>
+				</li>
+				<li>
+					<strong>Froze the milestone</strong>
+					<time>3 days ago</time>
+				</li>
+				<li>
+					<strong>Opened v0.6.0</strong>
+					<time>last week</time>
+				</li>
+			</ol>
+		</Timeline>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Terse feed</Heading>
+		<Timeline>
+			<ol>
+				<li><strong>Deploy succeeded</strong><time>12:04</time></li>
+				<li><strong>Build passed</strong><time>12:01</time></li>
+				<li><strong>Pushed 3 commits</strong><time>11:58</time></li>
+			</ol>
+		</Timeline>
+	</Card>
+</Stack>

@@ -181,6 +181,8 @@ export const heatmapManifest: ComponentManifest = {
 	name: "Heatmap",
 	since: "0.4.0",
 	category: "metrics",
+	keywords: ["heat map", "activity calendar", "punch card", "contribution graph", "intensity grid"],
+	seeAlso: ["bar", "pie", "sparkline"],
 	summary: "A 2D intensity grid (the activity-calendar / punch-card shape), colored on a theme-derived ramp, with a per-cell readout and opt-in clickable cells.",
 	description:
 		"Heatmap renders a matrix of values as a grid of colored cells, each cell's fill scaled by its value on an intensity ramp resolved off the live theme, the activity-calendar / punch-card shape (runs per hour over a week, load by host and resource, a GitHub-style contribution grid). Feed it a dense `values` matrix (row-major) plus optional `rows` and `cols` labels; the default `accent` ramp washes from a faint surface up to the accent, and `thermal` or `status` (or an explicit color array) swap the scale. Every cell's intensity is normalized against the data's own maximum, or an explicit `max` so several grids share one scale. It's interactive: hovering or focusing a cell floats a value readout, and the whole grid is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make cells a drill-in surface, each firing a `select` event with its row, column, and value. `showValues` prints the number in each cell. Feed an optional second `glow` matrix (the same shape as `values`) to carry a second signal in one grid: the fill reads one metric while a per-cell halo reads another (run count vs total runtime, requests vs error rate). An empty matrix shows a muted `No data` message in place of the grid.",

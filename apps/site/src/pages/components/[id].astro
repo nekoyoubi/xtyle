@@ -25,7 +25,7 @@ import Breadcrumb from "@xtyle/astro/Breadcrumb.astro";
 import CodeTabs from "../../components/reference/CodeTabs.astro";
 import PropTable from "../../components/reference/PropTable.astro";
 import CoveragePanel from "../../components/reference/CoveragePanel.astro";
-import CoverageBadge from "../../components/reference/CoverageBadge.astro";
+import CoverageMeter from "../../components/reference/CoverageMeter.astro";
 import { categoryMeta } from "../../components/reference/categories.ts";
 import {
 	renderMarkdown,
@@ -63,9 +63,6 @@ const fallbackExampleSource =
 const fallbackSources = firstExample?.source ?? {};
 
 const bindingOrder = ["html", "svelte", "astro"] as const;
-const supportedBindings = bindingOrder.filter((b) =>
-	component.bindings.includes(b),
-);
 const meta = categoryMeta[component.category];
 
 const all = listComponents();
@@ -74,6 +71,11 @@ const prev = idx > 0 ? all[idx - 1] : undefined;
 const next = idx < all.length - 1 ? all[idx + 1] : undefined;
 
 const composition = component.composition ?? [];
+
+const keywords = component.keywords ?? [];
+const related = (component.seeAlso ?? [])
+	.map((rid) => all.find((c) => c.id === rid))
+	.filter((c): c is ComponentManifest => Boolean(c));
 
 const languages = component.id === "code" ? listLanguages() : null;
 const aliasExamples = languages
@@ -95,6 +97,7 @@ const sections = [
 	component.a11y.length > 0 && { id: "a11y", label: "Accessibility" },
 	component.examples.length > 0 && { id: "examples", label: "Code" },
 	languages && { id: "languages", label: "Languages" },
+	related.length > 0 && { id: "related", label: "Related" },
 ].filter(Boolean) as { id: string; label: string }[];
 
 const trimmedDescription = component.description.trim();
@@ -130,10 +133,7 @@ const crumbs = [
 				</Cluster>
 				<Cluster gap={2} align="center">
 					<Badge tone="info">{meta.label}</Badge>
-					{supportedBindings.map((b) => (
-						<Badge tone="neutral" size="sm">{b}</Badge>
-					))}
-					<CoverageBadge
+					<CoverageMeter
 						covered={cov.covered}
 						missing={cov.missing}
 						produced={producedCount}
@@ -143,6 +143,13 @@ const crumbs = [
 				<Text size="lg" tone="muted" class="ref-summary">
 					{component.summary}
 				</Text>
+				{keywords.length > 0 && (
+					<Cluster gap={1} class="ref-keywords" aria-label="Also known as">
+						{keywords.map((kw) => (
+							<Badge tone="neutral" variant="soft" size="sm">{kw}</Badge>
+						))}
+					</Cluster>
+				)}
 			</Stack>
 		</Stack>
 
@@ -473,6 +480,29 @@ const crumbs = [
 			</section>
 		)}
 
+		{related.length > 0 && (
+			<section id="related" class="ref-anchor">
+				<Stack gap={3}>
+					<Stack gap={1}>
+						<Heading level={2} size="lg">Related</Heading>
+						<Text tone="muted" size="sm">
+							Components with overlapping capabilities, one hop away.
+						</Text>
+					</Stack>
+					<div class="ref-related">
+						{related.map((r) => (
+							<CardLink href={`/components/${r.id}`} class="ref-related__card">
+								<Stack gap={1}>
+									<Text weight="semibold" class="ref-related__name">{r.name}</Text>
+									<Text size="sm" tone="muted" set:html={renderMarkdownInline(r.summary)} />
+								</Stack>
+							</CardLink>
+						))}
+					</div>
+				</Stack>
+			</section>
+		)}
+
 		<nav aria-label="Pagination">
 			<Separator class="ref-pager__rule" />
 			<Cluster justify="between" gap={3} align="stretch" class="ref-pager">
@@ -629,6 +659,21 @@ const crumbs = [
 		letter-spacing: 0.06em;
 	}
 	.ref-pager__name {
+		color: var(--fg-0);
+	}
+
+	.ref-keywords {
+		margin-top: var(--space-1);
+	}
+	.ref-related {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+		gap: var(--space-3);
+	}
+	.ref-related :global(.ref-related__card) {
+		height: 100%;
+	}
+	.ref-related :global(.ref-related__name) {
 		color: var(--fg-0);
 	}
 

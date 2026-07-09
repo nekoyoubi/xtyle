@@ -9,6 +9,7 @@ interface CardBindings {
 	action?: boolean;
 	compact?: boolean;
 	tone?: string | null;
+	depthStrength?: string | null;
 }
 
 declare const hooks: {
@@ -22,6 +23,7 @@ function cardClass(b: CardBindings): string {
 		(b.interactive || b.action) && "xtyle-card--interactive",
 		b.action && "xtyle-card--action",
 		b.compact && "xtyle-card--compact",
+		b.depthStrength && `xtyle-card--depth-${b.depthStrength}`,
 		b.tone && `xtyle-card--${b.tone}`,
 		b.tone && "xtyle-card--toned",
 	]

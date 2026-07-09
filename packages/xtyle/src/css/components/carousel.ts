@@ -60,13 +60,18 @@ xtyle-carousel[data-enhanced] .xtyle-carousel__controls { display: flex; }
 	border-radius: var(--radius-full);
 	background: var(--bg-3);
 	cursor: pointer;
-	transition: background var(--duration-fast) var(--ease-standard);
+	transition:
+		background var(--duration-fast) var(--ease-standard),
+		width var(--duration-fast) var(--ease-standard);
 }
 .xtyle-carousel__dot:hover { background: var(--fg-2); }
 .xtyle-carousel__dot.is-active { background: var(--accent); }
 .xtyle-carousel__dot:focus-visible {
 	outline: var(--border-thin) solid var(--ring);
 	outline-offset: 2px;
+}
+@container style(--selection-cue: marker) {
+	.xtyle-carousel__dot.is-active { width: 1.4rem; }
 }
 @media (prefers-reduced-motion: reduce) {
 	.xtyle-carousel__track { scroll-behavior: auto; }

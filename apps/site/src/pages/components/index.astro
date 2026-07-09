@@ -4,14 +4,15 @@ import { getStats, displayStats } from "../../data/stats";
 import Base from "../../layouts/Base.astro";
 import Card from "@xtyle/astro/Card.astro";
 import Badge from "@xtyle/astro/Badge.astro";
-import Link from "@xtyle/astro/Link.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Grid from "@xtyle/astro/Grid.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Eyebrow from "@xtyle/astro/Eyebrow.astro";
-import CoverageBadge from "../../components/reference/CoverageBadge.astro";
+import Separator from "@xtyle/astro/Separator.astro";
+import CoverageMeter from "../../components/reference/CoverageMeter.astro";
+import CardPreview from "../../components/reference/CardPreview.astro";
 import {
 	categoryOrder,
 	categoryMeta,
@@ -26,6 +27,7 @@ const producedCount = site.tokens;
 
 const all = listComponents();
 const total = all.length;
+const peakFootprint = Math.max(...all.map((c) => c.consumedTokens.length));
 
 const grouped = categoryOrder
 	.map((category) => ({
@@ -34,7 +36,6 @@ const grouped = categoryOrder
 	}))
 	.filter((g) => g.items.length > 0);
 
-const bindingOrder = ["html", "svelte", "astro"] as const;
 
 function coverageFor(component: ComponentManifest) {
 	const result = coverComponent(component, register);
@@ -45,7 +46,8 @@ function coverageFor(component: ComponentManifest) {
 	};
 }
 
-const stats = displayStats(site).map((s) => ({ num: `${s.value}`, label: s.label }));
+const stats = displayStats(site).map((s) => ({ num: `${s.value}`, label: s.label, delta: site.delta(s.key) }));
+const newThisCycle = all.filter((c) => isNewComponent(c.since));
 
 const metaDescription = `The xtyle component contract: ${total} components across ${grouped.length} categories, each rendered live from the active xtyle-default theme with a live token-coverage check.`;
 ---
@@ -72,10 +74,70 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 				<Card compact role="listitem" class="cx-stat">
 					<p class="cx-stat__num">{stat.num}</p>
 					<Text size="xs" tone="muted" class="cx-stat__label">{stat.label}</Text>
+					{stat.delta > 0 && (
+						<Badge tone="success" variant="soft" size="sm" class="cx-stat__delta">
+							+{stat.delta} since v{site.baseline.version}
+						</Badge>
+					)}
 				</Card>
 			))}
 		</Grid>
 	</header>
+
+	<div class="cx-search">
+		<label class="cx-search__label" for="cx-q">Search components</label>
+		<input
+			id="cx-q"
+			type="search"
+			class="cx-search__input xtyle-control"
+			placeholder="Search by name, purpose, or capability: try 'meter', 'dropdown', 'modal'..."
+			autocomplete="off"
+			data-search-input
+		/>
+		<p class="cx-search__status" data-search-status aria-live="polite" role="status"></p>
+	</div>
+
+	{newThisCycle.length > 0 && (
+		<section class="cx-new" aria-labelledby="cx-new-title" data-new-band>
+			<div class="cx-new__head">
+				<span class="cx-new__spark" aria-hidden="true">✦</span>
+				<Heading level={2} size="lg" id="cx-new-title">New in v{site.version}</Heading>
+				<Text size="sm" tone="muted" class="cx-new__blurb">
+					{newThisCycle.length} components landed this cycle. Each renders live below, from the same theme.
+				</Text>
+			</div>
+			<Grid minColWidth="15rem" gap={4} align="stretch" class="cx-new__grid">
+				{newThisCycle.map((component) => {
+					const cov = coverageFor(component);
+					return (
+					<article class="cx-new-card">
+						<Card class="cx-new-card__inner">
+							<Cluster justify="between" align="start" gap={2} class="cx-new-card__title">
+								<Cluster gap={2} align="center">
+									<Heading level={3} size="md">
+										<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
+									</Heading>
+									<Badge variant="solid" tone="accent" size="sm">New</Badge>
+								</Cluster>
+								<CoverageMeter
+									covered={cov.covered}
+									missing={cov.missing}
+									produced={producedCount}
+									consumed={cov.consumed}
+									peak={peakFootprint}
+								/>
+							</Cluster>
+							<div class="cx-card__preview" aria-hidden="true" inert>
+								<CardPreview id={component.id} />
+							</div>
+							<p class="cx-new-card__summary" set:html={renderMarkdownInline(component.summary)} />
+						</Card>
+					</article>
+					);
+				})}
+			</Grid>
+		</section>
+	)}
 
 	{grouped.map((group, gi) => {
 		const groupCovered = group.items.filter(
@@ -83,70 +145,108 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		).length;
 		const groupHealthy = groupCovered === group.items.length;
 		return (
-		<section class="cx-section" id={group.meta.id} data-density={gi % 2 === 0 ? "roomy" : "tight"}>
-			<div class={`cx-section__head ${groupHealthy ? "is-healthy" : "has-gaps"}`}>
-				<span class="cx-section__stripe" aria-hidden="true"></span>
-				<Heading level={2} size="lg">{group.meta.label}</Heading>
-				<Text size="sm" tone="muted" class="cx-section__blurb">
-					{group.meta.blurb}
-				</Text>
-				<Badge
-					tone={groupHealthy ? "success" : "warn"}
-					size="sm"
-					class="cx-section__count"
-					title={`${groupCovered} of ${group.items.length} fully covered`}
-				>
-					{groupCovered}/{group.items.length}
-				</Badge>
-			</div>
-			<Grid minColWidth="18rem" gap={4} class="cx-grid">
+		<section class="cx-section" id={group.meta.id} data-density={gi % 2 === 0 ? "roomy" : "tight"} data-cx-section>
+			<header class="cx-section__head">
+				<Cluster justify="between" align="baseline" gap={3} class="cx-section__headrow">
+					<Cluster align="baseline" gap={2} class="cx-section__lead">
+						<Heading level={2} size="xl">{group.meta.label}</Heading>
+						<Text size="sm" tone="muted" class="cx-section__blurb">
+							{group.meta.blurb}
+						</Text>
+					</Cluster>
+					<Badge
+						tone={groupHealthy ? "success" : "warn"}
+						size="sm"
+						title={`${groupCovered} of ${group.items.length} fully covered`}
+					>
+						{groupCovered}/{group.items.length}
+					</Badge>
+				</Cluster>
+				<Separator />
+			</header>
+			<Grid minColWidth="18rem" gap={4} align="stretch" class="cx-grid">
 				{group.items.map((component) => {
 					const cov = coverageFor(component);
 					return (
-						<a
+						<article
 							class={`cx-card-link ${cov.covered ? "is-covered" : "has-gaps"}`}
-							href={`/components/${component.id}`}
+							data-cx-card
+							data-search={`${component.name} ${component.summary} ${(component.keywords ?? []).join(" ")} ${(component.seeAlso ?? []).join(" ")}`.toLowerCase()}
 						>
 							<Card interactive class="cx-card">
 								<Cluster justify="between" align="start" gap={2} class="cx-card__top">
 									<Cluster gap={2} align="center" class="cx-card__title">
-										<Heading level={3} size="sm" class="cx-card__name">
-											{component.name}
+										<Heading level={3} size="md" class="cx-card__name">
+											<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
 										</Heading>
 										{isNewComponent(component.since) && (
-											<Badge variant="soft" tone="accent" size="sm">New</Badge>
+											<Badge variant="solid" tone="accent" size="sm">New</Badge>
 										)}
 									</Cluster>
-									<CoverageBadge
+									<CoverageMeter
 										covered={cov.covered}
 										missing={cov.missing}
 										produced={producedCount}
 										consumed={cov.consumed}
+										peak={peakFootprint}
 									/>
 								</Cluster>
+								<div class="cx-card__preview" aria-hidden="true" inert>
+									<CardPreview id={component.id} />
+								</div>
 								<p
 									class="cx-card__summary"
 									set:html={renderMarkdownInline(component.summary)}
 								/>
-								<Cluster justify="between" align="center" gap={2} class="cx-card__foot">
-									<Cluster gap={1} class="cx-card__bindings">
-										{bindingOrder
-											.filter((b) => component.bindings.includes(b))
-											.map((b) => (
-												<Badge tone="neutral" size="sm">{b}</Badge>
-											))}
-									</Cluster>
-									<span class="cx-card__more">Reference →</span>
-								</Cluster>
 							</Card>
-						</a>
+						</article>
 					);
 				})}
 			</Grid>
 		</section>
 		);
 	})}
+
+	<p class="cx-search__empty" data-search-empty hidden>
+		No components match that search. Try a capability word like
+		<code>meter</code>, <code>dropdown</code>, or <code>modal</code>.
+	</p>
 </Base>
+
+<script>
+	const input = document.querySelector("[data-search-input]") as HTMLInputElement | null;
+	const status = document.querySelector("[data-search-status]") as HTMLElement | null;
+	const empty = document.querySelector("[data-search-empty]") as HTMLElement | null;
+	const sections = Array.from(document.querySelectorAll("[data-cx-section]")) as HTMLElement[];
+	const cards = Array.from(document.querySelectorAll("[data-cx-card]")) as HTMLElement[];
+	const total = cards.length;
+
+	function apply(raw: string) {
+		const q = raw.trim().toLowerCase();
+		let visible = 0;
+		for (const card of cards) {
+			const match = q === "" || (card.dataset.search ?? "").includes(q);
+			card.hidden = !match;
+			if (match) visible++;
+		}
+		for (const section of sections) {
+			section.hidden = !section.querySelector("[data-cx-card]:not([hidden])");
+		}
+		if (empty) empty.hidden = visible !== 0;
+		if (status) {
+			status.textContent = q === "" ? "" : `${visible} of ${total} match`;
+		}
+	}
+
+	if (input) {
+		input.addEventListener("input", () => apply(input.value));
+		const initial = new URLSearchParams(location.search).get("q");
+		if (initial) {
+			input.value = initial;
+			apply(initial);
+		}
+	}
+</script>
 
 <style>
 	.cx-head {
@@ -167,7 +267,8 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		max-width: 44rem;
 	}
 	.cx-lede code,
-	.cx-card__summary code {
+	.cx-card__summary code,
+	.cx-search__empty code {
 		font-family: var(--font-mono);
 		font-size: 0.9em;
 		background: var(--bg-2);
@@ -192,50 +293,105 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		letter-spacing: 0.06em;
 		margin: var(--space-1) 0 0;
 	}
-	.cx-section {
-		margin-bottom: var(--space-8);
-		scroll-margin-top: var(--space-6);
+	.cx-stat :global(.cx-stat__delta) {
+		margin-top: var(--space-2);
+		align-self: start;
 	}
-	.cx-section__head {
-		position: relative;
+
+	.cx-new {
+		margin-bottom: var(--space-8);
+		padding: var(--space-5);
+		border-radius: var(--radius-lg);
+		border: var(--border-thin) solid var(--accent);
+		background: linear-gradient(to bottom right, var(--accent-bg), transparent 72%);
+	}
+	.cx-new__head {
 		display: flex;
 		align-items: baseline;
 		flex-wrap: wrap;
 		gap: var(--space-2) var(--space-3);
 		margin-bottom: var(--space-4);
-		padding: var(--space-2) var(--space-3) var(--space-3);
-		padding-inline-start: var(--space-4);
-		border-radius: var(--radius-md);
-		background: linear-gradient(
-			to right,
-			var(--accent-bg),
-			transparent 60%
-		);
 	}
-	.cx-section__head.has-gaps {
-		background: linear-gradient(
-			to right,
-			var(--warn-bg),
-			transparent 60%
-		);
+	.cx-new__spark {
+		color: var(--accent);
+		font-size: var(--text-xl);
+		line-height: 1;
 	}
-	.cx-section__stripe {
+	.cx-new__blurb {
+		margin: 0;
+	}
+	.cx-new-card {
+		position: relative;
+		display: flex;
+	}
+	.cx-new-card :global(.cx-new-card__inner) {
+		position: relative;
+		flex: 1;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		box-shadow: var(--elevation-1);
+		transition:
+			box-shadow var(--duration-fast) var(--ease-standard),
+			transform var(--duration-fast) var(--ease-standard);
+	}
+	.cx-new-card:hover :global(.cx-new-card__inner) {
+		transform: translateY(-2px);
+		box-shadow: var(--elevation-3);
+	}
+	.cx-new-card :global(.cx-new-card__title) {
+		margin-bottom: var(--space-4);
+	}
+	.cx-new-card__summary {
+		color: var(--fg-1);
+		font-size: var(--text-sm);
+		line-height: var(--leading-normal);
+		margin: var(--space-4) 0 0;
+	}
+	.cx-search {
+		margin-bottom: var(--space-8);
+	}
+	.cx-search__label {
 		position: absolute;
-		inset-block: 0;
-		inset-inline-start: 0;
-		width: var(--border-thick);
-		border-start-start-radius: var(--radius-md);
-		border-end-start-radius: var(--radius-md);
-		background: var(--accent);
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+		border: 0;
 	}
-	.cx-section__head.has-gaps .cx-section__stripe {
-		background: var(--warn);
+	.cx-search__input {
+		width: 100%;
+		font-size: var(--text-base);
+	}
+	.cx-search__status {
+		margin: var(--space-2) 0 0;
+		min-height: 1.2em;
+		font-size: var(--text-sm);
+		color: var(--fg-2);
+	}
+	.cx-search__empty {
+		text-align: center;
+		color: var(--fg-2);
+		padding: var(--space-8) 0;
+	}
+
+	/* Every section is separated from the one above by the same `--space-8`, and each header keeps a
+	   uniform gap to its own grid, so headers read consistently and cards never crowd the next one. */
+	.cx-section {
+		margin-bottom: var(--space-8);
+		scroll-margin-top: var(--space-6);
+	}
+	.cx-section__head {
+		margin-bottom: var(--space-4);
+	}
+	.cx-section :global(.cx-section__headrow) {
+		margin-bottom: var(--space-3);
 	}
 	.cx-section__blurb {
 		margin: 0;
-	}
-	.cx-section__count {
-		margin-left: auto;
 	}
 	.cx-section[data-density="tight"] :global(.cx-grid) {
 		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
@@ -244,31 +400,77 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 	.cx-card-link {
 		text-decoration: none;
 		color: inherit;
-		display: block;
-	}
-	.cx-card-link:hover {
-		text-decoration: none;
+		display: flex;
 	}
 	.cx-card-link :global(.cx-card) {
+		position: relative;
+		flex: 1;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
 		border-inline-start-width: var(--border-thick);
-		box-shadow: var(--elevation-1);
-		transition:
-			border-color var(--duration-fast) var(--ease-standard),
-			box-shadow var(--duration-fast) var(--ease-standard),
-			transform var(--duration-fast) var(--ease-standard);
+		transition: border-color var(--duration-fast) var(--ease-standard);
+	}
+	/* The `<Card>` renders host → render-root wrapper → the visible `.xtyle-card` box. Stretching the
+	   host alone leaves the box at content height, so a stretched-to-row-height host shows its own
+	   background below the box (the ghost strip). Flex-fill the wrapper and the box down the chain so
+	   the visible card always reaches the row height. Covers the grid cards, the New band, and the
+	   stat row (whose `+N` growth chip makes one card taller than its siblings). */
+	.cx-stats :global(.cx-stat) {
+		display: flex;
+	}
+	.cx-card-link :global(.cx-card > *),
+	.cx-new-card :global(.cx-new-card__inner > *),
+	.cx-stats :global(.cx-stat > *) {
+		display: flex;
+		flex-direction: column;
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+	.cx-card-link :global(.xtyle-card),
+	.cx-new-card :global(.xtyle-card),
+	.cx-stats :global(.xtyle-card) {
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+	/* Stretched link: the whole card navigates, but the title is the only anchor, so the live
+	   preview's controls are siblings (valid HTML) instead of interactive elements inside an <a>. */
+	.cx-card__link {
+		color: inherit;
+		text-decoration: none;
+	}
+	.cx-card__link::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		border-radius: var(--radius-md);
+	}
+	.cx-card__link:focus-visible {
+		outline: none;
+	}
+	.cx-card__link:focus-visible::after {
+		outline: var(--border-thick) solid var(--ring);
+		outline-offset: 2px;
+	}
+	.cx-card__preview {
+		position: relative;
+		z-index: 0;
+		pointer-events: none;
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+	}
+	/* The preview frame absorbs a card's extra height so a short card frames its demo in the slack
+	   instead of leaving an empty bottom; the demo itself stays centered inside it. */
+	.cx-card__preview > :global(*) {
+		flex: 1 1 auto;
 	}
 	.cx-card-link.is-covered :global(.cx-card) {
 		border-inline-start-color: var(--success);
 	}
 	.cx-card-link.has-gaps :global(.cx-card) {
 		border-inline-start-color: var(--warn);
-	}
-	.cx-card-link:hover :global(.cx-card) {
-		transform: translateY(-2px);
-		box-shadow: var(--elevation-3);
 	}
 	.cx-card-link.is-covered:hover :global(.cx-card) {
 		border-color: var(--success);
@@ -279,7 +481,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		border-inline-start-color: var(--warn);
 	}
 	.cx-card :global(.cx-card__top) {
-		margin-bottom: var(--space-2);
+		margin-bottom: var(--space-4);
 	}
 	.cx-card :global(.cx-card__name) {
 		margin: 0;
@@ -288,16 +490,6 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		color: var(--fg-1);
 		font-size: var(--text-sm);
 		line-height: var(--leading-normal);
-		margin: 0 0 var(--space-4);
-		flex: 1;
-	}
-	.cx-card :global(.cx-card__foot) {
-		margin-top: auto;
-	}
-	.cx-card__more {
-		font-size: var(--text-sm);
-		font-weight: var(--weight-medium);
-		color: var(--accent-text);
-		white-space: nowrap;
+		margin: var(--space-4) 0 0;
 	}
 </style>

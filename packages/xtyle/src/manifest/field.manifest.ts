@@ -99,6 +99,8 @@ export const fieldManifest: ComponentManifest = {
 	id: "field",
 	name: "Field",
 	category: "form",
+	keywords: ["input", "text input", "text field", "search box", "textbox", "form input"],
+	seeAlso: ["textarea", "number-input", "form-group", "select"],
 	summary: "A labelled text input with helper text, validation, adornments, and built-in clear and reveal actions.",
 	description:
 		"Field is the complete single-line text input: a label, an input, a persistent description, and an error message wired together with the right accessibility relationships out of the box. The input inherits the shared `.xtyle-control` chrome and adds field-specific layout: a unified control box that holds leading and trailing adornment slots (icons, currency prefixes, unit suffixes) alongside the input. It generates a stable `id` and links it to the label, builds `aria-describedby` from both the description and the error, and ships two optional built-in actions: a clear button and a password reveal toggle. In the HTML and Svelte bindings the element is form-associated, participating in native form submission and constraint validation. Sizes (sm / md / lg) match the Button padding scale, and `readonly`, `required`, `disabled`, and `invalid` are all first-class.",

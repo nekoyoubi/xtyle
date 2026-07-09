@@ -1,0 +1,44 @@
+---
+interface Props {
+	value?: number;
+	max?: number;
+	size?: "sm" | "md" | "lg";
+	/** The icon to rate with: `star` (default), any functional glyph, or a mark spec (`taco--…`). */
+	icon?: string;
+	/** Read-only display (fixed, fractional). Omit for an interactive slider (focusable, click / keys). */
+	readonly?: boolean;
+	/** Snap interactive input to half steps. */
+	allowHalf?: boolean;
+	/** The series scheme a colorful mark draws its palette from. */
+	colors?: string;
+	/** Fill tone for a monochrome icon: a register hue (`accent`, `success`, `red`, …). */
+	tone?: string;
+	/** Form field name; when set, the value posts through a hidden input. */
+	name?: string;
+	/** Accessible label (also the no-JS fallback text). */
+	label?: string;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { value = 0, max = 5, size, icon, readonly, allowHalf, colors, tone, name, label, class: extra, ...rest } = Astro.props;
+---
+
+<xtyle-rating
+	value={value}
+	max={max}
+	size={size}
+	icon={icon}
+	colors={colors}
+	tone={tone}
+	name={name}
+	readonly={readonly ? "" : undefined}
+	allowhalf={allowHalf ? "" : undefined}
+	label={label}
+	class:list={["xtyle-rating", extra]}
+	{...rest}>{label ?? `${value} out of ${max} stars`}</xtyle-rating>
+
+<script>
+	import "@xtyle/core/elements";
+</script>

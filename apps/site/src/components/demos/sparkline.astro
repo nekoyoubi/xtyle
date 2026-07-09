@@ -88,6 +88,49 @@ const uptime = [
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Occupancy strip</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>variant="occupancy"</code> fills each "on" sample of a bool series as a solid block over a
+				faint track, the uptime/presence reading a 0/1 <code>step</code> line can't give. Same uptime
+				series, two shapes:
+			</Text>
+			<Grid minColWidth="16rem" gap={4}>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">step line</Text>
+					<Sparkline points={uptime} domain={domain} step bounds="unit" tone="success" label="Uptime, step line" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">occupancy strip</Text>
+					<Sparkline points={uptime} domain={domain} variant="occupancy" bounds="unit" tone="success" label="Uptime, occupancy" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Kind-aware bounds</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>bounds</code> ranges a typed metric without hand-math. <code>percent</code> pins
+				<code>[0, 100]</code> so a reading sits at its true fraction of full height;
+				<code>duration</code> caps at a rolling power of two, so one spike lifts the ceiling instead
+				of squashing everything below it.
+			</Text>
+			<Grid minColWidth="16rem" gap={4}>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">CPU % (bounds="percent")</Text>
+					<Sparkline values={[38, 41, 52, 49, 63, 58, 71]} bounds="percent" variant="area" tone="info" label="CPU percent" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">Latency ms (bounds="duration")</Text>
+					<Sparkline values={[120, 90, 140, 110, 760, 130, 150]} bounds="duration" variant="bar" tone="warn" label="Latency ms" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Inline in text</Heading>
 		<Text>
 			Signups climbed

@@ -36,6 +36,8 @@ export const skeletonManifest: ComponentManifest = {
 	id: "skeleton",
 	name: "Skeleton",
 	category: "feedback",
+	keywords: ["placeholder", "loading", "shimmer", "ghost", "content loader"],
+	seeAlso: ["spinner", "empty", "image"],
 	summary: "A shimmering loading placeholder in four shapes: text, line, block, and circle.",
 	description:
 		"Skeleton stands in for content that has not loaded yet, smoothing the perceived wait with a gentle shimmer that sweeps between two surface tints. Pick a `shape` to match the content it foreshadows (`text` for a run of copy, `line` for a thin rule or divider, `block` for a card or media region, `circle` for an avatar) and a `size` to scale it. The element is purely decorative and marks itself `aria-hidden`; the surrounding container owns the busy state via `aria-busy`, so assistive tech announces \"loading\" once rather than narrating every placeholder. Width is left to the caller (set it inline or via a class) so a skeleton can mirror the real content's measure.",

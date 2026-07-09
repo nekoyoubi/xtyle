@@ -109,7 +109,7 @@ const TONE_GROUPS = [
 							<Text as="span" size="sm" weight="medium">{drive.name}</Text>
 							<Text as="span" size="xs" tone="muted">{drive.free}</Text>
 						</Cluster>
-						<Progress meter value={drive.used} max={drive.total} aria-label={`${drive.name} capacity`} class="demo-progress-bar">
+						<Progress meter value={drive.used} max={drive.total} showValue valueFormat="value-max" unit=" GB" colorizeValue aria-label={`${drive.name} capacity`} class="demo-progress-bar">
 							<threshold below="75" tone="success" />
 							<threshold below="90" tone="warn" />
 							<threshold below="101" tone="danger" pulse="fast" />
@@ -117,6 +117,55 @@ const TONE_GROUPS = [
 					</Stack>
 				))
 			}
+		</Stack>
+	</Card>
+
+	<Card compact>
+		<Heading slot="header" level={3} size="sm">Value ramp (<code>ramp</code>)</Heading>
+		<Stack gap={5}>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">Solid <code>thermal</code>, colored by value</Text>
+				{
+					[18, 42, 68, 88, 100].map((v) => (
+						<Cluster gap={3} align="center" nowrap>
+							<Text as="span" size="xs" tone="muted" class="demo-progress-label">{v}%</Text>
+							<Progress ramp="thermal" value={v} showValue aria-label={`Load at ${v} percent`} class="demo-progress-bar" />
+						</Cluster>
+					))
+				}
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">Gradient sweep (<code>ramp-mode="gradient"</code>, pure CSS)</Text>
+				{
+					[35, 70, 100].map((v) => (
+						<Cluster gap={3} align="center" nowrap>
+							<Text as="span" size="xs" tone="muted" class="demo-progress-label">{v}%</Text>
+							<Progress ramp="thermal" rampMode="gradient" size="lg" value={v} aria-label={`Capacity sweep at ${v} percent`} class="demo-progress-bar" />
+						</Cluster>
+					))
+				}
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">Schemes</Text>
+				{
+					(["accent", "thermal", "status"] as const).map((scheme) => (
+						<Cluster gap={3} align="center" nowrap>
+							<Text as="span" size="xs" tone="muted" class="demo-progress-label">{scheme}</Text>
+							<Progress ramp={scheme} value={72} aria-label={`${scheme} ramp`} class="demo-progress-bar" />
+						</Cluster>
+					))
+				}
+			</Stack>
+			<Cluster gap={6} align="center">
+				{
+					[26, 58, 90].map((v) => (
+						<Stack gap={2} align="center">
+							<Progress variant="circular" ramp="thermal" value={v} showValue aria-label={`Ring at ${v} percent`} />
+							<Text as="span" size="xs" tone="muted">{v}%</Text>
+						</Stack>
+					))
+				}
+			</Cluster>
 		</Stack>
 	</Card>
 

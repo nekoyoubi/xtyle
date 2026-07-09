@@ -4,6 +4,7 @@
 	type ImageFit = "cover" | "contain";
 	type ImageRadius = "none" | "sm" | "md" | "lg";
 	type ImageLoading = "lazy" | "eager";
+	type ImageTrigger = "frame" | "button";
 
 	interface Props {
 		src?: string;
@@ -13,6 +14,7 @@
 		radius?: ImageRadius;
 		loading?: ImageLoading;
 		lightbox?: boolean;
+		trigger?: ImageTrigger;
 		caption?: string;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
@@ -26,6 +28,7 @@
 		radius = "md",
 		loading = "lazy",
 		lightbox = false,
+		trigger = "frame",
 		caption,
 		...rest
 	}: Props = $props();
@@ -41,4 +44,5 @@
 	{loading}
 	{caption}
 	lightbox={lightbox ? "" : undefined}
+	trigger={trigger === "button" ? "button" : undefined}
 ></xtyle-image>

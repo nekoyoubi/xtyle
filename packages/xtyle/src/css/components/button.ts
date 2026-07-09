@@ -177,4 +177,7 @@ ${linkRules}
 }
 .xtyle-button:disabled::after,
 .xtyle-button[aria-disabled="true"]::after { background: transparent; }
+@media (prefers-reduced-motion: reduce) {
+	.xtyle-button__spinner { animation: none; }
+}
 `.trim();

@@ -1,6 +1,8 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { FullTone } from "../index.js";
 import { progressHostCss } from "../markup/index.js";
+import { rampColor, rampGradientStops, RAMP_TOKENS, RAMP_SCHEMES, type RampScheme } from "../series.js";
+import { readLiveRegister } from "./live-register.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/progress/source.generated.js";
 
@@ -8,10 +10,15 @@ export type ProgressVariant = "linear" | "circular";
 export type ProgressSize = "sm" | "md" | "lg";
 export type ProgressValueFormat = "percent" | "value" | "value-max";
 export type ProgressPulse = "fast" | "slow" | null;
+export type ProgressRampMode = "solid" | "gradient";
 
 export class XtyleProgress extends XtyleElement {
 	protected override get styleMode(): StyleMode {
 		return "auto";
+	}
+
+	protected override get resolvesThemeAtRuntime(): boolean {
+		return true;
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "progress", {
@@ -19,7 +26,7 @@ export class XtyleProgress extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "colorize-value", "value-position", "meter", "aria-label"];
+		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "ramp", "ramp-mode", "reverse", "aria-label"];
 	}
 
 	get variant(): ProgressVariant {
@@ -86,6 +93,14 @@ export class XtyleProgress extends XtyleElement {
 		this.setAttribute("value-format", value);
 	}
 
+	/** A unit appended to the `value` / `value-max` readout (e.g. `GB`); the `percent` format ignores it. */
+	get unit(): string {
+		return this.getAttribute("unit") ?? "";
+	}
+	set unit(value: string) {
+		this.setAttribute("unit", value);
+	}
+
 	get colorizeValue(): boolean {
 		return this.hasAttribute("colorize-value");
 	}
@@ -109,8 +124,77 @@ export class XtyleProgress extends XtyleElement {
 		this.reflectBoolean("meter", value);
 	}
 
+	/** Color the fill by its own value along a ramp instead of a flat tone: a built-in `RampScheme`
+	 * (`accent` / `thermal` / `status`), a JSON array of stop colors (`["#00f","#f00"]`), or a
+	 * comma-separated stop list (`var(--info),var(--danger)`). Absent leaves the tone in charge. */
+	get ramp(): RampScheme | string[] | null {
+		const raw = this.getAttribute("ramp");
+		if (!raw) return null;
+		if (raw.startsWith("[")) {
+			try {
+				const parsed = JSON.parse(raw) as string[];
+				return Array.isArray(parsed) && parsed.length ? parsed : null;
+			} catch {
+				return null;
+			}
+		}
+		if (raw.includes(",")) {
+			const stops = raw.split(",").map((s) => s.trim()).filter(Boolean);
+			return stops.length ? stops : null;
+		}
+		return RAMP_SCHEMES.includes(raw as RampScheme) ? (raw as RampScheme) : null;
+	}
+	set ramp(value: RampScheme | string[] | null) {
+		if (value === null) this.removeAttribute("ramp");
+		else this.setAttribute("ramp", Array.isArray(value) ? JSON.stringify(value) : value);
+	}
+
+	/** How a `ramp` paints: `solid` (one color sampled at the current value off the live cascade) or
+	 * `gradient` (the whole scale as a pure-CSS sweep clipped to the fill, SSR-safe, linear only). */
+	get rampMode(): ProgressRampMode {
+		return this.getAttribute("ramp-mode") === "gradient" ? "gradient" : "solid";
+	}
+	set rampMode(value: ProgressRampMode) {
+		this.setAttribute("ramp-mode", value);
+	}
+
+	get reverse(): boolean {
+		return this.hasAttribute("reverse");
+	}
+	set reverse(value: boolean) {
+		this.reflectBoolean("reverse", value);
+	}
+
 	private get ariaRole(): string {
 		return this.meter ? "meter" : "progressbar";
+	}
+
+	private fraction(): number {
+		const span = this.max - this.min;
+		if (!Number.isFinite(span) || span <= 0) return 0;
+		const clamped = Math.min(Math.max(this.value, this.min), this.max);
+		return (clamped - this.min) / span;
+	}
+
+	/** Reads the ramp's anchor tokens off the live cascade so a solid fill's color tracks the theme. */
+	private paletteRegister(): Record<string, string> {
+		return readLiveRegister(this, RAMP_TOKENS, () => {
+			if (this.root.firstChild) this.render();
+		});
+	}
+
+	/** Circular rings only take a solid ramp; a stroke gradient would need a per-instance SVG def. */
+	private effectiveRampMode(): ProgressRampMode {
+		return this.rampMode === "gradient" && this.variant !== "circular" ? "gradient" : "solid";
+	}
+
+	private rampBindings(scheme: RampScheme | string[]): Record<string, unknown> {
+		const reverse = this.reverse;
+		if (this.effectiveRampMode() === "gradient") {
+			return { ramp: true, rampMode: "gradient", rampStops: rampGradientStops(scheme, { reverse }) };
+		}
+		const color = rampColor(scheme, this.fraction(), this.paletteRegister(), { reverse });
+		return { ramp: true, rampMode: "solid", rampColor: color };
 	}
 
 	/** The `<threshold>` config elements — direct children of the host, never displayed. Read live off
@@ -172,12 +256,14 @@ export class XtyleProgress extends XtyleElement {
 			indeterminate: this.indeterminate,
 			showValue: this.showValue,
 			valueFormat: this.valueFormat,
+			unit: this.getAttribute("unit") ?? undefined,
 			colorizeValue: this.colorizeValue,
 			valuePosition: this.valuePosition,
 			pulse: this.effectivePulse(),
 			role: this.ariaRole,
 			ariaLabel: this.getAttribute("aria-label"),
 			ariaLabelledby: this.getAttribute("aria-labelledby"),
+			...(this.ramp ? this.rampBindings(this.ramp) : {}),
 		};
 	}
 

@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { SERIES_SCHEMES } from "../series.js";
 import { FULL_TONES } from "../vocab.js";
 import { ICON_NAMES } from "../icons.js";
 
@@ -37,30 +38,30 @@ import Icon from "@xtyle/astro/Icon.astro";
 <Icon name="check" />`;
 
 const genHtmlExample = `<!-- a name carrying a spec is composed, not looked up -->
-<xtyle-icon name="crest--shield-c3--star-s45-c1" size="xl"></xtyle-icon>
+<xtyle-icon name="crest--shield-c1--star-s45-cf" size="xl"></xtyle-icon>
 
 <!-- a functional glyph rides as a charge by its bare name -->
-<xtyle-icon name="check-badge--circle-c5--check-s55-c1" size="xl"></xtyle-icon>
+<xtyle-icon name="check-badge--circle-c3--check-s55-cf" size="xl"></xtyle-icon>
 
 <!-- a negative-space die: three pips knocked out of a rounded face -->
-<xtyle-icon name="dice-3--square3-c3--dot-p7-s14-ko--dot-s14-ko--dot-p3-s14-ko" size="xl"></xtyle-icon>
+<xtyle-icon name="dice-3--square3-c1--dot-p7-s14-ko--dot-s14-ko--dot-p3-s14-ko" size="xl"></xtyle-icon>
 
 <!-- the same spec re-skinned by scheme -->
-<xtyle-icon name="chip--hex-c3--dot-s30-c4" colors="statuses" size="xl"></xtyle-icon>`;
+<xtyle-icon name="chip--hex-c1--dot-s30-c2" colors="statuses" size="xl"></xtyle-icon>`;
 
 const genSvelteExample = `<script lang="ts">
 	import { Icon } from "@xtyle/svelte";
 </script>
 
-<Icon name="crest--shield-c3--star-s45-c1" size="xl" />
-<Icon name="chip--hex-c3--dot-s30-c4" colors="statuses" size="xl" />`;
+<Icon name="crest--shield-c1--star-s45-cf" size="xl" />
+<Icon name="chip--hex-c1--dot-s30-c2" colors="statuses" size="xl" />`;
 
 const genAstroExample = `---
 import Icon from "@xtyle/astro/Icon.astro";
 ---
 
-<Icon name="crest--shield-c3--star-s45-c1" size="xl" />
-<Icon name="chip--hex-c3--dot-s30-c4" colors="statuses" size="xl" />`;
+<Icon name="crest--shield-c1--star-s45-cf" size="xl" />
+<Icon name="chip--hex-c1--dot-s30-c2" colors="statuses" size="xl" />`;
 
 const toneAstroExample = `---
 import Icon from "@xtyle/astro/Icon.astro";
@@ -74,6 +75,8 @@ export const iconManifest: ComponentManifest = {
 	name: "Icon",
 	since: "0.4.0",
 	category: "media",
+	keywords: ["glyph", "symbol", "svg", "pictogram", "mark"],
+	seeAlso: ["swatch", "avatar", "rating"],
 	summary: "A functional glyph, or a mark generated from a name, drawn in the current text color.",
 	description:
 		"Icon renders one glyph from a small functional set (chevrons, arrows, close, check, the status marks, a spinner, the menu dots, and the media-transport family: play, pause, stop, skip-forward, skip-back) as inline SVG. It carries no color of its own: the glyph is drawn in `currentColor`, so it inherits the text color around it and matches the derived theme with nothing to wire. It sizes off the surrounding type by default, so an icon set beside a word lines up with it; `size` steps it in fixed `em` for a standalone glyph. An optional `tone` tints it to a semantic role or named hue, `spin` turns it into a loading affordance, and a `label` promotes it from decorative to a named image for assistive tech. Beyond the lookup, a `name` can carry a spec: a terse grammar (`shield--star-s45-c1`) the engine parses into a layered mark and composes on the fly, placing primitives on a grid, sizing, rotating, outlining, or knocking them out, and coloring them from the theme's own series via `colors` so a generated mark recolors with the theme. Lookup for the common glyph, generation for everything else, one element for both.",
@@ -91,7 +94,7 @@ export const iconManifest: ComponentManifest = {
 			name: "name",
 			type: "IconName | string",
 			description:
-				"A functional-set glyph name, or a generated-mark spec (a name carrying a `--` grammar, e.g. `crest--shield-c3--star-s45-c1`). A plain name that is neither renders a visible placeholder box.",
+				"A functional-set glyph name, or a generated-mark spec (a name carrying a `--` grammar, e.g. `crest--shield-c1--star-s45-cf`). A plain name that is neither renders a visible placeholder box.",
 			bindings: ["html", "svelte", "astro"],
 			options: [...ICON_NAMES],
 		},
@@ -102,7 +105,7 @@ export const iconManifest: ComponentManifest = {
 			description:
 				"For a generated mark, the series scheme its `c3+` color slots draw from (`accents`, `skittles`, `statuses`, …), so one spec re-skins across schemes. Ignored for a functional glyph.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["accents", "skittles", "statuses", "thermal", "status"],
+			options: [...SERIES_SCHEMES],
 		},
 		{
 			name: "size",

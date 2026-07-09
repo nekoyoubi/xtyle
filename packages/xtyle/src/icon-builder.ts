@@ -87,6 +87,9 @@ export interface IconComposition {
 	label?: string;
 	/** A whole-icon drop shadow declared in the `---` finish (`d{color}p{dir}s{size}t{soft}`). */
 	dropShadow?: IconDropShadow;
+	/** Palette overrides from a `---pc` finish: a nibble key repaints that one slot, `*` silhouettes
+	 * every painting slot. Values are literal colors, applied as a `slot:{n}` resolves. */
+	palette?: Record<string, string>;
 }
 
 export interface ComposeIconOptions {
@@ -98,6 +101,9 @@ export interface ComposeIconOptions {
 	className?: string;
 	/** A `part` on the root `<svg>`, for `::part()` styling from a consumer. */
 	part?: string;
+	/** Palette overrides (from the composition's `---pc` finish), keyed by nibble or `*`; a `slot:{n}`
+	 * spec consults this before falling back to the canonical `SLOT_TABLE`. */
+	palette?: Record<string, string>;
 }
 
 // The whole primitive library shipped in 0.4.0; a later addition passes its own `since`.
@@ -128,6 +134,7 @@ const GLYPH_TAGS: Record<string, string[]> = {
 	error: ["error", "alert", "danger", "status"],
 	success: ["success", "check", "done", "status"],
 	"external-link": ["link", "external", "open", "out"],
+	maximize: ["zoom", "expand", "enlarge", "fullscreen"],
 	dot: ["dot", "point", "circle", "bullet"],
 	loader: ["loader", "spinner", "loading", "progress"],
 	play: ["play", "media", "playback", "control"],
@@ -158,23 +165,37 @@ export const ICON_PRIMITIVES: Record<string, IconPrimitive> = {
 	"shape-hex": bare(`<path d="M12 1.5 L21 6.75 V17.25 L12 22.5 L3 17.25 V6.75 Z"/>`, ["hexagon", "hex", "game", "shape"]),
 	"shape-diamond": bare(`<path d="M12 1 L23 12 L12 23 L1 12 Z"/>`, ["diamond", "rhombus", "shape"]),
 	"shape-triangle": bare(`<path d="M12 2.5 L21.5 21.5 H2.5 Z"/>`, ["triangle", "angular", "shape"]),
+	"shape-pentagon": bare(`<path d="M12 1 L22.5 8.6 L18.5 20.9 L5.5 20.9 L1.5 8.6 Z"/>`, ["pentagon", "polygon", "five", "shape"], "0.6.0"),
+	// Curved building blocks — the flat/polygon library had no filled rounds to compose from.
+	"shape-half": bare(`<path d="M1 12 A11 11 0 0 1 23 12 Z"/>`, ["half", "semicircle", "dome", "round", "shape"], "0.6.0"),
+	"shape-quarter": bare(`<path d="M12 12 V1 A11 11 0 0 1 23 12 Z"/>`, ["quarter", "quadrant", "corner", "round", "shape"], "0.6.0"),
+	"shape-wedge": bare(`<path d="M12 12 L6.5 2.47 A11 11 0 0 1 17.5 2.47 Z"/>`, ["wedge", "sector", "slice", "pie", "gauge"], "0.6.0"),
+	"shape-oval": bare(`<ellipse cx="12" cy="12" rx="11" ry="7.5"/>`, ["oval", "ellipse", "round", "shape"], "0.6.0"),
+	"shape-pill": bare(`<rect x="2" y="7.5" width="20" height="9" rx="4.5"/>`, ["pill", "capsule", "bar", "rounded", "shape"], "0.6.0"),
+	"shape-drop": bare(`<path d="M12 2 C16 9 19 12 19 15.5 A7 7 0 1 1 5 15.5 C5 12 8 9 12 2 Z"/>`, ["drop", "teardrop", "droplet", "pin", "water"], "0.6.0"),
 	"divider-rule": bare(`<rect x="2" y="11" width="20" height="2" rx="1"/>`, ["divider", "line", "separator", "rule"]),
 	"frame-ring": bare(`<circle cx="12" cy="12" r="10.5" fill="none" stroke="currentColor" stroke-width="1.5"/>`, ["ring", "circle", "frame", "outline", "round"]),
 	"frame-border": bare(`<rect x="2.25" y="2.25" width="19.5" height="19.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/>`, ["border", "square", "frame", "outline"]),
+	// Open pen-strokes — draw-with primitives, not stamps: a line/arc/corner/vee that take the layer's
+	// color through `currentColor` (like the frames) and rotate to any angle.
+	"stroke-line": bare(`<line x1="2" y1="12" x2="22" y2="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`, ["line", "stroke", "segment", "rule", "draw"], "0.6.0"),
+	"stroke-arc": bare(`<path d="M2 12 A10 10 0 0 1 22 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`, ["arc", "curve", "semicircle", "smile", "draw"], "0.6.0"),
+	"stroke-corner": bare(`<path d="M5 5 V19 H19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`, ["corner", "bracket", "ell", "angle", "draw"], "0.6.0"),
+	"stroke-vee": bare(`<path d="M5 8 L12 16 L19 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`, ["vee", "chevron", "angle", "caret", "draw"], "0.6.0"),
 	"bar-top": bare(`<rect x="2" y="2" width="20" height="5"/>`, ["bar", "band", "stripe", "top", "chief"]),
 	"bar-row": bare(`<rect x="2" y="9.5" width="20" height="5"/>`, ["bar", "band", "stripe", "row", "horizontal", "fess"]),
 	"bar-column": bare(`<rect x="9.5" y="2" width="5" height="20"/>`, ["bar", "band", "stripe", "column", "vertical", "pale"]),
 	"bar-diagonal": bare(`<path d="M2 7 L17 22 L22 17 L7 2 Z"/>`, ["diagonal", "stripe", "slash", "band", "bend"]),
 	"bar-cross": bare(`<path d="M9.5 2 h5 v7.5 h7.5 v5 h-7.5 v7.5 h-5 v-7.5 h-7.5 v-5 h7.5 Z"/>`, ["cross", "plus", "symbol"]),
 	"symbol-star": bare(`<path d="M12 2 l2.9 6.2 6.8 0.7 -5.1 4.6 1.5 6.7 -6.1 -3.6 -6.1 3.6 1.5 -6.7 -5.1 -4.6 6.8 -0.7 Z"/>`, ["star", "favorite", "rating", "symbol"]),
-	"symbol-heart": bare(`<path d="M12 21 C12 21 3 14.5 3 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8.5 C21 14.5 12 21 12 21 Z"/>`, ["heart", "love", "favorite", "symbol"]),
+	"symbol-heart": bare(`<path d="M12 21 C5.5 16.5 2 12.5 2 8.5 C2 5.4 4.3 3 7.1 3 C9.4 3 11 4.6 12 6.6 C13 4.6 14.6 3 16.9 3 C19.7 3 22 5.4 22 8.5 C22 12.5 18.5 16.5 12 21 Z"/>`, ["heart", "love", "favorite", "symbol"]),
 	"symbol-crescent": bare(`<path d="M12 3 a6 6 0 0 0 9 9 9 9 0 1 1 -9 -9 Z"/>`, ["crescent", "moon", "symbol"]),
 	"symbol-bolt": bare(`<path d="M13 2 L4 14 h6 l-1 8 l9 -13 h-6 Z"/>`, ["bolt", "lightning", "energy", "flash", "symbol"]),
 	...Object.fromEntries(Object.entries(ICONS).map(([name, body]) => [`symbol-${name}`, bare(body, GLYPH_TAGS[name] ?? [])])),
 };
 
 /** The single-token functional glyphs, reachable in the grammar by their bare name as a symbol
- * (`badge--circle-c4--check-s55-c1`). Multi-token glyph names (`chevron-right`) have no keyword; a
+ * (`badge--circle-c2--check-s55-cf`). Multi-token glyph names (`chevron-right`) have no keyword; a
  * spec reaches those through a full library name only, which the tokenizer's single-token keyword
  * rule doesn't parse, so they stay glyph-only. `dot` is deliberately a shape, not the glyph. */
 const glyphKeywords: Record<string, string> = Object.fromEntries(
@@ -195,10 +216,21 @@ export const PRIMITIVE_KEYWORDS: Record<string, string> = {
 	hex: "shape-hex",
 	diamond: "shape-diamond",
 	triangle: "shape-triangle",
+	pentagon: "shape-pentagon",
+	half: "shape-half",
+	quarter: "shape-quarter",
+	wedge: "shape-wedge",
+	oval: "shape-oval",
+	pill: "shape-pill",
+	drop: "shape-drop",
 	divider: "divider-rule",
 	dot: "shape-circle",
 	ring: "frame-ring",
 	border: "frame-border",
+	line: "stroke-line",
+	arc: "stroke-arc",
+	corner: "stroke-corner",
+	vee: "stroke-vee",
 	top: "bar-top",
 	row: "bar-row",
 	column: "bar-column",
@@ -245,16 +277,54 @@ function n(value: number): string {
 	return String(Math.round(value * 1000) / 1000);
 }
 
-/** The number of series slots the grammar exposes (`s1`..`s5` → `series:0`..`series:4`); a scheme
- * always resolves to this many evenly-spread colors so a slot is a stable pick across schemes. */
-export const ICON_SERIES_COUNT = 5;
+/** The number of series slots the palette exposes (`1`..`9` → `series:0`..`series:8`). Every scheme
+ * resolves to this many evenly-spread colors, so all nine slots are full and stable across schemes:
+ * a nine-hue scheme (`skittles`) fills them with the whole crayon box, a smaller one cycles its own. */
+export const ICON_SERIES_COUNT = 9;
 
-/** Maps a grammar color slot to a fill spec: 0 transparent, 1 `--fg-0`, 2 `--bg-0`, N≥3 the (N−3)th series color. */
+/** The palette-nibble map, addressed `0`–`f`: `0` transparent, `1`–`9` the nine series colors, and the
+ * semantic chrome slots that keep their meaning regardless of the series scheme, each with a one-letter
+ * mnemonic — `a` `currentColor` (Active ink), `b` `--bg-0` (Background), `c` transparent (Clear), `e`
+ * `--neutral-bg` (Empty: the neutral track an unfilled Rating mark or a Progress groove shows), `f`
+ * `--fg-0` (Foreground); `d` reserved (inert). Use them as a layer color like any nibble (`ce` fills the
+ * track color, as `cb`/`cf` fill the surface/ink). Every color flag (`c{n}`, an outline's `c{n}`, a drop
+ * shadow's color) is a nibble into this. */
+export const SLOT_TABLE: Record<number, string> = {
+	0: "transparent",
+	1: "series:0",
+	2: "series:1",
+	3: "series:2",
+	4: "series:3",
+	5: "series:4",
+	6: "series:5",
+	7: "series:6",
+	8: "series:7",
+	9: "series:8",
+	10: "currentColor",
+	11: "--bg-0",
+	12: "transparent",
+	13: "transparent",
+	14: "--neutral-bg",
+	15: "--fg-0",
+};
+
+/** True for a nibble that actually paints (every slot but transparent/reserved), so a `---pc-{hex}`
+ * silhouette knows which slots to repaint and which to leave clear. */
+function slotPaints(slot: number): boolean {
+	return (slot >= 1 && slot <= 11) || slot === 14 || slot === 15;
+}
+
+/** Resolve a palette nibble to its color spec: a per-slot `---pc{n}` override wins, then a
+ * whole-palette `---pc-{hex}` silhouette on a painting slot, then the canonical nibble map. */
+function resolveSlot(slot: number, palette: Record<string, string> | undefined): string {
+	const override = palette?.[slot] ?? (slotPaints(slot) ? palette?.["*"] : undefined);
+	return override ?? SLOT_TABLE[slot] ?? "transparent";
+}
+
+/** Wraps a palette nibble as a deferred `slot:{n}` spec, resolved at compose time so a `---pc`
+ * override (a single slot, or a whole-palette silhouette) can rewrite it before it lands. */
 export function colorSlot(slot: number): string {
-	if (slot <= 0) return "transparent";
-	if (slot === 1) return "--fg-0";
-	if (slot === 2) return "--bg-0";
-	return `series:${slot - 3}`;
+	return `slot:${slot}`;
 }
 
 /** The `xtyle-icon` root class for a glyph or mark, shared by the element and the Astro binding so
@@ -273,7 +343,15 @@ export function iconClass(opts: { size?: string; tone?: string | null; spin?: bo
 }
 
 function resolveColor(spec: string | undefined, opts: ComposeIconOptions): string {
-	if (!spec || spec === "currentColor") return "currentColor";
+	// A `---pc-…` silhouette flattens the implicit ink (no fill / `currentColor`) too, not just slots;
+	// resolve the override through the same path so a token or nibble silhouette works, not only a hex.
+	if (!spec || spec === "currentColor") {
+		const star = opts.palette?.["*"];
+		return star && star !== "currentColor" ? resolveColor(star, opts) : "currentColor";
+	}
+	if (spec.startsWith("slot:")) {
+		return resolveColor(resolveSlot(Number(spec.slice(5)), opts.palette), opts);
+	}
 	if (spec === "transparent" || spec === "none") return spec;
 	if (spec.startsWith("series:")) {
 		const index = Number(spec.slice(7));
@@ -370,6 +448,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 	const defs: string[] = [];
 	let body = "";
 	let holes = 0;
+	const paletteOpts: ComposeIconOptions = composition.palette ? { ...opts, palette: composition.palette } : opts;
 
 	for (const layer of composition.layers) {
 		const primitive = ICON_PRIMITIVES[layer.primitive] ?? MISSING;
@@ -389,7 +468,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				`<mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${GRID}" height="${GRID}"><rect width="${GRID}" height="${GRID}" fill="${fieldFill}"/>${cut}</mask>`,
 			);
 			body = `<g mask="url(#${maskId})">${body}</g>`;
-			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, transform, opts);
+			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, transform, paletteOpts);
 		} else if (layer.invert) {
 			// Paint the fill everywhere *except* the shape — a filled field with a shape-hole.
 			const maskId = `xi-${id}-${holes++}`;
@@ -398,9 +477,9 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				`<mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${GRID}" height="${GRID}"><rect width="${GRID}" height="${GRID}" fill="#fff"/>${cut}</mask>`,
 			);
 			const alpha = layer.opacity != null && layer.opacity !== 1 ? ` fill-opacity="${n(layer.opacity)}"` : "";
-			body += `<g mask="url(#${maskId})"><rect width="${GRID}" height="${GRID}" fill="${resolveColor(layer.fill, opts)}"${alpha}/></g>`;
+			body += `<g mask="url(#${maskId})"><rect width="${GRID}" height="${GRID}" fill="${resolveColor(layer.fill, paletteOpts)}"${alpha}/></g>`;
 		} else {
-			body += paintGroup(primitive.body, resolveColor(layer.fill, opts), layer, transform, opts);
+			body += paintGroup(primitive.body, resolveColor(layer.fill, paletteOpts), layer, transform, paletteOpts);
 		}
 	}
 
@@ -409,7 +488,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 	let overflow = "";
 	if (composition.dropShadow) {
 		const ds = composition.dropShadow;
-		const color = resolveColor(ds.color, opts);
+		const color = resolveColor(ds.color, paletteOpts);
 		const filterId = `xds-${id}`;
 		defs.push(
 			`<filter id="${filterId}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="${n(ds.dx)}" dy="${n(ds.dy)}" stdDeviation="${n(ds.blur)}" flood-opacity="0.5" style="flood-color:${color}"/></filter>`,
@@ -432,17 +511,25 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
  * plain CSS variable can't carry and re-colors with the theme for everything else.
  */
 export function composeIconThemed(composition: IconComposition, opts: ComposeIconOptions = {}): string {
-	const bakeSeries = (spec: string | undefined): string | undefined =>
-		spec?.startsWith("series:") ? resolveColor(spec, opts) : spec;
+	const palette = composition.palette;
+	// Resolve a deferred `slot:{n}` (applying any `---pc` override), then bake only a series color to a
+	// concrete value; a token / currentColor / transparent / literal is left for `composeIcon` to emit as
+	// `var(--…)` so the mark re-colors live with the theme.
+	const bake = (spec: string | undefined): string | undefined => {
+		// implicit ink (no fill / currentColor) also takes the `*` silhouette
+		if (!spec || spec === "currentColor") return palette?.["*"] ?? spec;
+		const s = spec.startsWith("slot:") ? resolveSlot(Number(spec.slice(5)), palette) : spec;
+		return s.startsWith("series:") ? resolveColor(s, opts) : s;
+	};
 	const layers = composition.layers.map((layer) => ({
 		...layer,
-		fill: bakeSeries(layer.fill),
-		outline: layer.outline ? { ...layer.outline, color: bakeSeries(layer.outline.color) ?? layer.outline.color } : undefined,
+		fill: bake(layer.fill),
+		outline: layer.outline ? { ...layer.outline, color: bake(layer.outline.color) ?? layer.outline.color } : undefined,
 	}));
 	const dropShadow = composition.dropShadow
-		? { ...composition.dropShadow, color: bakeSeries(composition.dropShadow.color) ?? composition.dropShadow.color }
+		? { ...composition.dropShadow, color: bake(composition.dropShadow.color) ?? composition.dropShadow.color }
 		: undefined;
-	return composeIcon({ ...composition, layers, dropShadow }, { scheme: opts.scheme, className: opts.className, part: opts.part });
+	return composeIcon({ layers, label: composition.label, dropShadow }, { scheme: opts.scheme, className: opts.className, part: opts.part });
 }
 
 /** A parsed icon name: its accessible label (humanized) and the composition its spec describes. */
@@ -451,7 +538,7 @@ export interface ParsedIconName {
 	composition: IconComposition;
 }
 
-const OBJECT_TOKEN = /-(?:(p|s|x|y|r|a|c)(-?\d+)|(o)([1-3])(?:c(-?\d+))?|(ko|fh|fv|i))/g;
+const OBJECT_TOKEN = /-(?:(p|s|x|y|r|a)(-?\d+)|c([0-9a-f])|(o)([1-3])(?:c([0-9a-f]))?|(ko|fh|fv|i))/g;
 
 function parseObject(segment: string): IconLayer | null {
 	// A primitive keyword is letters plus an optional trailing index (`square`, `square1`), so an
@@ -474,13 +561,14 @@ function parseObject(segment: string): IconLayer | null {
 			else if (token[1] === "y") offY = value;
 			else if (token[1] === "r") layer.rotate = value;
 			else if (token[1] === "a") layer.opacity = value / 100;
-			else if (token[1] === "c") layer.fill = colorSlot(value);
-		} else if (token[3]) {
-			layer.outline = { size: Number(token[4]), color: token[5] != null ? colorSlot(Number(token[5])) : "currentColor" };
-		} else if (token[6] === "ko") layer.knockout = true;
-		else if (token[6] === "fh") layer.flipH = true;
-		else if (token[6] === "fv") layer.flipV = true;
-		else if (token[6] === "i") layer.invert = true;
+		} else if (token[3] != null) {
+			layer.fill = colorSlot(parseInt(token[3], 16));
+		} else if (token[4]) {
+			layer.outline = { size: Number(token[5]), color: token[6] != null ? colorSlot(parseInt(token[6], 16)) : "currentColor" };
+		} else if (token[7] === "ko") layer.knockout = true;
+		else if (token[7] === "fh") layer.flipH = true;
+		else if (token[7] === "fv") layer.flipV = true;
+		else if (token[7] === "i") layer.invert = true;
 	}
 	const cell = cellCenter(position >= 1 && position <= 9 ? position : 5);
 	const tx = cell.x - CENTER + (offX * GRID) / 100;
@@ -495,9 +583,9 @@ const SHADOW_MAX_BLUR = 2.5;
 
 /** Reads a `d{color}p{dir}s{size}t{soft}` drop-shadow token into an offset+blur the renderer applies. */
 function parseDropShadow(token: string): IconDropShadow | null {
-	const m = /^d(\d+)?(?:p([1-9]))?(?:s([1-9]))?(?:t(\d{1,3}))?$/.exec(token);
+	const m = /^d([0-9a-f])?(?:p([1-9]))?(?:s([1-9]))?(?:t(\d{1,3}))?$/.exec(token);
 	if (!m) return null;
-	const color = colorSlot(m[1] != null ? Number(m[1]) : 1);
+	const color = colorSlot(m[1] != null ? parseInt(m[1], 16) : 15);
 	const dir = m[2] != null ? Number(m[2]) : 8;
 	const size = m[3] != null ? Number(m[3]) : 2;
 	const soft = m[4] != null ? Math.min(100, Number(m[4])) : 50;
@@ -513,19 +601,60 @@ function parseDropShadow(token: string): IconDropShadow | null {
 	};
 }
 
+/** One `pc` palette-override flag, anchored to a single finish flag: `pc{nibble}-{value}` (per-slot) or
+ * `pc-{value}` (whole-mark silhouette). The value runs to the end of the flag, so it may carry single
+ * hyphens (a hyphenated token like `neutral-bg`) — finish flags are delimited by `--`, not `-`. */
+const PC_FLAG = /^pc([0-9a-f])?-(.+)$/;
+
+/** Token-name aliases for a `---pc` override: bare `fg`/`bg` mean the base ink / base surface. */
+const PC_TOKEN_ALIAS: Record<string, string> = { fg: "fg-0", bg: "bg-0" };
+
 /**
- * The `---` finish grammar: whole-icon metadata after the last object. Two kinds of token coexist and
- * each reader skips the other's — render finishes the mark acts on (`d…` drop shadow), and `l…` lock
- * flags that are authoring metadata for the builder's Randomize, invisible to the rendered mark.
+ * Resolve a `---pc` override value to a color spec that flows through `resolveColor`. Three shapes, so an
+ * override can stay theme-reactive instead of baking a literal color: a **hex** (`3`/`4`/`6`/`8` digits)
+ * is a fixed color; a single **nibble** (`0`–`f`) borrows that palette slot's canonical color (a series
+ * color or a token, so it tracks the theme); a **token name** (`accent`, `success`, a named hue, the
+ * `fg`/`bg` aliases, or a hyphenated token like `accent-2` / `neutral-bg`) resolves to `--{token}` off the
+ * live register. Returns null for an unparseable value.
+ */
+function pcOverrideSpec(raw: string): string | null {
+	if (/^[0-9a-f]$/.test(raw)) return SLOT_TABLE[parseInt(raw, 16)] ?? null;
+	if (/^(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(raw)) return `#${raw}`;
+	if (/^[a-z][a-z0-9-]*$/.test(raw)) return `--${PC_TOKEN_ALIAS[raw] ?? raw}`;
+	return null;
+}
+
+/**
+ * The `---` finish grammar: whole-icon metadata after the last object, its flags delimited by `--` (the
+ * same separator as objects), so a flag's value can carry a single hyphen. Three kinds of flag coexist and
+ * each reader skips the others' — render finishes the mark acts on (`d…` drop shadow, `pc…` palette
+ * override), and `l…` lock flags that are authoring metadata for the builder's Randomize, invisible to
+ * the rendered mark. A `pc{nibble}-{value}` repaints that one palette slot; a bare `pc-{value}` silhouettes
+ * every painting slot to one color (the transparent/reserved slots stay clear). The value is a hex color, a
+ * palette nibble (`0`–`f`, theme-reactive), or a token name (`accent`, `success`, a hue, `fg`/`bg`, or a
+ * hyphenated token like `neutral-bg`).
  */
 function parseFinish(segment: string): Partial<IconComposition> {
 	const out: Partial<IconComposition> = {};
-	for (const token of segment.split("-")) {
-		if (token.startsWith("d")) {
-			const shadow = parseDropShadow(token);
+	const palette: Record<string, string> = {};
+	for (const flag of segment.split("--")) {
+		if (!flag) continue;
+		const pc = PC_FLAG.exec(flag);
+		if (pc) {
+			const spec = pcOverrideSpec(pc[2] as string);
+			if (spec != null) {
+				if (pc[1] != null) palette[String(parseInt(pc[1], 16))] = spec;
+				else palette["*"] = spec;
+			}
+			continue;
+		}
+		if (flag.startsWith("d")) {
+			const shadow = parseDropShadow(flag);
 			if (shadow) out.dropShadow = shadow;
 		}
+		// `l…` lock flags are authoring metadata for the builder's Randomize; ignored at render.
 	}
+	if (Object.keys(palette).length) out.palette = palette;
 	return out;
 }
 

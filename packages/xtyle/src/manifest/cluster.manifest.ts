@@ -57,6 +57,8 @@ export const clusterManifest: ComponentManifest = {
 	id: "cluster",
 	name: "Cluster",
 	category: "layout",
+	keywords: ["hstack", "row", "inline group", "wrap", "flex row", "tag list"],
+	seeAlso: ["stack", "grid", "toolbar"],
 	summary: "A horizontal flex row that wraps, for toolbars, tag lists, and inline action groups.",
 	description:
 		"Cluster lays its children out in a horizontal flex row that wraps onto new lines as space runs out, with a token-driven `gap` (0–8) between every item, including across wrapped rows. It vertically centers its children by default and exposes `align` and `justify` for finer control. A `nowrap` flag pins everything to a single row when wrapping is unwanted. Like Stack it carries no chrome of its own, making it the natural home for button groups, badge and tag lists, breadcrumb trails, and any run of inline-ish boxes that should breathe consistently.",

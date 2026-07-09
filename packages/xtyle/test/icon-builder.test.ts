@@ -61,6 +61,31 @@ describe("icon-builder", () => {
 		expect(primitiveTags("symbol-nonexistent")).toEqual([]);
 	});
 
+	it("ships the draw-with primitives: filled curves and open pen-strokes, reachable by keyword", () => {
+		// filled curves
+		for (const [kw, lib] of [["half", "shape-half"], ["quarter", "shape-quarter"], ["wedge", "shape-wedge"], ["oval", "shape-oval"], ["pill", "shape-pill"], ["drop", "shape-drop"], ["pentagon", "shape-pentagon"]] as const) {
+			expect(hasPrimitive(lib), lib).toBe(true);
+			expect(resolvePrimitiveName(kw), kw).toBe(lib);
+			expect(primitiveSince(kw), kw).toBe("0.6.0");
+		}
+		// open pen-strokes
+		for (const [kw, lib] of [["line", "stroke-line"], ["arc", "stroke-arc"], ["corner", "stroke-corner"], ["vee", "stroke-vee"]] as const) {
+			expect(hasPrimitive(lib), lib).toBe(true);
+			expect(resolvePrimitiveName(kw), kw).toBe(lib);
+			expect(primitiveSince(kw), kw).toBe("0.6.0");
+		}
+	});
+
+	it("colors a pen-stroke through the layer fill: the stroke resolves to the fill, the shape stays unfilled", () => {
+		// a stroke primitive draws `fill="none" stroke="currentColor"`; paintGroup seeds `color`, so a `c`
+		// color reaches the stroke while the path itself never fills — a genuine drawn line, not a filled bar.
+		const svg = composeIcon(parseIconName("x--line-c3-r45")!.composition, { register, scheme: "accents" });
+		expect(svg).toContain("rotate(45 12 12)");
+		expect(svg).toMatch(/color="#[0-9a-fA-F]{3,8}"/);
+		expect(svg).toContain('stroke="currentColor"');
+		expect(svg).toContain('fill="none"');
+	});
+
 	it("resolves the five series slots to five distinct colors, so a sequential/sampled scheme no longer collapses", () => {
 		const fillsFor = (scheme: "thermal" | "skittles" | "accents") => {
 			const layers = [0, 1, 2, 3, 4].map((i) => ({ primitive: "shape-square", fill: `series:${i}` }));
@@ -223,12 +248,81 @@ describe("icon-builder", () => {
 		expect(svg).toMatch(/fill="#[0-9a-fA-F]{3,8}"/);
 	});
 
-	it("maps the color ladder: 0 transparent, 1 fg, 2 bg, 3+ series", () => {
-		expect(colorSlot(0)).toBe("transparent");
-		expect(colorSlot(1)).toBe("--fg-0");
-		expect(colorSlot(2)).toBe("--bg-0");
-		expect(colorSlot(3)).toBe("series:0");
-		expect(colorSlot(5)).toBe("series:2");
+	it("wraps a palette nibble as a deferred slot spec the ladder resolves at compose time", () => {
+		expect(colorSlot(0)).toBe("slot:0");
+		expect(colorSlot(1)).toBe("slot:1");
+		expect(colorSlot(11)).toBe("slot:11");
+		expect(colorSlot(15)).toBe("slot:15");
+		const bake = (slot: number) =>
+			composeIconThemed({ layers: [{ primitive: "shape-square", fill: colorSlot(slot) }] }, { register, scheme: "accents" });
+		// nibbles 1–9 are the nine series colors: they bake to concrete hex under the active scheme
+		expect(bake(1)).toMatch(/fill="#[0-9a-fA-F]{3,8}"/);
+		expect(bake(1)).not.toContain("slot:");
+		// `b` is --bg-0 and `f` is --fg-0: token fills stay live as custom properties
+		expect(bake(11)).toContain('fill="var(--bg-0)"');
+		expect(bake(15)).toContain('fill="var(--fg-0)"');
+	});
+});
+
+describe("---pc palette overrides (hex, nibble, token)", () => {
+	const pal = (name: string) => parseIconName(name)?.composition.palette ?? {};
+
+	it("reads a literal hex into a per-slot or whole-palette override", () => {
+		expect(pal("x--shape-square---pc1-ff0000")).toEqual({ "1": "#ff0000" });
+		expect(pal("x--shape-square---pc-abc")).toEqual({ "*": "#abc" });
+	});
+
+	it("reads a single nibble as that slot's canonical, theme-reactive color", () => {
+		expect(pal("x--shape-square---pc1-3")).toEqual({ "1": "series:2" });
+		expect(pal("x--shape-square---pc2-b")).toEqual({ "2": "--bg-0" });
+		expect(pal("x--shape-square---pc-a")).toEqual({ "*": "currentColor" });
+	});
+
+	it("resolves the `e` empty nibble to the neutral track color, as a layer color or a pc value", () => {
+		expect(pal("x--shape-square---pc-e")).toEqual({ "*": "--neutral-bg" });
+		const svg = composeIcon(parseIconName("x--shape-square-ce")?.composition ?? { layers: [] }, { register: {} });
+		expect(svg).toContain("var(--neutral-bg)");
+	});
+
+	it("reads a token name as a live --token, with fg/bg aliases", () => {
+		expect(pal("x--shape-square---pc1-accent")).toEqual({ "1": "--accent" });
+		expect(pal("x--shape-square---pc3-success")).toEqual({ "3": "--success" });
+		expect(pal("x--shape-square---pc-fg")).toEqual({ "*": "--fg-0" });
+		expect(pal("x--shape-square---pc-bg")).toEqual({ "*": "--bg-0" });
+	});
+
+	it("does not eat an adjacent finish flag: a `--`-separated token override then a drop shadow coexist", () => {
+		const c = parseIconName("x--shape-square---pc1-accent--d2p8s3t80")?.composition;
+		expect(c?.palette).toEqual({ "1": "--accent" });
+		expect(c?.dropShadow).toBeDefined();
+	});
+
+	it("reads a hyphenated token name: the `--`-delimited finish lets a value carry a single hyphen", () => {
+		expect(pal("x--shape-square---pc-neutral-bg")).toEqual({ "*": "--neutral-bg" });
+		expect(pal("x--shape-square---pc3-accent-2")).toEqual({ "3": "--accent-2" });
+		const c = parseIconName("x--shape-square---pc-neutral-bg--d2p8s3t80")?.composition;
+		expect(c?.palette).toEqual({ "*": "--neutral-bg" });
+		expect(c?.dropShadow).toBeDefined();
+	});
+
+	it("resolves a per-slot token override to a live custom property at compose time", () => {
+		const svg = composeIcon({ layers: [{ primitive: "shape-square", fill: colorSlot(1) }], palette: { "1": "--accent" } });
+		expect(svg).toContain("var(--accent)");
+	});
+
+	it("resolves a token silhouette on the implicit ink, not only on slots", () => {
+		const svg = composeIcon({ layers: [{ primitive: "symbol-star" }], palette: { "*": "--accent" } });
+		expect(svg).toContain("var(--accent)");
+		expect(svg).not.toMatch(/"--accent"/);
+	});
+
+	it("bakes a nibble-derived series slot to a concrete hex under composeIconThemed", () => {
+		const svg = composeIconThemed(
+			{ layers: [{ primitive: "shape-square", fill: colorSlot(1) }], palette: { "1": "series:0" } },
+			{ register, scheme: "accents" },
+		);
+		expect(svg).toMatch(/fill="#[0-9a-fA-F]{3,8}"/);
+		expect(svg).not.toContain("series:0");
 	});
 });
 
@@ -244,8 +338,8 @@ describe("parseIconName", () => {
 		expect(parsed?.label).toBe("dice-3");
 		expect(parsed?.composition.label).toBe("dice 3");
 		expect(parsed?.composition.layers).toHaveLength(4);
-		// the face is the first scheme color; keyword resolves to the library name
-		expect(parsed?.composition.layers[0]).toMatchObject({ primitive: "shape-square", fill: "series:0" });
+		// the face color is the `c3` nibble as a deferred slot spec; keyword resolves to the library name
+		expect(parsed?.composition.layers[0]).toMatchObject({ primitive: "shape-square", fill: "slot:3" });
 		// a pip sized to 10% and centered by default (p5)
 		expect(parsed?.composition.layers[2]).toMatchObject({ primitive: "shape-circle", scale: 0.1 });
 		expect(parsed?.composition.layers[2].x ?? 0).toBe(0);
@@ -254,14 +348,14 @@ describe("parseIconName", () => {
 	it("reads a `d…` drop shadow from the `---` finish and ignores lock flags there", () => {
 		const shadow = parseIconName("crest--shield-c3---d2p8s3t80")?.composition.dropShadow;
 		expect(shadow).toBeDefined();
-		expect(shadow?.color).toBe("--bg-0");
+		expect(shadow?.color).toBe("slot:2");
 		expect(shadow?.dx).toBeCloseTo(0);
 		expect(shadow?.dy).toBeCloseTo(3.3);
 		expect(shadow?.blur).toBeCloseTo(2);
 		// lock flags in the finish are authoring metadata: the renderer never derives a shadow from them
 		expect(parseIconName("crest--shield-c3---l1*")?.composition.dropShadow).toBeUndefined();
-		// a shadow and locks coexist in one finish; each reader skips the other's tokens
-		expect(parseIconName("crest--shield-c3---d2p8s3t80-l1*")?.composition.dropShadow).toBeDefined();
+		// a shadow and locks coexist in one finish (flags `--`-separated); each reader skips the other's
+		expect(parseIconName("crest--shield-c3---d2p8s3t80--l1*")?.composition.dropShadow).toBeDefined();
 	});
 
 	it("composes a drop shadow into an SVG filter and lets the mark overflow its box", () => {
@@ -317,8 +411,8 @@ describe("parseIconName", () => {
 
 	it("parses the compound outline token without eating the standalone fill", () => {
 		const layer = parseObjectLayer("square-c3-o1c2");
-		expect(layer.fill).toBe("series:0");
-		expect(layer.outline).toEqual({ size: 1, color: "--bg-0" });
+		expect(layer.fill).toBe("slot:3");
+		expect(layer.outline).toEqual({ size: 1, color: "slot:2" });
 	});
 
 	it("reads flips and opacity", () => {

@@ -1,5 +1,6 @@
 import type { ComponentManifest } from "./types.js";
 import { FULL_TONES } from "../vocab.js";
+import { RAMP_SCHEMES } from "../series.js";
 
 const htmlExample = `<xtyle-progress value="42" aria-label="Upload progress"></xtyle-progress>
 
@@ -35,31 +36,51 @@ import { Progress } from "@xtyle/astro";
 
 <Progress variant="circular" indeterminate aria-label="Loading" />`;
 
-const meterHtmlExample = `<xtyle-progress meter value="910" max="1000" show-value colorize-value aria-label="System capacity">
+const meterHtmlExample = `<xtyle-progress meter value="910" max="1000" show-value value-format="value-max" unit=" GB" colorize-value aria-label="Disk usage">
 	<threshold below="75" tone="success"></threshold>
 	<threshold below="90" tone="warn"></threshold>
 	<threshold below="101" tone="danger" pulse="fast"></threshold>
 </xtyle-progress>`;
 
-const meterSvelteExample = `<Progress meter value={910} max={1000} showValue colorizeValue ariaLabel="System capacity">
+const meterSvelteExample = `<Progress meter value={910} max={1000} showValue valueFormat="value-max" unit=" GB" colorizeValue ariaLabel="Disk usage">
 	<threshold below="75" tone="success" />
 	<threshold below="90" tone="warn" />
 	<threshold below="101" tone="danger" pulse="fast" />
 </Progress>`;
 
-const meterAstroExample = `<Progress meter value={910} max={1000} showValue colorizeValue aria-label="System capacity">
+const meterAstroExample = `<Progress meter value={910} max={1000} showValue valueFormat="value-max" unit=" GB" colorizeValue aria-label="Disk usage">
 	<threshold below="75" tone="success" />
 	<threshold below="90" tone="warn" />
 	<threshold below="101" tone="danger" pulse="fast" />
 </Progress>`;
+
+const rampHtmlExample = `<xtyle-progress ramp="thermal" value="30" aria-label="Load, cool"></xtyle-progress>
+<xtyle-progress ramp="thermal" value="70" aria-label="Load, warm"></xtyle-progress>
+<xtyle-progress ramp="thermal" value="95" aria-label="Load, hot"></xtyle-progress>
+
+<xtyle-progress ramp="thermal" ramp-mode="gradient" value="80" aria-label="Capacity sweep"></xtyle-progress>`;
+
+const rampSvelteExample = `<Progress ramp="thermal" value={30} ariaLabel="Load, cool" />
+<Progress ramp="thermal" value={70} ariaLabel="Load, warm" />
+<Progress ramp="thermal" value={95} ariaLabel="Load, hot" />
+
+<Progress ramp="thermal" rampMode="gradient" value={80} ariaLabel="Capacity sweep" />`;
+
+const rampAstroExample = `<Progress ramp="thermal" value={30} aria-label="Load, cool" />
+<Progress ramp="thermal" value={70} aria-label="Load, warm" />
+<Progress ramp="thermal" value={95} aria-label="Load, hot" />
+
+<Progress ramp="thermal" rampMode="gradient" value={80} aria-label="Capacity sweep" />`;
 
 export const progressManifest: ComponentManifest = {
 	id: "progress",
 	name: "Progress",
 	category: "feedback",
+	seeAlso: ["spinner", "stat", "steps", "slider"],
 	summary: "A progress bar or capacity meter: a linear bar or circular ring with value thresholds that recolor and pulse.",
 	description:
 		"Progress shows how far along a task is, or how full a capacity is. The `variant` axis picks the shape (a horizontal `linear` bar or a circular `svg` ring) and the `tone` axis picks the color from the full roster (the six semantic roles, the accent variants, the twelve named hues). A determinate bar fills to `value` between `min` and `max`; an `indeterminate` mode animates a moving sweep when the amount of work is unknown. Declarative `<threshold below tone pulse>` children turn it into a self-coloring meter: each band names a percentage ceiling, and the active band (the first the current value falls under) overrides the tone and can `pulse` the fill (`slow` or `fast`) to flag a critical level, the pulse routed through motion tokens so the reduced-motion base rule stills it. Set `meter` to report `role=\"meter\"` (a measurement against a capacity, like disk used) instead of the default `role=\"progressbar\"` (a task advancing); either way it carries `aria-valuenow`/`aria-valuemin`/`aria-valuemax`. An optional inline readout (`show-value`) shows the percentage, the raw value, or `value/max` (`value-format`), sits at the end or inset over the bar (`value-position`), and can take the active tone (`colorize-value`).",
+	keywords: ["meter", "gauge", "capacity", "threshold", "disk", "battery", "usage", "quota", "score"],
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -156,6 +177,12 @@ export const progressManifest: ComponentManifest = {
 			options: ["percent", "value", "value-max"],
 		},
 		{
+			name: "unit",
+			type: "string",
+			description: "A unit appended to the `value` / `value-max` readout (e.g. ` GB`); the `percent` format ignores it (the `%` is the unit).",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "valuePosition",
 			type: "\"end\" | \"inset\"",
 			default: "end",
@@ -175,6 +202,28 @@ export const progressManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description: "Reports `role=\"meter\"` (a measurement against a capacity, e.g. disk used) instead of `role=\"progressbar\"` (a task advancing); the visual treatment is unchanged.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "ramp",
+			type: "RampScheme | string[]",
+			description: "Colors the fill by its own value along a ramp instead of the flat `tone`: a built-in scheme (`accent`, `thermal`, `status`), a JSON array of stop colors (`[\"#00f\",\"#f00\"]`), or a comma-separated stop list. Reinforces magnitude with temperature, so a fuller bar also reads hotter.",
+			bindings: ["html", "svelte", "astro"],
+			options: [...RAMP_SCHEMES],
+		},
+		{
+			name: "rampMode",
+			type: "\"solid\" | \"gradient\"",
+			default: "solid",
+			description: "How a `ramp` paints: `solid` samples one color at the current value off the live cascade (needs the runtime); `gradient` paints the whole scale as a pure-CSS sweep clipped to the fill (zero-JS, SSR-safe, linear only, a circular ring falls back to `solid`).",
+			bindings: ["html", "svelte", "astro"],
+			options: ["solid", "gradient"],
+		},
+		{
+			name: "reverse",
+			type: "boolean",
+			default: "false",
+			description: "Flips a `ramp` end for end (hot-to-cold).",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -289,8 +338,14 @@ export const progressManifest: ComponentManifest = {
 		{
 			id: "capacity-meter",
 			title: "A capacity meter with thresholds",
-			description: "Set `meter` for the measurement role and add `<threshold below tone pulse>` children: the bar greens under 75%, ambers past it, and reds and pulses once it crosses 90% full.",
+			description: "Set `meter` for the measurement role and add `<threshold below tone pulse>` children: the bar greens under 75%, ambers past it, and reds and pulses once it crosses 90% full, the `value/max` readout carrying its `unit`. This is the gauge use once served by a separate Meter.",
 			source: { html: meterHtmlExample, svelte: meterSvelteExample, astro: meterAstroExample },
+		},
+		{
+			id: "value-ramp",
+			title: "A fill that colors by its value",
+			description: "Set `ramp` to color the fill along a scale by its own value instead of a flat tone: `solid` (the default) samples one color at the current value, so a busier bar reads hotter; `ramp-mode=\"gradient\"` sweeps the whole scale as pure CSS. Both track the theme's own hues, so the ramp restyles with the algorithm.",
+			source: { html: rampHtmlExample, svelte: rampSvelteExample, astro: rampAstroExample },
 		},
 	],
 };

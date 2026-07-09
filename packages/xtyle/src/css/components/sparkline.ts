@@ -36,6 +36,13 @@ export const sparklineCss = `
 .xtyle-sparkline__bar {
 	fill: var(--spark-color);
 }
+.xtyle-sparkline__track {
+	fill: var(--line);
+	opacity: 0.4;
+}
+.xtyle-sparkline__block {
+	fill: var(--spark-color);
+}
 .xtyle-sparkline__end {
 	fill: var(--spark-color);
 	stroke: var(--bg-0);

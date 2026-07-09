@@ -1,0 +1,19 @@
+---
+interface Props {
+	/** Zero-based index of the current step. */
+	current?: number;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { current = 0, class: extra, ...rest } = Astro.props;
+---
+
+<xtyle-steps current={current} class:list={["xtyle-steps", extra]} {...rest}>
+	<slot />
+</xtyle-steps>
+
+<script>
+	import "@xtyle/core/elements";
+</script>
