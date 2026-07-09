@@ -1,4 +1,4 @@
-import { XtyleElement, define, type StyleMode } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 import { renderIcon } from "../icons.js";
 
 const DEFAULT_INTERVAL = 5000;
@@ -12,18 +12,7 @@ const SETTLE_MS = 600;
  * the pagination dots, the keyboard nav, and autoplay are enhancements wired only
  * when the runtime is present.
  */
-export class XtyleCarousel extends XtyleElement {
-	protected override get styleMode(): StyleMode {
-		return "scoped";
-	}
-
-	protected template(): string {
-		return "";
-	}
-
-	// `enhance()` manages the light DOM; the base render would wipe the slotted slides.
-	protected override render(): void {}
-
+export class XtyleCarousel extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
 		return ["label", "autoplay", "interval", "loop"];
 	}

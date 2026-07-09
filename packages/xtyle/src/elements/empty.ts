@@ -1,4 +1,4 @@
-import { XtyleElement, define, type StyleMode } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 
 /**
  * A centered placeholder for a no-data state: no results, an empty inbox, a fresh list. Standalone
@@ -6,18 +6,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
  * content, so a heading, a `<p>`, an icon in `.xtyle-empty__media`, and buttons in
  * `.xtyle-empty__actions` fall into place from the theme with no markup of its own.
  */
-export class XtyleEmpty extends XtyleElement {
-	protected override get styleMode(): StyleMode {
-		return "scoped";
-	}
-
-	protected template(): string {
-		return "";
-	}
-
-	// Decorator manages its own light DOM; the base render would wipe slotted children.
-	protected override render(): void {}
-
+export class XtyleEmpty extends XtyleDecoratorElement {
 	connectedCallback(): void {
 		super.connectedCallback();
 		this.classList.add("xtyle-empty");

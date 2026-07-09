@@ -1,4 +1,4 @@
-import { XtyleElement, define, type StyleMode } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 
 type HeroAlign = "center" | "start";
 
@@ -9,18 +9,7 @@ type HeroAlign = "center" | "start";
  * `Cluster` of `Button`s, an `Image`). The layout is pure CSS keyed off the `align`
  * and `split` attributes, so the band renders with no JavaScript at all.
  */
-export class XtyleHero extends XtyleElement {
-	protected override get styleMode(): StyleMode {
-		return "scoped";
-	}
-
-	protected template(): string {
-		return "";
-	}
-
-	// Decorator manages its own light DOM; the base render would wipe slotted children.
-	protected override render(): void {}
-
+export class XtyleHero extends XtyleDecoratorElement {
 	get align(): HeroAlign {
 		return (this.getAttribute("align") as HeroAlign) ?? "center";
 	}

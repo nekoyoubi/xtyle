@@ -1,4 +1,4 @@
-import { XtyleElement, define, type StyleMode } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 
 /**
  * A horizontal step indicator for a linear process (checkout, onboarding, a wizard). Standalone
@@ -6,18 +6,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
  * fragment. The `current` index splits the steps into done / current / upcoming, which the CSS
  * draws as filled / outlined / muted markers on a connector track, all from the theme.
  */
-export class XtyleSteps extends XtyleElement {
-	protected override get styleMode(): StyleMode {
-		return "scoped";
-	}
-
-	protected template(): string {
-		return "";
-	}
-
-	// Decorator manages its own light DOM; the base render would wipe slotted children.
-	protected override render(): void {}
-
+export class XtyleSteps extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
 		return ["current"];
 	}

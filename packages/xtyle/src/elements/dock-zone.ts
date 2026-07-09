@@ -1,4 +1,4 @@
-import { XtyleElement, define, type StyleMode } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 import { resolveDrop, type DockRect, type DockRegion, type DropResolution } from "./dock-layout.js";
 import {
 	dockPanel,
@@ -62,15 +62,7 @@ const CLOSE_GLYPH = "✕";
  * action chrome always reflects the zone's active panel; a `data-badge` (trailing status text) rides
  * on every panel's own tab or stacked-section header, not just the active one.
  */
-export class XtyleDockZone extends XtyleElement {
-	protected override get styleMode(): StyleMode {
-		return "scoped";
-	}
-
-	protected template(): string {
-		return "";
-	}
-
+export class XtyleDockZone extends XtyleDecoratorElement {
 	private _layout: DockNode | null = null;
 	private _floating: FloatingPanel[] = [];
 	private panels = new Map<string, PanelMeta>();

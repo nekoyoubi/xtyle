@@ -1,4 +1,4 @@
-import { XtyleElement, define, type StyleMode } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 
 const DEFAULT_AMPLITUDE = 80;
 
@@ -41,18 +41,7 @@ const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > 
  * `data-direction` (a compass token or an angle). With no JS, or under `prefers-reduced-motion`, the
  * layers sit still: the parallax is an enhancement, never a requirement.
  */
-export class XtyleParallax extends XtyleElement {
-	protected override get styleMode(): StyleMode {
-		return "scoped";
-	}
-
-	protected template(): string {
-		return "";
-	}
-
-	// `enhance()` manages the light DOM; the base render would wipe the slotted layers.
-	protected override render(): void {}
-
+export class XtyleParallax extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
 		return ["min-height", "amplitude", "mode"];
 	}

@@ -1,4 +1,4 @@
-import { XtyleElement, define, type StyleMode } from "./base.js";
+import { XtyleDecoratorElement, define } from "./base.js";
 import { tableParts } from "../markup/table.js";
 
 type TableVariant = "default" | "striped" | "bordered";
@@ -6,18 +6,7 @@ type TableSize = "normal" | "compact";
 
 const SORT_GLYPH = `<span class="${tableParts.sort}" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em"><path fill="currentColor" d="M12 8l5 6H7l5-6Z" /></svg></span>`;
 
-export class XtyleTable extends XtyleElement {
-	protected override get styleMode(): StyleMode {
-		return "scoped";
-	}
-
-	protected template(): string {
-		return "";
-	}
-
-	// Decorator manages its own light-DOM `<table>`; the base render would wipe slotted children.
-	protected override render(): void {}
-
+export class XtyleTable extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
 		return ["variant", "size", "hover", "sticky", "max-height"];
 	}

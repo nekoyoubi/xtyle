@@ -178,6 +178,25 @@ export abstract class XtyleElement extends HTMLElement {
 	}
 }
 
+/**
+ * A convenience base for a standalone element that decorates or enhances its own light-DOM
+ * children (a `Table` header, a `Carousel` track, a `Timeline` list) instead of rendering a
+ * shadow template from bindings. Defaults to `scoped` styling, an empty template, and a no-op
+ * `render()` so the base's first-connect render is harmless; override `render()` only when the
+ * element still needs that per-connect hook to do real work (e.g. `XtyleDockZone`).
+ */
+export abstract class XtyleDecoratorElement extends XtyleElement {
+	protected override get styleMode(): StyleMode {
+		return "scoped";
+	}
+
+	protected template(): string {
+		return "";
+	}
+
+	protected override render(): void {}
+}
+
 export function define(name: string, ctor: CustomElementConstructor): void {
 	if (typeof customElements === "undefined") return;
 	if (!customElements.get(name)) customElements.define(name, ctor);
