@@ -33,6 +33,8 @@ on screen rather than vanishing.
 
 - Split on `---` (triple) first → `[head, finish]`.
 - Split `head` on `--` (double) → `[label, ...objects]`.
+- Split `finish` on `--` (double) → finish flags. A flag's value can carry single hyphens, so a
+  hyphenated token (`neutral-bg`, `accent-2`) rides the finish fine.
 
 ### label
 
@@ -68,7 +70,12 @@ positional):
 Primitive keywords are single tokens (`square`, `circle`, `triangle`, `hex`, `diamond`, `shield`,
 `ring`, `divider`, `star`, `bolt`, `dot`, …) mapping to the primitive library (`square` →
 `shape-square`, `star` → `symbol-star`, `divider` → `divider-rule`, which rotates to vertical with
-`r90`). A trailing index selects a variant where the library ships one: `square` is a sharp square,
+`r90`). Beyond the stamped shapes and symbols, the library carries **draw-with primitives** you compose
+marks *from*: filled curves (`half` a semicircle, `quarter` a quarter-disc, `wedge` a pie sector,
+`oval`, `pill` a capsule, `drop` a teardrop, `pentagon`) and open pen-strokes (`line`, `arc` a
+semicircle curve, `corner` an L-bracket, `vee` a chevron) that take the layer's `c` color like any
+shape and rotate to any angle (a `wedge` spun around builds a pie; a `line-r45` is a diagonal rule).
+A trailing index selects a variant where the library ships one: `square` is a sharp square,
 `square1` / `square2` / `square3` its small / medium / large rounded corners. The single-token
 functional glyphs are reachable as symbols by their bare name too (`check`, `close`, `search`,
 `warning`, … → `symbol-check`, …), so a check badge is `badge--circle-c2--check-s55-cf`. Multi-token
@@ -86,11 +93,12 @@ cycles its own colors across the nine slots. The high nibbles are theme chrome.
 |------|-------------|
 | `c0` | transparent |
 | `c1`–`c9` | series colors 1–9 (drawn from `colors`) |
-| `ca` | `currentColor` — the active ink |
-| `cb` | `--bg-0` — background |
-| `cc` | transparent |
-| `cd` / `ce` | reserved (inert) |
-| `cf` | `--fg-0` — foreground |
+| `ca` | `currentColor` — the **a**ctive ink |
+| `cb` | `--bg-0` — **b**ackground |
+| `cc` | transparent — **c**lear |
+| `cd` | reserved (inert) |
+| `ce` | `--neutral-bg` — **e**mpty: the neutral track an unfilled Rating mark or Progress groove shows |
+| `cf` | `--fg-0` — **f**oreground |
 
 An object with no `c` inherits `currentColor`, so an un-colored spec renders like a flat
 functional glyph and tints with surrounding text.
@@ -106,8 +114,8 @@ any theme.
 
 ### finish
 
-Everything after `---`, any order. Two kinds of token share this tail, and each reader ignores the
-other's, so they coexist in one finish section:
+Everything after `---`, its flags `--`-separated (like objects), in any order. Two kinds of flag share
+this tail, and each reader ignores the other's, so they coexist in one finish section:
 
 **Render finish** modifies the whole mark. Per-shape rounding and silhouette clips are **layer** flags
 (an indexed `square1`, an inverted knockout `-i-ko`); the finish holds modifiers that act on the
@@ -121,8 +129,9 @@ composite:
 
 A `pc` value stays **theme-reactive** when it's a nibble or a token — it resolves off the live register
 at paint time, so the override tracks the theme instead of baking a dead color; a hex value is fixed.
-Hyphenated tokens (`accent-2`, `fg-1`) can't ride the `-`-delimited finish; reach a ramped shade with the
-nearest nibble or a hex. A future whole-composite modifier slots in the same way.
+Hyphenated tokens ride the finish directly (`pc-neutral-bg`, `pc3-accent-2`): finish flags are `--`-separated,
+so a value keeps its single hyphens. Combine finish flags with `--`: `pc1-accent--d2p8s3t80` overrides *and*
+casts a shadow. A future whole-composite modifier slots in the same way.
 
 **Lock flags** (`l{index}{codes}`) are **authoring metadata the renderer ignores**: they pin an
 object's props against the icon builder's Randomize, so a *template* name carries its own re-roll

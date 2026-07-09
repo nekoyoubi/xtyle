@@ -1,10 +1,11 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone as Tone } from "@xtyle/core";
+	import type { FullTone as Tone, RampScheme } from "@xtyle/core";
 
 	type ProgressVariant = "linear" | "circular";
 	type ProgressSize = "sm" | "md" | "lg";
+	type ProgressRampMode = "solid" | "gradient";
 
 	interface Props {
 		variant?: ProgressVariant;
@@ -25,6 +26,13 @@
 		colorizeValue?: boolean;
 		/** Report `role="meter"` (a capacity measurement) instead of `role="progressbar"` (a task). */
 		meter?: boolean;
+		/** Color the fill by its own value along a ramp instead of a flat `tone`: a built-in scheme
+		 * (`accent` / `thermal` / `status`) or an explicit list of stop colors. */
+		ramp?: RampScheme | string[];
+		/** How a `ramp` paints: `solid` (one sampled color) or `gradient` (a pure-CSS sweep, linear only). */
+		rampMode?: ProgressRampMode;
+		/** Flip the ramp end for end (hot-to-cold). */
+		reverse?: boolean;
 		ariaLabel?: string;
 		children?: Snippet;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -45,6 +53,9 @@
 		valuePosition = "end",
 		colorizeValue = false,
 		meter = false,
+		ramp,
+		rampMode = "solid",
+		reverse = false,
 		ariaLabel,
 		children,
 		...rest

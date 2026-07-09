@@ -21,6 +21,10 @@ export class XtylePie extends XtyleElement {
 		return "auto";
 	}
 
+	protected override get resolvesThemeAtRuntime(): boolean {
+		return true;
+	}
+
 	private dataProp: PieDatum[] | null = null;
 	private schemeProp: PieScheme | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "pie", {

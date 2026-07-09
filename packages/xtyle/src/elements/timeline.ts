@@ -1,14 +1,26 @@
-import { define } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 
 /**
  * A vertical activity feed. Standalone (like `table` / `dock-zone`): it decorates a slotted
  * ordered list rather than rendering a fragment, so the semantic `<ol><li>` stays the source
  * of truth and the connector rail + dots are drawn from the theme in CSS.
  */
-export class XtyleTimeline extends HTMLElement {
+export class XtyleTimeline extends XtyleElement {
+	protected override get styleMode(): StyleMode {
+		return "scoped";
+	}
+
+	protected template(): string {
+		return "";
+	}
+
+	// Decorator manages its own light DOM; the base render would wipe slotted children.
+	protected override render(): void {}
+
 	private observer: MutationObserver | null = null;
 
 	connectedCallback(): void {
+		super.connectedCallback();
 		this.decorate();
 		if (typeof MutationObserver !== "undefined" && !this.observer) {
 			this.observer = new MutationObserver(() => {
@@ -18,7 +30,8 @@ export class XtyleTimeline extends HTMLElement {
 		}
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.observer?.disconnect();
 		this.observer = null;
 	}

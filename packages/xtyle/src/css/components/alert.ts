@@ -22,6 +22,7 @@ const solidRules = TONES.map(
 export const alertCss = `
 .xtyle-alert {
 	display: flex;
+	align-items: center;
 	gap: var(--space-3);
 	font-family: var(--font-sans);
 	font-size: var(--text-body);
@@ -29,6 +30,17 @@ export const alertCss = `
 	border: var(--border-thin) solid transparent;
 	border-radius: var(--radius-md);
 	padding: var(--space-3) var(--space-4);
+}
+/* The fragment always emits the title/actions wrappers; they're only real when filled. A filled
+   title or actions stacks content, so the icon aligns to the first line; a message-only alert
+   centers the icon against its (possibly wrapped) text, and the empty wrappers collapse. */
+.xtyle-alert:has(.xtyle-alert__title:not(:empty)),
+.xtyle-alert:has(.xtyle-alert__actions:not(:empty)) {
+	align-items: flex-start;
+}
+.xtyle-alert__title:empty,
+.xtyle-alert__actions:empty {
+	display: none;
 }
 ${softRules}
 ${solidRules}

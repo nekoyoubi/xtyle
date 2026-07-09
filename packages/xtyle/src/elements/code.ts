@@ -248,7 +248,8 @@ export class XtyleCode extends XtyleElement {
 		}
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.overflowObserver?.disconnect();
 		this.overflowObserver = null;
 	}

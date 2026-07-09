@@ -9,6 +9,8 @@ interface Props {
 	action?: boolean;
 	compact?: boolean;
 	tone?: Tone;
+	/** How far the surface lifts: `sm` a whisper, `md` the eased default, `lg` a pronounced shadow. */
+	depthStrength?: "sm" | "md" | "lg";
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -16,10 +18,10 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { overlay = false, interactive = false, action = false, compact = false, tone, static: isStatic = false, class: extra, ...rest } =
+const { overlay = false, interactive = false, action = false, compact = false, tone, depthStrength, static: isStatic = false, class: extra, ...rest } =
 	Astro.props;
 
-const bindings = { overlay, interactive, action, compact, tone: tone ?? null };
+const bindings = { overlay, interactive, action, compact, tone: tone ?? null, depthStrength: depthStrength ?? null };
 const chrome = await renderFragmentLight("card", bindings);
 const headerHtml = Astro.slots.has("header") ? await Astro.slots.render("header") : "";
 const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
@@ -36,6 +38,7 @@ const composed = chrome
 	action={action || undefined}
 	compact={compact || undefined}
 	tone={tone}
+	depth-strength={depthStrength}
 	class={extra}
 	set:html={composed}
 	{...rest}

@@ -1,4 +1,4 @@
-import { define } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 import { tableParts } from "../markup/table.js";
 
 type TableVariant = "default" | "striped" | "bordered";
@@ -6,7 +6,18 @@ type TableSize = "normal" | "compact";
 
 const SORT_GLYPH = `<span class="${tableParts.sort}" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em"><path fill="currentColor" d="M12 8l5 6H7l5-6Z" /></svg></span>`;
 
-export class XtyleTable extends HTMLElement {
+export class XtyleTable extends XtyleElement {
+	protected override get styleMode(): StyleMode {
+		return "scoped";
+	}
+
+	protected template(): string {
+		return "";
+	}
+
+	// Decorator manages its own light-DOM `<table>`; the base render would wipe slotted children.
+	protected override render(): void {}
+
 	static get observedAttributes(): string[] {
 		return ["variant", "size", "hover", "sticky", "max-height"];
 	}
@@ -43,12 +54,14 @@ export class XtyleTable extends HTMLElement {
 	private contentObserver: MutationObserver | null = null;
 
 	connectedCallback(): void {
+		super.connectedCallback();
 		this.decorate();
 		this.observeOverflow();
 		this.observeContent();
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.overflowObserver?.disconnect();
 		this.overflowObserver = null;
 		this.contentObserver?.disconnect();
@@ -93,11 +106,6 @@ export class XtyleTable extends HTMLElement {
 		} else if (this.getAttribute("tabindex") === "0") {
 			this.removeAttribute("tabindex");
 		}
-	}
-
-	private reflectBoolean(name: string, value: boolean): void {
-		if (value) this.setAttribute(name, "");
-		else this.removeAttribute(name);
 	}
 
 	private get computedTableClass(): string[] {

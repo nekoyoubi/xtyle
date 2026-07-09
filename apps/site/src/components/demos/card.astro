@@ -87,6 +87,27 @@ const TONE_GROUPS = [
 
 	<Stack gap={3}>
 		<Stack gap={1}>
+			<Heading level={2} size="md">Depth — how far it lifts</Heading>
+			<Text tone="muted" size="sm">
+				Set <code>depthStrength</code> to tune the shadow: <code>sm</code> is a whisper,
+				<code>md</code> the eased default, <code>lg</code> a pronounced lift.
+			</Text>
+		</Stack>
+		<Grid minColWidth="12rem" gap={4}>
+			<Card depthStrength="sm">
+				<Text as="span" size="sm" weight="medium">sm — whisper</Text>
+			</Card>
+			<Card depthStrength="md">
+				<Text as="span" size="sm" weight="medium">md — default</Text>
+			</Card>
+			<Card depthStrength="lg">
+				<Text as="span" size="sm" weight="medium">lg — pronounced</Text>
+			</Card>
+		</Grid>
+	</Stack>
+
+	<Stack gap={3}>
+		<Stack gap={1}>
 			<Heading level={2} size="md">Toned — a leading accent bar</Heading>
 			<Text tone="muted" size="sm">
 				Set <code>tone</code> to mark a card with a colored edge; leave it off for the

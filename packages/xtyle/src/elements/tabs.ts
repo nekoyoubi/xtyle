@@ -94,7 +94,8 @@ export class XtyleTabs extends XtyleElement {
 		this.scheduleSettle();
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		if (this.settleHandle && typeof cancelAnimationFrame !== "undefined") {
 			cancelAnimationFrame(this.settleHandle);
 		}

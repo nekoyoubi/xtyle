@@ -8,6 +8,7 @@
       (b.interactive || b.action) && "xtyle-card--interactive",
       b.action && "xtyle-card--action",
       b.compact && "xtyle-card--compact",
+      b.depthStrength && `xtyle-card--depth-${b.depthStrength}`,
       b.tone && `xtyle-card--${b.tone}`,
       b.tone && "xtyle-card--toned"
     ].filter(Boolean).join(" ");

@@ -1,0 +1,44 @@
+---
+import Progress from "@xtyle/astro/Progress.astro";
+
+interface Props {
+	covered: boolean;
+	missing?: string[];
+	produced: number;
+	consumed: number;
+	/** The heaviest footprint across the set, so the thermal ramp normalizes by comparison (the
+	 * busiest component reads hottest). Falls back to `produced` on a standalone meter with no peers. */
+	peak?: number;
+}
+
+const { covered, missing = [], produced, consumed, peak } = Astro.props;
+const max = peak && peak > 0 ? peak : produced;
+const title = covered
+	? `Consumes ${consumed} of the ${produced} tokens the default register produces; all are covered.`
+	: `Consumes ${consumed} tokens; ${missing.length} missing from the default register: ${missing.join(", ")}.`;
+---
+
+<div class="cov-meter" title={title}>
+	<Progress
+		meter
+		value={consumed}
+		min={0}
+		max={max}
+		size="sm"
+		ramp={covered ? "thermal" : undefined}
+		tone={covered ? "accent" : "warn"}
+		showValue
+		valueFormat="value"
+		aria-label={`Consumes ${consumed} of ${produced} tokens`}
+	/>
+</div>
+
+<style>
+	.cov-meter {
+		width: 4rem;
+		flex: none;
+	}
+	.cov-meter :global(.xtyle-progress) {
+		width: 100%;
+	}
+</style>

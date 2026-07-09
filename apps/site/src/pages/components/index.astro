@@ -4,14 +4,14 @@ import { getStats, displayStats } from "../../data/stats";
 import Base from "../../layouts/Base.astro";
 import Card from "@xtyle/astro/Card.astro";
 import Badge from "@xtyle/astro/Badge.astro";
-import Link from "@xtyle/astro/Link.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Grid from "@xtyle/astro/Grid.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Eyebrow from "@xtyle/astro/Eyebrow.astro";
-import CoverageBadge from "../../components/reference/CoverageBadge.astro";
+import Separator from "@xtyle/astro/Separator.astro";
+import CoverageMeter from "../../components/reference/CoverageMeter.astro";
 import CardPreview from "../../components/reference/CardPreview.astro";
 import {
 	categoryOrder,
@@ -27,6 +27,7 @@ const producedCount = site.tokens;
 
 const all = listComponents();
 const total = all.length;
+const peakFootprint = Math.max(...all.map((c) => c.consumedTokens.length));
 
 const grouped = categoryOrder
 	.map((category) => ({
@@ -35,7 +36,6 @@ const grouped = categoryOrder
 	}))
 	.filter((g) => g.items.length > 0);
 
-const bindingOrder = ["html", "svelte", "astro"] as const;
 
 function coverageFor(component: ComponentManifest) {
 	const result = coverComponent(component, register);
@@ -107,14 +107,25 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 				</Text>
 			</div>
 			<Grid minColWidth="15rem" gap={4} align="stretch" class="cx-new__grid">
-				{newThisCycle.map((component) => (
+				{newThisCycle.map((component) => {
+					const cov = coverageFor(component);
+					return (
 					<article class="cx-new-card">
 						<Card class="cx-new-card__inner">
-							<Cluster gap={2} align="center" class="cx-new-card__title">
-								<Heading level={3} size="sm">
-									<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
-								</Heading>
-								<Badge variant="solid" tone="accent" size="sm">New</Badge>
+							<Cluster justify="between" align="start" gap={2} class="cx-new-card__title">
+								<Cluster gap={2} align="center">
+									<Heading level={3} size="md">
+										<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
+									</Heading>
+									<Badge variant="solid" tone="accent" size="sm">New</Badge>
+								</Cluster>
+								<CoverageMeter
+									covered={cov.covered}
+									missing={cov.missing}
+									produced={producedCount}
+									consumed={cov.consumed}
+									peak={peakFootprint}
+								/>
 							</Cluster>
 							<div class="cx-card__preview" aria-hidden="true" inert>
 								<CardPreview id={component.id} />
@@ -122,7 +133,8 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 							<p class="cx-new-card__summary" set:html={renderMarkdownInline(component.summary)} />
 						</Card>
 					</article>
-				))}
+					);
+				})}
 			</Grid>
 		</section>
 	)}
@@ -133,22 +145,25 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		).length;
 		const groupHealthy = groupCovered === group.items.length;
 		return (
-		<section class="cx-section" id={group.meta.id} data-density={gi % 2 === 0 ? "roomy" : "tight"} data-section>
-			<div class={`cx-section__head ${groupHealthy ? "is-healthy" : "has-gaps"}`}>
-				<span class="cx-section__stripe" aria-hidden="true"></span>
-				<Heading level={2} size="lg">{group.meta.label}</Heading>
-				<Text size="sm" tone="muted" class="cx-section__blurb">
-					{group.meta.blurb}
-				</Text>
-				<Badge
-					tone={groupHealthy ? "success" : "warn"}
-					size="sm"
-					class="cx-section__count"
-					title={`${groupCovered} of ${group.items.length} fully covered`}
-				>
-					{groupCovered}/{group.items.length}
-				</Badge>
-			</div>
+		<section class="cx-section" id={group.meta.id} data-density={gi % 2 === 0 ? "roomy" : "tight"} data-cx-section>
+			<header class="cx-section__head">
+				<Cluster justify="between" align="baseline" gap={3} class="cx-section__headrow">
+					<Cluster align="baseline" gap={2} class="cx-section__lead">
+						<Heading level={2} size="xl">{group.meta.label}</Heading>
+						<Text size="sm" tone="muted" class="cx-section__blurb">
+							{group.meta.blurb}
+						</Text>
+					</Cluster>
+					<Badge
+						tone={groupHealthy ? "success" : "warn"}
+						size="sm"
+						title={`${groupCovered} of ${group.items.length} fully covered`}
+					>
+						{groupCovered}/{group.items.length}
+					</Badge>
+				</Cluster>
+				<Separator />
+			</header>
 			<Grid minColWidth="18rem" gap={4} align="stretch" class="cx-grid">
 				{group.items.map((component) => {
 					const cov = coverageFor(component);
@@ -161,37 +176,28 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 							<Card interactive class="cx-card">
 								<Cluster justify="between" align="start" gap={2} class="cx-card__top">
 									<Cluster gap={2} align="center" class="cx-card__title">
-										<Heading level={3} size="sm" class="cx-card__name">
+										<Heading level={3} size="md" class="cx-card__name">
 											<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
 										</Heading>
 										{isNewComponent(component.since) && (
 											<Badge variant="solid" tone="accent" size="sm">New</Badge>
 										)}
 									</Cluster>
-									<CoverageBadge
+									<CoverageMeter
 										covered={cov.covered}
 										missing={cov.missing}
 										produced={producedCount}
 										consumed={cov.consumed}
+										peak={peakFootprint}
 									/>
 								</Cluster>
+								<div class="cx-card__preview" aria-hidden="true" inert>
+									<CardPreview id={component.id} />
+								</div>
 								<p
 									class="cx-card__summary"
 									set:html={renderMarkdownInline(component.summary)}
 								/>
-								<div class="cx-card__preview" aria-hidden="true" inert>
-									<CardPreview id={component.id} />
-								</div>
-								<Cluster justify="between" align="center" gap={2} class="cx-card__foot">
-									<Cluster gap={1} class="cx-card__bindings">
-										{bindingOrder
-											.filter((b) => component.bindings.includes(b))
-											.map((b) => (
-												<Badge tone="neutral" size="sm">{b}</Badge>
-											))}
-									</Cluster>
-									<span class="cx-card__more">Reference →</span>
-								</Cluster>
 							</Card>
 						</article>
 					);
@@ -211,7 +217,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 	const input = document.querySelector("[data-search-input]") as HTMLInputElement | null;
 	const status = document.querySelector("[data-search-status]") as HTMLElement | null;
 	const empty = document.querySelector("[data-search-empty]") as HTMLElement | null;
-	const sections = Array.from(document.querySelectorAll("[data-section]")) as HTMLElement[];
+	const sections = Array.from(document.querySelectorAll("[data-cx-section]")) as HTMLElement[];
 	const cards = Array.from(document.querySelectorAll("[data-cx-card]")) as HTMLElement[];
 	const total = cards.length;
 
@@ -334,13 +340,13 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		box-shadow: var(--elevation-3);
 	}
 	.cx-new-card :global(.cx-new-card__title) {
-		margin-bottom: var(--space-2);
+		margin-bottom: var(--space-4);
 	}
 	.cx-new-card__summary {
 		color: var(--fg-1);
 		font-size: var(--text-sm);
 		line-height: var(--leading-normal);
-		margin: var(--space-3) 0 0;
+		margin: var(--space-4) 0 0;
 	}
 	.cx-search {
 		margin-bottom: var(--space-8);
@@ -372,50 +378,20 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		padding: var(--space-8) 0;
 	}
 
+	/* Every section is separated from the one above by the same `--space-8`, and each header keeps a
+	   uniform gap to its own grid, so headers read consistently and cards never crowd the next one. */
 	.cx-section {
 		margin-bottom: var(--space-8);
 		scroll-margin-top: var(--space-6);
 	}
 	.cx-section__head {
-		position: relative;
-		display: flex;
-		align-items: baseline;
-		flex-wrap: wrap;
-		gap: var(--space-2) var(--space-3);
 		margin-bottom: var(--space-4);
-		padding: var(--space-2) var(--space-3) var(--space-3);
-		padding-inline-start: var(--space-4);
-		border-radius: var(--radius-md);
-		background: linear-gradient(
-			to right,
-			var(--accent-bg),
-			transparent 60%
-		);
 	}
-	.cx-section__head.has-gaps {
-		background: linear-gradient(
-			to right,
-			var(--warn-bg),
-			transparent 60%
-		);
-	}
-	.cx-section__stripe {
-		position: absolute;
-		inset-block: 0;
-		inset-inline-start: 0;
-		width: var(--border-thick);
-		border-start-start-radius: var(--radius-md);
-		border-end-start-radius: var(--radius-md);
-		background: var(--accent);
-	}
-	.cx-section__head.has-gaps .cx-section__stripe {
-		background: var(--warn);
+	.cx-section :global(.cx-section__headrow) {
+		margin-bottom: var(--space-3);
 	}
 	.cx-section__blurb {
 		margin: 0;
-	}
-	.cx-section__count {
-		margin-left: auto;
 	}
 	.cx-section[data-density="tight"] :global(.cx-grid) {
 		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
@@ -433,11 +409,29 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		display: flex;
 		flex-direction: column;
 		border-inline-start-width: var(--border-thick);
-		box-shadow: var(--elevation-1);
-		transition:
-			border-color var(--duration-fast) var(--ease-standard),
-			box-shadow var(--duration-fast) var(--ease-standard),
-			transform var(--duration-fast) var(--ease-standard);
+		transition: border-color var(--duration-fast) var(--ease-standard);
+	}
+	/* The `<Card>` renders host → render-root wrapper → the visible `.xtyle-card` box. Stretching the
+	   host alone leaves the box at content height, so a stretched-to-row-height host shows its own
+	   background below the box (the ghost strip). Flex-fill the wrapper and the box down the chain so
+	   the visible card always reaches the row height. Covers the grid cards, the New band, and the
+	   stat row (whose `+N` growth chip makes one card taller than its siblings). */
+	.cx-stats :global(.cx-stat) {
+		display: flex;
+	}
+	.cx-card-link :global(.cx-card > *),
+	.cx-new-card :global(.cx-new-card__inner > *),
+	.cx-stats :global(.cx-stat > *) {
+		display: flex;
+		flex-direction: column;
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+	.cx-card-link :global(.xtyle-card),
+	.cx-new-card :global(.xtyle-card),
+	.cx-stats :global(.xtyle-card) {
+		flex: 1 1 auto;
+		min-height: 0;
 	}
 	/* Stretched link: the whole card navigates, but the title is the only anchor, so the live
 	   preview's controls are siblings (valid HTML) instead of interactive elements inside an <a>. */
@@ -463,19 +457,20 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		position: relative;
 		z-index: 0;
 		pointer-events: none;
-		margin-top: var(--space-3);
-		padding-top: var(--space-3);
-		border-top: var(--border-thin) solid var(--line);
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+	}
+	/* The preview frame absorbs a card's extra height so a short card frames its demo in the slack
+	   instead of leaving an empty bottom; the demo itself stays centered inside it. */
+	.cx-card__preview > :global(*) {
+		flex: 1 1 auto;
 	}
 	.cx-card-link.is-covered :global(.cx-card) {
 		border-inline-start-color: var(--success);
 	}
 	.cx-card-link.has-gaps :global(.cx-card) {
 		border-inline-start-color: var(--warn);
-	}
-	.cx-card-link:hover :global(.cx-card) {
-		transform: translateY(-2px);
-		box-shadow: var(--elevation-3);
 	}
 	.cx-card-link.is-covered:hover :global(.cx-card) {
 		border-color: var(--success);
@@ -486,7 +481,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		border-inline-start-color: var(--warn);
 	}
 	.cx-card :global(.cx-card__top) {
-		margin-bottom: var(--space-2);
+		margin-bottom: var(--space-4);
 	}
 	.cx-card :global(.cx-card__name) {
 		margin: 0;
@@ -495,16 +490,6 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		color: var(--fg-1);
 		font-size: var(--text-sm);
 		line-height: var(--leading-normal);
-		margin: 0 0 var(--space-4);
-		flex: 1;
-	}
-	.cx-card :global(.cx-card__foot) {
-		margin-top: auto;
-	}
-	.cx-card__more {
-		font-size: var(--text-sm);
-		font-weight: var(--weight-medium);
-		color: var(--accent-text);
-		white-space: nowrap;
+		margin: var(--space-4) 0 0;
 	}
 </style>

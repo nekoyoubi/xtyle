@@ -105,7 +105,7 @@ export const cardManifest: ComponentManifest = {
 				"--border-thin",
 				"--line",
 				"--radius-lg",
-				"--elevation-2",
+				"--elevation-1",
 				"--space-5",
 				"--space-4",
 			],
@@ -168,13 +168,22 @@ export const cardManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 			options: [...FULL_TONES],
 		},
+		{
+			name: "depthStrength",
+			type: '"sm" | "md" | "lg"',
+			default: "md",
+			description:
+				"How far the surface lifts off the page: `sm` is a whisper, `md` (the default) an eased shadow, `lg` a pronounced lift. An interactive card bumps one step heavier on hover.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["sm", "md", "lg"],
+		},
 	],
 	variants: [
 		{
 			name: "default",
 			description: "The standard elevated surface on the raised background.",
 			className: "xtyle-card",
-			tokens: ["--bg-1", "--line", "--elevation-2"],
+			tokens: ["--bg-1", "--line", "--elevation-1"],
 		},
 		{
 			name: "overlay",
@@ -186,7 +195,7 @@ export const cardManifest: ComponentManifest = {
 			name: "interactive",
 			description: "Hover elevation lift plus a focus-within ring for a clickable card.",
 			className: "xtyle-card--interactive",
-			tokens: ["--elevation-4", "--line-2", "--state-hover", "--state-press", "--ring"],
+			tokens: ["--elevation-2", "--line-2", "--state-hover", "--state-press", "--ring"],
 		},
 	],
 	sizes: [
@@ -198,7 +207,7 @@ export const cardManifest: ComponentManifest = {
 			name: "hover",
 			description: "Pointer over an interactive card; the surface lifts and the overlay paints the hover tint.",
 			selector: ".xtyle-card--interactive:hover",
-			tokens: ["--elevation-4", "--line-2", "--state-hover"],
+			tokens: ["--elevation-2", "--line-2", "--state-hover"],
 		},
 		{
 			name: "active",
@@ -259,8 +268,9 @@ export const cardManifest: ComponentManifest = {
 		"--bg-1",
 		"--line",
 		"--line-2",
+		"--elevation-1",
 		"--elevation-2",
-		"--elevation-4",
+		"--elevation-3",
 		"--surface-overlay",
 		"--surface-overlay-border",
 	],

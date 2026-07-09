@@ -7,6 +7,14 @@ export interface ApplyOptions {
 	persistKey?: string;
 }
 
+/**
+ * Fired on `document` after a theme is applied to any target (`:root` or a scoped subtree). Elements
+ * that bake colors from the live cascade (the charts, the ramps) listen for it and re-resolve, so a
+ * theme swap under an already-mounted element recolors it instead of leaving it frozen on the palette
+ * it read at mount. Each listener re-reads its own cascade, so a scoped apply colors only its subtree.
+ */
+export const THEME_APPLY_EVENT = "xtyle:theme-apply";
+
 function normalize(name: string): string {
 	return name.startsWith("--") ? name : `--${name}`;
 }
@@ -19,6 +27,9 @@ export function apply(register: TokenRegister, opts: ApplyOptions = {}): void {
 	const bg = register["--bg-0"] ?? register["bg-0"];
 	if (bg) target.style.colorScheme = schemeOf(bg);
 	if (opts.persistKey) persist(opts.persistKey, register);
+	if (typeof document !== "undefined") {
+		document.dispatchEvent(new CustomEvent(THEME_APPLY_EVENT, { detail: { target } }));
+	}
 }
 
 export function clear(register: TokenRegister, target: HTMLElement = document.documentElement): void {

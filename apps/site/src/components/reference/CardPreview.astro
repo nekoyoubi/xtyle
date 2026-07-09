@@ -87,7 +87,7 @@ const scene =
 	)}
 	{id === "rating" && <Rating value={4} max={5} readonly label="4 of 5" />}
 	{id === "segmented" && <Segmented label="View" options="Day,Week,Month" value="Week" />}
-	{id === "slider" && <Slider label="Volume" value={62} />}
+	{id === "slider" && <Slider label="Volume" value={62} style="width: 13rem;" />}
 	{id === "swatch" && (
 		<Cluster gap={2} align="center">
 			<Swatch color="var(--accent)" label="Accent" />
@@ -167,10 +167,10 @@ const scene =
 	)}
 	{id === "pagination" && <Pagination total={10} current={3} aria-label="Pages" />}
 	{id === "steps" && (
-		<Steps current={1}>
+		<Steps current={1} style="width: 100%;">
 			<ol>
 				<li>Cart</li>
-				<li>Shipping</li>
+				<li>Ship</li>
 				<li>Pay</li>
 			</ol>
 		</Steps>
@@ -238,7 +238,6 @@ const scene =
 		background:
 			linear-gradient(var(--bg-0), var(--bg-0)) padding-box,
 			repeating-linear-gradient(45deg, var(--bg-2) 0 6px, transparent 6px 12px);
-		border: var(--border-thin) solid var(--line);
 	}
 	.cxp > :global(*) { max-width: 100%; }
 

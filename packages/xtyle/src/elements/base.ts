@@ -1,4 +1,5 @@
 import { componentStyleSheet } from "../css/index.js";
+import { THEME_APPLY_EVENT } from "../dom.js";
 
 /**
  * The base every xtyle element extends — and the blessed base for consumer
@@ -25,6 +26,7 @@ export abstract class XtyleElement extends HTMLElement {
 	protected root: ShadowRoot;
 
 	private hydrated = false;
+	private themeListener?: () => void;
 
 	/** Which `StyleMode` this element renders under, mirroring the `style` its host slot declares
 	 * in `component-host.json`. `isolated` attaches a shadow root and adopts the shared component
@@ -64,7 +66,25 @@ export abstract class XtyleElement extends HTMLElement {
 		return "";
 	}
 
+	/** Whether this element bakes colors from the live cascade (the charts, the ramps) and so must
+	 * re-resolve when the applied theme changes. Elements that color purely through CSS `var()` leave
+	 * this `false` (the cascade recolors them for free); a baking element overrides it to `true` to
+	 * subscribe to `THEME_APPLY_EVENT` and re-render on a live theme swap. */
+	protected get resolvesThemeAtRuntime(): boolean {
+		return false;
+	}
+
 	connectedCallback(): void {
+		// A baking element re-resolves its palette whenever a theme is applied anywhere (root or a
+		// scoped subtree): it read the cascade once at mount, so without this a later theme swap — the
+		// generator, the bench live preview, a runtime mode toggle — leaves it frozen on the palette it
+		// first saw (stale, or black if it mounted before its scope carried the tokens).
+		if (this.resolvesThemeAtRuntime && !this.themeListener && typeof document !== "undefined") {
+			this.themeListener = () => {
+				if (this.hydrated && this.root.firstChild) this.render();
+			};
+			document.addEventListener(THEME_APPLY_EVENT, this.themeListener);
+		}
 		// Render once on first connect — whether the shadow is empty (client-created,
 		// e.g. the Svelte binding) or already holds a server-rendered declarative shadow
 		// (the Astro DSD binding). For DSD this replaces the zero-JS inline shadow with
@@ -75,6 +95,13 @@ export abstract class XtyleElement extends HTMLElement {
 		if (this.hydrated) return;
 		this.hydrated = true;
 		this.render();
+	}
+
+	disconnectedCallback(): void {
+		if (this.themeListener) {
+			document.removeEventListener(THEME_APPLY_EVENT, this.themeListener);
+			this.themeListener = undefined;
+		}
 	}
 
 	/** Paint the render root. Under `isolated`, adopt the shared component sheet and inline

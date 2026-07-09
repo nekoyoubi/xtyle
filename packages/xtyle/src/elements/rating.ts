@@ -1,11 +1,12 @@
-import { define } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 import { composeIcon, composeIconThemed, resolveIconMark, resolvePrimitiveName, type IconComposition } from "../icon-builder.js";
 import { readLiveRegister } from "./live-register.js";
 import { SERIES_TOKENS, type SeriesScheme } from "../series.js";
 
-/** The neutral base layer's color; also every register token the icon marks read, so a browser-only
- * consumer can reconstruct the minimal register the silhouette + series colors need. */
-const RATING_TOKENS: readonly string[] = ["--fg-disabled", ...SERIES_TOKENS];
+/** The neutral track/surface color (the `e` "empty" nibble, shared with the Progress groove); also every
+ * register token the icon marks read, so a browser-only consumer can reconstruct the minimal register the
+ * silhouette + series colors need. */
+const RATING_TOKENS: readonly string[] = ["--neutral-bg", ...SERIES_TOKENS];
 
 /** Resolve an icon name to a composition: a `--` spec composes through the mark grammar (so a colorful
  * taco works), a bare name is a single-layer primitive (`star` → `symbol-star`, any functional glyph by
@@ -31,9 +32,24 @@ function clamp(min: number, max: number, v: number): number {
  * and syncing a hidden input when `name` is set. Client-rendered: the element's text is the no-JS
  * fallback and the accessible label.
  */
-export class XtyleRating extends HTMLElement {
+export class XtyleRating extends XtyleElement {
+	/** Rating is the host: the element itself carries `role="slider"` and the icon rows are its
+	 * direct children, so it always renders into its own light DOM (never a shadow scaffold). */
+	protected override get styleMode(): StyleMode {
+		return "scoped";
+	}
+
+	/** Bakes series colors from the live cascade, so it re-resolves on a live theme swap. */
+	protected override get resolvesThemeAtRuntime(): boolean {
+		return true;
+	}
+
 	static get observedAttributes(): string[] {
 		return ["value", "max", "size", "icon", "colors", "tone", "readonly", "allowhalf", "name", "label"];
+	}
+
+	protected template(): string {
+		return "";
 	}
 
 	private captured = false;
@@ -76,15 +92,20 @@ export class XtyleRating extends HTMLElement {
 	}
 
 	connectedCallback(): void {
-		if (!this.captured) {
+		// Capture the fallback label before the base's first render replaces the light-DOM children.
+		const first = !this.captured;
+		if (first) {
 			this.fallbackLabel = (this.textContent ?? "").trim();
 			this.captured = true;
 		}
-		this.render();
+		super.connectedCallback();
+		// The base renders (and so binds) only on first connect; re-render on a reconnect to rebind.
+		if (!first) this.render();
 	}
 
 	disconnectedCallback(): void {
 		this.unbind();
+		super.disconnectedCallback();
 	}
 
 	attributeChangedCallback(): void {
@@ -101,16 +122,16 @@ export class XtyleRating extends HTMLElement {
 		return this.getAttribute("label") || this.fallbackLabel || `${value} out of ${this.max} stars`;
 	}
 
-	private render(): void {
+	protected override render(): void {
 		const max = this.max;
 		const value = clamp(0, max, this.value);
 		const register = this.register();
-		const trackHex = register["--fg-disabled"];
 		const comp = ratingComposition(this.icon);
 		const filled = composeIconThemed(comp, { register, scheme: this.scheme });
-		// A colorful mark silhouettes to the track color via a `*` palette override; a monochrome glyph
-		// keeps `currentColor` and takes the track color from the row's CSS instead.
-		const emptyComp: IconComposition = trackHex ? { ...comp, palette: { "*": trackHex } } : comp;
+		// A colorful mark silhouettes to the neutral track surface (`--neutral-bg`, the same tone the
+		// Progress groove uses, the `e` "empty" chrome nibble); a monochrome glyph keeps `currentColor`
+		// and takes that same track color from the row's CSS instead.
+		const emptyComp: IconComposition = { ...comp, palette: { "*": "--neutral-bg" } };
 		const empty = composeIcon(emptyComp, { register, scheme: this.scheme });
 
 		this.className = "xtyle-rating";

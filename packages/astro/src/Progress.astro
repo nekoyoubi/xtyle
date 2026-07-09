@@ -1,9 +1,10 @@
 ---
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
-import type { FullTone as Tone } from "@xtyle/core";
+import { rampGradientStops, type FullTone as Tone, type RampScheme } from "@xtyle/core";
 type ProgressVariant = "linear" | "circular";
 type ProgressSize = "sm" | "md" | "lg";
+type ProgressRampMode = "solid" | "gradient";
 
 interface Props {
 	variant?: ProgressVariant;
@@ -24,6 +25,14 @@ interface Props {
 	valuePosition?: "end" | "inset";
 	/** Report `role="meter"` (a capacity measurement) instead of `role="progressbar"` (a task). */
 	meter?: boolean;
+	/** Color the fill by its own value along a ramp instead of a flat `tone`: a built-in scheme
+	 * (`accent` / `thermal` / `status`) or an explicit list of stop colors. */
+	ramp?: RampScheme | string[];
+	/** How a `ramp` paints: `solid` (one sampled color, needs the runtime) or `gradient` (a pure-CSS
+	 * sweep, zero-JS, linear only). Defaults to `solid`. */
+	rampMode?: ProgressRampMode;
+	/** Flip the ramp end for end (hot-to-cold). */
+	reverse?: boolean;
 	"aria-label"?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -46,11 +55,23 @@ const {
 	colorizeValue = false,
 	valuePosition = "end",
 	meter = false,
+	ramp,
+	rampMode = "solid",
+	reverse = false,
 	"aria-label": ariaLabel,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+
+// Gradient ramps are pure CSS (var()-referenced stops), so they render server-side with zero JS;
+// a solid ramp's color is sampled off the live cascade, so SSR leaves the tone and the runtime paints it.
+const gradientRamp = ramp && rampMode === "gradient" && variant !== "circular";
+const rampBindings = ramp
+	? gradientRamp
+		? { ramp: true, rampMode: "gradient", rampStops: rampGradientStops(ramp, { reverse }) }
+		: { ramp: true, rampMode: "solid" }
+	: {};
 
 const bindings = {
 	variant,
@@ -69,6 +90,7 @@ const bindings = {
 	role: meter ? "meter" : "progressbar",
 	ariaLabel: ariaLabel ?? null,
 	ariaLabelledby: null,
+	...rampBindings,
 };
 const light = await renderFragmentLight("progress", bindings);
 const valueHtml = Astro.slots.has("value") ? await Astro.slots.render("value") : null;
@@ -92,6 +114,9 @@ const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
 	colorize-value={colorizeValue || undefined}
 	value-position={valuePosition !== "end" ? valuePosition : undefined}
 	meter={meter || undefined}
+	ramp={ramp ? (Array.isArray(ramp) ? JSON.stringify(ramp) : ramp) : undefined}
+	ramp-mode={ramp && rampMode !== "solid" ? rampMode : undefined}
+	reverse={reverse || undefined}
 	aria-label={ariaLabel}
 	class={extra}
 	set:html={composed}

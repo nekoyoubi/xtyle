@@ -49,7 +49,8 @@
 	const CODE_LOCK: Record<string, string> = Object.fromEntries(Object.entries(LOCK_CODE).map(([k, v]) => [v, k]));
 
 	const PRIMITIVE_GROUPS: { group: string; keywords: string[] }[] = [
-		{ group: "Shapes", keywords: ["circle", "square", "square1", "square2", "square3", "shield", "hex", "diamond", "triangle"] },
+		{ group: "Shapes", keywords: ["circle", "square", "square1", "square2", "square3", "shield", "hex", "diamond", "triangle", "pentagon", "oval", "pill", "half", "quarter", "wedge", "drop"] },
+		{ group: "Strokes", keywords: ["line", "arc", "corner", "vee"] },
 		{ group: "Frames", keywords: ["ring", "border", "divider"] },
 		{ group: "Bars", keywords: ["top", "row", "column", "diagonal", "cross"] },
 		{ group: "Symbols", keywords: ["star", "heart", "crescent", "bolt", "dot"] },
@@ -134,7 +135,7 @@
 	const EXAMPLES: { name: string; scheme: SeriesScheme }[] = [
 		{ name: "Crest--shield-c1--star-s45-cf", scheme: "accents" },
 		{ name: "Bolt-badge--circle-c2--bolt-s52-cb", scheme: "accents" },
-		{ name: "dice-3--square3-c1-o1c2--dot-p7-x12-y-12-s20-c2--dot-s20-c2--dot-p3-x-12-y12-s20-c2---d3p8s1t20-pc1-e2e0e0-pc2-2d3038-pc3-000000", scheme: "accents" },
+		{ name: "dice-3--square3-c1-o1c2--dot-p7-x12-y-12-s20-c2--dot-s20-c2--dot-p3-x-12-y12-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
 		{ name: "Target--ring-c1--dot-s28-c2", scheme: "statuses" },
 		{ name: "Heart-seal--circle-c3--heart-s48-cf", scheme: "skittles" },
 		{ name: "Star-hex--hex-c1--star-s50-cb", scheme: "accents" },
@@ -344,7 +345,7 @@
 			...(dropShadow ? [serializeShadow(dropShadow)] : []),
 			...(paletteOverrides ? serializePalette(paletteOverrides) : []),
 			...layers.map(serializeLocks).filter(Boolean),
-		].join("-");
+		].join("--");
 		return `${slug(label)}--${body}${finish ? `---${finish}` : ""}`;
 	});
 
@@ -355,9 +356,9 @@
 		if (i < 0) return name;
 		const kept = name
 			.slice(i + 3)
-			.split("-")
+			.split("--")
 			.filter((token) => !/^l\d/.test(token));
-		return kept.length ? `${name.slice(0, i)}---${kept.join("-")}` : name.slice(0, i);
+		return kept.length ? `${name.slice(0, i)}---${kept.join("--")}` : name.slice(0, i);
 	}
 	const hasLocks = $derived(layers.some((l) => LOCK_KEYS.some((k) => l.locks[k])));
 

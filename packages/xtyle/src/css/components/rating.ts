@@ -1,6 +1,6 @@
 export const ratingCss = `
 .xtyle-rating {
-	--rating-track: var(--fg-disabled);
+	--rating-track: var(--neutral-bg);
 	--rating-fill: var(--accent);
 	display: inline-flex;
 	width: max-content;

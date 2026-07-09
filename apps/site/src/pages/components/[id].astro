@@ -25,7 +25,7 @@ import Breadcrumb from "@xtyle/astro/Breadcrumb.astro";
 import CodeTabs from "../../components/reference/CodeTabs.astro";
 import PropTable from "../../components/reference/PropTable.astro";
 import CoveragePanel from "../../components/reference/CoveragePanel.astro";
-import CoverageBadge from "../../components/reference/CoverageBadge.astro";
+import CoverageMeter from "../../components/reference/CoverageMeter.astro";
 import { categoryMeta } from "../../components/reference/categories.ts";
 import {
 	renderMarkdown,
@@ -63,9 +63,6 @@ const fallbackExampleSource =
 const fallbackSources = firstExample?.source ?? {};
 
 const bindingOrder = ["html", "svelte", "astro"] as const;
-const supportedBindings = bindingOrder.filter((b) =>
-	component.bindings.includes(b),
-);
 const meta = categoryMeta[component.category];
 
 const all = listComponents();
@@ -136,10 +133,7 @@ const crumbs = [
 				</Cluster>
 				<Cluster gap={2} align="center">
 					<Badge tone="info">{meta.label}</Badge>
-					{supportedBindings.map((b) => (
-						<Badge tone="neutral" size="sm">{b}</Badge>
-					))}
-					<CoverageBadge
+					<CoverageMeter
 						covered={cov.covered}
 						missing={cov.missing}
 						produced={producedCount}

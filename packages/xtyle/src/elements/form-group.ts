@@ -206,7 +206,8 @@ export class XtyleFormGroup extends XtyleElement {
 		this.warnIfUnlabelled();
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.contentObserver?.disconnect();
 		this.contentObserver = null;
 	}

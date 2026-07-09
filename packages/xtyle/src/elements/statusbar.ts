@@ -69,7 +69,8 @@ export class XtyleStatusbar extends XtyleElement {
 		if (this.root.firstChild) this.render();
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.teardownCollapse();
 	}
 

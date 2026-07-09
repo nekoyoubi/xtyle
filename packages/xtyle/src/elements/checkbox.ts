@@ -83,7 +83,8 @@ export class XtyleCheckbox extends XtyleElement {
 		this.addEventListener("click", this.onHostClick);
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.removeEventListener("click", this.onHostClick);
 	}
 
@@ -228,7 +229,8 @@ export class XtyleCheckboxGroup extends XtyleElement {
 		});
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.removeEventListener("change", this.onItemChange);
 	}
 

@@ -1,4 +1,4 @@
-import { define } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 // Side-effect import: guarantees `<xtyle-dialog>` is defined so the lightbox can compose it.
 import "./dialog.js";
 
@@ -89,7 +89,18 @@ function resolveTrigger(trigger: Element): { src: string; alt: string; caption?:
  * promoted to keyboard-operable (`role="button"`, `tabindex`, an `aria-label`), and Enter/Space open
  * the same lightbox — so the delegated path is keyboard-reachable, not mouse-only.
  */
-export class XtyleLightbox extends HTMLElement {
+export class XtyleLightbox extends XtyleElement {
+	protected override get styleMode(): StyleMode {
+		return "scoped";
+	}
+
+	protected template(): string {
+		return "";
+	}
+
+	// Controller composes an `<xtyle-dialog>` and toggles `display`; the base render would wipe it.
+	protected override render(): void {}
+
 	private controller: AbortController | null = null;
 	private observer: MutationObserver | null = null;
 
@@ -99,6 +110,7 @@ export class XtyleLightbox extends HTMLElement {
 	}
 
 	connectedCallback(): void {
+		super.connectedCallback();
 		this.style.display = "none";
 		this.controller = new AbortController();
 		const { signal } = this.controller;
@@ -115,7 +127,8 @@ export class XtyleLightbox extends HTMLElement {
 		}
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.controller?.abort();
 		this.controller = null;
 		this.observer?.disconnect();

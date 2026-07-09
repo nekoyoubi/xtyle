@@ -21,6 +21,10 @@ export class XtyleHeatmap extends XtyleElement {
 		return "auto";
 	}
 
+	protected override get resolvesThemeAtRuntime(): boolean {
+		return true;
+	}
+
 	private valuesProp: number[][] | null = null;
 	private glowProp: number[][] | null = null;
 	private rowsProp: string[] | null = null;

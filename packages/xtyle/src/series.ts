@@ -193,6 +193,23 @@ export function rampColor(
 	return lerpOklch(stops[seg] as string, stops[seg + 1] as string, pos - seg);
 }
 
+/**
+ * The ordered stop list for a ramp as CSS values, for a pure-CSS `linear-gradient` sweep that needs
+ * no register: register token names become `var(--token)` references (resolved against the cascade at
+ * paint, so the gradient recolors with the theme and survives SSR with zero JS), explicit color
+ * strings pass through verbatim. `reverse` flips the order. The SSR-safe sibling of `rampColor`:
+ * where `rampColor` samples one color at a position (needing the resolved register), this hands back
+ * the whole scale for the browser to interpolate.
+ */
+export function rampGradientStops(
+	scheme: RampScheme | string[],
+	options: SeriesPaletteOptions = {},
+): string[] {
+	const raw = Array.isArray(scheme) ? scheme : RAMP_ANCHORS[scheme] ?? RAMP_ANCHORS.accent;
+	const stops = raw.map((s) => (s.startsWith("--") ? `var(${s})` : s));
+	return options.reverse ? [...stops].reverse() : stops;
+}
+
 /** The default drop-shadow blur (in px) a full-strength glow cell reaches. */
 export const GLOW_MAX_BLUR = 7;
 

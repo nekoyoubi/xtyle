@@ -61,6 +61,31 @@ describe("icon-builder", () => {
 		expect(primitiveTags("symbol-nonexistent")).toEqual([]);
 	});
 
+	it("ships the draw-with primitives: filled curves and open pen-strokes, reachable by keyword", () => {
+		// filled curves
+		for (const [kw, lib] of [["half", "shape-half"], ["quarter", "shape-quarter"], ["wedge", "shape-wedge"], ["oval", "shape-oval"], ["pill", "shape-pill"], ["drop", "shape-drop"], ["pentagon", "shape-pentagon"]] as const) {
+			expect(hasPrimitive(lib), lib).toBe(true);
+			expect(resolvePrimitiveName(kw), kw).toBe(lib);
+			expect(primitiveSince(kw), kw).toBe("0.6.0");
+		}
+		// open pen-strokes
+		for (const [kw, lib] of [["line", "stroke-line"], ["arc", "stroke-arc"], ["corner", "stroke-corner"], ["vee", "stroke-vee"]] as const) {
+			expect(hasPrimitive(lib), lib).toBe(true);
+			expect(resolvePrimitiveName(kw), kw).toBe(lib);
+			expect(primitiveSince(kw), kw).toBe("0.6.0");
+		}
+	});
+
+	it("colors a pen-stroke through the layer fill: the stroke resolves to the fill, the shape stays unfilled", () => {
+		// a stroke primitive draws `fill="none" stroke="currentColor"`; paintGroup seeds `color`, so a `c`
+		// color reaches the stroke while the path itself never fills — a genuine drawn line, not a filled bar.
+		const svg = composeIcon(parseIconName("x--line-c3-r45")!.composition, { register, scheme: "accents" });
+		expect(svg).toContain("rotate(45 12 12)");
+		expect(svg).toMatch(/color="#[0-9a-fA-F]{3,8}"/);
+		expect(svg).toContain('stroke="currentColor"');
+		expect(svg).toContain('fill="none"');
+	});
+
 	it("resolves the five series slots to five distinct colors, so a sequential/sampled scheme no longer collapses", () => {
 		const fillsFor = (scheme: "thermal" | "skittles" | "accents") => {
 			const layers = [0, 1, 2, 3, 4].map((i) => ({ primitive: "shape-square", fill: `series:${i}` }));
@@ -253,6 +278,12 @@ describe("---pc palette overrides (hex, nibble, token)", () => {
 		expect(pal("x--shape-square---pc-a")).toEqual({ "*": "currentColor" });
 	});
 
+	it("resolves the `e` empty nibble to the neutral track color, as a layer color or a pc value", () => {
+		expect(pal("x--shape-square---pc-e")).toEqual({ "*": "--neutral-bg" });
+		const svg = composeIcon(parseIconName("x--shape-square-ce")?.composition ?? { layers: [] }, { register: {} });
+		expect(svg).toContain("var(--neutral-bg)");
+	});
+
 	it("reads a token name as a live --token, with fg/bg aliases", () => {
 		expect(pal("x--shape-square---pc1-accent")).toEqual({ "1": "--accent" });
 		expect(pal("x--shape-square---pc3-success")).toEqual({ "3": "--success" });
@@ -260,9 +291,17 @@ describe("---pc palette overrides (hex, nibble, token)", () => {
 		expect(pal("x--shape-square---pc-bg")).toEqual({ "*": "--bg-0" });
 	});
 
-	it("does not eat an adjacent finish token: a token override then a drop shadow coexist", () => {
-		const c = parseIconName("x--shape-square---pc1-accent-d2p8s3t80")?.composition;
+	it("does not eat an adjacent finish flag: a `--`-separated token override then a drop shadow coexist", () => {
+		const c = parseIconName("x--shape-square---pc1-accent--d2p8s3t80")?.composition;
 		expect(c?.palette).toEqual({ "1": "--accent" });
+		expect(c?.dropShadow).toBeDefined();
+	});
+
+	it("reads a hyphenated token name: the `--`-delimited finish lets a value carry a single hyphen", () => {
+		expect(pal("x--shape-square---pc-neutral-bg")).toEqual({ "*": "--neutral-bg" });
+		expect(pal("x--shape-square---pc3-accent-2")).toEqual({ "3": "--accent-2" });
+		const c = parseIconName("x--shape-square---pc-neutral-bg--d2p8s3t80")?.composition;
+		expect(c?.palette).toEqual({ "*": "--neutral-bg" });
 		expect(c?.dropShadow).toBeDefined();
 	});
 
@@ -315,8 +354,8 @@ describe("parseIconName", () => {
 		expect(shadow?.blur).toBeCloseTo(2);
 		// lock flags in the finish are authoring metadata: the renderer never derives a shadow from them
 		expect(parseIconName("crest--shield-c3---l1*")?.composition.dropShadow).toBeUndefined();
-		// a shadow and locks coexist in one finish; each reader skips the other's tokens
-		expect(parseIconName("crest--shield-c3---d2p8s3t80-l1*")?.composition.dropShadow).toBeDefined();
+		// a shadow and locks coexist in one finish (flags `--`-separated); each reader skips the other's
+		expect(parseIconName("crest--shield-c3---d2p8s3t80--l1*")?.composition.dropShadow).toBeDefined();
 	});
 
 	it("composes a drop shadow into an SVG filter and lets the mark overflow its box", () => {

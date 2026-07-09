@@ -165,16 +165,30 @@ export const ICON_PRIMITIVES: Record<string, IconPrimitive> = {
 	"shape-hex": bare(`<path d="M12 1.5 L21 6.75 V17.25 L12 22.5 L3 17.25 V6.75 Z"/>`, ["hexagon", "hex", "game", "shape"]),
 	"shape-diamond": bare(`<path d="M12 1 L23 12 L12 23 L1 12 Z"/>`, ["diamond", "rhombus", "shape"]),
 	"shape-triangle": bare(`<path d="M12 2.5 L21.5 21.5 H2.5 Z"/>`, ["triangle", "angular", "shape"]),
+	"shape-pentagon": bare(`<path d="M12 1 L22.5 8.6 L18.5 20.9 L5.5 20.9 L1.5 8.6 Z"/>`, ["pentagon", "polygon", "five", "shape"], "0.6.0"),
+	// Curved building blocks — the flat/polygon library had no filled rounds to compose from.
+	"shape-half": bare(`<path d="M1 12 A11 11 0 0 1 23 12 Z"/>`, ["half", "semicircle", "dome", "round", "shape"], "0.6.0"),
+	"shape-quarter": bare(`<path d="M12 12 V1 A11 11 0 0 1 23 12 Z"/>`, ["quarter", "quadrant", "corner", "round", "shape"], "0.6.0"),
+	"shape-wedge": bare(`<path d="M12 12 L6.5 2.47 A11 11 0 0 1 17.5 2.47 Z"/>`, ["wedge", "sector", "slice", "pie", "gauge"], "0.6.0"),
+	"shape-oval": bare(`<ellipse cx="12" cy="12" rx="11" ry="7.5"/>`, ["oval", "ellipse", "round", "shape"], "0.6.0"),
+	"shape-pill": bare(`<rect x="2" y="7.5" width="20" height="9" rx="4.5"/>`, ["pill", "capsule", "bar", "rounded", "shape"], "0.6.0"),
+	"shape-drop": bare(`<path d="M12 2 C16 9 19 12 19 15.5 A7 7 0 1 1 5 15.5 C5 12 8 9 12 2 Z"/>`, ["drop", "teardrop", "droplet", "pin", "water"], "0.6.0"),
 	"divider-rule": bare(`<rect x="2" y="11" width="20" height="2" rx="1"/>`, ["divider", "line", "separator", "rule"]),
 	"frame-ring": bare(`<circle cx="12" cy="12" r="10.5" fill="none" stroke="currentColor" stroke-width="1.5"/>`, ["ring", "circle", "frame", "outline", "round"]),
 	"frame-border": bare(`<rect x="2.25" y="2.25" width="19.5" height="19.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/>`, ["border", "square", "frame", "outline"]),
+	// Open pen-strokes — draw-with primitives, not stamps: a line/arc/corner/vee that take the layer's
+	// color through `currentColor` (like the frames) and rotate to any angle.
+	"stroke-line": bare(`<line x1="2" y1="12" x2="22" y2="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`, ["line", "stroke", "segment", "rule", "draw"], "0.6.0"),
+	"stroke-arc": bare(`<path d="M2 12 A10 10 0 0 1 22 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`, ["arc", "curve", "semicircle", "smile", "draw"], "0.6.0"),
+	"stroke-corner": bare(`<path d="M5 5 V19 H19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`, ["corner", "bracket", "ell", "angle", "draw"], "0.6.0"),
+	"stroke-vee": bare(`<path d="M5 8 L12 16 L19 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`, ["vee", "chevron", "angle", "caret", "draw"], "0.6.0"),
 	"bar-top": bare(`<rect x="2" y="2" width="20" height="5"/>`, ["bar", "band", "stripe", "top", "chief"]),
 	"bar-row": bare(`<rect x="2" y="9.5" width="20" height="5"/>`, ["bar", "band", "stripe", "row", "horizontal", "fess"]),
 	"bar-column": bare(`<rect x="9.5" y="2" width="5" height="20"/>`, ["bar", "band", "stripe", "column", "vertical", "pale"]),
 	"bar-diagonal": bare(`<path d="M2 7 L17 22 L22 17 L7 2 Z"/>`, ["diagonal", "stripe", "slash", "band", "bend"]),
 	"bar-cross": bare(`<path d="M9.5 2 h5 v7.5 h7.5 v5 h-7.5 v7.5 h-5 v-7.5 h-7.5 v-5 h7.5 Z"/>`, ["cross", "plus", "symbol"]),
 	"symbol-star": bare(`<path d="M12 2 l2.9 6.2 6.8 0.7 -5.1 4.6 1.5 6.7 -6.1 -3.6 -6.1 3.6 1.5 -6.7 -5.1 -4.6 6.8 -0.7 Z"/>`, ["star", "favorite", "rating", "symbol"]),
-	"symbol-heart": bare(`<path d="M12 21 C12 21 3 14.5 3 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8.5 C21 14.5 12 21 12 21 Z"/>`, ["heart", "love", "favorite", "symbol"]),
+	"symbol-heart": bare(`<path d="M12 21 C5.5 16.5 2 12.5 2 8.5 C2 5.4 4.3 3 7.1 3 C9.4 3 11 4.6 12 6.6 C13 4.6 14.6 3 16.9 3 C19.7 3 22 5.4 22 8.5 C22 12.5 18.5 16.5 12 21 Z"/>`, ["heart", "love", "favorite", "symbol"]),
 	"symbol-crescent": bare(`<path d="M12 3 a6 6 0 0 0 9 9 9 9 0 1 1 -9 -9 Z"/>`, ["crescent", "moon", "symbol"]),
 	"symbol-bolt": bare(`<path d="M13 2 L4 14 h6 l-1 8 l9 -13 h-6 Z"/>`, ["bolt", "lightning", "energy", "flash", "symbol"]),
 	...Object.fromEntries(Object.entries(ICONS).map(([name, body]) => [`symbol-${name}`, bare(body, GLYPH_TAGS[name] ?? [])])),
@@ -202,10 +216,21 @@ export const PRIMITIVE_KEYWORDS: Record<string, string> = {
 	hex: "shape-hex",
 	diamond: "shape-diamond",
 	triangle: "shape-triangle",
+	pentagon: "shape-pentagon",
+	half: "shape-half",
+	quarter: "shape-quarter",
+	wedge: "shape-wedge",
+	oval: "shape-oval",
+	pill: "shape-pill",
+	drop: "shape-drop",
 	divider: "divider-rule",
 	dot: "shape-circle",
 	ring: "frame-ring",
 	border: "frame-border",
+	line: "stroke-line",
+	arc: "stroke-arc",
+	corner: "stroke-corner",
+	vee: "stroke-vee",
 	top: "bar-top",
 	row: "bar-row",
 	column: "bar-column",
@@ -257,9 +282,13 @@ function n(value: number): string {
  * a nine-hue scheme (`skittles`) fills them with the whole crayon box, a smaller one cycles its own. */
 export const ICON_SERIES_COUNT = 9;
 
-/** The palette-nibble map, addressed `0`–`f`: `0` transparent, `1`–`9` the nine series colors,
- * `a` `currentColor` (the "active" ink), `b` `--bg-0`, `c` transparent, `f` `--fg-0`; `d`/`e` reserved
- * (inert). Every color flag (`c{n}`, an outline's `c{n}`, a drop shadow's color) is a nibble into this. */
+/** The palette-nibble map, addressed `0`–`f`: `0` transparent, `1`–`9` the nine series colors, and the
+ * semantic chrome slots that keep their meaning regardless of the series scheme, each with a one-letter
+ * mnemonic — `a` `currentColor` (Active ink), `b` `--bg-0` (Background), `c` transparent (Clear), `e`
+ * `--neutral-bg` (Empty: the neutral track an unfilled Rating mark or a Progress groove shows), `f`
+ * `--fg-0` (Foreground); `d` reserved (inert). Use them as a layer color like any nibble (`ce` fills the
+ * track color, as `cb`/`cf` fill the surface/ink). Every color flag (`c{n}`, an outline's `c{n}`, a drop
+ * shadow's color) is a nibble into this. */
 export const SLOT_TABLE: Record<number, string> = {
 	0: "transparent",
 	1: "series:0",
@@ -275,14 +304,14 @@ export const SLOT_TABLE: Record<number, string> = {
 	11: "--bg-0",
 	12: "transparent",
 	13: "transparent",
-	14: "transparent",
+	14: "--neutral-bg",
 	15: "--fg-0",
 };
 
 /** True for a nibble that actually paints (every slot but transparent/reserved), so a `---pc-{hex}`
  * silhouette knows which slots to repaint and which to leave clear. */
 function slotPaints(slot: number): boolean {
-	return (slot >= 1 && slot <= 11) || slot === 15;
+	return (slot >= 1 && slot <= 11) || slot === 14 || slot === 15;
 }
 
 /** Resolve a palette nibble to its color spec: a per-slot `---pc{n}` override wins, then a
@@ -572,7 +601,10 @@ function parseDropShadow(token: string): IconDropShadow | null {
 	};
 }
 
-const PC_OVERRIDE = /pc([0-9a-f])?-([0-9a-z]+)/g;
+/** One `pc` palette-override flag, anchored to a single finish flag: `pc{nibble}-{value}` (per-slot) or
+ * `pc-{value}` (whole-mark silhouette). The value runs to the end of the flag, so it may carry single
+ * hyphens (a hyphenated token like `neutral-bg`) — finish flags are delimited by `--`, not `-`. */
+const PC_FLAG = /^pc([0-9a-f])?-(.+)$/;
 
 /** Token-name aliases for a `---pc` override: bare `fg`/`bg` mean the base ink / base surface. */
 const PC_TOKEN_ALIAS: Record<string, string> = { fg: "fg-0", bg: "bg-0" };
@@ -581,42 +613,46 @@ const PC_TOKEN_ALIAS: Record<string, string> = { fg: "fg-0", bg: "bg-0" };
  * Resolve a `---pc` override value to a color spec that flows through `resolveColor`. Three shapes, so an
  * override can stay theme-reactive instead of baking a literal color: a **hex** (`3`/`4`/`6`/`8` digits)
  * is a fixed color; a single **nibble** (`0`–`f`) borrows that palette slot's canonical color (a series
- * color or a token, so it tracks the theme); a **token name** (`accent`, `success`, a named hue, or the
- * `fg`/`bg` aliases) resolves to `--{token}` off the live register. Returns null for an unparseable value.
- * Hyphenated tokens (`accent-2`, `fg-1`) can't ride the `-`-delimited finish; reach them with a nibble or hex.
+ * color or a token, so it tracks the theme); a **token name** (`accent`, `success`, a named hue, the
+ * `fg`/`bg` aliases, or a hyphenated token like `accent-2` / `neutral-bg`) resolves to `--{token}` off the
+ * live register. Returns null for an unparseable value.
  */
 function pcOverrideSpec(raw: string): string | null {
 	if (/^[0-9a-f]$/.test(raw)) return SLOT_TABLE[parseInt(raw, 16)] ?? null;
 	if (/^(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(raw)) return `#${raw}`;
-	if (/^[a-z][a-z0-9]*$/.test(raw)) return `--${PC_TOKEN_ALIAS[raw] ?? raw}`;
+	if (/^[a-z][a-z0-9-]*$/.test(raw)) return `--${PC_TOKEN_ALIAS[raw] ?? raw}`;
 	return null;
 }
 
 /**
- * The `---` finish grammar: whole-icon metadata after the last object. Three kinds of token coexist and
+ * The `---` finish grammar: whole-icon metadata after the last object, its flags delimited by `--` (the
+ * same separator as objects), so a flag's value can carry a single hyphen. Three kinds of flag coexist and
  * each reader skips the others' — render finishes the mark acts on (`d…` drop shadow, `pc…` palette
  * override), and `l…` lock flags that are authoring metadata for the builder's Randomize, invisible to
  * the rendered mark. A `pc{nibble}-{value}` repaints that one palette slot; a bare `pc-{value}` silhouettes
  * every painting slot to one color (the transparent/reserved slots stay clear). The value is a hex color, a
- * palette nibble (`0`–`f`, theme-reactive), or a token name (`accent`, `success`, a hue, `fg`/`bg`).
+ * palette nibble (`0`–`f`, theme-reactive), or a token name (`accent`, `success`, a hue, `fg`/`bg`, or a
+ * hyphenated token like `neutral-bg`).
  */
 function parseFinish(segment: string): Partial<IconComposition> {
 	const out: Partial<IconComposition> = {};
 	const palette: Record<string, string> = {};
-	PC_OVERRIDE.lastIndex = 0;
-	let pc: RegExpExecArray | null;
-	while ((pc = PC_OVERRIDE.exec(segment))) {
-		const raw = pc[2];
-		const spec = raw == null ? null : pcOverrideSpec(raw);
-		if (spec == null) continue;
-		if (pc[1] != null) palette[String(parseInt(pc[1], 16))] = spec;
-		else palette["*"] = spec;
-	}
-	for (const token of segment.replace(PC_OVERRIDE, "").split("-")) {
-		if (token.startsWith("d")) {
-			const shadow = parseDropShadow(token);
+	for (const flag of segment.split("--")) {
+		if (!flag) continue;
+		const pc = PC_FLAG.exec(flag);
+		if (pc) {
+			const spec = pcOverrideSpec(pc[2] as string);
+			if (spec != null) {
+				if (pc[1] != null) palette[String(parseInt(pc[1], 16))] = spec;
+				else palette["*"] = spec;
+			}
+			continue;
+		}
+		if (flag.startsWith("d")) {
+			const shadow = parseDropShadow(flag);
 			if (shadow) out.dropShadow = shadow;
 		}
+		// `l…` lock flags are authoring metadata for the builder's Randomize; ignored at render.
 	}
 	if (Object.keys(palette).length) out.palette = palette;
 	return out;

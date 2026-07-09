@@ -50,7 +50,7 @@ export const ratingManifest: ComponentManifest = {
 	seeAlso: ["icon", "slider"],
 	summary: "A rating control — interactive or read-only — that scores with any icon and shows fractional values as a partial icon.",
 	description:
-		"Rating draws `max` icons and overlays a colored copy clipped to `value / max`, so a fractional value like 4.5 shows an exact partial icon rather than rounding. It renders two rows: a neutral **base** row (the icon silhouetted to a muted track color) and a **filled** row (the icon in full color) clipped to the value fraction. Any icon works: the default `star`, any functional glyph (`heart`, `bolt`, …), or a composed colorful mark spec (`taco--…`), drawn through the icon system. A monochrome glyph takes its fill from `tone` (a register hue), a colorful mark draws its palette from `colors`. By default it is an interactive slider — focusable, `role=\"slider\"`, driven by pointer drag, click, and Arrow/Home/End keys, with a hover preview, firing `input` and `change` and posting through a hidden input when `name` is set. Add `readonly` and it becomes a fixed `role=\"img\"` display for an average score, a product rating, a survey result. The element's own text is the no-JS fallback and the accessible label. Override `--rating-track` (base color, defaults to `--fg-disabled`) or `--rating-fill` (fill color, defaults to `--accent`) per instance to retune it.",
+		"Rating draws `max` icons and overlays a colored copy clipped to `value / max`, so a fractional value like 4.5 shows an exact partial icon rather than rounding. It renders two rows: a neutral **base** row (the icon silhouetted to a muted track color) and a **filled** row (the icon in full color) clipped to the value fraction. Any icon works: the default `star`, any functional glyph (`heart`, `bolt`, …), or a composed colorful mark spec (`taco--…`), drawn through the icon system. A monochrome glyph takes its fill from `tone` (a register hue), a colorful mark draws its palette from `colors`. By default it is an interactive slider — focusable, `role=\"slider\"`, driven by pointer drag, click, and Arrow/Home/End keys, with a hover preview, firing `input` and `change` and posting through a hidden input when `name` is set. Add `readonly` and it becomes a fixed `role=\"img\"` display for an average score, a product rating, a survey result. The element's own text is the no-JS fallback and the accessible label. Override `--rating-track` (base color, defaults to `--neutral-bg`) or `--rating-fill` (fill color, defaults to `--accent`) per instance to retune it.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -58,13 +58,13 @@ export const ratingManifest: ComponentManifest = {
 			description:
 				"The control wrapper. Sizes the icons, stacks the two rows, and carries the interactive class, focus ring, and the `--rating-track` / `--rating-fill` override vars.",
 			selector: ".xtyle-rating",
-			tokens: ["--fg-disabled", "--accent", "--text-lg", "--ring", "--radius-sm", "--border-thick"],
+			tokens: ["--neutral-bg", "--accent", "--text-lg", "--ring", "--radius-sm", "--border-thick"],
 		},
 		{
 			name: "row",
 			description: "The base row of silhouetted icons; sets the neutral track color (`--rating-track`) and the overall size.",
 			selector: ".xtyle-rating__row--empty",
-			tokens: ["--fg-disabled"],
+			tokens: ["--neutral-bg"],
 		},
 		{
 			name: "fill",
@@ -185,7 +185,7 @@ export const ratingManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
-	consumedTokens: ["--accent", "--fg-disabled", "--ring", "--text-lg", "--text-sm", "--text-2xl", "--radius-sm", "--border-thick"],
+	consumedTokens: ["--accent", "--neutral-bg", "--ring", "--text-lg", "--text-sm", "--text-2xl", "--radius-sm", "--border-thick"],
 	composition: [
 		"Leave it interactive to collect a rating in a form; pair it with a `name` so the value posts, or bind `value` in Svelte.",
 		"Add `readonly` beside a product title with the numeric score and review count for a summary row.",

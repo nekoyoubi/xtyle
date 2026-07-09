@@ -1,4 +1,4 @@
-import { define } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 
 /**
  * A horizontal step indicator for a linear process (checkout, onboarding, a wizard). Standalone
@@ -6,7 +6,18 @@ import { define } from "./base.js";
  * fragment. The `current` index splits the steps into done / current / upcoming, which the CSS
  * draws as filled / outlined / muted markers on a connector track, all from the theme.
  */
-export class XtyleSteps extends HTMLElement {
+export class XtyleSteps extends XtyleElement {
+	protected override get styleMode(): StyleMode {
+		return "scoped";
+	}
+
+	protected template(): string {
+		return "";
+	}
+
+	// Decorator manages its own light DOM; the base render would wipe slotted children.
+	protected override render(): void {}
+
 	static get observedAttributes(): string[] {
 		return ["current"];
 	}
@@ -22,6 +33,7 @@ export class XtyleSteps extends HTMLElement {
 	private observer: MutationObserver | null = null;
 
 	connectedCallback(): void {
+		super.connectedCallback();
 		this.decorate();
 		if (typeof MutationObserver !== "undefined" && !this.observer) {
 			this.observer = new MutationObserver(() => {
@@ -31,7 +43,8 @@ export class XtyleSteps extends HTMLElement {
 		}
 	}
 
-	disconnectedCallback(): void {
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
 		this.observer?.disconnect();
 		this.observer = null;
 	}
