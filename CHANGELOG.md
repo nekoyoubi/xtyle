@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.0: TBD
+## v0.6.0: Components Catalog
 
 ### New components
 
@@ -51,6 +51,8 @@
 - **The chart component types resolve from the package root.** `SparklineVariant` / `SparklineTone` / `SparklineBounds`, `PieDatum` / `PieScheme` / `PieVariant`, `BarSeries` / `BarScheme`, `HeatmapScheme`, and `ImageFit` / `ImageRadius` / `ImageLoading` are now exported from `@xtyle/core` proper, not only its subpaths, so the Svelte and Astro wrappers (and any consumer) get real types for those props instead of a silent `any`
 - **The icon color grammar went to a nine-slot hex-nibble palette with per-slot overrides.** A mark's colors read off 16 nibble slots now: `c0` clear, `c1`–`c9` the nine series colors, and the semantic chrome, `ca` the active ink, `cb` `--bg-0`, `ce` `--neutral-bg` (the neutral track an unfilled `Rating` or `Progress` groove shows), `cf` `--fg-0`, with `cd` held in reserve. `ICON_SERIES_COUNT` is 9, so every scheme fills nine slots: `skittles` finishes its crayon box with a new `--brown`, and a smaller scheme cycles its own
   - a `---pc{n}-{hex}` finish overrides a single slot and `---pc-{hex}` recolors the whole silhouette, both resolved at compose time; the value takes a hex, a palette nibble, or a token name (so an override stays theme-reactive), including hyphenated tokens like `neutral-bg`, since finish flags delimit on `--`. `SLOT_TABLE` is exported as the blessed default palette for tooling and third-party mark work
+- **11 new draw-primitives joined `ICON_PRIMITIVES`.** Filled curves (`half`, `quarter`, `wedge`, `oval`, `pill`, `drop`, `pentagon`) and open pen-strokes (`line`, `arc`, `corner`, `vee`), each keyworded and tagged `since: "0.6.0"`. The strokes take a layer's `c` color through `currentColor` the way the frames do, and every primitive rotates about the grid center, so a `wedge` tiles a pie and a `line-r45` is a diagonal rule. They surface in the Icon Builder bench palette (a new `Strokes` group; the curves fold into `Shapes`) and are documented in `icon-name-grammar.md`
+  - `symbol-heart` was redrawn from cubic Béziers so the lobes round cleanly and the upper seam is gone; the old lobe arcs had chords longer than their own diameter, which forced flat near-semicircles
 - **Every component manifest carries `keywords` and `seeAlso` now, so a component is findable by what it does.** All 65 manifests gained capability-synonym `keywords` and related-component `seeAlso`: the `xtyle_components` MCP list returns them (an agent resolves `meter` → `Progress` or `kebab` → `Menu` by capability instead of guessing the tag), each reference page grew keyword chips and a Related section, and the components index gained a client-side capability search
 
 ### Fixes
