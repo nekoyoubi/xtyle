@@ -2919,11 +2919,6 @@ export const SHARED_KNOB_SPECS: KnobSpec[] = [
 const SHARED_KNOB_SPEC_BY_NAME = new Map(SHARED_KNOB_SPECS.map((spec) => [spec.name, spec]));
 
 /**
- * Knob names that are composite groups rather than single scalar controls. A consumer expands each
- * into a cluster of its own (font stacks, anchor pickers), so they carry no `KnobSpec` — and, unlike
- * an unrecognized name, their absence is intentional and must not degrade to a text field.
- */
-/**
  * Resolve a declared knob-name list to the render specs a consumer needs. A name matching the shared
  * registry gets its domain; a novel knob resolves from `extra` when the algorithm supplies its own
  * spec. This is the one place a knob name becomes a renderable domain, so both baked and hosted
