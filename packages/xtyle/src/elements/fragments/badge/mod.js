@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/markup/dot.ts
+  function dotClass(props) {
+    const size = props.size ?? "md";
+    return [
+      "xtyle-dot",
+      size !== "md" && `xtyle-dot--${size}`,
+      !props.color && props.tone && `xtyle-dot--${props.tone}`,
+      props.pulse && `xtyle-dot--pulse-${props.pulse}`,
+      props.ping && "xtyle-dot--ping",
+      props.glow && "xtyle-dot--glow"
+    ].filter(Boolean).join(" ");
+  }
+
   // packages/xtyle/src/elements/fragments/badge/mod.ts
   var STATUS_WORD = {
     success: "Success",
@@ -25,7 +38,8 @@
     const tone = b.tone ?? "neutral";
     const statusWord = STATUS_WORD[tone];
     const srTone = statusWord ? `<span class="xtyle-badge__sr-only" part="status-word">${statusWord}:</span>` : "";
-    const dot = b.dot ? `<span class="xtyle-badge__dot" part="dot" aria-hidden="true"></span>` : "";
+    const dotPulse = b.pulse === "fast" || b.pulse === "slow" ? b.pulse : void 0;
+    const dot = b.dot ? `<span class="${dotClass({ size: (b.size ?? "md") === "lg" ? "md" : "sm", pulse: dotPulse })} xtyle-badge__dot" part="dot" aria-hidden="true"></span>` : "";
     const countValue = b.count === null || b.count === void 0 ? null : String(b.count);
     const hasCount = countValue !== null && countValue !== "" && countValue !== "undefined";
     const count = hasCount ? `<span class="xtyle-badge__count" part="count">${countValue}</span>` : "";

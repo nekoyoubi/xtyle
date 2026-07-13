@@ -7,30 +7,74 @@ import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 
 const hues = ["#6ea8fe", "#7c5cff", "#ff7ac6", "#4ade80", "#fbbf24"];
-const slide = (hue: string, label: string) =>
+
+// Real-looking photos rather than "Slide N" placeholders: a gallery demo should look like a gallery.
+const photo = (sky: string, mid: string, deep: string, sun: string) =>
 	"data:image/svg+xml," +
 	encodeURIComponent(
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="' +
-			hue +
-			'"/><text x="320" y="200" font-family="sans-serif" font-size="48" fill="#0b0d12" text-anchor="middle">' +
-			label +
-			"</text></svg>",
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><linearGradient id="s" x1="0" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="${sky}"/><stop offset="0.62" stop-color="${mid}"/><stop offset="1" stop-color="${deep}"/></linearGradient></defs><rect width="640" height="360" fill="url(#s)"/><circle cx="486" cy="94" r="40" fill="${sun}" opacity="0.9"/><path d="M0 268 L150 176 L268 244 L392 150 L520 232 L640 186 L640 360 L0 360 Z" fill="#0b0d12" opacity="0.38"/><path d="M0 312 L190 236 L340 296 L470 232 L640 288 L640 360 L0 360 Z" fill="#0b0d12" opacity="0.62"/></svg>`,
 	);
-const shots = hues.map((h, i) => slide(h, `Slide ${i + 1}`));
+
+const gallery = [
+	{ src: photo("#8ec5ff", "#6ea8fe", "#2b3a75", "#fff6d8"), alt: "Dawn over the ridge" },
+	{ src: photo("#c9a7ff", "#7c5cff", "#2e2154", "#ffe9f4"), alt: "Violet dusk" },
+	{ src: photo("#7ee7d0", "#2fb8a0", "#123f39", "#eafff9"), alt: "Sea glass" },
+	{ src: photo("#ffc978", "#ff8f5e", "#6d2f26", "#fff2d6"), alt: "Ember" },
+	{ src: photo("#4a6bd8", "#2a3a8f", "#0d1230", "#dfe6ff"), alt: "Nightfall" },
+];
+
+// A self-contained moving preview, so the hover demo shows three different kinds of preview rather
+// than the same clip twice.
+const driftSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block"><defs><linearGradient id="d" x1="0" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="#ffc978"><animate attributeName="stop-color" values="#ffc978;#ff8f5e;#c9a7ff;#ffc978" dur="8s" repeatCount="indefinite"/></stop><stop offset="1" stop-color="#6d2f26"><animate attributeName="stop-color" values="#6d2f26;#2e2154;#6d2f26" dur="8s" repeatCount="indefinite"/></stop></linearGradient></defs><rect width="640" height="360" fill="url(#d)"/><circle cx="486" cy="94" r="40" fill="#fff2d6" opacity="0.9"><animate attributeName="cy" values="94;150;94" dur="9s" repeatCount="indefinite"/></circle><path d="M0 312 L190 236 L340 296 L470 232 L640 288 L640 360 L0 360 Z" fill="#0b0d12" opacity="0.62"/></svg>`;
 ---
 
 <Stack gap={6}>
 	<Card>
 		<Heading slot="header" level={3} size="sm">Image gallery</Heading>
-		<Carousel label="Product photos">
-			{shots.map((src, i) => <Image src={src} alt={`Photo ${i + 1}`} ratio="16/9" />)}
-		</Carousel>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				With <code>controls="overlay"</code> the prev/next arrows ride the slide edges and the dots
+				float over the bottom, for an in-image gallery. The overlay is click-through except for the
+				controls.
+			</Text>
+			<div style="width: 100%; max-width: 26rem; margin-inline: auto;">
+				<Carousel label="Landscapes" controls="overlay">
+					{gallery.map((p) => <Image src={p.src} alt={p.alt} ratio="16/9" />)}
+				</Carousel>
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Hover previews in a carousel</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Each slide is an <code>Image</code> carrying its own preview, and each one is a different kind:
+				a <code>hover-src</code> video, a nested carousel, and a moving image. Hovering (or focusing) a
+				slide reveals its preview and pauses the outer carousel's autoplay in the same gesture; leaving
+				resets both.
+			</Text>
+			<div style="width: 100%; max-width: 26rem; margin-inline: auto;">
+				<Carousel label="Featured landscapes" autoplay interval={4000} loop>
+					<Image src={gallery[0].src} alt={gallery[0].alt} ratio="16/9" hoverSrc="/preview-scene.mp4" />
+					<Image src={gallery[2].src} alt={gallery[2].alt} ratio="16/9">
+						<Carousel slot="hover" autoplay loop transition="fade" pauseOnHover={false} interval={1600} dots={false} controls={false} label="More from this set">
+							<Image src={gallery[1].src} alt={gallery[1].alt} ratio="16/9" />
+							<Image src={gallery[4].src} alt={gallery[4].alt} ratio="16/9" />
+						</Carousel>
+					</Image>
+					<Image src={gallery[3].src} alt={gallery[3].alt} ratio="16/9">
+						<div slot="hover" set:html={driftSvg}></div>
+					</Image>
+				</Carousel>
+			</div>
+		</Stack>
 	</Card>
 
 	<Card>
 		<Heading slot="header" level={3} size="sm">Autoplay and loop</Heading>
 		<Stack gap={3}>
-			<Text tone="muted" size="sm">Advances every 4s, wraps at the ends, and pauses when you hover or focus it.</Text>
+			<Text tone="muted" size="sm">Advances every 4s and loops seamlessly at the ends (no rewind), pausing when you hover or focus it.</Text>
 			<Carousel label="Highlights" autoplay interval={4000} loop>
 				{
 					hues.map((hue, i) => (
@@ -40,6 +84,64 @@ const shots = hues.map((h, i) => slide(h, `Slide ${i + 1}`));
 					))
 				}
 			</Carousel>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Fade, scale, and flip transitions</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>transition</code> stacks the slides and cross-fades the active one instead of paging a
+				track: <code>fade</code> dissolves, <code>scale</code> adds a zoom, <code>flip</code> turns
+				the card. Each auto-advances so you can watch the motion.
+			</Text>
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:var(--space-4);">
+				{
+					(["fade", "scale", "flip"] as const).map((mode) => (
+						<Stack gap={2}>
+							<Text size="xs" tone="subtle" weight="semibold">{mode}</Text>
+							<Carousel label={`${mode} demo`} transition={mode} autoplay interval={2600} loop>
+								{hues.map((hue, i) => (
+									<div style={`display:flex;align-items:center;justify-content:center;min-height:8rem;border-radius:var(--radius-md);background:${hue};color:#0b0d12;font-size:var(--text-lg);font-weight:var(--weight-bold);`}>
+										{i + 1}
+									</div>
+								))}
+							</Carousel>
+						</Stack>
+					))
+				}
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Direction: vertical and reversed</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>direction</code> sets the axis and sense: <code>up</code> / <code>down</code> page a
+				vertical track (give it a height with <code>--carousel-height</code>), and <code>left</code>
+				advances a horizontal track in reverse.
+			</Text>
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:var(--space-4);align-items:start;">
+				<Stack gap={2}>
+					<Text size="xs" tone="subtle" weight="semibold">down (vertical)</Text>
+					<Carousel label="Vertical gallery" direction="down" style="--carousel-height: 11rem;">
+						{gallery.map((p) => <Image src={p.src} alt={p.alt} ratio="16/9" />)}
+					</Carousel>
+				</Stack>
+				<Stack gap={2}>
+					<Text size="xs" tone="subtle" weight="semibold">left (reversed)</Text>
+					<Carousel label="Reversed highlights" direction="left" autoplay interval={3000} loop>
+						{
+							hues.map((hue, i) => (
+								<div style={`display:flex;align-items:center;justify-content:center;min-height:9rem;border-radius:var(--radius-md);background:${hue};color:#0b0d12;font-size:var(--text-lg);font-weight:var(--weight-bold);`}>
+									Highlight {i + 1}
+								</div>
+							))
+						}
+					</Carousel>
+				</Stack>
+			</div>
 		</Stack>
 	</Card>
 

@@ -1,0 +1,68 @@
+---
+import BottomNav from "@xtyle/astro/BottomNav.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Sections</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A real <code>tablist</code>: click a tab, or focus one and use the arrow keys (Home / End
+				jump to the ends). The whole bar is a single tab stop, so a keyboard user doesn't tab past
+				every section to get out of it. The selected tab takes an accent bar as well as the accent
+				color, so which section you're in never rests on hue alone.
+			</Text>
+			<div class="bar">
+				<BottomNav
+					value="inbox"
+					label="Sections"
+					tabs={[
+						{ value: "inbox", label: "Inbox", icon: "folder", badge: 3 },
+						{ value: "search", label: "Search", icon: "search" },
+						{ value: "starred", label: "Starred", icon: "bookmark" },
+						{ value: "you", label: "You", icon: "gear" },
+					]}
+				/>
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Labels only</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The icon is optional; a tab is happy as a label alone. The bar is an equal-column grid, so
+				the sections always divide the width evenly. Keep it to three to five: it's a thumb surface,
+				and past five the targets get too narrow to hit.
+			</Text>
+			<div class="bar">
+				<BottomNav
+					value="today"
+					label="Views"
+					tabs={[
+						{ value: "today", label: "Today" },
+						{ value: "upcoming", label: "Upcoming" },
+						{ value: "done", label: "Done" },
+					]}
+				/>
+			</div>
+		</Stack>
+	</Card>
+</Stack>
+
+<style>
+	/* The bar normally sits at the foot of a MobileShell; here it's shown on its own, framed at a
+	   phone-ish width so the touch targets read at their real size. */
+	.bar {
+		width: 100%;
+		max-width: 22rem;
+		margin-inline: auto;
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+</style>

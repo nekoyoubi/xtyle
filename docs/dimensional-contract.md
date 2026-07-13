@@ -45,8 +45,12 @@ Legend: `[have]` already exists in the prior cycles · `[new]` net-new for xtyle
 
 ### ANSI palette `[have]` (20)
 
-`--terminal-{bg,fg,cursor,cursor-accent}` + 8 normal + 8 bright. Scheme-aware
-OKLCH defaults; ride-through.
+`--terminal-{bg,fg,cursor,cursor-accent}` + 8 normal + 8 bright. **Derived**, not
+ride-through: the six chromatic slots take fixed hue angles and sweep to clear AA on
+`--terminal-bg`, the bright tier pushes each toward the readable pole, and
+`black` / `white` anchor the achromatic endpoints. Scheme-aware; the algorithm's
+invariants assert the chromatic slots stay legible and mutually distinguishable.
+`xtyle derive --format terminal` emits an xterm.js `ITheme`.
 
 ### New component-facing verbs `[new]`
 
@@ -149,9 +153,10 @@ per-shell sizes.
 
 ## Domain groups (ride-through `extras`) `[have]`
 
-`terminal.*` (the 20 ANSI), `syntax.*`, `chart.*`, and any author-invented slot.
-Not derived; flowed through to the floor unchanged. Keyed by CSS-token name
-without the leading `--`.
+`chart.*` and any author-invented slot: not derived, flowed through to the floor
+unchanged, keyed by CSS-token name without the leading `--`. (`terminal.*` and the
+syntax `--code-*` family started here but have since been promoted to derived,
+scheme-aware members of the register above.)
 
 ---
 

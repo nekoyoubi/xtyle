@@ -15,6 +15,10 @@
 		invalid?: boolean;
 		label?: string;
 		labelledby?: string;
+		/** A secondary line of explanation under the label (wired to the input's `aria-describedby`). */
+		description?: string;
+		/** Render the radio as a full-width option card: a bordered box that takes an accent ring and tint when selected. */
+		card?: boolean;
 		ariaLabel?: string;
 		onchange?: (event: Event) => void;
 		children?: Snippet;
@@ -33,6 +37,8 @@
 		invalid = false,
 		label,
 		labelledby,
+		description,
+		card = false,
 		ariaLabel,
 		onchange,
 		children,
@@ -65,6 +71,8 @@
 	invalid={invalid || undefined}
 	{label}
 	labelledby={labelledby || undefined}
+	description={description || undefined}
+	card={card || undefined}
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	onchange={handleChange}
 >

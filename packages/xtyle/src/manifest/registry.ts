@@ -19,10 +19,14 @@ import { buttonManifest } from "./button.manifest.js";
 import { cardManifest } from "./card.manifest.js";
 import { fieldManifest } from "./field.manifest.js";
 import { badgeManifest } from "./badge.manifest.js";
+import { dotManifest } from "./dot.manifest.js";
+import { ribbonManifest } from "./ribbon.manifest.js";
 import { switchManifest } from "./switch.manifest.js";
 import { alertManifest } from "./alert.manifest.js";
 import { linkManifest } from "./link.manifest.js";
 import { appShellManifest } from "./app-shell.manifest.js";
+import { mobileShellManifest } from "./mobile-shell.manifest.js";
+import { bottomNavManifest } from "./bottom-nav.manifest.js";
 import { toolbarManifest } from "./toolbar.manifest.js";
 import { dockManifest } from "./dock.manifest.js";
 import { panelManifest } from "./panel.manifest.js";
@@ -80,16 +84,21 @@ import { menuManifest } from "./menu.manifest.js";
 import { splitterManifest } from "./splitter.manifest.js";
 import { codeManifest } from "./code.manifest.js";
 import { paginationManifest } from "./pagination.manifest.js";
+import { qrManifest } from "./qr.manifest.js";
 
 export const components: ComponentRegistry = {
 	button: buttonManifest,
 	card: cardManifest,
 	field: fieldManifest,
 	badge: badgeManifest,
+	dot: dotManifest,
+	ribbon: ribbonManifest,
 	switch: switchManifest,
 	alert: alertManifest,
 	link: linkManifest,
 	"app-shell": appShellManifest,
+	"mobile-shell": mobileShellManifest,
+	"bottom-nav": bottomNavManifest,
 	toolbar: toolbarManifest,
 	dock: dockManifest,
 	panel: panelManifest,
@@ -147,6 +156,7 @@ export const components: ComponentRegistry = {
 	splitter: splitterManifest,
 	code: codeManifest,
 	pagination: paginationManifest,
+	qr: qrManifest,
 };
 
 export function getComponent(id: string): ComponentManifest | undefined {

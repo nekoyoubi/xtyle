@@ -3,12 +3,14 @@ import { emitCss } from "./css.js";
 import { emitJson } from "./json.js";
 import { emitMonaco } from "./monaco.js";
 import { emitPrism } from "./prism.js";
+import { emitTerminal } from "./terminal.js";
 
 const registry = new Map<string, Emitter>([
 	["css", emitCss],
 	["json", emitJson],
 	["prism", emitPrism],
 	["monaco", emitMonaco],
+	["terminal", emitTerminal],
 ]);
 
 export function registerEmitter(format: string, emitter: Emitter): void {
@@ -29,4 +31,4 @@ export function emit(register: TokenRegister, format: EmitFormat | string): stri
 	return emitter(register);
 }
 
-export { emitCss, emitJson, emitMonaco, emitPrism };
+export { emitCss, emitJson, emitMonaco, emitPrism, emitTerminal };

@@ -25,6 +25,40 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Option cards</Heading>
+		<Text size="sm" tone="muted">
+			<code>card</code> + <code>description</code> renders each choice as a full-width card
+			with a title and a line of explanation, taking an accent ring when selected. The group
+			still owns selection, roving focus, and the a11y, so a title-plus-explanation chooser
+			doesn't have to be hand-rolled.
+		</Text>
+		<RadioGroup label="Sync mode">
+			<Radio
+				card
+				name="sync"
+				value="linked"
+				checked
+				label="Linked"
+				description="Changes sync both ways automatically, the moment either side updates."
+			/>
+			<Radio
+				card
+				name="sync"
+				value="confirm"
+				label="Confirm each"
+				description="Review and approve every change before it's applied to the other side."
+			/>
+			<Radio
+				card
+				name="sync"
+				value="manual"
+				label="Manual"
+				description="Nothing syncs until you trigger it by hand from the sync menu."
+			/>
+		</RadioGroup>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={3} size="sm" tone="muted">Horizontal</Heading>
 		<RadioGroup orientation="horizontal" label="Density">
 			<Radio name="density" value="compact" label="Compact">Compact</Radio>

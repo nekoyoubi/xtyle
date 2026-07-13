@@ -1,11 +1,16 @@
 import type { ComponentManifest } from "./types.js";
 import { FULL_TONES, TONES } from "../vocab.js";
 
-const htmlExample = `<xtyle-avatar alt="Ada Lovelace" src="/avatars/ada.jpg"></xtyle-avatar>
+const htmlExample = `<!-- a photo when one loads -->
+<xtyle-avatar user-name="Ada Lovelace" alt="Ada Lovelace" src="/avatars/ada.jpg"></xtyle-avatar>
 
-<xtyle-avatar alt="Grace Hopper" tone="info" size="lg">GH</xtyle-avatar>
+<!-- no image: the initials fall out of the name ("Grace Hopper" → GH) -->
+<xtyle-avatar user-name="Grace Hopper" tone="info" size="lg"></xtyle-avatar>
 
-<xtyle-avatar alt="Project Apollo" tone="purple" shape="square" status="success"></xtyle-avatar>
+<xtyle-avatar user-name="Katherine Johnson" tone="purple" shape="square" status="success" status-label="Online"></xtyle-avatar>
+
+<!-- slot your own content to override the derived initials -->
+<xtyle-avatar user-name="Project Apollo" tone="warn">🚀</xtyle-avatar>
 
 <xtyle-avatar alt="Unknown user" size="xl">
 	<svg slot="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -17,11 +22,16 @@ const svelteExample = `<script lang="ts">
 	import { Avatar } from "@xtyle/svelte";
 </script>
 
-<Avatar alt="Ada Lovelace" src="/avatars/ada.jpg" />
+<!-- a photo when one loads -->
+<Avatar userName="Ada Lovelace" alt="Ada Lovelace" src="/avatars/ada.jpg" />
 
-<Avatar alt="Grace Hopper" tone="info" size="lg">GH</Avatar>
+<!-- no image: the initials fall out of the name ("Grace Hopper" → GH) -->
+<Avatar userName="Grace Hopper" tone="info" size="lg" />
 
-<Avatar alt="Project Apollo" tone="purple" shape="square" status="success" />
+<Avatar userName="Katherine Johnson" tone="purple" shape="square" status="success" statusLabel="Online" />
+
+<!-- slot your own content to override the derived initials -->
+<Avatar userName="Project Apollo" tone="warn">🚀</Avatar>
 
 <Avatar alt="Unknown user" size="xl">
 	{#snippet icon()}
@@ -35,11 +45,16 @@ const astroExample = `---
 import { Avatar } from "@xtyle/astro";
 ---
 
-<Avatar alt="Ada Lovelace" src="/avatars/ada.jpg" />
+<!-- a photo when one loads -->
+<Avatar userName="Ada Lovelace" alt="Ada Lovelace" src="/avatars/ada.jpg" />
 
-<Avatar alt="Grace Hopper" tone="info" size="lg">GH</Avatar>
+<!-- no image: the initials fall out of the name ("Grace Hopper" → GH) -->
+<Avatar userName="Grace Hopper" tone="info" size="lg" />
 
-<Avatar alt="Project Apollo" tone="purple" shape="square" status="success" />
+<Avatar userName="Katherine Johnson" tone="purple" shape="square" status="success" statusLabel="Online" />
+
+<!-- slot your own content to override the derived initials -->
+<Avatar userName="Project Apollo" tone="warn">🚀</Avatar>
 
 <Avatar alt="Unknown user" size="xl">
 	<svg slot="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -55,7 +70,7 @@ export const avatarManifest: ComponentManifest = {
 	seeAlso: ["avatar-group", "badge"],
 	summary: "An identity chip: a photo when one loads, a tinted initials-or-icon fallback when it doesn't.",
 	description:
-		"Avatar presents a person or entity as a compact square or circle. Given a `src`, it shows the image, cover-cropped to fill; if the image is absent or fails to load, it falls back to the slotted content (initials as text, or an icon via the `icon` slot) on a soft, hue-tinted background. The fallback tint follows `tone`, which accepts any of the six semantic roles or the twelve named hues, so a deterministic per-user color is a one-attribute choice. Four sizes (sm, md, lg, xl), two shapes (circle, square), and an optional corner status dot in any semantic tone round out the surface. `alt` names the image; the fallback text stays in the accessibility tree so the avatar is announced either way.",
+		"Avatar presents a person or entity as a compact square or circle. Given a `src`, it shows the image, cover-cropped to fill; if the image is absent or fails to load, it falls back to initials derived from `userName` (`\"Ada Lovelace\"` → `AL`) on a soft, hue-tinted background. Slot your own content to override those initials, or use the `icon` slot for a glyph instead. The prop is `userName`, not `name`, because `name` carries form-participation meaning on an element and an avatar is not a form control. The fallback tint follows `tone`, which accepts any of the six semantic roles or the twelve named hues, so a deterministic per-user color is a one-attribute choice. Four sizes (sm, md, lg, xl), two shapes (circle, square), and an optional corner status dot in any semantic tone round out the surface. `alt` names the image; `userName` names the avatar when there is no image, so it is announced either way.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -81,7 +96,7 @@ export const avatarManifest: ComponentManifest = {
 			name: "fallback",
 			description: "The initials-or-icon stand-in shown when no image is present, painted with the tone's soft tint.",
 			selector: ".xtyle-avatar__fallback",
-			tokens: ["--neutral-bg", "--neutral-text", "--space-0"],
+			tokens: ["--neutral-bg", "--neutral-text"],
 		},
 		{
 			name: "status-dot",
@@ -101,6 +116,13 @@ export const avatarManifest: ComponentManifest = {
 			name: "alt",
 			type: "string",
 			description: "Accessible name for the image. Required when `src` is set; also labels the fallback.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "userName",
+			type: "string",
+			description:
+				"The person the avatar stands for. Derives the fallback initials shown when there is no image and nothing slotted (`\"Ada Lovelace\"` → `AL`, `\"Prince\"` → `P`), and names the avatar when no `alt` is given. Named `userName` rather than `name` because `name` is a form-participation attribute on an element. Attribute: `user-name`.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -191,7 +213,8 @@ export const avatarManifest: ComponentManifest = {
 	slots: [
 		{
 			name: "default",
-			description: "Fallback initials shown when no image loads.",
+			description:
+				"Custom fallback content shown when no image loads. Overrides the initials `userName` derives — leave it empty and those initials are what you get.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -201,7 +224,6 @@ export const avatarManifest: ComponentManifest = {
 		},
 	],
 	consumedTokens: [
-		"--space-0",
 		"--space-2",
 		"--space-4",
 		"--space-6",
@@ -220,7 +242,6 @@ export const avatarManifest: ComponentManifest = {
 		"--radius-full",
 		"--border-thick",
 		"--bg-1",
-		"--ease-standard",
 		...FULL_TONES.flatMap((t) => [`--${t}-bg`, `--${t}-text`]),
 		...TONES.map((t) => `--${t}`),
 	],
@@ -231,6 +252,7 @@ export const avatarManifest: ComponentManifest = {
 	],
 	a11y: [
 		"The image carries `alt`; the binding warns at runtime when `src` is set without it.",
+		"`userName` names the avatar when there is no `alt`, so an image-less avatar is announced by the person it stands for rather than by two bare initials.",
 		"When the image is absent or errors, the fallback initials or `aria-label`'d icon remain in the accessibility tree so the avatar is still announced.",
 		"The decorative status dot is `aria-hidden`; its meaning rides on `statusLabel` as visually-hidden text in the accessibility tree.",
 		"`pulse` is decorative motion only, never the carrier of meaning: put the live state in `statusLabel` (\"Online\") so it reads the same to assistive tech and under `prefers-reduced-motion`, where the pulse holds still.",
@@ -248,9 +270,9 @@ export const avatarManifest: ComponentManifest = {
 			title: "Live presence",
 			description: "A pulsing status dot reads as online in real time; `statusLabel` carries the meaning for assistive tech.",
 			source: {
-				html: '<xtyle-avatar alt="Grace Hopper" status="success" status-label="Online" pulse>GH</xtyle-avatar>',
-				svelte: '<Avatar alt="Grace Hopper" status="success" statusLabel="Online" pulse>GH</Avatar>',
-				astro: '<Avatar alt="Grace Hopper" status="success" statusLabel="Online" pulse>GH</Avatar>',
+				html: '<xtyle-avatar user-name="Grace Hopper" status="success" status-label="Online" pulse></xtyle-avatar>',
+				svelte: '<Avatar userName="Grace Hopper" status="success" statusLabel="Online" pulse />',
+				astro: '<Avatar userName="Grace Hopper" status="success" statusLabel="Online" pulse />',
 			},
 		},
 	],

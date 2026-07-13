@@ -11,6 +11,7 @@ import {
 	makeXtylePipelineAlgorithm,
 	PRODUCED_TOKENS,
 	registerToNodes,
+	resolveKnobSpecs,
 	runPipeline,
 	settlePass,
 	SHARED_KNOBS,
@@ -19,6 +20,7 @@ import {
 	type PresetAnchors,
 	type PresetDefaults,
 } from "./algorithms/factory.js";
+import type { AccentStrategy } from "./types.js";
 import {
 	contrast,
 	formatCss,
@@ -59,6 +61,7 @@ import type {
 	Invariant,
 	InvariantContext,
 	InvariantResult,
+	KnobSpec,
 	Pass,
 	PassContext,
 	TokenCategories,
@@ -97,6 +100,7 @@ function registerExports(
 		produces: TokenName[];
 		categories: TokenCategories;
 		knobs: string[];
+		knobSpecs: KnobSpec[];
 		passNames: string[];
 	},
 	invariants: Invariant[],
@@ -132,6 +136,8 @@ export interface XtyleAlgorithmSpec {
 	id: string;
 	anchors?: PresetAnchors;
 	knobs?: string[];
+	/** Domain specs for any knob not in the shared registry — a novel knob this algorithm introduces. */
+	knobSpecs?: KnobSpec[];
 	contrast?: { floor?: number; textOnFill?: number };
 	vibrancy?: number;
 	chroma?: {
@@ -142,6 +148,10 @@ export interface XtyleAlgorithmSpec {
 		accentTint?: number;
 	};
 	elevation?: { strength?: number; alphaBoost?: number };
+	/** The accent-family posture this algorithm ships with — `fan` (default), `step`, `shade`, or `duo`
+	 * (see {@link AccentStrategy}). It is the *default* for the `accentStrategy` knob, not a lock: a
+	 * theme can override it, so this names the taste rather than fixing it. */
+	accentStrategy?: AccentStrategy;
 	extreme?: boolean;
 	/**
 	 * The ordered passes for one derivation. Absent means the algorithm is single-pass
@@ -158,6 +168,7 @@ export function toPreset(spec: XtyleAlgorithmSpec): PresetDefaults {
 	const preset: PresetDefaults = {
 		id: spec.id,
 		knobs: spec.knobs ?? SHARED_KNOBS,
+		knobSpecs: spec.knobSpecs,
 		// Merge over the full default so a spec that names only some anchors (e.g. just `bg` and
 		// `accent`) still yields a complete `bg`/`fg` default — derivation reads both, so a partial
 		// `defaultAnchors` would crash when invoked with no anchor overrides.
@@ -173,6 +184,7 @@ export function toPreset(spec: XtyleAlgorithmSpec): PresetDefaults {
 		elevationAlphaBoost: elevation.alphaBoost ?? 0,
 		accentTintChromaMul: chroma.accentTint ?? 0.3,
 	};
+	if (spec.accentStrategy) preset.accentStrategy = spec.accentStrategy;
 	if (spec.extreme) preset.extreme = true;
 	return preset;
 }
@@ -197,6 +209,7 @@ export function defineXtyleAlgorithm(spec: XtyleAlgorithmSpec): void {
 			produces: PRODUCED_TOKENS,
 			categories: TOKEN_CATEGORIES,
 			knobs: preset.knobs,
+			knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),
 			passNames: buildPasses(preset, {}).map((pass) => pass.name),
 		},
 		makeInvariants(preset),
@@ -217,6 +230,8 @@ export interface AlgorithmSpec {
 	produces: TokenName[];
 	categories: TokenCategories;
 	knobs: string[];
+	/** Domain specs for any knob not in the shared registry — a novel knob this algorithm introduces. */
+	knobSpecs?: KnobSpec[];
 	/** A single derivation, sugar for a one-pass pipeline. Mutually exclusive with `passes`. */
 	derive?(input: DeriveOptions, ctx: DeriveContext): TokenNode[];
 	/** The ordered pipeline. The author lists every pass; the first receives an empty register. */
@@ -257,6 +272,7 @@ export function defineAlgorithm(spec: AlgorithmSpec): void {
 			produces: spec.produces,
 			categories: spec.categories,
 			knobs: spec.knobs,
+			knobSpecs: resolveKnobSpecs(spec.knobs, spec.knobSpecs),
 			passNames: passes ? passes.map((pass) => pass.name) : ["derive"],
 		},
 		spec.invariants ?? [],

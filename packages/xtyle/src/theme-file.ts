@@ -98,3 +98,36 @@ export function parseThemeFile(input: string | unknown): XtyleThemeFile | null {
 	}
 	return isThemeFile(value) ? value : null;
 }
+
+/**
+ * Algorithms that no longer exist, and the recipe that reproduces what they used to derive.
+ *
+ * `xtyle-brand` was the default taste with a shade-ladder accent family — precisely what the
+ * `accentStrategy` knob now expresses — so it folded back into the default rather than staying a
+ * sixth algorithm.
+ */
+const RETIRED_ALGORITHMS: Record<string, { algorithm: string; knobs: Record<string, unknown> }> = {
+	"xtyle-brand": { algorithm: "xtyle-default", knobs: { accentStrategy: "shade" } },
+};
+
+/**
+ * Rewrite a recipe off any algorithm that has since been retired, so a theme saved against one keeps
+ * deriving what it derived instead of failing on a dead id.
+ *
+ * This lives in the engine and not in an app on purpose. `recipe` is the *source of truth* of a
+ * published, schema-URL'd artifact whose whole premise is "re-derive it anywhere" — so if only one
+ * consumer knew how to read an older recipe, the format would only really be portable for that
+ * consumer, and `xtyle derive -a xtyle-brand` would still fail. Every consumer (the CLI, the MCP
+ * server, the bench, a third party) gets the migration by reading the recipe through here.
+ *
+ * The recipe's own knobs win: a theme that already set `accentStrategy` meant it.
+ */
+export function migrateRecipe<T extends ThemeRecipe>(recipe: T): T {
+	const retired = RETIRED_ALGORITHMS[recipe.algorithm];
+	if (!retired) return recipe;
+	return {
+		...recipe,
+		algorithm: retired.algorithm,
+		knobs: { ...retired.knobs, ...(recipe.knobs ?? {}) },
+	};
+}

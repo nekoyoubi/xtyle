@@ -1,0 +1,116 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { encodeQr, qrPath, qrLogoModules, qrLinkHref, QR_ICON_SCALES, type QrEcLevel, type QrModuleShape, type QrMode, type QrIconSize } from "@xtyle/core";
+import { resolveQrColors } from "./internal/palette.ts";
+
+interface Props {
+	data?: string;
+	mode?: QrMode;
+	ecLevel?: QrEcLevel;
+	icon?: string;
+	logo?: string;
+	iconSize?: QrIconSize;
+	iconScale?: number;
+	iconOverlay?: boolean;
+	iconOutline?: boolean;
+	moduleShape?: QrModuleShape;
+	frame?: boolean;
+	caption?: string;
+	modeToggle?: boolean;
+	size?: number;
+	quietZone?: number;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `style`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	data = "",
+	mode = "theme",
+	ecLevel = "M",
+	icon,
+	logo,
+	iconSize = "md",
+	iconScale,
+	iconOverlay = false,
+	iconOutline = false,
+	moduleShape = "square",
+	frame = false,
+	caption,
+	modeToggle = false,
+	size = 200,
+	quietZone = 4,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const hasLogo = !!(icon || logo);
+const effectiveEc: QrEcLevel = hasLogo ? "H" : ecLevel;
+const matrix = encodeQr(data || " ", { ecLevel: effectiveEc });
+const effectiveScale = iconScale ?? QR_ICON_SCALES[iconSize];
+const patchModules = hasLogo ? qrLogoModules(matrix.size, effectiveScale) : 0;
+const clearModules = hasLogo && !iconOverlay ? patchModules : 0;
+const path = qrPath(matrix, {
+	quietZone,
+	shape: moduleShape,
+	clear: clearModules > 0 ? { size: clearModules } : undefined,
+});
+const boxSize = iconOverlay ? effectiveScale * matrix.size : patchModules;
+const lo = (matrix.size - boxSize) / 2;
+const logoBox = hasLogo ? { x: quietZone + lo, y: quietZone + lo, size: boxSize } : null;
+const { moduleColor, bgColor, lowContrast, bitonal } = await resolveQrColors(mode);
+const resolvedCaption = caption ?? (frame ? data : null);
+const bindings = {
+	path: path.d,
+	viewBox: path.viewBox,
+	extent: path.extent,
+	moduleColor,
+	bgColor,
+	shape: moduleShape,
+	size,
+	logoBox,
+	iconName: icon ?? null,
+	logoSrc: logo ?? null,
+	iconOverlay,
+	iconOutline,
+	frame,
+	caption: resolvedCaption,
+	linkHref: frame && resolvedCaption ? qrLinkHref(data) : null,
+	modeToggle,
+	isBitonal: bitonal,
+	label: label ?? (data ? `QR code: ${data}` : "QR code"),
+	lowContrast,
+	version: matrix.version,
+	ecLevel: matrix.ecLevel,
+};
+const chrome = await renderFragmentLight("qr", bindings);
+---
+
+<xtyle-qr
+	data={data}
+	mode={mode}
+	ec-level={ecLevel}
+	icon={icon}
+	logo={logo}
+	icon-size={(icon || logo) && iconScale === undefined ? iconSize : undefined}
+	icon-scale={(icon || logo) && iconScale !== undefined ? iconScale : undefined}
+	icon-overlay={iconOverlay || undefined}
+	icon-outline={iconOutline || undefined}
+	module-shape={moduleShape}
+	frame={frame || undefined}
+	caption={caption}
+	mode-toggle={modeToggle || undefined}
+	size={size}
+	quiet-zone={quietZone}
+	label={label}
+	class={extra}
+	set:html={chrome}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

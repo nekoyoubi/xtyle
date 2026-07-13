@@ -1,3 +1,5 @@
+import { dotClass } from "../../../markup/dot";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -47,7 +49,13 @@ function badgeHtml(b: BadgeBindings): string {
 	const tone = b.tone ?? "neutral";
 	const statusWord = STATUS_WORD[tone];
 	const srTone = statusWord ? `<span class="xtyle-badge__sr-only" part="status-word">${statusWord}:</span>` : "";
-	const dot = b.dot ? `<span class="xtyle-badge__dot" part="dot" aria-hidden="true"></span>` : "";
+	// The badge's dot IS the `Dot` primitive's dot, built by the primitive's own `dotClass` rather than
+	// re-assembled from class-name literals here. It only retints itself to the badge's ink
+	// (`--dot-color: currentColor`), and a large badge steps its dot up one rung to match.
+	const dotPulse = b.pulse === "fast" || b.pulse === "slow" ? b.pulse : undefined;
+	const dot = b.dot
+		? `<span class="${dotClass({ size: (b.size ?? "md") === "lg" ? "md" : "sm", pulse: dotPulse })} xtyle-badge__dot" part="dot" aria-hidden="true"></span>`
+		: "";
 	const countValue = b.count === null || b.count === undefined ? null : String(b.count);
 	const hasCount = countValue !== null && countValue !== "" && countValue !== "undefined";
 	const count = hasCount ? `<span class="xtyle-badge__count" part="count">${countValue}</span>` : "";

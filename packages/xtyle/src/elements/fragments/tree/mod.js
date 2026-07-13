@@ -52,13 +52,21 @@
     if (bindings.selectedValue) return bindings.selectedValue;
     return firstFocusableKey(bindings.items ?? []);
   }
+  function treeBadges(badge) {
+    if (badge == null) return [];
+    const list = Array.isArray(badge) ? badge : [badge];
+    return list.map((b) => typeof b === "string" ? { text: b } : b);
+  }
   function treeTrailing(node, value, isLink) {
-    const badge = node.badge ? `<span class="xtyle-tree__badge" part="badge" aria-hidden="true">${escapeHtml(node.badge)}</span>` : "";
+    const badges = treeBadges(node.badge).map(
+      (b) => `<span class="xtyle-tree__badge${b.tone ? ` xtyle-tree__badge--${b.tone}` : ""}" part="badge" aria-hidden="true">${escapeHtml(b.text)}</span>`
+    ).join("");
     const actionItems = !isLink && node.actions ? node.actions : [];
-    const actions = actionItems.length ? `<span class="xtyle-tree__actions" part="actions">${actionItems.map(
-      (a) => `<button type="button" class="xtyle-tree__action" part="row-action" data-action="${escapeAttr(a.id)}" data-value="${escapeAttr(value)}" aria-label="${escapeAttr(a.label)}" title="${escapeAttr(a.label)}" tabindex="-1">${escapeHtml(a.icon ?? a.label)}</button>`
-    ).join("")}</span>` : "";
-    return badge || actions ? `<span class="xtyle-tree__trailing">${badge}${actions}</span>` : "";
+    const actions = actionItems.length ? `<span class="xtyle-tree__actions" part="actions">${actionItems.map((a) => {
+      const disabled = a.disabled ? ` disabled data-disabled="true"` : "";
+      return `<button type="button" class="xtyle-tree__action" part="row-action" data-action="${escapeAttr(a.id)}" data-value="${escapeAttr(value)}" aria-label="${escapeAttr(a.label)}" title="${escapeAttr(a.label)}" tabindex="-1"${disabled}>${escapeHtml(a.icon ?? a.label)}</button>`;
+    }).join("")}</span>` : "";
+    return badges || actions ? `<span class="xtyle-tree__trailing">${badges}${actions}</span>` : "";
   }
   function buildNodes(nodes, level, selectedValue, expanded, roving) {
     return nodes.map((node) => {
@@ -134,6 +142,7 @@
   });
   xript.exports.register("rowAction", (payload) => {
     const e = payload;
+    if (e.dataset?.disabled === "true") return { stopPropagation: true, preventDefault: true };
     const action = e.dataset?.action;
     const value = e.dataset?.value;
     if (!action || value === void 0) return { stopPropagation: true };

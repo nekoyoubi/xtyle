@@ -9,6 +9,14 @@ interface Props {
 	min?: number;
 	max?: number;
 	step?: number;
+	/** The step taken while the modifier is held (a coarser or finer jump); defaults to `step * 10`. */
+	altStep?: number;
+	/** Invert the modifier so the alt step is the unmodified default and `step` needs the modifier. */
+	altDefault?: boolean;
+	/** Which key toggles between `step` and `altStep` for keyboard and drag. */
+	modifier?: "shift" | "alt" | "ctrl" | "meta";
+	/** Let a typed value exceed `min`/`max`: the thumb pins at the edge while the true value is kept. */
+	overflow?: boolean;
 	disabled?: boolean;
 	size?: Size;
 	tone?: Tone;
@@ -33,6 +41,10 @@ const {
 	min = 0,
 	max = 100,
 	step = 1,
+	altStep,
+	altDefault = false,
+	modifier = "shift",
+	overflow = false,
 	disabled = false,
 	size = "md",
 	tone = "accent",
@@ -56,6 +68,7 @@ const bindings = {
 	min,
 	max,
 	step,
+	altStep: altStep ?? step * 10,
 	disabled,
 	size,
 	tone,
@@ -75,6 +88,10 @@ const light = await renderFragmentLight("slider", bindings);
 	min={min}
 	max={max}
 	step={step}
+	alt-step={altStep ?? undefined}
+	alt-default={altDefault || undefined}
+	modifier={modifier}
+	overflow={overflow || undefined}
 	disabled={disabled || undefined}
 	size={size}
 	tone={tone}

@@ -1,3 +1,5 @@
+import { FULL_TONES } from "../../vocab.js";
+
 export const treeCss = `
 .xtyle-tree,
 .xtyle-tree__group {
@@ -88,6 +90,7 @@ export const treeCss = `
 	color: var(--fg-3);
 	font-variant-numeric: tabular-nums;
 }
+${FULL_TONES.map((t) => `.xtyle-tree__badge--${t} { color: var(--${t}-text); }`).join("\n")}
 .xtyle-tree__actions {
 	display: inline-flex;
 	align-items: center;
@@ -115,7 +118,8 @@ export const treeCss = `
 	border-radius: var(--radius-sm);
 	cursor: pointer;
 }
-.xtyle-tree__action:hover { color: var(--fg-0); background: var(--state-hover); }
+.xtyle-tree__action:hover:not(:disabled) { color: var(--fg-0); background: var(--state-hover); }
+.xtyle-tree__action:disabled { color: var(--fg-disabled); cursor: default; pointer-events: none; }
 .xtyle-tree__action:focus-visible {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: inset 0 0 0 var(--border-normal) var(--ring);

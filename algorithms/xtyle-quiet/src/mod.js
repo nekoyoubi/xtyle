@@ -3714,7 +3714,21 @@
   var DEFAULT_SHIFT_STEP = 90;
   var DEFAULT_ACCENT_SPLIT = 45;
   var DERIVED_SURFACE_TINT_C = 0.02;
-  var ACCENT_FAN = "split-complement";
+  var DEFAULT_ACCENT_STRATEGY = "fan";
+  var ACCENT_STRATEGIES = ["fan", "step", "shade", "duo"];
+  function accentStrategyOf(preset, knobs) {
+    const knob = knobs.accentStrategy;
+    if (typeof knob === "string" && ACCENT_STRATEGIES.includes(knob))
+      return knob;
+    return preset.accentStrategy ?? DEFAULT_ACCENT_STRATEGY;
+  }
+  function resolveAccentKnobs(preset, knobs) {
+    return {
+      strategy: accentStrategyOf(preset, knobs),
+      split: typeof knobs.accentSplit === "number" ? knobs.accentSplit : DEFAULT_ACCENT_SPLIT,
+      shiftStep: typeof knobs.accentShiftStep === "number" ? knobs.accentShiftStep : DEFAULT_SHIFT_STEP
+    };
+  }
   var ACHROMATIC_CHROMA = 0.02;
   var DERIVED_ACCENT_HUE_ROTATION = 150;
   var DERIVED_ACCENT_FALLBACK_HUE = 250;
@@ -3722,6 +3736,8 @@
   var DERIVED_ACCENT_C = 0.16;
   var ACCENT_RAMP_L_MIN = 0.1;
   var ACCENT_RAMP_L_MAX = 0.95;
+  var SHADE_LADDER_L_STEP = 0.12;
+  var DUO_L_STEP = 0.16;
   var HUE_STABLE_CHROMA = 0.1;
   var FAN_MIN_CHROMA = 0.045;
   var HUE_TOLERANCE = 8;
@@ -3778,6 +3794,17 @@
   var CODE_STRUCTURAL_ROLES = ["comment", "operator", "punctuation", "variable"];
   var CODE_SCOPES = [...CODE_VIVID_ROLES, ...CODE_STRUCTURAL_ROLES];
   var CODE_SURFACES = ["--code-bg", "--code-fg", "--code-line-highlight", "--code-selection"];
+  var TERMINAL_CHROME = ["bg", "fg", "cursor", "cursor-accent"];
+  var ANSI_ORDER = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"];
+  var ANSI_HUES = {
+    red: 25,
+    green: 145,
+    yellow: 95,
+    blue: 250,
+    magenta: 330,
+    cyan: 200
+  };
+  var ANSI_CHROMATIC = ["red", "green", "yellow", "blue", "magenta", "cyan"];
   var SURFACES = ["--body-bg", "--bg-0", "--bg-1", "--bg-2", "--bg-3"];
   var PANEL_REF_INDEX = SURFACES.indexOf("--bg-2");
   var PANEL_SURFACES = ["--bg-1", "--bg-2"];
@@ -3826,6 +3853,9 @@
     add("--placeholder", "color");
     add("--line", "color");
     add("--line-2", "color");
+    add("--scrollbar-track", "color");
+    add("--scrollbar-thumb", "color");
+    add("--scrollbar-thumb-hover", "color");
     add("--ring", "color");
     add("--ring-bg", "color");
     add("--accent", "color");
@@ -3880,6 +3910,12 @@
       add(t, "color");
     for (const role of CODE_SCOPES)
       add(`--code-${role}`, "color");
+    for (const role of TERMINAL_CHROME)
+      add(`--terminal-${role}`, "color");
+    for (const name of ANSI_ORDER) {
+      add(`--terminal-${name}`, "color");
+      add(`--terminal-bright-${name}`, "color");
+    }
     add("--font-sans", "font");
     add("--font-mono", "font");
     add("--font-display", "font");
@@ -3907,10 +3943,6 @@
   var KEYWORD_DOMAINS = {
     "--selection-cue": ["tint", "marker"]
   };
-  function stepLightness(base, scheme, step, index) {
-    const direction = scheme === "dark" ? 1 : -1;
-    return base + direction * step * index;
-  }
   function contrastBandFloor(knobs) {
     const band = knobs.contrastBand;
     if (typeof band === "number")
@@ -4280,7 +4312,25 @@
     const pin = parseChromaticPin(pinned[`--${name}`] ?? pinned[`--color-${name}-base`] ?? pinned[`--color-${name}`]);
     return pin ? pin.h : paletteHueAngle(name);
   }
+  var GRAPH_CACHE_LIMIT = 16;
+  var graphCaches = /* @__PURE__ */ new WeakMap();
   function buildGraph(preset, opts) {
+    let cache = graphCaches.get(preset);
+    if (!cache)
+      graphCaches.set(preset, cache = /* @__PURE__ */ new Map());
+    const key = JSON.stringify(opts ?? {});
+    const hit = cache.get(key);
+    if (hit)
+      return hit;
+    const nodes = buildGraphUncached(preset, opts);
+    cache.set(key, nodes);
+    if (cache.size > GRAPH_CACHE_LIMIT) {
+      const oldest = cache.keys().next().value;
+      cache.delete(oldest);
+    }
+    return nodes;
+  }
+  function buildGraphUncached(preset, opts) {
     const completed = completeAnchors(preset, opts);
     const bg = completed.bg;
     const fgAnchor = completed.fg;
@@ -4288,8 +4338,7 @@
     const accent = pinned["--accent"] ? toOklchColor(pinned["--accent"]) : completed.accent;
     const scheme = completed.scheme;
     const knobs = opts.knobs ?? {};
-    const shiftStep = typeof knobs.accentShiftStep === "number" ? knobs.accentShiftStep : DEFAULT_SHIFT_STEP;
-    const accentSplit = typeof knobs.accentSplit === "number" ? knobs.accentSplit : DEFAULT_ACCENT_SPLIT;
+    const { strategy, split: accentSplit, shiftStep } = resolveAccentKnobs(preset, knobs);
     const band = contrastBandFloor(knobs);
     const floor = Math.max(ENFORCE, preset.contrastFloor, (band ?? 0) + 0.2);
     const extreme = preset.extreme === true;
@@ -4301,6 +4350,7 @@
     const density = densityOf(knobs);
     const fonts = fontsOf(knobs);
     const surfaceStep = 0.045;
+    const surfaceRamp = typeof knobs.surfaceRamp === "number" ? knobs.surfaceRamp : scheme === "dark" ? surfaceStep : -surfaceStep;
     const nodes = [];
     const lit = (name, value, refs) => {
       nodes.push(refs && refs.length ? { name, value, refs } : { name, value });
@@ -4308,14 +4358,13 @@
     const pinKeys = new Set(Object.keys(pinned));
     const refIfPinned = (...names) => names.filter((n) => pinKeys.has(n));
     lit("--scheme", scheme);
-    const bg0 = pinned["--bg-0"] ? toOklchColor(pinned["--bg-0"]) : extreme ? oklch2(scheme === "dark" ? 0 : 1, 0, 0) : ensureTextHeadroom(withLightness(bg, stepLightness(bg.l, scheme, surfaceStep, 1)), scheme, floor);
+    const bg0 = pinned["--bg-0"] ? toOklchColor(pinned["--bg-0"]) : extreme ? oklch2(scheme === "dark" ? 0 : 1, 0, 0) : ensureTextHeadroom(withLightness(bg, bg.l + surfaceRamp), scheme, floor);
     const pageFloor = (fill) => separateFillFromSurface(fill, bg0, SURFACE_SEPARATION, floor);
-    const direction = scheme === "dark" ? 1 : -1;
-    const surfaceColors = SURFACES.map((_, index) => withLightness(bg0, bg0.l + direction * surfaceStep * (index - 1)));
+    const surfaceColors = SURFACES.map((_, index) => withLightness(bg0, bg0.l + surfaceRamp * (index - 1)));
     SURFACES.forEach((name, index) => {
       lit(name, formatCss2(surfaceColors[index]), refIfPinned("--bg-0"));
     });
-    lit("--bg-sunken", formatCss2(withLightness(bg0, bg0.l - direction * surfaceStep * 2)), refIfPinned("--bg-0"));
+    lit("--bg-sunken", formatCss2(withLightness(bg0, bg0.l - surfaceRamp * 2)), refIfPinned("--bg-0"));
     lit("--scrim", formatCss2(oklch2(scheme === "dark" ? 0 : 0.1, 0, 0, 0.6)));
     const overlayBase = withLightness(bg0, scheme === "dark" ? bg0.l + 0.07 : bg0.l + 0.03);
     lit("--surface-overlay", formatCss2(overlayBase), refIfPinned("--bg-0"));
@@ -4409,7 +4458,11 @@
     const lineSeed = extreme ? oklch2(scheme === "dark" ? 0.7 : 0.3, 0, 0) : withLightness(bg0, scheme === "dark" ? bg0.l + 0.12 : bg0.l - 0.12);
     lit("--line", formatCss2(borderForContrast(lineSeed, bg0, BORDER_SEPARATION)), refIfPinned("--bg-0"));
     const line2Seed = extreme ? oklch2(scheme === "dark" ? 0.85 : 0.15, 0, 0) : withLightness(bg0, scheme === "dark" ? bg0.l + 0.2 : bg0.l - 0.2);
-    lit("--line-2", formatCss2(borderForContrast(line2Seed, bg0, DIVIDER_SEPARATION)), refIfPinned("--bg-0"));
+    const line2Color = borderForContrast(line2Seed, bg0, DIVIDER_SEPARATION);
+    lit("--line-2", formatCss2(line2Color), refIfPinned("--bg-0"));
+    lit("--scrollbar-track", "transparent");
+    lit("--scrollbar-thumb", formatCss2(line2Color), ["--line-2", ...refIfPinned("--bg-0")]);
+    lit("--scrollbar-thumb-hover", formatCss2(withLightness(line2Color, line2Color.l + (scheme === "dark" ? 0.12 : -0.12))), ["--scrollbar-thumb"]);
     lit("--ring", formatCss2(withAlpha(accentFill, 0.7)), ["--accent"]);
     lit("--ring-bg", formatCss2(withAlpha(accentFill, 0.18)), ["--accent"]);
     const fieldBg = withLightness(bg0, scheme === "dark" ? bg0.l - 0.03 : bg0.l + 0.02);
@@ -4448,7 +4501,7 @@
     let a2Refs;
     let a3Refs;
     let a4Refs;
-    if (ACCENT_FAN === "split-complement") {
+    if (strategy === "fan") {
       const mirrorOf = (c2) => applyAccentDelta(fanBase, rotate(-hueDelta(a1.h, c2.h)));
       const a2Pin = pinned["--accent-2"];
       const a3Pin = pinned["--accent-3"];
@@ -4464,6 +4517,34 @@
       a2Refs = a3Pin && !a2Pin ? ["--accent", "--accent-3"] : ["--accent"];
       a3Refs = a2Pin && !a3Pin ? ["--accent", "--accent-2"] : ["--accent"];
       a4Refs = ["--accent"];
+    } else if (strategy === "shade") {
+      a2 = fanned("2", applyAccentDelta(fanBase, { dL: SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+      a3 = fanned("3", applyAccentDelta(fanBase, { dL: -SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+      a4 = fanned("4", applyAccentDelta(fanBase, { dL: -2 * SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+      a2Refs = ["--accent"];
+      a3Refs = ["--accent"];
+      a4Refs = ["--accent"];
+    } else if (strategy === "duo") {
+      a2 = fanned("2", applyAccentDelta(fanBase, rotate(accentSplit)));
+      const midL = (a1.l + a2.l) / 2;
+      const away = scheme === "dark" ? 1 : -1;
+      const room = (dir2) => {
+        const target = midL + dir2 * DUO_L_STEP;
+        return target <= ACCENT_RAMP_L_MAX && target >= ACCENT_RAMP_L_MIN;
+      };
+      const dir = room(away) ? away : -away;
+      const shadeL = Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, midL + dir * DUO_L_STEP));
+      const shadeOf = (brand) => ({
+        l: shadeL,
+        c: Math.max(brand.c, FAN_MIN_CHROMA),
+        h: brand.h,
+        alpha: 1
+      });
+      a3 = fanned("3", shadeOf(a1));
+      a4 = fanned("4", shadeOf(a2));
+      a2Refs = ["--accent"];
+      a3Refs = ["--accent", "--accent-2"];
+      a4Refs = ["--accent-2", "--accent"];
     } else {
       a2 = fanned("2", applyAccentDelta(fanBase, rotate(shiftStep)));
       a3 = fanned("3", applyAccentDelta(a2, accentDelta(fanBase, a2)));
@@ -4570,15 +4651,15 @@
     const codeTowardLight = contrast2("#ffffff", codeBgCss) >= contrast2("#000000", codeBgCss);
     const codePole = codeTowardLight ? 1 : 0;
     const codeFloor = AA;
-    const readableHuedOnCode = (l, c2, h, fl) => {
+    const readableHuedOn = (bgCss, pole, l, c2, h, fl) => {
       const seed = oklch2(l, c2, h);
       let best = seed;
-      let bestContrast = emittedContrast(seed, codeBgCss);
+      let bestContrast = emittedContrast(seed, bgCss);
       if (bestContrast >= fl)
         return seed;
       for (let i = 1; i <= 100; i++) {
-        const cand = withLightness(seed, seed.l + (codePole - seed.l) * (i / 100));
-        const ct = emittedContrast(cand, codeBgCss);
+        const cand = withLightness(seed, seed.l + (pole - seed.l) * (i / 100));
+        const ct = emittedContrast(cand, bgCss);
         if (ct >= fl)
           return cand;
         if (ct > bestContrast) {
@@ -4588,6 +4669,7 @@
       }
       return best;
     };
+    const readableHuedOnCode = (l, c2, h, fl) => readableHuedOn(codeBgCss, codePole, l, c2, h, fl);
     const codeChroma = Math.max(0.08, Math.max(0.1, accent.c) * (0.7 + vibrancy * 0.7) * preset.paletteChromaMul);
     const codeBaseHue = Number.isFinite(accent.h) ? accent.h : DERIVED_ACCENT_FALLBACK_HUE;
     const codeBaseL = codeTowardLight ? 0.76 : 0.46;
@@ -4607,6 +4689,33 @@
     lit("--code-operator", formatCss2(readableHuedOnCode(codeBaseL, codeChroma * 0.5, codeBaseHue, codeFloor)), ["--accent", "--code-bg"]);
     lit("--code-punctuation", formatCss2(enforceContrastFloor(withLightness(codeFg, codeFg.l + (codePole - codeFg.l) * 0.18), codeBg, scheme, codeFloor)), ["--code-fg", "--code-bg"]);
     lit("--code-variable", codeFgCss, ["--code-fg"]);
+    const terminalBg = ensureTextHeadroom(withLightness(bg0, scheme === "dark" ? bg0.l - 0.035 : bg0.l + 0.02), scheme, floor);
+    const terminalBgCss = formatCss2(terminalBg);
+    lit("--terminal-bg", terminalBgCss, refIfPinned("--bg-0"));
+    const terminalFg = enforceContrastFloor(fg0, terminalBg, scheme, floor);
+    lit("--terminal-fg", formatCss2(terminalFg), ["--fg-0", ...refIfPinned("--bg-0")]);
+    const terminalCursor = separateFillFromSurface(accentFill, terminalBg, SURFACE_SEPARATION, floor);
+    lit("--terminal-cursor", formatCss2(terminalCursor), ["--accent"]);
+    lit("--terminal-cursor-accent", pickReadable(terminalCursor, TEXT_POLES, floor), ["--accent"]);
+    const terminalTowardLight = contrast2("#ffffff", terminalBgCss) >= contrast2("#000000", terminalBgCss);
+    const terminalPole = terminalTowardLight ? 1 : 0;
+    const terminalFloor = AA;
+    const terminalChroma = Math.max(0.07, Math.max(0.1, accent.c) * (0.55 + vibrancy * 0.7) * preset.paletteChromaMul);
+    const terminalNormalL = terminalTowardLight ? 0.5 : 0.62;
+    const terminalBrightL = terminalNormalL + (terminalPole - terminalNormalL) * 0.34;
+    for (const name of ANSI_CHROMATIC) {
+      const hue3 = ANSI_HUES[name];
+      const normal = readableHuedOn(terminalBgCss, terminalPole, terminalNormalL, terminalChroma, hue3, terminalFloor);
+      const bright = readableHuedOn(terminalBgCss, terminalPole, terminalBrightL, terminalChroma * 1.08, hue3, terminalFloor);
+      lit(`--terminal-${name}`, formatCss2(normal), ["--accent", "--terminal-bg"]);
+      lit(`--terminal-bright-${name}`, formatCss2(bright), ["--accent", "--terminal-bg"]);
+    }
+    const terminalHue = Number.isFinite(bg0.h) ? bg0.h : 0;
+    const terminalAchroma = (l) => oklch2(l, 6e-3, terminalHue);
+    lit("--terminal-black", formatCss2(terminalAchroma(0.2)), refIfPinned("--bg-0"));
+    lit("--terminal-bright-black", formatCss2(terminalAchroma(0.42)), refIfPinned("--bg-0"));
+    lit("--terminal-white", formatCss2(terminalAchroma(0.85)), ["--fg-0"]);
+    lit("--terminal-bright-white", formatCss2(terminalAchroma(0.97)), ["--fg-0"]);
     lit("--font-sans", fonts.sans);
     lit("--font-mono", fonts.mono);
     lit("--font-display", fonts.display);
@@ -5206,13 +5315,26 @@
         if (accent.c < HUE_STABLE_CHROMA) {
           return { name, ok: true };
         }
-        const step = typeof ctx.knobs.accentShiftStep === "number" ? ctx.knobs.accentShiftStep : DEFAULT_SHIFT_STEP;
-        const split = typeof ctx.knobs.accentSplit === "number" ? ctx.knobs.accentSplit : DEFAULT_ACCENT_SPLIT;
+        const { strategy, split, shiftStep: step } = resolveAccentKnobs(preset, ctx.knobs);
         const accent2Value = ctx.register["--accent-2"];
         const accent3Value = ctx.register["--accent-3"];
         const pinnedAccent2 = ctx.constraints["--accent-2"] && accent2Value ? toOklchColor(accent2Value) : null;
         const pinnedAccent3 = ctx.constraints["--accent-3"] && accent3Value ? toOklchColor(accent3Value) : null;
-        const fanOffset = (n) => ACCENT_FAN === "split-complement" ? n === 2 ? pinnedAccent3 ? -hueDelta(accent.h, pinnedAccent3.h) : -split : n === 3 ? pinnedAccent2 ? -hueDelta(accent.h, pinnedAccent2.h) : split : 180 : step * (n - 1);
+        const duoSecondHue = () => pinnedAccent2 ? hueDelta(accent.h, pinnedAccent2.h) : split;
+        const fanOffset = (n) => {
+          if (strategy === "shade")
+            return 0;
+          if (strategy === "step")
+            return step * (n - 1);
+          if (strategy === "duo")
+            return n === 3 ? 0 : duoSecondHue();
+          if (n === 2)
+            return pinnedAccent3 ? -hueDelta(accent.h, pinnedAccent3.h) : -split;
+          if (n === 3)
+            return pinnedAccent2 ? -hueDelta(accent.h, pinnedAccent2.h) : split;
+          return 180;
+        };
+        const stepsLightness = strategy === "shade" || strategy === "duo";
         for (let n = 2; n <= 4; n++) {
           if (ctx.constraints[`--accent-${n}`])
             continue;
@@ -5233,21 +5355,23 @@
               };
             }
           }
-          if (Math.abs(rotated.l - accent.l) > LIGHTNESS_TOLERANCE) {
-            return {
-              name,
-              ok: false,
-              detail: `--accent-${n} l=${rotated.l.toFixed(3)} want ${accent.l.toFixed(3)}`
-            };
-          }
-          const maxChroma = clampToGamut({ l: accent.l, c: accent.c, h: wantH, alpha: 1 }).c;
-          const expectedChroma = Math.min(accent.c, maxChroma);
-          if (Math.abs(rotated.c - expectedChroma) > 0.02) {
-            return {
-              name,
-              ok: false,
-              detail: `--accent-${n} chroma ${rotated.c.toFixed(3)} want max-at-hue ${expectedChroma.toFixed(3)}`
-            };
+          if (!stepsLightness) {
+            if (Math.abs(rotated.l - accent.l) > LIGHTNESS_TOLERANCE) {
+              return {
+                name,
+                ok: false,
+                detail: `--accent-${n} l=${rotated.l.toFixed(3)} want ${accent.l.toFixed(3)}`
+              };
+            }
+            const maxChroma = clampToGamut({ l: accent.l, c: accent.c, h: wantH, alpha: 1 }).c;
+            const expectedChroma = Math.min(accent.c, maxChroma);
+            if (Math.abs(rotated.c - expectedChroma) > 0.02) {
+              return {
+                name,
+                ok: false,
+                detail: `--accent-${n} chroma ${rotated.c.toFixed(3)} want max-at-hue ${expectedChroma.toFixed(3)}`
+              };
+            }
           }
         }
         return { name, ok: true };
@@ -5516,6 +5640,46 @@
         return { name, ok: true };
       },
       (ctx) => {
+        const name = "terminal palette readable on --terminal-bg";
+        const bg = ctx.register["--terminal-bg"];
+        if (!bg)
+          return { name, ok: false, detail: "--terminal-bg missing" };
+        const readFloor = achievableFloor(AA, bg);
+        const inks = [
+          "--terminal-fg",
+          ...ANSI_CHROMATIC.map((n) => `--terminal-${n}`),
+          ...ANSI_CHROMATIC.map((n) => `--terminal-bright-${n}`)
+        ];
+        for (const token of inks) {
+          const v = ctx.register[token];
+          const ratio = v ? contrast2(v, bg) : 0;
+          if (ratio < readFloor - 0.05) {
+            return { name, ok: false, detail: `${token} on --terminal-bg = ${ratio.toFixed(2)} (floor ${readFloor.toFixed(2)})` };
+          }
+        }
+        return { name, ok: true };
+      },
+      (ctx) => {
+        const name = "terminal ANSI hues mutually distinguishable";
+        const MIN_DE = 0.012;
+        const slots = ANSI_CHROMATIC.map((n) => `--terminal-${n}`);
+        for (let i = 0; i < slots.length; i++) {
+          for (let j = i + 1; j < slots.length; j++) {
+            const ni = slots[i];
+            const nj = slots[j];
+            const a = ctx.register[ni];
+            const b = ctx.register[nj];
+            if (!a || !b)
+              continue;
+            const d = oklabDist(a, b);
+            if (d < MIN_DE) {
+              return { name, ok: false, detail: `${ni} vs ${nj} \u0394E=${d.toFixed(4)} (min ${MIN_DE})` };
+            }
+          }
+        }
+        return { name, ok: true };
+      },
+      (ctx) => {
         const name = "status roles mutually distinguishable";
         const MIN_DE = 0.02;
         const roles = Object.keys(STATUS_TO_HUE).map((r2) => `--${r2}`);
@@ -5541,6 +5705,8 @@
   var TOKEN_CATEGORIES = CATEGORIES;
   var SHARED_KNOBS = [
     "scheme",
+    "surfaceRamp",
+    "accentStrategy",
     "accentShiftStep",
     "accentSplit",
     "contrastBand",
@@ -5552,6 +5718,79 @@
     "fonts",
     "anchors"
   ];
+  var SHARED_KNOB_SPECS = [
+    {
+      name: "scheme",
+      kind: "select",
+      label: "Scheme",
+      options: [
+        { value: "dark", label: "dark" },
+        { value: "light", label: "light" }
+      ]
+    },
+    {
+      name: "contrastBand",
+      kind: "select",
+      label: "Contrast band",
+      default: "aa",
+      options: [
+        { value: "aa", label: "AA" },
+        { value: "aaa", label: "AAA" }
+      ]
+    },
+    {
+      name: "density",
+      kind: "select",
+      label: "Density",
+      default: "normal",
+      options: [
+        { value: "compact", label: "compact" },
+        { value: "normal", label: "normal" },
+        { value: "comfortable", label: "comfortable" }
+      ]
+    },
+    {
+      name: "cues",
+      kind: "select",
+      label: "Cues",
+      default: "color",
+      options: [
+        { value: "color", label: "color only" },
+        { value: "redundant", label: "redundant markers" }
+      ]
+    },
+    {
+      name: "accentStrategy",
+      kind: "select",
+      label: "Accent strategy",
+      options: [
+        { value: "fan", label: "fan (flanks + complement)" },
+        { value: "step", label: "step (even hue wheel)" },
+        { value: "shade", label: "shade (one hue, four depths)" },
+        { value: "duo", label: "duo (two brands + their shades)" }
+      ]
+    },
+    { name: "vibrancy", kind: "range", label: "Vibrancy", min: 0, max: 1, step: 0.05, default: 0.5 },
+    { name: "typeScale", kind: "range", label: "Type scale", min: 1.05, max: 1.6, step: 0.01, default: 1.2 },
+    { name: "radiusScale", kind: "range", label: "Radius scale", min: 0, max: 3, step: 0.1, default: 1 },
+    { name: "surfaceRamp", kind: "range", label: "Surface ramp", min: -0.06, max: 0.06, step: 5e-3, default: 0.045 },
+    // The defaults are the engine's own constants, not a second copy of them: a slider that opens on a
+    // value the derivation does not actually use is a lie the control surface tells about the engine.
+    { name: "accentSplit", kind: "range", label: "Accent split", min: 0, max: 90, step: 1, default: DEFAULT_ACCENT_SPLIT, unit: "\xB0" },
+    { name: "accentShiftStep", kind: "range", label: "Accent shift step", min: 0, max: 180, step: 5, default: DEFAULT_SHIFT_STEP, unit: "\xB0" },
+    { name: "hour", kind: "range", label: "Hour", min: 0, max: 24, step: 1, default: 12 }
+  ];
+  var SHARED_KNOB_SPEC_BY_NAME = new Map(SHARED_KNOB_SPECS.map((spec2) => [spec2.name, spec2]));
+  function resolveKnobSpecs(names, extra = []) {
+    const byName = new Map(extra.map((spec2) => [spec2.name, spec2]));
+    const out = [];
+    for (const name of names) {
+      const spec2 = byName.get(name) ?? SHARED_KNOB_SPEC_BY_NAME.get(name);
+      if (spec2)
+        out.push(spec2);
+    }
+    return out;
+  }
   var DEFAULT_ANCHORS = {
     bg: "#0f1115",
     fg: "#e8eaed"
@@ -5577,6 +5816,7 @@
     const preset = {
       id: spec2.id,
       knobs: spec2.knobs ?? SHARED_KNOBS,
+      knobSpecs: spec2.knobSpecs,
       // Merge over the full default so a spec that names only some anchors (e.g. just `bg` and
       // `accent`) still yields a complete `bg`/`fg` default — derivation reads both, so a partial
       // `defaultAnchors` would crash when invoked with no anchor overrides.
@@ -5592,6 +5832,8 @@
       elevationAlphaBoost: elevation.alphaBoost ?? 0,
       accentTintChromaMul: chroma.accentTint ?? 0.3
     };
+    if (spec2.accentStrategy)
+      preset.accentStrategy = spec2.accentStrategy;
     if (spec2.extreme)
       preset.extreme = true;
     return preset;
@@ -5605,6 +5847,7 @@
       produces: PRODUCED_TOKENS,
       categories: TOKEN_CATEGORIES,
       knobs: preset.knobs,
+      knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),
       passNames: buildPasses(preset, {}).map((pass) => pass.name)
     }, makeInvariants(preset));
   }

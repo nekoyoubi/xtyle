@@ -12,14 +12,14 @@
       b.showValue && b.editableValue && "xtyle-slider--value-editable"
     ].filter(Boolean).join(" ");
   }
-  function clampValue(b) {
+  function trueValue(b) {
+    const value = b.value ?? (b.min ?? 0);
+    return Number.isNaN(value) ? b.min ?? 0 : value;
+  }
+  function railValue(b) {
     const min = b.min ?? 0;
     const max = b.max ?? 100;
-    const step = (b.step ?? 1) > 0 ? b.step ?? 1 : 1;
-    const value = b.value ?? min;
-    if (Number.isNaN(value)) return min;
-    const snapped = Math.round((value - min) / step) * step + min;
-    return Math.min(max, Math.max(min, Number(snapped.toFixed(6))));
+    return Math.min(max, Math.max(min, trueValue(b)));
   }
   function fraction(value, min, max) {
     return max === min ? 0 : (value - min) / (max - min);
@@ -28,12 +28,15 @@
     return b.valueText ?? String(value);
   }
   function inner(b) {
-    const min = b.min ?? 0;
-    const max = b.max ?? 100;
-    const value = clampValue(b);
+    const railMin = b.min ?? 0;
+    const railMax = b.max ?? 100;
+    const value = trueValue(b);
+    const rail = railValue(b);
+    const ariaMin = Math.min(railMin, value);
+    const ariaMax = Math.max(railMax, value);
     const uid = b.elementId ?? "xtyle-slider";
     const labelId = `${uid}-label`;
-    const pct = `${(fraction(value, min, max) * 100).toFixed(3)}%`;
+    const pct = `${(fraction(rail, railMin, railMax) * 100).toFixed(3)}%`;
     const nameAttr = b.labelledby ? ` aria-labelledby="${b.labelledby}"` : b.label ? ` aria-labelledby="${labelId}"` : "";
     const disabledAttr = b.disabled ? ' aria-disabled="true"' : "";
     const tabindex = b.disabled ? "-1" : "0";
@@ -44,61 +47,49 @@
     const valueMarkup = b.showValue ? `<span class="xtyle-slider__value" part="value" aria-hidden="true">${readout(b, value)}</span>` : "";
     const headerLabel = b.hideLabel ? "" : label;
     const header = valueMarkup ? `<span class="xtyle-slider__header" part="header">${headerLabel}${valueMarkup}</span>${b.hideLabel ? label : ""}` : label;
-    return `${header}<span class="xtyle-slider__rail" part="rail"><span class="xtyle-slider__fill" part="fill" style="width: ${pct}"></span><span class="xtyle-slider__thumb" part="thumb" role="slider" tabindex="${tabindex}" aria-valuemin="${min}" aria-valuemax="${max}" aria-valuenow="${value}"${valueTextAttr} aria-orientation="horizontal"${nameAttr}${disabledAttr} style="inset-inline-start: ${pct}"></span></span>`;
+    return `${header}<span class="xtyle-slider__rail" part="rail"><span class="xtyle-slider__fill" part="fill" style="width: ${pct}"></span><span class="xtyle-slider__thumb" part="thumb" role="slider" tabindex="${tabindex}" aria-valuemin="${ariaMin}" aria-valuemax="${ariaMax}" aria-valuenow="${value}"${valueTextAttr} aria-orientation="horizontal"${nameAttr}${disabledAttr} style="inset-inline-start: ${pct}"></span></span>`;
   }
   hooks.fragment.mount("slider", (bindings, ops) => {
     ops.setAttr("[data-root]", "class", sliderClass(bindings));
     ops.replaceChildren("[data-slider]", inner(bindings));
   });
   hooks.fragment.update("slider", (bindings, ops) => {
-    const min = bindings.min ?? 0;
-    const max = bindings.max ?? 100;
-    const value = clampValue(bindings);
-    const pct = `${(fraction(value, min, max) * 100).toFixed(3)}%`;
+    const railMin = bindings.min ?? 0;
+    const railMax = bindings.max ?? 100;
+    const value = trueValue(bindings);
+    const rail = railValue(bindings);
+    const pct = `${(fraction(rail, railMin, railMax) * 100).toFixed(3)}%`;
     ops.setAttr("[data-root]", "class", sliderClass(bindings));
+    ops.setAttr(".xtyle-slider__thumb", "aria-valuemin", String(Math.min(railMin, value)));
+    ops.setAttr(".xtyle-slider__thumb", "aria-valuemax", String(Math.max(railMax, value)));
     ops.setAttr(".xtyle-slider__thumb", "aria-valuenow", String(value));
     const valueText = readout(bindings, value);
     ops.setAttr(".xtyle-slider__thumb", "aria-valuetext", valueText !== String(value) ? valueText : "");
     ops.setAttr(".xtyle-slider__thumb", "tabindex", bindings.disabled ? "-1" : "0");
     ops.setAttr(".xtyle-slider__thumb", "style", `inset-inline-start: ${pct}`);
     ops.setAttr(".xtyle-slider__fill", "style", `width: ${pct}`);
-    if (bindings.showValue) ops.setText(".xtyle-slider__value", readout(bindings, value));
+    if (bindings.showValue && !bindings.editing) ops.setText(".xtyle-slider__value", readout(bindings, value));
   });
-  function clamp(next, ctx) {
-    const step = ctx.step > 0 ? ctx.step : 1;
-    if (Number.isNaN(next)) return ctx.min;
-    const snapped = Math.round((next - ctx.min) / step) * step + ctx.min;
-    return Math.min(ctx.max, Math.max(ctx.min, Number(snapped.toFixed(6))));
-  }
   xript.exports.register("keyAdjust", (payload, context) => {
     const e = payload;
     if (e.disabled || e.ariaDisabled === "true") return {};
     const ctx = context;
-    const big = (ctx.step > 0 ? ctx.step : 1) * 10;
-    let next = null;
     switch (e.key) {
       case "ArrowRight":
       case "ArrowUp":
-        next = ctx.value + ctx.step;
-        break;
+        return { nudge: 1, preventDefault: true };
       case "ArrowLeft":
       case "ArrowDown":
-        next = ctx.value - ctx.step;
-        break;
+        return { nudge: -1, preventDefault: true };
       case "PageUp":
-        next = ctx.value + big;
-        break;
+        return { nudge: 1, forceAlt: true, preventDefault: true };
       case "PageDown":
-        next = ctx.value - big;
-        break;
+        return { nudge: -1, forceAlt: true, preventDefault: true };
       case "Home":
-        next = ctx.min;
-        break;
+        return { setValue: ctx.min, commit: "change", preventDefault: true };
       case "End":
-        next = ctx.max;
-        break;
+        return { setValue: ctx.max, commit: "change", preventDefault: true };
     }
-    if (next === null) return {};
-    return { setValue: clamp(next, ctx), commit: "change", preventDefault: true };
+    return {};
   });
 })();

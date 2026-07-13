@@ -1,7 +1,12 @@
 ---
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
-import { resolveHeatmapColors, resolveHeatmapGlows, resolveHeatmapScale } from "./internal/palette.ts";
-import type { HeatmapScheme } from "@xtyle/core";
+import {
+	resolveHeatmapColors,
+	resolveHeatmapGlows,
+	resolveHeatmapScale,
+	resolveHeatmapCategorical,
+} from "./internal/palette.ts";
+import { categoricalLegend, type HeatmapScheme, type SeriesScheme } from "@xtyle/core";
 
 interface Props {
 	values?: number[][];
@@ -26,8 +31,13 @@ interface Props {
 	currentPulse?: boolean;
 	/** Per-cell hover text (same shape as `values`); overrides a cell's default readout and accessible name. */
 	titles?: string[][];
-	/** Show a color-scale key (five swatches from the ramp with 0..max endpoints) below the grid. */
+	/** Show a key below the grid: a ramp scale (intensity mode) or a category legend (categorical mode). */
 	scale?: boolean;
+	/** Color by category instead of intensity: each column (or row) takes a distinct series hue, and the
+	 * cell value washes it from the surface up. `scheme` is read as a categorical `SeriesScheme`. */
+	categorical?: boolean;
+	/** Which axis carries the categories in `categorical` mode: `col` (default) or `row`. */
+	categoryAxis?: "col" | "row";
 	showValues?: boolean;
 	/** Make cells actionable: each becomes a `role="button"` that fires `select` on click or Enter/Space. */
 	selectable?: boolean;
@@ -44,7 +54,7 @@ const {
 	glow = [],
 	rows = [],
 	cols = [],
-	scheme = "accent",
+	scheme,
 	reverse = false,
 	max,
 	glowMax,
@@ -55,6 +65,8 @@ const {
 	currentPulse = false,
 	titles = [],
 	scale = false,
+	categorical = false,
+	categoryAxis = "col",
 	showValues = false,
 	selectable = false,
 	label,
@@ -63,10 +75,28 @@ const {
 	...rest
 } = Astro.props;
 
-const cellColors = await resolveHeatmapColors(scheme, values, reverse, max);
-const cellGlows = await resolveHeatmapGlows(scheme, glow, reverse, glowMax, glowBlur);
+const effectiveScheme = (scheme ?? (categorical ? "accents" : "accent")) as HeatmapScheme;
+const categoricalPalette = categorical
+	? await resolveHeatmapCategorical(effectiveScheme as SeriesScheme | string[], values, categoryAxis, reverse, max)
+	: null;
+const cellColors = categoricalPalette
+	? categoricalPalette.cellColors
+	: await resolveHeatmapColors(effectiveScheme, values, reverse, max);
+const cellGlows = await resolveHeatmapGlows(
+	effectiveScheme,
+	glow,
+	reverse,
+	glowMax,
+	glowBlur,
+	categoricalPalette?.hues,
+	categoryAxis,
+);
 const resolvedGlowLabel = glow.length ? (glowLabel ?? "glow") : null;
-const scaleKey = scale ? await resolveHeatmapScale(scheme, values, reverse, max) : null;
+const key = scale
+	? categoricalPalette
+		? { legend: categoricalLegend(categoricalPalette.hues, categoryAxis === "row" ? rows : cols) }
+		: await resolveHeatmapScale(effectiveScheme, values, reverse, max)
+	: {};
 const bindings = {
 	values,
 	rows,
@@ -80,7 +110,7 @@ const bindings = {
 	currentPulse,
 	titles,
 	scale,
-	...(scaleKey ?? {}),
+	...key,
 	showValues,
 	selectable,
 	title: label ?? null,
@@ -96,7 +126,9 @@ const chrome = await renderFragmentLight("heatmap", bindings);
 	cols={JSON.stringify(cols)}
 	current={current.length ? JSON.stringify(current) : undefined}
 	titles={titles.length ? JSON.stringify(titles) : undefined}
-	scheme={Array.isArray(scheme) ? JSON.stringify(scheme) : scheme}
+	scheme={Array.isArray(effectiveScheme) ? JSON.stringify(effectiveScheme) : effectiveScheme}
+	categorical={categorical || undefined}
+	category-axis={categorical && categoryAxis === "row" ? "row" : undefined}
 	reverse={reverse || undefined}
 	max={max ?? undefined}
 	glow-max={glowMax ?? undefined}

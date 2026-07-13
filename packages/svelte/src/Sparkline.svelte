@@ -1,6 +1,12 @@
 <script lang="ts">
 	import "./register.js";
-	import type { SparklineVariant, SparklineTone, SparklineBounds, TimeSample } from "@xtyle/core";
+	import type {
+		SparklineVariant,
+		SparklineTone,
+		SparklineBounds,
+		SparklineFormat,
+		TimeSample,
+	} from "@xtyle/core";
 
 	interface Props {
 		values?: number[];
@@ -18,6 +24,10 @@
 		showEnd?: boolean;
 		min?: number;
 		max?: number;
+		/** Kind-aware auto y-bounds for a typed metric: `percent` → 0–100, `unit` → 0–1, `duration` → 0–peak. */
+		bounds?: SparklineBounds;
+		/** Speak the metric's units in the hover readout: `duration` (`42s`/`1.5m`), `percent` (`87%`), `bytes`, `unit`. */
+		format?: SparklineFormat;
 		label?: string;
 		/** Any other attribute (`title`, `id`, `style`, `data-*`, `aria-*`, …) passes through. */
 		[key: string]: unknown;
@@ -34,6 +44,8 @@
 		showEnd = true,
 		min,
 		max,
+		bounds,
+		format,
 		label,
 		...rest
 	}: Props = $props();
@@ -58,5 +70,7 @@
 	domain={domain ? JSON.stringify(domain) : undefined}
 	min={min ?? undefined}
 	max={max ?? undefined}
+	bounds={bounds ?? undefined}
+	format={format ?? undefined}
 	{label}
 ></xtyle-sparkline>

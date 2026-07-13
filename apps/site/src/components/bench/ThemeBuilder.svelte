@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from "svelte";
-	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xtyle/core";
+	import type { Algorithm, DeriveOptions, TokenLineageNode, TokenRegister } from "@xtyle/core";
 	import { buildThemeFile, derive, emit, loadAuthoredAlgorithm, serializeThemeFile } from "@xtyle/core";
 	import { getAlgorithm } from "@xtyle/core/algorithms";
 	import { makeXtyleAlgorithm, toPreset, type XtyleAlgorithmSpec } from "@xtyle/core/authoring";
@@ -13,8 +13,10 @@
 	import CrmApp from "./mockups/CrmApp.svelte";
 	import SettingsPanel from "./mockups/SettingsPanel.svelte";
 	import DashboardApp from "./mockups/DashboardApp.svelte";
-	import CodeWorkspace from "./mockups/CodeWorkspace.svelte";
+	import Editor from "./mockups/Editor.svelte";
 	import OrderStatus from "./mockups/OrderStatus.svelte";
+	import BrandSite from "./mockups/BrandSite.svelte";
+	import MusicPlayer from "./mockups/MusicPlayer.svelte";
 	import { AppShell, Badge, Button, Switch, Tabs, Toolbar } from "@xtyle/svelte";
 	import { loadHostedAlgorithms } from "./hosted.js";
 	import type { BenchState } from "./state.js";
@@ -62,6 +64,19 @@
 		return $state.snapshot(created.recipe) as BenchState;
 	}
 
+	// The heavy pipeline (full OKLCH derive, the lineage graph, and the synced site reapply) reads
+	// this debounced trail of `state`, never `state` itself. A slider drag or a color-picker sweep
+	// fires a burst of input events, and recomputing the whole token register on every intermediate
+	// value is what made the rail janky. The controls stay bound to the live `state`, so thumbs and
+	// numeric readouts move instantly; only the expensive recompute waits for the burst to settle.
+	const DERIVE_DEBOUNCE_MS = 120;
+	let settledState = $state<BenchState>($state.snapshot(state) as BenchState);
+	$effect(() => {
+		const snapshot = $state.snapshot(state) as BenchState;
+		const handle = setTimeout(() => (settledState = snapshot), DERIVE_DEBOUNCE_MS);
+		return () => clearTimeout(handle);
+	});
+
 	let hosted = $state<Map<string, Algorithm> | null>(null);
 
 	$effect(() => {
@@ -79,9 +94,9 @@
 	});
 
 	const baseAlgorithm = $derived<Algorithm>(
-		state.algorithm === CUSTOM_ALGORITHM || state.algorithm === CUSTOM_CODE_ALGORITHM
+		settledState.algorithm === CUSTOM_ALGORITHM || settledState.algorithm === CUSTOM_CODE_ALGORITHM
 			? getAlgorithm("xtyle-default")
-			: (hosted?.get(state.algorithm) ?? getAlgorithm(state.algorithm)),
+			: (hosted?.get(settledState.algorithm) ?? getAlgorithm(settledState.algorithm)),
 	);
 
 	// The on-site authored *code* algorithm loads asynchronously through the hosted sandbox, so it
@@ -92,11 +107,11 @@
 	let authoredError = $state<string | null>(null);
 
 	$effect(() => {
-		if (state.algorithm !== CUSTOM_CODE_ALGORITHM) {
+		if (settledState.algorithm !== CUSTOM_CODE_ALGORITHM) {
 			authoredError = null;
 			return;
 		}
-		const code = state.customCode ?? "";
+		const code = settledState.customCode ?? "";
 		if (!code.trim()) {
 			authoredError = null;
 			authoredAlgorithm = null;
@@ -129,13 +144,27 @@
 	 * baked path — so a shared link carrying code can't ride Tier-1's in-process assumption.
 	 */
 	function buildCustomAlgorithm(): Algorithm {
-		const spec = JSON.parse(state.customSpec ?? "{}") as Record<string, unknown>;
+		const spec = JSON.parse(settledState.customSpec ?? "{}") as Record<string, unknown>;
 		return makeXtyleAlgorithm(toPreset({ id: "custom", ...spec } as XtyleAlgorithmSpec));
 	}
 
+	/**
+	 * The one derivation request the whole rail reads. `derive()` and `lineage()` resolve the same
+	 * cached pass, but only when handed *identical* options — the cache keys on a JSON dump of them.
+	 * Built once here rather than spelled out at each call site, so the cache hit is structural: two
+	 * hand-written copies of this object would stay in step only by luck, and reordering a spread in
+	 * one of them would silently double the work again with nothing to catch it.
+	 */
+	const deriveOptions = $derived<DeriveOptions>({
+		knobs: toDeriveKnobs(settledState.knobs),
+		// bg/fg/accent ride the one token channel; explicit overrides layer on top.
+		constraints: { ...anchorsToConstraints(settledState.anchors), ...settledState.overrides },
+	});
+
+	const initial = defaultState();
 	const initialRegister: TokenRegister = derive(getAlgorithm("xtyle-default"), {
-		knobs: toDeriveKnobs(defaultState().knobs),
-		constraints: anchorsToConstraints(defaultState().anchors),
+		knobs: toDeriveKnobs(initial.knobs),
+		constraints: anchorsToConstraints(initial.anchors),
 	});
 	let lastGood = $state<TokenRegister>(initialRegister);
 	let lastGoodAlgorithm = $state<Algorithm>(getAlgorithm("xtyle-default"));
@@ -151,10 +180,10 @@
 	function deriveResult(): DeriveResult {
 		try {
 			let built: Algorithm;
-			if (state.algorithm === CUSTOM_ALGORITHM) {
+			if (settledState.algorithm === CUSTOM_ALGORITHM) {
 				built = buildCustomAlgorithm();
-			} else if (state.algorithm === CUSTOM_CODE_ALGORITHM) {
-				if (!(state.customCode ?? "").trim()) {
+			} else if (settledState.algorithm === CUSTOM_CODE_ALGORITHM) {
+				if (!(settledState.customCode ?? "").trim()) {
 					// a custom-code theme with no source — restored from a share link (which never
 					// carries code) or a legacy doc — has nothing to drive the sandbox; fall back to
 					// the neutral default rather than erroring on every load.
@@ -173,11 +202,7 @@
 			}
 			return {
 				algorithm: built,
-				register: derive(built, {
-					knobs: toDeriveKnobs(state.knobs),
-					// bg/fg/accent ride the one token channel; explicit overrides layer on top.
-					constraints: { ...anchorsToConstraints(state.anchors), ...state.overrides },
-				}),
+				register: derive(built, deriveOptions),
 				error: null,
 			};
 		} catch (e) {
@@ -215,18 +240,17 @@
 		return influence;
 	}
 
-	const influence = $derived.by<Record<string, number>>(() => {
+	/** The derivation's edges, read once here and shared with the graph inspector. Same
+	 * `deriveOptions` the register came from, so both resolve one cached pass, not two. */
+	const lineage = $derived.by<TokenLineageNode[]>(() => {
 		try {
-			return computeInfluence(
-				algorithm.lineage({
-					knobs: toDeriveKnobs(state.knobs),
-					constraints: { ...anchorsToConstraints(state.anchors), ...state.overrides },
-				}),
-			);
+			return algorithm.lineage(deriveOptions);
 		} catch {
-			return {};
+			return [];
 		}
 	});
+
+	const influence = $derived<Record<string, number>>(computeInfluence(lineage));
 
 	$effect(() => {
 		if (!result.error) {
@@ -241,7 +265,7 @@
 		if (typeof window === "undefined") return;
 		if (editingId === null) return;
 		const id = editingId;
-		const snapshot = $state.snapshot(state) as BenchState;
+		const snapshot = $state.snapshot(settledState) as BenchState;
 		untrack(() => {
 			themeStore.updateRecipe(id, snapshot);
 			savedAt = Date.now();
@@ -274,17 +298,25 @@
 
 	let libraryOpen = $state(false);
 
+	/** Load a whole recipe into the editor. Unlike an incremental control edit (which trails through
+	 * the debounce), a wholesale load commits to `settledState` in the same tick, so the derive and
+	 * the autosave never run a beat against the previous theme's values under the new document's id. */
+	function commitState(next: BenchState): void {
+		state = next;
+		settledState = $state.snapshot(next) as BenchState;
+	}
+
 	function openDocInEditor(doc: ThemeDoc): void {
 		editingId = doc.id;
 		themeStore.setSelected(doc.id);
-		state = normalizeState($state.snapshot(doc.recipe));
+		commitState(normalizeState($state.snapshot(doc.recipe)));
 		savedAt = doc.updatedAt;
 	}
 
 	function newTheme(): void {
 		const created = themeStore.create({ recipe: defaultState() });
 		editingId = created.id;
-		state = $state.snapshot(created.recipe) as BenchState;
+		commitState($state.snapshot(created.recipe) as BenchState);
 		savedAt = created.updatedAt;
 	}
 
@@ -292,7 +324,7 @@
 		if (editingId === null) return;
 		const copy = themeStore.duplicate(editingId);
 		editingId = copy.id;
-		state = $state.snapshot(copy.recipe) as BenchState;
+		commitState($state.snapshot(copy.recipe) as BenchState);
 		savedAt = copy.updatedAt;
 	}
 
@@ -496,7 +528,7 @@
 	}
 
 	function reset(): void {
-		state = defaultState();
+		commitState(defaultState());
 	}
 
 	let importOpen = $state(false);
@@ -510,7 +542,7 @@
 			importStatus = "Couldn't read a theme from that JSON.";
 			return;
 		}
-		state = normalizeState($state.snapshot(doc.recipe));
+		commitState(normalizeState($state.snapshot(doc.recipe)));
 		if (editingId !== null) renameEditing(doc.meta.name);
 		importText = "";
 		importStatus = `Loaded "${doc.meta.name}" into this theme.`;
@@ -533,8 +565,10 @@
 		{ value: "crm", label: "CRM App" },
 		{ value: "settings", label: "Settings" },
 		{ value: "dashboard", label: "Dashboard" },
-		{ value: "code", label: "Code Workspace" },
+		{ value: "editor", label: "Editor" },
 		{ value: "order", label: "Order Status" },
+		{ value: "brand", label: "Brand Site" },
+		{ value: "music", label: "Music Player" },
 	];
 	let mockupTab = $state("email");
 
@@ -637,7 +671,7 @@
 
 		{#snippet right()}
 			<aside class="bench__rail x-surface-section">
-				<Controls bench={state} {register} {influence} onchange={(next) => (state = next)} />
+				<Controls bench={state} {algorithm} {register} {influence} onchange={(next) => (state = next)} />
 			</aside>
 		{/snippet}
 
@@ -669,8 +703,12 @@
 										<SettingsPanel {register} />
 									{:else if scene === "dashboard"}
 										<DashboardApp {register} />
-									{:else if scene === "code"}
-										<CodeWorkspace {register} />
+									{:else if scene === "editor"}
+										<Editor {register} />
+									{:else if scene === "brand"}
+										<BrandSite {register} />
+									{:else if scene === "music"}
+										<MusicPlayer {register} />
 									{:else}
 										<OrderStatus {register} />
 									{/if}
@@ -693,7 +731,7 @@
 						<Tabs items={REPORT_TABS} bind:value={reportTab} variant="underline" class="bench-subtabs" label="Report view">
 							{#snippet panel(p)}
 								<div class="bench-scene">
-									<Inspectors {register} {algorithm} bench={state} panel={p} />
+									<Inspectors {register} {lineage} panel={p} />
 								</div>
 							{/snippet}
 						</Tabs>

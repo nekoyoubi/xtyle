@@ -103,6 +103,52 @@ export function canonicalContrastPairs(): PairSpec[] {
 	return pairs;
 }
 
+/**
+ * The contrast floor a QR symbol's module/background pair must clear to stay reliably scannable.
+ * QR readers tolerate less than a human reading body text, but camera capture, print bleed, and
+ * screen glare all erode the margin — so xtyle holds themed codes to the WCAG AAA ratio (7:1) as a
+ * conservative scannable floor. Bitonal (pure black-on-white) sits at the 21:1 ceiling and always
+ * clears it; that is the guaranteed fallback the `auto` mode drops to when a theme's own `--fg-0` /
+ * `--bg-0` come in under this line.
+ */
+export const QR_MIN_CONTRAST = 7;
+
+export interface QrScannability {
+	/** The WCAG contrast ratio between the two tokens, rounded to two decimals. */
+	ratio: number;
+	/** The resolved module (dark) color. */
+	moduleValue: string;
+	/** The resolved background (light) color. */
+	bgValue: string;
+	/** Whether `ratio` clears {@link QR_MIN_CONTRAST}. */
+	scannable: boolean;
+	/** The floor `ratio` was graded against. */
+	floor: number;
+}
+
+export interface QrScannabilityOptions {
+	/** The module color token (default `--fg-0`). */
+	moduleToken?: TokenName;
+	/** The background color token (default `--bg-0`). */
+	bgToken?: TokenName;
+	/** Override the floor (default {@link QR_MIN_CONTRAST}). */
+	floor?: number;
+}
+
+/**
+ * Grade the contrast of the module/background token pair a QR symbol would ink itself with, the
+ * component-level complement to {@link auditRegister}. A theme editor, a CI gate, or the QR element's
+ * own `auto` mode reads `scannable` to decide whether a themed code is safe to render as-is or should
+ * fall back to bitonal. Missing tokens resolve to a `0` ratio (not scannable).
+ */
+export function qrScannability(register: TokenRegister, opts: QrScannabilityOptions = {}): QrScannability {
+	const floor = opts.floor ?? QR_MIN_CONTRAST;
+	const moduleValue = register[opts.moduleToken ?? "--fg-0"] ?? "";
+	const bgValue = register[opts.bgToken ?? "--bg-0"] ?? "";
+	const ratio = moduleValue && bgValue ? Math.round(contrast(moduleValue, bgValue) * 100) / 100 : 0;
+	return { ratio, moduleValue, bgValue, scannable: ratio >= floor, floor };
+}
+
 function tierFor(ratio: number, largeText: boolean): ContrastTier {
 	const aa = largeText ? 3 : 4.5;
 	const aaa = largeText ? 4.5 : 7;

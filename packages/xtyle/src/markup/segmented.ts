@@ -5,6 +5,8 @@ export interface Segment {
 	disabled?: boolean;
 	/** Trailing text after the label (a count or status), shown inside the segment. */
 	badge?: string;
+	/** A hover hint on the segment (its native `title`), for a pill whose short label needs disambiguating context. */
+	title?: string;
 	/** Project a live light-DOM child through this named `<slot>` instead of rendering `label` as text —
 	 * the rich-content mode where a segment holds an icon or other framework-owned markup. The element
 	 * sets it for `[slot="segment"]` children; the `options` shorthand never carries it. */
@@ -55,6 +57,7 @@ export function normalizeSegments(raw: unknown): Segment[] {
 			const seg: Segment = { value: e.value, label: typeof e.label === "string" ? e.label : e.value };
 			if (e.disabled) seg.disabled = true;
 			if (typeof e.badge === "string") seg.badge = e.badge;
+			if (typeof e.title === "string") seg.title = e.title;
 			out.push(seg);
 		}
 	}

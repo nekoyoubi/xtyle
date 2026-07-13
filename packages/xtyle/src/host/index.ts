@@ -2,6 +2,7 @@ import { initXript, type HardLimits, type HostNamespace, type XriptFactory, type
 import hostManifest from "../../manifest.json" with { type: "json" };
 import { authoringPrelude } from "./authoring-prelude.generated.js";
 import { createCuti } from "../cuti.js";
+import { resolveKnobSpecs } from "../algorithms/factory.js";
 import { resolveGraph, type TokenNode } from "../graph.js";
 import type {
 	Algorithm,
@@ -10,6 +11,7 @@ import type {
 	Invariant,
 	InvariantContext,
 	InvariantResult,
+	KnobSpec,
 	Pass,
 	TokenCategories,
 	TokenLineageNode,
@@ -26,6 +28,8 @@ interface ModAlgorithmManifest {
 	produces: TokenName[];
 	categories: TokenCategories;
 	knobs: string[];
+	/** Present on mods built against the widened authoring surface; older/third-party mods omit it. */
+	knobSpecs?: KnobSpec[];
 	invariantCount: number;
 	passNames?: string[];
 }
@@ -193,6 +197,9 @@ export async function loadAlgorithm(
 		id: (modManifest as { name?: string }).name ?? manifest.produces[0] ?? "unknown",
 		produces: manifest.produces,
 		knobs: manifest.knobs,
+		// A mod built against the widened surface ships its own specs (novel knobs included); an older
+		// or third-party mod that omits them still gets correct domains for shared knobs from the registry.
+		knobSpecs: manifest.knobSpecs ?? resolveKnobSpecs(manifest.knobs),
 		categories: manifest.categories,
 		derive: (opts: DeriveOptions = {}): TokenRegister => resolveGraph(graph(opts)),
 		lineage: (opts: DeriveOptions = {}): TokenLineageNode[] =>

@@ -45,6 +45,15 @@ const nowCell: [number, number][] = [[2, 1]];
 const runTitles = gdays.map((day, d) =>
 	gbuckets.map((bucket, b) => `${day} ${bucket}: ${runCount[d][b]} runs, ${totalRuntime[d][b]}m total`),
 );
+
+const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
+const categories = ["Bugs", "Features", "Docs", "Chores"];
+const workByCategory = [
+	[8, 3, 1, 5],
+	[2, 6, 4, 3],
+	[5, 1, 7, 2],
+	[3, 9, 2, 6],
+];
 ---
 
 <Stack gap={6}>
@@ -128,6 +137,28 @@ const runTitles = gdays.map((day, d) =>
 				titles={runTitles}
 				scheme="accent"
 				label="Runs per bucket, this week (Wed Midday is now)"
+			/>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Categorical heat-grid</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>categorical</code> colors each column its own hue from a <code>SeriesScheme</code>
+				(<code>skittles</code> here) and washes it up by value, so a grid whose columns are
+				unrelated categories reads by hue rather than one shared ramp. It shares the palette the
+				<code>Bar</code> and <code>Pie</code> charts use; <code>scale</code> keys the hues in a legend.
+			</Text>
+			<Heatmap
+				rows={weeks}
+				cols={categories}
+				values={workByCategory}
+				scheme="skittles"
+				categorical
+				scale
+				showValues
+				label="Weekly work by category"
 			/>
 		</Stack>
 	</Card>

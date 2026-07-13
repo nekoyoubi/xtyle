@@ -32,6 +32,15 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Fine-tuning &amp; overflow</Heading>
+		<Text size="xs" tone="subtle">Drag or arrow for coarse steps; hold <kbd>Shift</kbd> for the fine step. Click a value to type it; the scale accepts a value past its max.</Text>
+		<Stack gap={5} class="demo__rows">
+			<Slider id="demo-slider-angle" label="Angle" min={-180} max={180} step={15} altStep={1} value={45} showValue />
+			<Slider id="demo-slider-scale" label="Scale" min={10} max={200} step={5} altStep={1} value={100} showValue overflow />
+		</Stack>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={2} size="sm" tone="muted">Sizes</Heading>
 		<Stack gap={5} class="demo__rows">
 			<Slider label="Small" size="sm" value={25} />
@@ -56,10 +65,14 @@ const TONE_GROUPS = [
 </Stack>
 
 <script>
-	const pct = document.getElementById("demo-slider-pct") as
-		| (HTMLElement & { format: (value: number) => string })
-		| null;
-	if (pct) pct.format = (value: number) => `${value}%`;
+	type Formattable = HTMLElement & { format: (value: number) => string };
+	const setFormat = (id: string, fn: (value: number) => string): void => {
+		const el = document.getElementById(id) as Formattable | null;
+		if (el) el.format = fn;
+	};
+	setFormat("demo-slider-pct", (value) => `${value}%`);
+	setFormat("demo-slider-scale", (value) => `${value}%`);
+	setFormat("demo-slider-angle", (value) => `${value}°`);
 </script>
 
 <style>

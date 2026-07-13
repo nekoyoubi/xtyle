@@ -46,7 +46,7 @@
 	const skipAttr = $derived(skipLink === true ? "" : skipLink || undefined);
 	const railAttr = (v: number | string | undefined) =>
 		v === undefined ? undefined : typeof v === "number" ? String(v) : v;
-	const flag = (v: boolean | undefined) => (v ? "" : undefined);
+	const flag = (v: boolean | undefined) => (v ? true : undefined);
 </script>
 
 <xtyle-app-shell

@@ -60,6 +60,30 @@ import { Slider } from "@xtyle/astro";
 
 <Slider label="Locked" value={50} disabled />`;
 
+const steppingHtmlExample = `<!-- Coarse 15° steps; hold Shift while dragging or arrowing for 1° fine-tuning. -->
+<xtyle-slider label="Angle" min="-180" max="180" step="15" alt-step="1" value="45" show-value></xtyle-slider>
+
+<!-- overflow: type a scale past 200 in the readout; the thumb pins at the rail edge. -->
+<xtyle-slider label="Scale" min="10" max="200" step="5" alt-step="1" value="100" show-value overflow></xtyle-slider>`;
+
+const steppingSvelteExample = `<script lang="ts">
+	import { Slider } from "@xtyle/svelte";
+</script>
+
+<!-- Coarse 15° steps; hold Shift while dragging or arrowing for 1° fine-tuning. -->
+<Slider label="Angle" min={-180} max={180} step={15} altStep={1} value={45} showValue format={(v) => \`\${v}°\`} />
+
+<!-- overflow: type a scale past 200 in the readout; the thumb pins at the rail edge. -->
+<Slider label="Scale" min={10} max={200} step={5} altStep={1} value={100} showValue overflow format={(v) => \`\${v}%\`} />`;
+
+const steppingAstroExample = `---
+import { Slider } from "@xtyle/astro";
+---
+
+<Slider label="Angle" min={-180} max={180} step={15} altStep={1} value={45} showValue />
+
+<Slider label="Scale" min={10} max={200} step={5} altStep={1} value={100} showValue overflow />`;
+
 export const sliderManifest: ComponentManifest = {
 	id: "slider",
 	name: "Slider",
@@ -68,7 +92,7 @@ export const sliderManifest: ComponentManifest = {
 	seeAlso: ["number-input", "progress", "color-picker"],
 	summary: "A draggable range control for choosing a single value between a min and max, with full keyboard support.",
 	description:
-		"Slider picks one number across a range. It renders a rail with a fill showing the chosen portion and a `role=\"slider\"` thumb carrying `aria-valuemin`/`aria-valuemax`/`aria-valuenow`, so pointer drag, click-to-position, and the full arrow/Page/Home/End keyboard set all move it. Values snap to `step` and clamp to `[min, max]`. It is form-associated: give it a `name` and it contributes its current value to form data. Three sizes (`sm`, the default `md`, and `lg`) vary the thumb and rail thickness. It is the primitive the hue and alpha tracks of a color picker compose from.",
+		"Slider picks one number across a range. It renders a rail with a fill showing the chosen portion and a `role=\"slider\"` thumb carrying `aria-valuemin`/`aria-valuemax`/`aria-valuenow`, so pointer drag, click-to-position, and the full arrow/Page/Home/End keyboard set all move it. Values snap to `step` and clamp to `[min, max]`. Holding the `modifier` (Shift by default) while stepping or dragging swaps in `alt-step` for a coarser or finer jump, the same fine-tune contract the number field carries. With `show-value`, the readout is a click-to-edit numeric field that steps on the same keys; add `overflow` and a typed value may pass the rail while the thumb pins at the edge. It is form-associated: give it a `name` and it contributes its current value to form data. Three sizes (`sm`, the default `md`, and `lg`) vary the thumb and rail thickness. It is the primitive the hue and alpha tracks of a color picker compose from.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -146,7 +170,36 @@ export const sliderManifest: ComponentManifest = {
 			name: "step",
 			type: "number",
 			default: "1",
-			description: "The granularity values snap to; arrow keys move by one step, Page keys by ten.",
+			description: "The base granularity: an arrow key and a drag snap to `step`. The finest grid the slider lands on is the smaller of `step` and `alt-step`, so a typed or fine-modifier value can sit between coarse steps.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "alt-step",
+			type: "number",
+			default: "step * 10",
+			description: "The step taken while the modifier is held during an arrow press or a drag (and by Page keys): set it larger than `step` for a broad jump or smaller for fine-tuning. Mirrors the number field's alt step.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "alt-default",
+			type: "boolean",
+			default: "false",
+			description: "Inverts the modifier: `alt-step` becomes the unmodified default and the base `step` needs the modifier held.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "modifier",
+			type: "\"shift\" | \"alt\" | \"ctrl\" | \"meta\"",
+			default: "shift",
+			description: "Which key swaps `step` for `alt-step` on a keyboard press or a drag. Same contract as the number field, so a form's slider and stepper fine-tune on the same key.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["shift", "alt", "ctrl", "meta"],
+		},
+		{
+			name: "overflow",
+			type: "boolean",
+			default: "false",
+			description: "Lets a typed value in the inline editor pass `min`/`max`: the thumb pins at the rail edge while the true value is kept, emitted, and announced (the reported range widens to include it). Drag and arrow-stepping still stay on the rail.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -194,7 +247,7 @@ export const sliderManifest: ComponentManifest = {
 			name: "show-value",
 			type: "boolean",
 			default: "false",
-			description: "Renders the current value inline beside the label. The readout is `aria-hidden` since the thumb's `aria-valuenow` already announces it. Format it with the `format` property.",
+			description: "Renders the current value inline beside the label. Clicking it opens an inline numeric editor that types an exact value and steps on the arrow/Page keys (honoring `modifier` and `alt-step`). The readout is `aria-hidden` since the thumb's `aria-valuenow` already announces it. Format it with the `format` property.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -279,11 +332,13 @@ export const sliderManifest: ComponentManifest = {
 	composition: [
 		"Pair with Field or a form to capture the value; give it a `name` so it contributes to submitted data.",
 		"Use a tight `step` for coarse adjustments (a 0–10 rating) or `step=\"1\"` over a wide range for fine ones.",
+		"Give a coarse `step` a fine `alt-step` (e.g. `step=\"15\"` `alt-step=\"1\"`) so a drag snaps to big increments but the modifier unlocks precision; pair with `overflow` on a bounded rail whose value should occasionally exceed the slider (a scale past 200%).",
 		"It is the building block for a color picker's hue and alpha tracks: same rail, fill, and thumb mechanics with a gradient rail.",
 	],
 	a11y: [
 		"The thumb is `role=\"slider\"` with `aria-valuemin`, `aria-valuemax`, and `aria-valuenow` kept in sync, never conveying value by position alone.",
-		"Full keyboard support: arrows move by `step`, PageUp/PageDown by ten steps, Home/End jump to min/max; the keys' default scroll is prevented.",
+		"Full keyboard support: arrows move by `step` (by `alt-step` with the `modifier` held), PageUp/PageDown by `alt-step`, Home/End jump to min/max; the keys' default scroll is prevented.",
+		"Under `overflow`, a typed value past the rail keeps `aria-valuenow` valid by widening the announced `aria-valuemin`/`aria-valuemax` to include it, rather than misreporting a pinned value.",
 		"Requires an accessible name: `labelledby` wins, then `label`; the binding warns at runtime when neither is present. `hide-label` keeps the `label` as the accessible name while visually hiding its text, so a host that renders its own label avoids announcing the name twice.",
 		"The `show-value` readout is `aria-hidden` so screen readers hear the value once via the thumb's `aria-valuenow`, not twice.",
 		"Pointer drag uses pointer capture so the thumb keeps tracking even when the cursor leaves the rail.",
@@ -296,6 +351,12 @@ export const sliderManifest: ComponentManifest = {
 			title: "Ranges, sizes, and form association",
 			description: "A labeled slider, a stepped range, the compact size, a form-bound slider, and a disabled one.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "fine-tuning-and-overflow",
+			title: "Fine-tuning and overflow",
+			description: "A coarse-step angle that fine-tunes to 1° while Shift is held, and a scale whose editable readout accepts a value past the rail's max.",
+			source: { html: steppingHtmlExample, svelte: steppingSvelteExample, astro: steppingAstroExample },
 		},
 	],
 };

@@ -1,5 +1,6 @@
 import { contrast, formatCss, oklch } from "./color.js";
 import type {
+	AccentStrategy,
 	Algorithm,
 	InvariantContext,
 	InvariantResult,
@@ -84,6 +85,16 @@ function randomSeeds(rand: () => number): Seeds {
 const SCHEME_DRAWS: Array<Scheme | undefined> = [undefined, "dark", "light"];
 const SHIFT_STEP_DRAWS = [30, 45, 90, 120];
 const ACCENT_SPLIT_DRAWS = [20, 30, 45, 60];
+// Every accent strategy an algorithm can be driven into, plus `undefined` for its own taste. The knob
+// reshapes the accent family itself, so without this an algorithm is only ever proven in the posture
+// it happens to ship with — and `duo`'s two-anchor derivation would never meet a hostile seed.
+const ACCENT_STRATEGY_DRAWS: Array<AccentStrategy | undefined> = [
+	undefined,
+	"fan",
+	"step",
+	"shade",
+	"duo",
+];
 const CONSTRAINT_TARGETS = ["--accent", "--bg-0"];
 const CONTRAST_DRAWS: Array<"aa" | "aaa" | number | undefined> = [undefined, "aa", "aaa", 5];
 const VIBRANCY_DRAWS: Array<number | undefined> = [undefined, 0, 0.5, 1];
@@ -137,6 +148,12 @@ function randomKnobs(rand: () => number, base: Knobs, run: number): Knobs {
 	if (base.accentSplit === undefined) {
 		knobs.accentSplit = ACCENT_SPLIT_DRAWS[run % ACCENT_SPLIT_DRAWS.length] as number;
 	}
+	// Same deterministic walk, and coprime in length with the split's, so runs cross every
+	// strategy against every split rather than pairing them off in lockstep.
+	if (base.accentStrategy === undefined) {
+		const strategy = ACCENT_STRATEGY_DRAWS[run % ACCENT_STRATEGY_DRAWS.length];
+		if (strategy !== undefined) knobs.accentStrategy = strategy;
+	}
 	if (base.contrastBand === undefined) {
 		const band = pick(rand, CONTRAST_DRAWS);
 		if (band !== undefined) knobs.contrastBand = band;
@@ -188,6 +205,15 @@ export function gauntlet(
 			constraints[pick(rand, CONSTRAINT_TARGETS)] = headroomColor(rand);
 		} else if (run % 5 === 2) {
 			constraints["--bg-0"] = midLightnessColor(rand);
+		}
+		// `duo` is the one strategy whose headline input is a *second* pinned brand, and without this
+		// it would only ever be fuzzed in its degenerate fallback — no second brand, `--accent-2`
+		// falling out of the accent by the fan split, which is very nearly just a `fan`. Pin a real
+		// second brand on most duo runs so the two-hostile-brands case (the reason the strategy
+		// exists) actually meets the invariants: same-hue pairs, wildly-split lightness pairs, and
+		// the pairs that force the shade placement to flip away from a pole it has no room at.
+		if (knobs.accentStrategy === "duo" && run % 3 !== 0) {
+			constraints["--accent-2"] = run % 3 === 1 ? headroomColor(rand) : midLightnessColor(rand);
 		}
 		const register = algorithm.derive({ knobs, constraints });
 		const scheme: Scheme =

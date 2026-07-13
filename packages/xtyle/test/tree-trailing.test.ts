@@ -42,6 +42,24 @@ describe("tree trailing content", () => {
 		expect(treeTrailing({ label: "Plain" }, "plain", false)).toBe("");
 	});
 
+	it("renders multiple badges, each carrying its own tone", () => {
+		const node: TreeNode = { label: "Chapter 1", badge: ["1,204", { text: "3", tone: "warn" }] };
+		const html = treeTrailing(node, "ch1", false);
+		expect(html).toContain(">1,204<");
+		expect(html).toContain('class="xtyle-tree__badge xtyle-tree__badge--warn"');
+		expect(html).toContain(">3<");
+		// exactly two pills
+		expect(html.match(/part="badge"/g)?.length).toBe(2);
+	});
+
+	it("renders a disabled action as a non-firing, greyed button", () => {
+		const node: TreeNode = { label: "Root", actions: [{ id: "up", label: "Move up", disabled: true }] };
+		const html = treeTrailing(node, "root", false);
+		expect(html).toContain('data-action="up"');
+		expect(html).toContain(" disabled ");
+		expect(html).toContain('data-disabled="true"');
+	});
+
 	it("places the trailing content inside the row markup", () => {
 		const items: TreeNode[] = [{ label: "Opening", value: "op", badge: "3", actions: [{ id: "del", label: "Delete" }] }];
 		const html = treeMarkup({ items, label: "Binder" });

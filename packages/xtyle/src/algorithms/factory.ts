@@ -14,6 +14,7 @@ import {
 import { resolveGraph, type TokenNode } from "../graph.js";
 import { FULL_TONES } from "../vocab.js";
 import type {
+	AccentStrategy,
 	Algorithm,
 	DeriveOptions,
 	DeriveTrace,
@@ -21,6 +22,7 @@ import type {
 	Invariant,
 	InvariantContext,
 	InvariantResult,
+	KnobSpec,
 	Knobs,
 	Pass,
 	PassContext,
@@ -43,11 +45,36 @@ const DEFAULT_ACCENT_SPLIT = 45;
 // Chroma of the faint accent-hue wash on a surface synthesized from an accent (the "keep the tone"
 // derivation); kept low enough that any hue stays a neutral-reading surface rather than a muddy fill.
 const DERIVED_SURFACE_TINT_C = 0.02;
-// How accent-2/3/4 fan off the primary accent. "split-complement": 2 and 3 flank the
-// accent at ∓the accentSplit knob, 4 is its 180° complement; if a theme pins either wing, the
-// other mirrors its hue across the accent instead of the fixed knob, so the pair stays symmetric
-// around the author's choice. "wheel": an even fan, each accent one accentShiftStep past the last.
-const ACCENT_FAN: "split-complement" | "wheel" = "split-complement";
+const DEFAULT_ACCENT_STRATEGY: AccentStrategy = "fan";
+const ACCENT_STRATEGIES: readonly AccentStrategy[] = ["fan", "step", "shade", "duo"];
+
+/**
+ * The accent strategy in force for one derivation. It is both an algorithm's taste (a preset picks
+ * the posture it ships with) and a knob (a theme overrides it), so the knob wins where it is set and
+ * the preset's own choice is the default — the same layering anchors and every other knob follow.
+ */
+function accentStrategyOf(preset: PresetDefaults, knobs: Knobs): AccentStrategy {
+	const knob = knobs.accentStrategy;
+	if (typeof knob === "string" && ACCENT_STRATEGIES.includes(knob)) return knob;
+	return preset.accentStrategy ?? DEFAULT_ACCENT_STRATEGY;
+}
+
+/**
+ * Everything the accent family is built from, resolved in one place. The derivation and the
+ * invariant that grades it must read these identically — if they drift, the gauntlet grades a fan
+ * the engine never built.
+ */
+function resolveAccentKnobs(
+	preset: PresetDefaults,
+	knobs: Knobs,
+): { strategy: AccentStrategy; split: number; shiftStep: number } {
+	return {
+		strategy: accentStrategyOf(preset, knobs),
+		split: typeof knobs.accentSplit === "number" ? knobs.accentSplit : DEFAULT_ACCENT_SPLIT,
+		shiftStep:
+			typeof knobs.accentShiftStep === "number" ? knobs.accentShiftStep : DEFAULT_SHIFT_STEP,
+	};
+}
 const ACHROMATIC_CHROMA = 0.02;
 const DERIVED_ACCENT_HUE_ROTATION = 150;
 const DERIVED_ACCENT_FALLBACK_HUE = 250;
@@ -55,6 +82,12 @@ const DERIVED_ACCENT_L = 0.62;
 const DERIVED_ACCENT_C = 0.16;
 const ACCENT_RAMP_L_MIN = 0.1;
 const ACCENT_RAMP_L_MAX = 0.95;
+// The `shade` strategy steps lightness (not hue) by this much per rung: `accent-2` a tint one step
+// up, `accent-3`/`-4` one and two steps down, so the four read as distinct shades of the one brand hue.
+const SHADE_LADDER_L_STEP = 0.12;
+// How far `duo`'s two derived shades sit from the mean lightness of its two brand anchors. Larger than
+// a single `shade` rung: the shades must clear *both* anchors, not just step away from one.
+const DUO_L_STEP = 0.16;
 const HUE_STABLE_CHROMA = 0.1;
 // The fan (accent-2/3/4) varies hue at the accent's L/C, which collapses to identical grays when the
 // accent has near-zero chroma. Floor the fan's *base* chroma (not the primary accent) so a near-gray
@@ -144,6 +177,24 @@ const CODE_STRUCTURAL_ROLES = ["comment", "operator", "punctuation", "variable"]
 const CODE_SCOPES = [...CODE_VIVID_ROLES, ...CODE_STRUCTURAL_ROLES];
 const CODE_SURFACES = ["--code-bg", "--code-fg", "--code-line-highlight", "--code-selection"] as const;
 
+// The ANSI palette. The four chrome roles map to xterm.js's ITheme
+// (background / foreground / cursor / cursorAccent), and the sixteen colors are the
+// standard 8 + 8-bright set. The six chromatic slots take fixed hue angles (aligned
+// with the named `--color-*` palette) so a terminal skin re-colours with the chrome
+// while staying recognisably red/green/yellow/blue/magenta/cyan; `black` and `white`
+// are the achromatic endpoints (bg-fill / text) that a terminal uses regardless of scheme.
+const TERMINAL_CHROME = ["bg", "fg", "cursor", "cursor-accent"] as const;
+const ANSI_ORDER = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"] as const;
+const ANSI_HUES: Record<string, number> = {
+	red: 25,
+	green: 145,
+	yellow: 95,
+	blue: 250,
+	magenta: 330,
+	cyan: 200,
+};
+const ANSI_CHROMATIC = ["red", "green", "yellow", "blue", "magenta", "cyan"] as const;
+
 const SURFACES = ["--body-bg", "--bg-0", "--bg-1", "--bg-2", "--bg-3"] as const;
 
 const PANEL_REF_INDEX = SURFACES.indexOf("--bg-2");
@@ -192,6 +243,8 @@ export type PresetAnchors = { bg: string; fg: string; accent?: string };
 export interface PresetDefaults {
 	id: string;
 	knobs: string[];
+	/** Domain specs for any knob not in the shared registry — a novel knob this preset introduces. */
+	knobSpecs?: KnobSpec[];
 	defaultAnchors: PresetAnchors;
 	contrastFloor: number;
 	declaredTextOnFillFloor: number;
@@ -203,6 +256,9 @@ export interface PresetDefaults {
 	elevationStrengthMul: number;
 	elevationAlphaBoost: number;
 	accentTintChromaMul: number;
+	/** The accent family this taste ships with — the *default* for the `accentStrategy` knob, which a
+	 * theme can still override. Defaults to `fan`. */
+	accentStrategy?: AccentStrategy;
 	extreme?: boolean;
 }
 
@@ -226,6 +282,9 @@ function buildProduces(): { produces: string[]; categories: TokenCategories } {
 
 	add("--line", "color");
 	add("--line-2", "color");
+	add("--scrollbar-track", "color");
+	add("--scrollbar-thumb", "color");
+	add("--scrollbar-thumb-hover", "color");
 	add("--ring", "color");
 	add("--ring-bg", "color");
 
@@ -287,6 +346,12 @@ function buildProduces(): { produces: string[]; categories: TokenCategories } {
 	for (const t of CODE_SURFACES) add(t, "color");
 	for (const role of CODE_SCOPES) add(`--code-${role}`, "color");
 
+	for (const role of TERMINAL_CHROME) add(`--terminal-${role}`, "color");
+	for (const name of ANSI_ORDER) {
+		add(`--terminal-${name}`, "color");
+		add(`--terminal-bright-${name}`, "color");
+	}
+
 	add("--font-sans", "font");
 	add("--font-mono", "font");
 	add("--font-display", "font");
@@ -318,11 +383,6 @@ const { produces: PRODUCES, categories: CATEGORIES } = buildProduces();
 export const KEYWORD_DOMAINS: Record<string, readonly string[]> = {
 	"--selection-cue": ["tint", "marker"],
 };
-
-function stepLightness(base: number, scheme: Scheme, step: number, index: number): number {
-	const direction = scheme === "dark" ? 1 : -1;
-	return base + direction * step * index;
-}
 
 function contrastBandFloor(knobs: Knobs): number | undefined {
 	const band = knobs.contrastBand;
@@ -920,7 +980,32 @@ function resolveStatusHue(role: string, pinned: TokenRegister): number {
 	return pin ? pin.h : paletteHueAngle(name);
 }
 
+/**
+ * A single derivation is pure in `(preset, opts)`, and a live editor asks for the same one
+ * several ways at once: `derive` resolves the graph, `lineage` reads its edges, an inspector
+ * reads it again. Without this they each pay a full OKLCH pass over the whole register. The
+ * cache is per-preset and bounded — a slider drag mints a new key per settled value, so it
+ * evicts oldest-first rather than growing for the life of the page.
+ */
+const GRAPH_CACHE_LIMIT = 16;
+const graphCaches = new WeakMap<PresetDefaults, Map<string, TokenNode[]>>();
+
 export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNode[] {
+	let cache = graphCaches.get(preset);
+	if (!cache) graphCaches.set(preset, (cache = new Map()));
+	const key = JSON.stringify(opts ?? {});
+	const hit = cache.get(key);
+	if (hit) return hit;
+	const nodes = buildGraphUncached(preset, opts);
+	cache.set(key, nodes);
+	if (cache.size > GRAPH_CACHE_LIMIT) {
+		const oldest = cache.keys().next().value as string;
+		cache.delete(oldest);
+	}
+	return nodes;
+}
+
+function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenNode[] {
 	const completed = completeAnchors(preset, opts);
 	const bg = completed.bg;
 	const fgAnchor = completed.fg;
@@ -929,10 +1014,7 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 
 	const scheme: Scheme = completed.scheme;
 	const knobs: Knobs = opts.knobs ?? {};
-	const shiftStep =
-		typeof knobs.accentShiftStep === "number" ? knobs.accentShiftStep : DEFAULT_SHIFT_STEP;
-	const accentSplit =
-		typeof knobs.accentSplit === "number" ? knobs.accentSplit : DEFAULT_ACCENT_SPLIT;
+	const { strategy, split: accentSplit, shiftStep } = resolveAccentKnobs(preset, knobs);
 	const band = contrastBandFloor(knobs);
 	const floor = Math.max(ENFORCE, preset.contrastFloor, (band ?? 0) + 0.2);
 	const extreme = preset.extreme === true;
@@ -944,6 +1026,16 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 	const fonts = fontsOf(knobs);
 
 	const surfaceStep = 0.045;
+	// The signed lightness delta the surface stack walks from `--bg-0`. Unset, it resolves to the
+	// scheme-derived direction (dark ascends, light descends) at the default magnitude, so output is
+	// unchanged; set, the author's sign wins and the whole stack (body-bg, bg-1/2/3, bg-sunken)
+	// follows the one number instead of six hand-pinned surfaces.
+	const surfaceRamp =
+		typeof knobs.surfaceRamp === "number"
+			? knobs.surfaceRamp
+			: scheme === "dark"
+				? surfaceStep
+				: -surfaceStep;
 
 	const nodes: TokenNode[] = [];
 	const lit = (name: TokenName, value: string, refs?: TokenName[]): void => {
@@ -961,15 +1053,14 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 		: extreme
 			? oklch(scheme === "dark" ? 0 : 1, 0, 0)
 			: ensureTextHeadroom(
-					withLightness(bg, stepLightness(bg.l, scheme, surfaceStep, 1)),
+					withLightness(bg, bg.l + surfaceRamp),
 					scheme,
 					floor,
 				);
 	const pageFloor = (fill: OklchColor): OklchColor =>
 		separateFillFromSurface(fill, bg0, SURFACE_SEPARATION, floor);
-	const direction = scheme === "dark" ? 1 : -1;
 	const surfaceColors: OklchColor[] = SURFACES.map((_, index) =>
-		withLightness(bg0, bg0.l + direction * surfaceStep * (index - 1)),
+		withLightness(bg0, bg0.l + surfaceRamp * (index - 1)),
 	);
 	SURFACES.forEach((name, index) => {
 		lit(name, formatCss(surfaceColors[index] as OklchColor), refIfPinned("--bg-0"));
@@ -977,7 +1068,7 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 
 	lit(
 		"--bg-sunken",
-		formatCss(withLightness(bg0, bg0.l - direction * surfaceStep * 2)),
+		formatCss(withLightness(bg0, bg0.l - surfaceRamp * 2)),
 		refIfPinned("--bg-0"),
 	);
 
@@ -1161,7 +1252,17 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 	const line2Seed = extreme
 		? oklch(scheme === "dark" ? 0.85 : 0.15, 0, 0)
 		: withLightness(bg0, scheme === "dark" ? bg0.l + 0.2 : bg0.l - 0.2);
-	lit("--line-2", formatCss(borderForContrast(line2Seed, bg0, DIVIDER_SEPARATION)), refIfPinned("--bg-0"));
+	const line2Color = borderForContrast(line2Seed, bg0, DIVIDER_SEPARATION);
+	lit("--line-2", formatCss(line2Color), refIfPinned("--bg-0"));
+
+	lit("--scrollbar-track", "transparent");
+	lit("--scrollbar-thumb", formatCss(line2Color), ["--line-2", ...refIfPinned("--bg-0")]);
+	lit(
+		"--scrollbar-thumb-hover",
+		formatCss(withLightness(line2Color, line2Color.l + (scheme === "dark" ? 0.12 : -0.12))),
+		["--scrollbar-thumb"],
+	);
+
 	lit("--ring", formatCss(withAlpha(accentFill, 0.7)), ["--accent"]);
 	lit("--ring-bg", formatCss(withAlpha(accentFill, 0.18)), ["--accent"]);
 
@@ -1222,13 +1323,14 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 	let a2: OklchColor;
 	let a3: OklchColor;
 	let a4: OklchColor;
-	// The lineage edges differ per fan: a split-complement's 2/3 flank the accent and 4 is its
-	// complement (all off `--accent`, so a pinned flank pulls its mirror in), while a wheel chains
-	// 3 off 2 and 4 off 3. Declared per-branch so `lineage()` names what each token actually reads.
+	// The lineage edges differ per strategy: a `fan`'s 2/3 flank the accent and 4 is its complement
+	// (all off `--accent`, so a pinned flank pulls its mirror in), a `step` chains 3 off 2 and 4 off 3,
+	// and a `duo` reads *both* anchors into each shade. Declared per-branch so `lineage()` names what
+	// each token actually reads.
 	let a2Refs: TokenName[];
 	let a3Refs: TokenName[];
 	let a4Refs: TokenName[];
-	if (ACCENT_FAN === "split-complement") {
+	if (strategy === "fan") {
 		// The two flanks are symmetric either way: pin either wing and the other mirrors its hue
 		// across the accent, so the fan stays balanced around the author's choice. With neither
 		// pinned it's the default ∓split; with both pinned each holds its own value. Lightness and
@@ -1246,10 +1348,54 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 		a2Refs = a3Pin && !a2Pin ? ["--accent", "--accent-3"] : ["--accent"];
 		a3Refs = a2Pin && !a3Pin ? ["--accent", "--accent-2"] : ["--accent"];
 		a4Refs = ["--accent"];
+	} else if (strategy === "shade") {
+		// 2/3/4 hold the accent's hue and step its lightness: a tint one step up, two shades down, so
+		// the fan reads as one brand color in four depths. The separation is on lightness, so a
+		// near-gray accent still fans into four distinguishable rungs where a hue rotation is a no-op.
+		// Each rung reads off `--accent` and is independently pinnable.
+		a2 = fanned("2", applyAccentDelta(fanBase, { dL: SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+		a3 = fanned("3", applyAccentDelta(fanBase, { dL: -SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+		a4 = fanned("4", applyAccentDelta(fanBase, { dL: -2 * SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+		a2Refs = ["--accent"];
+		a3Refs = ["--accent"];
+		a4Refs = ["--accent"];
+	} else if (strategy === "duo") {
+		// Two brand colors, not one. `--accent` and `--accent-2` are both *inputs* — the only strategy
+		// where a fan slot is an anchor rather than an output — and 3/4 are their shades. Unpinned,
+		// `--accent-2` still has to come from somewhere, so it falls out of `--accent` by the same fan
+		// distance the split uses; a duo theme that never sets a second color is just a fan that kept
+		// two of its wings.
+		//
+		// The shades are placed against the *pair's* mean lightness rather than each anchor's own, which
+		// is what makes this more than two ladders side by side: both land on one common lightness, so
+		// they read as a matched secondary pair belonging to the same system. They step away from the
+		// surface (up from a dark scheme, down from a light one) and flip if that pole has no headroom
+		// left, so a pair of already-light brand colors on a light theme still yields separable rungs.
+		a2 = fanned("2", applyAccentDelta(fanBase, rotate(accentSplit)));
+		const midL = (a1.l + a2.l) / 2;
+		const away = scheme === "dark" ? 1 : -1;
+		const room = (dir: number): boolean => {
+			const target = midL + dir * DUO_L_STEP;
+			return target <= ACCENT_RAMP_L_MAX && target >= ACCENT_RAMP_L_MIN;
+		};
+		const dir = room(away) ? away : -away;
+		const shadeL = Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, midL + dir * DUO_L_STEP));
+		const shadeOf = (brand: OklchColor): OklchColor => ({
+			l: shadeL,
+			c: Math.max(brand.c, FAN_MIN_CHROMA),
+			h: brand.h,
+			alpha: 1,
+		});
+		a3 = fanned("3", shadeOf(a1));
+		a4 = fanned("4", shadeOf(a2));
+		a2Refs = ["--accent"];
+		// Both shades read both anchors: the hue is one brand's, the lightness is the pair's mean.
+		a3Refs = ["--accent", "--accent-2"];
+		a4Refs = ["--accent-2", "--accent"];
 	} else {
-		// Each accent is one hue-step past the last. Chaining off `fanBase` (not `a1`) keeps the whole
-		// wheel at the floored chroma for a near-gray accent instead of escalating it down the chain; a
-		// chromatic accent has `fanBase === a1`, so the step stays byte-identical.
+		// `step`: each accent is one hue-step past the last. Chaining off `fanBase` (not `a1`) keeps the
+		// whole walk at the floored chroma for a near-gray accent instead of escalating it down the
+		// chain; a chromatic accent has `fanBase === a1`, so the step stays byte-identical.
 		a2 = fanned("2", applyAccentDelta(fanBase, rotate(shiftStep)));
 		a3 = fanned("3", applyAccentDelta(a2, accentDelta(fanBase, a2)));
 		a4 = fanned("4", applyAccentDelta(a3, accentDelta(a2, a3)));
@@ -1434,14 +1580,21 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 	const codeTowardLight = contrast("#ffffff", codeBgCss) >= contrast("#000000", codeBgCss);
 	const codePole = codeTowardLight ? 1 : 0;
 	const codeFloor = AA;
-	const readableHuedOnCode = (l: number, c: number, h: number, fl: number): OklchColor => {
+	const readableHuedOn = (
+		bgCss: string,
+		pole: number,
+		l: number,
+		c: number,
+		h: number,
+		fl: number,
+	): OklchColor => {
 		const seed = oklch(l, c, h);
 		let best = seed;
-		let bestContrast = emittedContrast(seed, codeBgCss);
+		let bestContrast = emittedContrast(seed, bgCss);
 		if (bestContrast >= fl) return seed;
 		for (let i = 1; i <= 100; i++) {
-			const cand = withLightness(seed, seed.l + (codePole - seed.l) * (i / 100));
-			const ct = emittedContrast(cand, codeBgCss);
+			const cand = withLightness(seed, seed.l + (pole - seed.l) * (i / 100));
+			const ct = emittedContrast(cand, bgCss);
 			if (ct >= fl) return cand;
 			if (ct > bestContrast) {
 				bestContrast = ct;
@@ -1450,6 +1603,8 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 		}
 		return best;
 	};
+	const readableHuedOnCode = (l: number, c: number, h: number, fl: number): OklchColor =>
+		readableHuedOn(codeBgCss, codePole, l, c, h, fl);
 	const codeChroma = Math.max(
 		0.08,
 		Math.max(0.1, accent.c) * (0.7 + vibrancy * 0.7) * preset.paletteChromaMul,
@@ -1502,6 +1657,69 @@ export function buildGraph(preset: PresetDefaults, opts: DeriveOptions): TokenNo
 		["--code-fg", "--code-bg"],
 	);
 	lit("--code-variable", codeFgCss, ["--code-fg"]);
+
+	const terminalBg = ensureTextHeadroom(
+		withLightness(bg0, scheme === "dark" ? bg0.l - 0.035 : bg0.l + 0.02),
+		scheme,
+		floor,
+	);
+	const terminalBgCss = formatCss(terminalBg);
+	lit("--terminal-bg", terminalBgCss, refIfPinned("--bg-0"));
+
+	const terminalFg = enforceContrastFloor(fg0, terminalBg, scheme, floor);
+	lit("--terminal-fg", formatCss(terminalFg), ["--fg-0", ...refIfPinned("--bg-0")]);
+
+	// A block cursor reads as the accent; the glyph under it flips to whichever pole
+	// stays legible against that block.
+	const terminalCursor = separateFillFromSurface(accentFill, terminalBg, SURFACE_SEPARATION, floor);
+	lit("--terminal-cursor", formatCss(terminalCursor), ["--accent"]);
+	lit("--terminal-cursor-accent", pickReadable(terminalCursor, TEXT_POLES, floor), ["--accent"]);
+
+	// The six chromatic slots sit at a mid band that clears AA on the terminal bg; the
+	// bright tier pushes each toward the readable pole (and up in chroma) so bright and
+	// normal stay separable while both stay legible.
+	const terminalTowardLight =
+		contrast("#ffffff", terminalBgCss) >= contrast("#000000", terminalBgCss);
+	const terminalPole = terminalTowardLight ? 1 : 0;
+	const terminalFloor = AA;
+	const terminalChroma = Math.max(
+		0.07,
+		Math.max(0.1, accent.c) * (0.55 + vibrancy * 0.7) * preset.paletteChromaMul,
+	);
+	const terminalNormalL = terminalTowardLight ? 0.5 : 0.62;
+	const terminalBrightL = terminalNormalL + (terminalPole - terminalNormalL) * 0.34;
+	for (const name of ANSI_CHROMATIC) {
+		const hue = ANSI_HUES[name] as number;
+		const normal = readableHuedOn(
+			terminalBgCss,
+			terminalPole,
+			terminalNormalL,
+			terminalChroma,
+			hue,
+			terminalFloor,
+		);
+		const bright = readableHuedOn(
+			terminalBgCss,
+			terminalPole,
+			terminalBrightL,
+			terminalChroma * 1.08,
+			hue,
+			terminalFloor,
+		);
+		lit(`--terminal-${name}`, formatCss(normal), ["--accent", "--terminal-bg"]);
+		lit(`--terminal-bright-${name}`, formatCss(bright), ["--accent", "--terminal-bg"]);
+	}
+
+	// `black` and `white` are the achromatic endpoints — a terminal uses them as
+	// fills / ink, not as legible-on-bg scopes, so they anchor to fixed dark / light
+	// lightnesses (carrying a whisper of the bg hue for cohesion) rather than sweeping
+	// for contrast like the chromatic slots.
+	const terminalHue = Number.isFinite(bg0.h) ? bg0.h : 0;
+	const terminalAchroma = (l: number): OklchColor => oklch(l, 0.006, terminalHue);
+	lit("--terminal-black", formatCss(terminalAchroma(0.2)), refIfPinned("--bg-0"));
+	lit("--terminal-bright-black", formatCss(terminalAchroma(0.42)), refIfPinned("--bg-0"));
+	lit("--terminal-white", formatCss(terminalAchroma(0.85)), ["--fg-0"]);
+	lit("--terminal-bright-white", formatCss(terminalAchroma(0.97)), ["--fg-0"]);
 
 	lit("--font-sans", fonts.sans);
 	lit("--font-mono", fonts.mono);
@@ -2138,32 +2356,30 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			if (accent.c < HUE_STABLE_CHROMA) {
 				return { name, ok: true };
 			}
-			const step =
-				typeof ctx.knobs.accentShiftStep === "number"
-					? ctx.knobs.accentShiftStep
-					: DEFAULT_SHIFT_STEP;
-			const split =
-				typeof ctx.knobs.accentSplit === "number"
-					? ctx.knobs.accentSplit
-					: DEFAULT_ACCENT_SPLIT;
+			const { strategy, split, shiftStep: step } = resolveAccentKnobs(preset, ctx.knobs);
 			const accent2Value = ctx.register["--accent-2"];
 			const accent3Value = ctx.register["--accent-3"];
 			const pinnedAccent2 =
 				ctx.constraints["--accent-2"] && accent2Value ? toOklchColor(accent2Value) : null;
 			const pinnedAccent3 =
 				ctx.constraints["--accent-3"] && accent3Value ? toOklchColor(accent3Value) : null;
-			const fanOffset = (n: number): number =>
-				ACCENT_FAN === "split-complement"
-					? n === 2
-						? pinnedAccent3
-							? -hueDelta(accent.h, pinnedAccent3.h)
-							: -split
-						: n === 3
-							? pinnedAccent2
-								? -hueDelta(accent.h, pinnedAccent2.h)
-								: split
-							: 180
-					: step * (n - 1);
+			// The hue each slot owes the accent. A `shade` holds one hue and steps lightness, so every
+			// rung wants the accent's own. A `duo` carries two hues: 3 is brand one's (the accent's), 4 is
+			// brand two's — whatever `--accent-2` actually landed on, pinned or derived.
+			const duoSecondHue = (): number =>
+				pinnedAccent2 ? hueDelta(accent.h, pinnedAccent2.h) : split;
+			const fanOffset = (n: number): number => {
+				if (strategy === "shade") return 0;
+				if (strategy === "step") return step * (n - 1);
+				// 3 shades brand one (the accent's own hue); 2 and 4 are brand two's.
+				if (strategy === "duo") return n === 3 ? 0 : duoSecondHue();
+				if (n === 2) return pinnedAccent3 ? -hueDelta(accent.h, pinnedAccent3.h) : -split;
+				if (n === 3) return pinnedAccent2 ? -hueDelta(accent.h, pinnedAccent2.h) : split;
+				return 180;
+			};
+			// `shade` and `duo` both deliberately move lightness off the accent's, so the constant-L/C
+			// checks below belong only to the hue-rotating postures.
+			const stepsLightness = strategy === "shade" || strategy === "duo";
 			for (let n = 2; n <= 4; n++) {
 				if (ctx.constraints[`--accent-${n}`]) continue;
 				const value = ctx.register[`--accent-${n}`];
@@ -2181,21 +2397,25 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 						};
 					}
 				}
-				if (Math.abs(rotated.l - accent.l) > LIGHTNESS_TOLERANCE) {
-					return {
-						name,
-						ok: false,
-						detail: `--accent-${n} l=${rotated.l.toFixed(3)} want ${accent.l.toFixed(3)}`,
-					};
-				}
-				const maxChroma = clampToGamut({ l: accent.l, c: accent.c, h: wantH, alpha: 1 }).c;
-				const expectedChroma = Math.min(accent.c, maxChroma);
-				if (Math.abs(rotated.c - expectedChroma) > 0.02) {
-					return {
-						name,
-						ok: false,
-						detail: `--accent-${n} chroma ${rotated.c.toFixed(3)} want max-at-hue ${expectedChroma.toFixed(3)}`,
-					};
+				// A lightness-stepping strategy gamut-clamps chroma per rung, so only the shared-hue check
+				// above is a promise it makes; the constant-L/C pair below is the hue-fan postures' promise.
+				if (!stepsLightness) {
+					if (Math.abs(rotated.l - accent.l) > LIGHTNESS_TOLERANCE) {
+						return {
+							name,
+							ok: false,
+							detail: `--accent-${n} l=${rotated.l.toFixed(3)} want ${accent.l.toFixed(3)}`,
+						};
+					}
+					const maxChroma = clampToGamut({ l: accent.l, c: accent.c, h: wantH, alpha: 1 }).c;
+					const expectedChroma = Math.min(accent.c, maxChroma);
+					if (Math.abs(rotated.c - expectedChroma) > 0.02) {
+						return {
+							name,
+							ok: false,
+							detail: `--accent-${n} chroma ${rotated.c.toFixed(3)} want max-at-hue ${expectedChroma.toFixed(3)}`,
+						};
+					}
 				}
 			}
 			return { name, ok: true };
@@ -2470,6 +2690,49 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			return { name, ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
+			const name = "terminal palette readable on --terminal-bg";
+			const bg = ctx.register["--terminal-bg"];
+			if (!bg) return { name, ok: false, detail: "--terminal-bg missing" };
+			const readFloor = achievableFloor(AA, bg);
+			const inks = [
+				"--terminal-fg",
+				...ANSI_CHROMATIC.map((n) => `--terminal-${n}`),
+				...ANSI_CHROMATIC.map((n) => `--terminal-bright-${n}`),
+			];
+			for (const token of inks) {
+				const v = ctx.register[token];
+				const ratio = v ? contrast(v, bg) : 0;
+				if (ratio < readFloor - 0.05) {
+					return { name, ok: false, detail: `${token} on --terminal-bg = ${ratio.toFixed(2)} (floor ${readFloor.toFixed(2)})` };
+				}
+			}
+			return { name, ok: true };
+		},
+		(ctx: InvariantContext): InvariantResult => {
+			// OKLab distance, not WCAG contrast — two equally-light hues (a red and a green
+			// both readable on the bg) can still be one indistinguishable colour to a reader.
+			// Floored under the muted reality (the warm red/magenta pair converges to ~0.020
+			// once a low-chroma seed floors the palette), so it guards a real collapse, not the
+			// legitimate warm-family closeness a muted terminal skin is allowed.
+			const name = "terminal ANSI hues mutually distinguishable";
+			const MIN_DE = 0.012;
+			const slots = ANSI_CHROMATIC.map((n) => `--terminal-${n}`);
+			for (let i = 0; i < slots.length; i++) {
+				for (let j = i + 1; j < slots.length; j++) {
+					const ni = slots[i] as string;
+					const nj = slots[j] as string;
+					const a = ctx.register[ni];
+					const b = ctx.register[nj];
+					if (!a || !b) continue;
+					const d = oklabDist(a, b);
+					if (d < MIN_DE) {
+						return { name, ok: false, detail: `${ni} vs ${nj} ΔE=${d.toFixed(4)} (min ${MIN_DE})` };
+					}
+				}
+			}
+			return { name, ok: true };
+		},
+		(ctx: InvariantContext): InvariantResult => {
 			// Mistaking success for danger is a usability failure WCAG contrast can't see — two
 			// equally-light status hues read as one. Floored well under the muted reality
 			// (xtyle-quiet's closest pair sits ~0.044), so it guards a real collapse, not taste.
@@ -2518,6 +2781,7 @@ export function makeXtylePipelineAlgorithm(
 		id: preset.id,
 		produces: PRODUCES,
 		knobs: preset.knobs,
+		knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),
 		categories: CATEGORIES,
 		derive: (opts: DeriveOptions = {}) => run(opts).register,
 		lineage: (opts: DeriveOptions = {}) =>
@@ -2538,6 +2802,8 @@ export function makeXtyleAlgorithm(preset: PresetDefaults): Algorithm {
 
 export const SHARED_KNOBS = [
 	"scheme",
+	"surfaceRamp",
+	"accentStrategy",
 	"accentShiftStep",
 	"accentSplit",
 	"contrastBand",
@@ -2549,6 +2815,97 @@ export const SHARED_KNOBS = [
 	"fonts",
 	"anchors",
 ];
+
+/**
+ * The rendered *domain* of every knob the shared xtyle derivation reads — the kind, range, and
+ * accepted values a consumer needs to build a control. `hour` is included so `nxi-nite` resolves
+ * it from here without declaring its own spec. `fonts` and `anchors` are absent by design: they
+ * are composite groups a consumer expands into multiple controls (font stacks, anchor pickers),
+ * not single scalar knobs, so their orchestration stays with the consumer. Cosmetic concerns
+ * (localized labels, unit suffixes, digit precision) are deliberately not here — they belong to
+ * the consumer; the `label` hints below are just defaults a consumer may override.
+ */
+export const SHARED_KNOB_SPECS: KnobSpec[] = [
+	{
+		name: "scheme",
+		kind: "select",
+		label: "Scheme",
+		options: [
+			{ value: "dark", label: "dark" },
+			{ value: "light", label: "light" },
+		],
+	},
+	{
+		name: "contrastBand",
+		kind: "select",
+		label: "Contrast band",
+		default: "aa",
+		options: [
+			{ value: "aa", label: "AA" },
+			{ value: "aaa", label: "AAA" },
+		],
+	},
+	{
+		name: "density",
+		kind: "select",
+		label: "Density",
+		default: "normal",
+		options: [
+			{ value: "compact", label: "compact" },
+			{ value: "normal", label: "normal" },
+			{ value: "comfortable", label: "comfortable" },
+		],
+	},
+	{
+		name: "cues",
+		kind: "select",
+		label: "Cues",
+		default: "color",
+		options: [
+			{ value: "color", label: "color only" },
+			{ value: "redundant", label: "redundant markers" },
+		],
+	},
+	{
+		name: "accentStrategy",
+		kind: "select",
+		label: "Accent strategy",
+		options: [
+			{ value: "fan", label: "fan (flanks + complement)" },
+			{ value: "step", label: "step (even hue wheel)" },
+			{ value: "shade", label: "shade (one hue, four depths)" },
+			{ value: "duo", label: "duo (two brands + their shades)" },
+		],
+	},
+	{ name: "vibrancy", kind: "range", label: "Vibrancy", min: 0, max: 1, step: 0.05, default: 0.5 },
+	{ name: "typeScale", kind: "range", label: "Type scale", min: 1.05, max: 1.6, step: 0.01, default: 1.2 },
+	{ name: "radiusScale", kind: "range", label: "Radius scale", min: 0, max: 3, step: 0.1, default: 1 },
+	{ name: "surfaceRamp", kind: "range", label: "Surface ramp", min: -0.06, max: 0.06, step: 0.005, default: 0.045 },
+	// The defaults are the engine's own constants, not a second copy of them: a slider that opens on a
+	// value the derivation does not actually use is a lie the control surface tells about the engine.
+	{ name: "accentSplit", kind: "range", label: "Accent split", min: 0, max: 90, step: 1, default: DEFAULT_ACCENT_SPLIT, unit: "°" },
+	{ name: "accentShiftStep", kind: "range", label: "Accent shift step", min: 0, max: 180, step: 5, default: DEFAULT_SHIFT_STEP, unit: "°" },
+	{ name: "hour", kind: "range", label: "Hour", min: 0, max: 24, step: 1, default: 12 },
+];
+
+const SHARED_KNOB_SPEC_BY_NAME = new Map(SHARED_KNOB_SPECS.map((spec) => [spec.name, spec]));
+
+/**
+ * Resolve a declared knob-name list to the render specs a consumer needs. Names that match the
+ * shared registry get its domain; composite groups a consumer expands itself (`anchors`, `fonts`)
+ * resolve to nothing (they carry no single scalar control); a novel knob resolves from `extra` when
+ * the algorithm supplies its own spec. This is the one place a knob name becomes a renderable domain,
+ * so both baked and hosted facades — and a host facade rebuilding from a name list — agree.
+ */
+export function resolveKnobSpecs(names: readonly string[], extra: readonly KnobSpec[] = []): KnobSpec[] {
+	const byName = new Map(extra.map((spec) => [spec.name, spec]));
+	const out: KnobSpec[] = [];
+	for (const name of names) {
+		const spec = byName.get(name) ?? SHARED_KNOB_SPEC_BY_NAME.get(name);
+		if (spec) out.push(spec);
+	}
+	return out;
+}
 
 export const DEFAULT_ANCHORS: PresetAnchors = {
 	bg: "#0f1115",

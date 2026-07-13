@@ -9,6 +9,7 @@ interface SliderBindings {
 	min?: number;
 	max?: number;
 	step?: number;
+	altStep?: number;
 	disabled?: boolean;
 	size?: string;
 	tone?: string;
@@ -19,6 +20,7 @@ interface SliderBindings {
 	valueText?: string;
 	elementId?: string;
 	editableValue?: boolean;
+	editing?: boolean;
 }
 
 interface EventPayload {
@@ -36,6 +38,8 @@ interface KeyContext {
 
 interface Intent {
 	setValue?: number;
+	nudge?: 1 | -1;
+	forceAlt?: boolean;
 	commit?: "input" | "change";
 	preventDefault?: boolean;
 }
@@ -59,14 +63,18 @@ function sliderClass(b: SliderBindings): string {
 		.join(" ");
 }
 
-function clampValue(b: SliderBindings): number {
+/** The true value the host stored (already snapped / clamped as its mode dictates); never re-snapped here,
+ * so a fine typed value or an overflow value passes through untouched. */
+function trueValue(b: SliderBindings): number {
+	const value = b.value ?? (b.min ?? 0);
+	return Number.isNaN(value) ? (b.min ?? 0) : value;
+}
+
+/** The value the thumb sits at: the true value pinned to the rail (an overflow value pins at the edge). */
+function railValue(b: SliderBindings): number {
 	const min = b.min ?? 0;
 	const max = b.max ?? 100;
-	const step = (b.step ?? 1) > 0 ? (b.step ?? 1) : 1;
-	const value = b.value ?? min;
-	if (Number.isNaN(value)) return min;
-	const snapped = Math.round((value - min) / step) * step + min;
-	return Math.min(max, Math.max(min, Number(snapped.toFixed(6))));
+	return Math.min(max, Math.max(min, trueValue(b)));
 }
 
 function fraction(value: number, min: number, max: number): number {
@@ -78,12 +86,16 @@ function readout(b: SliderBindings, value: number): string {
 }
 
 function inner(b: SliderBindings): string {
-	const min = b.min ?? 0;
-	const max = b.max ?? 100;
-	const value = clampValue(b);
+	const railMin = b.min ?? 0;
+	const railMax = b.max ?? 100;
+	const value = trueValue(b);
+	const rail = railValue(b);
+	// The announced range widens to include an overflow value so `aria-valuenow` stays within it.
+	const ariaMin = Math.min(railMin, value);
+	const ariaMax = Math.max(railMax, value);
 	const uid = b.elementId ?? "xtyle-slider";
 	const labelId = `${uid}-label`;
-	const pct = `${(fraction(value, min, max) * 100).toFixed(3)}%`;
+	const pct = `${(fraction(rail, railMin, railMax) * 100).toFixed(3)}%`;
 
 	const nameAttr = b.labelledby
 		? ` aria-labelledby="${b.labelledby}"`
@@ -113,7 +125,7 @@ function inner(b: SliderBindings): string {
 		`${header}<span class="xtyle-slider__rail" part="rail">` +
 		`<span class="xtyle-slider__fill" part="fill" style="width: ${pct}"></span>` +
 		`<span class="xtyle-slider__thumb" part="thumb" role="slider" tabindex="${tabindex}" ` +
-		`aria-valuemin="${min}" aria-valuemax="${max}" aria-valuenow="${value}"${valueTextAttr} aria-orientation="horizontal"` +
+		`aria-valuemin="${ariaMin}" aria-valuemax="${ariaMax}" aria-valuenow="${value}"${valueTextAttr} aria-orientation="horizontal"` +
 		`${nameAttr}${disabledAttr} style="inset-inline-start: ${pct}"></span></span>`
 	);
 }
@@ -124,55 +136,46 @@ hooks.fragment.mount("slider", (bindings, ops) => {
 });
 
 hooks.fragment.update("slider", (bindings, ops) => {
-	const min = bindings.min ?? 0;
-	const max = bindings.max ?? 100;
-	const value = clampValue(bindings);
-	const pct = `${(fraction(value, min, max) * 100).toFixed(3)}%`;
+	const railMin = bindings.min ?? 0;
+	const railMax = bindings.max ?? 100;
+	const value = trueValue(bindings);
+	const rail = railValue(bindings);
+	const pct = `${(fraction(rail, railMin, railMax) * 100).toFixed(3)}%`;
 	ops.setAttr("[data-root]", "class", sliderClass(bindings));
+	ops.setAttr(".xtyle-slider__thumb", "aria-valuemin", String(Math.min(railMin, value)));
+	ops.setAttr(".xtyle-slider__thumb", "aria-valuemax", String(Math.max(railMax, value)));
 	ops.setAttr(".xtyle-slider__thumb", "aria-valuenow", String(value));
 	const valueText = readout(bindings, value);
 	ops.setAttr(".xtyle-slider__thumb", "aria-valuetext", valueText !== String(value) ? valueText : "");
 	ops.setAttr(".xtyle-slider__thumb", "tabindex", bindings.disabled ? "-1" : "0");
 	ops.setAttr(".xtyle-slider__thumb", "style", `inset-inline-start: ${pct}`);
 	ops.setAttr(".xtyle-slider__fill", "style", `width: ${pct}`);
-	if (bindings.showValue) ops.setText(".xtyle-slider__value", readout(bindings, value));
+	// While the value is being edited its span holds the inline field, so leave it be until the edit ends.
+	if (bindings.showValue && !bindings.editing) ops.setText(".xtyle-slider__value", readout(bindings, value));
 });
 
-function clamp(next: number, ctx: KeyContext): number {
-	const step = ctx.step > 0 ? ctx.step : 1;
-	if (Number.isNaN(next)) return ctx.min;
-	const snapped = Math.round((next - ctx.min) / step) * step + ctx.min;
-	return Math.min(ctx.max, Math.max(ctx.min, Number(snapped.toFixed(6))));
-}
-
+// The step size and rail clamp live host-side (they read the live event's modifier keys), so the sandbox
+// handler only names the direction: an arrow nudges by one step, a page nudges by the alt step, Home/End
+// jump to the rail ends.
 xript.exports.register("keyAdjust", (payload: unknown, context: unknown): Intent => {
 	const e = payload as EventPayload;
 	if (e.disabled || e.ariaDisabled === "true") return {};
 	const ctx = context as KeyContext;
-	const big = (ctx.step > 0 ? ctx.step : 1) * 10;
-	let next: number | null = null;
 	switch (e.key) {
 		case "ArrowRight":
 		case "ArrowUp":
-			next = ctx.value + ctx.step;
-			break;
+			return { nudge: 1, preventDefault: true };
 		case "ArrowLeft":
 		case "ArrowDown":
-			next = ctx.value - ctx.step;
-			break;
+			return { nudge: -1, preventDefault: true };
 		case "PageUp":
-			next = ctx.value + big;
-			break;
+			return { nudge: 1, forceAlt: true, preventDefault: true };
 		case "PageDown":
-			next = ctx.value - big;
-			break;
+			return { nudge: -1, forceAlt: true, preventDefault: true };
 		case "Home":
-			next = ctx.min;
-			break;
+			return { setValue: ctx.min, commit: "change", preventDefault: true };
 		case "End":
-			next = ctx.max;
-			break;
+			return { setValue: ctx.max, commit: "change", preventDefault: true };
 	}
-	if (next === null) return {};
-	return { setValue: clamp(next, ctx), commit: "change", preventDefault: true };
+	return {};
 });

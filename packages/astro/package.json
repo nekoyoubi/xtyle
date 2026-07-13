@@ -1,6 +1,6 @@
 {
 	"name": "@xtyle/astro",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"description": "Zero-JS Astro components that emit semantic HTML against the xtyle component classes; the SSR binding of the component contract.",
 	"type": "module",
 	"license": "MIT",
@@ -12,7 +12,7 @@
 		"README.md"
 	],
 	"dependencies": {
-		"@xtyle/core": "^0.6.0"
+		"@xtyle/core": "^0.7.0"
 	},
 	"peerDependencies": {
 		"astro": "^6.0.0"

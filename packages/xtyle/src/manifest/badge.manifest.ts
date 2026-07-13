@@ -75,7 +75,7 @@ const dotHtmlExample = `<!-- Tone-colored breathe (opacity loop) -->
 export const badgeManifest: ComponentManifest = {
 	id: "badge",
 	name: "Badge",
-	category: "media",
+	category: "feedback",
 	keywords: ["tag", "chip", "pill", "label", "status", "count", "counter", "dot"],
 	seeAlso: ["swatch", "stat"],
 	summary: "A compact label, tag, or status chip: three fills across six semantic tones and twelve named hues, optionally removable.",

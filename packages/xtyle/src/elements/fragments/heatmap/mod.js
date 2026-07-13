@@ -93,7 +93,15 @@
     const tooltip = `<div class="xtyle-heatmap__tooltip" part="tooltip" role="status" aria-hidden="true" hidden></div>`;
     const table = tableHtml(values, rows, cols, b.title ?? b.ariaLabel ?? "");
     const scaleColors = b.scaleColors ?? [];
-    const scaleHtml = b.scale && scaleColors.length ? `<div class="xtyle-heatmap__scale" part="scale" aria-hidden="true"><span class="xtyle-heatmap__scale-end">${esc(formatValue(b.scaleLow ?? 0))}</span><span class="xtyle-heatmap__scale-ramp">${scaleColors.map((color) => `<span class="xtyle-heatmap__scale-swatch" style="background:${esc(color)}"></span>`).join("")}</span><span class="xtyle-heatmap__scale-end">${esc(formatValue(b.scaleHigh ?? 0))}</span></div>` : "";
+    const legend = b.legend ?? [];
+    let scaleHtml = "";
+    if (b.scale && legend.length) {
+      scaleHtml = `<div class="xtyle-heatmap__legend" part="legend" aria-hidden="true">` + legend.map(
+        (item) => `<span class="xtyle-heatmap__legend-item"><span class="xtyle-heatmap__legend-swatch" style="background:${esc(item.color)}"></span>` + (item.label ? `<span class="xtyle-heatmap__legend-label">${esc(item.label)}</span>` : "") + `</span>`
+      ).join("") + `</div>`;
+    } else if (b.scale && scaleColors.length) {
+      scaleHtml = `<div class="xtyle-heatmap__scale" part="scale" aria-hidden="true"><span class="xtyle-heatmap__scale-end">${esc(formatValue(b.scaleLow ?? 0))}</span><span class="xtyle-heatmap__scale-ramp">${scaleColors.map((color) => `<span class="xtyle-heatmap__scale-swatch" style="background:${esc(color)}"></span>`).join("")}</span><span class="xtyle-heatmap__scale-end">${esc(formatValue(b.scaleHigh ?? 0))}</span></div>`;
+    }
     return `<figure part="chart" class="${cls}">${svg}${scaleHtml}${tooltip}${table}</figure>`;
   }
   hooks.fragment.mount("heatmap", (bindings, ops) => {

@@ -1,0 +1,44 @@
+---
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+
+interface Props {
+	/** The app bar's title. Named `heading` rather than `title`, which the DOM already owns (the native tooltip). */
+	heading?: string;
+	/** The `id` of the `<main>` column, so a skip link can target it. Override when more than one shell renders on a page. */
+	mainId?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	heading,
+	mainId = "main",
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const scaffold = await renderFragmentLight("mobile-shell", { heading, mainId });
+const brandHtml = Astro.slots.has("brand") ? await Astro.slots.render("brand") : null;
+const actionsHtml = Astro.slots.has("actions") ? await Astro.slots.render("actions") : null;
+const navHtml = Astro.slots.has("nav") ? await Astro.slots.render("nav") : null;
+const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+
+let composed = composeFallbackSlot(scaffold, "brand", brandHtml);
+composed = composeFallbackSlot(composed, "actions", actionsHtml);
+composed = composeFallbackSlot(composed, "nav", navHtml);
+composed = composed.replace("<slot></slot>", () => bodyHtml);
+---
+
+<xtyle-mobile-shell
+	heading={heading}
+	main-id={mainId === "main" ? undefined : mainId}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

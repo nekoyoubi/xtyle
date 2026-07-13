@@ -1,0 +1,161 @@
+---
+import QrCode from "@xtyle/astro/Qr.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const url = "https://xtyle.dev";
+const wifi = "WIFI:T:WPA;S:xtyle-guest;P:derive-and-look;;";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">A themed link</Heading>
+		<Text tone="muted" size="sm">
+			Encode any string; the modules ink themselves from the active theme (<code>--fg-0</code> on
+			<code>--bg-0</code>), so a QR that matches the surrounding UI is the default, not a manual export.
+			The encoder runs in the browser, so switch the theme and the code recolors live.
+		</Text>
+		<Grid minColWidth="14rem" gap={4}>
+			<Stack gap={1} align="center">
+				<QrCode data={url} label="Link to xtyle.dev" size={200} />
+				<Text size="xs" tone="subtle" mono>{url}</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data={wifi} label="Join the guest wifi" size={200} />
+				<Text size="xs" tone="subtle" mono>WIFI join</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data="mailto:hello@xtyle.dev" label="Email xtyle" size={200} />
+				<Text size="xs" tone="subtle" mono>mailto:</Text>
+			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Module shapes</Heading>
+		<Text tone="muted" size="sm">
+			Draw each dark cell as a full <code>square</code> (densest, scans most reliably), a
+			<code>dot</code>, or a <code>rounded</code> square. The finder patterns always stay solid so a
+			reader can still lock on, and the curved shapes anti-alias while squares render crisp.
+		</Text>
+		<Grid minColWidth="12rem" gap={4}>
+			<Stack gap={1} align="center">
+				<QrCode data={url} moduleShape="square" size={180} label="Square modules" />
+				<Text size="xs" tone="subtle" weight="semibold">square</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data={url} moduleShape="dot" size={180} label="Dot modules" />
+				<Text size="xs" tone="subtle" weight="semibold">dot</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data={url} moduleShape="rounded" size={180} label="Rounded modules" />
+				<Text size="xs" tone="subtle" weight="semibold">rounded</Text>
+			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">A mark in the middle</Heading>
+		<Text tone="muted" size="sm">
+			Drop any xtyle icon in the center with <code>icon</code> (or a bitmap with <code>logo</code>),
+			sized by <code>iconSize</code> (<code>sm</code>/<code>md</code>/<code>lg</code>/<code>xl</code>, or
+			an exact <code>iconScale</code>). Error correction bumps to level H automatically. By default the
+			mark <strong>knocks a clean hole</strong> in the modules; set <code>iconOverlay</code> to
+			<strong>lay it over the code</strong> the way a printed logo does, letting error correction recover
+			the covered modules, and <code>iconOutline</code> for a halo so it stays distinct. Add
+			<code>frame</code> to print the payload beneath for anyone who'd rather type the link than scan it.
+		</Text>
+		<Grid minColWidth="14rem" gap={4}>
+			<Stack gap={1} align="center">
+				<QrCode data={url} icon="palette" size={200} />
+				<Text size="xs" tone="subtle" weight="semibold">knockout (default)</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data={url} icon="palette" iconOverlay iconOutline size={200} />
+				<Text size="xs" tone="subtle" weight="semibold">overlay + outline</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data={url} icon="palette" iconSize="xl" size={200} />
+				<Text size="xs" tone="subtle" weight="semibold">iconSize xl</Text>
+			</Stack>
+		</Grid>
+		<Grid minColWidth="10rem" gap={4}>
+			{
+				(["sm", "md", "lg", "xl"] as const).map((sz) => (
+					<Stack gap={1} align="center">
+						<QrCode data={url} icon="palette" iconSize={sz} size={160} />
+						<Text size="xs" tone="subtle" weight="semibold">{sz}</Text>
+					</Stack>
+				))
+			}
+		</Grid>
+		<Grid minColWidth="15rem" gap={4}>
+			<QrCode data={url} icon="palette" frame size={240} />
+			<QrCode data="https://xtyle.dev/download" icon="download" iconOverlay iconOutline frame size={240} moduleShape="rounded" />
+			<QrCode data="https://xtyle.dev/docs" icon="bookmark" frame size={240} moduleShape="dot" />
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">An interactive frame</Heading>
+		<Text tone="muted" size="sm">
+			With <code>frame</code>, the payload prints beneath the code as a <strong>real, followable
+			link</strong> (when it is one), so a viewer can click through instead of scanning. Add
+			<code>modeToggle</code> for a small button that <strong>swaps between the themed and bitonal
+			renderings live</strong>, so anyone whose scanner struggles with the themed colors can flip to
+			guaranteed black-on-white on the spot. Only safe link schemes are ever made clickable.
+		</Text>
+		<Grid minColWidth="15rem" gap={4}>
+			<QrCode data={url} frame modeToggle size={220} />
+			<QrCode data="mailto:hello@xtyle.dev" frame modeToggle size={220} />
+			<QrCode data={url} icon="palette" frame modeToggle size={220} />
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Scannability modes</Heading>
+		<Text tone="muted" size="sm">
+			Scannability is a contract, not a hope. <code>theme</code> inks from the theme (and flags a
+			low-contrast pairing via <code>data-contrast</code>); <code>bitonal</code> forces the
+			guaranteed black-on-white a reader never misses, whatever the theme; <code>auto</code> keeps the
+			theme colors while they clear the scannability floor and silently drops to bitonal when they
+			don't. The floor is xtyle's own contrast audit pointed at a new surface.
+		</Text>
+		<Grid minColWidth="12rem" gap={4}>
+			<Stack gap={1} align="center">
+				<QrCode data={url} mode="theme" size={180} label="Themed" />
+				<Text size="xs" tone="subtle" weight="semibold">theme</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data={url} mode="bitonal" size={180} label="Bitonal" />
+				<Text size="xs" tone="subtle" weight="semibold">bitonal</Text>
+			</Stack>
+			<Stack gap={1} align="center">
+				<QrCode data={url} mode="auto" size={180} label="Auto" />
+				<Text size="xs" tone="subtle" weight="semibold">auto</Text>
+			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Error-correction levels</Heading>
+		<Text tone="muted" size="sm">
+			<code>L</code> (~7%), <code>M</code> (~15%), <code>Q</code> (~25%), and <code>H</code> (~30%)
+			set how much of the symbol can be lost and still decode. Higher recovers more damage or
+			occlusion at the cost of a denser grid.
+		</Text>
+		<Grid minColWidth="10rem" gap={4}>
+			{
+				(["L", "M", "Q", "H"] as const).map((level) => (
+					<Stack gap={1} align="center">
+						<QrCode data={url} ecLevel={level} size={160} label={`EC level ${level}`} />
+						<Text size="xs" tone="subtle" weight="semibold">{level}</Text>
+					</Stack>
+				))
+			}
+		</Grid>
+	</Card>
+</Stack>

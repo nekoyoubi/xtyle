@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getComponent, coverComponent, derive, windowedPlot, resolveSparklineBounds } from "../src/index.js";
+import { getComponent, coverComponent, derive, windowedPlot, resolveSparklineBounds, formatSparklineValue } from "../src/index.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
 import { xtyleDefault } from "../src/batteries.js";
 
@@ -175,5 +175,25 @@ describe("resolveSparklineBounds", () => {
 		expect(resolveSparklineBounds([1, 2], { bounds: "percent", max: 50 })).toEqual({ min: 0, max: 50 });
 		expect(resolveSparklineBounds([1, 2], { min: 5, max: 9 })).toEqual({ min: 5, max: 9 });
 		expect(resolveSparklineBounds([1, 2], {})).toEqual({ min: undefined, max: undefined });
+	});
+});
+
+describe("formatSparklineValue", () => {
+	it("reads a duration in seconds as s / m / h", () => {
+		expect(formatSparklineValue(42, "duration")).toBe("42s");
+		expect(formatSparklineValue(90, "duration")).toBe("1.5m");
+		expect(formatSparklineValue(3600, "duration")).toBe("1h");
+	});
+
+	it("appends a percent sign and steps bytes by 1024", () => {
+		expect(formatSparklineValue(87, "percent")).toBe("87%");
+		expect(formatSparklineValue(512, "bytes")).toBe("512 B");
+		expect(formatSparklineValue(2048, "bytes")).toBe("2 KB");
+		expect(formatSparklineValue(1_572_864, "bytes")).toBe("1.5 MB");
+	});
+
+	it("trims a unit value and passes the raw value through with no format", () => {
+		expect(formatSparklineValue(0.33333, "unit")).toBe("0.33");
+		expect(formatSparklineValue(1.23456)).toBe("1.23456");
 	});
 });

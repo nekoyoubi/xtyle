@@ -1,5 +1,5 @@
 /** The host-layout rules for a radio — shared by the element's scaffold and the SSR declarative shadow root. */
-export const radioHostCss = `:host { display: inline-flex; } :host([hidden]) { display: none; }`;
+export const radioHostCss = `:host { display: inline-flex; } :host([card]) { display: block; } :host([hidden]) { display: none; }`;
 
 export interface RadioGroupMarkupProps {
 	orientation?: "vertical" | "horizontal";

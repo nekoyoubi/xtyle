@@ -54,32 +54,10 @@ export const badgeCss = `
 ${toneSolid}
 ${toneSoft}
 ${toneOutline}
+/* The dot itself is the shared .xtyle-dot primitive (shape, size ramp, pulse, reduced-motion — all of
+   it). The badge only retints it to its own ink; it does not own a second implementation of a circle. */
 .xtyle-badge__dot {
-	display: inline-block;
-	width: var(--space-2);
-	height: var(--space-2);
-	flex: none;
-	border-radius: var(--radius-full);
-	background: currentColor;
-}
-.xtyle-badge--lg .xtyle-badge__dot {
-	width: var(--space-3);
-	height: var(--space-3);
-}
-.xtyle-badge--pulse-slow .xtyle-badge__dot {
-	animation: xtyle-badge-pulse 1.8s var(--ease-standard) infinite;
-}
-.xtyle-badge--pulse-fast .xtyle-badge__dot {
-	animation: xtyle-badge-pulse 0.9s var(--ease-standard) infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-	.xtyle-badge--pulse-slow .xtyle-badge__dot,
-	.xtyle-badge--pulse-fast .xtyle-badge__dot {
-		animation: none;
-	}
-}
-@keyframes xtyle-badge-pulse {
-	50% { opacity: 0.4; }
+	--dot-color: currentColor;
 }
 .xtyle-badge__count {
 	font-variant-numeric: tabular-nums;
@@ -137,67 +115,5 @@ ${toneOutline}
 .xtyle-badge__remove svg {
 	width: 0.75em;
 	height: 0.75em;
-}
-.xtyle-dot {
-	--dot-color: var(--neutral);
-	--dot-pulse-duration: 1.4s;
-	position: relative;
-	display: inline-block;
-	width: var(--space-2);
-	height: var(--space-2);
-	flex: none;
-	border-radius: var(--radius-full);
-	background: var(--dot-color);
-}
-.xtyle-dot--sm {
-	width: var(--space-1);
-	height: var(--space-1);
-}
-.xtyle-dot--lg {
-	width: var(--space-3);
-	height: var(--space-3);
-}
-${TONES.map((t) => `.xtyle-dot--${t} { --dot-color: var(--${t}); }`).join("\n")}
-.xtyle-dot--pulse-slow {
-	--dot-pulse-duration: 1.8s;
-	animation: xtyle-badge-pulse var(--dot-pulse-duration) var(--ease-standard) infinite;
-}
-.xtyle-dot--pulse-fast {
-	--dot-pulse-duration: 0.9s;
-	animation: xtyle-badge-pulse var(--dot-pulse-duration) var(--ease-standard) infinite;
-}
-.xtyle-dot--glow {
-	box-shadow:
-		0 0 0 var(--border-thin) color-mix(in oklch, var(--dot-color) 35%, transparent),
-		0 0 var(--space-2) 0 var(--dot-color);
-}
-.xtyle-dot--ping::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	border-radius: inherit;
-	background: var(--dot-color);
-	animation: xtyle-dot-ping var(--dot-pulse-duration) var(--ease-standard) infinite;
-}
-@keyframes xtyle-dot-ping {
-	0% {
-		transform: scale(1);
-		opacity: 0.55;
-	}
-	80%,
-	100% {
-		transform: scale(2.6);
-		opacity: 0;
-	}
-}
-@media (prefers-reduced-motion: reduce) {
-	.xtyle-dot--pulse-slow,
-	.xtyle-dot--pulse-fast {
-		animation: none;
-	}
-	.xtyle-dot--ping::after {
-		animation: none;
-		opacity: 0;
-	}
 }
 `.trim();

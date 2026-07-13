@@ -21,6 +21,25 @@ describe("segmented options", () => {
 		]);
 	});
 
+	it("carries a per-option title through the structured form", () => {
+		expect(normalizeSegments([{ value: "claude", label: "Claude", title: "Co-author provider" }])).toEqual([
+			{ value: "claude", label: "Claude", title: "Co-author provider" },
+		]);
+	});
+
+	it("renders a text option's title as a hover hint without adding an aria-label", async () => {
+		const html = await renderFragmentLight("segmented", {
+			segments: normalizeSegments([{ value: "claude", label: "Claude", title: "Co-author provider" }]),
+			value: "claude",
+			label: "Source",
+			elementId: "seg-t",
+		});
+		expect(html).toContain('title="Co-author provider"');
+		expect(html).toContain(">Claude</button>");
+		// the visible label is the accessible name; a text segment adds no redundant aria-label
+		expect(html).not.toContain("aria-label=");
+	});
+
 	it("round-trips the structured form through a JSON string (the astro attribute path)", () => {
 		const json = JSON.stringify([{ value: "x", label: "X", disabled: true }]);
 		expect(normalizeSegments(json)).toEqual([{ value: "x", label: "X", disabled: true }]);

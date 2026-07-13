@@ -1,6 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { imageHostCss } from "../markup/index.js";
-import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger } from "../markup/image.js";
+import { hoverMediaHtml } from "../markup/image.js";
+import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger, ImageHoverAudio } from "../markup/image.js";
 import { renderIcon } from "../icons.js";
 import { FragmentHost } from "./fragment-host.js";
 import { openLightbox } from "./lightbox.js";
@@ -15,13 +16,31 @@ export class XtyleImage extends XtyleElement {
 	private wiredImg: HTMLImageElement | null = null;
 	private wiredFrame: HTMLElement | null = null;
 	private lightboxTrigger: AbortController | null = null;
+	private hoverController: AbortController | null = null;
+	private hoverFrame: HTMLElement | null = null;
+	private hoverInjected = false;
+	private readonly reduceMotion =
+		typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
 
 	protected override get styleMode(): StyleMode {
 		return "auto";
 	}
 
 	static get observedAttributes(): string[] {
-		return ["src", "alt", "ratio", "fit", "radius", "loading", "lightbox", "caption", "trigger"];
+		return [
+			"src",
+			"alt",
+			"ratio",
+			"fit",
+			"radius",
+			"loading",
+			"lightbox",
+			"caption",
+			"trigger",
+			"hover-src",
+			"hover-poster",
+			"hover-audio",
+		];
 	}
 
 	get src(): string | null {
@@ -90,6 +109,32 @@ export class XtyleImage extends XtyleElement {
 		else this.removeAttribute("caption");
 	}
 
+	get hoverSrc(): string | null {
+		return this.getAttribute("hover-src");
+	}
+	set hoverSrc(value: string | null) {
+		if (value) this.setAttribute("hover-src", value);
+		else this.removeAttribute("hover-src");
+	}
+
+	get hoverPoster(): string | null {
+		return this.getAttribute("hover-poster");
+	}
+	set hoverPoster(value: string | null) {
+		if (value) this.setAttribute("hover-poster", value);
+		else this.removeAttribute("hover-poster");
+	}
+
+	/** `null` when the attribute is absent (silent, no toggle); `"on"` / `"off"` when audio is allowed. */
+	get hoverAudio(): ImageHoverAudio | null {
+		if (!this.hasAttribute("hover-audio")) return null;
+		return this.getAttribute("hover-audio") === "on" ? "on" : "off";
+	}
+	set hoverAudio(value: ImageHoverAudio | null) {
+		if (value === null) this.removeAttribute("hover-audio");
+		else this.setAttribute("hover-audio", value);
+	}
+
 	attributeChangedCallback(): void {
 		if (this.root.firstChild) this.render();
 	}
@@ -113,6 +158,9 @@ export class XtyleImage extends XtyleElement {
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(imageHostCss);
+		// The `figcaption` is only present when there's a caption, and the patch hook doesn't rebuild
+		// it; a change in caption presence remounts (which re-places any slotted hover preview intact).
+		this.fragment.reshapeIfChanged(this.caption ? "captioned" : "uncaptioned");
 		this.fragment.update(this.bindings);
 	}
 
@@ -132,6 +180,8 @@ export class XtyleImage extends XtyleElement {
 			}
 		}
 
+		this.wireHover(frame);
+
 		if (!this.lightbox) {
 			this.clearFrameTrigger(frame);
 			this.removeZoomButton(frame);
@@ -147,6 +197,134 @@ export class XtyleImage extends XtyleElement {
 			this.removeZoomButton(frame);
 			this.wireFrameTrigger(frame, label);
 		}
+	}
+
+	private wireHover(frame: HTMLElement): void {
+		const overlay = frame.querySelector<HTMLElement>(".xtyle-image__hover");
+		if (!overlay) return;
+
+		// In shadow mode the `hover-src` media must be a projected `[slot=hover]` child of the host;
+		// the light/SSR path already inlined it into the overlay, so only inject when there's nothing.
+		if (this.hoverSrc && !this.hoverInjected && !this.querySelector('[slot="hover"]')) {
+			const inLightDom = (this.root as unknown) === this;
+			if (!inLightDom && !overlay.querySelector(".xtyle-image__hover-media")) {
+				const tpl = document.createElement("template");
+				tpl.innerHTML = hoverMediaHtml(this.hoverSrc, this.hoverPoster ?? this.src ?? undefined);
+				const node = tpl.content.firstElementChild as HTMLElement | null;
+				if (node) {
+					node.setAttribute("slot", "hover");
+					this.appendChild(node);
+				}
+			}
+			this.hoverInjected = true;
+		}
+
+		if (!this.hoverContentPresent(overlay) || this.reduceMotion?.matches) {
+			this.clearHover(frame, overlay);
+			return;
+		}
+
+		this.ensureAudioButton(frame);
+
+		if (this.hoverFrame === frame) return;
+		this.hoverFrame = frame;
+		this.hoverController?.abort();
+		this.hoverController = new AbortController();
+		const { signal } = this.hoverController;
+		const show = (): void => this.revealHover(frame);
+		const hide = (): void => this.hideHover(frame);
+		frame.addEventListener("pointerenter", show, { signal });
+		frame.addEventListener("pointerleave", hide, { signal });
+		frame.addEventListener("focusin", show, { signal });
+		frame.addEventListener(
+			"focusout",
+			(event) => {
+				if (!frame.contains(event.relatedTarget as Node | null)) hide();
+			},
+			{ signal },
+		);
+
+		// Keyboard reach: a hover-only frame becomes focusable so the preview is not mouse-only. When
+		// it is already a lightbox trigger it is focusable, so leave that role/tabindex alone.
+		if (!this.lightbox) {
+			frame.tabIndex = 0;
+			if (!frame.hasAttribute("aria-label")) {
+				frame.setAttribute("aria-label", this.alt ? `${this.alt} (preview on focus)` : "Preview on focus");
+			}
+		}
+	}
+
+	private hoverContentPresent(overlay: HTMLElement): boolean {
+		if (overlay.querySelector(":scope > *:not(slot)")) return true;
+		const slot = overlay.querySelector<HTMLSlotElement>("slot[name='hover']");
+		if (slot && typeof slot.assignedElements === "function" && slot.assignedElements().length) return true;
+		return this.querySelector('[slot="hover"]') !== null;
+	}
+
+	private hoverVideo(): HTMLVideoElement | null {
+		return (
+			this.querySelector<HTMLVideoElement>('video[slot="hover"], [slot="hover"] video') ??
+			this.root.querySelector<HTMLVideoElement>(".xtyle-image__hover video")
+		);
+	}
+
+	private revealHover(frame: HTMLElement): void {
+		frame.setAttribute("data-hover-active", "");
+		const video = this.hoverVideo();
+		if (video) {
+			if (this.hoverAudio === "on") video.muted = false;
+			void video.play().catch(() => {});
+		}
+	}
+
+	private hideHover(frame: HTMLElement): void {
+		frame.removeAttribute("data-hover-active");
+		const video = this.hoverVideo();
+		if (video) {
+			video.pause();
+			video.currentTime = 0;
+			if (this.hoverAudio !== null) video.muted = true;
+		}
+	}
+
+	private clearHover(frame: HTMLElement, overlay: HTMLElement): void {
+		this.hoverController?.abort();
+		this.hoverController = null;
+		this.hoverFrame = null;
+		frame.removeAttribute("data-hover-active");
+		overlay.querySelector(".xtyle-image__audio")?.remove();
+	}
+
+	private ensureAudioButton(frame: HTMLElement): void {
+		const overlay = frame.querySelector<HTMLElement>(".xtyle-image__hover");
+		if (!overlay) return;
+		const existing = overlay.querySelector<HTMLButtonElement>(".xtyle-image__audio");
+		if (this.hoverAudio === null || !this.hoverVideo()) {
+			existing?.remove();
+			return;
+		}
+		let button = existing;
+		if (!button) {
+			button = document.createElement("button");
+			button.type = "button";
+			button.className = "xtyle-image__audio";
+			overlay.appendChild(button);
+			button.addEventListener("click", (event) => {
+				event.stopPropagation();
+				const target = this.hoverVideo();
+				if (!target) return;
+				target.muted = !target.muted;
+				this.paintAudioButton(button as HTMLButtonElement, target.muted);
+			});
+		}
+		const video = this.hoverVideo();
+		this.paintAudioButton(button, video ? video.muted : this.hoverAudio !== "on");
+	}
+
+	private paintAudioButton(button: HTMLButtonElement, muted: boolean): void {
+		button.innerHTML = renderIcon(muted ? "volume-off" : "volume");
+		button.setAttribute("aria-label", muted ? "Unmute preview" : "Mute preview");
+		button.setAttribute("aria-pressed", muted ? "false" : "true");
 	}
 
 	private wireFrameTrigger(frame: HTMLElement, label: string): void {

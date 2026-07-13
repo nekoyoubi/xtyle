@@ -1,0 +1,39 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-mobile-shell-default",
+	"version": "0.0.1",
+	"title": "Xtyle MobileShell (default)",
+	"description": "The built-in fill for the xtyle MobileShell component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.mobile-shell"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.mobile-shell": [
+			{
+				"id": "mobile-shell",
+				"format": "text/html+jsml",
+				"source": "mobile-shell.html",
+				"meta": {
+					"tokens": [
+						"--body-bg",
+						"--bg-1",
+						"--fg-0",
+						"--line",
+						"--font-sans",
+						"--text-body",
+						"--text-lg",
+						"--weight-semibold",
+						"--leading-normal",
+						"--border-thin",
+						"--border-normal",
+						"--border-thick",
+						"--ring",
+						"--space-3",
+						"--space-4",
+						"--space-6"
+					]
+				}
+			}
+		]
+	}
+}

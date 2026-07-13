@@ -168,16 +168,45 @@ tokens under the *algorithm's* policy; it is not a universal floor.
 3. **Token overrides**: pin or rewire any specific node (`--color-pink → --accent`).
    The universal escape hatch, available at any tier.
 
-**Anchors are seeds, not pins.** The handful of anchor colors (`bg` / `fg` /
-`accent`) are inputs the algorithm *interprets*, not literal values it stamps
-verbatim, so the algorithm's chroma posture reshapes them. The same
-`accent` anchor derives at its given chroma under the neutral default but is
-muted under a low-chroma posture and boosted under a vivid or high-contrast one
-(e.g. a frost cyan anchor lands near its source on the default, washed-out on the
-quiet posture, and pushed brighter on the loud / high-contrast ones). The fixed
-`bg` is the exception the postures leave alone; the seed they reshape most is the
-accent. To pin a color literally, immune to posture, reach for a tier-3 token
-override; that is exactly what the escape hatch is for.
+### Knob or algorithm? The orthogonality test
+
+The tempting line is "a knob *tunes*, an algorithm *reshapes*." It is the wrong
+line, and it does not survive contact with the register: `scheme` re-derives
+everything, and `surfaceRamp` inverts the entire surface stack. Nobody would argue
+light and dark should be two algorithms.
+
+The line that holds is **orthogonality**:
+
+> An input is a **knob** if its domain is meaningful under *every* algorithm.
+> It belongs to the **algorithm** if the algorithm's identity depends on it.
+
+`accentStrategy` passes: `fan` / `step` / `shade` / `duo` all mean something under
+every blessed algorithm, so it is a knob, and an algorithm merely declares which
+one it *ships with*. `hour` fails: it is nxi-nite's, and no other algorithm has an
+opinion about the time of day — which is exactly why `knobSpecs` scopes it there.
+`contrastFloor` fails hardest of all and **must never become a knob**: `xtyle-hc`
+*is* its floor. Promote it and the algorithm is left with no identity.
+
+This test is what retired `xtyle-brand`. A taste field that can only be changed by
+forking an algorithm turns "algorithm" into "row in a preset table," and the set
+rots combinatorially (default × four strategies × two ramp directions × …). Moving
+the orthogonal input out to a knob *raises* the bar for what earns the name: five
+algorithms that differ in taste, plus one knob any of them can wear, is a healthier
+register than six where one of them is a knob in costume.
+
+**Anchors are pins, and the tier is a convenience, not a separate channel.** The
+anchor colors (`bg` / `fg` / `accent`) are not a softer kind of input the algorithm
+gets to reinterpret: `derive` translates them straight into the same token
+constraints tier 3 writes (`bg` → `--bg-0`, `fg` → `--fg-0`, `accent` → `--accent`),
+so an anchor lands **verbatim**. A `#6ea8fe` accent comes back `#6ea8fe` under the
+neutral default, the quiet posture, the loud one, and the high-contrast one alike.
+An algorithm's chroma posture reshapes everything it *derives from* that anchor —
+the accent family, the tints, the inks — but it never launders the color you gave
+it. That is the right behavior: nobody wants a brand hex silently muted because
+they picked a low-chroma algorithm.
+
+So the three tiers are three *ergonomics* over one channel, not three channels.
+Anchors are simply the three constraints you reach for most.
 
 This is a "mechanism not policy" + tiered-adoption ethos applied to theming.
 

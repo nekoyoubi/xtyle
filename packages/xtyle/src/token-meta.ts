@@ -37,6 +37,9 @@ const RULES: MetaRule[] = [
 
 	{ test: /^--line-2$/, describe: () => "A stronger divider — section breaks and emphasized rules.", tags: ["border", "divider", "line", "rule", "separator", "stroke"] },
 	{ test: /^--line$/, describe: () => "The default divider — hairlines, card edges, table rules.", tags: ["border", "divider", "line", "rule", "separator", "stroke", "edge"] },
+	{ test: /^--scrollbar-thumb-hover$/, describe: () => "The scrollbar thumb on hover — a touch stronger so the grab target lifts under the pointer.", tags: ["scrollbar", "scroll", "thumb", "hover", "chrome", "overflow"] },
+	{ test: /^--scrollbar-thumb$/, describe: () => "The scrollbar thumb — the draggable bar, a neutral that reads as part of the theme instead of the browser default.", tags: ["scrollbar", "scroll", "thumb", "bar", "chrome", "overflow"] },
+	{ test: /^--scrollbar-track$/, describe: () => "The scrollbar track — the groove behind the thumb; transparent by default so it blends into the surface.", tags: ["scrollbar", "scroll", "track", "groove", "chrome", "overflow"] },
 	{ test: /^--ring-bg$/, describe: () => "The soft halo behind a focus ring — a faint accent wash around the crisp ring.", tags: ["focus", "ring", "outline", "halo", "accent"] },
 	{ test: /^--ring$/, describe: () => "The focus ring — the accent outline on a keyboard-focused control.", tags: ["focus", "ring", "outline", "accent", "keyboard"] },
 	{ test: /^--field-border$/, describe: () => "The border of an input field — separates the field from its surface.", tags: ["border", "field", "input", "form", "edge"] },
@@ -67,6 +70,10 @@ const RULES: MetaRule[] = [
 	{ test: /^--(red|orange|yellow|green|blue|purple|brown|pink|cyan|gray|white|black)(-(bg|fg|text|vivid))?$/, describe: (n) => { const hue = n.match(/^--([a-z]+)/)?.[1]; const role = n.match(/-(bg|fg|text|vivid)$/)?.[1]; return role ? `The ${hue} tone — its ${{ bg: "soft tint", fg: "on-solid ink", text: "on-surface ink", vivid: "vivid ink" }[role]}.` : `The ${hue} tone — a named color usable anywhere a tone is.`; }, tags: ["palette", "named", "crayola", "color", "hue", "tone"] },
 
 	{ test: /^--code-/, describe: (n) => `Syntax color for the \`${n.replace("--code-", "")}\` scope in highlighted code.`, tags: ["code", "syntax", "highlight", "editor"] },
+
+	{ test: /^--terminal-(bg|fg|cursor|cursor-accent)$/, describe: (n) => { const r = n.replace("--terminal-", ""); return { bg: "The terminal background — the panel a terminal draws onto.", fg: "The terminal foreground — the default text color in a terminal.", cursor: "The terminal cursor block.", "cursor-accent": "The glyph under the terminal cursor — the character the cursor block sits over." }[r] ?? ""; }, tags: ["terminal", "ansi", "console", "shell", "xterm"] },
+	{ test: /^--terminal-bright-([a-z]+)$/, describe: (n) => `The bright ANSI ${n.replace("--terminal-bright-", "")} — a terminal's bold / high-intensity variant.`, tags: ["terminal", "ansi", "console", "shell", "xterm", "bright", "bold"] },
+	{ test: /^--terminal-([a-z]+)$/, describe: (n) => `The ANSI ${n.replace("--terminal-", "")} — a terminal's standard 16-color slot.`, tags: ["terminal", "ansi", "console", "shell", "xterm", "color"] },
 
 	{ test: /^--font-/, describe: (n) => `The ${n.replace("--font-", "")} font stack.`, tags: ["type", "font", "typography", "family"] },
 	{ test: /^--text-/, describe: (n) => `The ${n.replace("--text-", "")} font size on the type scale.`, tags: ["type", "text", "size", "scale", "typography"] },

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import "./register.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xtyle/core";
+	import type { DialogSize } from "@xtyle/core";
 
 	interface Props {
 		open?: boolean;
-		size?: Size;
+		size?: DialogSize;
 		heading?: string;
 		label?: string;
 		labelledby?: string;

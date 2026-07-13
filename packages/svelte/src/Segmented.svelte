@@ -3,7 +3,7 @@
 	import type { Snippet } from "svelte";
 	import type { Size, FullTone as Tone } from "@xtyle/core";
 
-	type SegmentOption = { value: string; label?: string; disabled?: boolean; badge?: string };
+	type SegmentOption = { value: string; label?: string; disabled?: boolean; badge?: string; title?: string };
 
 	interface Props {
 		value?: string;

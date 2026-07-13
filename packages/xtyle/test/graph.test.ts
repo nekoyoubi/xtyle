@@ -70,6 +70,22 @@ describe.each(SET.map((a) => [a.id, a] as const))("graph(%s)", (_id, algorithm: 
 		}
 	});
 
+	it("derive and lineage on the same opts agree, interleaved and out of order", () => {
+		// They share one cached pass, so a stale or mis-keyed entry would surface here as one input's
+		// theme leaking into another's. Interleave the two reads and shuffle the order to catch it.
+		const expected = new Map(OPTS.map(({ label, opts }) => [label, derive(algorithm, opts)]));
+		for (const { label, opts } of [...OPTS].reverse()) {
+			expect(resolveGraph(algorithm.lineage(opts)), `${label}: lineage`).toEqual(expected.get(label));
+			expect(derive(algorithm, opts), `${label}: re-derive`).toEqual(expected.get(label));
+		}
+	});
+
+	it("a derivation survives eviction: more distinct inputs than the cache holds", () => {
+		const first = derive(algorithm, { knobs: { typeScale: 1 } });
+		for (let i = 2; i < 40; i++) derive(algorithm, { knobs: { typeScale: i / 20 } });
+		expect(derive(algorithm, { knobs: { typeScale: 1 } })).toEqual(first);
+	});
+
 	it("lineage nodes carry no closures (serializable lineage data)", () => {
 		const json = JSON.stringify(algorithm.lineage());
 		const round = JSON.parse(json) as TokenLineageNode[];

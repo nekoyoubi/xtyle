@@ -14,6 +14,9 @@ interface RadioBindings {
 	invalid?: boolean;
 	label?: string | null;
 	labelledby?: string | null;
+	description?: string | null;
+	card?: boolean;
+	descriptionId?: string;
 }
 
 interface EventPayload {
@@ -31,6 +34,13 @@ declare const hooks: {
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
+function escapeHtml(value: string): string {
+	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function escapeAttr(value: string): string {
+	return escapeHtml(value).replace(/"/g, "&quot;");
+}
+
 function radioClass(b: RadioBindings): string {
 	const tone = b.tone ?? "accent";
 	const size = b.size ?? "md";
@@ -39,6 +49,7 @@ function radioClass(b: RadioBindings): string {
 		`xtyle-radio--${tone}`,
 		size !== "md" && `xtyle-radio--${size}`,
 		b.invalid && "xtyle-radio--invalid",
+		b.card && "xtyle-radio--card",
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -49,6 +60,8 @@ function inner(b: RadioBindings): string {
 	const value = b.value ?? "on";
 	const label = b.label ?? null;
 	const labelledby = b.labelledby ?? null;
+	const description = b.description ?? "";
+	const descriptionId = b.descriptionId ?? "xtyle-radio-desc";
 	const nameAttr = name !== null ? ` name="${name}"` : "";
 	const valueAttr = ` value="${value}"`;
 	const checkedAttr = b.checked ? " checked" : "";
@@ -56,12 +69,17 @@ function inner(b: RadioBindings): string {
 	const ariaInvalid = b.invalid ? ` aria-invalid="true"` : "";
 	const ariaLabel = label && !labelledby ? ` aria-label="${label}"` : "";
 	const ariaLabelledby = labelledby ? ` aria-labelledby="${labelledby}"` : "";
+	const describedby = description.length > 0 ? ` aria-describedby="${escapeAttr(descriptionId)}"` : "";
+	const descriptionHidden = description.length === 0 ? " hidden" : "";
 	const labelText = label !== null ? label : "";
 	return (
 		`<input part="control" class="xtyle-radio__control" type="radio"` +
-		`${nameAttr}${valueAttr}${checkedAttr}${disabledAttr}${ariaInvalid}${ariaLabel}${ariaLabelledby} />` +
+		`${nameAttr}${valueAttr}${checkedAttr}${disabledAttr}${ariaInvalid}${ariaLabel}${ariaLabelledby}${describedby} />` +
 		`<span part="indicator" class="xtyle-radio__indicator" aria-hidden="true"></span>` +
-		`<span part="label" class="xtyle-radio__label"><slot>${labelText}</slot></span>`
+		`<span class="xtyle-radio__text">` +
+		`<span part="label" class="xtyle-radio__label"><slot>${labelText}</slot></span>` +
+		`<span part="description" class="xtyle-radio__description" id="${escapeAttr(descriptionId)}"${descriptionHidden}>${escapeHtml(description)}</span>` +
+		`</span>`
 	);
 }
 

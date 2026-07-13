@@ -1,0 +1,87 @@
+---
+import Dot from "@xtyle/astro/Dot.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
+
+const semantic = ["accent", "neutral", "success", "warn", "danger", "info"] as const;
+
+const TONE_GROUPS = [
+	{ label: "Accents", tones: ["accent", ...ACCENT_VARIANTS, "neutral"] },
+	{ label: "Statuses", tones: ["success", "info", "warn", "danger"] },
+	{ label: "Named hues", tones: [...HUES] },
+] as const;
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Every tone</Heading>
+		<Stack gap={4}>
+			{
+				TONE_GROUPS.map((group) => (
+					<Stack gap={2}>
+						<Text size="xs" tone="subtle" weight="semibold">{group.label}</Text>
+						<Cluster gap={3} align="center">
+							{group.tones.map((tone) => (
+								<Dot tone={tone} label={tone} />
+							))}
+						</Cluster>
+					</Stack>
+				))
+			}
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Three sizes</Heading>
+		<Cluster gap={4} align="center">
+			<Cluster gap={2} align="center"><Dot size="sm" tone="accent" /><Text size="sm" mono>sm</Text></Cluster>
+			<Cluster gap={2} align="center"><Dot size="md" tone="accent" /><Text size="sm" mono>md</Text></Cluster>
+			<Cluster gap={2} align="center"><Dot size="lg" tone="accent" /><Text size="sm" mono>lg</Text></Cluster>
+		</Cluster>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Live status</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A chip-less indicator for presence without a label around it: a connection light,
+				a per-row streaming pip. <code>pulse</code> breathes the dot at a
+				<code>slow</code> or <code>fast</code> cadence.
+			</Text>
+			<Cluster gap={4} align="center">
+				<Cluster gap={2} align="center"><Dot tone="success" pulse="slow" label="Connected" /><Text size="sm">Connected</Text></Cluster>
+				<Cluster gap={2} align="center"><Dot tone="accent" pulse="fast" label="Streaming" /><Text size="sm">Streaming</Text></Cluster>
+				<Cluster gap={2} align="center"><Dot tone="neutral" label="Offline" /><Text size="sm">Offline</Text></Cluster>
+			</Cluster>
+			<Text tone="muted" size="sm">
+				To grab the eye, <code>ping</code> radiates an expanding ring and <code>glow</code>
+				adds a soft halo. Both compose, and both hold still under reduced-motion.
+			</Text>
+			<Cluster gap={4} align="center">
+				<Cluster gap={2} align="center"><Dot tone="danger" ping label="Recording" /><Text size="sm">Recording</Text></Cluster>
+				<Cluster gap={2} align="center"><Dot tone="success" ping glow size="lg" label="Live" /><Text size="sm">Live (ping + glow)</Text></Cluster>
+				<Cluster gap={2} align="center"><Dot tone="info" glow label="Syncing" /><Text size="sm">Glow only</Text></Cluster>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Color escape hatch</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>color</code> paints the dot any raw value past the tone set, so a per-state
+				color from an app's own status map (or a <code>color-mix(…)</code> expression) drives
+				the dot, ping ring, and glow alike.
+			</Text>
+			<Cluster gap={4} align="center">
+				<Cluster gap={2} align="center"><Dot color="var(--purple)" glow label="Queued" /><Text size="sm">--purple</Text></Cluster>
+				<Cluster gap={2} align="center"><Dot color="#f59e0b" ping label="Building" /><Text size="sm">#f59e0b</Text></Cluster>
+				<Cluster gap={2} align="center"><Dot color="color-mix(in oklch, var(--success) 60%, var(--info))" label="Mixed" /><Text size="sm">color-mix</Text></Cluster>
+			</Cluster>
+		</Stack>
+	</Card>
+</Stack>

@@ -58,9 +58,58 @@ export const radioCss = `
 		transform var(--duration-fast) var(--ease-emphasized),
 		background-color var(--duration-fast) var(--ease-standard);
 }
+.xtyle-radio__text {
+	display: inline-flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+}
 .xtyle-radio__label {
 	display: inline-flex;
 	align-items: center;
+}
+.xtyle-radio__description {
+	font-size: var(--text-sm);
+	color: var(--fg-2);
+	line-height: var(--leading-normal);
+}
+.xtyle-radio__description[hidden] {
+	display: none;
+}
+.xtyle-radio:has(.xtyle-radio__description:not([hidden])) {
+	align-items: flex-start;
+}
+.xtyle-radio:has(.xtyle-radio__description:not([hidden])) .xtyle-radio__indicator,
+.xtyle-radio--card .xtyle-radio__indicator {
+	margin-top: 0.12em;
+}
+.xtyle-radio--card {
+	display: flex;
+	width: 100%;
+	align-items: flex-start;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-4);
+	border: var(--border-thin) solid var(--line);
+	border-radius: var(--radius-md);
+	background: var(--bg-1);
+	transition:
+		border-color var(--duration-fast) var(--ease-standard),
+		background-color var(--duration-fast) var(--ease-standard),
+		box-shadow var(--duration-fast) var(--ease-standard);
+}
+.xtyle-radio--card:hover {
+	border-color: var(--line-2);
+}
+.xtyle-radio--card:has(.xtyle-radio__control:checked) {
+	border-color: var(--accent);
+	background: var(--accent-bg);
+	box-shadow: inset 0 0 0 var(--border-thin) var(--accent);
+}
+.xtyle-radio--card:has(.xtyle-radio__control:focus-visible) {
+	box-shadow: 0 0 0 var(--border-thick) var(--ring);
+}
+.xtyle-radio--card .xtyle-radio__control:focus-visible ~ .xtyle-radio__indicator {
+	box-shadow: none;
 }
 .xtyle-radio--sm {
 	font-size: var(--text-sm);

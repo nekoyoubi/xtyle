@@ -11,6 +11,7 @@ interface Segment {
 	disabled?: boolean;
 	badge?: string;
 	slot?: string;
+	title?: string;
 }
 
 interface SegmentedBindings {
@@ -87,9 +88,13 @@ function options(bindings: SegmentedBindings, selected: string): string {
 			const disabledAttr = segDisabled ? " disabled" : "";
 			const badge = seg.badge ? `<span class="xtyle-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
 			// A slotted segment carries framework-owned content (an icon), so the radio itself owns the
-			// option's name and tooltip — `aria-label` and `title` from `label` — while its body is the
-			// live `<slot>`, not baked text. A text segment shows its label, so it needs neither.
-			const named = seg.slot ? ` aria-label="${escapeAttr(seg.label)}" title="${escapeAttr(seg.label)}"` : "";
+			// option's accessible name (`aria-label` from `label`) while its body is the live `<slot>`.
+			// The tooltip is an explicit per-segment `title` when given, else the label for a slotted
+			// segment (whose visible body isn't text) — a text segment needs no tooltip unless it asks.
+			const ariaLabel = seg.slot ? ` aria-label="${escapeAttr(seg.label)}"` : "";
+			const tooltip = seg.title ?? (seg.slot ? seg.label : undefined);
+			const titleAttr = tooltip ? ` title="${escapeAttr(tooltip)}"` : "";
+			const named = `${ariaLabel}${titleAttr}`;
 			const body = seg.slot ? `<slot name="${escapeAttr(seg.slot)}"></slot>` : escapeHtml(seg.label);
 			const optionClass = seg.slot ? "xtyle-segmented__option xtyle-segmented__option--icon" : "xtyle-segmented__option";
 			return (

@@ -1,0 +1,62 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+import type { FullTone as Tone } from "@xtyle/core";
+type RibbonCorner = "top-right" | "top-left" | "bottom-right" | "bottom-left";
+type RibbonSize = "sm" | "md" | "lg";
+type RibbonVariant = "solid" | "soft";
+
+interface Props {
+	tone?: Tone;
+	corner?: RibbonCorner;
+	size?: RibbonSize;
+	variant?: RibbonVariant;
+	color?: string;
+	textColor?: string;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	tone = "accent",
+	corner = "top-right",
+	size = "md",
+	variant = "solid",
+	color,
+	textColor,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const bindings = {
+	tone,
+	corner,
+	size,
+	variant,
+	color: color ?? null,
+	textColor: textColor ?? null,
+	label: label ?? null,
+};
+const composed = await renderFragmentLight("ribbon", bindings);
+---
+
+<xtyle-ribbon
+	tone={tone}
+	corner={corner}
+	size={size}
+	variant={variant}
+	color={color || undefined}
+	text-color={textColor || undefined}
+	label={label || undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

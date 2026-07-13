@@ -1,7 +1,7 @@
 ---
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { windowedPlot } from "@xtyle/core";
-import type { SparklineVariant, SparklineTone, TimeSample } from "@xtyle/core";
+import type { SparklineVariant, SparklineTone, SparklineBounds, SparklineFormat, TimeSample } from "@xtyle/core";
 
 interface Props {
 	values?: number[];
@@ -19,6 +19,10 @@ interface Props {
 	showEnd?: boolean;
 	min?: number;
 	max?: number;
+	/** Kind-aware auto y-bounds for a typed metric: `percent` → 0–100, `unit` → 0–1, `duration` → 0–peak. */
+	bounds?: SparklineBounds;
+	/** Speak the metric's units in the hover readout: `duration` (`42s`/`1.5m`), `percent` (`87%`), `bytes`, `unit`. */
+	format?: SparklineFormat;
 	label?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -38,6 +42,8 @@ const {
 	showEnd = true,
 	min,
 	max,
+	bounds,
+	format,
 	label,
 	static: isStatic = false,
 	class: extra,
@@ -70,6 +76,8 @@ const chrome = await renderFragmentLight("sparkline", bindings);
 	step={step || undefined}
 	min={min ?? undefined}
 	max={max ?? undefined}
+	bounds={bounds ?? undefined}
+	format={format ?? undefined}
 	label={label}
 	class={extra}
 	set:html={chrome}

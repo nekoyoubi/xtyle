@@ -1,6 +1,7 @@
 export const dialogCss = `
 .xtyle-dialog {
-	width: min(32rem, calc(100vw - var(--space-6)));
+	--_dialog-size: 32rem;
+	width: min(var(--_dialog-size), calc(100vw - var(--space-6)));
 	max-width: calc(100vw - var(--space-6));
 	max-height: calc(100vh - var(--space-6));
 	padding: 0;
@@ -23,11 +24,16 @@ export const dialogCss = `
 	background: var(--scrim);
 }
 .xtyle-dialog--sm {
-	width: min(24rem, calc(100vw - var(--space-6)));
+	--_dialog-size: 24rem;
 }
 .xtyle-dialog--lg {
-	width: min(48rem, calc(100vw - var(--space-5)));
-	max-width: calc(100vw - var(--space-5));
+	--_dialog-size: 48rem;
+}
+.xtyle-dialog--xl {
+	--_dialog-size: 64rem;
+}
+.xtyle-dialog--full {
+	--_dialog-size: 100vw;
 }
 .xtyle-dialog__header {
 	display: flex;

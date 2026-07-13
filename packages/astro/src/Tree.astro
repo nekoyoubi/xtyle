@@ -1,20 +1,9 @@
 ---
 import { firstSelectedValue } from "@xtyle/core/markup";
+import type { TreeNode } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 type Size = "sm" | "md" | "lg";
-
-interface TreeNode {
-	label: string;
-	value?: string;
-	href?: string;
-	expanded?: boolean;
-	locked?: boolean;
-	selected?: boolean;
-	disabled?: boolean;
-	badge?: string;
-	children?: TreeNode[];
-}
 
 interface Props {
 	items?: TreeNode[];

@@ -44,6 +44,12 @@ export interface IconOutline {
 export interface IconLayer {
 	/** The primitive name, a key into `ICON_PRIMITIVES` (or a short keyword resolved through `PRIMITIVE_KEYWORDS`). */
 	primitive: string;
+	/** For the `letter` primitive: the glyph to typeset, centered on the grid. Set, it renders a `<text>`
+	 * in the layer's font slot instead of a library path, riding the same fill / outline / transform. */
+	glyph?: string;
+	/** For a `letter`: the font slot (`0`+) whose family typesets the glyph; default `0`. Slots 0–2 are
+	 * the theme's sans / display / mono; a `---f{n}` finish overrides any slot. */
+	font?: number;
 	/** A literal color, `currentColor`, `transparent`, a token (`--accent`), or a series slot (`series:2`). Omit to inherit `currentColor`. */
 	fill?: string;
 	/** Uniform scale about the center (default 1). The grammar's `s{%}` maps here as a fraction of the full grid. */
@@ -90,6 +96,10 @@ export interface IconComposition {
 	/** Palette overrides from a `---pc` finish: a nibble key repaints that one slot, `*` silhouettes
 	 * every painting slot. Values are literal colors, applied as a `slot:{n}` resolves. */
 	palette?: Record<string, string>;
+	/** Font-slot overrides from a `---f` finish, keyed by slot index. A slot a `letter` uses without an
+	 * override falls back to `FONT_SLOT_TABLE`. Values are a resolved `font-family`: a `var(--font-*)`
+	 * theme token (portable) or a literal family name (renders only where that font is loaded). */
+	fonts?: Record<number, string>;
 }
 
 export interface ComposeIconOptions {
@@ -142,6 +152,8 @@ const GLYPH_TAGS: Record<string, string[]> = {
 	stop: ["stop", "media", "playback", "control"],
 	"skip-forward": ["skip", "forward", "next", "media", "control"],
 	"skip-back": ["skip", "back", "previous", "media", "control"],
+	volume: ["volume", "sound", "audio", "speaker", "unmute", "media"],
+	"volume-off": ["volume", "mute", "muted", "silent", "sound", "audio", "speaker", "media"],
 	gear: ["gear", "settings", "cog", "config", "options"],
 	folder: ["folder", "directory", "files"],
 	pencil: ["pencil", "edit", "write", "draw"],
@@ -153,9 +165,69 @@ const GLYPH_TAGS: Record<string, string[]> = {
 	download: ["download", "save", "import", "arrow"],
 };
 
+/**
+ * The theme's font families, indexed like color slots so a `letter` picks one by number and a `---f{n}`
+ * finish overrides it the same way `---pc{nibble}` overrides a color. Slot 0 is the body sans, 1 the
+ * display face, 2 the mono — the three `--font-*` tokens the register always carries. A slot with no
+ * default (3+) falls back to slot 0 unless a `---f{n}` finish supplies one.
+ */
+export const FONT_SLOT_TABLE: Record<number, string> = {
+	0: "var(--font-sans)",
+	1: "var(--font-display)",
+	2: "var(--font-mono)",
+};
+
+/** Theme-font aliases a `---f` value may name to bind a slot to a `--font-*` token — theme-reactive, and
+ * as portable as the page it lands on — instead of a literal family. */
+const THEME_FONT_ALIASES: Record<string, string> = {
+	sans: "var(--font-sans)",
+	body: "var(--font-sans)",
+	display: "var(--font-display)",
+	mono: "var(--font-mono)",
+};
+
+/**
+ * Resolve a `---f` finish value to a `font-family`. `+` reads as a space (so a Google-style
+ * `noto+sans+symbols` is one family), a bare theme alias (`sans` / `display` / `mono`) binds to that
+ * `--font-*` token, and anything else is a literal family name. A literal family only renders where the
+ * font is actually loaded; `iconFontImports` surfaces the loading snippets for the ones that need it.
+ */
+export function resolveFontSpec(raw: string): string {
+	const name = raw.replace(/\+/g, " ").trim();
+	const alias = THEME_FONT_ALIASES[name.toLowerCase()];
+	if (alias) return alias;
+	// Capitalize each word so a lowercase-typed `sigmar` / `noto+sans+symbols` reads and loads as the
+	// canonical family (CSS family matching is case-insensitive, but Google's `family=` param is not); an
+	// already-capped word like `IBM` is left as typed.
+	return name
+		.split(" ")
+		.map((w) => (w ? (w[0] as string).toUpperCase() + w.slice(1) : w))
+		.join(" ");
+}
+
+/** The resolved `font-family` for a layer's font slot: a `---f` override, else the theme default, else slot 0. */
+function fontForSlot(slot: number | undefined, composition: IconComposition): string {
+	const index = slot ?? 0;
+	return (
+		composition.fonts?.[index] ?? FONT_SLOT_TABLE[index] ?? FONT_SLOT_TABLE[0] ?? "var(--font-sans)"
+	);
+}
+
+/** The `<text>` body for a `letter` layer: the glyph centered on the 24-grid in the slot's font, with no
+ * fill of its own so the paint group's fill / color / stroke (nibble colors, `currentColor`, outlines,
+ * knockout) and the layer transform all apply exactly as they do to a path primitive. `paint-order="stroke"`
+ * draws any outline *behind* the fill, so an outlined letter reads as a solid glyph with a border hugging
+ * its silhouette rather than a centered stroke that eats into and doubles every stem. */
+function letterBody(glyph: string, fontFamily: string): string {
+	return `<text x="${CENTER}" y="${CENTER}" text-anchor="middle" dominant-baseline="central" paint-order="stroke" stroke-linejoin="round" font-size="20" font-family="${escapeAttr(fontFamily)}">${escapeAttr(glyph)}</text>`;
+}
+
 /** The seed primitive library: shapes, frames, bars, symbols, and the functional glyphs. Each carries
  * plain-language `tags` for search and filter; the keys are internal identifiers, not a taxonomy. */
 export const ICON_PRIMITIVES: Record<string, IconPrimitive> = {
+	// A parametric primitive: the grammar's `letter-<glyph>` supplies the character and font slot; this
+	// sample body is what the palette previews when no glyph is bound yet.
+	letter: { body: letterBody("A", FONT_SLOT_TABLE[1] as string), since: "0.7.0", tags: ["letter", "text", "glyph", "type", "character", "monogram", "initial"] },
 	"shape-circle": bare(`<circle cx="12" cy="12" r="11"/>`, ["circle", "round", "shape", "solid"]),
 	"shape-square": bare(`<rect x="1.5" y="1.5" width="21" height="21"/>`, ["square", "box", "shape", "solid"]),
 	"shape-square-1": bare(`<rect x="1.5" y="1.5" width="21" height="21" rx="2"/>`, ["square", "box", "rounded", "shape"]),
@@ -271,6 +343,18 @@ export function hasPrimitive(name: string): boolean {
 export const ICON_PRIMITIVE_NAMES: string[] = Object.keys(ICON_PRIMITIVES);
 
 const STROKE_WIDTH = [0, 0.75, 1.25, 1.75];
+
+/**
+ * The stroke width for an outline size step, pre-divided by the layer's own scale so the drawn
+ * thickness stays constant per icon rather than tracking the shape. A layer's `scale` rides on the
+ * same group the stroke does, so SVG would otherwise scale the stroke with the shape (an `s50` shape
+ * outlining at half thickness, an `s150` at 1.5×); dividing here cancels that, leaving the semantic
+ * thickness a property of the icon, not the shape's size.
+ */
+function outlineWidth(size: number, scale: number | undefined): number {
+	const base = STROKE_WIDTH[size] ?? STROKE_WIDTH[1] ?? 0.75;
+	return base / (Math.abs(scale ?? 1) || 1);
+}
 
 /** Trims float noise from a computed coordinate. */
 function n(value: number): string {
@@ -400,13 +484,13 @@ function layerTransform(layer: IconLayer): string {
  * `color` is left unset so an inherited outline color falls through to the icon's own `currentColor`
  * rather than the `"none"` `paintGroup` would seed, which is what made this render as a shade or a fill.
  */
-function outlineGroup(body: string, outline: IconOutline, transform: string, opts: ComposeIconOptions): string {
+function outlineGroup(body: string, outline: IconOutline, scale: number | undefined, transform: string, opts: ComposeIconOptions): string {
 	const color = resolveColor(outline.color, opts);
-	const width = STROKE_WIDTH[outline.size] ?? STROKE_WIDTH[1];
+	const width = outlineWidth(outline.size, scale);
 	const stroked = body
 		.replace(/fill="currentColor"/g, 'fill="none"')
 		.replace(/stroke="currentColor"/g, `stroke="${color}"`);
-	return `<g ${transform ? `transform="${transform}" ` : ""}fill="none" stroke="${color}" stroke-width="${width}">${stroked}</g>`;
+	return `<g ${transform ? `transform="${transform}" ` : ""}fill="none" stroke="${color}" stroke-width="${n(width)}">${stroked}</g>`;
 }
 
 function paintGroup(body: string, fill: string, layer: IconLayer, transform: string, opts: ComposeIconOptions): string {
@@ -416,7 +500,7 @@ function paintGroup(body: string, fill: string, layer: IconLayer, transform: str
 		// seeds currentColor for any child glyph drawn in it, so a symbol matches the layer fill
 		`color="${fill}"`,
 		layer.outline && `stroke="${resolveColor(layer.outline.color, opts)}"`,
-		layer.outline && `stroke-width="${STROKE_WIDTH[layer.outline.size] ?? STROKE_WIDTH[1]}"`,
+		layer.outline && `stroke-width="${n(outlineWidth(layer.outline.size, layer.scale))}"`,
 		layer.opacity != null && `opacity="${n(layer.opacity)}"`,
 	]
 		.filter(Boolean)
@@ -451,7 +535,12 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 	const paletteOpts: ComposeIconOptions = composition.palette ? { ...opts, palette: composition.palette } : opts;
 
 	for (const layer of composition.layers) {
-		const primitive = ICON_PRIMITIVES[layer.primitive] ?? MISSING;
+		// A `letter` layer typesets its glyph at compose time (font resolved from the slot table + any
+		// `---f` override); every other primitive is a static library body.
+		const primitive =
+			layer.glyph != null
+				? { body: letterBody(layer.glyph, fontForSlot(layer.font, composition)) }
+				: (ICON_PRIMITIVES[layer.primitive] ?? MISSING);
 		const transform = layerTransform(layer);
 		if (layer.knockout) {
 			// A normal knockout punches the shape out of the art below (white field, black shape);
@@ -468,7 +557,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				`<mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${GRID}" height="${GRID}"><rect width="${GRID}" height="${GRID}" fill="${fieldFill}"/>${cut}</mask>`,
 			);
 			body = `<g mask="url(#${maskId})">${body}</g>`;
-			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, transform, paletteOpts);
+			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, layer.scale, transform, paletteOpts);
 		} else if (layer.invert) {
 			// Paint the fill everywhere *except* the shape — a filled field with a shape-hole.
 			const maskId = `xi-${id}-${holes++}`;
@@ -529,7 +618,42 @@ export function composeIconThemed(composition: IconComposition, opts: ComposeIco
 	const dropShadow = composition.dropShadow
 		? { ...composition.dropShadow, color: bake(composition.dropShadow.color) ?? composition.dropShadow.color }
 		: undefined;
-	return composeIcon({ layers, label: composition.label, dropShadow }, { scheme: opts.scheme, className: opts.className, part: opts.part });
+	return composeIcon({ layers, label: composition.label, dropShadow, fonts: composition.fonts }, { scheme: opts.scheme, className: opts.className, part: opts.part });
+}
+
+/** A font a `letter` layer needs loaded, with ready-made Google Fonts loading snippets. */
+export interface IconFontRequirement {
+	/** The `font-family` the mark references. */
+	family: string;
+	/** A CSS `@import` that loads the family from Google Fonts. */
+	googleImport: string;
+	/** A `<link>` that loads the family from Google Fonts. */
+	googleLink: string;
+}
+
+/**
+ * The external font families a composition's `letter` layers need loaded, each with ready-made Google
+ * Fonts loading code. Theme-token fonts (`var(--font-*)`) are skipped: they inherit the page's own
+ * stacks and need nothing. This is the "help" for the expectation that a named font must be available
+ * for a text mark to render as authored, and the grammar's `+`-joined family is already Google's
+ * `family=` syntax, so the mapping is exact.
+ */
+export function iconFontImports(composition: IconComposition): IconFontRequirement[] {
+	const families = new Set<string>();
+	for (const layer of composition.layers) {
+		if (layer.glyph == null) continue;
+		const spec = fontForSlot(layer.font, composition);
+		if (spec.startsWith("var(")) continue; // a theme token is as portable as the page; nothing to load
+		families.add(spec);
+	}
+	return [...families].map((family) => {
+		const param = family.replace(/\s+/g, "+");
+		return {
+			family,
+			googleImport: `@import url('https://fonts.googleapis.com/css2?family=${param}&display=swap');`,
+			googleLink: `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${param}&display=swap">`,
+		};
+	});
 }
 
 /** A parsed icon name: its accessible label (humanized) and the composition its spec describes. */
@@ -549,7 +673,18 @@ function parseObject(segment: string): IconLayer | null {
 	let position = 5;
 	let offX = 0;
 	let offY = 0;
-	const rest = segment.slice(keyword.length);
+	let rest = segment.slice(keyword.length);
+	// The `letter` primitive is parametric: its first `-`-token is the glyph and an optional `-f{n}` names
+	// the font slot, both consumed here so the shared flag loop never misreads an arbitrary glyph (`-x`,
+	// `-a`) as a transform flag.
+	if (keyword === "letter") {
+		const m = /^-(.)(?:-f(\d))?/.exec(rest);
+		if (m) {
+			layer.glyph = m[1];
+			if (m[2] != null) layer.font = Number(m[2]);
+			rest = rest.slice(m[0].length);
+		}
+	}
 	OBJECT_TOKEN.lastIndex = 0;
 	let token: RegExpExecArray | null;
 	while ((token = OBJECT_TOKEN.exec(rest))) {
@@ -609,6 +744,10 @@ const PC_FLAG = /^pc([0-9a-f])?-(.+)$/;
 /** Token-name aliases for a `---pc` override: bare `fg`/`bg` mean the base ink / base surface. */
 const PC_TOKEN_ALIAS: Record<string, string> = { fg: "fg-0", bg: "bg-0" };
 
+/** One `f` font-slot flag: `f{n}-{name}` sets slot `n`, `f-{name}` sets slot 0 (the default). The name
+ * runs to the end of the flag (finishes are `--`-delimited), so a multi-word family like `noto+sans` fits. */
+const F_FLAG = /^f(\d)?-(.+)$/;
+
 /**
  * Resolve a `---pc` override value to a color spec that flows through `resolveColor`. Three shapes, so an
  * override can stay theme-reactive instead of baking a literal color: a **hex** (`3`/`4`/`6`/`8` digits)
@@ -637,6 +776,7 @@ function pcOverrideSpec(raw: string): string | null {
 function parseFinish(segment: string): Partial<IconComposition> {
 	const out: Partial<IconComposition> = {};
 	const palette: Record<string, string> = {};
+	const fonts: Record<number, string> = {};
 	for (const flag of segment.split("--")) {
 		if (!flag) continue;
 		const pc = PC_FLAG.exec(flag);
@@ -648,6 +788,12 @@ function parseFinish(segment: string): Partial<IconComposition> {
 			}
 			continue;
 		}
+		const f = F_FLAG.exec(flag);
+		if (f) {
+			const slot = f[1] != null ? Number(f[1]) : 0;
+			fonts[slot] = resolveFontSpec(f[2] as string);
+			continue;
+		}
 		if (flag.startsWith("d")) {
 			const shadow = parseDropShadow(flag);
 			if (shadow) out.dropShadow = shadow;
@@ -655,6 +801,7 @@ function parseFinish(segment: string): Partial<IconComposition> {
 		// `l…` lock flags are authoring metadata for the builder's Randomize; ignored at render.
 	}
 	if (Object.keys(palette).length) out.palette = palette;
+	if (Object.keys(fonts).length) out.fonts = fonts;
 	return out;
 }
 

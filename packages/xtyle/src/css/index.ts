@@ -3,6 +3,8 @@ export type { UtilityOptions } from "./utilities.js";
 export { componentsCss } from "./components.js";
 export { cardCss } from "./components/card.js";
 export { badgeCss } from "./components/badge.js";
+export { dotCss } from "./components/dot.js";
+export { ribbonCss } from "./components/ribbon.js";
 export { eyebrowCss } from "./components/eyebrow.js";
 export { kbdCss } from "./components/kbd.js";
 export { iconCss } from "./components/icon.js";

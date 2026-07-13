@@ -24,7 +24,9 @@ const cornerButton = `
 `.trim();
 
 const imageFrameCss = `
+xtyle-image { display: block; }
 [data-image] { display: contents; }
+.xtyle-image__media { display: contents; }
 .xtyle-image {
 	display: block;
 	margin: 0;
@@ -98,6 +100,44 @@ const imageFrameCss = `
 @media (hover: none) {
 	.xtyle-image__zoom { opacity: 1; transform: none; }
 }
+.xtyle-image__hover {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity var(--duration-slow) var(--ease-standard), visibility 0s linear var(--duration-slow);
+}
+.xtyle-image__frame[data-hover-active] .xtyle-image__hover {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity var(--duration-slow) var(--ease-standard);
+}
+/* The revealed media fills the frame. The slotted rule matches the shadow-projected path; the
+   direct-child rule matches the light / SSR path where the media is inlined into the overlay.
+   Both skip script / style nodes: a slotted island (a nested carousel) carries its own hydration
+   script, and sizing that non-visual node to the frame would push the real content out of view. */
+.xtyle-image__hover ::slotted(:not(script):not(style)),
+.xtyle-image__hover > :not(slot):not(script):not(style):not(.xtyle-image__audio),
+.xtyle-image__hover-media {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.xtyle-image__audio {
+	${cornerButton}
+	top: auto;
+	bottom: var(--space-2);
+	right: var(--space-2);
+	pointer-events: auto;
+	cursor: pointer;
+}
+.xtyle-image__audio:focus-visible {
+	outline: var(--border-thick) solid var(--ring);
+	outline-offset: 2px;
+}
 .xtyle-image__caption {
 	margin-top: var(--space-2);
 	color: var(--fg-2);
@@ -112,6 +152,7 @@ const imageFrameCss = `
 	.xtyle-image__placeholder { animation: none; }
 	.xtyle-image__img { transition: none; }
 	.xtyle-image__zoom { transition: none; }
+	.xtyle-image__hover { transition: none; }
 }
 `.trim();
 

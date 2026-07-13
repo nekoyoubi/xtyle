@@ -66,6 +66,36 @@ import { ICON_NAMES } from "@xtyle/core";
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Text marks</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The <code>letter</code> primitive typesets a glyph as a mark (<code>--letter-A</code>), so a
+				monogram or initial composes like any other primitive: colored, framed, outlined, scaled. It
+				draws in an indexed font slot (<code>-f0</code> sans, <code>-f1</code> display, <code>-f2</code>
+				mono), and a <code>---f</code> finish swaps a slot for another theme font. A named web font
+				renders only where it's loaded; theme-token fonts always work.
+			</Text>
+			<Grid minColWidth="8rem" gap={3}>
+				{
+					[
+						"letter A--letter-A",
+						"display Q--letter-Q-f1",
+						"mono 7--letter-7-f2",
+						"badged A--circle-c1--letter-A-cb-s55",
+						"framed N--square-c0-o2c1--letter-N-c1-s55",
+						"outlined R--letter-R-o2c2-s150",
+					].map((spec) => (
+						<Stack gap={1} align="center" style="text-align: center; padding: 0.75rem 0;">
+							<Icon name={spec} size="xl" />
+							<Text tone="muted" size="xs" mono style="word-break: break-all;">{spec.split("--")[0]}</Text>
+						</Stack>
+					))
+				}
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Sizes</Heading>
 		<Cluster gap={4} align="center" style="align-items: baseline;">
 			<Icon name="search" size="sm" />

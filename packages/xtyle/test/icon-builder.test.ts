@@ -3,6 +3,9 @@ import {
 	composeIcon,
 	composeIconThemed,
 	parseIconName,
+	resolveIconMark,
+	iconFontImports,
+	resolveFontSpec,
 	colorSlot,
 	ICON_PRIMITIVES,
 	ICON_PRIMITIVE_NAMES,
@@ -189,6 +192,19 @@ describe("icon-builder", () => {
 		// a filled glyph rim outlines rather than fills: its own fill="currentColor" is normalized to none
 		const glyph = composeIcon({ layers: [{ primitive: "shape-shield" }, { primitive: "symbol-stop", knockout: true, outline: { size: 1, color: "currentColor" } }] });
 		expect(glyph).toContain('width="12" height="12" rx="2" fill="none"');
+	});
+
+	it("keeps an outline's semantic thickness constant regardless of the shape's scale", () => {
+		// The stroke rides the same group as the layer's scale, so a naive width would track the shape.
+		// Dividing by the scale cancels that: an `s50` shape and an `s200` shape both draw a size-2 rim
+		// at the same on-screen thickness (0.625 units in the shape's own space vs 2.5, both = 1.25 drawn).
+		const small = composeIcon({ layers: [{ primitive: "shape-square", scale: 0.5, outline: { size: 2, color: "--accent" } }] });
+		expect(small).toContain('stroke-width="2.5"');
+		const large = composeIcon({ layers: [{ primitive: "shape-square", scale: 2, outline: { size: 2, color: "--accent" } }] });
+		expect(large).toContain('stroke-width="0.625"');
+		// a knockout rim compensates the same way, and a flip's negative scale uses its magnitude
+		const knock = composeIcon({ layers: [{ primitive: "shape-shield" }, { primitive: "shape-square", knockout: true, scale: 0.5, flipH: true, outline: { size: 2, color: "currentColor" } }] });
+		expect(knock).toContain('stroke-width="2.5"');
 	});
 
 	it("flips a layer via a negative scale about the center", () => {
@@ -467,6 +483,69 @@ describe("parseIconName", () => {
 		const svg = composeIcon(parsed!.composition);
 		expect(svg.startsWith("<svg")).toBe(true);
 		expect(svg).toContain('role="img"');
+	});
+
+	it("typesets a `letter` glyph as centered <text> in the default (sans) font slot", () => {
+		const layer = parseObjectLayer("letter-x");
+		expect(layer.primitive).toBe("letter");
+		expect(layer.glyph).toBe("x");
+		expect(layer.font).toBeUndefined();
+		const svg = composeIcon({ layers: [layer] });
+		expect(svg).toContain("<text");
+		expect(svg).toContain('text-anchor="middle"');
+		expect(svg).toContain('font-family="var(--font-sans)"');
+		expect(svg).toContain(">x</text>");
+	});
+
+	it("selects a font slot with `-f{n}` and preserves glyph case", () => {
+		const layer = parseObjectLayer("letter-Q-f1");
+		expect(layer.glyph).toBe("Q");
+		expect(layer.font).toBe(1);
+		expect(composeIcon({ layers: [layer] })).toContain('font-family="var(--font-display)"');
+	});
+
+	it("overrides a font slot from a `---f` finish: theme alias, literal family, and per-slot", () => {
+		const bareSlot = resolveIconMark("--letter-N---f-sigmar")!.composition;
+		expect(bareSlot.fonts).toEqual({ 0: "Sigmar" });
+		expect(composeIcon(bareSlot)).toContain('font-family="Sigmar"');
+
+		const multiWord = resolveIconMark("--letter-x-f1---f1-noto+sans+symbols")!.composition;
+		expect(multiWord.fonts).toEqual({ 1: "Noto Sans Symbols" });
+		expect(composeIcon(multiWord)).toContain('font-family="Noto Sans Symbols"');
+
+		const themeToken = resolveIconMark("--letter-Q-f1---f1-display")!.composition;
+		expect(themeToken.fonts).toEqual({ 1: "var(--font-display)" });
+	});
+
+	it("resolves a `---f` value: `+` to spaces, theme alias to a token, literal to a canonical family", () => {
+		expect(resolveFontSpec("sigmar")).toBe("Sigmar");
+		expect(resolveFontSpec("noto+sans+symbols")).toBe("Noto Sans Symbols");
+		expect(resolveFontSpec("display")).toBe("var(--font-display)");
+		expect(resolveFontSpec("IBM+Plex+Mono")).toBe("IBM Plex Mono");
+	});
+
+	it("threads a glyph through the fill and outline pipeline like a path primitive", () => {
+		const svg = composeIconThemed(resolveIconMark("ex--letter-x-c3-o2")!.composition, { register });
+		expect(svg).toContain("<text");
+		expect(svg).toMatch(/<g[^>]*stroke="/);
+		expect(svg).toContain('role="img"');
+		expect(svg).toContain('aria-label="ex"');
+	});
+
+	it("reports external font families to load and skips portable theme tokens", () => {
+		const reqs = iconFontImports(resolveIconMark("--letter-N---f-sigmar")!.composition);
+		expect(reqs).toHaveLength(1);
+		expect(reqs[0]!.family).toBe("Sigmar");
+		expect(reqs[0]!.googleImport).toContain("family=Sigmar");
+		expect(reqs[0]!.googleLink).toContain("<link");
+		// a theme-token font, and the default sans slot, need nothing loaded
+		expect(iconFontImports(resolveIconMark("--letter-Q-f1---f1-display")!.composition)).toEqual([]);
+		expect(iconFontImports({ layers: [parseObjectLayer("letter-x")] })).toEqual([]);
+	});
+
+	it("registers `letter` in the primitive library for palette discovery", () => {
+		expect(hasPrimitive("letter")).toBe(true);
+		expect(primitiveSince("letter")).toBe("0.7.0");
 	});
 });
 

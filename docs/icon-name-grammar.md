@@ -82,6 +82,15 @@ functional glyphs are reachable as symbols by their bare name too (`check`, `clo
 glyph names (`chevron-right`) have no keyword, since a keyword is one token by rule; they stay
 glyph-only.
 
+**Text marks.** One primitive is *parametric*: `letter-{glyph}` typesets a single character as a mark,
+so a monogram or initial composes like any other primitive (colored with `c`, outlined with `o`, framed,
+scaled, knocked out). An optional `-f{n}` picks a **font slot**: the three theme families are indexed
+`f0` sans (default), `f1` display, `f2` mono. So `--letter-A` is an "A" in the body font and
+`--letter-Q-f1` a display-face "Q". The glyph is centered on the grid and takes the layer's fill through
+`currentColor`, so `badge--circle-c1--letter-A-cb-s55` sets a background-colored "A" on an accent disc.
+The glyph and its font-slot digit are consumed before the shared flag loop, so an arbitrary glyph never
+collides with a flag like `-x` or `-a`.
+
 ### color palette
 
 `c{n}` takes one **hex nibble** `0`–`f` into a 16-slot palette. Slots `1`–`9` are the nine **series
@@ -126,12 +135,21 @@ composite:
 | `d{c}p{1-9}s{1-5}t{%}` | **drop shadow**: a colored, offset, blurred copy cast behind the mark. `d{c}` shadow color (a palette nibble), `p{1-9}` cast direction (keypad; `5` = straight down/no offset), `s{1-5}` cast distance, `t{%}` softness (blur). Sub-params optional, default `dfp8s2t50`. | no shadow |
 | `pc{n}-{value}` | **palette override**: repaint one slot for this mark. The value is a **hex** (`pc3-ff00ff` forces slot 3 to magenta), a single **nibble** `0`–`f` (`pc3-1` borrows slot 1's series color), or a **token name** (`pc3-accent` → `--accent`; also `success`, a named hue, or the `fg`/`bg` aliases). | none |
 | `pc-{value}` | **silhouette**: force every painting slot to one color (transparent/reserved slots stay clear). Same three value shapes: `pc-424242` (fixed grey), `pc-fg` (the foreground token), `pc-a` (the active ink). | none |
+| `f{n}-{name}` | **font slot**: bind slot `n` (`0`+) for this mark's `letter` layers to a font; `f-{name}` sets the default slot `0`. `{name}` is a theme alias (`sans` / `display` / `mono` → a `--font-*` token, portable), or a literal family with `+` for spaces (`f1-noto+sans+symbols` → `Noto Sans Symbols`). | slots `0`–`2` = sans / display / mono |
 
 A `pc` value stays **theme-reactive** when it's a nibble or a token — it resolves off the live register
 at paint time, so the override tracks the theme instead of baking a dead color; a hex value is fixed.
 Hyphenated tokens ride the finish directly (`pc-neutral-bg`, `pc3-accent-2`): finish flags are `--`-separated,
 so a value keeps its single hyphens. Combine finish flags with `--`: `pc1-accent--d2p8s3t80` overrides *and*
 casts a shadow. A future whole-composite modifier slots in the same way.
+
+A `letter`'s font renders faithfully only where that family is **available**. A theme-alias slot
+(`f1-display`) is as portable as the page it lands on — it inherits the page's own `--font-*` stack. A
+literal family (`f-sigmar`, `f1-noto+sans+symbols`) must be loaded separately; the mark declares the
+font but does not carry it. `iconFontImports(composition)` returns ready-made Google Fonts `@import` /
+`<link>` snippets for exactly the literal families a mark uses (the `+`-joined grammar is already
+Google's `family=` syntax, and theme-token slots are skipped since they need nothing), so a builder can
+surface the loading code to the author.
 
 **Lock flags** (`l{index}{codes}`) are **authoring metadata the renderer ignores**: they pin an
 object's props against the icon builder's Randomize, so a *template* name carries its own re-roll
@@ -188,6 +206,9 @@ crest--shield-c1-o1--star-s45-cf---l1o-l2*                          a re-rollabl
                                                                     while the builder randomizes the rest
 badge--circle-c2--bolt-s52-cb---dfp8s3t60                            a bolt badge lifted off the page by
                                                                     a soft shadow cast down and behind
+mark--letter-A-cf                                                   a foreground "A" in the body font
+badge--circle-c1--letter-A-cb-s55---f0-display                      a display-font "A" on an accent disc
+tag--letter-x-f1---f1-noto+sans+symbols                            an "x" in a named web font (load separately)
 ```
 
 ## Extensibility

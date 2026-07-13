@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
 
 const htmlExample = `<xtyle-tree label="Documentation"></xtyle-tree>
 
@@ -31,11 +32,21 @@ const svelteExample = `<script lang="ts">
 				{ label: "Theming", href: "/guides/theming" },
 			],
 		},
-		{ label: "Reference", children: [{ label: "Engine", href: "/reference/engine" }] },
+		{
+			label: "Reference",
+			children: [
+				{ label: "Engine", value: "engine", actions: [{ id: "rename", label: "Rename", icon: "✎" }] },
+			],
+		},
 	];
 </script>
 
-<Tree label="Documentation" {items} onselect={(e) => console.log(e.detail.value)} />`;
+<Tree
+	label="Documentation"
+	{items}
+	onselect={(e) => console.log("select", e.detail.value)}
+	ontreeaction={(e) => console.log(e.detail.action, "on", e.detail.value)}
+/>`;
 
 const astroExample = `---
 import { Tree } from "@xtyle/astro";
@@ -61,18 +72,21 @@ const trailingExample = `<xtyle-tree label="Binder"></xtyle-tree>
 	const tree = document.querySelector("xtyle-tree");
 	tree.items = [
 		{
-			label: "Chapter 1", value: "ch1", expanded: true, badge: "1.2k",
+			label: "Chapter 1", value: "ch1", expanded: true,
+			// a word count plus a toned drift pill: two trailing badges, each its own color
+			badge: ["1,204", { text: "3", tone: "warn" }],
 			children: [
-				{ label: "Opening", value: "ch1-1", badge: "3", actions: [
+				{ label: "Opening", value: "ch1-1", badge: "512", actions: [
+					{ id: "up", label: "Move up", icon: "↑", disabled: true },
 					{ id: "rename", label: "Rename", icon: "✎" },
 					{ id: "delete", label: "Delete", icon: "✕" },
 				] },
 				{ label: "Rising action", value: "ch1-2", actions: [{ id: "rename", label: "Rename", icon: "✎" }] },
 			],
 		},
-		{ label: "Chapter 2", value: "ch2", badge: "0.8k" },
+		{ label: "Chapter 2", value: "ch2", badge: "812" },
 	];
-	// A row's badge shows always; its actions reveal on hover and fire tree-action.
+	// Badges show always; actions reveal on hover and fire tree-action (a disabled action stays greyed).
 	tree.addEventListener("tree-action", (e) => console.log(e.detail.action, "on", e.detail.value));
 </script>`;
 
@@ -84,7 +98,7 @@ export const treeManifest: ComponentManifest = {
 	seeAlso: ["toc", "accordion", "table"],
 	summary: "A hierarchical, keyboard-navigable list of expandable nodes built from a data array.",
 	description:
-		"Tree renders a nested hierarchy from an `items` array. Each node carries a `label`, an optional `value`, `href`, and `children`, plus flags for `expanded`, `selected`, and `disabled`. It builds the WAI-ARIA tree pattern: a `role=\"tree\"` with nested `role=\"group\"` levels and `role=\"treeitem\"` nodes carrying `aria-level`, `aria-expanded`, and `aria-selected`, with a single roving tab stop so the whole tree is one Tab stop and the arrow keys walk it. A twisty rotates on expand. A node with an `href` renders its row as a link whether or not it has children, so a branch can be both navigable and a group; the row navigates while the twisty (and Left/Right) work the children. A branch without an `href` is a pure container that toggles on click. A node also carries per-row trailing content: a `badge` (a count or status after the label) and `actions` (hover-revealed row buttons that fire a `tree-action` event), the file-tree-with-inline-controls shape. Being data-driven keeps it robust across the bindings and a natural fit for a file or navigation tree. Three sizes (`sm`, `md`, `lg`) scale the row density.",
+		"Tree renders a nested hierarchy from an `items` array. Each node carries a `label`, an optional `value`, `href`, and `children`, plus flags for `expanded`, `selected`, and `disabled`. It builds the WAI-ARIA tree pattern: a `role=\"tree\"` with nested `role=\"group\"` levels and `role=\"treeitem\"` nodes carrying `aria-level`, `aria-expanded`, and `aria-selected`, with a single roving tab stop so the whole tree is one Tab stop and the arrow keys walk it. A twisty rotates on expand. A node with an `href` renders its row as a link whether or not it has children, so a branch can be both navigable and a group; the row navigates while the twisty (and Left/Right) work the children. A branch without an `href` is a pure container that toggles on click. A node also carries per-row trailing content: one or more `badge` pills (a count plus a toned status pill after the label) and `actions` (hover-revealed row buttons that fire a `tree-action` event, each optionally `disabled` in place), the file-tree-with-inline-controls shape. Being data-driven keeps it robust across the bindings and a natural fit for a file or navigation tree. Three sizes (`sm`, `md`, `lg`) scale the row density.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -130,13 +144,13 @@ export const treeManifest: ComponentManifest = {
 		},
 		{
 			name: "trailing",
-			description: "Per-row content after the label: a `badge` (a count or status, always shown) and hover-revealed `actions` buttons. Reachable at `::part(badge)` and `::part(row-action)`.",
+			description: "Per-row content after the label: one or more `badge` pills (a count plus a toned status, always shown) and hover-revealed `actions` buttons. Reachable at `::part(badge)` and `::part(row-action)`.",
 			selector: ".xtyle-tree__trailing",
 			tokens: ["--text-xs", "--fg-0", "--fg-2", "--fg-3", "--state-hover", "--space-0"],
 		},
 	],
 	props: [
-		{ name: "items", type: "TreeNode[]", description: "The node hierarchy. Each `TreeNode` has a `label` and optional `value`, `href`, `children`, `expanded`, `selected`, and `disabled`. Each node can also take a `badge` (trailing text after the label, a count or status) and `actions` (a `{ id, label, icon? }[]` of hover-revealed trailing buttons, non-link rows only) that fire a `tree-action` event. Passed as a property in the bindings (serialized to JSON for the element).", bindings: ["html", "svelte", "astro"] },
+		{ name: "items", type: "TreeNode[]", description: "The node hierarchy. Each `TreeNode` has a `label` and optional `value`, `href`, `children`, `expanded`, `selected`, and `disabled`. Each node can also take a `badge` (trailing content after the label: a plain string, a toned `{ text, tone }` pill, or a list of them so a count and a status pill each keep their own color) and `actions` (a `{ id, label, icon?, disabled? }[]` of hover-revealed trailing buttons, non-link rows only) that fire a `tree-action` event; a `disabled` action renders greyed and non-firing instead of being omitted, so a positional control set keeps a stable count. Passed as a property in the bindings (serialized to JSON for the element).", bindings: ["html", "svelte", "astro"] },
 		{ name: "size", type: "Size", default: "md", description: "Row density: `sm`, `md`, or `lg`.", bindings: ["html", "svelte", "astro"], options: ["sm", "md", "lg"] },
 		{ name: "label", type: "string", description: "Accessible name for the tree, applied as `aria-label`.", bindings: ["html", "svelte", "astro"] },
 		{ name: "labelledby", type: "string", description: "Id of an external element naming the tree; takes precedence over `label`.", bindings: ["html", "svelte", "astro"] },
@@ -190,7 +204,7 @@ export const treeManifest: ComponentManifest = {
 		"--fg-3",
 		"--fg-disabled",
 		"--accent-bg",
-		"--accent-text",
+		...FULL_TONES.map((t) => `--${t}-text` as const),
 		"--selection-cue",
 		"--weight-medium",
 		"--state-hover",
