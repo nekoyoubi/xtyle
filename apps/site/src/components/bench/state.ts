@@ -99,10 +99,19 @@ function humanizeKnob(name: string): string {
  * (`algorithm.knobSpecs`) with the site's cosmetics, then appending the composite font stacks when
  * the algorithm reads `fonts`. The domain drives which controls exist and their kind/range/options,
  * so the rail follows the algorithm — including a novel knob no hardcoded table anticipated.
+ *
+ * `scheme` is the one the theme currently derives under. A range knob's seed — the value it takes the
+ * instant it is switched from "default" to "custom" — has to be the value the derivation was *already*
+ * using, or flicking the toggle silently changes the theme instead of just unlocking the control.
+ * `surfaceRamp` is the case that forces it: its default sign follows the scheme, so a lone static
+ * default would seed an ascending stack under a light theme and invert every surface on the way in.
  */
-export function knobControls(algorithm: Algorithm): KnobControl[] {
+export function knobControls(algorithm: Algorithm, scheme: SchemeKnob): KnobControl[] {
 	const controls: KnobControl[] = [];
 	for (const spec of algorithm.knobSpecs) {
+		// A composite knob is a group the consumer assembles itself — the font stacks below, the anchor
+		// pickers in their own section — so it carries no single scalar control to render here.
+		if (spec.kind === "composite") continue;
 		const cosmetic = KNOB_COSMETICS[spec.name] ?? {};
 		const control: KnobControl = {
 			field: spec.name,
@@ -120,7 +129,8 @@ export function knobControls(algorithm: Algorithm): KnobControl[] {
 			control.step = spec.step;
 			if (cosmetic.digits !== undefined) control.digits = cosmetic.digits;
 			if (spec.unit) control.unit = spec.unit;
-			if (typeof spec.default === "number") control.seed = spec.default;
+			const seed = spec.defaultByScheme?.[scheme] ?? spec.default;
+			if (typeof seed === "number") control.seed = seed;
 		}
 		controls.push(control);
 	}

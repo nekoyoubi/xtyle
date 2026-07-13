@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Algorithm, TokenRegister } from "@xtyle/core";
 	import { HUES, schemeOf } from "@xtyle/core";
-	import type { BenchState, KnobControl } from "./state.js";
+	import type { BenchState, KnobControl, SchemeKnob } from "./state.js";
 	import {
 		ALGORITHMS,
 		CUSTOM_ALGORITHM,
@@ -23,10 +23,16 @@
 
 	let { bench, algorithm, register, influence, onchange }: Props = $props();
 
+	/** The scheme the theme *actually* derives under, read off the resolved register rather than
+	 * reconstructed from the inputs — so it holds whether the scheme came from the knob, a `--bg-0`
+	 * override, or the algorithm's own default. A range knob seeds from this, which is what keeps
+	 * switching `surfaceRamp` to "custom" from inverting the surface stack on a light theme. */
+	const derivedScheme = $derived<SchemeKnob>(register["--bg-0"] ? schemeOf(register["--bg-0"]) : "dark");
+
 	/** The rail's controls, built from the algorithm's own knob domains merged with site cosmetics — it
 	 * never shows a dial the algorithm doesn't read (so `hour` stays with nxi-nite), and a novel
 	 * algorithm's knob self-renders from its declared spec rather than vanishing for want of a UI entry. */
-	const knobSpecs = $derived<KnobControl[]>(knobControls(algorithm));
+	const knobSpecs = $derived<KnobControl[]>(knobControls(algorithm, derivedScheme));
 
 	let tokenFilter = $state("");
 

@@ -5,11 +5,12 @@ import { auditRegister } from "./audit.js";
 import { coverage } from "./coverage.js";
 import { derive } from "./index.js";
 import { emit, emitters } from "./emit/index.js";
-import { buildThemeFile, migrateRecipe, serializeThemeFile, type ThemeRecipe } from "./theme-file.js";
-import type { Knobs } from "./types.js";
+import { buildThemeFile, migratedTarget, serializeThemeFile } from "./theme-file.js";
+import type { Algorithm, Knobs } from "./types.js";
+import { validateKnobs } from "./knobs.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "./gauntlet.js";
-import { availableAlgorithms, resolveAlgorithm } from "./host/registry.js";
-import { bakedAlgorithm } from "./baked.js";
+import { availableAlgorithms, defaultAlgorithm, resolveAlgorithm, HARNESS_TIMEOUT_MS } from "./host/registry.js";
+import { algorithmDomains, bakedAlgorithm } from "./baked.js";
 import { constraintsFrom } from "./constraints.js";
 import type { EmitFormat } from "./types.js";
 
@@ -29,14 +30,16 @@ interface ParsedArgs {
 	mode: GauntletMode;
 	algorithm: string;
 	overrides?: Record<string, string>;
+	knobs?: Record<string, string>;
 }
+
 
 function parse(argv: string[]): ParsedArgs {
 	const args: ParsedArgs = {
 		command: argv[0] ?? "help",
 		format: "css",
 		mode: "baked",
-		algorithm: "xtyle-default",
+		algorithm: defaultAlgorithm(),
 	};
 	for (let i = 1; i < argv.length; i++) {
 		const arg = argv[i];
@@ -63,6 +66,21 @@ function parse(argv: string[]): ParsedArgs {
 					(args.overrides ??= {})[key] = next.slice(eq + 1);
 				} else if (next !== undefined) {
 					process.stderr.write(`xtyle: ignoring malformed --set "${next}" (expected token=value)\n`);
+				}
+				i++;
+				break;
+			}
+			case "--knob":
+			case "-k": {
+				const eq = next?.indexOf("=") ?? -1;
+				if (next && eq > 0) {
+					// Kept as the raw string the shell handed over. The value is coerced against the knob's
+					// *declared* kind once the algorithm is known — guessing a type from the string's shape
+					// here would read a `text` knob set to "12" as a number and a `select` set to "false" as
+					// a boolean.
+					(args.knobs ??= {})[next.slice(0, eq).trim()] = next.slice(eq + 1);
+				} else if (next !== undefined) {
+					process.stderr.write(`xtyle: ignoring malformed --knob "${next}" (expected name=value)\n`);
 				}
 				i++;
 				break;
@@ -95,7 +113,7 @@ function parse(argv: string[]): ParsedArgs {
 				break;
 			case "--algorithm":
 			case "-a":
-				args.algorithm = next ?? "xtyle-default";
+				args.algorithm = next ?? defaultAlgorithm();
 				i++;
 				break;
 		}
@@ -103,20 +121,22 @@ function parse(argv: string[]): ParsedArgs {
 	return args;
 }
 
+/** A gauntlet run loads a hosted mod under {@link HARNESS_TIMEOUT_MS}, not the production rail. */
 function resolveForMode(id: string, mode: GauntletMode) {
-	const { algorithm } = migrateRecipe<ThemeRecipe>({ algorithm: id });
-	return mode === "hosted" ? resolveAlgorithm(algorithm) : bakedAlgorithm(algorithm);
+	const { algorithm } = migratedTarget(id);
+	return mode === "hosted" ? resolveAlgorithm(algorithm, { timeoutMs: HARNESS_TIMEOUT_MS }) : bakedAlgorithm(algorithm);
 }
 
 /**
- * The algorithm and knobs a requested id actually derives with. An id naming a retired algorithm
- * migrates onto the recipe that reproduces it, so `xtyle derive -a xtyle-brand` still emits the
- * theme that algorithm used to emit instead of failing on a dead id — the same migration the theme
- * file format carries, so the CLI and a saved recipe agree.
+ * The resolved algorithm a command derives with, and the knobs it derives under: the requested id
+ * through the retirement migration, then the caller's `--knob`s checked and coerced against the domain
+ * that algorithm declares. Validation has to happen here rather than at parse time, because the domain
+ * belongs to the algorithm and is not known until it resolves.
  */
-function migratedTarget(id: string): { algorithm: string; knobs: Knobs } {
-	const migrated = migrateRecipe<ThemeRecipe>({ algorithm: id });
-	return { algorithm: migrated.algorithm, knobs: (migrated.knobs ?? {}) as Knobs };
+async function target(args: ParsedArgs): Promise<{ id: string; algorithm: Algorithm; knobs: Knobs }> {
+	const migrated = migratedTarget(args.algorithm, args.knobs ?? {});
+	const algorithm = await resolveAlgorithm(migrated.algorithm);
+	return { id: migrated.algorithm, algorithm, knobs: validateKnobs(algorithm, migrated.knobs) };
 }
 
 function usage(): void {
@@ -125,14 +145,17 @@ function usage(): void {
 			"xtyle: themable-derivation engine",
 			"",
 			"usage:",
-			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--set <token>=<value>]... [--format css|json|theme|prism|monaco|terminal] [--name <s>] [--out <file>]",
+			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--format css|json|theme|prism|monaco|terminal] [--name <s>] [--out <file>]",
 			"  xtyle gauntlet [-a <algorithm>|all] [--mode baked|hosted] [--depth quick|standard|full] [--runs <n>]",
-			"  xtyle coverage --consumed <a,b,c> [-a <algorithm>] [--bg <c>] [--accent <c>] [--set <token>=<value>]...",
-			"  xtyle audit [-a <algorithm>] [--bg <c>] [--accent <c>] [--set <token>=<value>]... [--level AA|AAA] [--large-text]",
+			"  xtyle coverage --consumed <a,b,c> [-a <algorithm>] [--bg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]...",
+			"  xtyle audit [-a <algorithm>] [--bg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--level AA|AAA] [--large-text]",
 			"",
-			"  --set pins any token (repeatable): --set --accent-2=#7c3aed --set font-sans='Inter, sans-serif'",
-			"        the leading -- is optional (--set radius-md=10px). Alias: --constraint.",
+			"  --knob turns an algorithm's own dial (repeatable): --knob accentStrategy=duo --knob surfaceRamp=-0.05",
+			"         `xtyle knobs` prints each algorithm's dials and the values they accept. Alias: -k.",
+			"  --set  pins any token (repeatable): --set --accent-2=#7c3aed --set font-sans='Inter, sans-serif'",
+			"         the leading -- is optional (--set radius-md=10px). Alias: --constraint.",
 			"  xtyle list",
+			"  xtyle knobs [-a <algorithm>]",
 			"  xtyle mcp",
 			"",
 			`algorithms: ${availableAlgorithms().join(", ")}`,
@@ -153,6 +176,13 @@ async function main(): Promise<void> {
 
 	if (args.command === "list") {
 		for (const id of availableAlgorithms()) process.stdout.write(`${id}\n`);
+		return;
+	}
+
+	if (args.command === "knobs") {
+		const ids = argv.includes("-a") || argv.includes("--algorithm") ? [migratedTarget(args.algorithm).algorithm] : availableAlgorithms();
+		const algorithms = await algorithmDomains(ids);
+		process.stdout.write(`${JSON.stringify({ algorithms }, null, 2)}\n`);
 		return;
 	}
 
@@ -180,16 +210,15 @@ async function main(): Promise<void> {
 	}
 
 	if (args.command === "derive") {
-		const target = migratedTarget(args.algorithm);
-		const algorithm = await resolveAlgorithm(target.algorithm);
+		const { id, algorithm, knobs } = await target(args);
 		const constraints = constraintsFrom(args);
-		const register = derive(algorithm, { constraints, knobs: target.knobs });
+		const register = derive(algorithm, { constraints, knobs });
 		const output =
 			args.format === "theme"
 				? serializeThemeFile(
 						buildThemeFile({
-							meta: { name: args.name ?? `${target.algorithm} theme`, generator: "@xtyle/core" },
-							recipe: { algorithm: target.algorithm, knobs: target.knobs, overrides: constraints },
+							meta: { name: args.name ?? `${id} theme`, generator: "@xtyle/core" },
+							recipe: { algorithm: id, knobs, overrides: constraints },
 							register,
 						}),
 					)
@@ -220,10 +249,10 @@ async function main(): Promise<void> {
 	}
 
 	if (args.command === "coverage") {
-		const algorithm = await resolveAlgorithm(args.algorithm);
+		const { algorithm, knobs } = await target(args);
 		const consumedArg = argv[argv.indexOf("--consumed") + 1] ?? "";
 		const consumed = consumedArg.split(",").map((s) => s.trim()).filter(Boolean);
-		const register = derive(algorithm, { constraints: constraintsFrom(args) });
+		const register = derive(algorithm, { constraints: constraintsFrom(args), knobs });
 		const result = coverage(consumed, register);
 		process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 		process.exitCode = result.covered ? 0 : 1;
@@ -231,8 +260,8 @@ async function main(): Promise<void> {
 	}
 
 	if (args.command === "audit") {
-		const algorithm = await resolveAlgorithm(args.algorithm);
-		const register = derive(algorithm, { constraints: constraintsFrom(args) });
+		const { algorithm, knobs } = await target(args);
+		const register = derive(algorithm, { constraints: constraintsFrom(args), knobs });
 		const levelIndex = argv.indexOf("--level");
 		const level = levelIndex >= 0 && argv[levelIndex + 1] === "AAA" ? "AAA" : "AA";
 		const result = auditRegister(register, { level, largeText: argv.includes("--large-text") });

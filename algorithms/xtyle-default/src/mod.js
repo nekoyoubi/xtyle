@@ -3713,6 +3713,10 @@
   var DIVIDER_SEPARATION = 1.8;
   var DEFAULT_SHIFT_STEP = 90;
   var DEFAULT_ACCENT_SPLIT = 45;
+  var DEFAULT_SURFACE_STEP = 0.045;
+  function defaultSurfaceRamp(scheme) {
+    return scheme === "dark" ? DEFAULT_SURFACE_STEP : -DEFAULT_SURFACE_STEP;
+  }
   var DERIVED_SURFACE_TINT_C = 0.02;
   var DEFAULT_ACCENT_STRATEGY = "fan";
   var ACCENT_STRATEGIES = ["fan", "step", "shade", "duo"];
@@ -4349,8 +4353,7 @@
     const radiusScale = radiusScaleOf(knobs);
     const density = densityOf(knobs);
     const fonts = fontsOf(knobs);
-    const surfaceStep = 0.045;
-    const surfaceRamp = typeof knobs.surfaceRamp === "number" ? knobs.surfaceRamp : scheme === "dark" ? surfaceStep : -surfaceStep;
+    const surfaceRamp = typeof knobs.surfaceRamp === "number" ? knobs.surfaceRamp : defaultSurfaceRamp(scheme);
     const nodes = [];
     const lit = (name, value, refs) => {
       nodes.push(refs && refs.length ? { name, value, refs } : { name, value });
@@ -5773,21 +5776,37 @@
     { name: "vibrancy", kind: "range", label: "Vibrancy", min: 0, max: 1, step: 0.05, default: 0.5 },
     { name: "typeScale", kind: "range", label: "Type scale", min: 1.05, max: 1.6, step: 0.01, default: 1.2 },
     { name: "radiusScale", kind: "range", label: "Radius scale", min: 0, max: 3, step: 0.1, default: 1 },
-    { name: "surfaceRamp", kind: "range", label: "Surface ramp", min: -0.06, max: 0.06, step: 5e-3, default: 0.045 },
     // The defaults are the engine's own constants, not a second copy of them: a slider that opens on a
     // value the derivation does not actually use is a lie the control surface tells about the engine.
+    // `surfaceRamp` is signed and its sign is scheme-derived, so it declares a default per scheme; a
+    // lone `+0.045` would open the control on an *ascending* stack under a light theme, which is the
+    // exact inversion of what that theme derives.
+    {
+      name: "surfaceRamp",
+      kind: "range",
+      label: "Surface ramp",
+      min: -0.06,
+      max: 0.06,
+      step: 5e-3,
+      default: DEFAULT_SURFACE_STEP,
+      defaultByScheme: { dark: defaultSurfaceRamp("dark"), light: defaultSurfaceRamp("light") }
+    },
     { name: "accentSplit", kind: "range", label: "Accent split", min: 0, max: 90, step: 1, default: DEFAULT_ACCENT_SPLIT, unit: "\xB0" },
     { name: "accentShiftStep", kind: "range", label: "Accent shift step", min: 0, max: 180, step: 5, default: DEFAULT_SHIFT_STEP, unit: "\xB0" },
-    { name: "hour", kind: "range", label: "Hour", min: 0, max: 24, step: 1, default: 12 }
+    // Groups a consumer expands into a cluster of its own, not single scalar controls. They *declare*
+    // that rather than being named in a list the engine keeps: an algorithm with its own composite knob
+    // (a palette array, a per-role font map) has to be able to say so, and a name-keyed table of knob
+    // identities held by the engine is exactly what `knobSpecs` exists to delete.
+    { name: "anchors", kind: "composite", label: "Anchors" },
+    { name: "fonts", kind: "composite", label: "Fonts" }
   ];
   var SHARED_KNOB_SPEC_BY_NAME = new Map(SHARED_KNOB_SPECS.map((spec2) => [spec2.name, spec2]));
   function resolveKnobSpecs(names, extra = []) {
     const byName = new Map(extra.map((spec2) => [spec2.name, spec2]));
     const out = [];
     for (const name of names) {
-      const spec2 = byName.get(name) ?? SHARED_KNOB_SPEC_BY_NAME.get(name);
-      if (spec2)
-        out.push(spec2);
+      const spec2 = byName.get(name) ?? SHARED_KNOB_SPEC_BY_NAME.get(name) ?? { name, kind: "text", undeclared: true };
+      out.push(spec2);
     }
     return out;
   }

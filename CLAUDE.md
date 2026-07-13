@@ -44,6 +44,8 @@ npm test --workspace=packages/xtyle        # test just the engine
 
 # the unified CLI (after build)
 npx xtyle derive --bg <c> --accent <c> --format css   # derive a theme + emit (css/json/theme/prism/monaco/terminal)
+npx xtyle derive --knob accentStrategy=duo             # turn one of the algorithm's own dials (repeatable; alias -k)
+npx xtyle knobs [-a <algorithm>]                        # what dials an algorithm has, and what each one accepts
 npx xtyle gauntlet -a all --depth quick                # fast baked spot-check across all algorithms (default mode: baked)
 npx xtyle gauntlet -a all --mode hosted --depth full   # prove invariants against the shipped sandboxed mods
 npx xtyle coverage --consumed a,b,c                    # check a component's consumed tokens
@@ -75,6 +77,32 @@ When you add or change a prop, variant, size, state, token, or behavior, you MUS
 **Then prove it with your own eyes.** Build the site and actually load the demo page (browser/screenshot, not just a passing test) to confirm the new thing renders in the live demo under a derived theme. "The manifest example has it" is not proof the demo shows it — those are different surfaces, and the demo is the one users look at.
 
 **The failure this rule exists to prevent:** shipping a feature that works in code and passes tests but appears *nowhere* in the docs a user actually browses — so it's built, but undiscoverable. If you catch yourself thinking "the code's done, the demos can come later," stop: the demos are not later, they are now, in this change.
+
+## ⚠️ CHROME IS A FRAGMENT — NEVER IMPERATIVE MARKUP IN AN ELEMENT
+
+**If a component builds its own markup, that markup goes in an xript fragment. If you are writing `document.createElement` (or `innerHTML`, or a template string) in an element's `connectedCallback` to construct a control bar, a button, a dot, a handle, or a rail — stop. You are hardcoding the one surface a mod exists to reshape.**
+
+The test is **who owns the markup**, and there are three answers, not two:
+
+- **The component owns it, and it renders → it MUST be a fragment.** Markup the component *invents* and the user *sees*: a track, a control bar, prev/next arrows, dots, a play toggle, a star row, a tab strip, a resize handle, a shell's app bar. The component conjured it, so the author has nothing to edit and a mod is the *only* way to change it. It renders through `packages/xtyle/src/elements/fragments/<id>/` with a `mod.manifest.json` `fills` entry and a matching slot in `component-host.json`. That is mod-zero: the built-in fill goes through the exact surface a third party would use.
+- **The author owns it → a decorator is correct.** Semantic content the *consumer* wrote, which the element merely classes and ARIAs in place: a real `<table>`, an `<ol>` of events, a set of slides. There is nothing for a mod to override that isn't already the author's to edit.
+- **The component owns it and it does NOT render → plumbing, and it stays in the element.** An `aria-live` announcer, a hidden form input mirroring the value for a `<form>`, a measurement sentinel, a portal root. It is invented, but it has no visual surface anyone would ever want to restyle. **If a mod can't see it, it isn't chrome.** Routing plumbing through a fragment buys nothing and makes the fragment a liability.
+
+**A component can be more than one of these, and that is the trap.** `Carousel` receives the author's slides (content), invents a track, arrows, dots, and a play toggle (chrome), *and* invents an `aria-live` region (plumbing). Receiving content does not license building chrome imperatively, and having plumbing does not excuse the chrome next to it. Split it: behavior — scroll math, seam-clone looping, keyboard, autoplay — stays in the element, plumbing stays in the element, and the *chrome it draws* goes in the fragment.
+
+**How this actually goes wrong:** the first pass of `MobileShell` was built as a light-DOM decorator, which would have put an app's chrome outside the fragment model and quietly made the one surface an app most wants to reskin the one surface it *couldn't*. It got caught and rebuilt as a fragment. Others shipped the other way, because the line was never written down. As of this writing, the components that invent rendered chrome with no `fragments/<id>/` are:
+
+| component | imperative DOM calls | what it invents |
+|---|---|---|
+| `dock-zone` | 26 | tab strips, headers, chevrons, close buttons, floating windows, resize handles |
+| `carousel` | 9 | track, control bar, arrows, dots, play toggle |
+| `table` | 2 | a sort glyph inside the author's `<th>` |
+| `rating` | 2 | the whole star row (`innerHTML`), plus a hidden input (plumbing, fine) |
+| `lightbox` | 2 | an `<xtyle-dialog>` it fills — the dialog *is* fragment-backed, so most of this chrome is already reachable |
+
+`dock-zone` is the worst of them, not `carousel`: it hand-builds an entire panel chrome tree, and dockable panel chrome is close to the top of what an app would want to reskin.
+
+**When you add or touch a component, state which side of the line it is on and why.** If it draws rendered chrome and has no fragment, that is a defect to raise — not a style preference, and not something to work around. Keep the table above honest; a component that lands in it silently is the exact failure this rule exists to prevent.
 
 ## Release Process
 

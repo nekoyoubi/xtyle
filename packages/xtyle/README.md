@@ -70,9 +70,29 @@ xtyle audit -a xtyle-default --level AA
 xtyle gauntlet --runs 200
 ```
 
-`--bg` / `--fg` / `--accent` are shorthands for the three headline anchors; `--set <token>=<value>`
-(repeatable, alias `--constraint`) pins *any* token, so a full multi-anchor recipe bakes straight
-from the CLI without dropping to the importable API. The leading `--` on the token is optional.
+The CLI reaches all three input tiers.
+
+`--bg` / `--fg` / `--accent` are shorthands for the three headline anchors.
+
+`--knob <name>=<value>` (repeatable, alias `-k`) turns one of the algorithm's own dials — the casual
+tier, where a small input reshapes the whole theme. `accentStrategy` is the one to know: it decides
+how `--accent-2/3/4` relate to `--accent`, and it takes `fan` (flanks plus complement), `step` (an
+even walk of the hue circle), `shade` (one hue at four depths), or `duo` (two brand colors as inputs,
+3 and 4 as their shades).
+
+```sh
+xtyle derive --accent "#5b8cff" --knob accentStrategy=duo --set --accent-2=#e0507a
+xtyle derive --knob scheme=light --knob surfaceRamp=-0.05 --knob density=compact
+```
+
+`xtyle knobs` prints every algorithm's dials and exactly what each one accepts — kind, range, options,
+default — read from the algorithm's own declaration, so a third-party algorithm's novel knob is as
+discoverable as a blessed one. `xtyle knobs -a nxi-nite` narrows to one.
+
+`--set <token>=<value>` (repeatable, alias `--constraint`) is the escape hatch: it pins *any* token, so
+a full multi-anchor recipe bakes straight from the CLI without dropping to the importable API. The
+leading `--` on the token is optional. Reach for a knob before a pin — hand-pinning `--accent-2/3/4`
+to fake an accent family is exactly what `accentStrategy` exists to spare you.
 
 ```sh
 xtyle derive --accent "#2d5a9e" \
@@ -82,9 +102,13 @@ xtyle derive --accent "#2d5a9e" \
   --format css
 ```
 
+An algorithm that has since been retired still derives what it always derived: `-a xtyle-brand`
+migrates onto the recipe that reproduces it (`xtyle-default` under `accentStrategy: "shade"`), and a
+`--format theme` written from it names the live algorithm, never the dead id.
+
 ## The seven-dimension contract
 
-`xtyle-default` produces 276 tokens. A representative tour follows; see
+`xtyle-default` produces 299 tokens. A representative tour follows; see
 [xtyle.dev](https://xtyle.dev) for the authoritative full register.
 
 ### color

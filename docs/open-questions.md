@@ -148,17 +148,30 @@ ancestor's declared knobs.
 
 **Knob types are now DECIDED (structured, algorithm-declared).** A knob is no longer a
 bare name: an algorithm declares each one's *domain* as a `KnobSpec` (`kind`:
-`select` | `range` | `text`, plus per-kind `min` / `max` / `step` / `options` /
-`default`), carried on `Algorithm.knobSpecs` and threaded through the `manifest()`
-export and the sandboxed host, so the editing surface renders a knob's control
-*from* the algorithm's own declaration. The blessed scalar knobs resolve their
-domains from a shared registry; a novel knob of the algorithm's own self-renders from
-the spec it ships. The split the shape settled on: the algorithm owns the *domain*
-(kind, range, options, the valid inputs) and a consumer owns only cosmetics (a
-localized label, digit precision), so the two never re-litigate who decides a knob's
-values. `color` / `list` kinds are intentionally not in the type yet (a boolean folds
-onto `select`, a color onto the token-override tier); they can join if a real knob
-needs one.
+`select` | `range` | `text` | `composite`, plus per-kind `min` / `max` / `step` /
+`options` / `default`), carried on `Algorithm.knobSpecs` and threaded through the
+`manifest()` export and the sandboxed host, so the editing surface renders a knob's
+control *from* the algorithm's own declaration. The blessed scalar knobs resolve their
+domains from a shared registry; a knob only one algorithm reads lives in *that
+algorithm's* `knobSpecs` and self-renders from the spec it ships (`hour` is nxi-nite's,
+and a shared registry holding it would be the same name-keyed table `knobSpecs` exists
+to delete). `composite` marks a group the consumer expands into several controls
+(`anchors`, `fonts`) — declared rather than name-matched, so a consumer tells a
+composite from a scalar without a hardcoded list. A `default` may be qualified by
+`defaultByScheme`: `surfaceRamp` is signed, so one static number necessarily seeds the
+wrong sign on half of all themes, and the scheme it keys off is the one the register
+*derived* under, not the `scheme` knob.
+
+The split the shape settled on: the algorithm owns the *domain* (kind, range, options,
+the valid inputs) and a consumer owns only cosmetics (a localized label, digit
+precision), so the two never re-litigate who decides a knob's values. The domain is
+also *enforced*, not merely rendered: every headless door (CLI `--knob`, the MCP tools)
+checks a value against the declared domain and coerces by the declared `kind`, because
+the derivation itself falls back silently on an unrecognized value — correct for a
+derivation that must always produce a theme, fatal for an input surface where it turns
+a typo into a quietly different design. `color` / `list` kinds are intentionally not in
+the type yet (a boolean folds onto `select`, a color onto the token-override tier);
+they can join if a real knob needs one.
 
 ## 10. Discovery & resolution: sub-forks
 

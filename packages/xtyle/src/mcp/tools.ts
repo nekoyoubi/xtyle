@@ -5,11 +5,12 @@ import { auditRegister } from "../audit.js";
 import { emit, emitters } from "../emit/index.js";
 import { coverage, coverComponent, coverComponents } from "../coverage.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "../gauntlet.js";
-import { availableAlgorithms, resolveAlgorithm } from "../host/registry.js";
+import { availableAlgorithms, defaultAlgorithm, resolveAlgorithm, HARNESS_TIMEOUT_MS } from "../host/registry.js";
 import { listComponents, getComponent } from "../manifest/registry.js";
-import { buildThemeFile, serializeThemeFile } from "../theme-file.js";
-import type { TokenRegister } from "../types.js";
-import { bakedAlgorithm } from "../baked.js";
+import { buildThemeFile, migratedTarget, serializeThemeFile } from "../theme-file.js";
+import type { Algorithm, Knobs, TokenRegister } from "../types.js";
+import { validateKnobs } from "../knobs.js";
+import { algorithmDomains, bakedAlgorithm } from "../baked.js";
 import { constraintsFrom } from "../constraints.js";
 import type { ServerBuildInfo } from "./server.js";
 
@@ -34,6 +35,39 @@ function json(value: unknown, isError = false): ToolResult {
 type ToolHandler = (args: Record<string, any>) => ToolResult | Promise<ToolResult>;
 type RegisterTool = (name: string, config: { title: string; description: string; inputSchema: z.ZodRawShape }, cb: ToolHandler) => void;
 
+/**
+ * The `knobs` input every deriving tool takes — an algorithm's own dials (`accentStrategy`,
+ * `surfaceRamp`, a novel knob a third-party algorithm declares). Values stay loosely typed because
+ * the *domain* is the algorithm's to state, not this schema's: `xtyle_list_algorithms` returns each
+ * algorithm's `knobSpecs`, which is where an agent learns what a knob accepts.
+ */
+const knobsInput = z
+	.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
+	.optional()
+	.describe('Algorithm knobs, e.g. { "accentStrategy": "duo" } or { "surfaceRamp": -0.05 }. Call xtyle_list_algorithms for each algorithm\'s knobSpecs (the accepted names, kinds, and ranges).');
+
+/**
+ * The emit formats a tool accepts, built from the engine's own emitter set rather than a second copy
+ * of it — so a newly-added emitter can't be advertised by `xtyle_list_algorithms` and then rejected
+ * by `xtyle_derive`. `emitters()` is a runtime list, so the tuple `z.enum` wants is asserted here.
+ */
+export const formatInput = z.enum([...emitters(), "theme"] as unknown as [string, ...string[]]);
+
+/**
+ * The resolved algorithm a tool derives with, and the knobs it derives under: the id through
+ * {@link migratedTarget}, then the caller's knobs checked against the domain that algorithm declares.
+ * Every tool resolves through here rather than off a raw id — and an agent that invents a knob name or
+ * a value outside the domain gets told so, instead of a theme that quietly isn't the one it asked for.
+ */
+async function resolveTarget(
+	algorithm: string | undefined,
+	knobs: Record<string, unknown> | undefined,
+): Promise<{ id: string; algorithm: Algorithm; knobs: Knobs }> {
+	const migrated = migratedTarget(algorithm ?? defaultAlgorithm(), knobs ?? {});
+	const resolved = await resolveAlgorithm(migrated.algorithm);
+	return { id: migrated.algorithm, algorithm: resolved, knobs: validateKnobs(resolved, migrated.knobs) };
+}
+
 export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): void {
 	const register = server.registerTool.bind(server) as unknown as RegisterTool;
 
@@ -51,11 +85,15 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 	register(
 		"xtyle_list_algorithms",
 		{
-			title: "List algorithms and emit formats",
-			description: "List the algorithm ids that derive a theme and the emit formats the engine can serialize a register into.",
+			title: "List algorithms, their knobs, and emit formats",
+			description:
+				"List the algorithms that derive a theme — each with the `knobs` it reads and the `knobSpecs` declaring what those knobs accept (kind, range, options, default) — plus the emit formats the engine can serialize a register into. Read this before passing `knobs` to any other tool: the algorithm owns its knob domain, so this is the only place the accepted values are stated. `accentStrategy` is the one that reshapes the accent family (`fan` / `step` / `shade` / `duo`); a novel knob a third-party algorithm declares shows up here the same way a blessed one does.",
 			inputSchema: {},
 		},
-		async () => json({ algorithms: availableAlgorithms(), formats: [...emitters(), "theme"] }),
+		async () => {
+			const algorithms = await algorithmDomains(availableAlgorithms());
+			return json({ algorithms, formats: [...emitters(), "theme"] });
+		},
 	);
 
 	register(
@@ -63,36 +101,37 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		{
 			title: "Derive a theme",
 			description:
-				"Run an algorithm over a set of constraints and emit the resulting token register. Pass seed colors as `bg`/`fg`/`accent`, or pin any token directly via `overrides`. The algorithm runs through xript's sandbox, the canonical derivation path.",
+				"Run an algorithm over a set of constraints and emit the resulting token register. Pass seed colors as `bg`/`fg`/`accent`, turn the algorithm's own dials via `knobs` (the casual path — `accentStrategy: \"duo\"` for a two-brand theme), or pin any token directly via `overrides` (the escape hatch). Reach for `knobs` before `overrides`: hand-pinning `--accent-2/3/4` to fake an accent family is what `accentStrategy` exists to spare you. The algorithm runs through xript's sandbox, the canonical derivation path.",
 			inputSchema: {
 				algorithm: z.string().optional().describe("Algorithm id. Defaults to xtyle-default. Use xtyle_list_algorithms to see the set."),
 				bg: z.string().optional().describe("Background seed color, the `--bg-0` constraint (any CSS color)."),
 				fg: z.string().optional().describe("Foreground seed color, the `--fg-0` constraint."),
 				accent: z.string().optional().describe("Accent seed color, the `--accent` constraint."),
+				knobs: knobsInput,
 				overrides: z.record(z.string(), z.string()).optional().describe("Pin any token directly, e.g. { \"--radius-md\": \"6px\" }. Merged under the seed colors."),
-				format: z.enum(["css", "json", "theme", "prism", "monaco"]).optional().describe("Emit format. Defaults to css."),
+				format: formatInput.optional().describe("Emit format. Defaults to css."),
 				name: z.string().optional().describe("Theme name, used only by the `theme` format."),
 			},
 		},
-		async ({ algorithm, bg, fg, accent, overrides, format, name }) => {
-			const id = algorithm ?? "xtyle-default";
+		async ({ algorithm, bg, fg, accent, knobs, overrides, format, name }) => {
 			try {
-				const resolved = await resolveAlgorithm(id);
+				const target = await resolveTarget(algorithm, knobs);
+				const resolved = target.algorithm;
 				const constraints = constraintsFrom({ bg, fg, accent, overrides });
-				const register = derive(resolved, { constraints });
+				const register = derive(resolved, { constraints, knobs: target.knobs });
 				const fmt = format ?? "css";
 				if (fmt === "theme") {
 					return text(
 						serializeThemeFile(
 							buildThemeFile({
-								meta: { name: name ?? `${id} theme`, generator: "@xtyle/core" },
-								recipe: { algorithm: id, overrides: constraints },
+								meta: { name: name ?? `${target.id} theme`, generator: "@xtyle/core" },
+								recipe: { algorithm: target.id, knobs: target.knobs, overrides: constraints },
 								register,
 							}),
 						),
 					);
 				}
-				return text(emit(register, fmt));
+				return text(emit(register, fmt as Parameters<typeof emit>[1]));
 			} catch (error) {
 				return text(error instanceof Error ? error.message : String(error), true);
 			}
@@ -110,24 +149,25 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 				bg: z.string().optional().describe("Background seed color."),
 				fg: z.string().optional().describe("Foreground seed color."),
 				accent: z.string().optional().describe("Accent seed color."),
+				knobs: knobsInput,
 				overrides: z.record(z.string(), z.string()).optional().describe("Pin tokens directly before checking."),
 				component: z.string().optional().describe("A component id to check against its declared consumedTokens."),
 				consumed: z.array(z.string()).optional().describe("An explicit list of token names to check."),
 			},
 		},
-		async ({ algorithm, bg, fg, accent, overrides, component, consumed }) => {
-			const id = algorithm ?? "xtyle-default";
+		async ({ algorithm, bg, fg, accent, knobs, overrides, component, consumed }) => {
 			try {
-				const resolved = await resolveAlgorithm(id);
-				const register = derive(resolved, { constraints: constraintsFrom({ bg, fg, accent, overrides }) });
+				const target = await resolveTarget(algorithm, knobs);
+				const resolved = target.algorithm;
+				const register = derive(resolved, { constraints: constraintsFrom({ bg, fg, accent, overrides }), knobs: target.knobs });
 				if (component) {
 					const manifest = getComponent(component);
 					if (!manifest) return text(`unknown component: ${component}`, true);
-					return json({ algorithm: id, component, ...coverComponent(manifest, register) });
+					return json({ algorithm: target.id, component, ...coverComponent(manifest, register) });
 				}
-				if (consumed) return json({ algorithm: id, ...coverage(consumed, register) });
+				if (consumed) return json({ algorithm: target.id, ...coverage(consumed, register) });
 				const all = coverComponents(register);
-				return json({ algorithm: id, covered: all.every((c) => c.covered), components: all });
+				return json({ algorithm: target.id, covered: all.every((c) => c.covered), components: all });
 			} catch (error) {
 				return text(error instanceof Error ? error.message : String(error), true);
 			}
@@ -178,15 +218,18 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 			},
 		},
 		async ({ algorithm, mode, depth, runs }) => {
-			const id = algorithm ?? "xtyle-default";
+			const id = algorithm ?? defaultAlgorithm();
 			const resolvedDepth = resolveDepth(depth);
 			const runCount = runs ?? GAUNTLET_DEPTH_RUNS[resolvedDepth];
 			const resolvedMode = mode ?? "baked";
 			try {
-				const ids = id === "all" ? availableAlgorithms() : [id];
+				const ids = id === "all" ? availableAlgorithms() : [migratedTarget(id).algorithm];
 				const reports = [];
 				for (const algId of ids) {
-					const resolved = resolvedMode === "hosted" ? await resolveAlgorithm(algId) : await bakedAlgorithm(algId);
+					const resolved =
+						resolvedMode === "hosted"
+							? await resolveAlgorithm(algId, { timeoutMs: HARNESS_TIMEOUT_MS })
+							: await bakedAlgorithm(algId);
 					reports.push({ ...gauntlet(resolved, { runs: runCount }), algorithm: algId });
 				}
 				const ok = reports.every((r) => r.ok);
@@ -208,18 +251,19 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 				bg: z.string().optional().describe("Background seed color."),
 				fg: z.string().optional().describe("Foreground seed color."),
 				accent: z.string().optional().describe("Accent seed color."),
+				knobs: knobsInput,
 				overrides: z.record(z.string(), z.string()).optional().describe("Pin tokens directly before auditing."),
 				level: z.enum(["AA", "AAA"]).optional().describe("The floor a pair must clear to pass. Defaults to AA."),
 				largeText: z.boolean().optional().describe("Grade against the large-text WCAG floors (AA 3.0 / AAA 4.5)."),
 			},
 		},
-		async ({ algorithm, bg, fg, accent, overrides, level, largeText }) => {
-			const id = algorithm ?? "xtyle-default";
+		async ({ algorithm, bg, fg, accent, knobs, overrides, level, largeText }) => {
 			try {
-				const resolved = await resolveAlgorithm(id);
-				const register = derive(resolved, { constraints: constraintsFrom({ bg, fg, accent, overrides }) });
+				const target = await resolveTarget(algorithm, knobs);
+				const resolved = target.algorithm;
+				const register = derive(resolved, { constraints: constraintsFrom({ bg, fg, accent, overrides }), knobs: target.knobs });
 				const result = auditRegister(register, { level, largeText });
-				return json({ algorithm: id, ...result }, !result.passes);
+				return json({ algorithm: target.id, ...result }, !result.passes);
 			} catch (error) {
 				return text(error instanceof Error ? error.message : String(error), true);
 			}

@@ -54,7 +54,6 @@ export interface Knobs {
 	density?: Density | number;
 	cues?: "color" | "redundant";
 	fonts?: FontStacks;
-	hour?: number;
 	[knob: string]: unknown;
 }
 
@@ -166,8 +165,15 @@ export interface DeriveTrace {
 	trace: TraceSnapshot[];
 }
 
-/** How a knob's control is rendered — the algorithm's *domain*, not the site's cosmetics. */
-export type KnobKind = "select" | "range" | "text";
+/**
+ * How a knob's control is rendered — the algorithm's *domain*, not the site's cosmetics.
+ *
+ * `composite` is the odd one: it declares that a knob is a *group* the consumer assembles into a
+ * cluster of its own (a font stack, an anchor picker) rather than a single scalar control. Saying so
+ * is the algorithm's job, not the engine's — an algorithm with its own composite knob (a palette
+ * array, a per-role font map) must be able to state that, or it gets rendered as a scalar it isn't.
+ */
+export type KnobKind = "select" | "range" | "text" | "composite";
 
 /** One option a `select` knob accepts. `label` is an optional display hint; a consumer may override it. */
 export interface KnobOption {
@@ -192,8 +198,32 @@ export interface KnobSpec {
 	label?: string;
 	/** Logical grouping for a consumer that sections its controls. Defaults to `name`. */
 	group?: string;
-	/** The value the knob takes when first switched on from its default. */
+	/**
+	 * The value the knob takes when first switched on from its default. Superseded by
+	 * {@link defaultByScheme} wherever that is present — a consumer that resolves a scheme must prefer
+	 * it, and this remains only for one that cannot.
+	 */
 	default?: string | number;
+	/**
+	 * A default that depends on the resolved scheme, superseding {@link default} for the matching one.
+	 * `surfaceRamp` is why this exists: the surface stack ascends under a dark scheme and descends
+	 * under a light one, so a single static number necessarily seeds the wrong *sign* on half of all
+	 * themes — a control that opens on a value the derivation would never have produced, and that
+	 * silently inverts every surface the moment it is switched on.
+	 *
+	 * Keyed by the scheme the theme **actually derived under**, not by the `scheme` *knob*: the scheme
+	 * can just as well fall out of a `--bg-0` override, or out of the algorithm's own default, and a
+	 * consumer that keys this off `knobs.scheme` gets it wrong every time it was not the knob that
+	 * decided. Read it off the derived register.
+	 */
+	defaultByScheme?: Partial<Record<Scheme, string | number>>;
+	/**
+	 * Set when the engine synthesized this spec because the algorithm declared the knob but never
+	 * described it. The control degrades to `text` so the knob stays reachable; this says the crude
+	 * control is a *gap in the declaration*, not a deliberate free-text domain — so a discovery surface
+	 * can name it, and a typo'd knob name surfaces as a gap rather than a mystery text box.
+	 */
+	undeclared?: boolean;
 	/** `range` domain. */
 	min?: number;
 	max?: number;
@@ -209,10 +239,11 @@ export interface Algorithm {
 	produces: TokenName[];
 	knobs: string[];
 	/**
-	 * The rendered domain of each scalar knob this algorithm reads — kind, range, options — so a
-	 * consumer's editing surface renders from the algorithm's own declaration rather than a hardcoded
-	 * table. A subset of {@link knobs}: composite groups a consumer expands itself (`anchors`, `fonts`)
-	 * carry no spec. Resolved from the shared registry for blessed knobs; a novel knob supplies its own.
+	 * The rendered domain of each knob this algorithm reads — kind, range, options — so a consumer's
+	 * editing surface renders from the algorithm's own declaration rather than a hardcoded table.
+	 * Groups a consumer expands itself (`anchors`, `fonts`) declare `kind: "composite"` and carry no
+	 * scalar domain, so a consumer can tell a composite from a scalar without knowing their names.
+	 * Resolved from the shared registry for blessed knobs; a novel knob supplies its own.
 	 */
 	knobSpecs: KnobSpec[];
 	categories: TokenCategories;
