@@ -23,6 +23,11 @@
 		/** Per-cell hover text (same shape as `values`); overrides a cell's default readout and accessible name. */
 		titles?: string[][];
 		scale?: boolean;
+		/** Color by category instead of intensity: each column (or row) takes a distinct series hue, and the
+		 * cell value washes it from the surface up. `scheme` is read as a categorical `SeriesScheme`. */
+		categorical?: boolean;
+		/** Which axis carries the categories in `categorical` mode: `col` (default) or `row`. */
+		categoryAxis?: "col" | "row";
 		showValues?: boolean;
 		/** Make cells actionable: each becomes a `role="button"` that fires `select` on click or Enter/Space. */
 		selectable?: boolean;
@@ -44,13 +49,15 @@
 		currentTone,
 		currentPulse = false,
 		titles = [],
-		scheme = "accent",
+		scheme,
 		reverse = false,
 		max,
 		glowMax,
 		glowBlur,
 		glowLabel,
 		scale = false,
+		categorical = false,
+		categoryAxis = "col",
 		showValues = false,
 		selectable = false,
 		label,
@@ -78,7 +85,7 @@
 		host.cols = cols;
 		host.current = current;
 		host.titles = titles;
-		host.scheme = scheme;
+		host.scheme = scheme ?? (categorical ? "accents" : "accent");
 	});
 </script>
 
@@ -93,6 +100,8 @@
 	current-tone={currentTone ?? undefined}
 	current-pulse={currentPulse || undefined}
 	scale={scale || undefined}
+	categorical={categorical || undefined}
+	category-axis={categorical && categoryAxis === "row" ? "row" : undefined}
 	show-values={showValues || undefined}
 	selectable={selectable || undefined}
 	{onselect}

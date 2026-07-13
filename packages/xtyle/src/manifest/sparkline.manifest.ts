@@ -89,6 +89,21 @@ const occupancySvelteExample = `<script lang="ts">
 
 <Sparkline values={uptime} variant="occupancy" bounds="unit" tone="success" label="Uptime" />`;
 
+const formatHtmlExample = `<!-- Latency in seconds: the hover reads 1.5m, not 90 -->
+<xtyle-sparkline values="42,58,90,73,120,66,54" format="duration" bounds="duration" tone="warn" label="Latency"></xtyle-sparkline>
+
+<!-- Load as a percentage: the hover reads 87% -->
+<xtyle-sparkline values="38,41,52,49,87,58,71" format="percent" bounds="percent" tone="info" label="Load"></xtyle-sparkline>`;
+
+const formatSvelteExample = `<script lang="ts">
+	import { Sparkline } from "@xtyle/svelte";
+	const latency = [42, 58, 90, 73, 120, 66, 54]; // seconds
+	const load = [38, 41, 52, 49, 87, 58, 71]; // percent
+</script>
+
+<Sparkline values={latency} format="duration" bounds="duration" tone="warn" label="Latency" />
+<Sparkline values={load} format="percent" bounds="percent" tone="info" label="Load" />`;
+
 export const sparklineManifest: ComponentManifest = {
 	id: "sparkline",
 	name: "Sparkline",
@@ -98,7 +113,7 @@ export const sparklineManifest: ComponentManifest = {
 	seeAlso: ["stat", "bar", "heatmap"],
 	summary: "A tiny, word-sized trend line, area, bar, or occupancy chart, single-tone and axis-free, for inline use or a live time-series.",
 	description:
-		"Sparkline draws a single series of numbers as a small, axis-free SVG that reads as a trend at a glance, sized to sit inline in a sentence, a table cell, or beside a `Stat`. Four shapes: a `line`, a filled `area`, a mini `bar` run, or an `occupancy` strip that fills each \"on\" sample of a bool/binary series as a solid block (uptime, presence, connection state) rather than drawing a 0/1 line. Feed it evenly-spaced `values`, or switch to `points` (timestamped samples) for a real time-series: they map onto a sliding `window` (or an explicit `domain`), so irregular samples sit at their true position and slide left over real time. Add `step` to hold each value for an on/off signal. It takes one `tone` from the theme roster (any semantic role or named hue) and marks the latest point with an end dot. It's interactive: sweeping across it floats a marker and the value at the nearest point. Size it with the `--spark-width` and `--spark-height` custom properties; give it a `label` for an accessible name. Auto-ranged from the data, pinned with `min` / `max`, or ranged by kind with `bounds`: `percent` locks `[0, 100]`, `unit` locks `[0, 1]`, and `duration` caps at a rolling power of two so a latency spike lifts the ceiling instead of squashing the baseline; the per-kind range every consumer of a typed metric would otherwise re-derive by hand. An empty series shows a muted `No data` label instead of a blank box.",
+		"Sparkline draws a single series of numbers as a small, axis-free SVG that reads as a trend at a glance, sized to sit inline in a sentence, a table cell, or beside a `Stat`. Four shapes: a `line`, a filled `area`, a mini `bar` run, or an `occupancy` strip that fills each \"on\" sample of a bool/binary series as a solid block (uptime, presence, connection state) rather than drawing a 0/1 line. Feed it evenly-spaced `values`, or switch to `points` (timestamped samples) for a real time-series: they map onto a sliding `window` (or an explicit `domain`), so irregular samples sit at their true position and slide left over real time. Add `step` to hold each value for an on/off signal. It takes one `tone` from the theme roster (any semantic role or named hue) and marks the latest point with an end dot. It's interactive: sweeping across it floats a marker and the value at the nearest point, and `format` makes that readout speak the metric's units (`duration` as `42s`/`1.5m`, `percent` as `87%`, `bytes`, or a plain `unit`). Size it with the `--spark-width` and `--spark-height` custom properties; give it a `label` for an accessible name. Auto-ranged from the data, pinned with `min` / `max`, or ranged by kind with `bounds`: `percent` locks `[0, 100]`, `unit` locks `[0, 1]`, and `duration` caps at a rolling power of two so a latency spike lifts the ceiling instead of squashing the baseline; the per-kind range every consumer of a typed metric would otherwise re-derive by hand. An empty series shows a muted `No data` label instead of a blank box.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -214,6 +229,14 @@ export const sparklineManifest: ComponentManifest = {
 			options: ["percent", "unit", "duration"],
 		},
 		{
+			name: "format",
+			type: "\"percent\" | \"duration\" | \"bytes\" | \"unit\"",
+			description:
+				"Speak the metric's units in the hover readout instead of a bare number: `duration` reads seconds as `42s` / `1.5m` / `0.3h`, `percent` appends `%`, `bytes` steps `B`/`KB`/`MB`/…, `unit` is a trimmed number. Independent of `bounds` (range vs. label); unset shows the raw value.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["percent", "duration", "bytes", "unit"],
+		},
+		{
 			name: "label",
 			type: "string",
 			description: "An accessible name for the chart.",
@@ -299,6 +322,12 @@ export const sparklineManifest: ComponentManifest = {
 			title: "Occupancy strip for a bool series",
 			description: "`variant=\"occupancy\"` fills each \"on\" sample as a solid block over a faint track; the uptime/presence/connection reading a 0/1 step line can't give. Pair with `bounds=\"unit\"`.",
 			source: { html: occupancyHtmlExample, svelte: occupancySvelteExample },
+		},
+		{
+			id: "hover-format",
+			title: "Units in the hover readout",
+			description: "`format` makes the hover value speak the metric's units — a latency series reads `1.5m` instead of `90`, a load series reads `87%`. Independent of `bounds`, which ranges the y-axis.",
+			source: { html: formatHtmlExample, svelte: formatSvelteExample },
 		},
 	],
 };

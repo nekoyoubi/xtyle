@@ -1,0 +1,35 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-dot-default",
+	"version": "0.0.1",
+	"title": "Xtyle Dot (default)",
+	"description": "The built-in fill for the xtyle Dot component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.dot"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.dot": [
+			{
+				"id": "dot",
+				"format": "text/html+jsml",
+				"source": "dot.html",
+				"meta": {
+					"tokens": [
+						"--neutral",
+						"--accent",
+						"--success",
+						"--warn",
+						"--danger",
+						"--info",
+						"--radius-full",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--border-thin",
+						"--ease-standard"
+					]
+				}
+			}
+		]
+	}
+}

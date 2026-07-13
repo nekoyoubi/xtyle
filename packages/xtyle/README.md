@@ -130,10 +130,16 @@ the `typeScale` ratio), `--leading-{tight,normal,loose}`, `--weight-{normal,medi
 
 ## Knobs
 
-`scheme` · `vibrancy` (`0..1`) · `contrastBand` (`'aa'|'aaa'|number`) · `accentSplit` ·
-`accentShiftStep` · `typeScale` · `radiusScale` · `density` · `cues` ·
-`fonts {sans,mono,display}` · `anchors {bg,fg}` (the base-color seed). Every knob has a
-sensible default. Specific colors like the accent are set as constraints, not knobs.
+`scheme` · `accentStrategy` (`'fan'|'step'|'shade'|'duo'`) · `accentSplit` · `accentShiftStep` ·
+`surfaceRamp` (signed per-step lightness delta the surface stack walks off `--bg-0`) ·
+`vibrancy` (`0..1`) · `contrastBand` (`'aa'|'aaa'|number`) · `typeScale` · `radiusScale` ·
+`density` · `cues` · `fonts {sans,mono,display}` · `anchors {bg,fg}` (the base-color seed).
+Every knob has a sensible default. Specific colors like the accent are set as constraints, not
+knobs.
+
+`accentStrategy` is the one knob that *reshapes* the accent family rather than tuning it — an
+algorithm declares the posture it ships with, but that is a default, not a lock. See the accent
+family under **Derivation rules** below.
 
 ## Derivation rules (`xtyle-default`)
 
@@ -144,8 +150,11 @@ sensible default. Specific colors like the accent are set as constraints, not kn
   AA floor (`>= 4.5`, or AAA / a custom band via `contrastBand`) against `--bg-0`.
 - **On-fill / on-tint text** (`--*-fg`, `--*-text`, `--color-*-contrast`) is swept to clear
   AA against its pairing; fills get nudged out of the contrast dead-zone.
-- **Accent family** `--accent-2/3` flank the accent as a split-complement at ∓`accentSplit`;
-  `--accent-4` takes its 180° complement. `vibrancy` scales accent, status, and palette chroma.
+- **Accent family** is shaped by the `accentStrategy` knob. `fan` (the default) flanks the accent
+  with `--accent-2/3` at ∓`accentSplit` and takes its 180° complement for `--accent-4`; `step` walks
+  all four evenly by `accentShiftStep`; `shade` holds one hue and steps its lightness; `duo` reads
+  `--accent` *and* `--accent-2` as two brand anchors and derives 3/4 as their shades. `vibrancy`
+  scales accent, status, and palette chroma.
 - **Status hues** track the named palette (success green, warn amber, danger red, info blue)
   and follow a pin to those palette colors.
 - **State overlays** are scheme-aware neutral colors with alpha ~0.06 to 0.16.

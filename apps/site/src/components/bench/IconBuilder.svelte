@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type SeriesScheme, composeIcon, primitiveSince, primitiveTags, resolveIconMark, seriesPalette, SERIES_TOKENS } from "@xtyle/core";
+	import { type SeriesScheme, composeIcon, iconFontImports, primitiveSince, primitiveTags, resolveIconMark, seriesPalette, SERIES_TOKENS } from "@xtyle/core";
 	import { AppShell, Button, ColorPicker, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xtyle/svelte";
 	import { isNewComponent } from "../../data/newness.ts";
 	import { ACTIVE_CHANGED_EVENT } from "../../lib/theme-active.ts";
@@ -10,6 +10,10 @@
 	interface MarkLayer {
 		id: number;
 		keyword: string;
+		/** For the `letter` primitive: the glyph to typeset. */
+		glyph: string;
+		/** For a `letter`: the font slot (0 sans, 1 display, 2 mono). */
+		font: number;
 		p: number;
 		x: number;
 		y: number;
@@ -54,6 +58,7 @@
 		{ group: "Frames", keywords: ["ring", "border", "divider"] },
 		{ group: "Bars", keywords: ["top", "row", "column", "diagonal", "cross"] },
 		{ group: "Symbols", keywords: ["star", "heart", "crescent", "bolt", "dot"] },
+		{ group: "Text", keywords: ["letter"] },
 		{ group: "Glyphs", keywords: ["check", "close", "plus", "minus", "search", "menu", "info", "warning", "error", "success", "play", "pause", "stop", "loader"] },
 		{ group: "Objects", keywords: ["gear", "folder", "pencil", "trash", "eye", "copy", "palette", "bookmark", "download"] },
 	];
@@ -112,6 +117,8 @@
 		return {
 			id: nextId++,
 			keyword,
+			glyph: "A",
+			font: 0,
 			p: 5,
 			x: 0,
 			y: 0,
@@ -135,7 +142,12 @@
 	const EXAMPLES: { name: string; scheme: SeriesScheme }[] = [
 		{ name: "Crest--shield-c1--star-s45-cf", scheme: "accents" },
 		{ name: "Bolt-badge--circle-c2--bolt-s52-cb", scheme: "accents" },
+		{ name: "dice-1--square3-c1-o1c2--dot-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
+		{ name: "dice-2--square3-c1-o1c2--dot-p7-x16-y-16-s20-c2--dot-p3-x-16-y16-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
 		{ name: "dice-3--square3-c1-o1c2--dot-p7-x12-y-12-s20-c2--dot-s20-c2--dot-p3-x-12-y12-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
+		{ name: "dice-4--square3-c1-o1c2--dot-p7-x16-y-16-s20-c2--dot-p1-x16-y16-s20-c2--dot-p3-x-16-y16-s20-c2--dot-p9-x-16-y-16-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
+		{ name: "dice-5--square3-c1-o1c2--dot-p7-x12-y-12-s20-c2--dot-p1-x12-y12-s20-c2--dot-s20-c2--dot-p3-x-12-y12-s20-c2--dot-p9-x-12-y-12-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
+		{ name: "dice-6--square3-c1-o1c2--dot-p7-x14-y-10-s20-c2--dot-p1-x14-y10-s20-c2--dot-p4-x14-s20-c2--dot-p6-x-14-s20-c2--dot-p3-x-14-y10-s20-c2--dot-p9-x-14-y-10-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
 		{ name: "Target--ring-c1--dot-s28-c2", scheme: "statuses" },
 		{ name: "Heart-seal--circle-c3--heart-s48-cf", scheme: "skittles" },
 		{ name: "Star-hex--hex-c1--star-s50-cb", scheme: "accents" },
@@ -173,6 +185,11 @@
 	function exampleLabel(name: string): string {
 		return name.split("--")[0];
 	}
+	/** Order icons alphabetically by the first piece of their name (the label before the first `--`),
+	 * numerically aware so a numbered series sorts `dice-2` before `dice-10`. */
+	function byIconName(a: { name: string }, b: { name: string }): number {
+		return exampleLabel(a.name).toLowerCase().localeCompare(exampleLabel(b.name).toLowerCase(), undefined, { numeric: true });
+	}
 	let exampleQuery = $state("");
 	/** Match an example against the filter box: its name (label + shapes + flags) or its palette. */
 	function exampleMatches(ex: (typeof EXAMPLES)[number]): boolean {
@@ -180,7 +197,7 @@
 		if (!q) return true;
 		return ex.name.toLowerCase().includes(q) || ex.scheme.includes(q);
 	}
-	const shownExamples = $derived(EXAMPLES.filter(exampleMatches));
+	const shownExamples = $derived(EXAMPLES.filter(exampleMatches).sort(byIconName));
 
 	interface DropShadow {
 		color: number;
@@ -199,6 +216,15 @@
 	// A `---pc` palette override map (null = off): a nibble key (`"1"`..`"9"`) repaints that slot, `"*"`
 	// silhouettes the whole mark. Values are `#rrggbb`. Serializes into the finish, resolves in the preview.
 	let paletteOverrides = $state<Record<string, string> | null>(null);
+	// A `---f` font override map (null = off): a slot index (0 sans, 1 display, 2 mono) → a family token
+	// (a theme alias `sans`/`display`/`mono`, or a literal family with `+` for spaces). Serializes into the
+	// finish; the letter layers that use the slot pick it up. The three theme slots letters can select.
+	let fontOverrides = $state<Record<number, string> | null>(null);
+	const FONT_SLOTS = [
+		{ slot: 0, label: "Sans", placeholder: "sans / a family" },
+		{ slot: 1, label: "Display", placeholder: "display / sigmar" },
+		{ slot: 2, label: "Mono", placeholder: "mono / a family" },
+	];
 	type CopyState = "idle" | "done" | "fail";
 	let copyState = $state<CopyState>("idle");
 	let cleanState = $state<CopyState>("idle");
@@ -272,10 +298,27 @@
 	$effect(() => dismissable(() => addOpen, () => addBoxEl, () => (addOpen = false)));
 	$effect(() => dismissable(() => replaceOpen, () => replaceBoxEl, () => (replaceOpen = false)));
 
-	// Until the builder persists your last mark, start on a random example so the page opens on something
-	// different each visit rather than always the same default.
-	const initialIcon = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
-	loadIcon(initialIcon.name, initialIcon.scheme);
+	// The builder remembers your work-in-progress mark across reloads by round-tripping the serialized name
+	// (which already carries layers, locks, and finish) plus the scheme through `localStorage`. First visit,
+	// or a corrupt entry, falls back to a random example so the page still opens on something.
+	const STORAGE_KEY = "xtyle:icon-builder";
+	function restoreSaved(): boolean {
+		if (typeof localStorage === "undefined") return false;
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY);
+			if (!raw) return false;
+			const saved = JSON.parse(raw) as { name?: string; scheme?: SeriesScheme };
+			if (!saved?.name) return false;
+			loadIcon(saved.name, saved.scheme ?? "accents");
+			return layers.length > 0;
+		} catch {
+			return false;
+		}
+	}
+	if (!restoreSaved()) {
+		const initialIcon = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
+		loadIcon(initialIcon.name, initialIcon.scheme);
+	}
 
 	const selected = $derived(layers.find((l) => l.id === selectedId) ?? null);
 
@@ -304,6 +347,11 @@
 
 	function serializeLayer(l: MarkLayer): string {
 		const parts = [l.keyword];
+		// A letter's glyph and font slot lead the flags (the grammar consumes them before the shared loop).
+		if (l.keyword === "letter") {
+			parts.push(l.glyph || "A");
+			if (l.font) parts.push(`f${l.font}`);
+		}
 		if (l.p !== 5) parts.push(`p${l.p}`);
 		if (l.x) parts.push(`x${l.x}`);
 		if (l.y) parts.push(`y${l.y}`);
@@ -338,16 +386,145 @@
 		return Object.entries(pc).map(([key, hex]) => `pc${key === "*" ? "" : key}-${hex.replace(/^#/, "")}`);
 	}
 
+	/** Each set font override as a `f{slot}-{family}` finish token. */
+	function serializeFonts(fo: Record<number, string>): string[] {
+		return Object.entries(fo)
+			.filter(([, family]) => family.trim())
+			.map(([slot, family]) => `f${slot}-${family.trim().replace(/\s+/g, "+")}`);
+	}
+
 	const iconName = $derived.by(() => {
 		if (layers.length === 0) return "";
 		const body = layers.map(serializeLayer).join("--");
 		const finish = [
 			...(dropShadow ? [serializeShadow(dropShadow)] : []),
 			...(paletteOverrides ? serializePalette(paletteOverrides) : []),
+			...(fontOverrides ? serializeFonts(fontOverrides) : []),
 			...layers.map(serializeLocks).filter(Boolean),
 		].join("--");
 		return `${slug(label)}--${body}${finish ? `---${finish}` : ""}`;
 	});
+
+	// Persist the current mark (name + scheme) on every change, so a reload restores where you left off.
+	$effect(() => {
+		const payload = JSON.stringify({ name: iconName, scheme });
+		if (typeof localStorage === "undefined") return;
+		try {
+			localStorage.setItem(STORAGE_KEY, payload);
+		} catch {
+			/* storage full or blocked (private mode) — persistence is best-effort */
+		}
+	});
+
+	// The saved-icon library: explicit marks you keep, persisted separately from the auto-restored session
+	// so they survive across builds. Each entry stores the full serialized name plus its scheme, so loading
+	// one is the same round-trip as loading an example.
+	interface SavedIcon {
+		id: string;
+		label: string;
+		name: string;
+		scheme: SeriesScheme;
+	}
+	const LIBRARY_KEY = "xtyle:icon-library";
+	function loadLibrary(): SavedIcon[] {
+		if (typeof localStorage === "undefined") return [];
+		try {
+			const parsed = JSON.parse(localStorage.getItem(LIBRARY_KEY) ?? "[]");
+			if (!Array.isArray(parsed)) return [];
+			// Normalize on load: exported JSON drops `id`, and a hand-edited entry may lack fields, so
+			// backfill a fresh id (the each-block key) and sane defaults rather than trust the stored shape.
+			return parsed
+				.filter((entry) => entry && typeof entry.name === "string" && entry.name.includes("--"))
+				.map((entry) => ({
+					id: typeof entry.id === "string" && entry.id ? entry.id : freshId(),
+					label: (typeof entry.label === "string" && entry.label.trim()) || exampleLabel(entry.name),
+					name: entry.name,
+					scheme: entry.scheme ?? "accents",
+				}));
+		} catch {
+			return [];
+		}
+	}
+	let library = $state<SavedIcon[]>(loadLibrary());
+	let savedFlash = $state<CopyState>("idle");
+	function persistLibrary(): void {
+		if (typeof localStorage === "undefined") return;
+		try {
+			localStorage.setItem(LIBRARY_KEY, JSON.stringify(library));
+		} catch {
+			/* best-effort */
+		}
+	}
+	function freshId(): string {
+		return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `icon-${Math.random().toString(36).slice(2, 10)}`;
+	}
+	function saveToLibrary(): void {
+		if (!iconName) return;
+		library = [{ id: freshId(), label: label.trim() || "icon", name: iconName, scheme }, ...library];
+		persistLibrary();
+		savedFlash = "done";
+		setTimeout(() => (savedFlash = "idle"), 1400);
+	}
+	function removeSaved(id: string): void {
+		library = library.filter((entry) => entry.id !== id);
+		persistLibrary();
+	}
+	/** Match a saved icon against the filter box: its label, its serialized name, or its palette. */
+	function savedMatches(entry: SavedIcon): boolean {
+		const q = exampleQuery.trim().toLowerCase();
+		if (!q) return true;
+		return entry.label.toLowerCase().includes(q) || entry.name.toLowerCase().includes(q) || entry.scheme.includes(q);
+	}
+	const shownSaved = $derived(library.filter(savedMatches).sort(byIconName));
+
+	// Import / export the library as a plain newline-delimited list of icon names, so a set of marks can be
+	// shared, backed up, or pasted between sessions without wrestling a JSON blob. Export copies the names;
+	// import reads any text file, taking each name-shaped line and merging new marks in (duplicates skipped).
+	let exportFlash = $state<CopyState>("idle");
+	let libraryFileInput = $state<HTMLInputElement>();
+	async function exportLibrary(): Promise<void> {
+		if (library.length === 0) return;
+		const payload = [...library].sort(byIconName).map((entry) => entry.name).join("\n");
+		try {
+			await navigator.clipboard.writeText(payload);
+			exportFlash = "done";
+		} catch {
+			exportFlash = "fail";
+		}
+		setTimeout(() => (exportFlash = "idle"), 1400);
+	}
+	/** Parse a name list (one icon name per line) into library entries: blanks and non-name lines are
+	 * ignored, surrounding punctuation is stripped, the label comes from the name, and the scheme defaults. */
+	function parseNameList(text: string): SavedIcon[] {
+		const out: SavedIcon[] = [];
+		const seen = new Set<string>();
+		for (const line of text.split(/\r?\n/)) {
+			const name = line.trim().replace(/^["',\s[\]]+|["',\s[\]]+$/g, "");
+			if (!name.includes("--") || /\s/.test(name) || seen.has(name)) continue;
+			seen.add(name);
+			out.push({ id: freshId(), label: exampleLabel(name), name, scheme: "accents" });
+		}
+		return out;
+	}
+	function triggerImport(): void {
+		libraryFileInput?.click();
+	}
+	async function onImportFile(event: Event): Promise<void> {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = "";
+		if (!file) return;
+		try {
+			const entries = parseNameList(await file.text());
+			const existing = new Set(library.map((entry) => entry.name));
+			const fresh = entries.filter((entry) => !existing.has(entry.name));
+			if (fresh.length === 0) return;
+			library = [...fresh, ...library];
+			persistLibrary();
+		} catch {
+			/* unreadable file — ignore */
+		}
+	}
 
 	/** Lift only the `l…` lock tokens from the finish, keeping any render finish (a drop shadow is part
 	 * of the mark and must survive export); drops the `---` entirely when nothing else remains. */
@@ -367,9 +544,19 @@
 		const keyword = /^[a-z]+[0-9]*/.exec(segment)?.[0];
 		if (!keyword) return null;
 		const over: Partial<MarkLayer> = {};
+		let rest = segment.slice(keyword.length);
+		// A letter's glyph + font slot are consumed before the shared flag loop, mirroring the engine.
+		if (keyword === "letter") {
+			const lm = /^-(.)(?:-f(\d))?/.exec(rest);
+			if (lm) {
+				over.glyph = lm[1];
+				if (lm[2] != null) over.font = Number(lm[2]);
+				rest = rest.slice(lm[0].length);
+			}
+		}
 		const token = /-(?:([pxysra])(-?\d+)|c([0-9a-f])|o(\d+)(?:c([0-9a-f]))?|(fh|fv|ko|i))/g;
 		let m: RegExpExecArray | null;
-		while ((m = token.exec(segment.slice(keyword.length))) !== null) {
+		while ((m = token.exec(rest)) !== null) {
 			if (m[1] === "p") over.p = Number(m[2]);
 			else if (m[1] === "x") over.x = Number(m[2]);
 			else if (m[1] === "y") over.y = Number(m[2]);
@@ -422,6 +609,16 @@
 		return Object.keys(out).length ? out : null;
 	}
 
+	/** Read every `f…` font-override token from the finish (`--`-delimited) into the slot→family map. */
+	function parseFonts(flags: string): Record<number, string> | null {
+		const out: Record<number, string> = {};
+		for (const flag of flags.split("--")) {
+			const m = /^f(\d)?-(.+)$/.exec(flag);
+			if (m) out[m[1] != null ? Number(m[1]) : 0] = (m[2] as string).replace(/\+/g, " ");
+		}
+		return Object.keys(out).length ? out : null;
+	}
+
 	/** Parse an edited icon name back into the builder: the label prefix, one layer per segment, and the
 	 * optional `---` finish (a `d…` drop shadow and `l…` lock flags). Invalid input reverts on next render. */
 	function applyName(raw: string): void {
@@ -443,6 +640,7 @@
 		selectedId = next[0].id;
 		dropShadow = flags ? parseShadow(flags) : null;
 		paletteOverrides = flags ? parsePalette(flags) : null;
+		fontOverrides = flags ? parseFonts(flags) : null;
 	}
 
 	// `active` is `currentColor`, which is exactly what a layer with no `c` flag renders — so it maps to
@@ -511,6 +709,16 @@
 		layers = layers.filter((l) => l.id !== id);
 		if (selectedId === id) selectedId = layers[Math.max(0, idx - 1)]?.id ?? null;
 	}
+	/** Clone a layer (a fresh id, a copied lock map) and drop it in just above the original, selected. */
+	function duplicateLayer(id: number): void {
+		const idx = layers.findIndex((l) => l.id === id);
+		if (idx < 0) return;
+		const copy: MarkLayer = { ...(layers[idx] as MarkLayer), id: nextId++, locks: { ...(layers[idx] as MarkLayer).locks } };
+		const next = [...layers];
+		next.splice(idx + 1, 0, copy);
+		layers = next;
+		selectedId = copy.id;
+	}
 	function move(id: number, dir: -1 | 1): void {
 		const idx = layers.findIndex((l) => l.id === id);
 		const to = idx + dir;
@@ -523,6 +731,7 @@
 	/** A compact readout of a layer's non-default settings for the layer chip, e.g. `c1 · s80 · r45 · ko`. */
 	function layerSummary(l: MarkLayer): string {
 		const parts: string[] = [];
+		if (l.keyword === "letter") parts.push(`"${l.glyph}"${l.font ? ` f${l.font}` : ""}`);
 		if (l.c !== null) parts.push(`c${l.c.toString(16)}`);
 		if (l.p !== 5) parts.push(`p${l.p}`);
 		if (l.s !== 100) parts.push(`s${l.s}`);
@@ -559,6 +768,7 @@
 		selectedId = null;
 		dropShadow = null;
 		paletteOverrides = null;
+		fontOverrides = null;
 	}
 
 	// Reset returns each layer's *unlocked* properties to their factory defaults, leaving locked props and
@@ -652,6 +862,32 @@
 		const next = { ...paletteOverrides };
 		delete next[key];
 		paletteOverrides = next;
+	}
+
+	function toggleFonts(on: boolean): void {
+		fontOverrides = on ? {} : null;
+	}
+	function setFont(slot: number, family: string): void {
+		const next = { ...(fontOverrides ?? {}) };
+		if (family.trim()) next[slot] = family;
+		else delete next[slot];
+		fontOverrides = next;
+	}
+	// The web fonts the current mark needs loaded (a literal family in a used slot); theme-token slots
+	// (`var(--font-*)`) resolve to `[]`. Surfaced as ready-made Google Fonts loading code — the "help".
+	const fontImports = $derived.by(() => {
+		const parsed = resolveIconMark(iconName);
+		return parsed ? iconFontImports(parsed.composition) : [];
+	});
+	let fontCopyState = $state<CopyState>("idle");
+	async function copyFontImports(): Promise<void> {
+		try {
+			await navigator.clipboard.writeText(fontImports.map((f) => f.googleLink).join("\n"));
+			fontCopyState = "done";
+		} catch {
+			fontCopyState = "fail";
+		}
+		setTimeout(() => (fontCopyState = "idle"), 1400);
 	}
 
 	// The export copy drops the `---` lock flags: the pinned style is authoring metadata, so a production
@@ -873,6 +1109,7 @@
 								<Icon name={copyGlyph(cleanState)} />
 							</Button>
 						{/if}
+						<Button size="sm" variant="subtle" onclick={saveToLibrary} disabled={!iconName} title="Save this icon to your library"><Icon name={savedFlash === "done" ? "check" : "bookmark"} size="sm" /> Save</Button>
 						<Button size="sm" variant="subtle" onclick={saveSvg} disabled={!iconName} title="Download the mark as a scalable SVG"><Icon name="download" size="sm" /> SVG</Button>
 						<Button size="sm" variant="subtle" onclick={savePng} disabled={!iconName} title="Download the mark as a 512px transparent PNG"><Icon name="download" size="sm" /> PNG</Button>
 					</div>
@@ -919,6 +1156,38 @@
 						</div>
 					</div>
 
+					{#if l.keyword === "letter"}
+						<div class="ib__prop ib__prop--stack">
+							<div class="ib__prop-body">
+								<div class="ib__field">
+									<span class="ib__field-label">Glyph</span>
+									<input
+										class="ib__glyph"
+										type="text"
+										value={l.glyph}
+										oninput={(e) => { const v = (e.currentTarget as HTMLInputElement).value; if (v) l.glyph = v.slice(-1); }}
+										aria-label="Letter glyph"
+										spellcheck="false"
+										autocomplete="off"
+									/>
+								</div>
+								<div class="ib__field">
+									<span class="ib__field-label">Font</span>
+									<Segmented
+										value={String(l.font)}
+										options={[
+											{ value: "0", label: "Sans" },
+											{ value: "1", label: "Display" },
+											{ value: "2", label: "Mono" },
+										]}
+										onchange={(e) => (l.font = Number((e.target as HTMLInputElement).value))}
+										aria-label="Letter font slot"
+									/>
+								</div>
+							</div>
+						</div>
+					{/if}
+
 					<div class="ib__prop ib__prop--stack">
 						{@render propLock(l, "p")}
 						<div class="ib__prop-body">
@@ -933,23 +1202,23 @@
 
 					<div class="ib__prop">
 						{@render propLock(l, "s")}
-						<Slider label="Size" bind:value={l.s} min={10} max={200} step={5} showValue format={(v) => `${v}%`} />
+						<Slider label="Size" bind:value={l.s} min={10} max={200} step={5} altStep={1} overflow showValue format={(v) => `${v}%`} />
 					</div>
 					<div class="ib__prop">
 						{@render propLock(l, "r")}
-						<Slider label="Rotate" bind:value={l.r} min={-180} max={180} step={15} showValue format={(v) => `${v}°`} />
+						<Slider label="Rotate" bind:value={l.r} min={-180} max={180} step={15} altStep={1} overflow showValue format={(v) => `${v}°`} />
 					</div>
 					<div class="ib__prop">
 						{@render propLock(l, "x")}
-						<Slider label="Nudge X" bind:value={l.x} min={-40} max={40} step={2} showValue format={(v) => `${v}%`} />
+						<Slider label="Nudge X" bind:value={l.x} min={-40} max={40} step={2} altStep={1} overflow showValue format={(v) => `${v}%`} />
 					</div>
 					<div class="ib__prop">
 						{@render propLock(l, "y")}
-						<Slider label="Nudge Y" bind:value={l.y} min={-40} max={40} step={2} showValue format={(v) => `${v}%`} />
+						<Slider label="Nudge Y" bind:value={l.y} min={-40} max={40} step={2} altStep={1} overflow showValue format={(v) => `${v}%`} />
 					</div>
 					<div class="ib__prop">
 						{@render propLock(l, "a")}
-						<Slider label="Opacity" bind:value={l.a} min={0} max={100} step={5} showValue format={(v) => `${v}%`} />
+						<Slider label="Opacity" bind:value={l.a} min={0} max={100} step={5} altStep={1} showValue format={(v) => `${v}%`} />
 					</div>
 
 					<div class="ib__prop ib__prop--stack">
@@ -1039,10 +1308,12 @@
 			<ol class="ib__stack">
 				{#each layers as l, i (l.id)}
 					{@const lockState = layerLockState(l)}
+					{@const chipColor = l.c !== null ? `-c${l.c.toString(16)}` : ""}
+					{@const chipName = l.keyword === "letter" ? `--letter-${l.glyph || "A"}${chipColor}` : `--${l.keyword}${chipColor}`}
 					<li>
 						<div class="ib__chip" class:ib__chip--on={l.id === selectedId}>
 							<button type="button" class="ib__chip-main" onclick={() => (selectedId = l.id)}>
-								{#key themeTick}<Icon name={`--${l.keyword}${l.c !== null ? `-c${l.c.toString(16)}` : ""}`} colors={scheme} size="sm" />{/key}
+								{#key themeTick}<Icon name={chipName} colors={scheme} size="sm" />{/key}
 								<span class="ib__chip-name">{l.keyword}</span>
 								{#if layerSummary(l)}
 									<span class="ib__chip-meta">{layerSummary(l)}</span>
@@ -1062,6 +1333,7 @@
 								>
 									{@render lockGlyph(lockState === "all" ? "on" : lockState === "some" ? "some" : "off")}
 								</button>
+								<button type="button" title="Duplicate layer" aria-label="Duplicate layer" onclick={() => duplicateLayer(l.id)}><Icon name="copy" size="sm" /></button>
 								<button type="button" title="Move up" aria-label="Move up" disabled={i === 0} onclick={() => move(l.id, -1)}>↑</button>
 								<button type="button" title="Move down" aria-label="Move down" disabled={i === layers.length - 1} onclick={() => move(l.id, 1)}>↓</button>
 								<button type="button" title="Remove" aria-label="Remove" onclick={() => removeLayer(l.id)}>✕</button>
@@ -1115,6 +1387,37 @@
 				<Slider label="Softness" bind:value={dropShadow.soft} min={0} max={100} step={5} showValue format={(v) => `${v}%`} />
 			{/if}
 
+			<Switch checked={!!fontOverrides} onchange={(e) => toggleFonts((e.target as HTMLInputElement).checked)} label="Custom fonts" labelSide="end" />
+			{#if fontOverrides}
+				<p class="ib__hint">Bind a <code>letter</code> font slot to a theme font (<code>sans</code>, <code>display</code>, <code>mono</code>) or a web font (<code>sigmar</code>, <code>noto+sans+symbols</code>). A web font renders only where it's loaded.</p>
+				{#each FONT_SLOTS as fs (fs.slot)}
+					<div class="ib__field">
+						<span class="ib__field-label">{fs.label} <span class="ib__field-pick">· slot {fs.slot}</span></span>
+						<input
+							class="ib__search"
+							type="text"
+							value={fontOverrides[fs.slot] ?? ""}
+							oninput={(e) => setFont(fs.slot, (e.currentTarget as HTMLInputElement).value)}
+							placeholder={fs.placeholder}
+							spellcheck="false"
+							autocomplete="off"
+							aria-label={`${fs.label} font override`}
+						/>
+					</div>
+				{/each}
+				{#if fontImports.length}
+					<div class="ib__field">
+						<div class="ib__fonts-load-head">
+							<span class="ib__field-label">Load these fonts</span>
+							<Button size="sm" variant="subtle" iconOnly onclick={copyFontImports} title="Copy the loading tags" aria-label="Copy font loading code"><Icon name={copyGlyph(fontCopyState)} /></Button>
+						</div>
+						{#each fontImports as f (f.family)}
+							<code class="ib__fonts-load">{f.googleLink}</code>
+						{/each}
+					</div>
+				{/if}
+			{/if}
+
 			<Switch checked={!!paletteOverrides} onchange={(e) => togglePalette((e.target as HTMLInputElement).checked)} label="Palette overrides" labelSide="end" />
 			{#if paletteOverrides}
 				<div class="ib__field">
@@ -1142,33 +1445,77 @@
 			{/if}
 		</section>
 
-		<section class="ib__examples" aria-label="Example marks">
+		<section class="ib__examples" aria-label="Icon library">
 			<div class="ib__examples-head">
-				<span class="ib__palette-label">Examples</span>
+				<span class="ib__palette-label">Library</span>
 				<input
 					class="ib__search"
 					type="search"
 					bind:value={exampleQuery}
-					placeholder="Filter examples…"
-					aria-label="Filter examples by name, shape, or palette"
+					placeholder="Filter icons…"
+					aria-label="Filter icons by name, shape, or palette"
 					spellcheck="false"
 				/>
+				<div class="ib__lib-io">
+					<Button size="sm" variant="subtle" iconOnly onclick={triggerImport} title="Import icons from a text file (one name per line)" aria-label="Import icons">
+						<Icon name="download" size="sm" />
+					</Button>
+					<Button size="sm" variant="subtle" iconOnly onclick={exportLibrary} disabled={library.length === 0} title="Copy your saved icons as a name list (one per line)" aria-label="Export saved icons">
+						<Icon name={copyGlyph(exportFlash)} size="sm" />
+					</Button>
+					<input class="ib__file" type="file" accept=".txt,.text,text/plain" bind:this={libraryFileInput} onchange={onImportFile} tabindex="-1" aria-hidden="true" />
+				</div>
 			</div>
-			<div class="ib__example-grid">
-				{#each shownExamples as ex (ex.name)}
-					<button
-						type="button"
-						class="ib__example"
-						title={exampleLabel(ex.name)}
-						aria-label={`Load ${exampleLabel(ex.name)}`}
-						onclick={() => loadIcon(ex.name, ex.scheme)}
-					>
-						{#key themeTick}<Icon name={ex.name} colors={ex.scheme} />{/key}
-					</button>
-				{/each}
-				{#if shownExamples.length === 0}
-					<p class="ib__empty">No examples match “{exampleQuery}”.</p>
-				{/if}
+
+			{#if library.length > 0}
+				<div class="ib__lib-group">
+					<span class="ib__lib-label">User created</span>
+					<div class="ib__example-grid">
+						{#each shownSaved as ex (ex.id)}
+							<div class="ib__saved">
+								<button
+									type="button"
+									class="ib__example"
+									title={ex.label}
+									aria-label={`Load ${ex.label}`}
+									onclick={() => loadIcon(ex.name, ex.scheme)}
+								>
+									{#key themeTick}<Icon name={ex.name} colors={ex.scheme} />{/key}
+								</button>
+								<button
+									type="button"
+									class="ib__saved-remove"
+									title={`Remove ${ex.label}`}
+									aria-label={`Remove ${ex.label} from your library`}
+									onclick={() => removeSaved(ex.id)}
+								>×</button>
+							</div>
+						{/each}
+						{#if shownSaved.length === 0}
+							<p class="ib__empty">No saved icons match “{exampleQuery}”.</p>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
+			<div class="ib__lib-group">
+				<span class="ib__lib-label">Examples</span>
+				<div class="ib__example-grid">
+					{#each shownExamples as ex (ex.name)}
+						<button
+							type="button"
+							class="ib__example"
+							title={exampleLabel(ex.name)}
+							aria-label={`Load ${exampleLabel(ex.name)}`}
+							onclick={() => loadIcon(ex.name, ex.scheme)}
+						>
+							{#key themeTick}<Icon name={ex.name} colors={ex.scheme} />{/key}
+						</button>
+					{/each}
+					{#if shownExamples.length === 0}
+						<p class="ib__empty">No examples match “{exampleQuery}”.</p>
+					{/if}
+				</div>
 			</div>
 		</section>
 	</div>
@@ -1644,10 +1991,62 @@
 		min-width: 0;
 		max-width: 16rem;
 	}
+	.ib__lib-io {
+		flex: none;
+		display: flex;
+		gap: var(--space-1);
+	}
+	.ib__file {
+		display: none;
+	}
+	/* A titled sub-group within the library (User created / Examples), each with its own grid. */
+	.ib__lib-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+	.ib__lib-label {
+		font-size: var(--text-xs);
+		font-weight: var(--weight-medium);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--fg-3);
+	}
 	.ib__example-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
 		gap: var(--space-2);
+	}
+	/* A saved tile carries a hover-revealed remove affordance in its corner. */
+	.ib__saved {
+		position: relative;
+	}
+	.ib__saved-remove {
+		position: absolute;
+		top: calc(var(--space-1) * -1);
+		inset-inline-end: calc(var(--space-1) * -1);
+		width: 1.1rem;
+		height: 1.1rem;
+		display: grid;
+		place-items: center;
+		padding: 0;
+		font-size: var(--text-xs);
+		line-height: 1;
+		color: var(--fg-1);
+		background: var(--bg-3, var(--bg-1));
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-full);
+		cursor: pointer;
+		opacity: 0;
+		transition: opacity var(--duration-fast, 0.12s) var(--ease-standard, ease);
+	}
+	.ib__saved:hover .ib__saved-remove,
+	.ib__saved-remove:focus-visible {
+		opacity: 1;
+	}
+	.ib__saved-remove:hover {
+		color: var(--danger-text, var(--danger));
+		border-color: var(--danger);
 	}
 	.ib__example {
 		aspect-ratio: 1;
@@ -1941,5 +2340,51 @@
 		margin: 0;
 		color: var(--fg-3);
 		font-size: var(--text-sm);
+	}
+
+	.ib__glyph {
+		width: 3rem;
+		padding: var(--space-1) var(--space-2);
+		text-align: center;
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-sm);
+		color: var(--fg-0);
+		font-family: var(--font-mono);
+		font-size: var(--text-md);
+	}
+	.ib__glyph:focus-visible {
+		outline: none;
+		border-color: var(--accent);
+	}
+
+	.ib__hint {
+		margin: 0;
+		color: var(--fg-3);
+		font-size: var(--text-xs);
+		line-height: 1.4;
+	}
+	.ib__hint code {
+		font-family: var(--font-mono);
+		color: var(--fg-2);
+	}
+
+	.ib__fonts-load-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+	}
+	.ib__fonts-load {
+		display: block;
+		margin-top: var(--space-1);
+		padding: var(--space-1) var(--space-2);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-sm);
+		color: var(--fg-2);
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		word-break: break-all;
 	}
 </style>

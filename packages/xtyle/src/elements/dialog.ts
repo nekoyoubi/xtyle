@@ -1,6 +1,5 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import type { Size } from "../index.js";
-import { dialogHostCss } from "../markup/index.js";
+import { dialogHostCss, type DialogSize } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/dialog/source.generated.js";
 
@@ -32,10 +31,10 @@ export class XtyleDialog extends XtyleElement {
 		this.reflectBoolean("open", value);
 	}
 
-	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+	get size(): DialogSize {
+		return (this.getAttribute("size") as DialogSize) ?? "md";
 	}
-	set size(value: Size) {
+	set size(value: DialogSize) {
 		this.setAttribute("size", value);
 	}
 

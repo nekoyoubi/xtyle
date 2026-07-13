@@ -58,7 +58,7 @@ export const dialogManifest: ComponentManifest = {
 	seeAlso: ["tooltip", "menu", "toast"],
 	summary: "A centered modal built on the native `<dialog>` element: scrim, focus trap, and Esc-to-close come for free.",
 	description:
-		"Dialog is a centered modal that wraps the platform `<dialog>` element, so the native modal machinery (the top-layer scrim, the focus trap, focus restore on close, `Escape` to dismiss, and the `role`/`aria-modal` semantics) all comes from the browser rather than re-implemented JavaScript. Open and close it imperatively with `showModal()` / `close()` (or the reactive `open` prop in the framework wrappers). It lays out a header, a scrolling body, and a footer via named slots, and ships a close button by default. The header is wired to the dialog with `aria-labelledby` whenever a `heading` (or explicit `labelledby`) is supplied; a dialog that brings its own `header` slot instead names itself with `label`, since `aria-labelledby` cannot reach a slotted title across the shadow boundary. Three sizes (sm, md, lg) cap its width while it stays responsive on small screens.",
+		"Dialog is a centered modal that wraps the platform `<dialog>` element, so the native modal machinery (the top-layer scrim, the focus trap, focus restore on close, `Escape` to dismiss, and the `role`/`aria-modal` semantics) all comes from the browser rather than re-implemented JavaScript. Open and close it imperatively with `showModal()` / `close()` (or the reactive `open` prop in the framework wrappers). It lays out a header, a scrolling body, and a footer via named slots, and ships a close button by default. The header is wired to the dialog with `aria-labelledby` whenever a `heading` (or explicit `labelledby`) is supplied; a dialog that brings its own `header` slot instead names itself with `label`, since `aria-labelledby` cannot reach a slotted title across the shadow boundary. Five sizes (sm, md, lg, xl, full) cap its width while it stays responsive on small screens; `xl` (64rem) and `full` cover editor-class content, and the inner panel is exposed as `::part(dialog)` so a consumer can size or style it to an exact width directly.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -131,11 +131,11 @@ export const dialogManifest: ComponentManifest = {
 		},
 		{
 			name: "size",
-			type: "Size",
+			type: "DialogSize",
 			default: "md",
-			description: "Caps the dialog's width.",
+			description: "Caps the dialog's width. `xl` (64rem) and `full` cover editor-class content; for an exact width, style `::part(dialog)`.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["sm", "md", "lg"],
+			options: ["sm", "md", "lg", "xl", "full"],
 		},
 		{
 			name: "heading",
@@ -175,6 +175,8 @@ export const dialogManifest: ComponentManifest = {
 		{ name: "sm", description: "Compact: for short confirmations.", className: "xtyle-dialog--sm" },
 		{ name: "md", description: "Default.", className: "xtyle-dialog", isDefault: true },
 		{ name: "lg", description: "Roomy: for richer content.", className: "xtyle-dialog--lg" },
+		{ name: "xl", description: "Wide (64rem): editor-class content, multi-column forms.", className: "xtyle-dialog--xl" },
+		{ name: "full", description: "Viewport width minus the responsive margin.", className: "xtyle-dialog--full" },
 	],
 	states: [
 		{
@@ -254,6 +256,7 @@ export const dialogManifest: ComponentManifest = {
 		"Pair the footer with Button for the action row; wire a ghost neutral Cancel to `close()` and the primary action to its handler.",
 		"Use `heading` for the common titled case; drop in a `header` slot when the title needs an icon, badge, or subtitle.",
 		"Set `no-close-button` when the dialog is a blocking confirm whose only exits are explicit footer actions.",
+		"For a wide, editor-class host (a code editor, a multi-column form), reach for `size=\"xl\"` (64rem) or `size=\"full\"`; for an exact width or any other panel styling, target `::part(dialog)` from the consumer's own stylesheet (`xtyle-dialog::part(dialog) { width: min(1100px, 96vw); }`).",
 	],
 	a11y: [
 		"Built on the native `<dialog>` element, so `role=\"dialog\"`, `aria-modal=\"true\"`, the focus trap, focus restore on close, and `Escape`-to-dismiss all come from the browser.",

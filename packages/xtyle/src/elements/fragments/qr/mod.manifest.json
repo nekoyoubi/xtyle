@@ -1,0 +1,34 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-qr-default",
+	"version": "0.0.1",
+	"title": "Xtyle QR Code (default)",
+	"description": "The built-in fill for the xtyle QR Code component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.qr"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.qr": [
+			{
+				"id": "qr",
+				"format": "text/html+jsml",
+				"source": "qr.html",
+				"meta": {
+					"tokens": [
+						"--bg-0",
+						"--bg-1",
+						"--fg-0",
+						"--fg-1",
+						"--font-mono",
+						"--radius-lg",
+						"--radius-md",
+						"--ring",
+						"--space-2",
+						"--space-3",
+						"--text-sm"
+					]
+				}
+			}
+		]
+	}
+}

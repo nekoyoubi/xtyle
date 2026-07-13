@@ -1,10 +1,13 @@
 <script lang="ts">
 	import "./register.js";
 
+	import type { Snippet } from "svelte";
+
 	type ImageFit = "cover" | "contain";
 	type ImageRadius = "none" | "sm" | "md" | "lg";
 	type ImageLoading = "lazy" | "eager";
 	type ImageTrigger = "frame" | "button";
+	type ImageHoverAudio = "on" | "off";
 
 	interface Props {
 		src?: string;
@@ -16,6 +19,14 @@
 		lightbox?: boolean;
 		trigger?: ImageTrigger;
 		caption?: string;
+		/** A video (`.mp4`/`.webm`) or gif shown on hover/focus; the still `src` is the poster. */
+		hoverSrc?: string;
+		/** An explicit poster still for the hover video (defaults to `src`). */
+		hoverPoster?: string;
+		/** Allow sound on the hover video and show an unmute toggle; omit for a silent preview. */
+		hoverAudio?: ImageHoverAudio;
+		/** Custom hover-preview content — pass elements carrying `slot="hover"` (a `<video>`, images, or a nested `<Carousel>`). */
+		children?: Snippet;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
@@ -30,6 +41,10 @@
 		lightbox = false,
 		trigger = "frame",
 		caption,
+		hoverSrc,
+		hoverPoster,
+		hoverAudio,
+		children,
 		...rest
 	}: Props = $props();
 </script>
@@ -43,6 +58,9 @@
 	{radius}
 	{loading}
 	{caption}
-	lightbox={lightbox ? "" : undefined}
+	lightbox={lightbox ? true : undefined}
 	trigger={trigger === "button" ? "button" : undefined}
-></xtyle-image>
+	hover-src={hoverSrc}
+	hover-poster={hoverPoster}
+	hover-audio={hoverAudio}
+>{@render children?.()}</xtyle-image>

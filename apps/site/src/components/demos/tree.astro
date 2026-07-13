@@ -2,8 +2,9 @@
 import Tree from "@xtyle/astro/Tree.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Heading from "@xtyle/astro/Heading.astro";
+import type { TreeNode } from "@xtyle/core/markup";
 
-const docs = [
+const docs: TreeNode[] = [
 	{
 		label: "Guides",
 		locked: true,
@@ -31,7 +32,7 @@ const docs = [
 	{ label: "Changelog", href: "#changelog" },
 ];
 
-const files = [
+const files: TreeNode[] = [
 	{
 		label: "src",
 		expanded: true,
@@ -46,19 +47,24 @@ const files = [
 	{ label: "package.json", href: "#pkg" },
 ];
 
-const binder = [
+const binder: TreeNode[] = [
 	{
 		label: "Chapter 1",
 		value: "ch1",
 		expanded: true,
-		badge: "1.2k",
+		// a live word count plus a distinct, toned drift pill — two trailing badges, each its own color
+		badge: ["1,204", { text: "3", tone: "warn" }],
 		children: [
 			{
 				label: "Opening",
 				value: "ch1-1",
 				selected: true,
-				badge: "3",
+				badge: "512",
+				// a positional move cluster: "up" is disabled on the first sibling (greyed, not omitted,
+				// so the button count stays stable row to row)
 				actions: [
+					{ id: "up", label: "Move up", icon: "↑", disabled: true },
+					{ id: "down", label: "Move down", icon: "↓" },
 					{ id: "rename", label: "Rename", icon: "✎" },
 					{ id: "delete", label: "Delete", icon: "✕" },
 				],
@@ -66,11 +72,17 @@ const binder = [
 			{
 				label: "Rising action",
 				value: "ch1-2",
-				actions: [{ id: "rename", label: "Rename", icon: "✎" }],
+				badge: ["388", { text: "1", tone: "warn" }],
+				actions: [
+					{ id: "up", label: "Move up", icon: "↑" },
+					{ id: "down", label: "Move down", icon: "↓", disabled: true },
+					{ id: "rename", label: "Rename", icon: "✎" },
+					{ id: "delete", label: "Delete", icon: "✕" },
+				],
 			},
 		],
 	},
-	{ label: "Chapter 2", value: "ch2", badge: "0.8k", actions: [{ id: "rename", label: "Rename", icon: "✎" }] },
+	{ label: "Chapter 2", value: "ch2", badge: "812", actions: [{ id: "rename", label: "Rename", icon: "✎" }] },
 	{ label: "Notes", value: "notes", badge: "12" },
 ];
 ---

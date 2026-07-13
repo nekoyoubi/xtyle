@@ -1,31 +1,32 @@
 <script lang="ts">
-	import type { TokenRegister } from "@xtyle/core";
+	import type { Algorithm, TokenRegister } from "@xtyle/core";
 	import { HUES, schemeOf } from "@xtyle/core";
-	import type {
-		BenchState,
-		ContrastBandKnob,
-		DensityKnob,
-		SchemeKnob,
-	} from "./state.js";
+	import type { BenchState, KnobControl } from "./state.js";
 	import {
 		ALGORITHMS,
 		CUSTOM_ALGORITHM,
 		CUSTOM_CODE_ALGORITHM,
 		CUSTOM_CODE_SEED,
 		CUSTOM_SPEC_SEED,
-		KNOB_SEEDS,
+		knobControls,
 	} from "./state.js";
 	import { Accordion, ColorPicker } from "@xtyle/svelte";
 	import { isColorToken, allGroups, contrastRefFor, tokenSearchTerms, tokenMeta } from "./tokens.js";
 
 	interface Props {
 		bench: BenchState;
+		algorithm: Algorithm;
 		register: TokenRegister;
 		influence: Record<string, number>;
 		onchange: (next: BenchState) => void;
 	}
 
-	let { bench, register, influence, onchange }: Props = $props();
+	let { bench, algorithm, register, influence, onchange }: Props = $props();
+
+	/** The rail's controls, built from the algorithm's own knob domains merged with site cosmetics — it
+	 * never shows a dial the algorithm doesn't read (so `hour` stays with nxi-nite), and a novel
+	 * algorithm's knob self-renders from its declared spec rather than vanishing for want of a UI entry. */
+	const knobSpecs = $derived<KnobControl[]>(knobControls(algorithm));
 
 	let tokenFilter = $state("");
 
@@ -69,37 +70,42 @@
 		bench.knobs.scheme != null && bgScheme !== null && bench.knobs.scheme !== bgScheme,
 	);
 
-	type RangeKnob = "vibrancy" | "typeScale" | "radiusScale" | "accentSplit" | "hour";
-	const RANGE_META: { key: RangeKnob; label: string; min: number; max: number; step: number; digits?: number; unit?: string }[] = [
-		{ key: "vibrancy", label: "Vibrancy", min: 0, max: 1, step: 0.05 },
-		{ key: "typeScale", label: "Type scale", min: 1.05, max: 1.6, step: 0.01 },
-		{ key: "radiusScale", label: "Radius scale", min: 0, max: 3, step: 0.1 },
-		{ key: "accentSplit", label: "Accent split", min: 0, max: 90, step: 1, digits: 0, unit: "°" },
-		{ key: "hour", label: "Hour", min: 0, max: 24, step: 1, digits: 0 },
-	];
+	// A knob field is a `BenchKnobs` key for the blessed set; a novel algorithm's knob writes under its
+	// own name through the same `Record<string, unknown>` channel, so the field is typed as a string.
+	type KnobField = string;
 
-	type FontKnob = "fontSans" | "fontMono" | "fontDisplay";
-	const FONT_META: { key: FontKnob; label: string }[] = [
-		{ key: "fontSans", label: "Sans font stack" },
-		{ key: "fontMono", label: "Mono font stack" },
-		{ key: "fontDisplay", label: "Display font stack" },
-	];
-
-	function setRange(key: RangeKnob, value: number): void {
-		patch((s) => (s.knobs[key] = value));
+	// `BenchKnobs` has no index signature, so reads and writes through a runtime field name need one
+	// assertion — kept here rather than repeated at every call site.
+	function knobsOf(s: BenchState): Record<string, unknown> {
+		return s.knobs as Record<string, unknown>;
 	}
 
-	function toggleRange(key: RangeKnob, on: boolean): void {
+	function knobValue(field: KnobField): string | number | undefined {
+		return knobsOf(bench)[field] as string | number | undefined;
+	}
+
+	function setKnobNumber(field: KnobField, value: number): void {
+		patch((s) => (knobsOf(s)[field] = value));
+	}
+
+	function toggleKnobNumber(field: KnobField, on: boolean, seed?: number): void {
 		patch((s) => {
-			if (on) s.knobs[key] = KNOB_SEEDS[key];
-			else delete s.knobs[key];
+			if (on) knobsOf(s)[field] = seed ?? 0;
+			else delete knobsOf(s)[field];
 		});
 	}
 
-	function setFont(key: FontKnob, value: string): void {
+	function setKnobSelect(field: KnobField, value: string): void {
 		patch((s) => {
-			if (value.trim()) s.knobs[key] = value;
-			else delete s.knobs[key];
+			if (value) knobsOf(s)[field] = value;
+			else delete knobsOf(s)[field];
+		});
+	}
+
+	function setKnobText(field: KnobField, value: string): void {
+		patch((s) => {
+			if (value.trim()) knobsOf(s)[field] = value;
+			else delete knobsOf(s)[field];
 		});
 	}
 
@@ -250,65 +256,47 @@
 	<div class="bench-acc__panel">
 		{#if knobCount}<div class="bench-acc__status"><span class="bench-layer__count">{knobCount} set</span></div>{/if}
 
-		<div class="bench-field">
-			<label class="bench-field__label" for="knob-scheme">Scheme</label>
-			<select id="knob-scheme" class="bench-select" value={bench.knobs.scheme ?? ""} onchange={(e) => patch((s) => { const v = (e.currentTarget as HTMLSelectElement).value; if (v) s.knobs.scheme = v as SchemeKnob; else delete s.knobs.scheme; })}>
-				<option value="">default (from background)</option>
-				<option value="dark">dark</option>
-				<option value="light">light</option>
-			</select>
-			{#if schemeConflict}
-				<p class="bench-field__conflict x-caption" role="alert">
-					forcing {bench.knobs.scheme} over a {bgScheme} background — surfaces can't separate.
-					<button type="button" class="bench-field__conflict-fix" onclick={() => patch((s) => delete s.knobs.scheme)}>use default</button>
-				</p>
-			{/if}
-		</div>
-
-		<div class="bench-field">
-			<label class="bench-field__label" for="knob-band">Contrast band</label>
-			<select id="knob-band" class="bench-select" value={bench.knobs.contrastBand ?? ""} onchange={(e) => patch((s) => { const v = (e.currentTarget as HTMLSelectElement).value; if (v) s.knobs.contrastBand = v as ContrastBandKnob; else delete s.knobs.contrastBand; })}>
-				<option value="">default</option>
-				<option value="aa">AA</option>
-				<option value="aaa">AAA</option>
-			</select>
-		</div>
-
-		<div class="bench-field">
-			<label class="bench-field__label" for="knob-density">Density</label>
-			<select id="knob-density" class="bench-select" value={bench.knobs.density ?? ""} onchange={(e) => patch((s) => { const v = (e.currentTarget as HTMLSelectElement).value; if (v) s.knobs.density = v as DensityKnob; else delete s.knobs.density; })}>
-				<option value="">default</option>
-				<option value="compact">compact</option>
-				<option value="normal">normal</option>
-				<option value="comfortable">comfortable</option>
-			</select>
-		</div>
-
-		{#each RANGE_META as meta (meta.key)}
-			{@const set = bench.knobs[meta.key] !== undefined}
-			<div class="bench-field">
-				<div class="bench-anchor__row">
-					<label class="bench-field__label" for={`knob-${meta.key}`}>
-						{meta.label}
-						{#if set}<span class="bench-field__value">{bench.knobs[meta.key]?.toFixed(meta.digits ?? 2)}{meta.unit ?? ""}</span>{:else}<span class="bench-default-tag">default</span>{/if}
-					</label>
-					<label class="bench-toggle">
-						<input type="checkbox" checked={set} onchange={(e) => toggleRange(meta.key, (e.currentTarget as HTMLInputElement).checked)} />
-						<span>custom</span>
-					</label>
+		{#each knobSpecs as spec (spec.field)}
+			{#if spec.kind === "select"}
+				<div class="bench-field">
+					<label class="bench-field__label" for={`knob-${spec.field}`}>{spec.label}</label>
+					<select id={`knob-${spec.field}`} class="bench-select" value={knobValue(spec.field) ?? ""} onchange={(e) => setKnobSelect(spec.field, (e.currentTarget as HTMLSelectElement).value)}>
+						{#each spec.options ?? [] as opt (opt.value)}
+							<option value={opt.value}>{opt.label}</option>
+						{/each}
+					</select>
+					{#if spec.field === "scheme" && schemeConflict}
+						<p class="bench-field__conflict x-caption" role="alert">
+							forcing {bench.knobs.scheme} over a {bgScheme} background — surfaces can't separate.
+							<button type="button" class="bench-field__conflict-fix" onclick={() => patch((s) => delete s.knobs.scheme)}>use default</button>
+						</p>
+					{/if}
 				</div>
-				<input id={`knob-${meta.key}`} class="bench-range" type="range" min={meta.min} max={meta.max} step={meta.step} disabled={!set} value={bench.knobs[meta.key] ?? KNOB_SEEDS[meta.key]} oninput={(e) => setRange(meta.key, Number((e.currentTarget as HTMLInputElement).value))} />
-			</div>
-		{/each}
-
-		{#each FONT_META as meta (meta.key)}
-			<div class="bench-field">
-				<label class="bench-field__label" for={`knob-${meta.key}`}>
-					{meta.label}
-					{#if bench.knobs[meta.key] === undefined}<span class="bench-default-tag">default</span>{/if}
-				</label>
-				<input id={`knob-${meta.key}`} class="bench-text" type="text" spellcheck="false" placeholder="algorithm default" value={bench.knobs[meta.key] ?? ""} oninput={(e) => setFont(meta.key, (e.currentTarget as HTMLInputElement).value)} />
-			</div>
+			{:else if spec.kind === "range"}
+				{@const value = knobValue(spec.field)}
+				{@const set = value !== undefined}
+				<div class="bench-field">
+					<div class="bench-anchor__row">
+						<label class="bench-field__label" for={`knob-${spec.field}`}>
+							{spec.label}
+							{#if set}<span class="bench-field__value">{(value as number).toFixed(spec.digits ?? 2)}{spec.unit ?? ""}</span>{:else}<span class="bench-default-tag">default</span>{/if}
+						</label>
+						<label class="bench-toggle">
+							<input type="checkbox" checked={set} onchange={(e) => toggleKnobNumber(spec.field, (e.currentTarget as HTMLInputElement).checked, spec.seed)} />
+							<span>custom</span>
+						</label>
+					</div>
+					<input id={`knob-${spec.field}`} class="bench-range" type="range" min={spec.min} max={spec.max} step={spec.step} disabled={!set} value={value ?? spec.seed ?? 0} oninput={(e) => setKnobNumber(spec.field, Number((e.currentTarget as HTMLInputElement).value))} />
+				</div>
+			{:else}
+				<div class="bench-field">
+					<label class="bench-field__label" for={`knob-${spec.field}`}>
+						{spec.label}
+						{#if knobValue(spec.field) === undefined}<span class="bench-default-tag">default</span>{/if}
+					</label>
+					<input id={`knob-${spec.field}`} class="bench-text" type="text" spellcheck="false" placeholder={spec.placeholder} value={knobValue(spec.field) ?? ""} oninput={(e) => setKnobText(spec.field, (e.currentTarget as HTMLInputElement).value)} />
+				</div>
+			{/if}
 		{/each}
 	</div>
 	{:else if value === "palette"}

@@ -131,6 +131,26 @@ const uptime = [
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Units in the hover readout</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>format</code> makes the hover value speak the metric's units — sweep across
+				these and the readout reads <code>1.5m</code> or <code>87%</code>, not a bare number.
+			</Text>
+			<Grid min="14rem" gap={4}>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">Latency (format="duration")</Text>
+					<Sparkline values={[42, 58, 90, 73, 120, 66, 54]} format="duration" bounds="duration" variant="area" tone="warn" label="Latency, seconds" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">Load (format="percent")</Text>
+					<Sparkline values={[38, 41, 52, 49, 87, 58, 71]} format="percent" bounds="percent" variant="area" tone="info" label="Load, percent" style="--spark-width: 100%; --spark-height: 2.4rem;" />
+				</Stack>
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Inline in text</Heading>
 		<Text>
 			Signups climbed

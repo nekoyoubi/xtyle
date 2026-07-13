@@ -17,4 +17,4 @@
 	let { name, size = "md", tone, colors, label, spin = false, ...rest }: Props = $props();
 </script>
 
-<xtyle-icon {...rest} {name} {size} {tone} {colors} {label} spin={spin ? "" : undefined}></xtyle-icon>
+<xtyle-icon {...rest} {name} {size} {tone} {colors} {label} spin={spin ? true : undefined}></xtyle-icon>

@@ -2,10 +2,14 @@ export { default as Button } from "./Button.svelte";
 export { default as Field } from "./Field.svelte";
 export { default as Card } from "./Card.svelte";
 export { default as Badge } from "./Badge.svelte";
+export { default as Dot } from "./Dot.svelte";
+export { default as Ribbon } from "./Ribbon.svelte";
 export { default as Switch } from "./Switch.svelte";
 export { default as Alert } from "./Alert.svelte";
 export { default as Link } from "./Link.svelte";
 export { default as AppShell } from "./AppShell.svelte";
+export { default as MobileShell } from "./MobileShell.svelte";
+export { default as BottomNav } from "./BottomNav.svelte";
 export { default as Toolbar } from "./Toolbar.svelte";
 export { default as Dock } from "./Dock.svelte";
 export { default as Panel } from "./Panel.svelte";
@@ -64,6 +68,7 @@ export { default as Menu } from "./Menu.svelte";
 export { default as Splitter } from "./Splitter.svelte";
 export { default as Code } from "./Code.svelte";
 export { default as Pagination } from "./Pagination.svelte";
+export { default as QrCode } from "./Qr.svelte";
 export { default as DockZone } from "./DockZone.svelte";
 
 export {
@@ -71,6 +76,8 @@ export {
 	XtyleField,
 	XtyleCard,
 	XtyleBadge,
+	XtyleDot,
+	XtyleRibbon,
 	XtyleSwitch,
 	XtyleAlert,
 	XtyleLink,

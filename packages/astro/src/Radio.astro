@@ -14,6 +14,10 @@ interface Props {
 	invalid?: boolean;
 	label?: string;
 	labelledby?: string;
+	/** A secondary line of explanation under the label (wired to the input's `aria-describedby`). */
+	description?: string;
+	/** Render the radio as a full-width option card: a bordered box that takes an accent ring and tint when selected. */
+	card?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -31,11 +35,14 @@ const {
 	invalid = false,
 	label,
 	labelledby,
+	description,
+	card = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
 
+const descriptionId = `xtyle-radio-desc-${Math.random().toString(36).slice(2, 8)}`;
 const bindings = {
 	tone,
 	size,
@@ -46,6 +53,9 @@ const bindings = {
 	invalid,
 	label: label ?? null,
 	labelledby: labelledby ?? null,
+	description: description ?? null,
+	card,
+	descriptionId,
 };
 const light = await renderFragmentLight("radio", bindings);
 const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : null;
@@ -63,6 +73,8 @@ const composed = slotHtml !== null ? light.replace(/<slot>[\s\S]*?<\/slot>/, () 
 	invalid={invalid || undefined}
 	label={label}
 	labelledby={labelledby}
+	description={description}
+	card={card || undefined}
 	class={extra}
 	set:html={composed}
 	{...rest}

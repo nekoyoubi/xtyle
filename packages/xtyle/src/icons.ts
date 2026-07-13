@@ -41,6 +41,8 @@ export type IconName =
 	| "stop"
 	| "skip-forward"
 	| "skip-back"
+	| "volume"
+	| "volume-off"
 	| "gear"
 	| "folder"
 	| "pencil"
@@ -115,6 +117,8 @@ export const ICONS: Record<IconName, string> = {
 	stop: `<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>`,
 	"skip-forward": fill("M6 5l9 7-9 7z") + bar(16, 2.6),
 	"skip-back": fill("M18 5l-9 7 9 7z") + bar(5.4, 2.6),
+	volume: fill("M11 5L6 9H3v6h3l5 4V5z") + stroke("M15.5 8.5a5 5 0 0 1 0 7") + stroke("M18.5 6a9 9 0 0 1 0 12"),
+	"volume-off": fill("M11 5L6 9H3v6h3l5 4V5z") + stroke("M22 9l-6 6") + stroke("M16 9l6 6"),
 	gear:
 		stroke("M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z") +
 		stroke(

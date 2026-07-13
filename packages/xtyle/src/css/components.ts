@@ -16,10 +16,14 @@ import { buttonCss } from "./components/button.js";
 import { cardCss } from "./components/card.js";
 import { fieldCss } from "./components/field.js";
 import { badgeCss } from "./components/badge.js";
+import { dotCss } from "./components/dot.js";
+import { ribbonCss } from "./components/ribbon.js";
 import { switchCss } from "./components/switch.js";
 import { alertCss } from "./components/alert.js";
 import { linkCss } from "./components/link.js";
 import { appShellCss } from "./components/app-shell.js";
+import { mobileShellCss } from "./components/mobile-shell.js";
+import { bottomNavCss } from "./components/bottom-nav.js";
 import { toolbarCss } from "./components/toolbar.js";
 import { dockCss } from "./components/dock.js";
 import { panelCss } from "./components/panel.js";
@@ -72,6 +76,7 @@ import { barCss } from "./components/bar.js";
 import { sparklineCss } from "./components/sparkline.js";
 import { heatmapCss } from "./components/heatmap.js";
 import { pieCss } from "./components/pie.js";
+import { qrCss } from "./components/qr.js";
 import { swatchCss } from "./components/swatch.js";
 import { menuCss } from "./components/menu.js";
 import { codeCss } from "./components/code.js";
@@ -84,6 +89,8 @@ import { paginationCss } from "./components/pagination.js";
  * last `isolated` consumer. */
 const hostDisplayCss = [
 	"xtyle-badge { display: inline-flex; }",
+	"xtyle-dot { display: inline-flex; align-items: center; justify-content: center; line-height: 0; vertical-align: middle; }",
+	"xtyle-ribbon { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 1; }",
 	"xtyle-form-group { display: block; }",
 	"xtyle-cluster { display: block; } xtyle-cluster[inline] { display: inline-block; }",
 	"xtyle-stack { display: block; } xtyle-stack[inline] { display: inline-block; }",
@@ -102,6 +109,7 @@ const hostDisplayCss = [
 	"xtyle-sparkline { display: inline-block; }",
 	"xtyle-heatmap { display: block; }",
 	"xtyle-pie { display: block; }",
+	"xtyle-qr { display: inline-block; }",
 	"xtyle-spinner { display: inline-flex; }",
 	"xtyle-skeleton { display: block; }",
 	"xtyle-link { display: inline; }",
@@ -122,7 +130,7 @@ const hostDisplayCss = [
 	"xtyle-toc { display: block; }",
 	"xtyle-statusbar { display: block; }",
 	"xtyle-checkbox { display: inline-block; }",
-	"xtyle-radio { display: inline-flex; } xtyle-radio[hidden] { display: none; }",
+	"xtyle-radio { display: inline-flex; } xtyle-radio[card] { display: block; } xtyle-radio[hidden] { display: none; }",
 	"xtyle-textarea { display: block; }",
 	"xtyle-number-input { display: inline-block; }",
 	"xtyle-slider { display: block; }",
@@ -155,10 +163,14 @@ export const componentsCss: string = [
 	cardCss,
 	fieldCss,
 	badgeCss,
+	dotCss,
+	ribbonCss,
 	switchCss,
 	alertCss,
 	linkCss,
 	appShellCss,
+	mobileShellCss,
+	bottomNavCss,
 	toolbarCss,
 	dockCss,
 	panelCss,
@@ -211,6 +223,7 @@ export const componentsCss: string = [
 	sparklineCss,
 	heatmapCss,
 	pieCss,
+	qrCss,
 	swatchCss,
 	menuCss,
 	codeCss,

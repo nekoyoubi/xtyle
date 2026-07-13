@@ -132,6 +132,25 @@ export function formatCss(input: string | OklchColor): string {
 	return formatHex(culoriColor) ?? "#000000";
 }
 
+/**
+ * Normalises any colour to hex for consumers that only speak hex (Monaco themes,
+ * xterm.js `ITheme`, terminal-emulator configs). `formatCss` renders alpha colours
+ * as `rgba(...)`, so this folds both of its output shapes into `#rrggbb` / `#rrggbbaa`.
+ */
+export function cssToHex(input: string | OklchColor): string {
+	const css = formatCss(input);
+	if (css.startsWith("#")) return css;
+	const parts = css
+		.match(/rgba?\(([^)]+)\)/)?.[1]
+		?.split(",")
+		.map((s) => s.trim());
+	if (!parts) return css;
+	const byte = (n: number): string => Math.round(n).toString(16).padStart(2, "0");
+	const [r, g, b] = parts.slice(0, 3).map((n) => byte(Number.parseFloat(n)));
+	const a = parts[3] === undefined ? "" : byte(Number.parseFloat(parts[3]) * 255);
+	return `#${r}${g}${b}${a}`;
+}
+
 export function schemeOf(bg: string | OklchColor): "dark" | "light" {
 	return lightness(bg) < 0.5 ? "dark" : "light";
 }

@@ -142,9 +142,23 @@ that surface is the input-side mirror of the open-register decision. Two poles:
   weird stuff. Lets "swap the algorithm, keep my cyan + orange and my mid-high
   contrast" do something predictable.
 
-Open: the exact blessed set, knob types (enum / range / color / list), how an
-algorithm maps a blessed intent onto its internal rules, and how composed /
-inherited algorithms merge or override an ancestor's declared knobs.
+Open: the exact blessed set, how an algorithm maps a blessed intent onto its
+internal rules, and how composed / inherited algorithms merge or override an
+ancestor's declared knobs.
+
+**Knob types are now DECIDED (structured, algorithm-declared).** A knob is no longer a
+bare name: an algorithm declares each one's *domain* as a `KnobSpec` (`kind`:
+`select` | `range` | `text`, plus per-kind `min` / `max` / `step` / `options` /
+`default`), carried on `Algorithm.knobSpecs` and threaded through the `manifest()`
+export and the sandboxed host, so the editing surface renders a knob's control
+*from* the algorithm's own declaration. The blessed scalar knobs resolve their
+domains from a shared registry; a novel knob of the algorithm's own self-renders from
+the spec it ships. The split the shape settled on: the algorithm owns the *domain*
+(kind, range, options, the valid inputs) and a consumer owns only cosmetics (a
+localized label, digit precision), so the two never re-litigate who decides a knob's
+values. `color` / `list` kinds are intentionally not in the type yet (a boolean folds
+onto `select`, a color onto the token-override tier); they can join if a real knob
+needs one.
 
 ## 10. Discovery & resolution: sub-forks
 
@@ -176,17 +190,26 @@ passes its per-token AA invariant while failing the *product*: the gauntlet chec
 each token in isolation, so none of these were caught. Each is per-algorithm policy,
 not architecture:
 
-- **Accent-2/3/4 identity: shade ladder vs harmonic.** `accent-2`/`-3` flank the
-  accent at ∓half the shift step and `accent-4` is its 180° complement (a
-  split-complement fan off the base, each member derived independently and
-  individually pinnable), so a chromatic brand yields a harmonious, distinct
-  four-color set rather than a tight analogous huddle. The categorical posture is the
-  current default; a shade ladder of the accent (deeper / lighter around the one brand
-  hue) remains the likely answer for a branding-first posture, so the fork is still
-  open, possibly per-algorithm (ties to #3). Re-confirmed dogfooding seven brand /
-  hostile palettes: chromatic accents spread cleanly, but a near-gray accent still
-  collapses to near-identical grays (hue rotation can't separate what has no chroma;
-  see the next bullet).
+- **Accent-2/3/4 identity: SETTLED — it is a knob, not a taste.** This began as "shade ladder vs
+  harmonic," became an algorithm-declared taste field (`accentFan`), and has now landed where it
+  belonged: **`accentStrategy` is a first-class knob** on the shared derivation, taking `fan`
+  (the default: 2/3 flank the accent at ∓`accentSplit`, 4 is its 180° complement), `step` (an even
+  hue-walk, each accent one `accentShiftStep` past the last, chaining a pinned wing with it),
+  `shade` (2/3/4 hold the accent's hue and step its lightness — a tint up, two deeper shades down),
+  or `duo` (two brand anchors: `--accent` *and* `--accent-2` are inputs, and 3/4 are their shades,
+  placed against the pair's mean lightness so the two ramps read as one system). An algorithm still
+  declares its own default posture via the `accentStrategy` spec field, but that is now a *default*,
+  not a lock — a theme reshapes the accent family without needing a whole algorithm to do it.
+
+  This is what retired `xtyle-brand`: a sixth blessed algorithm whose entire reason to exist was
+  "the default, but with a shade ladder" is a knob wearing an algorithm's clothes. Its output is
+  reachable as `accentStrategy: "shade"`, and stored themes naming it migrate onto the knob.
+
+  What stays open is narrower: whether a near-gray accent's *hue* postures (`fan` / `step`) should
+  borrow the status chroma-floor, the look call below. `shade` and `duo` sidestep it by separating on
+  lightness. Confirmed dogfooding seven brand / hostile palettes: chromatic accents spread cleanly
+  under every strategy, and a near-gray accent still collapses to near-identical grays under the
+  *hue* strategies (hue rotation can't separate what has no chroma; see the next bullet).
 - **Low-chroma / contrast-floor accent fallback: the *vanish* is FIXED; the *ramp* taste fork stays open.**
   The accent only ever moves on hue/chroma, so when chroma collapses (near-gray accent) it can't
   separate from neutral. Dogfooding showed the failure is broader than chroma: *any* solid page-paint
@@ -200,11 +223,12 @@ not architecture:
   minimum `1.5:1` separation, and a `solid fills separate from --bg-0` gauntlet invariant guards the
   line. A healthy chromatic fill already clears it and is untouched (amber `1.88`, vivid blue `4.53`),
   so only the degenerate near-coincident cases move; a pinned fill is honored verbatim. What *remains*
-  open is purely the **categorical taste fork**: a pure-gray accent still fans `accent-2/3/4` into four
-  byte-identical grays (hue rotation is a no-op with no chroma to turn), the same `accent-N` identity
-  question (split-complement vs shade-ladder, §11 first bullet), and whether the fan should borrow the
-  status chroma-floor so a muted brand's accents stay mutually distinguishable. That's a look call, not
-  a safety one; surface, don't force.
+  open is purely the **categorical taste fork for the *hue* strategies**: a pure-gray accent still fans
+  `accent-2/3/4` into four byte-identical grays under `fan` / `step` (hue rotation is a no-op with no
+  chroma to turn), and whether that hue fan should borrow the status chroma-floor so a muted brand's
+  accents stay mutually distinguishable. The `shade` and `duo` strategies (§11 first bullet) sidestep it
+  by separating on lightness instead of hue; whether a *hue* strategy should chroma-floor a near-gray fan
+  is a look call, not a safety one; surface, don't force.
 - **Bare `--accent` as a non-text affordance: the fill floor (1.5:1) is below the WCAG non-text floor (3:1).**
   The safety floor above guarantees a solid fill *separates* from `--bg-0` (≥1.5:1, so it can't vanish), tuned
   for `--accent` as a **fill** with `--accent-fg` on top. But dogfooding a *derived-accent* sweep (bg only, no

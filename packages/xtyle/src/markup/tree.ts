@@ -1,4 +1,4 @@
-import type { Size } from "../vocab.js";
+import type { Size, FullTone } from "../vocab.js";
 import { escapeHtml, escapeAttr } from "./escape.js";
 
 /** A trailing per-row control: a glyph and the accessible name it fires a `tree-action` with. */
@@ -7,6 +7,21 @@ export interface TreeAction {
 	label: string;
 	/** A short glyph or emoji shown on the button; `label` is its accessible name. */
 	icon?: string;
+	/** Render the button greyed and non-firing (a positional control disabled by context), instead of omitting it. */
+	disabled?: boolean;
+}
+
+/** A trailing pill after a row's label — text with an optional tone, so a count and a status pill can each carry their own color. */
+export interface TreeBadge {
+	text: string;
+	tone?: FullTone;
+}
+
+/** Normalize a node's `badge` (a string, a single `TreeBadge`, or a mix) into a list of toned pills. */
+export function treeBadges(badge: TreeNode["badge"]): TreeBadge[] {
+	if (badge == null) return [];
+	const list = Array.isArray(badge) ? badge : [badge];
+	return list.map((b) => (typeof b === "string" ? { text: b } : b));
 }
 
 export interface TreeNode {
@@ -20,26 +35,33 @@ export interface TreeNode {
 	locked?: boolean;
 	selected?: boolean;
 	disabled?: boolean;
-	/** Trailing text after the label (a count or status), shown always. Decorative (`aria-hidden`); put anything the row must announce in `label`. */
-	badge?: string;
+	/** Trailing content after the label (a count or status), shown always. A plain string, a toned
+	 * `TreeBadge`, or a list of them (a count plus a distinct status pill). Decorative (`aria-hidden`);
+	 * put anything the row must announce in `label`. */
+	badge?: string | TreeBadge | Array<string | TreeBadge>;
 	/** Trailing action buttons revealed on hover/focus, each firing a `tree-action` (`detail: { value, action }`). Rendered on non-link rows only. */
 	actions?: TreeAction[];
 	children?: TreeNode[];
 }
 
-/** The trailing content after a row's label: a badge, then hover-revealed action buttons (non-link rows only). */
+/** The trailing content after a row's label: badge pills, then hover-revealed action buttons (non-link rows only). */
 export function treeTrailing(node: TreeNode, value: string, isLink: boolean): string {
-	const badge = node.badge ? `<span class="xtyle-tree__badge" part="badge" aria-hidden="true">${escapeHtml(node.badge)}</span>` : "";
+	const badges = treeBadges(node.badge)
+		.map(
+			(b) =>
+				`<span class="xtyle-tree__badge${b.tone ? ` xtyle-tree__badge--${b.tone}` : ""}" part="badge" aria-hidden="true">${escapeHtml(b.text)}</span>`,
+		)
+		.join("");
 	const actionItems = !isLink && node.actions ? node.actions : [];
 	const actions = actionItems.length
 		? `<span class="xtyle-tree__actions" part="actions">${actionItems
-				.map(
-					(a) =>
-						`<button type="button" class="xtyle-tree__action" part="row-action" data-action="${escapeAttr(a.id)}" data-value="${escapeAttr(value)}" aria-label="${escapeAttr(a.label)}" title="${escapeAttr(a.label)}" tabindex="-1">${escapeHtml(a.icon ?? a.label)}</button>`,
-				)
+				.map((a) => {
+					const disabled = a.disabled ? ` disabled data-disabled="true"` : "";
+					return `<button type="button" class="xtyle-tree__action" part="row-action" data-action="${escapeAttr(a.id)}" data-value="${escapeAttr(value)}" aria-label="${escapeAttr(a.label)}" title="${escapeAttr(a.label)}" tabindex="-1"${disabled}>${escapeHtml(a.icon ?? a.label)}</button>`;
+				})
 				.join("")}</span>`
 		: "";
-	return badge || actions ? `<span class="xtyle-tree__trailing">${badge}${actions}</span>` : "";
+	return badges || actions ? `<span class="xtyle-tree__trailing">${badges}${actions}</span>` : "";
 }
 
 export interface TreeMarkupProps {

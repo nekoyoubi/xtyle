@@ -7,7 +7,7 @@ type Size = "sm" | "md" | "lg";
 
 interface Props {
 	value?: string;
-	options?: string | ReadonlyArray<string | { value: string; label?: string; disabled?: boolean; badge?: string }>;
+	options?: string | ReadonlyArray<string | { value: string; label?: string; disabled?: boolean; badge?: string; title?: string }>;
 	disabled?: boolean;
 	size?: Size;
 	tone?: Tone;

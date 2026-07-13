@@ -16,13 +16,19 @@ export const appShellCss = `
 	--xtyle-app-right: auto;
 	display: grid;
 	grid-template-columns: var(--xtyle-app-left) auto minmax(0, 1fr) var(--xtyle-app-right);
+	grid-template-rows: minmax(0, 1fr);
 	min-width: 0;
 	min-height: 0;
 	overflow: hidden;
 	position: relative;
 }
+/* The body's single row is clamped to its own (viewport-bounded) height, not the tallest column's
+   content; without this, a rail or main taller than the shell blows the row out and every column
+   overflows the shell behind the status bar. Each column then scrolls its own overflow. */
 .xtyle-app__rail {
 	min-width: 0;
+	min-height: 0;
+	overflow-y: auto;
 }
 /* A dock's host element carries a standalone default width (14/18/22rem by size); in a rail it must
    fill the shell-sized track instead, or its edge border overhangs the rail and bleeds into main. */
@@ -134,11 +140,15 @@ export const appShellCss = `
 	}
 	.xtyle-app__body {
 		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto;
 		overflow: visible;
 	}
 	.xtyle-main {
 		grid-column: 1;
 		overflow: visible;
+	}
+	.xtyle-app__rail {
+		overflow-y: visible;
 	}
 	.xtyle-app__rail--left,
 	.xtyle-app__rail--right {

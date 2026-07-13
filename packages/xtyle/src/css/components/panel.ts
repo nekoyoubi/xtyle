@@ -48,7 +48,7 @@ export const panelCss = `
 .xtyle-panel--scroll .xtyle-panel__body {
 	overflow-y: auto;
 	max-height: var(--space-8);
-	scrollbar-color: var(--line-2) transparent;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 .xtyle-panel--scroll .xtyle-panel__body:focus-visible {
 	outline: var(--border-normal) solid transparent;

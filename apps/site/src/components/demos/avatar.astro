@@ -14,26 +14,62 @@ const TONE_GROUPS = [
 	{ label: "Named hues", tones: [...HUES] },
 ] as const;
 const people = [
-	{ tone: "accent", initials: "AL", name: "Ada Lovelace" },
-	{ tone: "success", initials: "GH", name: "Grace Hopper" },
-	{ tone: "warn", initials: "KJ", name: "Katherine Johnson" },
-	{ tone: "danger", initials: "RM", name: "Radia Perlman" },
-	{ tone: "info", initials: "BL", name: "Barbara Liskov" },
-	{ tone: "neutral", initials: "MH", name: "Margaret Hamilton" },
+	{ tone: "accent", name: "Ada Lovelace" },
+	{ tone: "success", name: "Grace Hopper" },
+	{ tone: "warn", name: "Katherine Johnson" },
+	{ tone: "danger", name: "Radia Perlman" },
+	{ tone: "info", name: "Barbara Liskov" },
+	{ tone: "neutral", name: "Margaret Hamilton" },
 ] as const;
 const statuses = ["success", "warn", "danger", "neutral"] as const;
 ---
 
 <Stack gap={6}>
 	<Card>
-		<Heading slot="header" level={3} size="sm">Initials fallback across tones</Heading>
-		<Cluster gap={3} align="center">
-			{
-				people.map((p) => (
-					<Avatar tone={p.tone} alt={p.name}>{p.initials}</Avatar>
-				))
-			}
-		</Cluster>
+		<Heading slot="header" level={3} size="sm">Initials derived from the name</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				Pass <code>userName</code> and the initials fall out of it — no image, nothing slotted, nothing
+				hand-typed. Two words give first + last; one word gives one letter.
+			</Text>
+			<Cluster gap={3} align="center">
+				{people.map((p) => <Avatar tone={p.tone} userName={p.name} />)}
+				<Avatar tone="purple" userName="Prince" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">What fills the chip</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				An image wins when it loads. Otherwise slotted content wins over the derived initials, so
+				<code>userName</code> is the floor, not a ceiling.
+			</Text>
+			<Cluster gap={4} align="center">
+				<Stack gap={2} align="center">
+					<Avatar size="lg" tone="accent" userName="Ada Lovelace" />
+					<Text size="xs" tone="muted" mono>userName</Text>
+				</Stack>
+				<Stack gap={2} align="center">
+					<Avatar size="lg" tone="warn" userName="Project Apollo">🚀</Avatar>
+					<Text size="xs" tone="muted" mono>slot overrides</Text>
+				</Stack>
+				<Stack gap={2} align="center">
+					<Avatar size="lg" tone="info" alt="System account">
+						<svg slot="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+							<path d="M12 14a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+							<path d="M5 20a7 7 0 0 1 14 0" stroke-linecap="round" />
+						</svg>
+					</Avatar>
+					<Text size="xs" tone="muted" mono>icon slot</Text>
+				</Stack>
+				<Stack gap={2} align="center">
+					<Avatar size="lg" tone="success" userName="Grace Hopper" status="success" statusLabel="Online" />
+					<Text size="xs" tone="muted" mono>+ presence</Text>
+				</Stack>
+			</Cluster>
+		</Stack>
 	</Card>
 
 	<Card>
@@ -54,11 +90,11 @@ const statuses = ["success", "warn", "danger", "neutral"] as const;
 		<Heading slot="header" level={3} size="sm">Sizes, circle and square</Heading>
 		<Stack gap={4}>
 			<Cluster gap={3} align="center">
-				{sizes.map((size) => <Avatar size={size} tone="accent" alt="Ada Lovelace">AL</Avatar>)}
+				{sizes.map((size) => <Avatar size={size} tone="accent" userName="Ada Lovelace" />)}
 			</Cluster>
 			<Cluster gap={3} align="center">
 				{sizes.map((size) => (
-					<Avatar size={size} shape="square" tone="purple" alt="Grace Hopper">GH</Avatar>
+					<Avatar size={size} shape="square" tone="purple" userName="Grace Hopper" />
 				))}
 			</Cluster>
 		</Stack>
@@ -75,8 +111,8 @@ const statuses = ["success", "warn", "danger", "neutral"] as const;
 							tone="neutral"
 							status={status}
 							statusLabel={status}
-							alt="Team member"
-						>TM</Avatar>
+							userName="Team Member"
+						/>
 						<Text size="xs" tone="muted" mono>{status}</Text>
 					</Stack>
 				))
@@ -88,45 +124,35 @@ const statuses = ["success", "warn", "danger", "neutral"] as const;
 		<Heading slot="header" level={3} size="sm">Live presence</Heading>
 		<Cluster gap={4} align="center">
 			<Stack gap={2} align="center">
-				<Avatar size="lg" tone="neutral" status="success" statusLabel="Online" pulse alt="Grace Hopper">GH</Avatar>
+				<Avatar size="lg" tone="neutral" status="success" statusLabel="Online" pulse userName="Grace Hopper" />
 				<Text size="xs" tone="muted" mono>pulse</Text>
 			</Stack>
 			<Stack gap={2} align="center">
-				<Avatar size="lg" tone="neutral" status="warn" statusLabel="Streaming" pulse="fast" alt="Ada Lovelace">AL</Avatar>
+				<Avatar size="lg" tone="neutral" status="warn" statusLabel="Streaming" pulse="fast" userName="Ada Lovelace" />
 				<Text size="xs" tone="muted" mono>pulse="fast"</Text>
 			</Stack>
 			<Stack gap={2} align="center">
-				<Avatar size="lg" tone="neutral" status="neutral" statusLabel="Idle" alt="Katherine Johnson">KJ</Avatar>
+				<Avatar size="lg" tone="neutral" status="neutral" statusLabel="Idle" userName="Katherine Johnson" />
 				<Text size="xs" tone="muted" mono>static</Text>
 			</Stack>
 		</Cluster>
 	</Card>
 
 	<Card>
-		<Heading slot="header" level={3} size="sm">Icon fallback and stacked group</Heading>
-		<Stack gap={4}>
-			<Cluster gap={3} align="center">
-				<Avatar size="lg" tone="info" alt="System account">
-					<svg slot="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-						<path d="M12 14a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-						<path d="M5 20a7 7 0 0 1 14 0" stroke-linecap="round" />
-					</svg>
-				</Avatar>
-				<Avatar size="lg" tone="success" alt="Automated bot">
-					<svg slot="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-						<rect x="5" y="8" width="14" height="11" rx="2.5" />
-						<path d="M12 8V4M9 13h.01M15 13h.01" stroke-linecap="round" />
-					</svg>
-				</Avatar>
-			</Cluster>
+		<Heading slot="header" level={3} size="sm">Stacked group</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				Each face derives its own initials; the overflow chip slots <code>+5</code> over them.
+			</Text>
 			<Cluster gap={0} align="center" class="demo-stacked">
-				{["AL", "GH", "KJ", "RM", "+5"].map((label, i) => (
+				{["Ada Lovelace", "Grace Hopper", "Katherine Johnson", "Radia Perlman"].map((name, i) => (
 					<Avatar
 						size="md"
-						tone={(["accent", "purple", "green", "orange", "neutral"] as const)[i]}
-						alt={`Member ${label}`}
-					>{label}</Avatar>
+						tone={(["accent", "purple", "green", "orange"] as const)[i]}
+						userName={name}
+					/>
 				))}
+				<Avatar size="md" tone="neutral" alt="5 more members">+5</Avatar>
 			</Cluster>
 		</Stack>
 	</Card>

@@ -54,10 +54,16 @@ export * from "./audit.js";
 export * from "./convert.js";
 export * from "./series.js";
 export * from "./timeseries.js";
+export { encodeQr, qrPath } from "./qr.js";
+export type { QrEcLevel, QrMatrix, QrModuleShape, EncodeQrOptions, QrPathOptions, QrPath } from "./qr.js";
+export type { QrMode, QrIconSize } from "./markup/qr.js";
+export { qrLogoModules, qrLinkHref, QR_LOGO_SCALE, QR_ICON_SCALES, QR_ICON_SIZES } from "./markup/qr.js";
 export { constraintsFrom } from "./constraints.js";
 export { tableParts } from "./markup/table.js";
+export { avatarInitials } from "./markup/avatar.js";
 export type { TablePart } from "./markup/table.js";
-export { resolveSparklineBounds } from "./markup/sparkline.js";
+export { resolveSparklineBounds, formatSparklineValue } from "./markup/sparkline.js";
+export { hoverMediaHtml } from "./markup/image.js";
 export type {
 	BarSeries,
 	BarScheme,
@@ -68,9 +74,16 @@ export type {
 	SparklineVariant,
 	SparklineTone,
 	SparklineBounds,
+	SparklineFormat,
 	ImageFit,
 	ImageRadius,
 	ImageLoading,
+	ImageTrigger,
+	ImageHoverAudio,
+	DialogSize,
+	TreeNode,
+	TreeAction,
+	TreeBadge,
 } from "./markup/index.js";
 export * from "./graph.js";
 export {
@@ -79,6 +92,7 @@ export {
 	emitJson,
 	emitMonaco,
 	emitPrism,
+	emitTerminal,
 	emitters,
 	registerEmitter,
 } from "./emit/index.js";
@@ -91,6 +105,7 @@ export {
 	serializeThemeFile,
 	isThemeFile,
 	parseThemeFile,
+	migrateRecipe,
 	type ThemeFileMeta,
 	type ThemeRecipe,
 	type XtyleThemeFile,
@@ -135,6 +150,8 @@ export {
 	buildPassContext,
 	DEFAULT_ANCHORS,
 	SHARED_KNOBS,
+	SHARED_KNOB_SPECS,
+	resolveKnobSpecs,
 	KEYWORD_DOMAINS,
 	type PresetDefaults,
 	type PresetAnchors,

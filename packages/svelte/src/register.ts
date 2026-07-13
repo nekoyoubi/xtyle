@@ -3,6 +3,8 @@ export {
 	XtyleField,
 	XtyleCard,
 	XtyleBadge,
+	XtyleDot,
+	XtyleRibbon,
 	XtyleSwitch,
 	XtyleAlert,
 	XtyleLink,
@@ -64,6 +66,7 @@ export {
 	XtyleSplitter,
 	XtyleCode,
 	XtylePagination,
+	XtyleQrCode,
 	XtyleDockZone,
 } from "@xtyle/core/elements";
 

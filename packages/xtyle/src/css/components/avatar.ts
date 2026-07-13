@@ -8,7 +8,9 @@ const toneFallback = FULL_TONES.map(
 ).join("\n");
 
 // The presence dot is a status signal, not a free color choice — it stays on the semantic roles.
-const statusTones = STATUS_TONES.map((t) => `.xtyle-avatar--status-${t} .xtyle-avatar__status-dot { background: var(--${t}); }`).join("\n");
+const statusTones = STATUS_TONES.map(
+	(t) => `.xtyle-avatar--status-${t} .xtyle-avatar__status-dot { --dot-color: var(--${t}); }`,
+).join("\n");
 
 export const avatarCss = `
 [data-avatar] { display: contents; }
@@ -71,42 +73,31 @@ export const avatarCss = `
 	color: var(--neutral-text);
 	user-select: none;
 	text-transform: uppercase;
-	letter-spacing: var(--space-0);
 }
 .xtyle-avatar__fallback svg {
 	width: 60%;
 	height: 60%;
 }
+.xtyle-avatar__initials {
+	line-height: 1;
+}
 ${toneFallback}
+/* The presence dot is the shared .xtyle-dot primitive — shape, tone plumbing, pulse, and its
+   reduced-motion hold-still all come from there. What is genuinely the avatar's own is the geometry:
+   it scales with the chip rather than sitting on the dot size ramp, and it wears a ring so it reads
+   against the portrait behind it. avatarCss is emitted after dotCss, so these override cleanly. */
 .xtyle-avatar__status-dot {
 	position: absolute;
-	display: block;
 	width: 28%;
 	height: 28%;
 	min-width: var(--space-2);
 	min-height: var(--space-2);
 	inset-block-end: 0;
 	inset-inline-end: 0;
-	background: var(--neutral);
-	border-radius: var(--radius-full);
 	box-shadow: 0 0 0 var(--border-thick) var(--bg-1);
 }
 .xtyle-avatar--square .xtyle-avatar__status-dot {
-	inset-block-end: 0;
-	inset-inline-end: 0;
 	transform: translate(25%, 25%);
-}
-.xtyle-avatar--pulse-slow .xtyle-avatar__status-dot {
-	animation: xtyle-badge-pulse 1.8s var(--ease-standard) infinite;
-}
-.xtyle-avatar--pulse-fast .xtyle-avatar__status-dot {
-	animation: xtyle-badge-pulse 0.9s var(--ease-standard) infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-	.xtyle-avatar--pulse-slow .xtyle-avatar__status-dot,
-	.xtyle-avatar--pulse-fast .xtyle-avatar__status-dot {
-		animation: none;
-	}
 }
 ${statusTones}
 `.trim();

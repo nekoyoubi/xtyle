@@ -28,6 +28,9 @@ import Text from "@xtyle/astro/Text.astro";
 			<Button variant="ghost" tone="neutral" data-open="terms">
 				Read the terms…
 			</Button>
+			<Button variant="outline" tone="accent" data-open="editor">
+				Open editor…
+			</Button>
 		</Cluster>
 	</Card>
 
@@ -76,7 +79,55 @@ import Text from "@xtyle/astro/Text.astro";
 		<Button slot="footer" variant="outline" tone="neutral" data-close>Decline</Button>
 		<Button slot="footer" variant="solid" tone="accent" data-close>Accept</Button>
 	</Dialog>
+
+	<Dialog id="editor" heading="Edit theme" size="xl">
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A wide, editor-class host. The default <code>lg</code> caps at 48rem, which
+				crushes a code editor or a multi-column form; <code>size="xl"</code> (64rem)
+				and <code>size="full"</code> are the ready-made wide steps. For an exact
+				width, a consumer styles <code>::part(dialog)</code> from its own stylesheet.
+			</Text>
+			<div class="dialog-editor">
+				<pre class="dialog-editor__code"><code>{`export const theme = derive({
+	bg: "#0f1115",
+	accent: "#5b8cff",
+	algorithm: "xtyle-default",
+});`}</code></pre>
+				<Stack gap={2} class="dialog-editor__aside">
+					<Field label="Background" value="#0f1115" />
+					<Field label="Accent" value="#5b8cff" />
+					<Field label="Algorithm" value="xtyle-default" />
+				</Stack>
+			</div>
+		</Stack>
+		<Button slot="footer" variant="ghost" tone="neutral" data-close>Cancel</Button>
+		<Button slot="footer" variant="solid" tone="accent" data-close>Save</Button>
+	</Dialog>
 </div>
+
+<style>
+	.dialog-editor {
+		display: grid;
+		grid-template-columns: 1fr 16rem;
+		gap: var(--space-4);
+		align-items: start;
+	}
+	.dialog-editor__code {
+		margin: 0;
+		padding: var(--space-4);
+		background: var(--code-bg, var(--bg-sunken));
+		color: var(--code-fg, var(--fg-1));
+		border-radius: var(--radius-md);
+		overflow-x: auto;
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+		line-height: var(--leading-normal);
+	}
+	@media (max-width: 40rem) {
+		.dialog-editor { grid-template-columns: 1fr; }
+	}
+</style>
 
 <script>
 	const root = document.querySelector<HTMLElement>("[data-dialog-demo]");

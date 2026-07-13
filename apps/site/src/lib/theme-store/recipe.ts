@@ -2,7 +2,12 @@ import type { Algorithm, TokenRegister } from "@xtyle/core";
 import { derive } from "@xtyle/core";
 import { hostedAlgorithm } from "@xtyle/core/algorithms";
 import type { BenchState } from "../../components/bench/state.js";
-import { anchorsToConstraints, defaultState, toDeriveKnobs } from "../../components/bench/state.js";
+import {
+	anchorsToConstraints,
+	defaultState,
+	retireAlgorithm,
+	toDeriveKnobs,
+} from "../../components/bench/state.js";
 import type { ThemeRecipe } from "./types.js";
 
 export { defaultState };
@@ -12,10 +17,14 @@ export function normalizeRecipe(partial: unknown): ThemeRecipe {
 	if (!partial || typeof partial !== "object") return base;
 	const p = partial as Partial<BenchState> & { pins?: TokenRegister };
 	const rawOverrides = p.overrides ?? p.pins;
+	const retired = retireAlgorithm(
+		typeof p.algorithm === "string" ? p.algorithm : base.algorithm,
+		{ ...base.knobs, ...(p.knobs ?? {}) },
+	);
 	const recipe: ThemeRecipe = {
-		algorithm: typeof p.algorithm === "string" ? p.algorithm : base.algorithm,
+		algorithm: retired.algorithm,
 		anchors: { ...base.anchors, ...(p.anchors ?? {}) },
-		knobs: { ...base.knobs, ...(p.knobs ?? {}) },
+		knobs: retired.knobs,
 		overrides:
 			rawOverrides && typeof rawOverrides === "object"
 				? ({ ...rawOverrides } as TokenRegister)

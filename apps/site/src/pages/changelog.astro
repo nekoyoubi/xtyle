@@ -29,6 +29,45 @@ import { Content as Changelog } from "../../../../CHANGELOG.md";
 	</div>
 </Base>
 
+<script>
+	const body = document.querySelector(".changelog-body");
+	if (body) {
+		const sections: { summary: HTMLHeadingElement; content: Element[] }[] = [];
+		let current: (typeof sections)[number] | null = null;
+		for (const node of [...body.children]) {
+			if (node.tagName === "H2") {
+				current = { summary: node as HTMLHeadingElement, content: [] };
+				sections.push(current);
+			} else if (current) {
+				current.content.push(node);
+			}
+		}
+		sections.forEach((section, i) => {
+			const details = document.createElement("details");
+			details.className = "changelog-version";
+			details.setAttribute("name", "changelog-versions");
+			if (section.summary.id) details.id = section.summary.id;
+			if (i === 0) details.open = true;
+			const summary = document.createElement("summary");
+			summary.className = "changelog-version__summary";
+			summary.innerHTML = section.summary.innerHTML;
+			details.appendChild(summary);
+			const panel = document.createElement("div");
+			panel.className = "changelog-version__panel";
+			for (const n of section.content) panel.appendChild(n);
+			details.appendChild(panel);
+			section.summary.replaceWith(details);
+		});
+		// Single-open fallback for browsers without the exclusive `<details name>` accordion.
+		const all = [...body.querySelectorAll<HTMLDetailsElement>("details.changelog-version")];
+		for (const d of all) {
+			d.addEventListener("toggle", () => {
+				if (d.open) for (const o of all) if (o !== d) o.open = false;
+			});
+		}
+	}
+</script>
+
 <style>
 	.changelog {
 		max-width: 56rem;
@@ -44,6 +83,50 @@ import { Content as Changelog } from "../../../../CHANGELOG.md";
 		margin: var(--space-8) 0 var(--space-2);
 		padding-bottom: var(--space-2);
 		border-bottom: var(--border-thin) solid var(--line);
+	}
+	/* Once the client script groups each version into a <details> accordion, its <summary>
+	   carries the version-header styling and a rotating disclosure caret. */
+	.changelog-body :global(details.changelog-version) {
+		border-bottom: var(--border-thin) solid var(--line);
+	}
+	.changelog-body :global(.changelog-version__summary) {
+		list-style: none;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		font-family: var(--font-display, var(--font-sans));
+		font-size: var(--text-2xl);
+		font-weight: var(--weight-bold);
+		color: var(--fg-0);
+		padding: var(--space-4) 0;
+	}
+	.changelog-body :global(.changelog-version__summary::-webkit-details-marker) {
+		display: none;
+	}
+	.changelog-body :global(.changelog-version__summary::before) {
+		content: "";
+		flex: none;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-right: 2px solid var(--accent-text);
+		border-bottom: 2px solid var(--accent-text);
+		transform: rotate(-45deg);
+		transition: transform 0.15s ease;
+	}
+	.changelog-body :global(details[open] .changelog-version__summary::before) {
+		transform: rotate(45deg);
+	}
+	.changelog-body :global(.changelog-version__summary:hover) {
+		color: var(--accent-text);
+	}
+	.changelog-body :global(.changelog-version__panel) {
+		padding-bottom: var(--space-6);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.changelog-body :global(.changelog-version__summary::before) {
+			transition: none;
+		}
 	}
 	.changelog-body :global(h3) {
 		font-size: var(--text-lg);

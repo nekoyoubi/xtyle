@@ -6,8 +6,48 @@ export type SparklineTone = FullTone;
 /** Kind-aware auto y-bounds for a typed metric; see {@link resolveSparklineBounds} for the ranges. */
 export type SparklineBounds = "percent" | "unit" | "duration";
 
+/** How the hover readout speaks a typed metric's units; see {@link formatSparklineValue}. */
+export type SparklineFormat = "percent" | "duration" | "bytes" | "unit";
+
 /** The host-layout rule for a sparkline, shared by the element's scaffold and the SSR shadow root. */
 export const sparklineHostCss = ":host { display: inline-block; }";
+
+/** At most two decimals, trailing zeros trimmed — `1.5`, `42`, `0.3`, not `1.50` or `42.0000001`. */
+function trimNumber(n: number): string {
+	return String(Math.round(n * 100) / 100);
+}
+
+/**
+ * Format a sparkline hover value in the metric's own units. `duration` reads seconds as `42s` /
+ * `1.5m` / `0.3h`, `percent` appends `%`, `bytes` steps through `B`/`KB`/`MB`/… by 1024, and `unit`
+ * is a trimmed bare number. With no `format` the raw value passes through unchanged (the default).
+ */
+export function formatSparklineValue(value: number, format?: SparklineFormat): string {
+	switch (format) {
+		case "percent":
+			return `${trimNumber(value)}%`;
+		case "duration": {
+			const s = Math.abs(value);
+			if (s < 60) return `${trimNumber(value)}s`;
+			if (s < 3600) return `${trimNumber(value / 60)}m`;
+			return `${trimNumber(value / 3600)}h`;
+		}
+		case "bytes": {
+			const units = ["B", "KB", "MB", "GB", "TB", "PB"];
+			let v = value;
+			let i = 0;
+			while (Math.abs(v) >= 1024 && i < units.length - 1) {
+				v /= 1024;
+				i++;
+			}
+			return `${trimNumber(v)} ${units[i]}`;
+		}
+		case "unit":
+			return trimNumber(value);
+		default:
+			return String(value);
+	}
+}
 
 function nextPow2(n: number): number {
 	if (n <= 1) return 1;

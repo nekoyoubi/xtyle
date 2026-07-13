@@ -1,0 +1,47 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+interface BottomNavTab {
+	value: string;
+	label: string;
+	/** A functional icon name, drawn above the label. */
+	icon?: string;
+	/** An optional count, e.g. unread. */
+	badge?: string | number | null;
+}
+
+interface Props {
+	tabs?: BottomNavTab[];
+	/** The selected tab's `value`. */
+	value?: string;
+	/** The accessible name of the tablist. */
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	tabs = [],
+	value,
+	label = "Sections",
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const composed = await renderFragmentLight("bottom-nav", { tabs, value, label });
+---
+
+<xtyle-bottom-nav
+	value={value}
+	label={label}
+	tabs={JSON.stringify(tabs)}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

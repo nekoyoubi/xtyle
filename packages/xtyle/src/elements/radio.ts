@@ -28,8 +28,10 @@ export class XtyleRadio extends XtyleElement {
 		}
 	}
 
+	private descriptionId = `xtyle-radio-desc-${Math.random().toString(36).slice(2, 8)}`;
+
 	static get observedAttributes(): string[] {
-		return ["tone", "size", "name", "value", "checked", "disabled", "invalid", "label", "labelledby"];
+		return ["tone", "size", "name", "value", "checked", "disabled", "invalid", "label", "labelledby", "description", "card"];
 	}
 
 	get tone(): FullTone {
@@ -126,6 +128,9 @@ export class XtyleRadio extends XtyleElement {
 			invalid: this.invalid,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
+			description: this.getAttribute("description"),
+			card: this.hasAttribute("card"),
+			descriptionId: this.descriptionId,
 		};
 	}
 
@@ -139,6 +144,8 @@ export class XtyleRadio extends XtyleElement {
 			this.name != null,
 			this.getAttribute("label") ?? "",
 			this.getAttribute("labelledby") ?? "",
+			this.getAttribute("description") ?? "",
+			this.hasAttribute("card"),
 		].join("|");
 	}
 

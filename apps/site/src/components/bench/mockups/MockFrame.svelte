@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { TokenRegister } from "@xtyle/core";
 	import { apply } from "@xtyle/core/dom";
-	import { Badge } from "@xtyle/svelte";
+	import { Badge, Dot } from "@xtyle/svelte";
 	import type { Snippet } from "svelte";
 
 	interface Props {
@@ -21,9 +21,9 @@
 
 <div class="mock" bind:this={root}>
 	<header class="mock__bar">
-		<span class="mock__dot" aria-hidden="true"></span>
-		<span class="mock__dot" aria-hidden="true"></span>
-		<span class="mock__dot" aria-hidden="true"></span>
+		<Dot tone="danger" size="sm" />
+		<Dot tone="warn" size="sm" />
+		<Dot tone="success" size="sm" />
 		<span class="mock__title">{title}</span>
 		<span class="mock__spacer"></span>
 		<Badge tone="info">live</Badge>
@@ -51,13 +51,6 @@
 		padding: var(--space-3) var(--space-4);
 		background: var(--surface-overlay);
 		border-bottom: var(--border-thin) solid var(--line);
-	}
-
-	.mock__dot {
-		width: 0.6rem;
-		height: 0.6rem;
-		border-radius: var(--radius-full);
-		background: var(--line-2);
 	}
 
 	.mock__title {

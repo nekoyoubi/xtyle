@@ -1,10 +1,12 @@
 ---
-import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+import { hoverMediaHtml } from "@xtyle/core";
 
 type ImageFit = "cover" | "contain";
 type ImageRadius = "none" | "sm" | "md" | "lg";
 type ImageLoading = "lazy" | "eager";
 type ImageTrigger = "frame" | "button";
+type ImageHoverAudio = "on" | "off";
 
 interface Props {
 	src?: string;
@@ -16,6 +18,12 @@ interface Props {
 	lightbox?: boolean;
 	trigger?: ImageTrigger;
 	caption?: string;
+	/** A video (`.mp4`/`.webm`) or gif shown on hover/focus; the still `src` is the poster. */
+	hoverSrc?: string;
+	/** An explicit poster still for the hover video (defaults to `src`). */
+	hoverPoster?: string;
+	/** Allow sound on the hover video and show an unmute toggle; omit for a silent preview. */
+	hoverAudio?: ImageHoverAudio;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -33,13 +41,24 @@ const {
 	lightbox = false,
 	trigger = "frame",
 	caption,
+	hoverSrc,
+	hoverPoster,
+	hoverAudio,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
 
 const bindings = { src, alt, ratio, fit, radius, loading, caption };
-const composed = await renderFragmentLight("image", bindings);
+const scaffold = await renderFragmentLight("image", bindings);
+// Compose the hover slot: an author-supplied `hover` slot wins; otherwise `hoverSrc` generates the
+// media. Either way it replaces the fragment's `<slot name="hover">` so the zero-JS render is right.
+const hoverContent = Astro.slots.has("hover")
+	? await Astro.slots.render("hover")
+	: hoverSrc
+		? hoverMediaHtml(hoverSrc, hoverPoster ?? src)
+		: null;
+const composed = composeFallbackSlot(scaffold, "hover", hoverContent);
 ---
 
 <xtyle-image
@@ -52,6 +71,9 @@ const composed = await renderFragmentLight("image", bindings);
 	caption={caption}
 	lightbox={lightbox ? "" : undefined}
 	trigger={trigger === "button" ? "button" : undefined}
+	hover-src={hoverSrc}
+	hover-poster={hoverPoster}
+	hover-audio={hoverAudio}
 	class={extra}
 	set:html={composed}
 	{...rest}

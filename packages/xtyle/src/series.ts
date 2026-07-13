@@ -251,6 +251,59 @@ export function seriesPalette(
 	return options.reverse ? colors.reverse() : colors;
 }
 
+/** The intensity ceiling a full-strength cell maps to: an explicit positive `max`, else the matrix's
+ * own largest finite value (never below 1, so an all-zero matrix stays well-defined). Shared by every
+ * heat-grid path so the element, the SSR bake, and the categorical helper all normalize the same way. */
+export function matrixCeiling(matrix: number[][], explicit?: number): number {
+	if (explicit && explicit > 0) return explicit;
+	return Math.max(1, ...matrix.flatMap((row) => row.map((v) => (Number.isFinite(v) ? v : 0))));
+}
+
+/** Zips a categorical grid's per-category hues with their axis labels into the legend the key renders. */
+export function categoricalLegend(hues: string[], labels: readonly string[]): { color: string; label: string }[] {
+	return hues.map((color, i) => ({ color, label: labels[i] ?? "" }));
+}
+
+export interface CategoricalHeatOptions {
+	/** Which axis carries the categories: `col` (default) colors each column a distinct hue, `row` each row. */
+	axis?: "col" | "row";
+	/** Flip the categorical palette end for end, so the category order runs the other way. */
+	reverse?: boolean;
+	/** The intensity ceiling a full-fill cell maps to; defaults to the data's own maximum. */
+	max?: number;
+}
+
+/**
+ * Colors a categorical heat-grid: each category (a column by default, or a row) takes a distinct hue
+ * from a categorical `SeriesScheme`, and every cell blends from the neutral surface (`--bg-2`) to its
+ * category's hue by intensity, so one grid reads category by hue and magnitude by fill at once. This
+ * is the categorical sibling of the intensity `rampColor` path: where a ramp washes one hue by value,
+ * this hands each category its own hue and washes within it. Returns the row-major cell-color matrix
+ * parallel to `values` and the per-category `hues` (for a legend), both resolved off `register`.
+ */
+export function categoricalHeatColors(
+	scheme: SeriesScheme | string[],
+	values: number[][],
+	register: TokenRegister,
+	options: CategoricalHeatOptions = {},
+): { cellColors: string[][]; hues: string[] } {
+	const axis = options.axis === "row" ? "row" : "col";
+	const nCols = values.reduce((max, row) => Math.max(max, row.length), 0);
+	const count = axis === "col" ? nCols : values.length;
+	const hues = seriesPalette(scheme, count, register, { reverse: options.reverse });
+	const base = register["--bg-2"];
+	const ceiling = matrixCeiling(values, options.max);
+	const cellColors = values.map((row, r) =>
+		row.map((v, c) => {
+			const hue = hues[axis === "col" ? c : r];
+			if (!hue) return "currentColor";
+			const t = (Number.isFinite(v) ? v : 0) / ceiling;
+			return base ? rampColor([base, hue], t, register) : hue;
+		}),
+	);
+	return { cellColors, hues };
+}
+
 /**
  * Resolves a color per data item, honoring an optional semantic `tone` key when the scheme supports
  * by-name mapping. Under `statuses`, an item carrying a known `tone` pins to that outcome's token

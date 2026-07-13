@@ -42,7 +42,10 @@
       const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
       const disabledAttr = segDisabled ? " disabled" : "";
       const badge = seg.badge ? `<span class="xtyle-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
-      const named = seg.slot ? ` aria-label="${escapeAttr(seg.label)}" title="${escapeAttr(seg.label)}"` : "";
+      const ariaLabel = seg.slot ? ` aria-label="${escapeAttr(seg.label)}"` : "";
+      const tooltip = seg.title ?? (seg.slot ? seg.label : void 0);
+      const titleAttr = tooltip ? ` title="${escapeAttr(tooltip)}"` : "";
+      const named = `${ariaLabel}${titleAttr}`;
       const body = seg.slot ? `<slot name="${escapeAttr(seg.slot)}"></slot>` : escapeHtml(seg.label);
       const optionClass = seg.slot ? "xtyle-segmented__option xtyle-segmented__option--icon" : "xtyle-segmented__option";
       return `<button class="${optionClass}" part="option" type="button" role="radio" aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${named}${disabledAttr}>${body}${badge}</button>`;

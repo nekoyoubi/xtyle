@@ -75,6 +75,29 @@ export const heatmapCss = `
 	border-radius: 2px;
 	border: var(--border-thin) solid var(--bg-0);
 }
+.xtyle-heatmap__legend {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-1) var(--space-3);
+	margin-top: var(--space-2);
+	font-size: var(--text-xs);
+	color: var(--fg-3);
+}
+.xtyle-heatmap__legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+.xtyle-heatmap__legend-swatch {
+	width: 0.9rem;
+	height: 0.9rem;
+	border-radius: 2px;
+	border: var(--border-thin) solid var(--bg-0);
+}
+.xtyle-heatmap__legend-label {
+	color: var(--fg-2);
+}
 .xtyle-heatmap__tooltip {
 	position: absolute;
 	top: 0;

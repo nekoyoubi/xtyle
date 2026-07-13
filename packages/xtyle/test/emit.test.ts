@@ -37,6 +37,19 @@ describe("emit", () => {
 		expect(css).toContain("var(--code-bg");
 	});
 
+	it("emits an xterm.js ITheme from the terminal family", () => {
+		const theme = JSON.parse(emit(register, "terminal"));
+		expect(theme.background).toMatch(/^#[0-9a-f]{6}$/);
+		expect(theme.foreground).toMatch(/^#[0-9a-f]{6}$/);
+		expect(theme.cursor).toMatch(/^#[0-9a-f]{6}$/);
+		expect(theme.cursorAccent).toMatch(/^#[0-9a-f]{6}$/);
+		for (const name of ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]) {
+			expect(theme[name]).toMatch(/^#[0-9a-f]{6}$/);
+			const bright = `bright${name[0]!.toUpperCase()}${name.slice(1)}`;
+			expect(theme[bright]).toMatch(/^#[0-9a-f]{6}$/);
+		}
+	});
+
 	it("emits a valid monaco theme from the code family", () => {
 		const theme = JSON.parse(emit(register, "monaco"));
 		expect(theme.base).toBe("vs-dark");

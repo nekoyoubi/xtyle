@@ -70,6 +70,30 @@ import Icon from "@xtyle/astro/Icon.astro";
 <Icon name="success" tone="success" />
 <Icon name="error" tone="danger" />`;
 
+const textHtmlExample = `<!-- the letter primitive typesets a glyph; -f1 draws it in the display font -->
+<xtyle-icon name="initial--letter-A" size="xl"></xtyle-icon>
+<xtyle-icon name="mono--letter-7-f2" size="xl"></xtyle-icon>
+
+<!-- a monogram badged, colored, and scaled like any primitive -->
+<xtyle-icon name="badge--circle-c1--letter-A-cb-s55" size="xl"></xtyle-icon>
+
+<!-- a ---f finish swaps a slot to a named web font (load it separately) -->
+<xtyle-icon name="mark--letter-Q-f1---f1-noto+sans+symbols" size="xl"></xtyle-icon>`;
+
+const textSvelteExample = `<script lang="ts">
+	import { Icon } from "@xtyle/svelte";
+</script>
+
+<Icon name="initial--letter-A" size="xl" />
+<Icon name="badge--circle-c1--letter-A-cb-s55" size="xl" />`;
+
+const textAstroExample = `---
+import Icon from "@xtyle/astro/Icon.astro";
+---
+
+<Icon name="initial--letter-A" size="xl" />
+<Icon name="badge--circle-c1--letter-A-cb-s55" size="xl" />`;
+
 export const iconManifest: ComponentManifest = {
 	id: "icon",
 	name: "Icon",
@@ -79,7 +103,7 @@ export const iconManifest: ComponentManifest = {
 	seeAlso: ["swatch", "avatar", "rating"],
 	summary: "A functional glyph, or a mark generated from a name, drawn in the current text color.",
 	description:
-		"Icon renders one glyph from a small functional set (chevrons, arrows, close, check, the status marks, a spinner, the menu dots, and the media-transport family: play, pause, stop, skip-forward, skip-back) as inline SVG. It carries no color of its own: the glyph is drawn in `currentColor`, so it inherits the text color around it and matches the derived theme with nothing to wire. It sizes off the surrounding type by default, so an icon set beside a word lines up with it; `size` steps it in fixed `em` for a standalone glyph. An optional `tone` tints it to a semantic role or named hue, `spin` turns it into a loading affordance, and a `label` promotes it from decorative to a named image for assistive tech. Beyond the lookup, a `name` can carry a spec: a terse grammar (`shield--star-s45-c1`) the engine parses into a layered mark and composes on the fly, placing primitives on a grid, sizing, rotating, outlining, or knocking them out, and coloring them from the theme's own series via `colors` so a generated mark recolors with the theme. Lookup for the common glyph, generation for everything else, one element for both.",
+		"Icon renders one glyph from a small functional set (chevrons, arrows, close, check, the status marks, a spinner, the menu dots, and the media-transport family: play, pause, stop, skip-forward, skip-back) as inline SVG. It carries no color of its own: the glyph is drawn in `currentColor`, so it inherits the text color around it and matches the derived theme with nothing to wire. It sizes off the surrounding type by default, so an icon set beside a word lines up with it; `size` steps it in fixed `em` for a standalone glyph. An optional `tone` tints it to a semantic role or named hue, `spin` turns it into a loading affordance, and a `label` promotes it from decorative to a named image for assistive tech. Beyond the lookup, a `name` can carry a spec: a terse grammar (`shield--star-s45-c1`) the engine parses into a layered mark and composes on the fly, placing primitives on a grid, sizing, rotating, outlining, or knocking them out, and coloring them from the theme's own series via `colors` so a generated mark recolors with the theme. A parametric `letter` primitive typesets a glyph as a mark (`--letter-A`) in an indexed theme font slot (`f0` sans, `f1` display, `f2` mono) that a `---f` finish can swap for another theme font or a named web font. Lookup for the common glyph, generation for everything else, one element for both.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -192,6 +216,13 @@ export const iconManifest: ComponentManifest = {
 			description:
 				"A `name` carrying a spec is composed on the fly: primitives on a grid, sized / rotated / outlined / knocked out, colored from the theme's series via `colors`.",
 			source: { html: genHtmlExample, svelte: genSvelteExample, astro: genAstroExample },
+		},
+		{
+			id: "text-marks",
+			title: "Text marks",
+			description:
+				"The `letter` primitive typesets a glyph as a mark, drawn in an indexed theme font slot (`f0` sans, `f1` display, `f2` mono); a `---f` finish swaps a slot for another theme font or a named web font, and `iconFontImports` returns the loading code for a named web font.",
+			source: { html: textHtmlExample, svelte: textSvelteExample, astro: textAstroExample },
 		},
 	],
 };

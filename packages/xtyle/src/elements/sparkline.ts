@@ -2,9 +2,11 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import {
 	sparklineHostCss,
 	resolveSparklineBounds,
+	formatSparklineValue,
 	type SparklineVariant,
 	type SparklineTone,
 	type SparklineBounds,
+	type SparklineFormat,
 } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/sparkline/source.generated.js";
@@ -50,7 +52,7 @@ export class XtyleSparkline extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["values", "points", "window", "domain", "step", "variant", "tone", "show-end", "min", "max", "bounds", "label"];
+		return ["values", "points", "window", "domain", "step", "variant", "tone", "show-end", "min", "max", "bounds", "format", "label"];
 	}
 
 	get values(): number[] {
@@ -90,6 +92,15 @@ export class XtyleSparkline extends XtyleElement {
 	set bounds(value: SparklineBounds | undefined) {
 		if (value) this.setAttribute("bounds", value);
 		else this.removeAttribute("bounds");
+	}
+
+	get format(): SparklineFormat | undefined {
+		const raw = this.getAttribute("format");
+		return raw === "percent" || raw === "duration" || raw === "bytes" || raw === "unit" ? raw : undefined;
+	}
+	set format(value: SparklineFormat | undefined) {
+		if (value) this.setAttribute("format", value);
+		else this.removeAttribute("format");
 	}
 
 	attributeChangedCallback(name: string): void {
@@ -182,7 +193,7 @@ export class XtyleSparkline extends XtyleElement {
 			dot?.setAttribute("cx", String(vx));
 			dot?.setAttribute("cy", String(vy));
 			marker.removeAttribute("hidden");
-			tooltip.textContent = String(values[i]);
+			tooltip.textContent = formatSparklineValue(values[i] as number, this.format);
 			const sparkBox = spark.getBoundingClientRect();
 			tooltip.style.left = `${(vx / VW) * sparkBox.width}px`;
 			tooltip.style.top = `${(vy / 32) * sparkBox.height}px`;

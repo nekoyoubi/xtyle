@@ -17,11 +17,14 @@ import Slider from "@xtyle/astro/Slider.astro";
 import Swatch from "@xtyle/astro/Swatch.astro";
 import Progress from "@xtyle/astro/Progress.astro";
 import Spinner from "@xtyle/astro/Spinner.astro";
+import Dot from "@xtyle/astro/Dot.astro";
+import Ribbon from "@xtyle/astro/Ribbon.astro";
 import Alert from "@xtyle/astro/Alert.astro";
 import Skeleton from "@xtyle/astro/Skeleton.astro";
 import Avatar from "@xtyle/astro/Avatar.astro";
 import AvatarGroup from "@xtyle/astro/AvatarGroup.astro";
 import Icon from "@xtyle/astro/Icon.astro";
+import QrCode from "@xtyle/astro/Qr.astro";
 import Kbd from "@xtyle/astro/Kbd.astro";
 import Link from "@xtyle/astro/Link.astro";
 import Heading from "@xtyle/astro/Heading.astro";
@@ -48,11 +51,6 @@ const { id } = Astro.props;
 const statusTones = ["success", "warn", "danger", "info"] as const;
 const hueTones = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "cyan"] as const;
 
-const scene =
-	"data:image/svg+xml," +
-	encodeURIComponent(
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ea8fe"/><stop offset="1" stop-color="#ff7ac6"/></linearGradient></defs><rect width="160" height="90" fill="url(#g)"/><circle cx="126" cy="26" r="14" fill="#fff" opacity="0.85"/></svg>',
-	);
 ---
 
 <div class="cxp" data-preview={id}>
@@ -64,7 +62,7 @@ const scene =
 	{id === "button" && (
 		<Cluster gap={2} align="center">
 			<Button variant="solid" tone="accent">Save</Button>
-			<Button variant="soft" tone="neutral">Cancel</Button>
+			<Button variant="subtle" tone="neutral">Cancel</Button>
 		</Cluster>
 	)}
 	{id === "switch" && (
@@ -104,6 +102,21 @@ const scene =
 	)}
 	{id === "alert" && <Alert tone="info" severity="info">Heads up, a new version is available.</Alert>}
 	{id === "toast" && <Alert tone="success" severity="success">Saved your changes.</Alert>}
+	{id === "dot" && (
+		<Cluster gap={4} align="center">
+			<Dot tone="success" size="lg" />
+			<Dot tone="warn" size="lg" pulse="slow" />
+			<Dot tone="danger" size="lg" ping />
+			<Dot tone="info" size="lg" glow />
+		</Cluster>
+	)}
+	{id === "ribbon" && (
+		<div class="cxp-ribbon">
+			<Ribbon corner="top-right" tone="accent" size="sm" label="New" />
+			<span class="cxp-schema__line" style="width: 62%"></span>
+			<span class="cxp-schema__line" style="width: 44%"></span>
+		</div>
+	)}
 	{id === "skeleton" && (
 		<Cluster gap={2} align="center">
 			<Skeleton shape="circle" style="width: 2rem; height: 2rem;" />
@@ -184,7 +197,7 @@ const scene =
 		</Timeline>
 	)}
 	{id === "sparkline" && <Sparkline values={[4, 6, 5, 8, 7, 9, 12, 10, 13]} variant="area" tone="accent" label="Trend" style="--spark-width: 9rem; --spark-height: 2.2rem;" />}
-	{id === "stat" && <Stat value="1,284" label="Signups" delta={12} />}
+	{id === "stat" && <Stat value="1,284" label="Signups" delta="+12%" trend="up" />}
 	{id === "field" && <Field label="Email" value="ada@xtyle.dev" style="width: 13rem;" />}
 	{id === "number-input" && <NumberInput label="Qty" value={3} min={0} max={99} />}
 	{id === "select" && <Select label="Plan" options="Starter,Pro,Team" value="Pro" style="width: 11rem;" />}
@@ -199,15 +212,18 @@ const scene =
 	{id === "cluster" && <div class="cxp-cluster"><span></span><span></span><span></span><span></span></div>}
 	{id === "grid" && <div class="cxp-grid"><span></span><span></span><span></span><span></span><span></span><span></span></div>}
 	{id === "app-shell" && <div class="cxp-appshell"><span class="cxp-appshell__bar"></span><div class="cxp-appshell__body"><span class="cxp-appshell__side"></span><span class="cxp-appshell__main"></span><span class="cxp-appshell__side"></span></div></div>}
+	{id === "mobile-shell" && <div class="cxp-mshell"><span class="cxp-mshell__bar"></span><span class="cxp-mshell__body"></span><span class="cxp-mshell__nav"><i class="is-on"></i><i></i><i></i></span></div>}
+	{id === "bottom-nav" && <div class="cxp-bnav"><span class="is-on"><i></i>Inbox</span><span><i></i>Search</span><span><i></i>You</span></div>}
 	{id === "dock" && <div class="cxp-dock"><span class="cxp-dock__rail"></span><span class="cxp-dock__main"></span></div>}
 	{id === "dock-zone" && <div class="cxp-dockzone"><span class="cxp-dockzone__tabs"></span><div class="cxp-dockzone__panes"><span></span><span></span></div></div>}
 	{id === "splitter" && <div class="cxp-splitter"><span></span><span class="cxp-splitter__bar"></span><span></span></div>}
 	{id === "statusbar" && <div class="cxp-statusbar"><span>main</span><span>UTF-8</span><span>Ln 1</span></div>}
 	{id === "toolbar" && <div class="cxp-toolbar"><span class="cxp-toolbar__title"></span><span class="cxp-toolbar__btn"></span><span class="cxp-toolbar__btn"></span></div>}
-	{id === "hero" && <div class="cxp-hero" style={`background-image: url("${scene}")`}><span></span></div>}
-	{id === "parallax" && <div class="cxp-hero cxp-parallax" style={`background-image: url("${scene}")`}></div>}
+	{id === "hero" && <div class="cxp-hero"><span></span></div>}
+	{id === "parallax" && <div class="cxp-hero cxp-parallax"></div>}
 	{id === "carousel" && <div class="cxp-carousel"><span></span><span></span><span></span><em class="cxp-carousel__dots"><i class="is-on"></i><i></i><i></i></em></div>}
-	{id === "image" && <div class="cxp-image" style={`background-image: url("${scene}")`}></div>}
+	{id === "image" && <div class="cxp-image"></div>}
+	{id === "qr" && <QrCode data="https://xtyle.dev" size={64} label="xtyle.dev QR code" />}
 	{id === "dialog" && <div class="cxp-dialog"><span class="cxp-dialog__bar"></span><span class="cxp-schema__line" style="width: 70%"></span><span class="cxp-dialog__btn"></span></div>}
 	{id === "menu" && <div class="cxp-menu"><span class="cxp-menu__trigger">Actions ▾</span><span class="cxp-menu__pop"><i></i><i></i><i></i></span></div>}
 	{id === "tooltip" && <div class="cxp-tooltip"><span class="cxp-tooltip__bubble">Copy link</span><span class="cxp-tooltip__anchor"></span></div>}
@@ -243,6 +259,19 @@ const scene =
 
 	.cxp-empty { display: grid; justify-items: center; gap: 0.2rem; color: var(--fg-2); }
 
+	.cxp-ribbon {
+		position: relative;
+		display: grid;
+		align-content: center;
+		gap: 0.3rem;
+		width: 8rem;
+		height: 5rem;
+		padding: var(--space-2);
+		border-radius: var(--radius-md);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+	}
+
 	/* Schematic scaffolding shared by the structural previews. */
 	.cxp-schema {
 		display: grid;
@@ -276,6 +305,19 @@ const scene =
 	.cxp-appshell__side { border-radius: var(--radius-sm); background: var(--bg-2); }
 	.cxp-appshell__main { border-radius: var(--radius-sm); background: var(--accent-bg); }
 
+	.cxp-mshell { display: grid; grid-template-rows: 0.6rem 1fr 0.8rem; gap: 0.2rem; width: 3.6rem; height: 4.4rem; padding: 0.15rem; border-radius: var(--radius-sm); background: var(--bg-1); border: var(--border-thin) solid var(--line); }
+	.cxp-mshell__bar { border-radius: 2px; background: var(--bg-3); }
+	.cxp-mshell__body { border-radius: 2px; background: var(--bg-2); }
+	.cxp-mshell__nav { display: flex; align-items: center; justify-content: space-around; border-radius: 2px; background: var(--bg-3); }
+	.cxp-mshell__nav i { width: 0.3rem; height: 0.3rem; border-radius: var(--radius-full); background: var(--fg-3); }
+	.cxp-mshell__nav i.is-on { background: var(--accent); }
+
+	.cxp-bnav { display: flex; width: 10rem; border-radius: var(--radius-sm); background: var(--bg-1); border: var(--border-thin) solid var(--line); overflow: hidden; }
+	.cxp-bnav > span { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.35rem 0; font-size: var(--text-xs); color: var(--fg-3); }
+	.cxp-bnav > span i { width: 0.7rem; height: 0.7rem; border-radius: 2px; background: var(--fg-3); }
+	.cxp-bnav > span.is-on { color: var(--accent-text); border-top: var(--border-thick) solid var(--accent); }
+	.cxp-bnav > span.is-on i { background: var(--accent); }
+
 	.cxp-dock { display: grid; grid-template-columns: 0.5fr 3fr; gap: 0.25rem; width: 9rem; height: 3rem; }
 	.cxp-dock__rail { border-radius: var(--radius-sm); background: var(--bg-3); }
 	.cxp-dock__main { border-radius: var(--radius-sm); background: var(--bg-1); border: var(--border-thin) solid var(--line); }
@@ -295,7 +337,7 @@ const scene =
 	.cxp-toolbar__title { flex: 1; height: 0.5rem; border-radius: var(--radius-full); background: var(--fg-3); }
 	.cxp-toolbar__btn { width: 1.1rem; height: 1.1rem; border-radius: var(--radius-sm); background: var(--accent-bg); }
 
-	.cxp-hero { width: 11rem; height: 3.2rem; border-radius: var(--radius-md); background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 0.4rem; }
+	.cxp-hero { width: 11rem; height: 3.2rem; border-radius: var(--radius-md); background: radial-gradient(circle at 78% 32%, var(--fg-0) 0 13%, transparent 14%), linear-gradient(135deg, var(--accent), var(--accent-3)); display: flex; align-items: flex-end; padding: 0.4rem; }
 	.cxp-hero > span { display: block; width: 60%; height: 0.45rem; border-radius: var(--radius-full); background: rgba(255,255,255,0.85); }
 
 	.cxp-carousel { position: relative; width: 11rem; height: 3.2rem; display: flex; gap: 0.3rem; overflow: hidden; }
@@ -304,7 +346,7 @@ const scene =
 	.cxp-carousel__dots i { width: 0.35rem; height: 0.35rem; border-radius: var(--radius-full); background: var(--fg-3); }
 	.cxp-carousel__dots i.is-on { background: var(--accent); }
 
-	.cxp-image { width: 6rem; height: 3.4rem; border-radius: var(--radius-md); background-size: cover; background-position: center; }
+	.cxp-image { width: 6rem; height: 3.4rem; border-radius: var(--radius-md); background: radial-gradient(circle at 76% 30%, var(--fg-0) 0 15%, transparent 16%), linear-gradient(135deg, var(--accent), var(--accent-3)); }
 
 	.cxp-dialog { display: grid; gap: 0.3rem; width: 8rem; padding: var(--space-2); border-radius: var(--radius-md); background: var(--bg-1); border: var(--border-thin) solid var(--line); box-shadow: var(--elevation-3); }
 	.cxp-dialog__bar { height: 0.6rem; width: 55%; border-radius: var(--radius-full); background: var(--fg-3); }

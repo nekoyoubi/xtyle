@@ -63,6 +63,13 @@ export type Size = "sm" | "md" | "lg";
 /** The button's variant set. */
 export type ButtonVariant = "solid" | "outline" | "ghost" | "subtle" | "link";
 
+/** How a Carousel changes slides: a sliding scroll-snap track, or a stacked cross-fade / zoom / turn. */
+export type CarouselTransition = "slide" | "fade" | "scale" | "flip";
+
+/** Which way a `slide`-transition Carousel advances: the cardinal sets both the axis (horizontal vs
+ * vertical) and the sense (`left` / `up` reverse the default `right` / `down`). */
+export type CarouselDirection = "right" | "left" | "up" | "down";
+
 /** How a button justifies its content when it is wider than that content. */
 export type ButtonAlign = "start" | "center" | "end";
 

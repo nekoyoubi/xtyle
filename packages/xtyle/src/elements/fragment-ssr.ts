@@ -9,9 +9,13 @@ import { manifest as buttonManifest, fragmentSources as buttonSources } from "./
 import { manifest as switchManifest, fragmentSources as switchSources } from "./fragments/switch/source.generated.js";
 import { manifest as alertManifest, fragmentSources as alertSources } from "./fragments/alert/source.generated.js";
 import { manifest as appShellManifest, fragmentSources as appShellSources } from "./fragments/app-shell/source.generated.js";
+import { manifest as mobileShellManifest, fragmentSources as mobileShellSources } from "./fragments/mobile-shell/source.generated.js";
+import { manifest as bottomNavManifest, fragmentSources as bottomNavSources } from "./fragments/bottom-nav/source.generated.js";
 import { manifest as avatarManifest, fragmentSources as avatarSources } from "./fragments/avatar/source.generated.js";
 import { manifest as avatarGroupManifest, fragmentSources as avatarGroupSources } from "./fragments/avatar-group/source.generated.js";
 import { manifest as badgeManifest, fragmentSources as badgeSources } from "./fragments/badge/source.generated.js";
+import { manifest as dotManifest, fragmentSources as dotSources } from "./fragments/dot/source.generated.js";
+import { manifest as ribbonManifest, fragmentSources as ribbonSources } from "./fragments/ribbon/source.generated.js";
 import { manifest as breadcrumbManifest, fragmentSources as breadcrumbSources } from "./fragments/breadcrumb/source.generated.js";
 import { manifest as cardManifest, fragmentSources as cardSources } from "./fragments/card/source.generated.js";
 import { manifest as cardLinkManifest, fragmentSources as cardLinkSources } from "./fragments/card-link/source.generated.js";
@@ -32,6 +36,7 @@ import { manifest as barManifest, fragmentSources as barSources } from "./fragme
 import { manifest as sparklineManifest, fragmentSources as sparklineSources } from "./fragments/sparkline/source.generated.js";
 import { manifest as heatmapManifest, fragmentSources as heatmapSources } from "./fragments/heatmap/source.generated.js";
 import { manifest as pieManifest, fragmentSources as pieSources } from "./fragments/pie/source.generated.js";
+import { manifest as qrManifest, fragmentSources as qrSources } from "./fragments/qr/source.generated.js";
 import { manifest as linkManifest, fragmentSources as linkSources } from "./fragments/link/source.generated.js";
 import { manifest as menuManifest, fragmentSources as menuSources } from "./fragments/menu/source.generated.js";
 import { manifest as numberInputManifest, fragmentSources as numberInputSources } from "./fragments/number-input/source.generated.js";
@@ -77,9 +82,13 @@ const fragments: Record<string, FragmentEntry> = {
 	switch: { manifest: switchManifest, fragmentSources: switchSources },
 	alert: { manifest: alertManifest, fragmentSources: alertSources },
 	"app-shell": { manifest: appShellManifest, fragmentSources: appShellSources },
+	"mobile-shell": { manifest: mobileShellManifest, fragmentSources: mobileShellSources },
+	"bottom-nav": { manifest: bottomNavManifest, fragmentSources: bottomNavSources },
 	avatar: { manifest: avatarManifest, fragmentSources: avatarSources },
 	"avatar-group": { manifest: avatarGroupManifest, fragmentSources: avatarGroupSources },
 	badge: { manifest: badgeManifest, fragmentSources: badgeSources },
+	dot: { manifest: dotManifest, fragmentSources: dotSources },
+	ribbon: { manifest: ribbonManifest, fragmentSources: ribbonSources },
 	breadcrumb: { manifest: breadcrumbManifest, fragmentSources: breadcrumbSources },
 	card: { manifest: cardManifest, fragmentSources: cardSources },
 	"card-link": { manifest: cardLinkManifest, fragmentSources: cardLinkSources },
@@ -100,6 +109,7 @@ const fragments: Record<string, FragmentEntry> = {
 	sparkline: { manifest: sparklineManifest, fragmentSources: sparklineSources },
 	heatmap: { manifest: heatmapManifest, fragmentSources: heatmapSources },
 	pie: { manifest: pieManifest, fragmentSources: pieSources },
+	qr: { manifest: qrManifest, fragmentSources: qrSources },
 	link: { manifest: linkManifest, fragmentSources: linkSources },
 	menu: { manifest: menuManifest, fragmentSources: menuSources },
 	"number-input": { manifest: numberInputManifest, fragmentSources: numberInputSources },

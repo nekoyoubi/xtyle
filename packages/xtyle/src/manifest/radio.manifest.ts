@@ -24,6 +24,25 @@ const svelteExample = `<script lang="ts">
 
 <Radio name="confirm" value="yes" tone="success">I agree to the terms</Radio>`;
 
+const cardHtmlExample = `<xtyle-radio-group label="Sync mode">
+	<xtyle-radio card name="sync" value="linked" label="Linked" checked
+		description="Changes sync both ways automatically, the moment either side updates."></xtyle-radio>
+	<xtyle-radio card name="sync" value="confirm" label="Confirm each"
+		description="Review and approve every change before it is applied to the other side."></xtyle-radio>
+</xtyle-radio-group>`;
+
+const cardSvelteExample = `<script lang="ts">
+	import { Radio, RadioGroup } from "@xtyle/svelte";
+	let mode = $state("linked");
+</script>
+
+<RadioGroup label="Sync mode" onchange={(e) => (mode = (e.target as HTMLInputElement).value)}>
+	<Radio card name="sync" value="linked" label="Linked" checked={mode === "linked"}
+		description="Changes sync both ways automatically, the moment either side updates." />
+	<Radio card name="sync" value="confirm" label="Confirm each" checked={mode === "confirm"}
+		description="Review and approve every change before it is applied to the other side." />
+</RadioGroup>`;
+
 const astroExample = `---
 import { Radio, RadioGroup } from "@xtyle/astro";
 ---
@@ -44,7 +63,7 @@ export const radioManifest: ComponentManifest = {
 	seeAlso: ["checkbox", "segmented", "select"],
 	summary: "A single-choice input: a styled native radio plus a group that manages roving focus and arrow-key navigation.",
 	description:
-		"Radio is a styled native `<input type=\"radio\">`: the real input drives state and keyboard semantics while a custom indicator paints the selected dot in any of the six semantic tones. RadioGroup wraps a set of radios in a `role=\"radiogroup\"`, lays them out vertically or horizontally, and owns the WAI-ARIA roving-tabindex pattern: the group is a single Tab stop and arrow keys move selection between options, wrapping at the ends. Each radio carries its own label (via the `label` attribute or default-slot text), an invalid state, and a disabled state; the group can disable as a whole. State lives on the native input, so form participation and submission come for free.",
+		"Radio is a styled native `<input type=\"radio\">`: the real input drives state and keyboard semantics while a custom indicator paints the selected dot in any of the six semantic tones. RadioGroup wraps a set of radios in a `role=\"radiogroup\"`, lays them out vertically or horizontally, and owns the WAI-ARIA roving-tabindex pattern: the group is a single Tab stop and arrow keys move selection between options, wrapping at the ends. Each radio carries its own label (via the `label` attribute or default-slot text), an optional `description` (a secondary explanation line wired to `aria-describedby`), an invalid state, and a disabled state; the group can disable as a whole. Add `card` to render a radio as a full-width option card that takes an accent ring and tint when selected: `card` plus `description` is the title-and-explanation option-card pattern, selection and a11y owned by the component instead of hand-rolled. State lives on the native input, so form participation and submission come for free.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -82,6 +101,12 @@ export const radioManifest: ComponentManifest = {
 			name: "label",
 			description: "The text content for the option, taken from the `label` attribute or the default slot.",
 			selector: ".xtyle-radio__label",
+		},
+		{
+			name: "description",
+			description: "The optional secondary explanation line under the label; hidden when empty.",
+			selector: ".xtyle-radio__description",
+			tokens: ["--text-sm", "--fg-2", "--leading-normal"],
 		},
 		{
 			name: "group",
@@ -147,6 +172,19 @@ export const radioManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "description",
+			type: "string",
+			description: "A secondary line of explanation under the label, wired to the input's `aria-describedby`. Radio only.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "card",
+			type: "boolean",
+			default: "false",
+			description: "Renders the radio as a full-width option card: a bordered box that takes an accent ring and tint when selected. Pairs with `description` for the title-plus-explanation option-card pattern. Radio only.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "orientation",
 			type: '"vertical" | "horizontal"',
 			default: "vertical",
@@ -163,6 +201,12 @@ export const radioManifest: ComponentManifest = {
 		},
 	],
 	variants: [
+		{
+			name: "card",
+			description: "A full-width option card: a bordered box that takes an accent ring and tint when selected. Pairs with `description` for the option-card pattern.",
+			className: "xtyle-radio--card",
+			tokens: ["--line", "--line-2", "--bg-1", "--radius-md", "--border-thin", "--accent", "--accent-bg", "--ring"],
+		},
 		{
 			name: "accent",
 			description: "The checked indicator fills with the accent tone (the default).",
@@ -258,10 +302,15 @@ export const radioManifest: ComponentManifest = {
 		"--leading-normal",
 		"--fg-0",
 		"--fg-1",
+		"--fg-2",
 		"--fg-disabled",
+		"--bg-1",
+		"--accent-bg",
 		"--border-normal",
+		"--border-thin",
 		"--border-thick",
 		"--radius-full",
+		"--radius-md",
 		"--space-1",
 		"--space-2",
 		"--space-3",
@@ -298,6 +347,12 @@ export const radioManifest: ComponentManifest = {
 			title: "Grouped choice and tones",
 			description: "A labelled vertical group with roving focus, plus standalone toned radios.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "option-cards",
+			title: "Option cards",
+			description: "`card` + `description` renders each choice as a full-width card with a title and a line of explanation, taking an accent ring when selected — the option-card pattern with selection and a11y owned by the component.",
+			source: { html: cardHtmlExample, svelte: cardSvelteExample },
 		},
 	],
 };

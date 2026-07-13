@@ -5,7 +5,8 @@ import { auditRegister } from "./audit.js";
 import { coverage } from "./coverage.js";
 import { derive } from "./index.js";
 import { emit, emitters } from "./emit/index.js";
-import { buildThemeFile, serializeThemeFile } from "./theme-file.js";
+import { buildThemeFile, migrateRecipe, serializeThemeFile, type ThemeRecipe } from "./theme-file.js";
+import type { Knobs } from "./types.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "./gauntlet.js";
 import { availableAlgorithms, resolveAlgorithm } from "./host/registry.js";
 import { bakedAlgorithm } from "./baked.js";
@@ -103,7 +104,19 @@ function parse(argv: string[]): ParsedArgs {
 }
 
 function resolveForMode(id: string, mode: GauntletMode) {
-	return mode === "hosted" ? resolveAlgorithm(id) : bakedAlgorithm(id);
+	const { algorithm } = migrateRecipe<ThemeRecipe>({ algorithm: id });
+	return mode === "hosted" ? resolveAlgorithm(algorithm) : bakedAlgorithm(algorithm);
+}
+
+/**
+ * The algorithm and knobs a requested id actually derives with. An id naming a retired algorithm
+ * migrates onto the recipe that reproduces it, so `xtyle derive -a xtyle-brand` still emits the
+ * theme that algorithm used to emit instead of failing on a dead id — the same migration the theme
+ * file format carries, so the CLI and a saved recipe agree.
+ */
+function migratedTarget(id: string): { algorithm: string; knobs: Knobs } {
+	const migrated = migrateRecipe<ThemeRecipe>({ algorithm: id });
+	return { algorithm: migrated.algorithm, knobs: (migrated.knobs ?? {}) as Knobs };
 }
 
 function usage(): void {
@@ -112,7 +125,7 @@ function usage(): void {
 			"xtyle: themable-derivation engine",
 			"",
 			"usage:",
-			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--set <token>=<value>]... [--format css|json|theme|prism|monaco] [--name <s>] [--out <file>]",
+			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--set <token>=<value>]... [--format css|json|theme|prism|monaco|terminal] [--name <s>] [--out <file>]",
 			"  xtyle gauntlet [-a <algorithm>|all] [--mode baked|hosted] [--depth quick|standard|full] [--runs <n>]",
 			"  xtyle coverage --consumed <a,b,c> [-a <algorithm>] [--bg <c>] [--accent <c>] [--set <token>=<value>]...",
 			"  xtyle audit [-a <algorithm>] [--bg <c>] [--accent <c>] [--set <token>=<value>]... [--level AA|AAA] [--large-text]",
@@ -167,15 +180,16 @@ async function main(): Promise<void> {
 	}
 
 	if (args.command === "derive") {
-		const algorithm = await resolveAlgorithm(args.algorithm);
+		const target = migratedTarget(args.algorithm);
+		const algorithm = await resolveAlgorithm(target.algorithm);
 		const constraints = constraintsFrom(args);
-		const register = derive(algorithm, { constraints });
+		const register = derive(algorithm, { constraints, knobs: target.knobs });
 		const output =
 			args.format === "theme"
 				? serializeThemeFile(
 						buildThemeFile({
-							meta: { name: args.name ?? `${args.algorithm} theme`, generator: "@xtyle/core" },
-							recipe: { algorithm: args.algorithm, overrides: constraints },
+							meta: { name: args.name ?? `${target.algorithm} theme`, generator: "@xtyle/core" },
+							recipe: { algorithm: target.algorithm, knobs: target.knobs, overrides: constraints },
 							register,
 						}),
 					)

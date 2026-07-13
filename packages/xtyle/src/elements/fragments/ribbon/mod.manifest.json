@@ -1,0 +1,37 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-ribbon-default",
+	"version": "0.0.1",
+	"title": "Xtyle Ribbon (default)",
+	"description": "The built-in fill for the xtyle Ribbon component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.ribbon"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.ribbon": [
+			{
+				"id": "ribbon",
+				"format": "text/html+jsml",
+				"source": "ribbon.html",
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-fg",
+						"--accent-bg",
+						"--accent-text",
+						"--success",
+						"--warn",
+						"--danger",
+						"--info",
+						"--neutral",
+						"--text-xs",
+						"--text-sm",
+						"--text-lg",
+						"--weight-semibold",
+						"--elevation-2"
+					]
+				}
+			}
+		]
+	}
+}

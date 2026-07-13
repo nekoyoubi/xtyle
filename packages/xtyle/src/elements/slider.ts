@@ -25,8 +25,10 @@ export class XtyleSlider extends XtyleElement {
 	private initialValue = Number.NaN;
 
 	static get observedAttributes(): string[] {
-		return ["value", "min", "max", "step", "disabled", "size", "tone", "label", "labelledby", "name", "show-value", "hide-label", "default", "static-value"];
+		return ["value", "min", "max", "step", "alt-step", "alt-default", "modifier", "overflow", "disabled", "size", "tone", "label", "labelledby", "name", "show-value", "hide-label", "default", "static-value"];
 	}
+
+	private editing = false;
 
 	constructor() {
 		super();
@@ -75,6 +77,47 @@ export class XtyleSlider extends XtyleElement {
 	}
 	set step(value: number) {
 		this.setAttribute("step", String(value));
+	}
+
+	/** The step taken while the modifier is held (a coarser or finer jump); defaults to `step * 10`. */
+	get altStep(): number {
+		const raw = Number(this.getAttribute("alt-step"));
+		return this.getAttribute("alt-step") !== null && raw > 0 ? raw : this.step * 10;
+	}
+	set altStep(value: number) {
+		this.setAttribute("alt-step", String(value));
+	}
+
+	/** Invert the modifier: the alt step becomes the unmodified default and the base `step` needs the modifier. */
+	get altDefault(): boolean {
+		return this.hasAttribute("alt-default");
+	}
+	set altDefault(value: boolean) {
+		this.reflectBoolean("alt-default", value);
+	}
+
+	/** Which key toggles between `step` and `altStep` for keyboard and drag; mirrors the number field. */
+	get modifier(): "shift" | "alt" | "ctrl" | "meta" {
+		const raw = (this.getAttribute("modifier") ?? "shift").toLowerCase();
+		return raw === "alt" || raw === "ctrl" || raw === "meta" ? raw : "shift";
+	}
+	set modifier(value: "shift" | "alt" | "ctrl" | "meta") {
+		this.setAttribute("modifier", value);
+	}
+
+	/** Let a typed value exceed `min`/`max`: the thumb pins at the rail edge while the true value is kept
+	 * and emitted (the announced range widens to include it). Drag and arrow-stepping still stay on the rail. */
+	get overflow(): boolean {
+		return this.hasAttribute("overflow");
+	}
+	set overflow(value: boolean) {
+		this.reflectBoolean("overflow", value);
+	}
+
+	/** The finest grid the slider snaps to (the smaller of `step` / `altStep`), so a fine modifier step and
+	 * a typed value both land on a value the coarse step can't express. */
+	private get snapGrid(): number {
+		return Math.min(this.step, this.altStep);
 	}
 
 	get value(): number {
@@ -133,10 +176,40 @@ export class XtyleSlider extends XtyleElement {
 	}
 
 	private clamp(value: number): number {
-		const { min, max, step } = this;
+		if (Number.isNaN(value)) return this.min;
+		// Overflow keeps a typed value exact and uncapped; the stepping paths (drag / arrow) do their own
+		// grid snap, so a plain value set here isn't re-snapped and can't drift off a fine typed number.
+		if (this.overflow) return Number(value.toFixed(6));
+		const { min, max, snapGrid } = this;
+		const snapped = Number((Math.round((value - min) / snapGrid) * snapGrid + min).toFixed(6));
+		return Math.min(max, Math.max(min, snapped));
+	}
+
+	/** Snap a raw value to a specific grid and cap it to the rail; drag and arrow-stepping never overflow. */
+	private snapTo(value: number, grid: number): number {
+		const { min, max } = this;
 		if (Number.isNaN(value)) return min;
-		const snapped = Math.round((value - min) / step) * step + min;
-		return Math.min(max, Math.max(min, Number(snapped.toFixed(6))));
+		const snapped = Number((Math.round((value - min) / grid) * grid + min).toFixed(6));
+		return Math.min(max, Math.max(min, snapped));
+	}
+
+	private modifierPressed(event: MouseEvent | KeyboardEvent): boolean {
+		switch (this.modifier) {
+			case "alt":
+				return event.altKey;
+			case "ctrl":
+				return event.ctrlKey;
+			case "meta":
+				return event.metaKey;
+			default:
+				return event.shiftKey;
+		}
+	}
+
+	/** The step this event should take: the alt step when the modifier is engaged, else the base step. */
+	private stepFor(event: MouseEvent | KeyboardEvent): number {
+		const useAlt = this.altDefault ? !this.modifierPressed(event) : this.modifierPressed(event);
+		return useAlt ? this.altStep : this.step;
 	}
 
 	attributeChangedCallback(): void {
@@ -149,6 +222,7 @@ export class XtyleSlider extends XtyleElement {
 			min: this.min,
 			max: this.max,
 			step: this.step,
+			altStep: this.altStep,
 			disabled: this.disabled,
 			size: this.size,
 			tone: this.tone,
@@ -159,6 +233,7 @@ export class XtyleSlider extends XtyleElement {
 			valueText: this.formatValue(this.value),
 			elementId: this.elementId,
 			editableValue: this.editableValue,
+			editing: this.editing,
 		};
 	}
 
@@ -204,7 +279,14 @@ export class XtyleSlider extends XtyleElement {
 
 	private applyIntent(intent: FragmentIntent, event: Event): void {
 		if (intent.preventDefault) event.preventDefault();
-		if (intent.setValue !== undefined) this.commit(intent.setValue, intent.commit === "input" ? "input" : "change");
+		if (intent.setValue !== undefined) {
+			this.commit(intent.setValue, intent.commit === "input" ? "input" : "change");
+			return;
+		}
+		if (intent.nudge) {
+			const step = intent.forceAlt ? this.altStep : this.stepFor(event as KeyboardEvent);
+			this.commit(this.snapTo(this.value + (intent.nudge > 0 ? step : -step), this.snapGrid), "change");
+		}
 	}
 
 	private valueAtPointer(clientX: number): number {
@@ -219,12 +301,12 @@ export class XtyleSlider extends XtyleElement {
 		if (this.disabled) return;
 		this.thumb?.focus();
 		(event.target as Element).setPointerCapture?.(event.pointerId);
-		this.commit(this.valueAtPointer(event.clientX), "input");
-		const move = (e: PointerEvent) => this.commit(this.valueAtPointer(e.clientX), "input");
+		this.commit(this.snapTo(this.valueAtPointer(event.clientX), this.stepFor(event)), "input");
+		const move = (e: PointerEvent) => this.commit(this.snapTo(this.valueAtPointer(e.clientX), this.stepFor(e)), "input");
 		const up = (e: PointerEvent) => {
 			this.rail?.removeEventListener("pointermove", move);
 			this.rail?.removeEventListener("pointerup", up);
-			this.commit(this.valueAtPointer(e.clientX), "change");
+			this.commit(this.snapTo(this.valueAtPointer(e.clientX), this.stepFor(e)), "change");
 		};
 		this.rail?.addEventListener("pointermove", move);
 		this.rail?.addEventListener("pointerup", up);
@@ -251,7 +333,9 @@ export class XtyleSlider extends XtyleElement {
 		});
 	}
 
-	/** Swap the shown value for an inline number editor; Enter or blur commits the typed value (clamped), Escape cancels. */
+	/** Swap the shown value for an inline numeric editor that reads like the number field: Arrow / Page keys
+	 * step (the modifier swaps base <-> alt step for big/small jumps), Enter or blur commits, Escape cancels.
+	 * Where `overflow` is set the committed value may pass min/max; otherwise it clamps to the rail. */
 	private enterValueEdit(): void {
 		if (this.disabled) return;
 		const valueSpan = this.root.querySelector(".xtyle-slider__value") as HTMLElement | null;
@@ -264,6 +348,7 @@ export class XtyleSlider extends XtyleElement {
 		input.setAttribute("aria-label", "Edit value");
 		valueSpan.removeAttribute("aria-hidden");
 		valueSpan.replaceChildren(input);
+		this.editing = true;
 		input.focus();
 		input.select();
 		let done = false;
@@ -272,18 +357,48 @@ export class XtyleSlider extends XtyleElement {
 			done = true;
 			input.removeEventListener("keydown", onKey);
 			input.removeEventListener("blur", onBlur);
+			this.editing = false;
 			valueSpan.setAttribute("aria-hidden", "true");
 			const next = Number(input.value.trim());
 			if (save && input.value.trim() !== "" && !Number.isNaN(next)) this.commit(next, "change");
 			else this.render();
 		};
+		// The thumb tracks live while the editor stays open: `editing` keeps the update from rebuilding the
+		// value span (which holds the input), so a step doesn't tear down the field mid-edit.
+		const stepEditor = (dir: 1 | -1, event: KeyboardEvent, forceAlt: boolean): void => {
+			const current = Number(input.value.trim());
+			const base = Number.isNaN(current) ? this.value : current;
+			const step = forceAlt ? this.altStep : this.stepFor(event);
+			const nextVal = this.clamp(base + dir * step);
+			input.value = String(nextVal);
+			this.commit(nextVal, "input");
+		};
 		const onKey = (e: KeyboardEvent): void => {
-			if (e.key === "Enter") {
-				e.preventDefault();
-				finish(true);
-			} else if (e.key === "Escape") {
-				e.preventDefault();
-				finish(false);
+			switch (e.key) {
+				case "Enter":
+					e.preventDefault();
+					finish(true);
+					break;
+				case "Escape":
+					e.preventDefault();
+					finish(false);
+					break;
+				case "ArrowUp":
+					e.preventDefault();
+					stepEditor(1, e, false);
+					break;
+				case "ArrowDown":
+					e.preventDefault();
+					stepEditor(-1, e, false);
+					break;
+				case "PageUp":
+					e.preventDefault();
+					stepEditor(1, e, true);
+					break;
+				case "PageDown":
+					e.preventDefault();
+					stepEditor(-1, e, true);
+					break;
 			}
 		};
 		const onBlur = (): void => finish(true);

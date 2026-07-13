@@ -1,0 +1,63 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+import type { FullTone as Tone } from "@xtyle/core";
+type DotSize = "sm" | "md" | "lg";
+type DotPulse = "slow" | "fast";
+
+interface Props {
+	tone?: Tone;
+	size?: DotSize;
+	pulse?: DotPulse;
+	ping?: boolean;
+	glow?: boolean;
+	color?: string;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	tone = "neutral",
+	size = "md",
+	pulse,
+	ping = false,
+	glow = false,
+	color,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const bindings = {
+	tone,
+	size,
+	pulse: pulse || null,
+	ping,
+	glow,
+	color: color ?? null,
+};
+const composed = await renderFragmentLight("dot", bindings);
+---
+
+<xtyle-dot
+	tone={tone}
+	size={size}
+	pulse={pulse || undefined}
+	ping={ping || undefined}
+	glow={glow || undefined}
+	color={color || undefined}
+	label={label || undefined}
+	role={label ? "img" : undefined}
+	aria-label={label || undefined}
+	aria-hidden={label ? undefined : "true"}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

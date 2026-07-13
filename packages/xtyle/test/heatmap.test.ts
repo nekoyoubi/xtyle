@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getComponent, coverComponent, derive, rampColor, glowFilter, GLOW_MAX_BLUR } from "../src/index.js";
+import { getComponent, coverComponent, derive, rampColor, glowFilter, categoricalHeatColors, GLOW_MAX_BLUR } from "../src/index.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
 import { xtyleDefault } from "../src/batteries.js";
 
@@ -151,6 +151,20 @@ describe("heatmap", () => {
 		expect(html).toContain('aria-label="A, x: 0"'); // untitled cell keeps the default readout
 	});
 
+	it("renders a categorical legend instead of the ramp scale when a legend binding is present", async () => {
+		const legend = [
+			{ color: "#e5484d", label: "Bugs" },
+			{ color: "#30a46c", label: "Features" },
+		];
+		const html = await renderFragmentLight("heatmap", { ...bindings, scale: true, legend });
+		expect(html).toContain('class="xtyle-heatmap__legend"');
+		expect(html).not.toContain('class="xtyle-heatmap__scale"');
+		const swatches = html.match(/xtyle-heatmap__legend-swatch/g) ?? [];
+		expect(swatches).toHaveLength(2);
+		expect(html).toContain("background:#30a46c");
+		expect(html).toContain(">Features</span>");
+	});
+
 	it("shows a No data message with no grid for an empty matrix", async () => {
 		const html = await renderFragmentLight("heatmap", { values: [] });
 		expect(html).toContain('class="xtyle-heatmap__empty"');
@@ -171,6 +185,34 @@ describe("glowFilter", () => {
 
 	it("clamps intensity above one to the full-strength blur", () => {
 		expect(glowFilter(5, "#abc")).toBe(glowFilter(1, "#abc"));
+	});
+});
+
+describe("categoricalHeatColors", () => {
+	const values = [
+		[10, 0, 5],
+		[2, 8, 6],
+	];
+
+	it("gives each column its own hue and blends toward the surface at low values", () => {
+		const { cellColors, hues } = categoricalHeatColors("skittles", values, register);
+		expect(hues.length).toBe(3); // one per column
+		expect(new Set(hues).size).toBe(3); // distinct
+		// column max (value === ceiling) lands on the column's own hue…
+		expect(cellColors[0][0].toLowerCase()).toBe(hues[0].toLowerCase());
+		// …and a zero cell washes to the neutral surface, not the hue.
+		expect(cellColors[0][1].toLowerCase()).not.toBe(hues[1].toLowerCase());
+		expect(cellColors[0][1]).toMatch(/^#[0-9a-f]{6}$/i);
+	});
+
+	it("colors by row when axis is row", () => {
+		const { hues } = categoricalHeatColors("skittles", values, register, { axis: "row" });
+		expect(hues.length).toBe(2); // one per row
+	});
+
+	it("shares its palette with seriesPalette (the Bar/Pie categorical path)", () => {
+		const { hues } = categoricalHeatColors("accents", values, register);
+		expect(hues[0].toLowerCase()).toBe((register["--accent"] ?? "").toLowerCase());
 	});
 });
 

@@ -11,6 +11,8 @@ import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Eyebrow from "@xtyle/astro/Eyebrow.astro";
+import { derive, makeXtyleAlgorithm, toOklchColor, hueDelta, type AccentStrategy } from "@xtyle/core";
+import { toPreset } from "@xtyle/core/authoring";
 
 const sections = [
 	{ id: "what", label: "What an algorithm is" },
@@ -18,6 +20,7 @@ const sections = [
 	{ id: "anatomy", label: "Anatomy of a mod" },
 	{ id: "preset", label: "Tier 1: a family preset" },
 	{ id: "scratch", label: "Tier 2: from scratch" },
+	{ id: "knobs", label: "Declaring knob controls" },
 	{ id: "passes", label: "Deriving in passes" },
 	{ id: "prove", label: "Prove it" },
 	{ id: "load", label: "Load it" },
@@ -38,9 +41,40 @@ const specFields = [
 	{ field: "chroma", type: "{ accent, status, palette, neutral, accentTint }", note: "per-family chroma multipliers over the shared derivation" },
 	{ field: "contrast", type: "{ floor, textOnFill }", note: "the AA/AAA floors the derivation must clear" },
 	{ field: "elevation", type: "{ strength, alphaBoost }", note: "shadow weight and overlay opacity" },
+	{ field: "accentStrategy", type: '"fan" | "step" | "shade" | "duo"', note: "the accent family this taste ships with — the default for the accentStrategy knob, which a theme can still override" },
 	{ field: "knobs", type: "string[]", note: "the knobs this algorithm accepts (defaults to the shared set)" },
+	{ field: "knobSpecs", type: "KnobSpec[]", note: "control domains for any knob beyond the shared set, so a knob of your own self-renders in the builder" },
 	{ field: "passes", type: "(preset, input) => Pass[]", note: "ordered passes for a staged derivation (single-pass if omitted)" },
 ];
+
+const knobSpecFields = [
+	{ field: "name", type: "string", note: "the knob name, matched against the algorithm's knobs" },
+	{ field: "kind", type: '"select" | "range" | "text"', note: "the control the builder renders" },
+	{ field: "min / max / step", type: "number", note: "the bounds of a range knob" },
+	{ field: "options", type: "{ value, label? }[]", note: "the accepted values of a select knob" },
+	{ field: "default", type: "string | number", note: "the value the knob takes when first switched on" },
+	{ field: "label", type: "string", note: "a default label hint; a consumer may localize it" },
+	{ field: "group", type: "string", note: "sections controls in the builder; defaults to the name" },
+	{ field: "unit", type: "string", note: "a suffix intrinsic to the value, e.g. ° for a hue step" },
+];
+
+const knobsSnippet = `import { defineAlgorithm } from "@xtyle/core/authoring";
+
+defineAlgorithm({
+  id: "mono",
+  produces: ["--bg-0", "--fg-0", "--accent"],
+  categories: { color: ["--bg-0", "--fg-0", "--accent"] },
+  knobs: ["scheme", "punch"],           // 'scheme' is shared; 'punch' is your own
+  knobSpecs: [
+    { name: "punch", kind: "range", label: "Punch", min: 0, max: 0.4, step: 0.02, default: 0.15 },
+  ],
+  derive(input, { cuti }) {
+    const punch = typeof input.knobs?.punch === "number" ? input.knobs.punch : 0.15;
+    const accent = cuti.saturate(input.anchors?.accent ?? "#8a8f98", punch);
+    // ... derive the register, its accent chroma lifted by 'punch'
+    return [/* nodes */];
+  },
+});`;
 
 const anatomySnippet = `algorithms/sunrise/
 ├─ mod-manifest.json   # declares the mod: name, capabilities, entry
@@ -67,6 +101,7 @@ defineXtyleAlgorithm({
   anchors: { bg: "#1a1410", accent: "#ff9e5e" },
   vibrancy: 0.7,
   chroma: { accent: 1.4, palette: 1.3 },
+  accentStrategy: "step",   // spread accent-2/3/4 evenly, not as flanks + complement
 });`;
 
 const scratchSnippet = `import { defineAlgorithm } from "@xtyle/core/authoring";
@@ -110,6 +145,45 @@ npx xtyle audit -a sunrise`;
 
 const loadSnippet = `npm run build:mods            # bundles src/mod.ts → src/mod.js
 npx xtyle derive -a sunrise    # loads by id, derives a theme`;
+
+const fanBg = "#0e1018";
+const fanAccent = "#6c5cff";
+// `duo` is the one strategy with a second *input*: it reads `--accent-2` as a brand anchor rather
+// than deriving it, so the preview pins one to show the mode doing its actual job.
+const fanAccent2 = "#ff8a3d";
+type FanSwatch = { label: string; hex: string; fg: string; shift: string };
+function deriveFan(strategy: AccentStrategy): FanSwatch[] {
+	const algorithm = makeXtyleAlgorithm(toPreset({ id: `fan-${strategy}`, accentStrategy: strategy }));
+	const register = derive(algorithm, {
+		anchors: { bg: fanBg, accent: fanAccent },
+		...(strategy === "duo" ? { constraints: { "--accent-2": fanAccent2 } } : {}),
+	});
+	const baseHue = toOklchColor(register["--accent"]).h;
+	const stepsLightness = strategy === "shade" || strategy === "duo";
+	return (["--accent", "--accent-2", "--accent-3", "--accent-4"] as const).map((key, i) => {
+		const color = toOklchColor(register[key]);
+		let shift: string;
+		if (strategy === "duo") shift = i < 2 ? "brand" : `L ${Math.round(color.l * 100)}`;
+		else if (stepsLightness) shift = `L ${Math.round(color.l * 100)}`;
+		else if (i === 0) shift = "base hue";
+		else {
+			const delta = Math.round(hueDelta(baseHue, color.h));
+			shift = `${delta > 0 ? "+" : ""}${delta}°`;
+		}
+		return {
+			label: key === "--accent" ? "accent" : key.replace("--", ""),
+			hex: register[key],
+			fg: register[`${key}-fg`] ?? "#000",
+			shift,
+		};
+	});
+}
+const fanComparison = [
+	{ fan: "fan", note: "2 and 3 flank the accent; 4 is its complement", swatches: deriveFan("fan") },
+	{ fan: "step", note: "all four step evenly around the wheel", swatches: deriveFan("step") },
+	{ fan: "shade", note: "one hue, stepped in lightness: a tint and two deeper shades", swatches: deriveFan("shade") },
+	{ fan: "duo", note: "two brand colors in, both shaded against the pair's mean lightness", swatches: deriveFan("duo") },
+];
 ---
 
 <Base
@@ -157,7 +231,7 @@ npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 			<Panel title="The built-in set" id="built-in" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						Five algorithms ship blessed. They are ordinary mods, the same shape yours
+						Six algorithms ship blessed. They are ordinary mods, the same shape yours
 						takes, and a good place to read taste off working examples.
 					</Text>
 					<Table aria-label="Built-in algorithms">
@@ -199,7 +273,27 @@ npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 						<code>{"{ id: \"xtyle-default\" }"}</code>; from there you turn knobs up or down.
 					</Text>
 					<Code lang="typescript" code={presetSnippet} />
-					<Text tone="muted">Every field is optional but <code>id</code>; the rest fall through to the shared defaults.</Text>
+					<Text tone="muted">Every field is optional but <code>id</code>; the rest fall through to the shared defaults. <code>accentStrategy</code> is the one taste that reshapes the accent family itself, and it is also a knob — so what you set here is the algorithm's default posture, not a lock a theme can't move. <code>fan</code> (the default) flanks the accent with 2/3 and complements it with 4; <code>step</code> walks all four evenly around the hue circle; <code>shade</code> holds one hue and steps its lightness; and <code>duo</code> takes <em>two</em> brand colors — <code>--accent</code> and <code>--accent-2</code> are both inputs, and 3/4 become their shades, placed against the pair's mean lightness so the two ramps read as one system.</Text>
+					<div class="fan-compare" role="group" aria-label="Accent strategies compared off one accent">
+						{fanComparison.map((row) => (
+							<div class="fan-row">
+								<div class="fan-head">
+									<code>{row.fan}</code>
+									<span class="fan-note">{row.note}</span>
+								</div>
+								<div class="fan-swatches">
+									{row.swatches.map((s) => (
+										<div class="fan-swatch" style={`background:${s.hex};color:${s.fg}`}>
+											<span class="fan-swatch-label">{s.label}</span>
+											<span class="fan-swatch-hue">{s.shift}</span>
+											<span class="fan-swatch-hex">{s.hex}</span>
+										</div>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+					<Text tone="muted">All four derive off the same <code>{fanAccent}</code> accent (degrees are the hue step off it; <code>L</code> is the OKLCH lightness), and <code>duo</code> takes a second brand anchor of <code>{fanAccent2}</code>. <code>fan</code> keeps the family tight and adds one true opposite; <code>step</code> trades that cohesion for even separation; <code>shade</code> drops hue harmony for one brand color in four depths, so even a near-gray accent stays legible where a hue turn would collapse; <code>duo</code> is the one to reach for when the brand simply <em>is</em> two colors, and neither should be derived from the other.</Text>
 					<Table aria-label="defineXtyleAlgorithm spec fields">
 						<table>
 							<thead>
@@ -231,6 +325,47 @@ npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 						<code>pickReadable</code>, <code>contrast</code>, and the rest) is the same
 						math the engine derives with, so a token your mod produces can't drift from one
 						the engine produces.
+					</Alert>
+				</Stack>
+			</Panel>
+
+			<Panel title="Declaring knob controls" id="knobs" class="docs-anchor">
+				<Stack gap={4}>
+					<Text tone="muted">
+						An algorithm's <code>knobs</code> names the dials it reads;
+						<code>knobSpecs</code> declares their <strong>domain</strong>: the kind of
+						control, its range or options, its default. Each one then self-renders in the
+						theme builder. The shared knobs (<code>scheme</code>, <code>vibrancy</code>,
+						<code>contrastBand</code>, <code>density</code>, <code>cues</code>,
+						<code>accentSplit</code>, <code>accentShiftStep</code>, <code>typeScale</code>,
+						<code>radiusScale</code>) carry their domains for free; declare a
+						<code>KnobSpec</code> only for a knob of your own.
+					</Text>
+					<Code lang="typescript" code={knobsSnippet} />
+					<Text tone="muted">
+						The builder renders the control straight from your declaration (a range slider,
+						a select, or a text field), so a knob no one hardcoded a UI for still appears the
+						moment your algorithm reads it. See it live on
+						<Link href="/generator">The Bench</Link>: pick an algorithm and its own knobs
+						fill the right rail.
+					</Text>
+					<Table aria-label="KnobSpec fields">
+						<table>
+							<thead>
+								<tr><th>field</th><th>type</th><th>what it sets</th></tr>
+							</thead>
+							<tbody>
+								{knobSpecFields.map((f) => (
+									<tr><td><code>{f.field}</code></td><td><code>{f.type}</code></td><td>{f.note}</td></tr>
+								))}
+							</tbody>
+						</table>
+					</Table>
+					<Alert severity="info" variant="soft">
+						<span slot="title">The algorithm owns the domain; the consumer owns cosmetics</span>
+						What a knob accepts and how it's shaped (kind, range, options) is the algorithm's
+						declaration. A consumer layers only cosmetics on top (a localized label, digit
+						precision), so the two never re-litigate who decides a knob's valid values.
 					</Alert>
 				</Stack>
 			</Panel>
@@ -299,5 +434,58 @@ npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 	pre {
 		margin: 0;
 		white-space: pre;
+	}
+	.fan-compare {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		padding: var(--space-4);
+		border: var(--border-thin) solid var(--bg-3);
+		border-radius: var(--radius-md);
+		background: var(--bg-1);
+	}
+	.fan-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-2);
+		margin-bottom: var(--space-2);
+	}
+	.fan-note {
+		color: var(--fg-2);
+		font-size: 0.875rem;
+	}
+	.fan-swatches {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: var(--space-2);
+	}
+	.fan-swatch {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		padding: var(--space-3);
+		min-height: 4.5rem;
+		border-radius: var(--radius-sm);
+		font-size: 0.8125rem;
+		line-height: 1.2;
+	}
+	.fan-swatch-label {
+		font-weight: 600;
+	}
+	.fan-swatch-hue {
+		font-size: 0.75rem;
+		opacity: 0.85;
+	}
+	.fan-swatch-hex {
+		margin-top: auto;
+		font-family: var(--font-mono, ui-monospace, monospace);
+		font-size: 0.75rem;
+		opacity: 0.85;
+	}
+	@media (max-width: 30rem) {
+		.fan-swatches {
+			grid-template-columns: repeat(2, 1fr);
+		}
 	}
 </style>

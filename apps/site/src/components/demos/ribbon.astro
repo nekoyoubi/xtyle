@@ -1,0 +1,155 @@
+---
+import Ribbon from "@xtyle/astro/Ribbon.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
+
+const CORNERS = [
+	{ corner: "top-left", tone: "info", label: "Beta" },
+	{ corner: "top-right", tone: "accent", label: "New" },
+	{ corner: "bottom-left", tone: "success", label: "Free" },
+	{ corner: "bottom-right", tone: "danger", label: "Sale" },
+] as const;
+
+const SIZES = [
+	{ size: "sm", label: "sm" },
+	{ size: "md", label: "md" },
+	{ size: "lg", label: "lg" },
+] as const;
+
+const SEMANTIC = ["accent", "success", "warn", "danger", "info", "neutral"] as const;
+
+const TONE_GROUPS = [
+	{ label: "Accents", tones: ["accent", ...ACCENT_VARIANTS, "neutral"] },
+	{ label: "Statuses", tones: ["success", "info", "warn", "danger"] },
+	{ label: "Named hues", tones: [...HUES] },
+] as const;
+---
+
+<style>
+	.rb-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+		gap: var(--space-4);
+	}
+	.rb-grid--tight {
+		grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+		gap: var(--space-3);
+	}
+	.rb-tile {
+		position: relative;
+		height: 8rem;
+		border-radius: var(--radius-lg);
+		border: var(--border-thin) solid var(--line);
+		background: var(--bg-1);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.rb-tile--sm {
+		height: 5.5rem;
+	}
+	.rb-tile__label {
+		font-size: var(--text-sm);
+		font-family: var(--font-mono);
+		color: var(--fg-2);
+	}
+	.rb-tile--art {
+		background: linear-gradient(135deg, var(--accent-bg), var(--bg-2));
+	}
+</style>
+
+<Stack gap={6}>
+	<Stack gap={3}>
+		<Heading level={3} size="sm">Four corners</Heading>
+		<Text tone="muted" size="sm">
+			A ribbon pins to any corner of its container and clips to the edges, so it reads as a folded
+			banner. The container just needs <code>position: relative</code> — the ribbon clips itself,
+			rounded corners included, so it never forces <code>overflow: hidden</code> on your card.
+		</Text>
+		<div class="rb-grid">
+			{CORNERS.map((r) => (
+				<div class="rb-tile">
+					<Ribbon corner={r.corner} tone={r.tone} label={r.label} />
+					<span class="rb-tile__label">{r.corner}</span>
+				</div>
+			))}
+		</div>
+	</Stack>
+
+	<Stack gap={3}>
+		<Heading level={3} size="sm">Three sizes</Heading>
+		<div class="rb-grid">
+			{SIZES.map((s) => (
+				<div class="rb-tile">
+					<Ribbon size={s.size} tone="accent" label="New" />
+					<span class="rb-tile__label">{s.label}</span>
+				</div>
+			))}
+		</div>
+	</Stack>
+
+	<Stack gap={3}>
+		<Heading level={3} size="sm">Solid and soft</Heading>
+		<div class="rb-grid">
+			{SEMANTIC.map((tone) => (
+				<div class="rb-tile">
+					<Ribbon tone={tone} variant="solid" label="Solid" />
+					<span class="rb-tile__label">{tone}</span>
+				</div>
+			))}
+			{SEMANTIC.map((tone) => (
+				<div class="rb-tile">
+					<Ribbon tone={tone} variant="soft" label="Soft" />
+					<span class="rb-tile__label">{tone}</span>
+				</div>
+			))}
+		</div>
+	</Stack>
+
+	<Stack gap={3}>
+		<Heading level={3} size="sm">Every tone</Heading>
+		<Text tone="muted" size="sm">
+			<code>tone</code> spans the full roster: the accent variants, the status roles, and the
+			named hues, each resolved off the derived theme.
+		</Text>
+		<Stack gap={4}>
+			{TONE_GROUPS.map((group) => (
+				<Stack gap={2}>
+					<Text size="xs" tone="subtle" weight="semibold">{group.label}</Text>
+					<div class="rb-grid rb-grid--tight">
+						{group.tones.map((tone) => (
+							<div class="rb-tile rb-tile--sm">
+								<Ribbon tone={tone} size="sm" label={tone} />
+								<span class="rb-tile__label">{tone}</span>
+							</div>
+						))}
+					</div>
+				</Stack>
+			))}
+		</Stack>
+	</Stack>
+
+	<Stack gap={3}>
+		<Heading level={3} size="sm">Color escape hatch</Heading>
+		<Text tone="muted" size="sm">
+			<code>color</code> paints the band any raw value past the tone set, for a per-campaign
+			palette. Pair it with <code>textColor</code> so the label stays legible on the custom fill.
+		</Text>
+		<div class="rb-grid">
+			<div class="rb-tile rb-tile--art">
+				<Ribbon color="var(--purple)" textColor="var(--purple-fg)" label="Featured" />
+				<span class="rb-tile__label">--purple</span>
+			</div>
+			<div class="rb-tile rb-tile--art">
+				<Ribbon color="#f59e0b" textColor="#1a1205" corner="top-left" label="Hot" />
+				<span class="rb-tile__label">#f59e0b</span>
+			</div>
+			<div class="rb-tile rb-tile--art">
+				<Ribbon color="color-mix(in oklch, var(--success) 60%, var(--info))" textColor="#fff" corner="bottom-right" label="Mixed" />
+				<span class="rb-tile__label">color-mix</span>
+			</div>
+		</div>
+	</Stack>
+</Stack>

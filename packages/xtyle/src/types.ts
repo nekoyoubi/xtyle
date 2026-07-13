@@ -21,10 +21,32 @@ export interface FontStacks {
 	display?: string;
 }
 
+/**
+ * How `--accent-2/3/4` relate to `--accent` — the one input that reshapes the accent family itself
+ * rather than tuning it.
+ *
+ * - `fan` — 2/3 flank the accent by ∓`accentSplit`, 4 is its complement. Constant lightness/chroma.
+ * - `step` — each accent is one `accentShiftStep` rotation past the last, an even walk of the wheel.
+ * - `shade` — one hue in four depths: 2/3/4 hold the accent's hue and step its lightness.
+ * - `duo` — two brand anchors. `--accent` and `--accent-2` are both *inputs*; 3 and 4 are their
+ *   shades, placed against the pair's mean lightness so the two ramps read as one system.
+ */
+export type AccentStrategy = "fan" | "step" | "shade" | "duo";
+
 export interface Knobs {
 	scheme?: Scheme;
 	accentShiftStep?: number;
 	accentSplit?: number;
+	/** Which accent family to build — see {@link AccentStrategy}. Unset takes the algorithm's own taste. */
+	accentStrategy?: AccentStrategy;
+	/**
+	 * Signed per-step lightness delta the surface stack walks from `--bg-0`: positive ascends the
+	 * ramp (each surface lighter than the last), negative descends it (each darker). Governs the whole
+	 * stack — `--body-bg`, `--bg-1/2/3`, and `--bg-sunken` — off one number, so flipping the ramp's
+	 * direction no longer means hand-pinning every surface. Unset resolves to the algorithm's
+	 * scheme-derived default (dark ascends, light descends), so out-of-box output is unchanged.
+	 */
+	surfaceRamp?: number;
 	contrastBand?: "aa" | "aaa" | number;
 	vibrancy?: number;
 	typeScale?: number;
@@ -144,10 +166,55 @@ export interface DeriveTrace {
 	trace: TraceSnapshot[];
 }
 
+/** How a knob's control is rendered — the algorithm's *domain*, not the site's cosmetics. */
+export type KnobKind = "select" | "range" | "text";
+
+/** One option a `select` knob accepts. `label` is an optional display hint; a consumer may override it. */
+export interface KnobOption {
+	value: string;
+	label?: string;
+}
+
+/**
+ * The valid-input *domain* an algorithm declares for one knob — kind, range, and options.
+ * This is the algorithm's contract (what values it accepts and how they're shaped), distinct
+ * from a consumer's cosmetic concerns (a localized label, a unit suffix, digit precision), which
+ * stay with the consumer. A consumer renders a knob's control from this declaration, so a novel
+ * algorithm's knob self-renders instead of vanishing for want of a hardcoded UI entry. Composite
+ * groups a consumer expands itself (anchor pickers, font stacks) carry no `KnobSpec` — those are
+ * orchestration, not a single scalar control.
+ */
+export interface KnobSpec {
+	/** The knob name — a `Knobs` key, matched against {@link Algorithm.knobs}. */
+	name: string;
+	kind: KnobKind;
+	/** A short human label hint. A consumer may override for localization; falls back to a humanized `name`. */
+	label?: string;
+	/** Logical grouping for a consumer that sections its controls. Defaults to `name`. */
+	group?: string;
+	/** The value the knob takes when first switched on from its default. */
+	default?: string | number;
+	/** `range` domain. */
+	min?: number;
+	max?: number;
+	step?: number;
+	/** `select` domain — the accepted values. */
+	options?: KnobOption[];
+	/** A unit suffix intrinsic to the value (e.g. `°` for a hue step). */
+	unit?: string;
+}
+
 export interface Algorithm {
 	id: string;
 	produces: TokenName[];
 	knobs: string[];
+	/**
+	 * The rendered domain of each scalar knob this algorithm reads — kind, range, options — so a
+	 * consumer's editing surface renders from the algorithm's own declaration rather than a hardcoded
+	 * table. A subset of {@link knobs}: composite groups a consumer expands itself (`anchors`, `fonts`)
+	 * carry no spec. Resolved from the shared registry for blessed knobs; a novel knob supplies its own.
+	 */
+	knobSpecs: KnobSpec[];
 	categories: TokenCategories;
 	derive(opts: DeriveOptions): TokenRegister;
 	/**
@@ -172,7 +239,7 @@ export interface Algorithm {
 	deriveTraced?(opts: DeriveOptions): DeriveTrace;
 }
 
-export type EmitFormat = "css" | "json" | "prism" | "monaco";
+export type EmitFormat = "css" | "json" | "prism" | "monaco" | "terminal";
 
 export type Emitter = (register: TokenRegister) => string;
 

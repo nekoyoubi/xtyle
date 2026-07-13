@@ -1,8 +1,10 @@
-import type { Knobs, TokenRegister } from "@xtyle/core";
+import type { Algorithm, Knobs, TokenRegister } from "@xtyle/core";
+import { migrateRecipe } from "@xtyle/core";
 
 export type SchemeKnob = "dark" | "light";
 export type ContrastBandKnob = "aa" | "aaa";
 export type DensityKnob = "compact" | "normal" | "comfortable";
+export type CuesKnob = "color" | "redundant";
 
 /** Anchor colors. Every field is optional — an unset anchor falls back to the algorithm's own default. */
 export interface BenchAnchors {
@@ -15,15 +17,115 @@ export interface BenchAnchors {
 export interface BenchKnobs {
 	scheme?: SchemeKnob;
 	contrastBand?: ContrastBandKnob;
+	cues?: CuesKnob;
 	vibrancy?: number;
 	typeScale?: number;
 	radiusScale?: number;
 	accentSplit?: number;
+	accentShiftStep?: number;
 	density?: DensityKnob;
 	hour?: number;
 	fontSans?: string;
 	fontMono?: string;
 	fontDisplay?: string;
+}
+
+export type KnobControlKind = "select" | "range" | "text";
+
+export interface KnobSelectOption {
+	value: string;
+	label: string;
+}
+
+/**
+ * One rendered control in the bench's right rail — the merge of an algorithm-declared knob *domain*
+ * (`kind`, range, options; from `Algorithm.knobSpecs`) with the site's *cosmetic* concerns (a
+ * localized `label`, a `unit` suffix, `digits` of precision). `field` is the `BenchKnobs` key it
+ * reads and writes — for the blessed scalar knobs this is the knob name itself; a novel knob writes
+ * under its own name via the same channel. The rail is built from the active algorithm's own specs,
+ * so a novel algorithm's knob self-renders instead of vanishing for want of a hardcoded UI entry.
+ */
+export interface KnobControl {
+	field: string;
+	label: string;
+	kind: KnobControlKind;
+	options?: KnobSelectOption[];
+	min?: number;
+	max?: number;
+	step?: number;
+	digits?: number;
+	unit?: string;
+	placeholder?: string;
+	/** The value a range/toggle knob takes when first switched on from its default. */
+	seed?: number;
+}
+
+/**
+ * Site-owned cosmetics keyed by knob name — everything the algorithm's domain spec deliberately
+ * leaves to the consumer: a localized label, digit precision, the "unset" option's wording. The
+ * domain (kind, range, options, unit) comes from the algorithm; a knob absent here still renders
+ * from its spec with a humanized label.
+ */
+interface KnobCosmetic {
+	label?: string;
+	digits?: number;
+	/** The wording of the prepended "unset" option for a select knob. */
+	defaultOption?: string;
+}
+
+const KNOB_COSMETICS: Record<string, KnobCosmetic> = {
+	scheme: { defaultOption: "default (from background)" },
+	accentStrategy: { defaultOption: "default (the algorithm's taste)" },
+	accentSplit: { digits: 0 },
+	accentShiftStep: { digits: 0 },
+	hour: { digits: 0 },
+};
+
+/** The composite `fonts` knob fans out into three text stacks — a consumer-orchestrated group with no scalar domain. */
+const FONT_CONTROLS: KnobControl[] = [
+	{ field: "fontSans", label: "Sans font stack", kind: "text", placeholder: "algorithm default" },
+	{ field: "fontMono", label: "Mono font stack", kind: "text", placeholder: "algorithm default" },
+	{ field: "fontDisplay", label: "Display font stack", kind: "text", placeholder: "algorithm default" },
+];
+
+/** Title-case a raw knob name for a novel knob the site has no cosmetic label for. */
+function humanizeKnob(name: string): string {
+	const spaced = name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[-_]+/g, " ");
+	return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
+ * Build the rail's controls for an algorithm by merging each declared knob *domain*
+ * (`algorithm.knobSpecs`) with the site's cosmetics, then appending the composite font stacks when
+ * the algorithm reads `fonts`. The domain drives which controls exist and their kind/range/options,
+ * so the rail follows the algorithm — including a novel knob no hardcoded table anticipated.
+ */
+export function knobControls(algorithm: Algorithm): KnobControl[] {
+	const controls: KnobControl[] = [];
+	for (const spec of algorithm.knobSpecs) {
+		const cosmetic = KNOB_COSMETICS[spec.name] ?? {};
+		const control: KnobControl = {
+			field: spec.name,
+			label: cosmetic.label ?? spec.label ?? humanizeKnob(spec.name),
+			kind: spec.kind,
+		};
+		if (spec.kind === "select") {
+			control.options = [
+				{ value: "", label: cosmetic.defaultOption ?? "default" },
+				...(spec.options ?? []).map((o) => ({ value: o.value, label: o.label ?? o.value })),
+			];
+		} else if (spec.kind === "range") {
+			control.min = spec.min;
+			control.max = spec.max;
+			control.step = spec.step;
+			if (cosmetic.digits !== undefined) control.digits = cosmetic.digits;
+			if (spec.unit) control.unit = spec.unit;
+			if (typeof spec.default === "number") control.seed = spec.default;
+		}
+		controls.push(control);
+	}
+	if (algorithm.knobs.includes("fonts")) controls.push(...FONT_CONTROLS);
+	return controls;
 }
 
 /**
@@ -100,18 +202,6 @@ defineXtyleAlgorithm({
   chroma: { accent: 1.2, palette: 1.15 },
 });`;
 
-/** Sensible starting points when a knob is first switched from default to custom. */
-export const KNOB_SEEDS = {
-	scheme: "dark" as SchemeKnob,
-	contrastBand: "aa" as ContrastBandKnob,
-	vibrancy: 0.5,
-	typeScale: 1.2,
-	radiusScale: 1,
-	accentSplit: 45,
-	density: "normal" as DensityKnob,
-	hour: 12,
-} as const;
-
 export function defaultState(): BenchState {
 	return {
 		algorithm: "xtyle-default",
@@ -134,34 +224,47 @@ export function anchorsToConstraints(a: BenchAnchors): TokenRegister {
 /** Build the `Knobs` payload `derive` consumes, omitting every unset knob so the engine applies its own default. */
 export function toDeriveKnobs(k: BenchKnobs): Knobs {
 	const out: Knobs = {};
-	if (k.scheme) out.scheme = k.scheme;
-	if (k.contrastBand) out.contrastBand = k.contrastBand;
-	if (k.vibrancy !== undefined) out.vibrancy = k.vibrancy;
-	if (k.typeScale !== undefined) out.typeScale = k.typeScale;
-	if (k.radiusScale !== undefined) out.radiusScale = k.radiusScale;
-	if (k.accentSplit !== undefined) out.accentSplit = k.accentSplit;
-	if (k.density) out.density = k.density;
-	if (k.hour !== undefined) out.hour = k.hour;
 	const fonts: Record<string, string> = {};
-	if (k.fontSans) fonts.sans = k.fontSans;
-	if (k.fontMono) fonts.mono = k.fontMono;
-	if (k.fontDisplay) fonts.display = k.fontDisplay;
+	// Every knob field maps to its own name on the derive payload; the three font stacks are the only
+	// ones that fold into a group. Copying by key (rather than a fixed whitelist) means a novel knob a
+	// custom algorithm declares beyond the `BenchKnobs` shape reaches `derive()` for free.
+	for (const [key, value] of Object.entries(k as Record<string, unknown>)) {
+		if (value === undefined || value === "") continue;
+		if (key === "fontSans") fonts.sans = value as string;
+		else if (key === "fontMono") fonts.mono = value as string;
+		else if (key === "fontDisplay") fonts.display = value as string;
+		else (out as Record<string, unknown>)[key] = value;
+	}
 	if (Object.keys(fonts).length) out.fonts = fonts;
 	return out;
 }
 
-/** Accept recipes from older shapes (concrete anchors, `pins`) and normalize to the optional model. */
+/** Rewrite a recipe off any algorithm the engine has retired. The map itself lives in `@xtyle/core`
+ * beside the theme-file format, so the CLI, the MCP server, and any third-party consumer read an
+ * older recipe the same way the bench does; this is just the bench's call into it. */
+export function retireAlgorithm(
+	algorithm: string,
+	knobs: BenchKnobs,
+): { algorithm: string; knobs: BenchKnobs } {
+	const migrated = migrateRecipe({ algorithm, knobs });
+	return { algorithm: migrated.algorithm, knobs: migrated.knobs as BenchKnobs };
+}
+
+/** Accept recipes from older shapes (concrete anchors, `pins`, a retired algorithm) and normalize. */
 export function normalizeState(raw: unknown): BenchState {
 	const base = defaultState();
 	if (!raw || typeof raw !== "object") return base;
 	const r = raw as Record<string, unknown>;
 	const anchors = (r.anchors as BenchAnchors) ?? {};
-	const knobs = (r.knobs as BenchKnobs) ?? {};
+	const retired = retireAlgorithm(
+		typeof r.algorithm === "string" ? r.algorithm : base.algorithm,
+		((r.knobs as BenchKnobs) ?? {}),
+	);
 	const overrides = (r.overrides ?? r.pins ?? {}) as TokenRegister;
 	const normalized: BenchState = {
-		algorithm: typeof r.algorithm === "string" ? r.algorithm : base.algorithm,
+		algorithm: retired.algorithm,
 		anchors: { ...anchors },
-		knobs: { ...knobs },
+		knobs: { ...retired.knobs },
 		overrides: { ...overrides },
 	};
 	if (typeof r.customSpec === "string") normalized.customSpec = r.customSpec;
@@ -179,10 +282,12 @@ export function toInvocation(state: BenchState): string {
 	const knobEntries = [
 		...(k.scheme ? [`scheme: ${JSON.stringify(k.scheme)}`] : []),
 		...(k.contrastBand ? [`contrastBand: ${JSON.stringify(k.contrastBand)}`] : []),
+		...(k.cues ? [`cues: ${JSON.stringify(k.cues)}`] : []),
 		...(k.vibrancy !== undefined ? [`vibrancy: ${k.vibrancy}`] : []),
 		...(k.typeScale !== undefined ? [`typeScale: ${k.typeScale}`] : []),
 		...(k.radiusScale !== undefined ? [`radiusScale: ${k.radiusScale}`] : []),
 		...(k.accentSplit !== undefined ? [`accentSplit: ${k.accentSplit}`] : []),
+		...(k.accentShiftStep !== undefined ? [`accentShiftStep: ${k.accentShiftStep}`] : []),
 		...(k.density ? [`density: ${JSON.stringify(k.density)}`] : []),
 		...(k.hour !== undefined ? [`hour: ${k.hour}`] : []),
 	];

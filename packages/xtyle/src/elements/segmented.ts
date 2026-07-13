@@ -79,6 +79,8 @@ export class XtyleSegmented extends XtyleElement {
 			const disabled = readBoolAttrOrProp(child, "disabled") || child.getAttribute("aria-disabled") === "true";
 			const seg: Segment = { value, label, slot: `segment-${i}` };
 			if (disabled) seg.disabled = true;
+			const title = readAttrOrProp(child, "title");
+			if (title) seg.title = title;
 			return seg;
 		});
 	}

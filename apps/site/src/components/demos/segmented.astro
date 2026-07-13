@@ -74,6 +74,27 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Per-option hover hints</Heading>
+		<Stack gap={2}>
+			<Text size="sm" tone="muted">
+				When a short pill label needs context, give the option a <code>title</code> for a native
+				hover hint. Here each source pill spells out its kind on hover, so a picker of terse
+				names doesn't have to fall back to a bespoke tooltip-wrapped button set.
+			</Text>
+			<Segmented
+				label="Source"
+				value="claude"
+				options={[
+					{ value: "claude", label: "Claude", title: "Co-author provider" },
+					{ value: "gpt", label: "GPT", title: "Co-author provider" },
+					{ value: "outline", label: "Outline", title: "Structural generator" },
+					{ value: "expand", label: "Expand", title: "Expansion generator" },
+				]}
+			/>
+		</Stack>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={2} size="sm" tone="muted">Icon segments</Heading>
 		<Stack gap={2}>
 			<Text size="sm" tone="muted">

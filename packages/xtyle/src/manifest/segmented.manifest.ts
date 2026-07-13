@@ -34,9 +34,9 @@ const svelteStructuredExample = `<script lang="ts">
 const perOptionExample = `<xtyle-segmented id="run-view" label="Run output"></xtyle-segmented>
 <script>
 	document.getElementById("run-view").options = [
-		{ value: "report", label: "Report", badge: "128" },
-		{ value: "text", label: "Text", disabled: true },
-		{ value: "log", label: "Log", disabled: true },
+		{ value: "report", label: "Report", badge: "128", title: "The parsed summary view" },
+		{ value: "text", label: "Text", disabled: true, title: "Raw text (no run yet)" },
+		{ value: "log", label: "Log", disabled: true, title: "Execution log (no run yet)" },
 	];
 </script>`;
 
@@ -151,9 +151,9 @@ export const segmentedManifest: ComponentManifest = {
 		{ name: "value", type: "string", description: "The selected option's value. Defaults to the first option. Reflected and form-submitted.", bindings: ["html", "svelte", "astro"] },
 		{
 			name: "options",
-			type: "string | { value: string; label?: string; disabled?: boolean; badge?: string }[]",
+			type: "string | { value: string; label?: string; disabled?: boolean; badge?: string; title?: string }[]",
 			description:
-				"The options. The comma-string shorthand takes bare labels (`Day,Week`, the label is the value) or `label:value` pairs (`Left:start`). For labels that differ from their value or carry a comma or colon, pass a `{ value, label }[]` instead (the JS property in html / svelte, a JSON array attribute in Astro); a bare `string[]` works too. The structured form also takes a per-option `disabled` (a choice the current data can't offer, skipped by pointer and keyboard) and a `badge` (trailing text like a count) per segment.",
+				"The options. The comma-string shorthand takes bare labels (`Day,Week`, the label is the value) or `label:value` pairs (`Left:start`). For labels that differ from their value or carry a comma or colon, pass a `{ value, label }[]` instead (the JS property in html / svelte, a JSON array attribute in Astro); a bare `string[]` works too. The structured form also takes a per-option `disabled` (a choice the current data can't offer, skipped by pointer and keyboard), a `badge` (trailing text like a count), and a `title` (a hover hint on the segment, for a short label that needs disambiguating context) per segment.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{ name: "disabled", type: "boolean", default: "false", description: "Disables selection and mutes the bar.", bindings: ["html", "svelte", "astro"] },

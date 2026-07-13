@@ -1,5 +1,6 @@
 ---
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { avatarInitials } from "@xtyle/core";
 
 import type { Tone, FullTone as BadgeTone } from "@xtyle/core";
 type AvatarSize = "sm" | "md" | "lg" | "xl";
@@ -8,6 +9,9 @@ type AvatarShape = "circle" | "square";
 interface Props {
 	src?: string;
 	alt?: string;
+	/** The person the avatar stands for: supplies the fallback initials when there is no image and
+	 * nothing slotted, and names the avatar when no `alt` is given. */
+	userName?: string;
 	tone?: BadgeTone;
 	size?: AvatarSize;
 	shape?: AvatarShape;
@@ -25,6 +29,7 @@ interface Props {
 const {
 	src,
 	alt = "",
+	userName,
 	tone = "neutral",
 	size = "md",
 	shape = "circle",
@@ -36,9 +41,16 @@ const {
 	...rest
 } = Astro.props;
 
+const iconHtml = Astro.slots.has("icon") ? await Astro.slots.render("icon") : "";
+const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+
 const bindings = {
 	src: src ?? null,
 	alt,
+	userName: userName ?? null,
+	// Resolved here rather than left to the slot: the initials are real content, and this is the
+	// layer that knows whether the consumer supplied any of their own.
+	initials: bodyHtml.trim() ? "" : avatarInitials(userName),
 	tone,
 	size,
 	shape,
@@ -47,8 +59,6 @@ const bindings = {
 	pulse: pulse ?? null,
 };
 const chrome = await renderFragmentLight("avatar", bindings);
-const iconHtml = Astro.slots.has("icon") ? await Astro.slots.render("icon") : "";
-const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 const composed = chrome
 	.replace('<slot name="icon"></slot>', () => iconHtml)
 	.replace("<slot></slot>", () => bodyHtml);
@@ -57,6 +67,7 @@ const composed = chrome
 <xtyle-avatar
 	src={src ?? undefined}
 	alt={alt}
+	user-name={userName ?? undefined}
 	tone={tone}
 	size={size}
 	shape={shape}

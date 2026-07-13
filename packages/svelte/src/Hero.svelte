@@ -15,6 +15,6 @@
 	let { align = "center", split = false, children, ...rest }: Props = $props();
 </script>
 
-<xtyle-hero {...rest} align={align !== "center" ? align : undefined} split={split ? "" : undefined}>
+<xtyle-hero {...rest} align={align !== "center" ? align : undefined} split={split ? true : undefined}>
 	{@render children?.()}
 </xtyle-hero>

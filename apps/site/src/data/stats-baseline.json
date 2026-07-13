@@ -1,9 +1,9 @@
 {
-	"version": "0.5.0",
-	"components": 61,
+	"version": "0.6.0",
+	"components": 65,
 	"tokens": 276,
 	"categories": 10,
 	"bindings": 3,
-	"primitives": 59,
+	"primitives": 71,
 	"tools": 2
 }

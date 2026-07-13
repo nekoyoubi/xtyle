@@ -9,6 +9,9 @@
 	interface Props {
 		src?: string;
 		alt?: string;
+		/** The person the avatar stands for: supplies the fallback initials when there is no image and
+		 * nothing slotted, and names the avatar when no `alt` is given. */
+		userName?: string;
 		tone?: BadgeTone;
 		size?: AvatarSize;
 		shape?: AvatarShape;
@@ -25,6 +28,7 @@
 	let {
 		src,
 		alt,
+		userName,
 		tone = "neutral",
 		size = "md",
 		shape = "circle",
@@ -41,6 +45,7 @@
 	{...rest}
 	{src}
 	{alt}
+	user-name={userName}
 	{tone}
 	{size}
 	{shape}

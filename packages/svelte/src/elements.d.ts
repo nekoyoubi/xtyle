@@ -51,9 +51,29 @@ interface XtyleCodeAttributes extends XtyleAttributes {
 	preload?: boolean;
 }
 
+interface XtyleQrCodeAttributes extends XtyleAttributes {
+	data?: string;
+	mode?: "theme" | "bitonal" | "auto";
+	"ec-level"?: "L" | "M" | "Q" | "H";
+	icon?: string;
+	logo?: string;
+	"icon-size"?: "sm" | "md" | "lg" | "xl";
+	"icon-scale"?: number;
+	"icon-overlay"?: boolean;
+	"icon-outline"?: boolean;
+	"module-shape"?: "square" | "dot" | "rounded";
+	frame?: boolean;
+	caption?: string;
+	"mode-toggle"?: boolean;
+	size?: number;
+	"quiet-zone"?: number;
+	label?: string;
+}
+
 declare module "svelte/elements" {
 	interface SvelteHTMLElements {
 		"xtyle-button": XtyleButtonAttributes;
+		"xtyle-qr": XtyleQrCodeAttributes;
 		"xtyle-field": XtyleFieldAttributes;
 		"xtyle-card": XtyleCardAttributes;
 		"xtyle-badge": XtyleBadgeAttributes;

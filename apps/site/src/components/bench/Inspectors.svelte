@@ -1,19 +1,18 @@
 <script lang="ts">
-	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xtyle/core";
+	import type { TokenLineageNode, TokenRegister } from "@xtyle/core";
 	import { auditRegister, clampToGamut, coverComponents, toOklchColor } from "@xtyle/core";
 	import { isColorToken } from "./tokens.js";
-	import type { BenchState } from "./state.js";
-	import { anchorsToConstraints, toDeriveKnobs } from "./state.js";
 
 	interface Props {
 		register: TokenRegister;
-		algorithm: Algorithm;
-		bench: BenchState;
+		/** The edges of the derivation that produced `register` — resolved once by the bench and passed
+		 * down, so opening this tab reads the graph rather than deriving a second one to read it from. */
+		lineage: TokenLineageNode[];
 		/** Which inspector to show — `contrast` | `coverage` | `gamut` | `graph` (driven by the report sub-bar). */
 		panel: string;
 	}
 
-	let { register, algorithm, bench, panel }: Props = $props();
+	let { register, lineage, panel }: Props = $props();
 
 	const audit = $derived(auditRegister(register));
 	const contrastRows = $derived(
@@ -50,19 +49,6 @@
 			.map(([name, value]) => ({ name, value, ceiling: clampPressure(value) }))
 			.filter((w) => w.ceiling > 0),
 	);
-
-	const lineage = $derived<TokenLineageNode[]>(safeLineage());
-
-	function safeLineage(): TokenLineageNode[] {
-		try {
-			return algorithm.lineage({
-				knobs: toDeriveKnobs(bench.knobs),
-				constraints: { ...anchorsToConstraints(bench.anchors), ...bench.overrides },
-			});
-		} catch {
-			return [];
-		}
-	}
 
 	let graphFilter = $state("");
 	const graphRows = $derived(

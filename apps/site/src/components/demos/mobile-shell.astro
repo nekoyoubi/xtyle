@@ -1,0 +1,78 @@
+---
+import MobileShell from "@xtyle/astro/MobileShell.astro";
+import BottomNav from "@xtyle/astro/BottomNav.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+
+const tabs = [
+	{ value: "inbox", label: "Inbox", icon: "folder", badge: 3 },
+	{ value: "search", label: "Search", icon: "search" },
+	{ value: "starred", label: "Starred", icon: "bookmark" },
+	{ value: "you", label: "You", icon: "gear" },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">The frame</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A sticky app bar, one scrolling column, and a bottom nav in thumb reach. Scroll inside the
+				phone: the bar and the nav hold their place while the column moves. The tabs are a real
+				tablist, so arrow keys (and Home / End) move between sections.
+			</Text>
+			<div class="phone">
+				<MobileShell heading="Inbox">
+					<Button slot="actions" variant="subtle" tone="neutral" size="sm">Filter</Button>
+
+					<Stack gap={3}>
+						{
+							[
+								["Deploy finished", "the 0.7 cut is live on staging", "success"],
+								["Review requested", "hover previews on Image", "info"],
+								["Build failed", "a backtick closed a template literal", "danger"],
+								["New follower", "someone starred the repo", "neutral"],
+								["Weekly digest", "14 commits, 3 merged", "neutral"],
+								["Token drift", "two components consume a retired token", "warn"],
+							].map(([title, body, tone]) => (
+								<Card compact>
+									<Stack gap={1}>
+										<div style="display:flex;align-items:center;gap:var(--space-2);justify-content:space-between;">
+											<Text weight="semibold" size="sm">{title}</Text>
+											<Badge tone={tone as never} variant="soft" size="sm">{tone}</Badge>
+										</div>
+										<Text size="sm" tone="muted">{body}</Text>
+									</Stack>
+								</Card>
+							))
+						}
+					</Stack>
+
+					<BottomNav slot="nav" tabs={tabs} value="inbox" label="Sections" />
+				</MobileShell>
+			</div>
+		</Stack>
+	</Card>
+</Stack>
+
+<style>
+	/* The shell is a full-screen frame (100dvh), so the demo puts it in a phone-sized viewport and
+	   scopes it to that box rather than letting it take over the docs page. */
+	.phone {
+		width: 100%;
+		max-width: 22rem;
+		height: 32rem;
+		margin-inline: auto;
+		overflow: hidden;
+		border: var(--border-normal) solid var(--line-2);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--elevation-3);
+	}
+	.phone :global(.xtyle-mshell) {
+		height: 100%;
+	}
+</style>
