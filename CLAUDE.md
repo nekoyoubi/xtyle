@@ -43,7 +43,7 @@ npm run build --workspace=packages/xtyle   # build just the engine
 npm test --workspace=packages/xtyle        # test just the engine
 
 # the unified CLI (after build)
-npx xtyle derive --bg <c> --accent <c> --format css   # derive a theme + emit (css/json)
+npx xtyle derive --bg <c> --accent <c> --format css   # derive a theme + emit (css/json/theme/prism/monaco/terminal)
 npx xtyle gauntlet -a all --depth quick                # fast baked spot-check across all algorithms (default mode: baked)
 npx xtyle gauntlet -a all --mode hosted --depth full   # prove invariants against the shipped sandboxed mods
 npx xtyle coverage --consumed a,b,c                    # check a component's consumed tokens

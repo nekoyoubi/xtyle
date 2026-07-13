@@ -39,7 +39,7 @@ xtyle/
 │   └── site/                 # xtyle.dev: Astro (docs, examples, marketplace, generator)
 ├── docs/                     # internal design record (these files)
 ├── scripts/                  # version:bump · release  (xript-style release mechanics)
-├── .github/workflows/ci.yml  # frontend + site build + docgen; no Rust (CI policy)
+├── .github/workflows/        # deploy.yml (site → Pages on main) · publish.yml (npm on release)
 ├── .gitignore · LICENSE · CONTRIBUTING.md · CLAUDE.md · README.md
 ├── package.json              # private workspace root: npm workspaces + scripts
 └── tsconfig.base.json
@@ -59,7 +59,7 @@ packages/xtyle/
 │   ├── host.ts       # xript host glue: load + run an algorithm plugin
 │   ├── resolve.ts    # algorithm resolution (installed dep / on-demand fetch)
 │   ├── coverage.ts   # coverage check: consumed vs produced tokens
-│   ├── emit/         # serializers, open set: css · json · json5 · yaml · xml
+│   ├── emit/         # serializers, open set: css · json · theme · prism · monaco · terminal
 │   ├── gauntlet.ts   # per-algorithm invariant prover
 │   ├── dom.ts        # browser-only: apply/switch/persist  (exports["./dom"])
 │   └── cli.ts        # node-only shell: argv + fs  (the bin)
@@ -105,8 +105,8 @@ the whole project:
 - **`@xtyle/core`**: the engine, and the flagship. Pure derivation over the open
   token graph: a xript host that runs an algorithm-plugin over
   `(knobs + constraints)` → a token graph, then emits artifacts (css / json /
-  json5 / yaml / xml, an *open* emitter set). Ships a **CLI bin** *and* an
-  importable API from the one package; see the dual-entry seam below.
+  theme / prism / monaco / terminal, an *open* emitter set). Ships a **CLI bin**
+  *and* an importable API from the one package; see the dual-entry seam below.
 - **`@xtyle/core/elements`** *(optional)*: single-layer raw custom elements (a subpath of `@xtyle/core`), styled only against the tokens they declare they consume. The element *is*
   the component; **no headless tier beneath it.**
 - **`@xtyle/svelte`** *(optional)*: thin wrappers that skin the custom elements for

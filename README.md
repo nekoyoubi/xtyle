@@ -74,9 +74,14 @@ each its own xript module with its own declared invariants the gauntlet holds it
 - **`nxi-nite`**: time-aware day/night. Folds the time of day into the derivation through its
   own passes, beyond the posture scalars the others vary.
 
-All five share the same token register (~276 tokens across the seven-dimension contract) and
+All five share the same token register (~299 tokens across the seven-dimension contract) and
 the same core math. The first four differ only in posture; `nxi-nite` adds its own derivation
-passes on top. Drive any of them from the CLI:
+passes on top.
+
+How the accent family relates to `--accent` is a **knob, not an algorithm**: `accentStrategy`
+(`fan` / `step` / `shade` / `duo`) reshapes `--accent-2/3/4` against any of the five, and each
+algorithm's declared posture is a default rather than a lock. `duo` takes a second brand color
+and shades the pair. Drive any of them from the CLI:
 
 ```sh
 xtyle list                       # the five algorithm ids
