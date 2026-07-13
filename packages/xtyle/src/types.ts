@@ -182,13 +182,16 @@ export interface KnobOption {
 }
 
 /**
- * The valid-input *domain* an algorithm declares for one knob — kind, range, and options.
+ * The valid-input *domain* an algorithm declares for one knob: kind, range, and options.
  * This is the algorithm's contract (what values it accepts and how they're shaped), distinct
  * from a consumer's cosmetic concerns (a localized label, a unit suffix, digit precision), which
  * stay with the consumer. A consumer renders a knob's control from this declaration, so a novel
- * algorithm's knob self-renders instead of vanishing for want of a hardcoded UI entry. Composite
- * groups a consumer expands itself (anchor pickers, font stacks) carry no `KnobSpec` — those are
- * orchestration, not a single scalar control.
+ * algorithm's knob self-renders instead of vanishing for want of a hardcoded UI entry, and a headless
+ * caller checks a value against it rather than passing whatever it was handed.
+ *
+ * A group a consumer expands into a cluster of its own (an anchor picker, a font stack) declares
+ * `kind: "composite"` and carries a spec like any other knob. Only the *scalar* control is absent;
+ * the declaration is not, or an algorithm's own composite knob would have no way to say what it is.
  */
 export interface KnobSpec {
 	/** The knob name — a `Knobs` key, matched against {@link Algorithm.knobs}. */
