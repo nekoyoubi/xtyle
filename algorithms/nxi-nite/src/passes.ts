@@ -18,7 +18,8 @@ import {
 	type PresetDefaults,
 } from "@xtyle/core/authoring";
 
-const DEFAULT_HOUR = 12;
+import { DEFAULT_HOUR } from "./preset.js";
+
 const FLOOR = 4.5 + 0.2;
 
 const WARM_HUE = 65;

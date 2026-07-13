@@ -97,6 +97,7 @@ export {
 	registerEmitter,
 } from "./emit/index.js";
 export { coverage, coverComponent, coverComponents } from "./coverage.js";
+export { validateKnobs } from "./knobs.js";
 export {
 	THEME_FILE_FORMAT,
 	THEME_FILE_VERSION,
@@ -106,6 +107,7 @@ export {
 	isThemeFile,
 	parseThemeFile,
 	migrateRecipe,
+	migratedTarget,
 	type ThemeFileMeta,
 	type ThemeRecipe,
 	type XtyleThemeFile,

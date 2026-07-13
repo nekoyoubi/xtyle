@@ -85,7 +85,9 @@ and shades the pair. Drive any of them from the CLI:
 
 ```sh
 xtyle list                       # the five algorithm ids
+xtyle knobs                      # every algorithm's dials, and what each accepts
 xtyle derive -a xtyle-loud --bg "#0f1115" --accent "#5b8cff"
+xtyle derive --knob accentStrategy=duo --accent "#5b8cff" --set --accent-2=#e0507a
 xtyle gauntlet -a xtyle-hc --runs 250
 ```
 

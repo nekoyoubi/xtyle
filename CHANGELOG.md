@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.7.1: Turn the Dial
+
+v0.7.0 made the accent family a knob and retired an algorithm into it. That knob turned out to be unreachable from anywhere but the site, the retirement only half-landed, and the one algorithm with a knob of its own had that knob held for it by the engine. This is the repair.
+
+### The knob tier is reachable
+
+- **`--knob <name>=<value>` on the CLI** (repeatable, alias `-k`), and a **`knobs` input on the MCP tools** (`xtyle_derive` / `xtyle_coverage` / `xtyle_audit`). The knob tier is the whole casual UX, the tier where one small input reshapes a theme, and none of it had a headless door. `step` and `duo` could not be derived by any means outside the browser, and `shade` was worse than unreachable: it *had* been reachable as `-a xtyle-brand` right up until v0.7.0 retired that id, so the release that promoted the strategy to a knob is the release that took away the only way to ask for it. `xtyle derive --knob accentStrategy=duo` works now, which is what "it's a knob, not an algorithm" was supposed to mean in the first place
+  - a knob's value is typed on the way in, because the derivation guards on `typeof knobs.surfaceRamp === "number"` and a shell hands over `"-0.05"`; the string would have been accepted, ignored, and derived as though you had never set it
+- **`xtyle knobs`** prints every algorithm's dials and exactly what each one accepts: kind, range, options, default. It reads the algorithm's own `knobSpecs`, so a third-party algorithm's novel knob is as discoverable as a blessed one, and `--knob` has a vocabulary you can look up instead of guess at. `xtyle list` still prints bare ids, unchanged
+- the MCP `format` enum is built from `emitters()` rather than a hand-kept second copy, which had already drifted: v0.7.0 shipped the `terminal` emitter, and the server would advertise it in `xtyle_list_algorithms` and then reject it in `xtyle_derive`
+
+### The retirement actually retires
+
+- **Every consumer migrates a retired algorithm; before, half of them died on it.** `xtyle derive` and `xtyle gauntlet` ran the migration map. `xtyle audit -a xtyle-brand` and `xtyle coverage -a xtyle-brand` hard-failed on a dead id, and all four MCP tools resolved the raw id too. There is one `migratedTarget()` in the engine now and everything reads through it, which is what the code comment beside the map had been claiming all along
+  - worst of it: `xtyle_derive` with `format: "theme"` wrote the **un-migrated** id into `recipe.algorithm`. A theme file is the source of truth of a re-derivable artifact, so the tool was minting brand-new files naming an algorithm the engine can no longer resolve: a fresh theme, born broken
+  - `-a xtyle-brand` now derives byte-identical to `--knob accentStrategy=shade`, which is the entire claim the retirement rests on and is now a test rather than an assertion
+
+### An algorithm owns its own knobs
+
+- **`hour` moved out of the engine and into nxi-nite, where it always belonged.** The engine's *shared* knob registry was holding the domain of a knob exactly one algorithm reads, with a comment explaining that this saved nxi-nite from declaring it; that is the hardcoded, name-keyed table `knobSpecs` exists to delete, relocated one layer down. nxi-nite declares its own `hour` now, and becomes the first bundled algorithm to exercise the novel-knob path at all: the feature's whole justification had shipped with no algorithm using it
+- **nxi-nite lost two working knobs from its rail, and has them back.** Its derivation read `accentStrategy` and `surfaceRamp` and its declaration named neither. Nobody noticed while the rail was a hardcoded table; the moment v0.7.0 made the rail render from the declaration, both dials vanished from the UI, while a saved recipe that set them still applied them. Declaration and behavior had drifted in opposite directions
+
+### A knob is checked against its declared domain
+
+- **`--knob accentStrategy=duoo` used to exit 0 and hand you a different theme.** Every knob reader in the derivation falls back quietly on a value it doesn't recognize. Right for the *derivation*, because a theme has to come out the other side; catastrophic for an *input surface*, because a typo becomes a silently different design. The bench never had this problem: its controls are built *from* the domain and cannot express a value outside it. The new headless doors handed the engine a raw envelope and hoped. A knob is checked against the domain its algorithm declares now, and a bad one is loud: an unknown name lists the knobs that algorithm actually has, a bad `select` lists the values it takes, and an out-of-range number names the range
+  - the check is the algorithm's, not the CLI's: `hour` is a knob on nxi-nite and on nothing else, so `-a xtyle-default --knob hour=3` is an error rather than a value quietly dropped on the floor
+  - a value is coerced by the kind the algorithm *declared*, never by the shape the string happens to have. Guessing from the shape is wrong in both directions: it reads a text knob set to `12` as a number, and a select set to `false` as a boolean
+- **A group can say that it's a group.** `anchors` and `fonts` are clusters a consumer expands into several controls, not single dials, and the engine used to know that by keeping a list of their names: the same hardcoded, name-keyed table `knobSpecs` exists to delete. They declare `kind: "composite"` now, which means a third-party algorithm's own composite knob (a palette array, a per-role font map) can say so too, instead of being rendered as a scalar it isn't
+
+### Fixes
+
+- **Switching `surfaceRamp` to "custom" inverted the entire surface stack on a light theme.** The knob is signed and its default sign follows the scheme (dark ascends, light descends), but it declared one static `+0.045`. On a light theme the control opened on a value the derivation would never have produced, and merely *unlocking the slider*, touching nothing and choosing nothing, flipped every surface from descending to ascending. `KnobSpec` takes a `defaultByScheme` now, and the control seeds from the scheme the theme actually derived under, so the toggle unlocks the dial without moving it
+- **A knob an algorithm declared but never described used to vanish.** It resolved to no control, no warning, nothing: the one thing the author asked for, silently unreachable. It degrades to a text field now and carries an *undeclared* flag rather than quiet tolerance, so a crude control beats an absent one and `xtyle knobs` shows the gap in the declaration instead of a mystery text box
+- **`qr.ts` was a binary file.** A literal NUL byte, used as a cache-key delimiter, made git classify 250 lines of TypeScript as binary: no diff, no blame, no review, on that file, forever. It is an escape sequence now, byte-identical at runtime and legible to `git blame` again
+- **`AlgorithmManifest` understated its own contract by three fields.** The host reads `knobSpecs`, `invariantCount`, and `passNames` off the `manifest()` export; the manifest declared none of them, so a third party writing an algorithm against the published type would ship a `manifest()` the host reads `undefined` off. The type declares what the host actually reads, and `KnobSpec` is declared beside it
+  - `invariantCount` is *required*, and the host now refuses a mod that omits it. The invariant list is sized from that number, so an absent one yielded a zero-length list: the mod loaded, reported no invariants at all, and sailed through the gauntlet having proven nothing. An algorithm that cannot say how many invariants it has does not get to be assumed to have none
+- **A mod that described only *some* of its knobs lost the rest.** The host took a partially-declaring `manifest()` at its word for the whole list, so an algorithm that described the one novel knob it invented (precisely the case `knobSpecs` exists for) dropped the domains of every shared knob it also read. The mod's own specs win by name and the registry fills the rest
+- **The gauntlet couldn't finish a hosted run.** `--mode hosted --depth standard` and `--depth full` died on `interrupted`, so the documented way to prove invariants against the shipped sandboxed mods had been unable to run past `quick` since long before this release. The sandbox's 5s rail is an anti-runaway guard, not a performance budget, but a single interpreted derivation against a hostile seed already takes ~3s, so a deep sweep tripped it on the slowest seeds. A correctness battery is supervised by the person running it, so it loads under its own rail; the browser and every production path keep the 5s guard exactly as it was
+
+| package | tests |
+|---|---|
+| `@xtyle/core` | 980 |
+
 ## v0.7.0: Show Your Work
 
 ### The accent family

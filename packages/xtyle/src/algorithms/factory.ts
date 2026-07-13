@@ -42,6 +42,16 @@ export const BORDER_SEPARATION = 1.5;
 export const DIVIDER_SEPARATION = 1.8;
 const DEFAULT_SHIFT_STEP = 90;
 const DEFAULT_ACCENT_SPLIT = 45;
+/**
+ * The magnitude of one step on the surface stack. The *sign* is scheme-derived rather than constant
+ * (see {@link defaultSurfaceRamp}), so this is a magnitude and never a `surfaceRamp` value on its own.
+ */
+const DEFAULT_SURFACE_STEP = 0.045;
+
+/** The `surfaceRamp` a scheme resolves to when the knob is unset: dark ascends the stack, light descends it. */
+function defaultSurfaceRamp(scheme: Scheme): number {
+	return scheme === "dark" ? DEFAULT_SURFACE_STEP : -DEFAULT_SURFACE_STEP;
+}
 // Chroma of the faint accent-hue wash on a surface synthesized from an accent (the "keep the tone"
 // derivation); kept low enough that any hue stays a neutral-reading surface rather than a muddy fill.
 const DERIVED_SURFACE_TINT_C = 0.02;
@@ -1025,17 +1035,11 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const density = densityOf(knobs);
 	const fonts = fontsOf(knobs);
 
-	const surfaceStep = 0.045;
 	// The signed lightness delta the surface stack walks from `--bg-0`. Unset, it resolves to the
 	// scheme-derived direction (dark ascends, light descends) at the default magnitude, so output is
 	// unchanged; set, the author's sign wins and the whole stack (body-bg, bg-1/2/3, bg-sunken)
 	// follows the one number instead of six hand-pinned surfaces.
-	const surfaceRamp =
-		typeof knobs.surfaceRamp === "number"
-			? knobs.surfaceRamp
-			: scheme === "dark"
-				? surfaceStep
-				: -surfaceStep;
+	const surfaceRamp = typeof knobs.surfaceRamp === "number" ? knobs.surfaceRamp : defaultSurfaceRamp(scheme);
 
 	const nodes: TokenNode[] = [];
 	const lit = (name: TokenName, value: string, refs?: TokenName[]): void => {
@@ -2818,12 +2822,19 @@ export const SHARED_KNOBS = [
 
 /**
  * The rendered *domain* of every knob the shared xtyle derivation reads — the kind, range, and
- * accepted values a consumer needs to build a control. `hour` is included so `nxi-nite` resolves
- * it from here without declaring its own spec. `fonts` and `anchors` are absent by design: they
- * are composite groups a consumer expands into multiple controls (font stacks, anchor pickers),
- * not single scalar knobs, so their orchestration stays with the consumer. Cosmetic concerns
- * (localized labels, unit suffixes, digit precision) are deliberately not here — they belong to
- * the consumer; the `label` hints below are just defaults a consumer may override.
+ * accepted values a consumer needs to build a control.
+ *
+ * Strictly the *shared* knobs: a knob only one algorithm reads belongs to that algorithm's own
+ * `knobSpecs`, not here (`hour` is nxi-nite's, and lives there). A shared registry carrying a
+ * single algorithm's domain would be the same hardcoded name-keyed table `knobSpecs` exists to
+ * delete, moved one layer down.
+ *
+ * `fonts` and `anchors` carry `kind: "composite"` rather than a scalar domain: they are groups a
+ * consumer expands into multiple controls (font stacks, anchor pickers), so their orchestration stays
+ * with the consumer. They are declared here all the same, so that "this knob is a composite" is a fact
+ * the algorithm states rather than a list of names the engine keeps. Cosmetic concerns (localized
+ * labels, unit suffixes, digit precision) are deliberately not here — they belong to the consumer; the
+ * `label` hints below are just defaults a consumer may override.
  */
 export const SHARED_KNOB_SPECS: KnobSpec[] = [
 	{
@@ -2880,29 +2891,57 @@ export const SHARED_KNOB_SPECS: KnobSpec[] = [
 	{ name: "vibrancy", kind: "range", label: "Vibrancy", min: 0, max: 1, step: 0.05, default: 0.5 },
 	{ name: "typeScale", kind: "range", label: "Type scale", min: 1.05, max: 1.6, step: 0.01, default: 1.2 },
 	{ name: "radiusScale", kind: "range", label: "Radius scale", min: 0, max: 3, step: 0.1, default: 1 },
-	{ name: "surfaceRamp", kind: "range", label: "Surface ramp", min: -0.06, max: 0.06, step: 0.005, default: 0.045 },
 	// The defaults are the engine's own constants, not a second copy of them: a slider that opens on a
 	// value the derivation does not actually use is a lie the control surface tells about the engine.
+	// `surfaceRamp` is signed and its sign is scheme-derived, so it declares a default per scheme; a
+	// lone `+0.045` would open the control on an *ascending* stack under a light theme, which is the
+	// exact inversion of what that theme derives.
+	{
+		name: "surfaceRamp",
+		kind: "range",
+		label: "Surface ramp",
+		min: -0.06,
+		max: 0.06,
+		step: 0.005,
+		default: DEFAULT_SURFACE_STEP,
+		defaultByScheme: { dark: defaultSurfaceRamp("dark"), light: defaultSurfaceRamp("light") },
+	},
 	{ name: "accentSplit", kind: "range", label: "Accent split", min: 0, max: 90, step: 1, default: DEFAULT_ACCENT_SPLIT, unit: "°" },
 	{ name: "accentShiftStep", kind: "range", label: "Accent shift step", min: 0, max: 180, step: 5, default: DEFAULT_SHIFT_STEP, unit: "°" },
-	{ name: "hour", kind: "range", label: "Hour", min: 0, max: 24, step: 1, default: 12 },
+	// Groups a consumer expands into a cluster of its own, not single scalar controls. They *declare*
+	// that rather than being named in a list the engine keeps: an algorithm with its own composite knob
+	// (a palette array, a per-role font map) has to be able to say so, and a name-keyed table of knob
+	// identities held by the engine is exactly what `knobSpecs` exists to delete.
+	{ name: "anchors", kind: "composite", label: "Anchors" },
+	{ name: "fonts", kind: "composite", label: "Fonts" },
 ];
 
 const SHARED_KNOB_SPEC_BY_NAME = new Map(SHARED_KNOB_SPECS.map((spec) => [spec.name, spec]));
 
 /**
- * Resolve a declared knob-name list to the render specs a consumer needs. Names that match the
- * shared registry get its domain; composite groups a consumer expands itself (`anchors`, `fonts`)
- * resolve to nothing (they carry no single scalar control); a novel knob resolves from `extra` when
- * the algorithm supplies its own spec. This is the one place a knob name becomes a renderable domain,
- * so both baked and hosted facades — and a host facade rebuilding from a name list — agree.
+ * Knob names that are composite groups rather than single scalar controls. A consumer expands each
+ * into a cluster of its own (font stacks, anchor pickers), so they carry no `KnobSpec` — and, unlike
+ * an unrecognized name, their absence is intentional and must not degrade to a text field.
+ */
+/**
+ * Resolve a declared knob-name list to the render specs a consumer needs. A name matching the shared
+ * registry gets its domain; a novel knob resolves from `extra` when the algorithm supplies its own
+ * spec. This is the one place a knob name becomes a renderable domain, so both baked and hosted
+ * facades — and a host facade rebuilding from a name list — agree.
+ *
+ * A name that resolves to nothing degrades to a `text` control rather than vanishing. An algorithm
+ * that declares a knob it never described still *reads* that knob, so dropping it silently would
+ * leave the one thing the author asked for unreachable, with nothing on screen to say why. A
+ * permissive text field is the honest floor: the knob stays editable, and the missing domain shows up
+ * as a crude control instead of an absent one. `undeclared` marks it, so a discovery surface can say
+ * *why* it looks crude — a typo'd knob name surfaces as a named gap rather than a mystery text box.
  */
 export function resolveKnobSpecs(names: readonly string[], extra: readonly KnobSpec[] = []): KnobSpec[] {
 	const byName = new Map(extra.map((spec) => [spec.name, spec]));
 	const out: KnobSpec[] = [];
 	for (const name of names) {
-		const spec = byName.get(name) ?? SHARED_KNOB_SPEC_BY_NAME.get(name);
-		if (spec) out.push(spec);
+		const spec = byName.get(name) ?? SHARED_KNOB_SPEC_BY_NAME.get(name) ?? { name, kind: "text" as const, undeclared: true };
+		out.push(spec);
 	}
 	return out;
 }

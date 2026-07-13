@@ -63,11 +63,34 @@
 			}
 		},
 		"AlgorithmManifest": {
-			"description": "What an algorithm produces, the category of each token, and its knobs.",
+			"description": "What an algorithm produces, the category of each token, its knobs and their domains, and the shape of its derivation. The full value the host reads off the `manifest` export.",
 			"fields": {
 				"produces": { "type": { "array": "string" }, "description": "Every token name the algorithm emits." },
 				"categories": { "type": "map", "description": "Token name to category." },
-				"knobs": { "type": { "array": "string" }, "description": "Declared knob names." }
+				"knobs": { "type": { "array": "string" }, "description": "Declared knob names." },
+				"knobSpecs": {
+					"type": { "array": "KnobSpec" },
+					"description": "The domain of each scalar knob — what it accepts and how it is shaped — so a consumer renders a control from the algorithm's own declaration rather than a hardcoded table. A subset of `knobs`: composite groups a consumer expands itself (`anchors`, `fonts`) carry no spec. Omit and the host resolves domains for the shared knobs; a knob only this algorithm reads must declare its own here or it has no stated domain.",
+					"optional": true
+				},
+				"invariantCount": { "type": "number", "description": "How many per-algorithm invariants the `invariants` export evaluates. Required: the host sizes the invariant list from it, so a mod that omits it reports *no* invariants and passes the gauntlet vacuously." },
+				"passNames": { "type": { "array": "string" }, "description": "The ordered names of the derivation's passes, used to label trace snapshots.", "optional": true }
+			}
+		},
+		"KnobSpec": {
+			"description": "The valid-input domain an algorithm declares for one knob: the kind of control it is, and the values it accepts. The algorithm's contract, distinct from a consumer's cosmetics (a localized label, digit precision), which stay with the consumer.",
+			"fields": {
+				"name": { "type": "string", "description": "The knob name, matched against `knobs`." },
+				"kind": { "type": "string", "description": "How the control is rendered: `select`, `range`, or `text`." },
+				"label": { "type": "string", "description": "A short human label hint; a consumer may override it.", "optional": true },
+				"group": { "type": "string", "description": "Logical grouping for a consumer that sections its controls.", "optional": true },
+				"default": { "type": "string", "description": "The value the knob takes when first switched on from its default. A number crosses as a number.", "optional": true },
+				"defaultByScheme": { "type": "map", "description": "A default that depends on the resolved scheme (`dark` / `light`), winning over `default` for the matching one. For a signed knob like `surfaceRamp`, whose sign follows the scheme, one static default would seed the wrong sign on half of all themes.", "optional": true },
+				"min": { "type": "number", "description": "`range` domain: lowest accepted value.", "optional": true },
+				"max": { "type": "number", "description": "`range` domain: highest accepted value.", "optional": true },
+				"step": { "type": "number", "description": "`range` domain: the increment between accepted values.", "optional": true },
+				"options": { "type": { "array": "map" }, "description": "`select` domain: the accepted values, each `{ value, label? }`.", "optional": true },
+				"unit": { "type": "string", "description": "A unit suffix intrinsic to the value, e.g. `°` for a hue step.", "optional": true }
 			}
 		},
 		"InvariantResult": {

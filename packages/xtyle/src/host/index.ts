@@ -150,6 +150,15 @@ export async function loadAlgorithm(
 
 	const manifest = rt.invokeExport("manifest", []) as ModAlgorithmManifest;
 
+	// The invariant list is *sized* from this number, so an absent one yields a zero-length list: the mod
+	// would load, report no invariants at all, and sail through the gauntlet having proven nothing. A mod
+	// that cannot say how many invariants it has does not get to be silently assumed to have none.
+	if (typeof manifest.invariantCount !== "number" || !Number.isInteger(manifest.invariantCount) || manifest.invariantCount < 0) {
+		throw new Error(
+			`xtyle: algorithm mod's manifest() must report a non-negative integer invariantCount, got ${JSON.stringify(manifest.invariantCount)}`,
+		);
+	}
+
 	const graphCache = new Map<string, TokenNode[]>();
 	const graph = (opts: DeriveOptions): TokenNode[] => {
 		const key = JSON.stringify(opts ?? {});
@@ -197,9 +206,11 @@ export async function loadAlgorithm(
 		id: (modManifest as { name?: string }).name ?? manifest.produces[0] ?? "unknown",
 		produces: manifest.produces,
 		knobs: manifest.knobs,
-		// A mod built against the widened surface ships its own specs (novel knobs included); an older
-		// or third-party mod that omits them still gets correct domains for shared knobs from the registry.
-		knobSpecs: manifest.knobSpecs ?? resolveKnobSpecs(manifest.knobs),
+		// Merged, not replaced. A mod that declares specs for *some* of its knobs — the Tier-3 case this
+		// exists for, where an author hand-writes `manifest()` and describes only the novel knob they
+		// invented — would otherwise be taken at its word for the whole list and lose the domains for
+		// every shared knob it reads. The mod's own specs win by name; the registry fills the rest.
+		knobSpecs: resolveKnobSpecs(manifest.knobs, manifest.knobSpecs ?? []),
 		categories: manifest.categories,
 		derive: (opts: DeriveOptions = {}): TokenRegister => resolveGraph(graph(opts)),
 		lineage: (opts: DeriveOptions = {}): TokenLineageNode[] =>

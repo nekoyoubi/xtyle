@@ -1,6 +1,6 @@
 {
 	"name": "@xtyle/svelte",
-	"version": "0.7.0",
+	"version": "0.7.1",
 	"description": "Thin Svelte wrappers over the @xtyle/core/elements custom elements.",
 	"type": "module",
 	"license": "MIT",
@@ -21,7 +21,7 @@
 		"build": "svelte-package -i src -o dist"
 	},
 	"dependencies": {
-		"@xtyle/core": "^0.7.0"
+		"@xtyle/core": "^0.7.1"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
