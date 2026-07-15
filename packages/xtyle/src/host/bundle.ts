@@ -1,5 +1,5 @@
 import type { Algorithm } from "../types.js";
-import { loadAlgorithm } from "./index.js";
+import { loadAlgorithm, staticAlgorithmManifest, type AlgorithmManifest } from "./index.js";
 import { ALGORITHM_BUNDLES } from "./algorithms-bundle.generated.js";
 
 /**
@@ -18,6 +18,16 @@ const resolved = new Map<string, Algorithm>();
 /** The ids resolvable from the embedded bundle (no filesystem). */
 export function bundledAlgorithms(): string[] {
 	return Object.keys(ALGORITHM_BUNDLES);
+}
+
+/**
+ * What a bundled algorithm declares about itself — produced tokens, knobs and their domains, invariant
+ * count, pass names — read off the embedded mod manifest with no sandbox boot. `null` for a bundle
+ * whose mod ships no static block. The filesystem-free twin of {@link ./registry}.`algorithmManifest`.
+ */
+export function bundledAlgorithmManifest(id: string): AlgorithmManifest | null {
+	const bundle = ALGORITHM_BUNDLES[id];
+	return bundle ? staticAlgorithmManifest(bundle.manifest) : null;
 }
 
 /**

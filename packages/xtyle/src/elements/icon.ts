@@ -7,7 +7,7 @@ import { manifest, fragmentSources } from "./fragments/icon/source.generated.js"
 import { resolveIconMark, composeIconThemed, iconClass } from "../icon-builder.js";
 import { readLiveRegister } from "./live-register.js";
 import { ICON_NAMES } from "../icons.js";
-import { SERIES_TOKENS, type SeriesScheme } from "../series.js";
+import { PALETTE_TOKENS, type Palette } from "../series.js";
 
 const FUNCTIONAL_GLYPHS = new Set<string>(ICON_NAMES);
 
@@ -51,11 +51,12 @@ export class XtyleIcon extends XtyleElement {
 		else this.removeAttribute("tone");
 	}
 
-	/** The series scheme a generated mark's `c3+` color slots draw from. */
-	get colors(): SeriesScheme {
-		return (this.getAttribute("colors") as SeriesScheme) ?? "accents";
+	/** The palette a generated mark's `c1`–`c9` color slots draw from. A mark that pins its own
+	 * palette in its name (a `---ps-{palette}` finish) overrides this. */
+	get colors(): Palette {
+		return (this.getAttribute("colors") as Palette) ?? "accents";
 	}
-	set colors(value: SeriesScheme) {
+	set colors(value: Palette) {
 		this.setAttribute("colors", value);
 	}
 
@@ -82,10 +83,10 @@ export class XtyleIcon extends XtyleElement {
 		return { name: this.name, size: this.size, tone: this.tone, label: this.label, spin: this.spin };
 	}
 
-	/** Reads the series anchor tokens off the live cascade, so a generated mark's colors track the theme.
+	/** Reads the palette stop tokens off the live cascade, so a generated mark's colors track the theme.
 	 * Re-resolves once if a scoped theme lands after mount, matching the chart elements' behavior. */
 	private seriesRegister(): Record<string, string> {
-		return readLiveRegister(this, SERIES_TOKENS, () => {
+		return readLiveRegister(this, PALETTE_TOKENS, () => {
 			if (this.root.firstChild) this.render();
 		});
 	}

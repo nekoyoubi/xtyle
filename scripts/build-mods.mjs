@@ -1,20 +1,16 @@
 import { build } from "esbuild";
-import { readdirSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { discoverAlgorithms, readAlgorithmManifest, writeStaticManifest } from "./algorithms.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const modsDir = join(root, "algorithms");
+const mods = discoverAlgorithms(root);
 
-const mods = readdirSync(modsDir, { withFileTypes: true })
-	.filter((e) => e.isDirectory() && existsSync(join(modsDir, e.name, "src", "mod.ts")))
-	.map((e) => e.name);
-
-for (const id of mods) {
-	const here = join(modsDir, id);
+for (const mod of mods) {
 	await build({
-		entryPoints: [join(here, "src/mod.ts")],
-		outfile: join(here, "src/mod.js"),
+		entryPoints: [mod.sourcePath],
+		outfile: mod.scriptPath,
 		bundle: true,
 		format: "iife",
 		platform: "neutral",
@@ -22,7 +18,19 @@ for (const id of mods) {
 		legalComments: "none",
 		logLevel: "warning",
 	});
-	console.log(`bundled ${id} mod -> algorithms/${id}/src/mod.js`);
+	console.log(`bundled ${mod.id} mod -> algorithms/${mod.dir}/src/mod.js`);
+}
+
+// The static manifest block: what each algorithm produces, the knobs it reads and their domains, its
+// invariant count and pass names, stamped into the packaged mod manifest. Read off the *built* mod, so
+// the block is the algorithm's own account of itself rather than a second one derived from the engine.
+// A discovery index reads it without booting a sandbox per algorithm; the host cross-checks it against
+// the code on the one load that already happens, so a stale block cannot pass itself off as current.
+for (const mod of mods) {
+	const block = readAlgorithmManifest(readFileSync(mod.scriptPath, "utf8"), mod.id);
+	if (writeStaticManifest(mod, block)) {
+		console.log(`stamped ${mod.id} static manifest -> algorithms/${mod.dir}/mod-manifest.json`);
+	}
 }
 
 const core = join(root, "packages", "xtyle");
@@ -60,15 +68,15 @@ await build({
 });
 console.log("bundled batteries -> packages/xtyle/dist/batteries.js");
 
-// The browser-delivery bundle: each blessed mod's manifest + its built `mod.js`, embedded as data so a
+// The browser-delivery bundle: each mod's manifest + its built `mod.js`, embedded as data so a
 // filesystem-free consumer (the browser) can load it through the neutral host without `node:fs`. The
-// disk-reading resolver stays the Node path; this is its client-side twin over the same `loadAlgorithm`.
+// disk-reading resolver stays the Node path; this is its client-side twin over the same `loadAlgorithm`,
+// discovered off the same scan, so the two can never disagree about which algorithms exist.
 const bundles = {};
-for (const id of mods) {
-	const here = join(modsDir, id);
-	bundles[id] = {
-		manifest: JSON.parse(readFileSync(join(here, "mod-manifest.json"), "utf8")),
-		source: readFileSync(join(here, "src/mod.js"), "utf8"),
+for (const mod of mods) {
+	bundles[mod.id] = {
+		manifest: JSON.parse(readFileSync(mod.manifestPath, "utf8")),
+		source: readFileSync(mod.scriptPath, "utf8"),
 	};
 }
 writeFileSync(

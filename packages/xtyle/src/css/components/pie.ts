@@ -84,6 +84,9 @@ export const pieCss = `
 	white-space: nowrap;
 }
 .xtyle-pie__tooltip[hidden] { display: none; }
+.xtyle-pie__tooltip-row[hidden] { display: none; }
+.xtyle-pie__tooltip-name { color: var(--fg-2); }
+.xtyle-pie__tooltip-value { font-weight: var(--weight-semibold); }
 .xtyle-pie__a11y {
 	position: absolute;
 	width: 1px;

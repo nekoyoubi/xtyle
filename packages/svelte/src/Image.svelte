@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/image.js";
 
 	import type { Snippet } from "svelte";
 

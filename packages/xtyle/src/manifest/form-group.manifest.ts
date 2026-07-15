@@ -51,8 +51,9 @@ import { FormGroup, Select } from "@xtyle/astro";
 
 export const formGroupManifest: ComponentManifest = {
 	id: "form-group",
-	name: "FormGroup",
+	name: "Form Group",
 	category: "form",
+	since: "0.1.0",
 	keywords: ["label", "field wrapper", "form field", "helper text", "error text", "validation"],
 	seeAlso: ["field", "textarea", "checkbox", "radio"],
 	summary: "A label / description / error scaffold that wraps any slotted control and wires the accessibility plumbing.",

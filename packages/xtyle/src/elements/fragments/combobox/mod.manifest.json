@@ -1,0 +1,67 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-combobox-default",
+	"version": "0.0.1",
+	"title": "Xtyle Combobox (default)",
+	"description": "The built-in fill for the xtyle Combobox component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.combobox"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.combobox": [
+			{
+				"id": "combobox",
+				"format": "text/html+jsml",
+				"source": "combobox.html",
+				"handlers": [
+					{ "selector": "[data-option]", "on": "click", "handler": "optionClick" },
+					{ "selector": "[data-chip-remove]", "on": "click", "handler": "chipRemove" },
+					{ "selector": "[data-clear]", "on": "click", "handler": "clearClick" },
+					{ "selector": "[data-toggle]", "on": "click", "handler": "toggleClick" },
+					{ "selector": "[data-control]", "on": "click", "handler": "controlClick" },
+					{ "selector": "[data-input]", "on": "keydown", "handler": "inputKeydown" },
+					{ "selector": "[data-input]", "on": "input", "handler": "inputChanged" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-bg",
+						"--accent-text",
+						"--bg-1",
+						"--border-normal",
+						"--border-thin",
+						"--danger",
+						"--danger-bg",
+						"--danger-text",
+						"--duration-fast",
+						"--ease-standard",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--fg-disabled",
+						"--field-bg",
+						"--field-border",
+						"--font-sans",
+						"--leading-normal",
+						"--leading-tight",
+						"--placeholder",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--state-disabled",
+						"--state-hover",
+						"--state-press",
+						"--state-selected",
+						"--text-lg",
+						"--text-sm",
+						"--weight-medium",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

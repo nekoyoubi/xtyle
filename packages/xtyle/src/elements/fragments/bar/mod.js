@@ -43,6 +43,20 @@
     ).join("");
     return `<div class="xtyle-bar__legend" part="legend">${items}</div>`;
   }
+  function tooltipHtml(series, categories) {
+    const rows = [];
+    for (let ci = 0; ci < categories.length; ci++) {
+      for (let si = 0; si < series.length; si++) {
+        const name = series[si]?.name ?? "";
+        const value = series[si]?.values[ci] ?? 0;
+        const label = esc(categories[ci] ?? "") + (name ? ` \xB7 ${esc(name)}` : "");
+        rows.push(
+          `<span class="xtyle-bar__tooltip-row" part="tooltip-row" data-tip-row="${si}-${ci}" hidden><span class="xtyle-bar__tooltip-name">${label}</span> <span class="xtyle-bar__tooltip-value">${esc(String(value))}</span></span>`
+        );
+      }
+    }
+    return `<div class="xtyle-bar__tooltip" part="tooltip" role="status" aria-hidden="true" hidden>${rows.join("")}</div>`;
+  }
   function tableHtml(series, categories, caption) {
     const head = `<tr><th scope="col">Category</th>${series.map((s) => `<th scope="col">${esc(s.name)}</th>`).join("")}</tr>`;
     const rows = categories.map(
@@ -187,7 +201,7 @@
     const plot = horizontal ? horizontalPlot(b, series, colors, height) : verticalPlot(b, series, colors, height);
     const svg = `<svg class="xtyle-bar__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${plot}</svg>`;
     const legend = b.legend !== false && series.length > 1 ? legendHtml(series, colors) : "";
-    const tooltip = `<div class="xtyle-bar__tooltip" part="tooltip" role="status" aria-hidden="true" hidden></div>`;
+    const tooltip = tooltipHtml(series, categories);
     const table = tableHtml(series, categories, b.title ?? b.ariaLabel ?? "");
     return `<figure part="chart" class="${barClass(b)}" style="--bar-height:${height}px">${svg}${legend}${tooltip}${table}</figure>`;
   }

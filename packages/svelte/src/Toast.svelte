@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/toast.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone } from "@xtyle/core";
 	type ToastSeverity = "success" | "warn" | "danger" | "info";
@@ -44,7 +44,7 @@
 	{tone}
 	{severity}
 	{variant}
-	closable={closable || undefined}
+	closable={String(closable)}
 	close-label={closeLabel}
 	action-label={actionLabel}
 	{ondismiss}

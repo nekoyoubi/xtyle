@@ -1,6 +1,6 @@
 import type { ComponentManifest } from "./types.js";
 import { FULL_TONES } from "../vocab.js";
-import { RAMP_SCHEMES } from "../series.js";
+import { PALETTES } from "../series.js";
 
 const htmlExample = `<xtyle-progress value="42" aria-label="Upload progress"></xtyle-progress>
 
@@ -76,6 +76,7 @@ export const progressManifest: ComponentManifest = {
 	id: "progress",
 	name: "Progress",
 	category: "feedback",
+	since: "0.1.0",
 	seeAlso: ["spinner", "stat", "steps", "slider"],
 	summary: "A progress bar or capacity meter: a linear bar or circular ring with value thresholds that recolor and pulse.",
 	description:
@@ -206,10 +207,10 @@ export const progressManifest: ComponentManifest = {
 		},
 		{
 			name: "ramp",
-			type: "RampScheme | string[]",
-			description: "Colors the fill by its own value along a ramp instead of the flat `tone`: a built-in scheme (`accent`, `thermal`, `status`), a JSON array of stop colors (`[\"#00f\",\"#f00\"]`), or a comma-separated stop list. Reinforces magnitude with temperature, so a fuller bar also reads hotter.",
+			type: "Palette | string[]",
+			description: "Colors the fill by its own value along a ramp instead of the flat `tone`: a built-in palette (`intensity`, `thermal`, `severity`), a JSON array of stop colors (`[\"#00f\",\"#f00\"]`), or a comma-separated stop list. Reinforces magnitude with temperature, so a fuller bar also reads hotter.",
 			bindings: ["html", "svelte", "astro"],
-			options: [...RAMP_SCHEMES],
+			options: [...PALETTES],
 		},
 		{
 			name: "rampMode",

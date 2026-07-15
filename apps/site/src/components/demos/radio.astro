@@ -84,6 +84,23 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Reskinning the glyph</Heading>
+		<Text size="sm" tone="muted">
+			The checked glyph is the <code>dot</code> part: a real node inside the <code>indicator</code>,
+			not a pseudo-element. So it can be reshaped into something else entirely, or replaced outright
+			by a mod that fills <code>component.radio</code> with an icon. The group below is the same
+			Radio with the dot clipped into a checkmark, tone, animation, and a11y untouched.
+		</Text>
+		<div class="demo__reskin">
+			<RadioGroup orientation="horizontal" label="Reminder">
+				<Radio name="remind" value="never" label="Never">Never</Radio>
+				<Radio name="remind" value="daily" checked label="Daily">Daily</Radio>
+				<Radio name="remind" value="weekly" label="Weekly">Weekly</Radio>
+			</RadioGroup>
+		</div>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={3} size="sm" tone="muted">Sizes &amp; states</Heading>
 		<Cluster gap={5} align="center">
 			<Stack gap={2} align="center">
@@ -117,5 +134,11 @@ const TONE_GROUPS = [
 	.demo__group {
 		display: grid;
 		gap: var(--space-3);
+	}
+	.demo__reskin :global(.xtyle-radio__dot) {
+		width: 0.72em;
+		height: 0.72em;
+		border-radius: 0;
+		clip-path: polygon(13% 45%, 0 61%, 39% 100%, 100% 22%, 85% 8%, 37% 68%);
 	}
 </style>

@@ -1,12 +1,8 @@
-import { XtyleElement, define, escapeHtml, escapeAttr, type StyleMode } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 import {
-	ASSERTIVE_SEVERITIES,
-	CLOSE_ICON,
 	toastHostCss,
-	toastIconMarkup,
 	toastRegionHostCss,
 	toastRegionMarkup,
-	toastSeverity,
 	type ToastRegionMarkupProps,
 	type ToastSeverity,
 	type ToastTone,
@@ -14,6 +10,12 @@ import {
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/toast/source.generated.js";
+
+/**
+ * Toasts a region pushed hand their removal back to it — the region owns the leave transition, the
+ * auto-dismiss timer, and the stack cap. A standalone toast has no owner and removes itself.
+ */
+const regionRelease = new WeakMap<XtyleToast, (item: XtyleToast) => void>();
 
 /** Options accepted by {@link XtyleToastRegion.toast}. */
 export interface ToastOptions {
@@ -76,11 +78,16 @@ export class XtyleToast extends XtyleElement {
 		this.setAttribute("variant", value);
 	}
 
+	/** On by default — an undismissable toast is a trap, so it takes an explicit `closable="false"`
+	 * to drop the close button. A bare `closable` attribute (or any other value) reads as on. */
 	get closable(): boolean {
-		return this.hasAttribute("closable");
+		const raw = this.getAttribute("closable");
+		if (raw === null) return true;
+		const value = raw.trim().toLowerCase();
+		return value !== "false" && value !== "none";
 	}
 	set closable(value: boolean) {
-		this.reflectBoolean("closable", value);
+		this.setAttribute("closable", String(value));
 	}
 
 	attributeChangedCallback(): void {
@@ -92,7 +99,7 @@ export class XtyleToast extends XtyleElement {
 			tone: this.tone,
 			severity: this.severity,
 			variant: this.variant,
-			closable: this.closable || !this.hasAttribute("closable"),
+			closable: this.closable,
 			closeLabel: this.getAttribute("close-label") ?? "Dismiss",
 			actionLabel: this.getAttribute("action-label") ?? null,
 		};
@@ -101,14 +108,15 @@ export class XtyleToast extends XtyleElement {
 	/** Structural state ops can't patch incrementally: whether the close and action buttons exist.
 	 * A change here rebuilds; a `tone` / `variant` swap is a cheap patch. */
 	private shapeSignature(): string {
-		const closable = this.closable || !this.hasAttribute("closable");
-		return `${closable}|${this.getAttribute("action-label")}|${this.getAttribute("close-label")}`;
+		return `${this.closable}|${this.getAttribute("action-label")}|${this.getAttribute("close-label")}`;
 	}
 
 	private dismiss(): void {
 		const event = new CustomEvent("dismiss", { bubbles: true, composed: true, cancelable: true });
-		const proceed = this.dispatchEvent(event);
-		if (proceed) this.remove();
+		if (!this.dispatchEvent(event)) return;
+		const release = regionRelease.get(this);
+		if (release) release(this);
+		else this.remove();
 	}
 
 	private applyIntent(intent: FragmentIntent, event: Event): void {
@@ -164,44 +172,34 @@ export class XtyleToastRegion extends XtyleElement {
 	}
 
 	/**
-	 * Push a toast into the region. Returns the created element so callers can
-	 * dismiss it early. Auto-dismiss pauses while the pointer is over the toast.
+	 * Push a toast into the region. Returns the created `<xtyle-toast>` so callers can dismiss it
+	 * early. The card is rendered by the same fill the declarative element uses, so an app's
+	 * `component.toast` override reshapes a pushed toast exactly as it reshapes a placed one.
+	 * Auto-dismiss pauses while the pointer or focus rests on the toast.
 	 */
 	toast(opts: ToastOptions): HTMLElement {
-		const variant: ToastVariant = opts.variant ?? "soft";
-		const severity = toastSeverity(opts.tone, opts.severity);
-		const color = opts.tone ?? severity ?? "info";
-		const assertive = ASSERTIVE_SEVERITIES.has(severity);
-		const duration = opts.duration ?? 5000;
-		const closable = opts.closable ?? true;
+		const item = document.createElement("xtyle-toast") as XtyleToast;
+		if (opts.tone) item.setAttribute("tone", opts.tone);
+		if (opts.severity) item.setAttribute("severity", opts.severity);
+		item.setAttribute("variant", opts.variant ?? "soft");
+		if (opts.actionLabel) item.setAttribute("action-label", opts.actionLabel);
+		if (opts.closeLabel) item.setAttribute("close-label", opts.closeLabel);
+		if (opts.closable === false) item.setAttribute("closable", "false");
+		item.textContent = opts.message;
+		item.classList.add("xtyle-toast--enter");
+		regionRelease.set(item, (el) => this.release(el));
 
-		const item = document.createElement("div");
-		item.className = `xtyle-toast xtyle-toast--${variant} xtyle-toast--${color || "info"}${severity ? "" : " xtyle-toast--noicon"} xtyle-toast--enter`;
-		item.setAttribute("part", "toast");
-		item.setAttribute("role", assertive ? "alert" : "status");
-		item.setAttribute("aria-atomic", "true");
-
-		const action = opts.actionLabel
-			? `<button class="xtyle-toast__action" part="action" type="button">${escapeHtml(opts.actionLabel)}</button>`
-			: "";
-		const close = closable
-			? `<button class="xtyle-toast__close" part="close" type="button" aria-label="${escapeAttr(opts.closeLabel ?? "Dismiss")}">${CLOSE_ICON}</button>`
-			: "";
-		item.innerHTML = `${toastIconMarkup(severity)}<div class="xtyle-toast__body" part="body"><span class="xtyle-toast__message" part="message">${escapeHtml(opts.message)}</span>${action}</div>${close}`;
-
-		const region = this.regionEl;
-		region?.appendChild(item);
+		this.regionEl?.appendChild(item);
 		this.enforceMax();
 
 		requestAnimationFrame(() => item.classList.remove("xtyle-toast--enter"));
 
-		const dismiss = () => this.dismiss(item);
-		item.querySelector(".xtyle-toast__close")?.addEventListener("click", dismiss);
-		item.querySelector(".xtyle-toast__action")?.addEventListener("click", () => {
+		item.addEventListener("action", () => {
 			opts.onAction?.();
-			dismiss();
+			this.dismiss(item);
 		});
 
+		const duration = opts.duration ?? 5000;
 		if (duration > 0) {
 			this.arm(item, duration);
 			item.addEventListener("pointerenter", () => this.clear(item));
@@ -232,11 +230,19 @@ export class XtyleToastRegion extends XtyleElement {
 		}
 	}
 
+	/** Announce the dismissal, then remove unless a listener cancelled it. */
 	private dismiss(item: HTMLElement): void {
 		this.clear(item);
 		const event = new CustomEvent("dismiss", { bubbles: true, composed: true, cancelable: true });
-		const proceed = item.dispatchEvent(event);
-		if (!proceed) return;
+		if (!item.dispatchEvent(event)) return;
+		this.release(item);
+	}
+
+	/** The removal half of a dismissal: play the leave transition and drop the card. Reached
+	 * directly when the toast itself already announced the dismissal and got consent (its close
+	 * button), so the region never doubles the `dismiss` event. */
+	private release(item: HTMLElement): void {
+		this.clear(item);
 		item.classList.add("xtyle-toast--leave");
 		const remove = () => item.remove();
 		item.addEventListener("transitionend", remove, { once: true });
@@ -246,7 +252,7 @@ export class XtyleToastRegion extends XtyleElement {
 	private enforceMax(): void {
 		const region = this.regionEl;
 		if (!region) return;
-		const items = region.querySelectorAll(".xtyle-toast");
+		const items = region.querySelectorAll("xtyle-toast");
 		const overflow = items.length - this.max;
 		for (let i = 0; i < overflow; i += 1) {
 			this.dismiss(items[i] as HTMLElement);

@@ -109,7 +109,7 @@ function panels(bindings: TabsBindings, selected: string | null): string {
 /** Build the whole structure once — the expensive `replaceChildren` rebuild. */
 hooks.fragment.mount("tabs", (bindings, ops) => {
 	const selected = selectedKey(bindings);
-	ops.setAttr("[data-root]", "class", rootClass(bindings));
+	ops.setAttr(".xtyle-tabs", "class", rootClass(bindings));
 	const tablistLabel = bindings.labelledby ?? bindings.label ?? "";
 	const tablistAttr = bindings.labelledby ? "aria-labelledby" : "aria-label";
 	if (tablistLabel) ops.setAttr("[data-tablist]", tablistAttr, tablistLabel);
@@ -120,7 +120,7 @@ hooks.fragment.mount("tabs", (bindings, ops) => {
 /** A selection change — toggle state on the existing nodes, never rebuild them. */
 hooks.fragment.update("tabs", (bindings, ops) => {
 	const selected = selectedKey(bindings);
-	ops.setAttr("[data-root]", "class", rootClass(bindings));
+	ops.setAttr(".xtyle-tabs", "class", rootClass(bindings));
 	const tabs = bindings.tabs ?? [];
 	tabs.forEach((tab, i) => {
 		const key = tab.key ?? String(i);

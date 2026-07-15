@@ -15,15 +15,16 @@ import Cluster from "@xtyle/astro/Cluster.astro";
 import Text from "@xtyle/astro/Text.astro";
 import SiteNav from "../components/SiteNav.astro";
 import ThemeReapply from "../components/ThemeReapply.astro";
-import Logo from "../components/Logo.astro";
+import Icon from "@xtyle/astro/Icon.astro";
 import ThemeSwitcher from "../components/ThemeSwitcher.svelte";
 import "@fontsource/teko/600.css";
+import "@fontsource/knewave/latin-400.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
 import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
 import "@fontsource-variable/rem";
-import "@fontsource/sigmar";
+import "@fontsource/sigmar/latin-400.css";
 import "../styles/global.css";
 
 interface Props {
@@ -99,7 +100,10 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		<AppShell skipLink leftSize={288}>
 			<Toolbar slot="toolbar">
 				<a slot="start" class="x-brand" href="/" aria-label="xtyle home">
-					<Logo size={22} />
+					<Icon
+						class="x-brand__mark"
+						name="xtyle--letter-x-x-2-y-6-s120-c9-o2cb--column-x22-s145-ko--letter-t-x16-s105-cf-o2cb---d9p8s1t20--f0-Sigmar--ps-skittles"
+					/>
 					<span class="x-brand__word">xtyle</span>
 				</a>
 				<Cluster slot="end" gap={3} align="center">
@@ -110,8 +114,13 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						rel="noopener noreferrer"
 						aria-label="Built on xript"
 						title="Built on xript"
+						style="--glow: var(--pink)"
 					>
-						<span aria-hidden="true">xr</span>
+						<Icon
+							class="x-xript-mark"
+							name="xript--letter-x-x-12-y-4-s110-c8-o2cb--column-x16-s150-ko--letter-r-x18-y-4-s115-cf-o2cb---f0-Sigmar--ps-skittles"
+							label="xript"
+						/>
 					</a>
 					<a
 						class="x-iconlink"
@@ -120,8 +129,9 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						rel="noopener noreferrer"
 						aria-label="@xtyle/core on npm"
 						title="npm"
+						style="--glow: var(--red)"
 					>
-						<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+						<svg viewBox="0 0 24 24" width="22" height="22" fill="var(--red)" aria-hidden="true">
 							<path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0H1.763zM5.13 5.323h13.741v10.288h-3.435V8.748h-3.43v6.863H5.13V5.323z" />
 						</svg>
 					</a>
@@ -132,8 +142,9 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						rel="noopener noreferrer"
 						aria-label="xtyle on GitHub"
 						title="GitHub"
+						style="--glow: var(--blue)"
 					>
-						<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true">
+						<svg viewBox="0 0 16 16" width="20" height="20" fill="var(--blue)" aria-hidden="true">
 							<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z" />
 						</svg>
 					</a>
@@ -193,6 +204,14 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 					</span>
 				))}
 				<span class="xtyle-statusbar__spacer"></span>
+				<span class="xtyle-statusbar__item" data-priority="4">
+					<Stat label="google fonts" inline class="x-status-stat">
+						<span
+							class="x-status-note"
+							title="This site makes no third-party requests on its own. The icon builder can load a font from Google Fonts, but only when you click to load it. That request goes from your browser straight to Google, which tells Google your IP address."
+						>on request only</span>
+					</Stat>
+				</span>
 				<span class="xtyle-statusbar__item" data-priority="3"><Stat label="version" inline class="x-status-stat"><a class="x-status-link" href="/changelog">v{site.version}</a></Stat></span>
 				<span class="xtyle-statusbar__item" data-priority="2"><Stat label="updated" inline class="x-status-stat"><a class="x-status-link" href="/changelog"><span id="x-build-rel" data-build={buildIso} title={buildLabel}>{buildLabel}</span></a></Stat></span>
 			</Statusbar>
@@ -278,15 +297,18 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		color: var(--fg-0);
 		text-decoration: none;
 	}
+	.x-brand__mark {
+		font-size: 26px;
+	}
 	.x-brand__word {
 		line-height: 1;
-		font-family: "Teko", var(--font-sans);
-		font-weight: 600;
-		font-size: var(--text-2xl);
-		letter-spacing: 0.01em;
+		font-family: "Knewave", var(--font-sans);
+		font-weight: 400;
+		font-size: var(--text-xl);
+		letter-spacing: 0.005em;
 		position: relative;
-		top: 2px;
-		-webkit-text-stroke: 0.25px var(--bg-0);
+		top: -2px;
+		-webkit-text-stroke: 0.4px var(--bg-0);
 		paint-order: stroke;
 	}
 	.x-iconlink {
@@ -303,15 +325,22 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		color: var(--fg-0);
 		text-decoration: none;
 	}
+	.x-iconlink > svg,
+	.x-iconlink > .x-xript-mark {
+		transition: filter 0.18s ease;
+	}
+	.x-iconlink:hover > svg,
+	.x-iconlink:hover > .x-xript-mark {
+		filter: drop-shadow(0 1px 6px color-mix(in oklab, var(--glow, var(--accent)) 45%, transparent))
+			drop-shadow(0 0 13px color-mix(in oklab, var(--glow, var(--accent)) 32%, transparent));
+	}
 	.x-iconlink:focus-visible {
 		outline: var(--focus-ring, 2px solid var(--accent));
 		outline-offset: 2px;
 	}
-	.x-iconlink--xript span {
-		font-family: "Sigmar", var(--font-sans), sans-serif;
-		font-size: 1.1rem;
-		line-height: 1;
-		letter-spacing: -0.02em;
+	.x-xript-mark {
+		display: inline-flex;
+		font-size: 24px;
 	}
 	.x-status-stat {
 		position: relative;
@@ -320,6 +349,12 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 	.x-status-link {
 		color: inherit;
 		text-decoration: none;
+	}
+	.x-status-note {
+		color: inherit;
+		text-decoration: underline dotted;
+		text-underline-offset: 2px;
+		cursor: help;
 	}
 	.x-status-link:hover {
 		color: var(--fg-0);

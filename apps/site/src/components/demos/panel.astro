@@ -49,8 +49,8 @@ const logLines = [
 					This one starts closed — click the header to open it.
 				</Text>
 				<Text tone="muted" size="sm">
-					Built on a real <code>&lt;details&gt;</code>, so it works without
-					JavaScript and stays keyboard-operable.
+					The toggle is a real button carrying <code>aria-expanded</code>, so it
+					stays keyboard-operable and announces its state.
 				</Text>
 			</Stack>
 		</Panel>
@@ -63,6 +63,10 @@ const logLines = [
 				<Text size="sm">
 					Same disclosure, started expanded with <code>open</code>. Actions live
 					in the header alongside the marker.
+				</Text>
+				<Text tone="muted" size="sm">
+					The marker leading the title is an <code>&lt;xtyle-icon&gt;</code> the panel's
+					fragment draws, so a mod can swap the caret without touching the panel.
 				</Text>
 			</Stack>
 		</Panel>

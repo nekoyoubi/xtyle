@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/button.js";
 	import type { Snippet } from "svelte";
 	import type { ButtonVariant, ButtonAlign, Size, FullTone } from "@xtyle/core";
 

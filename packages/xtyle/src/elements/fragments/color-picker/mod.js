@@ -40,7 +40,11 @@
   }
   function harmonyRow(b) {
     if (!b.harmonyScheme) return "";
-    return `<div class="xtyle-color-picker__presets xtyle-color-picker__harmony" part="harmony" role="group" aria-label="${b.harmonyScheme} harmony"></div>`;
+    const disabledAttr = b.disabled ? " disabled" : "";
+    const chips = (b.harmonyChips ?? []).map(
+      (c) => `<button class="xtyle-color-picker__preset xtyle-color-picker__harmony-chip" part="harmony-chip" type="button" data-color="${c.hex}" data-hex="${c.hex}" style="--cp-chip: ${c.hex}" aria-label="${c.hex}" aria-pressed="false"${disabledAttr}></button>`
+    ).join("");
+    return `<div class="xtyle-color-picker__presets xtyle-color-picker__harmony" part="harmony" role="group" aria-label="${b.harmonyScheme} harmony">${chips}</div>`;
   }
   function channelRows(b) {
     const model = b.channelModelLabel;
@@ -89,13 +93,13 @@
     return labelSpan(b) + shell(b);
   }
   hooks.fragment.mount("color-picker", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", rootClass(bindings));
+    ops.setAttr(".xtyle-color-picker", "class", rootClass(bindings));
     ops.setAttr("[data-root]", "role", "group");
     const labelledby = rootLabelledby(bindings);
     if (labelledby) ops.setAttr("[data-root]", "aria-labelledby", labelledby);
     ops.replaceChildren("[data-root]", inner(bindings));
   });
   hooks.fragment.update("color-picker", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", rootClass(bindings));
+    ops.setAttr(".xtyle-color-picker", "class", rootClass(bindings));
   });
 })();

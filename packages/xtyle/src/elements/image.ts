@@ -1,15 +1,19 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { imageHostCss } from "../markup/index.js";
-import { hoverMediaHtml } from "../markup/image.js";
+import { hoverMediaHtml, isHoverVideo } from "../markup/image.js";
 import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger, ImageHoverAudio } from "../markup/image.js";
-import { renderIcon } from "../icons.js";
-import { FragmentHost } from "./fragment-host.js";
+import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { openLightbox } from "./lightbox.js";
 import { manifest, fragmentSources } from "./fragments/image/source.generated.js";
 
+/** A click or key that lands on a control inside the frame belongs to the control, not the frame. */
+function onFrameControl(target: EventTarget | null): boolean {
+	return target instanceof Element && target.closest("button, a, input, select, textarea") !== null;
+}
+
 export class XtyleImage extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "image", {
-		applyIntent: () => {},
+		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => this.wire(),
 	});
 
@@ -139,7 +143,33 @@ export class XtyleImage extends XtyleElement {
 		if (this.root.firstChild) this.render();
 	}
 
+	/** The frame is not the click target when a zoom button is: a click meant for the surrounding
+	 * prose (or a drag-select over the image) shouldn't fire the modal. */
+	private get zoomEnabled(): boolean {
+		return this.lightbox && this.trigger === "button";
+	}
+
+	/** The mute toggle only earns its place over a hover *video* whose author allowed sound — and
+	 * never under reduced motion, where the preview doesn't play at all. Resolved from attributes and
+	 * the consumer's own slotted content, so it holds on the very first render, before the element
+	 * has injected a `hover-src` preview. */
+	private get audioEnabled(): boolean {
+		if (this.hoverAudio === null || this.reduceMotion?.matches) return false;
+		if (this.querySelector('video[slot="hover"], [slot="hover"] video')) return true;
+		return isHoverVideo(this.hoverSrc);
+	}
+
+	private get zoomLabel(): string {
+		return this.alt ? `View image: ${this.alt}` : "View image";
+	}
+
+	private get audioMuted(): boolean {
+		const video = this.hoverVideo();
+		return video ? video.muted : this.hoverAudio !== "on";
+	}
+
 	private get bindings(): Record<string, unknown> {
+		const muted = this.audioMuted;
 		return {
 			src: this.src,
 			alt: this.alt,
@@ -148,6 +178,11 @@ export class XtyleImage extends XtyleElement {
 			radius: this.radius,
 			loading: this.loading,
 			caption: this.caption,
+			zoom: this.zoomEnabled,
+			zoomLabel: this.zoomLabel,
+			audio: this.audioEnabled,
+			audioMuted: muted,
+			audioLabel: muted ? "Unmute preview" : "Mute preview",
 		};
 	}
 
@@ -161,7 +196,30 @@ export class XtyleImage extends XtyleElement {
 		// The `figcaption` is only present when there's a caption, and the patch hook doesn't rebuild
 		// it; a change in caption presence remounts (which re-places any slotted hover preview intact).
 		this.fragment.reshapeIfChanged(this.caption ? "captioned" : "uncaptioned");
+		if (this.chromeStale()) this.fragment.remount();
 		this.fragment.update(this.bindings);
+	}
+
+	/**
+	 * Whether the frame's live controls disagree with what the bindings now ask for. Two paths land
+	 * here: an attribute flipped (`lightbox`, `trigger`, `hover-audio`), and hydration — the zero-JS
+	 * render carries no zoom button (one that can't open a lightbox is dead chrome), so the element
+	 * upgrades over a scaffold that lacks it and the fill's `mount` never runs. Either way the fill
+	 * has to redraw, so ask it to.
+	 */
+	private chromeStale(): boolean {
+		const frame = this.root.querySelector<HTMLElement>(".xtyle-image__frame");
+		if (!frame) return false;
+		return (
+			this.zoomEnabled !== (frame.querySelector(".xtyle-image__zoom") !== null) ||
+			this.audioEnabled !== (frame.querySelector(".xtyle-image__audio") !== null)
+		);
+	}
+
+	private applyIntent(intent: FragmentIntent, event: Event): void {
+		if (intent.stopPropagation) event.stopPropagation();
+		if (intent.activate === "zoom") this.openLightbox();
+		else if (intent.activate === "audio") this.toggleHoverAudio();
 	}
 
 	private wire(): void {
@@ -182,21 +240,8 @@ export class XtyleImage extends XtyleElement {
 
 		this.wireHover(frame);
 
-		if (!this.lightbox) {
-			this.clearFrameTrigger(frame);
-			this.removeZoomButton(frame);
-			return;
-		}
-		const label = this.alt ? `View image: ${this.alt}` : "View image";
-		if (this.trigger === "button") {
-			// The frame is not the click target; a dedicated zoom button is, so a click meant for
-			// the surrounding prose (or a drag-select over the image) doesn't fire the modal.
-			this.clearFrameTrigger(frame);
-			this.ensureZoomButton(frame, label);
-		} else {
-			this.removeZoomButton(frame);
-			this.wireFrameTrigger(frame, label);
-		}
+		if (this.lightbox && this.trigger !== "button") this.wireFrameTrigger(frame, this.zoomLabel);
+		else this.clearFrameTrigger(frame);
 	}
 
 	private wireHover(frame: HTMLElement): void {
@@ -220,11 +265,9 @@ export class XtyleImage extends XtyleElement {
 		}
 
 		if (!this.hoverContentPresent(overlay) || this.reduceMotion?.matches) {
-			this.clearHover(frame, overlay);
+			this.clearHover(frame);
 			return;
 		}
-
-		this.ensureAudioButton(frame);
 
 		if (this.hoverFrame === frame) return;
 		this.hoverFrame = frame;
@@ -287,44 +330,23 @@ export class XtyleImage extends XtyleElement {
 		}
 	}
 
-	private clearHover(frame: HTMLElement, overlay: HTMLElement): void {
+	private clearHover(frame: HTMLElement): void {
 		this.hoverController?.abort();
 		this.hoverController = null;
 		this.hoverFrame = null;
 		frame.removeAttribute("data-hover-active");
-		overlay.querySelector(".xtyle-image__audio")?.remove();
 	}
 
-	private ensureAudioButton(frame: HTMLElement): void {
-		const overlay = frame.querySelector<HTMLElement>(".xtyle-image__hover");
-		if (!overlay) return;
-		const existing = overlay.querySelector<HTMLButtonElement>(".xtyle-image__audio");
-		if (this.hoverAudio === null || !this.hoverVideo()) {
-			existing?.remove();
-			return;
-		}
-		let button = existing;
-		if (!button) {
-			button = document.createElement("button");
-			button.type = "button";
-			button.className = "xtyle-image__audio";
-			overlay.appendChild(button);
-			button.addEventListener("click", (event) => {
-				event.stopPropagation();
-				const target = this.hoverVideo();
-				if (!target) return;
-				target.muted = !target.muted;
-				this.paintAudioButton(button as HTMLButtonElement, target.muted);
-			});
-		}
+	/** Flip the preview's sound and mirror it onto the fill's toggle. The glyph is the fill's — both
+	 * are rendered, and `aria-pressed` selects which one shows — so this writes state, not markup. */
+	private toggleHoverAudio(): void {
 		const video = this.hoverVideo();
-		this.paintAudioButton(button, video ? video.muted : this.hoverAudio !== "on");
-	}
-
-	private paintAudioButton(button: HTMLButtonElement, muted: boolean): void {
-		button.innerHTML = renderIcon(muted ? "volume-off" : "volume");
-		button.setAttribute("aria-label", muted ? "Unmute preview" : "Mute preview");
-		button.setAttribute("aria-pressed", muted ? "false" : "true");
+		if (!video) return;
+		video.muted = !video.muted;
+		const button = this.root.querySelector<HTMLElement>(".xtyle-image__audio");
+		if (!button) return;
+		button.setAttribute("aria-pressed", video.muted ? "false" : "true");
+		button.setAttribute("aria-label", video.muted ? "Unmute preview" : "Mute preview");
 	}
 
 	private wireFrameTrigger(frame: HTMLElement, label: string): void {
@@ -336,14 +358,21 @@ export class XtyleImage extends XtyleElement {
 		this.lightboxTrigger?.abort();
 		this.lightboxTrigger = new AbortController();
 		const { signal } = this.lightboxTrigger;
-		frame.addEventListener("click", () => this.openLightbox(), { signal });
+		frame.addEventListener(
+			"click",
+			(event) => {
+				if (onFrameControl(event.target)) return;
+				this.openLightbox();
+			},
+			{ signal },
+		);
 		frame.addEventListener(
 			"keydown",
 			(event) => {
-				if (event.key === "Enter" || event.key === " ") {
-					event.preventDefault();
-					this.openLightbox();
-				}
+				if (event.key !== "Enter" && event.key !== " ") return;
+				if (onFrameControl(event.target)) return;
+				event.preventDefault();
+				this.openLightbox();
 			},
 			{ signal },
 		);
@@ -358,38 +387,15 @@ export class XtyleImage extends XtyleElement {
 		frame.removeAttribute("aria-label");
 	}
 
-	private ensureZoomButton(frame: HTMLElement, label: string): void {
-		let button = frame.querySelector<HTMLButtonElement>(".xtyle-image__zoom");
-		if (!button) {
-			button = document.createElement("button");
-			button.type = "button";
-			button.className = "xtyle-image__zoom";
-			button.innerHTML = renderIcon("maximize");
-			button.addEventListener("click", () => this.openLightbox());
-			frame.appendChild(button);
-		}
-		button.setAttribute("aria-label", label);
-	}
-
-	private removeZoomButton(frame: HTMLElement): void {
-		frame.querySelector(".xtyle-image__zoom")?.remove();
-	}
-
 	private markLoaded(frame: HTMLElement): void {
 		frame.removeAttribute("data-loading");
 		frame.setAttribute("data-loaded", "");
 	}
 
+	/** The failure mark is the fill's, rendered up front and revealed by this state. */
 	private markError(frame: HTMLElement): void {
 		frame.removeAttribute("data-loading");
 		frame.setAttribute("data-error", "");
-		if (!frame.querySelector(".xtyle-image__error")) {
-			const mark = document.createElement("span");
-			mark.className = "xtyle-image__error";
-			mark.setAttribute("aria-hidden", "true");
-			mark.innerHTML = renderIcon("warning", { size: "lg" });
-			frame.appendChild(mark);
-		}
 	}
 
 	private openLightbox(): void {

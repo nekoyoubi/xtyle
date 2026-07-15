@@ -7,9 +7,7 @@ const htmlExample = `<xtyle-table variant="striped" hover sticky aria-label="Rec
 			<tr class="xtyle-table__row">
 				<th class="xtyle-table__header-cell xtyle-table__header-cell--sortable" scope="col" aria-sort="ascending">
 					<span class="xtyle-table__header-content">Order
-						<span class="xtyle-table__sort" aria-hidden="true">
-							<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 8l5 6H7l5-6Z" /></svg>
-						</span>
+						<xtyle-icon class="xtyle-table__sort" name="chevron-down" aria-hidden="true"></xtyle-icon>
 					</span>
 				</th>
 				<th class="xtyle-table__header-cell" scope="col">Customer</th>
@@ -50,9 +48,7 @@ const svelteExample = `<script lang="ts">
 					onclick={() => (sort = sort === "ascending" ? "descending" : "ascending")}
 				>
 					<span class="xtyle-table__header-content">Order
-						<span class="xtyle-table__sort" aria-hidden="true">
-							<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 8l5 6H7l5-6Z" /></svg>
-						</span>
+						<xtyle-icon class="xtyle-table__sort" name="chevron-down" aria-hidden="true"></xtyle-icon>
 					</span>
 				</th>
 				<th class="xtyle-table__header-cell" scope="col">Customer</th>
@@ -129,11 +125,12 @@ export const tableManifest: ComponentManifest = {
 	id: "table",
 	name: "Table",
 	category: "content",
+	since: "0.1.0",
 	keywords: ["data table", "rows", "columns", "spreadsheet", "sortable", "grid"],
-	seeAlso: ["pagination", "tree"],
+	seeAlso: ["pagination", "tree", "icon"],
 	summary: "A styled data table around native `<table>`: zebra, bordered, hover, sticky header, and a sortable-header affordance.",
 	description:
-		"Table dresses a native `<table>` in xtyle styling without taking over its markup. The binding is a thin wrapper that relays consumer-authored rows: you write the real `<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>` and tag them with the `xtyle-table__*` part classes, and the wrapper supplies the scroll container, variant, size, hover, and sticky behavior. Rows you render after mount get decorated automatically by a subtree observer, so a keyed `{#each}` or a live feed needs no classing at all. A framework that would rather class rows at author time (skipping the observer entirely) can, and to keep that path from hard-coding magic strings, `@xtyle/core` exports the part-class names as the typed `tableParts` map (`tableParts.head`, `.row`, `.cell`, `.headerCell`, `.body`, …); the same constants the decorator itself writes, so a part rename can't drift silently. Variants `default`/`striped`/`bordered` set the row and cell chrome; `compact`/`normal` sizes set the cell padding. The sortable-header affordance renders a sort glyph and exposes an `aria-sort` hook on the header cell; the engine is presentation-only, so the consumer wires the actual sort and toggles `aria-sort` (`ascending`/`descending`/`none`), and the glyph rotates to match. `scope` belongs on every header cell so screen readers associate it with its row or column.",
+		"Table dresses a native `<table>` in xtyle styling without taking over its markup. The binding is a thin wrapper that relays consumer-authored rows: you write the real `<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>` and tag them with the `xtyle-table__*` part classes, and the wrapper supplies the scroll container, variant, size, hover, and sticky behavior. Rows you render after mount get decorated automatically by a subtree observer, so a keyed `{#each}` or a live feed needs no classing at all. A framework that would rather class rows at author time (skipping the observer entirely) can, and to keep that path from hard-coding magic strings, `@xtyle/core` exports the part-class names as the typed `tableParts` map (`tableParts.head`, `.row`, `.cell`, `.headerCell`, `.body`, …); the same constants the decorator itself writes, so a part rename can't drift silently. Variants `default`/`striped`/`bordered` set the row and cell chrome; `compact`/`normal` sizes set the cell padding. The sortable-header affordance renders a sort caret — an `<xtyle-icon>`, so the glyph comes from the Icon component's fragment and re-skins with the rest of the icon set — and exposes an `aria-sort` hook on the header cell; the engine is presentation-only, so the consumer wires the actual sort and toggles `aria-sort` (`ascending`/`descending`/`none`), and the caret rotates to match. `scope` belongs on every header cell so screen readers associate it with its row or column.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -183,8 +180,15 @@ export const tableManifest: ComponentManifest = {
 			tokens: ["--space-3", "--space-4", "--line"],
 		},
 		{
+			name: "header-content",
+			description: "The inline row inside a sortable `<th>` that keeps the label and the sort caret on one line.",
+			selector: ".xtyle-table__header-content",
+			tokens: ["--space-2"],
+		},
+		{
 			name: "sort",
-			description: "The decorative sort glyph inside a sortable header; rotates and colors per `aria-sort`.",
+			description:
+				"The decorative sort caret inside a sortable header; rotates and colors per `aria-sort`. It is an `<xtyle-icon name=\"chevron-down\">`, so the glyph itself renders through the Icon component's fragment and a mod that reskins `component.icon` reskins the caret too.",
 			selector: ".xtyle-table__sort",
 			tokens: ["--fg-3", "--accent-text", "--duration-fast", "--ease-standard"],
 		},

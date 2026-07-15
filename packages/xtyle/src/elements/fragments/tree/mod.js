@@ -103,13 +103,13 @@
     return buildNodes(items, 1, selected, expanded, roving);
   }
   hooks.fragment.mount("tree", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", treeClass(bindings));
+    ops.setAttr(".xtyle-tree", "class", treeClass(bindings));
     if (bindings.labelledby) ops.setAttr("[data-root]", "aria-labelledby", bindings.labelledby);
     else if (bindings.label) ops.setAttr("[data-root]", "aria-label", bindings.label);
     ops.replaceChildren("[data-root]", tree(bindings));
   });
   hooks.fragment.update("tree", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", treeClass(bindings));
+    ops.setAttr(".xtyle-tree", "class", treeClass(bindings));
     const expanded = new Set(bindings.expandedKeys ?? []);
     const selected = bindings.selectedValue ?? null;
     const roving = rovingTarget(bindings);

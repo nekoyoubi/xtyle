@@ -34,6 +34,7 @@ export const tocManifest: ComponentManifest = {
 	id: "toc",
 	name: "Toc",
 	category: "navigation",
+	since: "0.1.0",
 	keywords: ["table of contents", "on this page", "outline", "anchor nav", "jump links"],
 	seeAlso: ["tree", "breadcrumb", "tabs"],
 	summary: "An on-this-page table of contents that highlights the section currently in view.",

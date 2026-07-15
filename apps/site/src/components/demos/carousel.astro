@@ -157,4 +157,26 @@ const driftSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" 
 			}
 		</Carousel>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Bare track</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				With both <code>{"controls={false}"}</code> and <code>{"dots={false}"}</code> the carousel draws
+				no chrome at all: the control bar drops out entirely and the slides are paged by swipe, the
+				arrow keys, and Home/End. Everything the other demos show above it — the arrows, the dots rail,
+				the play toggle, the track itself — is the component's fragment, so a mod can restyle or
+				restructure any of it without touching the scrolling.
+			</Text>
+			<Carousel label="Bare track" controls={false} dots={false}>
+				{
+					hues.map((hue, i) => (
+						<div style={`display:flex;align-items:center;justify-content:center;min-height:7rem;border-radius:var(--radius-md);background:${hue};color:#0b0d12;font-size:var(--text-lg);font-weight:var(--weight-bold);`}>
+							{i + 1}
+						</div>
+					))
+				}
+			</Carousel>
+		</Stack>
+	</Card>
 </Stack>

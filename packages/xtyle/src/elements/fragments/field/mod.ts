@@ -165,12 +165,12 @@ function inner(b: FieldBindings): string {
 }
 
 hooks.fragment.mount("field", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", fieldClass(bindings));
+	ops.setAttr(".xtyle-field", "class", fieldClass(bindings));
 	ops.replaceChildren("[data-field]", inner(bindings));
 });
 
 hooks.fragment.update("field", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", fieldClass(bindings));
+	ops.setAttr(".xtyle-field", "class", fieldClass(bindings));
 
 	const labelText = bindings.label ?? "";
 	const star = bindings.required

@@ -182,9 +182,15 @@ export const imageManifest: ComponentManifest = {
 		},
 		{
 			name: "audio",
-			description: "The mute/unmute toggle shown on a hover video when `hover-audio` allows sound.",
+			description: "The mute/unmute toggle shown on a hover video when `hover-audio` allows sound. It carries both glyphs; `aria-pressed` picks the one that shows, so the element flips sound without rewriting the button.",
 			selector: ".xtyle-image__audio",
 			tokens: ["--bg-1", "--fg-1", "--radius-full", "--surface-overlay-border", "--elevation-3"],
+		},
+		{
+			name: "error",
+			description: "The warning glyph revealed over the frame when the image fails to load (the frame carries `data-error`).",
+			selector: ".xtyle-image__error",
+			tokens: ["--fg-2"],
 		},
 	],
 	props: [
@@ -286,7 +292,7 @@ export const imageManifest: ComponentManifest = {
 		},
 		{
 			name: "hover-active",
-			description: "While the frame is hovered or focused with hover-preview content: the overlay is faded in and any hover video is playing.",
+			description: "While the frame is hovered or focused with hover-preview content: the overlay is faded in, the mute toggle (if any) is revealed, and any hover video is playing.",
 			selector: ".xtyle-image__frame[data-hover-active]",
 		},
 	],

@@ -60,8 +60,10 @@ export interface ComponentManifest {
 	id: string;
 	name: string;
 	category: ComponentCategory;
-	/** The version this component first shipped. Drives a "new" badge in the nav and index while it sits ahead of the released stats baseline; clears itself once the next release baselines past it. Omit for anything that predates the tracking. */
-	since?: string;
+	/** The version this component first shipped. Drives a "new" badge in the nav and index while it sits ahead of
+	 * the released stats baseline; clears itself once the next release baselines past it. Required: an absent
+	 * `since` reads as "not new", so a component that forgets it lands silently and is never announced. */
+	since: string;
 	summary: string;
 	description: string;
 	/** Discovery aliases: capability words a searcher (human or agent) might reach for that aren't the

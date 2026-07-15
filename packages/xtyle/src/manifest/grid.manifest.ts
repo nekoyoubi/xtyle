@@ -60,6 +60,7 @@ export const gridManifest: ComponentManifest = {
 	id: "grid",
 	name: "Grid",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["columns", "layout grid", "auto-fit", "gallery", "masonry"],
 	seeAlso: ["stack", "cluster", "section"],
 	summary: "A two-dimensional CSS grid: fixed columns or responsive auto-fit, with a token-driven gap.",

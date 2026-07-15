@@ -55,12 +55,66 @@ import { ICON_NAMES } from "@xtyle/core";
 				}
 			</Grid>
 			<Text tone="muted" size="sm">
-				The same spec under a different scheme via <code>colors</code>:
+				The same spec under a different palette via <code>colors</code>. A palette is a set of stops
+				and a mark asks it for N colors, so a ramp-shaped palette (<code>thermal</code>,
+				<code>severity</code>, <code>intensity</code>) is sampled just as happily as a categorical one:
 			</Text>
 			<Cluster gap={4} align="center">
 				<Icon name="chip--hex-c1--dot-s30-c2" size="xl" colors="accents" />
 				<Icon name="chip--hex-c1--dot-s30-c2" size="xl" colors="skittles" />
 				<Icon name="chip--hex-c1--dot-s30-c2" size="xl" colors="statuses" />
+				<Icon name="chip--hex-c1--dot-s30-c2" size="xl" colors="thermal" />
+				<Icon name="chip--hex-c1--dot-s30-c2" size="xl" colors="severity" />
+				<Icon name="chip--hex-c1--dot-s30-c2" size="xl" colors="intensity" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">A mark that carries its own palette</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A palette reaches a mark from two places, and the narrower one wins. <code>colors</code> sets it on
+				the control; a <code>---ps-&#123;palette&#125;</code> finish pins it in the <em>name</em>, so the mark
+				is self-contained and colors the same wherever it lands. The flag validates against the shipped
+				palette list, so every name below works with no parser change. All six icons sit under the same
+				<code>colors="accents"</code> control:
+			</Text>
+			<Cluster gap={5} align="center">
+				{
+				[
+					{ name: "chip--hex-c1--dot-s30-c2", tag: "no ps · inherits accents" },
+					{ name: "chip--hex-c1--dot-s30-c2---ps-skittles", tag: "---ps-skittles" },
+					{ name: "chip--hex-c1--dot-s30-c2---ps-thermal", tag: "---ps-thermal" },
+					{ name: "chip--hex-c1--dot-s30-c2---ps-statuses", tag: "---ps-statuses" },
+					{ name: "chip--hex-c1--dot-s30-c2---ps-severity", tag: "---ps-severity" },
+					{ name: "chip--hex-c1--dot-s30-c2---ps-intensity", tag: "---ps-intensity" },
+				].map((mark) => (
+					<Stack gap={1} align="center" style="text-align: center;">
+						<Icon name={mark.name} size="xl" colors="accents" />
+						<Text tone="muted" size="xs" mono style="word-break: break-all;">{mark.tag}</Text>
+					</Stack>
+				))
+				}
+			</Cluster>
+			<Text tone="muted" size="sm">
+				A <code>pc</code> override still beats the pinned palette for the one slot it names, so a mark can
+				pin the crayon box and then force a single slot to a theme token:
+			</Text>
+			<Cluster gap={5} align="center">
+				{
+				[
+					{ name: "heat--ring-c1--dot-s28-c9---ps-thermal", tag: "---ps-thermal" },
+					{ name: "heat--ring-c1--dot-s28-c9---ps-thermal--pc1-accent", tag: "---ps-thermal--pc1-accent" },
+					{ name: "swatch--square2-c1--star-s45-c5---ps-skittles", tag: "---ps-skittles" },
+					{ name: "swatch--square2-c1--star-s45-c5---ps-skittles--pc5-fg", tag: "---ps-skittles--pc5-fg" },
+				].map((mark) => (
+					<Stack gap={1} align="center" style="text-align: center;">
+						<Icon name={mark.name} size="xl" />
+						<Text tone="muted" size="xs" mono style="word-break: break-all;">{mark.tag}</Text>
+					</Stack>
+				))
+				}
 			</Cluster>
 		</Stack>
 	</Card>
@@ -92,6 +146,46 @@ import { ICON_NAMES } from "@xtyle/core";
 					))
 				}
 			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Web fonts, on request</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A <code>---f</code> finish can name a web font (<code>---f1-lobster</code>). The engine gates the
+				family on its character set, which is what keeps an untrusted icon name from smuggling a quote
+				or an angle bracket into the URL it builds. Hand it the Google Fonts list with
+				<code>useGoogleFontCatalogue</code> — as the icon builder does — and it also gets exact: a typo
+				reads as a typo instead of rendering in a silent fallback, and <code>ibm+plex+mono</code>
+				resolves to the real <code>IBM Plex Mono</code> rather than a mis-cased guess that 404s. These
+				marks render in the theme's display font until you load the family.
+			</Text>
+			<Grid minColWidth="8rem" gap={3} class="demo-webfont-marks">
+				{
+					[
+						["Lobster", "lobster L--letter-L-f1---f1-lobster"],
+						["Monoton", "monoton 8--circle-c3--letter-8-f1-cb-s55---f1-monoton"],
+						["Bungee", "bungee B--letter-B-f1-o2c2---f1-bungee"],
+						["Noto Sans Symbols", "symbols--letter-N-f1---f1-noto+sans+symbols"],
+					].map(([family, spec]) => (
+						<Stack gap={1} align="center" style="text-align: center; padding: 0.75rem 0;">
+							<Icon name={spec} size="xl" />
+							<Text tone="muted" size="xs" mono style="word-break: break-all;">{family}</Text>
+						</Stack>
+					))
+				}
+			</Grid>
+			<Cluster gap={3} align="center">
+				<Button size="sm" variant="subtle" id="demo-load-fonts">Load from Google Fonts</Button>
+				<Text tone="subtle" size="xs" id="demo-font-status">Not loaded</Text>
+			</Cluster>
+			<Text tone="subtle" size="xs">
+				Nothing is fetched until you click. Your browser asks <code>fonts.googleapis.com</code> for the
+				font directly, which tells Google your IP address. An export does not have this problem:
+				<code>embedFontsInSvg</code> bakes the face into the SVG, subsetted to just the glyphs the mark
+				draws, so the file renders correctly on a machine that has never heard of the font.
+			</Text>
 		</Stack>
 	</Card>
 
@@ -165,3 +259,26 @@ import { ICON_NAMES } from "@xtyle/core";
 		</Text>
 	</Card>
 </Stack>
+
+<script>
+	import { loadGoogleFont } from "@xtyle/core";
+
+	const FAMILIES = ["Lobster", "Monoton", "Bungee", "Noto Sans Symbols"];
+
+	function initWebFontDemo(): void {
+		const button = document.querySelector<HTMLButtonElement>("#demo-load-fonts");
+		const status = document.querySelector<HTMLElement>("#demo-font-status");
+		if (!button || !status) return;
+
+		button.addEventListener("click", async () => {
+			button.disabled = true;
+			status.textContent = "Loading…";
+			const results = await Promise.allSettled(FAMILIES.map((family) => loadGoogleFont(family)));
+			const failed = results.filter((r) => r.status === "rejected").length;
+			status.textContent = failed ? `Loaded, ${failed} failed` : "Loaded from Google Fonts";
+			button.disabled = failed === 0;
+		});
+	}
+
+	document.addEventListener("astro:page-load", initWebFontDemo);
+</script>

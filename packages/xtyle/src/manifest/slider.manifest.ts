@@ -88,6 +88,7 @@ export const sliderManifest: ComponentManifest = {
 	id: "slider",
 	name: "Slider",
 	category: "control",
+	since: "0.1.0",
 	keywords: ["range", "range input", "track", "value picker", "volume", "brightness"],
 	seeAlso: ["number-input", "progress", "color-picker"],
 	summary: "A draggable range control for choosing a single value between a min and max, with full keyboard support.",
@@ -103,9 +104,15 @@ export const sliderManifest: ComponentManifest = {
 		},
 		{
 			name: "rail",
-			description: "The interactive track the thumb travels along; its `::before` paints the unfilled groove.",
+			description: "The interactive track the thumb travels along; it sizes the groove and thumb and takes the pointer.",
 			selector: ".xtyle-slider__rail",
-			tokens: ["--space-5", "--space-2", "--radius-full", "--neutral-bg", "--border-thin", "--line-2"],
+			tokens: ["--space-5", "--space-2"],
+		},
+		{
+			name: "groove",
+			description: "The unfilled channel the fill runs through: a node in the fill's markup, not a pseudo-element, so a mod can restructure it (tick marks, segments, a gradient track) rather than only recolor it.",
+			selector: ".xtyle-slider__groove",
+			tokens: ["--radius-full", "--neutral-bg", "--border-thin", "--line-2"],
 		},
 		{
 			name: "fill",
@@ -136,6 +143,18 @@ export const sliderManifest: ComponentManifest = {
 			description: "The optional inline readout of the current value, shown when `show-value` is set and formatted by the `format` property.",
 			selector: ".xtyle-slider__value",
 			tokens: ["--fg-1", "--text-sm"],
+		},
+		{
+			name: "value-text",
+			description: "The text node inside the readout that carries the formatted number. The value patch lands here rather than on the readout itself, so a mod is free to put its own markup (a unit, a richer display) beside it without a value move clearing it.",
+			selector: ".xtyle-slider__value-text",
+			tokens: [],
+		},
+		{
+			name: "value-input",
+			description: "The inline numeric field the readout becomes while it is being edited: a node in the fill's markup (drawn whenever the slider reports it is editing), not one the element conjures, so a mod that reshapes the value display keeps its own markup through an edit.",
+			selector: ".xtyle-slider__value-input",
+			tokens: ["--field-bg", "--field-border", "--border-thin", "--radius-sm", "--space-1", "--ring"],
 		},
 		{
 			name: "overlay",

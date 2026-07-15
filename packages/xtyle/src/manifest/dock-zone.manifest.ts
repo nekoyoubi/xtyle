@@ -99,13 +99,20 @@ export const dockZoneManifest: ComponentManifest = {
 	id: "dock-zone",
 	name: "Dock Zone",
 	category: "shell",
+	since: "0.2.0",
 	keywords: ["docking", "panels", "workspace", "ide layout", "draggable panels", "tear-off", "float"],
 	seeAlso: ["dock", "app-shell", "panel", "splitter"],
 	summary: "A drag-and-drop dockable-panel workspace: tabbed zones that rearrange by dragging.",
 	description:
-		"Dock Zone is a movable-panel workspace, the editor-style chrome an app builds its layout from. Its direct children are the panels: any element with a `data-panel-id` and a `data-title` (or `title`) for its tab. The zone reads them, arranges them into a layout of tabbed zones, and renders the tab strips and splits around them. Dragging a tab re-docks its panel onto another zone, joining it as a tab when dropped over the center or splitting the zone when dropped against an edge. Dragging a tab out past every zone tears it into a floating window that moves, resizes, and docks back on the same layout. Every rearrangement dispatches a `layout-change` event carrying the serializable layout, and setting the `layout` property restores a saved one, so a workspace persists across reloads. A panel carries its own header chrome, declared on the panel child: `data-closable` for a built-in close (a cancelable `panel-close`, then removal and a fresh `layout-change`), `data-actions` for direct header buttons, and `data-menu` for a kebab overflow `<xtyle-menu>`. A header button or a menu row both fire `panel-action`, and a `data-badge` puts trailing status text (a count) on the panel's own tab. A leaf renders in one of two modes: `tabs` (the default, one active panel behind a tab strip) or `stack` (every panel a collapsible section, the tool-rail shape); set `mode` for the whole workspace or per leaf in the tree. The layout physics are xtyle's own headless engine (`resolveDrop` for the drop geometry, `dockPanel` for the tree), the same primitives a consumer can drive directly from `@xtyle/core/elements`. The Svelte binding surfaces `layout` as a prop and reports rearrangement through `onLayoutChange`, close through `onPanelClose`, and header controls through `onPanelAction`; the Astro binding renders the panels and upgrades the workspace on the client.",
+		"Dock Zone is a movable-panel workspace, the editor-style chrome an app builds its layout from. Its direct children are the panels: any element with a `data-panel-id` and a `data-title` (or `title`) for its tab. The zone reads them, arranges them into a layout of tabbed zones, and renders the tab strips and splits around them. Dragging a tab re-docks its panel onto another zone, joining it as a tab when dropped over the center or splitting the zone when dropped against an edge. Dragging a tab out past every zone tears it into a floating window that moves, resizes, and docks back on the same layout. A float's titlebar moves it: dragging anywhere across the open workspace just repositions the window, and a re-dock is only offered — films and all — once the pointer comes within the `--dock-band` of a zone's boundary, the seam a split would land against. Every rearrangement dispatches a `layout-change` event carrying the serializable layout, and setting the `layout` property restores a saved one, so a workspace persists across reloads. A panel carries its own header chrome, declared on the panel child: `data-closable` for a built-in close (a cancelable `panel-close`, then removal and a fresh `layout-change`), `data-actions` for direct header buttons, and `data-menu` for a kebab overflow `<xtyle-menu>`. A header button or a menu row both fire `panel-action`, and a `data-badge` puts trailing status text (a count) on the panel's own tab. A leaf renders in one of two modes: `tabs` (the default, one active panel behind a tab strip) or `stack` (every panel a collapsible section, the tool-rail shape); set `mode` for the whole workspace or per leaf in the tree. The layout physics are xtyle's own headless engine (`resolveDrop` for the drop geometry, `dockPanel` for the tree), the same primitives a consumer can drive directly from `@xtyle/core/elements`. The Svelte binding surfaces `layout` as a prop and reports rearrangement through `onLayoutChange`, close through `onPanelClose`, and header controls through `onPanelAction`; the Astro binding renders the panels and upgrades the workspace on the client. All of the chrome the workspace invents — the tab strips, the section headers and their chevrons, the header buttons and the kebab, the float windows and their resize grips, the drag films — is drawn by the `component.dock-zone` fragment, so an app reskins or restructures the panel chrome the same way a third-party mod would, while the element keeps the dock math, the pointer gestures, panel custody, and the persisted layout.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
+		{
+			name: "root",
+			description: "The fragment's workspace root: the flex container the zones, the drag films, and the float layer all render inside. Everything below is drawn by the `component.dock-zone` fill, so a mod reshapes any of it.",
+			selector: ".xtyle-dock-zone__root",
+			tokens: ["--space-1"],
+		},
 		{
 			name: "zone",
 			description: "A leaf of the layout: a tab strip over the active panel's body.",
@@ -120,19 +127,31 @@ export const dockZoneManifest: ComponentManifest = {
 		},
 		{
 			name: "actions",
-			description: "The active panel's header controls, pinned to the end of the tab strip: direct action buttons, a kebab overflow menu, and the close button (its hover tints `--danger`).",
+			description: "The active panel's header controls, pinned to the end of the tab strip: direct action buttons, the kebab, and the close button (its hover tints `--danger`).",
 			selector: ".xtyle-dock-zone__actions",
 			tokens: ["--fg-0", "--fg-2", "--danger", "--state-hover"],
 		},
 		{
+			name: "kebab",
+			description: "The overflow button a `data-menu` panel gets. A real button around a real `⋮` glyph (`.xtyle-dock-zone__kebab-glyph`), so a mod can swap the glyph for an icon or restructure the control; it opens the one cursor-anchored `<xtyle-menu>` the workspace shares.",
+			selector: ".xtyle-dock-zone__kebab",
+			tokens: ["--fg-2", "--state-hover", "--text-lg"],
+		},
+		{
 			name: "section",
-			description: "A stack-mode panel: a disclosure header (a rotating chevron and the title, the panel's controls beside it) over a body shown when expanded.",
+			description: "A stack-mode panel: a disclosure header (a rotating chevron, `.xtyle-dock-zone__chevron`, and the title, the panel's controls beside it) over a body shown when expanded.",
 			selector: ".xtyle-dock-zone__section",
 			tokens: ["--bg-2", "--fg-0", "--fg-2", "--line", "--state-hover"],
 		},
 		{
+			name: "float",
+			description: "A torn-off panel's window: a titlebar (`.xtyle-dock-zone__float-head`) that drags the window around the workspace, with dock and close buttons, the panel's body, and a bottom-right resize grip (`.xtyle-dock-zone__float-resize`).",
+			selector: ".xtyle-dock-zone__float",
+			tokens: ["--bg-1", "--bg-2", "--elevation-4", "--line", "--radius-md", "--weight-medium"],
+		},
+		{
 			name: "highlight",
-			description: "The drag-preview films over the live zones: the drop target (`--accent`), the remnant a split would leave (`--accent-2`), and every other zone (`--accent-3`).",
+			description: "The drag-preview films, shown only while a drop is actually on offer: the drop target (`--accent`), the remnant a split would leave (`--accent-2`), and every other zone (`--accent-3`).",
 			selector: ".xtyle-dock-zone__film",
 			tokens: ["--accent", "--accent-2", "--accent-3", "--border-normal"],
 		},
@@ -173,7 +192,7 @@ export const dockZoneManifest: ComponentManifest = {
 		{
 			name: "data-menu",
 			type: "JSON `MenuItem[]` (on a panel child)",
-			description: "A kebab (⋮) overflow menu for the panel, rendered as an `<xtyle-menu>` (so it carries headings, hints, and `intent: \"danger\"`). Selecting a row fires `panel-action` with the row's `value` as the `actionId`.",
+			description: "A kebab (⋮) overflow menu for the panel. The kebab is a real button in the panel's header; pressing it opens the workspace's shared cursor-anchored `<xtyle-menu>` loaded with this panel's rows (so it carries headings, hints, keyboard navigation, and `intent: \"danger\"`). Selecting a row fires `panel-action` with the row's `value` as the `actionId`.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -185,13 +204,13 @@ export const dockZoneManifest: ComponentManifest = {
 		{
 			name: "floatPanel",
 			type: "(panelId: string, rect?: { x, y, w, h }) => void (method)",
-			description: "Tear a docked panel out into a floating window over the workspace, opening at `rect` (or a cascaded default), and report the new layout through `layout-change`. The window has a draggable titlebar (clamped to the workspace), a bottom-right resize grip, plus dock and close buttons; its rect rides on the same `layout` as the docks, so it persists with everything else. Dragging a tab out past every zone floats it too. Wire the method to a `data-menu` \"float\" row or a shortcut.",
+			description: "Tear a docked panel out into a floating window over the workspace, opening at `rect` (or a cascaded default), and report the new layout through `layout-change`. The window has a titlebar that drags it around the workspace (clamped to it), a bottom-right resize grip, plus dock and close buttons; its rect rides on the same `layout` as the docks, so it persists with everything else. Dragging a tab out past every zone floats it too. Wire the method to a `data-menu` \"float\" row or a shortcut.",
 			bindings: ["html", "svelte"],
 		},
 		{
 			name: "dockFloating",
 			type: "(panelId: string, target?: string, region?: DockRegion) => void (method)",
-			description: "Re-dock a floating panel back into the tree, routing through the same drop path a tab move uses. With no `target` it returns to the zone it floated out of (or the root zone if that's gone); pass a `target` zone id and `region` to land it elsewhere. The float window's dock button calls this, and dragging the window over a zone re-docks it there through the drop preview.",
+			description: "Re-dock a floating panel back into the tree, routing through the same drop path a tab move uses. With no `target` it returns to the zone it floated out of (or the root zone if that's gone); pass a `target` zone id and `region` to land it elsewhere. The float window's dock button calls this — it is also the only way back to a *tab*, since a titlebar drag only ever offers a split. Dragging the window's titlebar into the `--dock-band` along a zone's boundary re-docks it there through the drop preview; anywhere else in the workspace the drag is just a move.",
 			bindings: ["html", "svelte"],
 		},
 		{
@@ -244,6 +263,7 @@ export const dockZoneManifest: ComponentManifest = {
 		"--space-3",
 		"--space-4",
 		"--space-6",
+		"--space-8",
 		"--state-hover",
 		"--text-lg",
 		"--text-sm",
@@ -255,11 +275,13 @@ export const dockZoneManifest: ComponentManifest = {
 		"For a headless workspace (your own panel chrome), drive `resolveDrop` and `dockPanel` from `@xtyle/core/elements` directly instead.",
 		"Give a panel header controls without leaving the layout: `data-closable` for a built-in close, `data-actions` for direct buttons, and `data-menu` for a kebab `<xtyle-menu>`. The chrome always reflects the active panel.",
 		"`panel-close` is cancelable, so a consumer can gate removal (unsaved changes) with `preventDefault()`; otherwise the zone removes the panel and reports the new tree through `layout-change`.",
+		"To reshape the chrome itself (a tab that carries an icon, a different float titlebar, a kebab that isn't a `⋮`), fill the `component.dock-zone` slot: the built-in panel chrome is a fragment, so an override goes through the same surface a third-party mod would use. The dock math, the gestures, and the layout stay with the element, so a reshaped workspace still drags, splits, floats, and persists.",
 	],
 	a11y: [
 		"Tabs are real `<button>`s with `role=\"tab\"` and `aria-selected`, so the active panel is announced and the strip is keyboard-focusable.",
 		"Dragging is pointer-driven; clicking a tab activates its panel without a drag, so rearrangement is not the only way to switch panels.",
-		"Header controls are real `<button>`s with an accessible name (`data-actions` uses its `label`, close reads `Close <title>`); the kebab menu is a full `<xtyle-menu>` with keyboard navigation.",
+		"Header controls are real `<button>`s with an accessible name (`data-actions` uses its `label`, close reads `Close <title>`, the kebab reads `<title> options`); the kebab opens a full `<xtyle-menu>` with keyboard navigation, and its glyph is `aria-hidden`.",
+		"A floating window's titlebar controls are named buttons (`Dock <title>`, `Close <title>`), so a torn-off panel can be docked back or closed without a pointer drag.",
 		"A `data-badge` is decorative (`aria-hidden`), so a tab's accessible name stays its title; put anything a screen reader must announce in `data-title`.",
 		"In `stack` mode each section header is a real `<button>` with `aria-expanded`, so its collapsed state is announced and it toggles by keyboard; the chevron is decorative (`aria-hidden`).",
 	],

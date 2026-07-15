@@ -1,7 +1,7 @@
 ---
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
-import { rampGradientStops, type FullTone as Tone, type RampScheme } from "@xtyle/core";
+import { rampGradientStops, type FullTone as Tone, type Palette } from "@xtyle/core";
 type ProgressVariant = "linear" | "circular";
 type ProgressSize = "sm" | "md" | "lg";
 type ProgressRampMode = "solid" | "gradient";
@@ -25,9 +25,9 @@ interface Props {
 	valuePosition?: "end" | "inset";
 	/** Report `role="meter"` (a capacity measurement) instead of `role="progressbar"` (a task). */
 	meter?: boolean;
-	/** Color the fill by its own value along a ramp instead of a flat `tone`: a built-in scheme
-	 * (`accent` / `thermal` / `status`) or an explicit list of stop colors. */
-	ramp?: RampScheme | string[];
+	/** Color the fill by its own value along a ramp instead of a flat `tone`: a built-in palette
+	 * (`intensity` / `thermal` / `severity`) or an explicit list of stop colors. */
+	ramp?: Palette | string[];
 	/** How a `ramp` paints: `solid` (one sampled color, needs the runtime) or `gradient` (a pure-CSS
 	 * sweep, zero-JS, linear only). Defaults to `solid`. */
 	rampMode?: ProgressRampMode;

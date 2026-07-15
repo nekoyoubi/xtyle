@@ -49,37 +49,55 @@ export const timelineManifest: ComponentManifest = {
 	seeAlso: ["steps", "tree", "stat"],
 	summary: "A vertical activity feed: an ordered list drawn as a connected rail of dots.",
 	description:
-		"Timeline turns a semantic ordered list into a vertical activity feed. It wraps an `<ol>` of `<li>` events and decorates them: each item grows a themed dot on a connector rail that runs from one event to the next and stops at the last. It renders no markup of its own beyond the classes it adds, so the list stays the source of truth for order and content, and screen readers hear a plain ordered list. Inside an item, a `<strong>` reads as the event title, a `<time>` as its timestamp, and a `<p>` as the body; the same styling is available through `xtyle-timeline__title` / `__meta` / `__body` classes if the markup can't use those elements. Being standalone (like `Table`), it needs no runtime to render, only the derived token register the rail and dots draw from.",
+		"Timeline turns a semantic ordered list into a vertical activity feed. Author an `<ol>` of `<li>` events and each one takes a themed dot on a connector rail that runs from one event to the next and stops at the last. The dot and the rail are real nodes rendered by the component's fill, not lines painted onto the author's markup, so a mod can swap the dot for a per-event icon or draw the rail dashed — while each event's content is relocated into its content region untouched, and the rendered list stays a semantic `<ol>` screen readers hear in order. Inside an event, a `<strong>` reads as the title, a `<time>` as its timestamp, and a `<p>` as the body; the same styling is available through `xtyle-timeline__title` / `__meta` / `__body` classes if the markup can't use those elements.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
 			name: "list",
-			description: "The decorated ordered list; carries no bullets and no default spacing.",
+			description: "The rendered ordered list; carries no bullets and no default spacing.",
 			selector: ".xtyle-timeline__list",
 			tokens: [],
 		},
 		{
 			name: "item",
-			description: "One event. Its marker dot and the connector rail below it are drawn as pseudo-elements.",
+			description: "One event: its dot, the rail running to the next event, and its content. Carries any attributes the author put on the source `<li>`.",
 			selector: ".xtyle-timeline__item",
-			tokens: ["--space-5", "--space-4", "--accent", "--bg-0", "--line", "--border-thin", "--border-thick", "--radius-full"],
+			tokens: ["--space-5", "--space-4"],
+		},
+		{
+			name: "dot",
+			description: "The event's marker on the rail. A real node, so a mod can replace it with a per-event icon or status glyph.",
+			selector: ".xtyle-timeline__dot",
+			tokens: ["--accent", "--bg-0", "--border-thick", "--radius-full"],
+		},
+		{
+			name: "rail",
+			description: "The line running from one event's dot down to the next. The last event has none, so the feed ends at its dot.",
+			selector: ".xtyle-timeline__rail",
+			tokens: ["--line", "--border-thin"],
+		},
+		{
+			name: "content",
+			description: "The region each event's authored content is relocated into, beside its dot.",
+			selector: ".xtyle-timeline__content",
+			tokens: [],
 		},
 		{
 			name: "title",
 			description: "The event title: a `<strong>` (or `.xtyle-timeline__title`).",
-			selector: ".xtyle-timeline__item > strong",
+			selector: ".xtyle-timeline__content > strong",
 			tokens: ["--text-sm", "--weight-semibold", "--fg-0", "--leading-tight"],
 		},
 		{
 			name: "meta",
 			description: "The timestamp or secondary line: a `<time>` (or `.xtyle-timeline__meta`).",
-			selector: ".xtyle-timeline__item > time",
+			selector: ".xtyle-timeline__content > time",
 			tokens: ["--text-xs", "--fg-2"],
 		},
 		{
 			name: "body",
 			description: "The event body copy: a `<p>` (or `.xtyle-timeline__body`).",
-			selector: ".xtyle-timeline__item > p",
+			selector: ".xtyle-timeline__content > p",
 			tokens: ["--text-sm", "--fg-1", "--leading-normal", "--space-1"],
 		},
 	],
@@ -90,7 +108,8 @@ export const timelineManifest: ComponentManifest = {
 	slots: [
 		{
 			name: "default",
-			description: "The ordered list. Provide an `<ol>` (or `<ul>`) whose `<li>` children are the events.",
+			description:
+				"The ordered list. Provide an `<ol>` (or `<ul>`) whose `<li>` children are the events. Each event's content is relocated into the rendered item's content region, and any attributes on the source `<li>` ride along onto the rendered item.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -118,9 +137,10 @@ export const timelineManifest: ComponentManifest = {
 		"Feed it real markup: an order history, a changelog, an audit trail, a deploy log. Each `<li>` is one event.",
 		"Pair a `<strong>` title with a `<time>` for the when, and an optional `<p>` for the detail; leave the `<p>` off for a terse feed.",
 		"Drop a `Badge` or an `Icon` inside an item for a status chip beside the title; both inherit the derived theme.",
+		"The dot and the rail are the fill's own nodes: a mod filling `component.timeline` can turn the dot into a per-event icon or dash the rail, without the app changing a line.",
 	],
 	a11y: [
-		"It renders a semantic ordered list, so assistive tech announces the events in order with no ARIA to wire; the dots and rail are decorative pseudo-elements that carry no content.",
+		"It renders a semantic ordered list, so assistive tech announces the events in order with no ARIA to wire; the dot and rail nodes are decorative and carry `aria-hidden`.",
 		"Order is conveyed by the list itself, not by color, so a color-deficient or screen-reader user reads the same sequence.",
 		"Use a real `<time datetime=\"…\">` for timestamps so the machine-readable date is exposed alongside the human label.",
 	],

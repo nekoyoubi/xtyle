@@ -1,5 +1,14 @@
 export { XtyleElement, define } from "./base.js";
 export {
+	loadFill,
+	loadedFillNames,
+	type FillManifest,
+	type FillDecl,
+	type HandlerDecl,
+	type FragmentIntent,
+	type SerializedEvent,
+} from "./fragment-host.js";
+export {
 	wireHostControls,
 	declaredHostControls,
 	type HostControlBehavior,
@@ -87,6 +96,11 @@ export { XtyleTabs } from "./tabs.js";
 export { XtyleBreadcrumb } from "./breadcrumb.js";
 export { XtyleSkeleton } from "./skeleton.js";
 export { XtyleDialog } from "./dialog.js";
+export { XtyleSheet } from "./sheet.js";
+export { XtyleSplitButton } from "./split-button.js";
+export { XtyleSpotlight } from "./spotlight.js";
+export { XtyleRedact, revealAllRedactions, redactionsRevealed } from "./redact.js";
+export { XtyleTour, XtyleTourStep } from "./tour.js";
 export { XtyleToast, XtyleToastRegion } from "./toast.js";
 export { XtyleTable } from "./table.js";
 export { XtyleTimeline } from "./timeline.js";
@@ -96,6 +110,15 @@ export { XtyleProgress } from "./progress.js";
 export { XtyleSlider } from "./slider.js";
 export { XtyleColorPicker } from "./color-picker.js";
 export { XtyleNumberInput } from "./number-input.js";
+export { XtyleDatePicker } from "./date-picker.js";
+export type {
+	DatePickerMode,
+	HourCyclePosture,
+	DisabledDatePredicate,
+	CivilDate,
+	CivilTime,
+	CivilValue,
+} from "./date-picker.js";
 export { XtyleSegmented } from "./segmented.js";
 export { XtyleAccordion } from "./accordion.js";
 export { XtyleTree } from "./tree.js";
@@ -117,6 +140,8 @@ export { XtyleParallax } from "./parallax.js";
 export { XtyleHero } from "./hero.js";
 export { XtyleBar } from "./bar.js";
 export type { BarSeries, BarScheme } from "./bar.js";
+export { XtyleChart } from "./chart.js";
+export type { ChartSeries, ChartScheme, ChartVariant, ChartCurve, ChartXScale, ChartSelection } from "./chart.js";
 export { XtyleSparkline } from "./sparkline.js";
 export type { SparklineVariant, SparklineTone } from "./sparkline.js";
 export { XtyleHeatmap } from "./heatmap.js";
@@ -125,10 +150,36 @@ export { XtylePie } from "./pie.js";
 export type { PieDatum, PieScheme, PieVariant } from "./pie.js";
 export { XtyleSwatch } from "./swatch.js";
 export { XtyleMenu } from "./menu.js";
-export type { MenuItem, MenuAction } from "./menu.js";
+export type { MenuItem, MenuAction, MenuOpenAtOptions } from "./menu.js";
+export { XtylePopover } from "./popover.js";
+export type {
+	PopoverPlacement,
+	PopoverAlign,
+	PopoverFocus,
+	PopoverPanelRole,
+	PopoverCloseReason,
+	PopoverOpenOptions,
+	PopoverAnchorKind,
+} from "./popover.js";
+export { XtyleCommandPalette } from "./command-palette.js";
+export type { CommandItem, CommandMatch, CommandScorer, CommandCloseReason } from "./command-palette.js";
+export { XtyleCombobox, parseValueList } from "./combobox.js";
+export type { ComboboxFilter } from "./combobox.js";
 export { XtyleCode } from "./code.js";
 export { XtylePagination } from "./pagination.js";
+export { XtyleCalendar } from "./calendar.js";
 export { XtyleQrCode } from "./qr.js";
+export { XtyleDropzone, routeNativeDrop, formatBytes, parseByteSize } from "./dropzone.js";
+export type {
+	DropItem,
+	DropFile,
+	DropFileDescriptor,
+	DropFileStatus,
+	DropRejection,
+	DropRejectReason,
+	DropResult,
+	DropSource,
+} from "./dropzone.js";
 
 import "./button.js";
 import "./field.js";
@@ -166,6 +217,11 @@ import "./tabs.js";
 import "./breadcrumb.js";
 import "./skeleton.js";
 import "./dialog.js";
+import "./sheet.js";
+import "./split-button.js";
+import "./spotlight.js";
+import "./redact.js";
+import "./tour.js";
 import "./toast.js";
 import "./table.js";
 import "./timeline.js";
@@ -175,6 +231,7 @@ import "./progress.js";
 import "./slider.js";
 import "./color-picker.js";
 import "./number-input.js";
+import "./date-picker.js";
 import "./segmented.js";
 import "./accordion.js";
 import "./tree.js";
@@ -190,11 +247,17 @@ import "./carousel.js";
 import "./parallax.js";
 import "./hero.js";
 import "./bar.js";
+import "./chart.js";
 import "./sparkline.js";
 import "./heatmap.js";
 import "./pie.js";
 import "./swatch.js";
 import "./menu.js";
+import "./popover.js";
+import "./command-palette.js";
+import "./combobox.js";
 import "./code.js";
 import "./pagination.js";
+import "./calendar.js";
 import "./qr.js";
+import "./dropzone.js";

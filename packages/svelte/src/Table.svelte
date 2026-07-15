@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/table.js";
 	import type { Snippet } from "svelte";
 
 	type TableVariant = "default" | "striped" | "bordered";

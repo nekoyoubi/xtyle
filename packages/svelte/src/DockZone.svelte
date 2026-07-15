@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/dock-zone.js";
 	import type { Snippet } from "svelte";
 	import type { DockNode, DockLayout, FloatRect } from "@xtyle/core/elements";
 

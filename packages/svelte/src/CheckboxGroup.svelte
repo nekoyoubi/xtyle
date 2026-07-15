@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/checkbox.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as Tone, Size } from "@xtyle/core";
 

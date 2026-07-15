@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { encodeQr, qrPath, qrScannability, qrLinkHref, qrLogoModules, QR_MIN_CONTRAST, getComponent, coverComponent, derive } from "../src/index.js";
 import { __qrInternals } from "../src/qr.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
-import { algorithms, xtyleDefault } from "../src/batteries.js";
+import { bakedAlgorithms, xtyleDefault } from "../src/batteries.js";
 
 const register = derive(xtyleDefault, {
 	constraints: { "--bg-0": "#0b0d12", "--fg-0": "#e6e9ef", "--accent": "#6ea8fe" },
@@ -189,7 +189,7 @@ describe("qr scannability", () => {
 	// The invariant, wired across the blessed set: every algorithm's default derive must yield a
 	// scannable themed QR, so a themed code is never the one un-audited patch of a page.
 	it("holds for every blessed algorithm's default theme", () => {
-		for (const [id, algorithm] of Object.entries(algorithms)) {
+		for (const [id, algorithm] of Object.entries(bakedAlgorithms)) {
 			const reg = derive(algorithm, {});
 			const scan = qrScannability(reg);
 			expect(scan.scannable, `${id}: --fg-0 on --bg-0 is ${scan.ratio}:1, below ${QR_MIN_CONTRAST}:1`).toBe(true);

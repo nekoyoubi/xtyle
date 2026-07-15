@@ -1,0 +1,59 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-command-palette-default",
+	"version": "0.0.1",
+	"title": "Xtyle Command Palette (default)",
+	"description": "The built-in fill for the xtyle Command Palette component: the mod-zero surface (search row, grouped result list, keycap column, empty state, legend) every app inherits and may override.",
+	"capabilities": ["xtyle.component.command-palette"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.command-palette": [
+			{
+				"id": "command-palette",
+				"format": "text/html+jsml",
+				"source": "command-palette.html",
+				"handlers": [
+					{ "selector": ".xtyle-command-palette__input", "on": "input", "handler": "paletteInput" },
+					{ "selector": ".xtyle-command-palette__input", "on": "keydown", "handler": "paletteKeydown" },
+					{ "selector": ".xtyle-command-palette__option", "on": "click", "handler": "optionClick" },
+					{ "selector": ".xtyle-command-palette__option", "on": "mouseover", "handler": "optionHover" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-bg",
+						"--accent-text",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--elevation-5",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--fg-3",
+						"--fg-disabled",
+						"--font-sans",
+						"--leading-normal",
+						"--line",
+						"--radius-lg",
+						"--radius-sm",
+						"--scrim",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-4",
+						"--space-6",
+						"--space-8",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--text-body",
+						"--text-sm",
+						"--text-xs",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

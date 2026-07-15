@@ -41,15 +41,12 @@ xtyle-code[line-numbers] { --xtyle-code-gutter: 2.5ch; }
 :host([line-numbers]) .xtyle-code,
 xtyle-code[line-numbers] .xtyle-code { padding-left: 0; }
 :host([line-numbers]) .xtyle-code code,
-xtyle-code[line-numbers] .xtyle-code code { display: block; counter-reset: xtyle-code-line; }
+xtyle-code[line-numbers] .xtyle-code code { display: block; }
 :host([line-numbers]) .xtyle-code-line,
 xtyle-code[line-numbers] .xtyle-code-line {
 	display: flex;
-	counter-increment: xtyle-code-line;
 }
-:host([line-numbers]) .xtyle-code-line::before,
-xtyle-code[line-numbers] .xtyle-code-line::before {
-	content: counter(xtyle-code-line);
+.xtyle-code-line__number {
 	position: sticky;
 	left: 0;
 	flex: 0 0 auto;

@@ -48,6 +48,7 @@ export const dockManifest: ComponentManifest = {
 	id: "dock",
 	name: "Dock",
 	category: "shell",
+	since: "0.1.0",
 	keywords: ["side rail", "sidebar", "side panel", "rail", "drawer"],
 	seeAlso: ["app-shell", "dock-zone", "panel"],
 	summary: "The side rail: a vertical panel pinned to the left or right edge of the shell.",
@@ -231,6 +232,7 @@ export const dockManifest: ComponentManifest = {
 		"Drop a Button stack or a list of anchors into the body for a navigation rail; set `nav` so the landmark is correct.",
 		"Use the `footer` slot for a pinned account menu, theme switch, or status line.",
 		"Pair two docks (left + right) around a main content column for an editor-style three-pane shell.",
+		"A dock fills the height of its container, so give it a definite one: a grid track, a flex column that stretches it, or an explicit `height`. A bare `min-height` is not a definite height, so the rail comes up only as tall as its own content and its divider stops short. `AppShell` sizes its rails this way already.",
 	],
 	a11y: [
 		"Renders a native `<nav>` (when `nav` is set) or `<aside>` complementary landmark, so the rail is reachable via landmark navigation.",

@@ -76,6 +76,7 @@ export const switchManifest: ComponentManifest = {
 	id: "switch",
 	name: "Switch",
 	category: "control",
+	since: "0.1.0",
 	keywords: ["toggle", "on off", "boolean", "flip"],
 	seeAlso: ["checkbox", "segmented"],
 	summary: "An on/off toggle that applies immediately, with an accessible name and optional state labels.",

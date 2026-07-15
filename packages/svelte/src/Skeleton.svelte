@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/skeleton.js";
 	import type { Size } from "@xtyle/core";
 
 	type SkeletonShape = "text" | "line" | "block" | "circle";

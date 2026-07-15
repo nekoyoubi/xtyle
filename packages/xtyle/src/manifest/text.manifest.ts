@@ -46,6 +46,7 @@ export const textManifest: ComponentManifest = {
 	id: "text",
 	name: "Text",
 	category: "content",
+	since: "0.1.0",
 	keywords: ["paragraph", "body text", "copy", "prose", "span", "typography"],
 	seeAlso: ["heading", "eyebrow", "link"],
 	summary: "A body-text primitive: paragraph or inline span across four sizes, four weights, three leadings, and four tones.",

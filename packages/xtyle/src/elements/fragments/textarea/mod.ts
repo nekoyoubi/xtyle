@@ -74,12 +74,12 @@ function inner(b: TextareaBindings): string {
 }
 
 hooks.fragment.mount("textarea", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", rootClass(bindings));
+	ops.setAttr(".xtyle-textarea", "class", rootClass(bindings));
 	ops.replaceChildren("[data-textarea]", inner(bindings));
 });
 
 hooks.fragment.update("textarea", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", rootClass(bindings));
+	ops.setAttr(".xtyle-textarea", "class", rootClass(bindings));
 	ops.setAttr("[data-field]", "aria-invalid", String(bindings.invalid ?? false));
 
 	const labelText = bindings.label ?? "";

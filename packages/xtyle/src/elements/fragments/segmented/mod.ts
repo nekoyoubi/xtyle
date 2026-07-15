@@ -128,7 +128,7 @@ function fieldInner(bindings: SegmentedBindings, selected: string): string {
 /** Build the whole structure once: the expensive `replaceChildren` rebuild. */
 hooks.fragment.mount("segmented", (bindings, ops) => {
 	const selected = selectedValue(bindings);
-	ops.replaceChildren("[data-field]", fieldInner(bindings, selected));
+	ops.replaceChildren("[data-control]", fieldInner(bindings, selected));
 });
 
 /** A selection change: patch state on the existing nodes, never rebuild them. */

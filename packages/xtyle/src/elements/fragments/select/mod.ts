@@ -50,23 +50,23 @@ hooks.fragment.mount("select", (bindings, ops) => {
 	const error = errorText(bindings);
 	const invalid = bindings.invalid === true;
 
-	ops.setAttr("[data-root]", "class", selectClass(bindings));
+	ops.setAttr(".xtyle-select", "class", selectClass(bindings));
 
 	ops.setAttr("[data-label]", "for", fieldId);
 	ops.setText("[data-label]", label);
 	if (label.length === 0) ops.setAttr("[data-label]", "hidden", "hidden");
 
-	ops.setAttr("[data-field]", "id", fieldId);
-	if (bindings.name != null) ops.setAttr("[data-field]", "name", bindings.name);
-	if (bindings.disabled) ops.setAttr("[data-field]", "disabled", "disabled");
+	ops.setAttr("[data-control]", "id", fieldId);
+	if (bindings.name != null) ops.setAttr("[data-control]", "name", bindings.name);
+	if (bindings.disabled) ops.setAttr("[data-control]", "disabled", "disabled");
 	if (bindings.required) {
-		ops.setAttr("[data-field]", "required", "required");
-		ops.setAttr("[data-field]", "aria-required", "true");
+		ops.setAttr("[data-control]", "required", "required");
+		ops.setAttr("[data-control]", "aria-required", "true");
 	}
-	ops.setAttr("[data-field]", "aria-invalid", String(invalid));
-	if (bindings.value != null) ops.setAttr("[data-field]", "value", bindings.value);
-	if (invalid && error.length > 0) ops.setAttr("[data-field]", "aria-describedby", errorId);
-	ops.replaceChildren("[data-field]", bindings.optionsHtml ?? "");
+	ops.setAttr("[data-control]", "aria-invalid", String(invalid));
+	if (bindings.value != null) ops.setAttr("[data-control]", "value", bindings.value);
+	if (invalid && error.length > 0) ops.setAttr("[data-control]", "aria-describedby", errorId);
+	ops.replaceChildren("[data-control]", bindings.optionsHtml ?? "");
 
 	ops.setAttr("[data-error]", "id", errorId);
 	ops.setText("[data-error]", error);
@@ -78,15 +78,15 @@ hooks.fragment.update("select", (bindings, ops) => {
 	const error = errorText(bindings);
 	const invalid = bindings.invalid === true;
 
-	ops.setAttr("[data-root]", "class", selectClass(bindings));
+	ops.setAttr(".xtyle-select", "class", selectClass(bindings));
 
 	ops.setText("[data-label]", label);
 	ops.toggle("[data-label]", label.length > 0);
 
-	ops.setAttr("[data-field]", "aria-invalid", String(invalid));
+	ops.setAttr("[data-control]", "aria-invalid", String(invalid));
 	const fieldId = bindings.fieldId ?? "xtyle-select";
 	const errorId = bindings.errorId ?? `${fieldId}-error`;
-	ops.setAttr("[data-field]", "aria-describedby", invalid && error.length > 0 ? errorId : "");
+	ops.setAttr("[data-control]", "aria-describedby", invalid && error.length > 0 ? errorId : "");
 
 	ops.setText("[data-error]", error);
 	ops.toggle("[data-error]", error.length > 0);

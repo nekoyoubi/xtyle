@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/tabs.js";
 	import type { Snippet } from "svelte";
 	import type { Size } from "@xtyle/core";
 	import type { TabItemData, TabsVariant, TabsActivation } from "@xtyle/core/markup";

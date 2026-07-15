@@ -30,6 +30,7 @@ export const paginationManifest: ComponentManifest = {
 	id: "pagination",
 	name: "Pagination",
 	category: "navigation",
+	since: "0.1.0",
 	keywords: ["pager", "page nav", "paging", "next previous", "page numbers"],
 	seeAlso: ["table", "breadcrumb", "carousel"],
 	summary: "A page navigator: previous/next controls around a windowed list of page numbers with ellipses.",

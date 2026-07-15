@@ -143,6 +143,11 @@ ${linkRules}
 	display: inline-flex;
 	align-items: center;
 }
+/* a class rule outweighs the UA's hidden-attribute rule, so a spinner that lives in the markup and is
+   toggled by the attribute (rather than built on demand) would spin on every button in the set */
+.xtyle-button__spinner[hidden] {
+	display: none;
+}
 .xtyle-button__spinner {
 	display: inline-flex;
 	width: 1em;

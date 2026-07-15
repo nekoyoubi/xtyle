@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { SERIES_SCHEMES } from "../series.js";
+import { PALETTES } from "../series.js";
 
 const htmlExample = `<xtyle-pie label="Traffic by source"></xtyle-pie>
 <script>
@@ -154,9 +154,15 @@ export const pieManifest: ComponentManifest = {
 		},
 		{
 			name: "tooltip",
-			description: "The floating value/share readout shown on hover or focus of a slice.",
+			description: "The floating value/share readout shown on hover or focus of a slice; it holds one row per slice and reveals the one under the cursor.",
 			selector: ".xtyle-pie__tooltip",
 			tokens: ["--surface-overlay", "--surface-overlay-border", "--elevation-3", "--radius-md", "--fg-0"],
+		},
+		{
+			name: "tooltip-row",
+			description: "One slice's readout line, pairing its label with its value and share. The fill draws every row up front and the element only unhides the hovered one, so a mod's reshaped row (a swatch, a unit, its own order) survives the hover.",
+			selector: ".xtyle-pie__tooltip-row",
+			tokens: ["--fg-2", "--text-sm", "--weight-semibold"],
 		},
 	],
 	props: [
@@ -177,11 +183,11 @@ export const pieManifest: ComponentManifest = {
 		},
 		{
 			name: "scheme",
-			type: "SeriesScheme | string[]",
+			type: "Palette | string[]",
 			default: "skittles",
-			description: "How slices are colored: a built-in scheme resolved off the theme, or an explicit color array.",
+			description: "How slices are colored: a built-in palette sampled off the theme, or an explicit color array.",
 			bindings: ["html", "svelte", "astro"],
-			options: [...SERIES_SCHEMES],
+			options: [...PALETTES],
 		},
 		{
 			name: "reverse",
@@ -266,7 +272,7 @@ export const pieManifest: ComponentManifest = {
 		"--elevation-3",
 	],
 	composition: [
-		"Colors come from the theme register, so the slices match the surrounding UI. `skittles` (the default) keeps the parts distinct; `statuses` pins each slice to a semantic tone (success, failed, warn, info, skipped, live) for discrete-outcome charts, distinct from the sequential `status` severity ramp; pass an explicit array to pin brand colors, and a `var(--token)` string in that array lands straight in the fill and resolves against the theme.",
+		"Colors come from the theme register, so the slices match the surrounding UI. `skittles` (the default) keeps the parts distinct; `statuses` pins each slice to a semantic tone (success, failed, warn, info, skipped, live) for discrete-outcome charts, distinct from `severity`, the good-to-bad gradient; pass an explicit array to pin brand colors, and a `var(--token)` string in that array lands straight in the fill and resolves against the theme.",
 		"Under `statuses`, give each slice an explicit `tone` when a category can be absent: without one, colors are assigned by position, so a run where nothing failed drops the failed slice and shifts every survivor to the wrong tone. A `tone` pins each slice to its meaning regardless of which categories are present.",
 		"Reach for a `donut` when you want a headline total in the middle; a full `pie` when the parts are the whole story.",
 		"Pair with a `Stat` or a `Bar` in the Metrics family for a composition-plus-trend view.",

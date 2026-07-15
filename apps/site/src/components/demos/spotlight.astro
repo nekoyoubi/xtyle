@@ -1,0 +1,111 @@
+---
+import Spotlight from "@xtyle/astro/Spotlight.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Avatar from "@xtyle/astro/Avatar.astro";
+import Field from "@xtyle/astro/Field.astro";
+---
+
+<div class="sl-demo" data-spotlight-demo>
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={2} size="body">Point at one thing</Heading>
+			<Text tone="muted" size="sm">
+				Everything else dims. The hole traces the target's own corners — and the target stays
+				live, so you can still press the thing being pointed at.
+			</Text>
+		</Stack>
+		<Stack gap={5}>
+			<div class="sl-demo__stage">
+				<Grid columns={3} gap={3}>
+					<Field id="sl-name" label="Project name" value="Aurora" />
+					<Stack gap={2}>
+						<Text size="xs" tone="subtle" weight="semibold">Owner</Text>
+						<Cluster gap={2}>
+							<Avatar id="sl-avatar" tone="purple" alt="Ada Lovelace">AL</Avatar>
+						</Cluster>
+					</Stack>
+					<Cluster gap={2} justify="end" align="end">
+						<Button id="sl-save" variant="solid" tone="accent">Save</Button>
+					</Cluster>
+				</Grid>
+			</div>
+
+			<Cluster gap={3}>
+				<Button variant="outline" tone="neutral" data-show="sl-coach-save">Coach the save button</Button>
+				<Button variant="outline" tone="neutral" data-show="sl-coach-avatar">Circle the avatar</Button>
+				<Button variant="outline" tone="neutral" data-show="sl-coach-blur">Blur the page behind</Button>
+				<Button variant="outline" tone="neutral" data-show="sl-coach-locked">A step you can't skip</Button>
+			</Cluster>
+
+			<Text size="xs" tone="subtle">
+				Press <code>Escape</code>, or click anywhere outside the hole, to leave.
+			</Text>
+		</Stack>
+	</Card>
+</div>
+
+<Spotlight id="sl-coach-save" target="#sl-save" heading="Save as you go" placement="left" pulse="slow" arrow="bounce">
+	Your work stays on this machine until you press this. Go on — the button still works while
+	the spotlight is up.
+</Spotlight>
+
+<Spotlight id="sl-coach-avatar" target="#sl-avatar" shape="circle" heading="Who owns this" placement="bottom" arrow="static">
+	A circle, for the things a rounded rectangle would look wrong around.
+</Spotlight>
+
+<Spotlight id="sl-coach-blur" target="#sl-name" heading="Name it something you'll recognize" blur={4} dim={0.5} placement="bottom">
+	The page behind the veil is blurred rather than merely dimmed. It looks lovely and it costs a
+	compositor layer the size of the viewport, so it's off by default.
+</Spotlight>
+
+<Spotlight
+	id="sl-coach-locked"
+	target="#sl-save"
+	heading="This one you have to answer"
+	placement="left"
+	no-dismiss
+	no-close-button
+	arrow="none"
+>
+	<Text size="sm">
+		Escape does nothing here, and neither does a click on the veil. A coachmark with no exit is a
+		trap, so the way out is the app's to provide:
+	</Text>
+	<Fragment slot="actions">
+		<Button variant="ghost" tone="neutral" class="js-close-step" data-step="sl-coach-locked">Not now</Button>
+		<Button variant="solid" tone="accent" class="js-close-step" data-step="sl-coach-locked">Understood</Button>
+	</Fragment>
+</Spotlight>
+
+<script>
+	type SpotlightEl = HTMLElement & { show(): void; close(): void };
+
+	for (const trigger of document.querySelectorAll<HTMLElement>("[data-show]")) {
+		trigger.addEventListener("click", () => {
+			const id = trigger.dataset.show!;
+			(document.getElementById(id) as SpotlightEl | null)?.show();
+		});
+	}
+
+	for (const closer of document.querySelectorAll<HTMLElement>(".js-close-step")) {
+		closer.addEventListener("click", () => {
+			const id = closer.dataset.step!;
+			(document.getElementById(id) as SpotlightEl | null)?.close();
+		});
+	}
+</script>
+
+<style>
+	.sl-demo__stage {
+		padding: var(--space-4);
+		border-radius: var(--radius-md);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+	}
+</style>

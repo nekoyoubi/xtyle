@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/select.js";
 	import type { Snippet } from "svelte";
 	import type { Size } from "@xtyle/core";
 

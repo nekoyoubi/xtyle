@@ -1,0 +1,141 @@
+---
+import SplitButton from "@xtyle/astro/SplitButton.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const saveActions = [
+	{ label: "Save and close", value: "save-close" },
+	{ label: "Save as draft", value: "save-draft", hint: "Ctrl+D" },
+	{ label: "Save a copy", value: "save-copy" },
+	{ separator: true },
+	{ label: "Discard changes", value: "discard", intent: "danger" },
+];
+
+const deployActions = [
+	{ heading: "Environments" },
+	{ label: "Staging", value: "staging" },
+	{ label: "Preview", value: "preview" },
+	{ label: "Canary", value: "canary", disabled: true },
+	{ separator: true },
+	{ label: "Roll back", value: "rollback", intent: "danger" },
+];
+
+const exportActions = [
+	{ label: "Export as CSV", value: "csv" },
+	{ label: "Export as JSON", value: "json" },
+	{ label: "Export as Parquet", value: "parquet" },
+];
+---
+
+<div class="sb-demo" data-split-demo>
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={2} size="body">The default, and the family</Heading>
+			<Text tone="muted" size="sm">
+				Press the primary for the thing you meant. Press the caret for the things you
+				nearly meant. <code>ArrowDown</code> drops the menu from either half.
+			</Text>
+		</Stack>
+		<Stack gap={5}>
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">Variants</Text>
+				<Cluster gap={3} align="center">
+					<SplitButton id="sb-save" items={saveActions} menuLabel="More save actions">Save</SplitButton>
+					<SplitButton variant="outline" tone="neutral" items={exportActions} menuLabel="Other export formats">
+						Export
+					</SplitButton>
+					<SplitButton variant="subtle" tone="accent" items={exportActions} menuLabel="Other export formats">
+						Export
+					</SplitButton>
+					<SplitButton variant="ghost" tone="neutral" items={exportActions} menuLabel="Other export formats">
+						Export
+					</SplitButton>
+				</Cluster>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">Sizes</Text>
+				<Cluster gap={3} align="center">
+					<SplitButton size="xs" items={exportActions} menuLabel="Other export formats">Export</SplitButton>
+					<SplitButton size="sm" items={exportActions} menuLabel="Other export formats">Export</SplitButton>
+					<SplitButton size="md" items={exportActions} menuLabel="Other export formats">Export</SplitButton>
+					<SplitButton size="lg" items={exportActions} menuLabel="Other export formats">Export</SplitButton>
+				</Cluster>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">Tones</Text>
+				<Cluster gap={3} align="center">
+					<SplitButton tone="success" items={deployActions} menuLabel="Other deploy targets">Deploy</SplitButton>
+					<SplitButton tone="warn" items={deployActions} menuLabel="Other deploy targets">Deploy</SplitButton>
+					<SplitButton tone="danger" items={saveActions} menuLabel="More actions">Delete</SplitButton>
+					<SplitButton tone="purple" items={exportActions} menuLabel="Other export formats">Export</SplitButton>
+				</Cluster>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">States</Text>
+				<Cluster gap={3} align="center">
+					<SplitButton id="sb-loading" loading items={exportActions} menuLabel="Other export formats">
+						Exporting
+					</SplitButton>
+					<SplitButton disabled items={exportActions} menuLabel="Other export formats">Export</SplitButton>
+				</Cluster>
+				<Text tone="subtle" size="xs">
+					A loading primary is blocked, but its caret stays live — a running export is still
+					cancellable from its own menu.
+				</Text>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">Full width</Text>
+				<SplitButton block tone="accent" items={saveActions} menuLabel="More save actions">
+					Save changes
+				</SplitButton>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">What fired</Text>
+				<Text size="sm" tone="muted">
+					The primary fires a plain <code>click</code>; a row fires <code>select</code>. The caret's
+					own click never reaches a click listener, so the two never blur together.
+				</Text>
+				<output class="sb-demo__out" id="sb-out">nothing yet</output>
+			</Stack>
+		</Stack>
+	</Card>
+</div>
+
+<script>
+	const out = document.getElementById("sb-out");
+	const stamp = (message: string) => {
+		if (out) out.textContent = message;
+	};
+
+	for (const split of document.querySelectorAll("xtyle-split-button")) {
+		split.addEventListener("click", () => {
+			const label = split.textContent?.trim() || "primary";
+			stamp(`click → the primary action (${label})`);
+		});
+		split.addEventListener("select", (event) => {
+			const detail = (event as CustomEvent<{ value: string; label: string }>).detail;
+			stamp(`select → ${detail.label} (${detail.value})`);
+		});
+	}
+</script>
+
+<style>
+	.sb-demo__out {
+		display: block;
+		padding: var(--space-2) var(--space-3);
+		border-radius: var(--radius-sm);
+		background: var(--bg-2);
+		border: var(--border-thin) solid var(--line);
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		color: var(--fg-1);
+	}
+</style>

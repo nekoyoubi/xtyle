@@ -1,0 +1,164 @@
+---
+import Sheet from "@xtyle/astro/Sheet.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Field from "@xtyle/astro/Field.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Switch from "@xtyle/astro/Switch.astro";
+---
+
+<div class="sheet-demo" data-sheet-demo>
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={2} size="body">Open a drawer</Heading>
+			<Text tone="muted" size="sm">
+				Each button opens a real <code>&lt;dialog&gt;</code> anchored to a
+				viewport edge — scrim, focus trap, and Esc-to-close come from the
+				platform. Drag the grabber (or the header) toward the edge to dismiss.
+			</Text>
+		</Stack>
+		<Stack gap={4}>
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">Sides</Text>
+				<Cluster gap={3}>
+					<Button variant="solid" tone="accent" data-open="filters">Bottom…</Button>
+					<Button variant="outline" tone="neutral" data-open="nav">Left…</Button>
+					<Button variant="outline" tone="neutral" data-open="inspector">Right…</Button>
+					<Button variant="outline" tone="neutral" data-open="shade">Top…</Button>
+				</Cluster>
+			</Stack>
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">Sizes</Text>
+				<Cluster gap={3}>
+					<Button variant="ghost" tone="neutral" data-open="size-sm">sm</Button>
+					<Button variant="ghost" tone="neutral" data-open="size-lg">lg</Button>
+					<Button variant="ghost" tone="neutral" data-open="size-full">full</Button>
+				</Cluster>
+			</Stack>
+			<Stack gap={2}>
+				<Text tone="muted" size="sm" weight="semibold">Posture</Text>
+				<Cluster gap={3}>
+					<Button variant="outline" tone="accent" data-open="inspector-live">
+						Non-modal inspector…
+					</Button>
+					<Button variant="ghost" tone="neutral" data-open="blocking">
+						No swipe, no grabber…
+					</Button>
+				</Cluster>
+			</Stack>
+		</Stack>
+	</Card>
+
+	<Sheet id="filters" side="bottom" size="md" heading="Filters">
+		<Stack gap={4}>
+			<Text tone="muted" size="sm">
+				The phone-native posture. The panel grows by the bottom safe-area inset
+				and pads it back out of the content, so it meets the home indicator
+				without hiding anything behind it.
+			</Text>
+			<Field label="Search" placeholder="Anything…" />
+			<Switch label="Only show available" />
+			<Switch label="Include archived" />
+		</Stack>
+		<Button slot="footer" variant="ghost" tone="neutral" data-close>Reset</Button>
+		<Button slot="footer" variant="solid" tone="accent" data-close>Apply</Button>
+	</Sheet>
+
+	<Sheet id="nav" side="left" size="sm" heading="Navigate">
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The classic navigation drawer. Its grabber turns vertical on a
+				left/right sheet, and the swipe runs along the horizontal axis.
+			</Text>
+			<nav>
+				<Stack gap={2}>
+					<Text>Overview</Text>
+					<Text>Projects</Text>
+					<Text>Activity</Text>
+					<Text>Settings</Text>
+				</Stack>
+			</nav>
+		</Stack>
+	</Sheet>
+
+	<Sheet id="inspector" side="right" size="md" heading="Inspector">
+		<Stack gap={4}>
+			<Text tone="muted" size="sm">
+				A modal detail pane. Every surface here is derived from the same
+				algorithm powering this page — the overlay panel, the hairlines, the
+				scrim, and the focus ring are all materialized tokens.
+			</Text>
+			<Field label="Name" value="derive()" />
+			<Field label="Algorithm" value="xtyle-default" />
+		</Stack>
+		<Button slot="footer" variant="solid" tone="accent" data-close>Done</Button>
+	</Sheet>
+
+	<Sheet id="shade" side="top" size="sm" heading="Notifications">
+		<Text tone="muted" size="sm">
+			A top sheet pulls down like a notification shade, absorbing the top
+			safe-area inset so its content clears a notch. Its handle sits at the
+			bottom edge — the direction you swipe to send it away.
+		</Text>
+	</Sheet>
+
+	<Sheet id="size-sm" side="bottom" size="sm" heading="size=&quot;sm&quot;">
+		<Text tone="muted" size="sm">28dvh tall on a bottom sheet, 16rem wide on a side one.</Text>
+	</Sheet>
+
+	<Sheet id="size-lg" side="bottom" size="lg" heading="size=&quot;lg&quot;">
+		<Text tone="muted" size="sm">72dvh tall on a bottom sheet, 30rem wide on a side one.</Text>
+	</Sheet>
+
+	<Sheet id="size-full" side="bottom" size="full" heading="size=&quot;full&quot;">
+		<Text tone="muted" size="sm">
+			The whole edge-to-edge screen, insets included — a full-screen takeover
+			that still slides in from its edge.
+		</Text>
+		<Button slot="footer" variant="solid" tone="accent" data-close>Close</Button>
+	</Sheet>
+
+	<Sheet id="inspector-live" side="right" size="sm" nonModal heading="Live inspector">
+		<Text tone="muted" size="sm">
+			<code>non-modal</code> opens beside a live page: no scrim, no focus trap,
+			no inert background. Click around the demo behind this panel — it still
+			works. Escape closes it whenever focus is inside.
+		</Text>
+	</Sheet>
+
+	<Sheet id="blocking" side="bottom" size="sm" heading="Confirm" noGrabber noSwipe>
+		<Text tone="muted" size="sm">
+			<code>noGrabber</code> drops the drag affordance and <code>noSwipe</code>
+			drops the gesture, for a sheet that must be answered rather than flicked
+			away. Escape and the close button still work — a gesture was never the
+			only way out.
+		</Text>
+		<Button slot="footer" variant="ghost" tone="neutral" data-close>Cancel</Button>
+		<Button slot="footer" variant="solid" tone="danger" data-close>Delete</Button>
+	</Sheet>
+</div>
+
+<script>
+	const root = document.querySelector<HTMLElement>("[data-sheet-demo]");
+	if (root) {
+		root.querySelectorAll<HTMLElement>("[data-open]").forEach((trigger) => {
+			trigger.addEventListener("click", () => {
+				const id = trigger.dataset.open;
+				const sheet = id
+					? document.querySelector<HTMLElement & { showModal?: () => void }>(`#${id}`)
+					: null;
+				sheet?.showModal?.();
+			});
+		});
+		document.addEventListener("click", (event) => {
+			const target = event.target as HTMLElement | null;
+			const closer = target?.closest?.("[data-close]");
+			if (!closer) return;
+			const sheet = closer.closest<HTMLElement & { close?: () => void }>("xtyle-sheet");
+			sheet?.close?.();
+		});
+	}
+</script>

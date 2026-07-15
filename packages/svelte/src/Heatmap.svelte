@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/heatmap.js";
 	import type { HeatmapScheme } from "@xtyle/core";
 
 	interface Props {
@@ -24,7 +24,7 @@
 		titles?: string[][];
 		scale?: boolean;
 		/** Color by category instead of intensity: each column (or row) takes a distinct series hue, and the
-		 * cell value washes it from the surface up. `scheme` is read as a categorical `SeriesScheme`. */
+		 * cell value washes it from the surface up. `scheme` is read as a `Palette` and sampled, one color per category. */
 		categorical?: boolean;
 		/** Which axis carries the categories in `categorical` mode: `col` (default) or `row`. */
 		categoryAxis?: "col" | "row";
@@ -85,7 +85,7 @@
 		host.cols = cols;
 		host.current = current;
 		host.titles = titles;
-		host.scheme = scheme ?? (categorical ? "accents" : "accent");
+		host.scheme = scheme ?? (categorical ? "accents" : "intensity");
 	});
 </script>
 

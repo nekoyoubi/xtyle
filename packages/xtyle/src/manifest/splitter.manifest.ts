@@ -37,6 +37,7 @@ export const splitterManifest: ComponentManifest = {
 	id: "splitter",
 	name: "Splitter",
 	category: "shell",
+	since: "0.1.0",
 	keywords: ["resizer", "resize handle", "gutter", "pane divider", "drag handle", "divider"],
 	seeAlso: ["dock-zone", "separator", "panel"],
 	summary: "A draggable divider that resizes an adjacent pane, with configurable bounds and steps.",

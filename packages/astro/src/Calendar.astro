@@ -1,0 +1,128 @@
+---
+import { calendarBindings, parseCalendarValue, resolveWeekInfo, toIso, todayIn } from "@xtyle/core/markup";
+import type { CalendarDecorations, CalendarMode } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { FullTone, Size } from "@xtyle/core";
+
+interface Props {
+	mode?: CalendarMode;
+	/** The selection as a comma-separated ISO list (`range`: `start` while pending, `start,end` once closed). */
+	value?: string;
+	/** The displayed month, `YYYY-MM`. Defaults to the selection's month, else today's. */
+	month?: string;
+	min?: string;
+	max?: string;
+	locale?: string;
+	timezone?: string;
+	/** Override the week's first day, 0 = Sunday … 6 = Saturday. */
+	firstDayOfWeek?: number;
+	weekdayFormat?: "short" | "narrow";
+	weekNumbers?: boolean;
+	fixedWeeks?: boolean;
+	hideOutsideDays?: boolean;
+	hideNav?: boolean;
+	disabledDates?: string[];
+	decorations?: CalendarDecorations;
+	tone?: FullTone;
+	size?: Size;
+	readonly?: boolean;
+	disabled?: boolean;
+	label?: string;
+	labelledby?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	mode = "single",
+	value,
+	month,
+	min,
+	max,
+	locale,
+	timezone,
+	firstDayOfWeek,
+	weekdayFormat = "short",
+	weekNumbers = false,
+	fixedWeeks = false,
+	hideOutsideDays = false,
+	hideNav = false,
+	disabledDates = [],
+	decorations = {},
+	tone = "accent",
+	size = "md",
+	readonly = false,
+	disabled = false,
+	label,
+	labelledby,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const selected = parseCalendarValue(value ?? null, mode);
+const today = toIso(todayIn(timezone));
+const displayed = month ?? (selected[0] ?? today).slice(0, 7);
+const firstDay = firstDayOfWeek ?? resolveWeekInfo(locale).firstDay;
+
+const uid = `xtyle-calendar-${Math.random().toString(36).slice(2, 9)}`;
+
+const bindings = calendarBindings({
+	uid,
+	mode,
+	month: displayed,
+	selected,
+	focusDate: disabled ? null : (selected[0] ?? (today.slice(0, 7) === displayed ? today : `${displayed}-01`)),
+	today,
+	locale,
+	firstDay,
+	weekdayFormat,
+	weekNumbers,
+	fixedWeeks,
+	outsideDays: !hideOutsideDays,
+	size,
+	tone,
+	label: label ?? null,
+	labelledby: labelledby ?? null,
+	hideNav,
+	readonly,
+	disabled,
+	min,
+	max,
+	disabledDates,
+	decorations,
+});
+const light = await renderFragmentLight("calendar", bindings as unknown as Record<string, unknown>);
+---
+
+<xtyle-calendar
+	mode={mode}
+	value={value}
+	month={month}
+	min={min}
+	max={max}
+	locale={locale}
+	timezone={timezone}
+	first-day-of-week={firstDayOfWeek === undefined ? undefined : String(firstDayOfWeek)}
+	weekday-format={weekdayFormat}
+	week-numbers={weekNumbers || undefined}
+	fixed-weeks={fixedWeeks || undefined}
+	hide-outside-days={hideOutsideDays || undefined}
+	hide-nav={hideNav || undefined}
+	disabled-dates={disabledDates.length ? disabledDates.join(",") : undefined}
+	decorations={Object.keys(decorations).length ? JSON.stringify(decorations) : undefined}
+	tone={tone}
+	size={size}
+	readonly={readonly || undefined}
+	disabled={disabled || undefined}
+	label={label}
+	labelledby={labelledby}
+	class={extra}
+	set:html={light}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

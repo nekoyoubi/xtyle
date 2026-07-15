@@ -1,3 +1,5 @@
+import { renderIcon } from "../../../icons";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -24,9 +26,14 @@ declare const hooks: {
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
+// The inline glyph is the zero-JS fallback: `<xtyle-icon>` only paints once the custom element
+// upgrades, and the `static` render never loads the runtime. Once it does upgrade, the icon's
+// shadow root has no `<slot>`, so this light child stops rendering and the fragment-backed glyph
+// takes over.
 const MARKER =
-	'<span class="xtyle-panel__marker" part="marker" aria-hidden="true">' +
-	'<svg viewBox="0 0 24 24" width="1em" height="1em"><path fill="currentColor" d="M9 6l6 6-6 6V6Z" /></svg></span>';
+	'<xtyle-icon class="xtyle-panel__marker" part="marker" name="chevron-right" aria-hidden="true">' +
+	renderIcon("chevron-right") +
+	"</xtyle-icon>";
 
 function level(b: PanelBindings): number {
 	const raw = Number(b.level);
@@ -97,13 +104,13 @@ function applyName(bindings: PanelBindings, ops: OpsBuilder): void {
 }
 
 hooks.fragment.mount("panel", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", panelClass(bindings));
+	ops.setAttr(".xtyle-panel", "class", panelClass(bindings));
 	applyName(bindings, ops);
 	ops.replaceChildren("[data-panel]", inner(bindings));
 });
 
 hooks.fragment.update("panel", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", panelClass(bindings));
+	ops.setAttr(".xtyle-panel", "class", panelClass(bindings));
 	applyName(bindings, ops);
 	if (isCollapsible(bindings)) {
 		const open = bindings.open === true;

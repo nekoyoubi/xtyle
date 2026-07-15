@@ -48,6 +48,8 @@ export * from "./types.js";
 export * from "./vocab.js";
 export * from "./icons.js";
 export * from "./icon-builder.js";
+export * from "./fonts/google.js";
+export * from "./fonts/embed.js";
 export * from "./token-meta.js";
 export * from "./color.js";
 export * from "./audit.js";
@@ -63,10 +65,19 @@ export { tableParts } from "./markup/table.js";
 export { avatarInitials } from "./markup/avatar.js";
 export type { TablePart } from "./markup/table.js";
 export { resolveSparklineBounds, formatSparklineValue } from "./markup/sparkline.js";
+export { resolveChartPlot, CHART_VARIANTS, CHART_CURVES, CHART_X_SCALES } from "./markup/chart.js";
 export { hoverMediaHtml } from "./markup/image.js";
 export type {
 	BarSeries,
 	BarScheme,
+	ChartSeries,
+	ChartScheme,
+	ChartVariant,
+	ChartCurve,
+	ChartXScale,
+	ChartPlot,
+	ChartPlotSeries,
+	ChartPlotOptions,
 	HeatmapScheme,
 	PieDatum,
 	PieScheme,
@@ -81,6 +92,8 @@ export type {
 	ImageTrigger,
 	ImageHoverAudio,
 	DialogSize,
+	SheetSide,
+	SheetSize,
 	TreeNode,
 	TreeAction,
 	TreeBadge,

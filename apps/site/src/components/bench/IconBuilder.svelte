@@ -1,8 +1,14 @@
 <script lang="ts">
-	import { type SeriesScheme, composeIcon, iconFontImports, primitiveSince, primitiveTags, resolveIconMark, seriesPalette, SERIES_TOKENS } from "@xtyle/core";
+	import { type Palette, composeIcon, embedFontsInSvg, iconFontImports, isFontLoaded, loadGoogleFont, primitiveSince, primitiveTags, resolveIconMark, resolvePalette, seriesPalette, suggestGoogleFonts, PALETTES, PALETTE_TOKENS } from "@xtyle/core";
 	import { AppShell, Button, ColorPicker, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xtyle/svelte";
 	import { isNewComponent } from "../../data/newness.ts";
 	import { ACTIVE_CHANGED_EVENT } from "../../lib/theme-active.ts";
+	import { installGoogleFonts } from "../../lib/google-fonts.ts";
+
+	// The engine ships a character-set gate, not the 1,900-name Google list — that would be ~10 KB gzipped
+	// in every consumer's bundle for a list only a human typing a family name ever needs. This is that
+	// human, so the builder hands the list back: autocomplete, real casing, and an honest "no such font".
+	installGoogleFonts();
 
 	// No `register` prop: the builder is a standalone page that inherits the site's active theme
 	// straight from the `:root` cascade, so a mark colors against whatever theme is applied.
@@ -86,12 +92,12 @@
 		{ value: "0", label: "clear" },
 	];
 
-	const SCHEMES: { value: SeriesScheme; label: string }[] = [
-		{ value: "accents", label: "Accents" },
-		{ value: "skittles", label: "Skittles" },
-		{ value: "statuses", label: "Statuses" },
-		{ value: "thermal", label: "Thermal" },
-	];
+	// Every palette the engine ships, so a palette added to `PALETTES` shows up in the picker (and as a
+	// valid `---ps` value) with no edit here.
+	const SCHEMES: { value: Palette; label: string }[] = PALETTES.map((value) => ({
+		value,
+		label: value.charAt(0).toUpperCase() + value.slice(1),
+	}));
 
 	// Backgrounds to preview the mark against — the engine's full surface ladder (`--body-bg` … `--bg-3`,
 	// the same tokens the palette itself uses) plus the contrasting ink, so an author can check a mark on
@@ -139,7 +145,7 @@
 
 	// A browsable gallery of full marks, authored as icon-name strings so each is its own live preview.
 	// Clicking one loads it into the builder (label + layers), which is exactly what the name box parses.
-	const EXAMPLES: { name: string; scheme: SeriesScheme }[] = [
+	const EXAMPLES: { name: string; scheme: Palette }[] = [
 		{ name: "Crest--shield-c1--star-s45-cf", scheme: "accents" },
 		{ name: "Bolt-badge--circle-c2--bolt-s52-cb", scheme: "accents" },
 		{ name: "dice-1--square3-c1-o1c2--dot-s20-c2---d3p8s1t20--pc1-e2e0e0--pc2-2d3038--pc3-000000", scheme: "accents" },
@@ -175,9 +181,13 @@
 		{ name: "Copy-badge--square3-c2--copy-s50-cb", scheme: "accents" },
 		{ name: "Crescent-star--circle-c4--crescent-s52-cf--star-p3-s18-cb", scheme: "skittles" },
 		{ name: "Trash-badge--circle-c2--trash-s50-cb", scheme: "statuses" },
+		// Two marks that pin their own palette: the `---ps` finish wins over the `accents` the gallery
+		// renders them under, so each shows its own scheme with no control to wire.
+		{ name: "Thermal-chip--hex-c1--dot-s30-c9---ps-thermal", scheme: "accents" },
+		{ name: "Skittle-crest--shield-c1--star-s45-c5---ps-skittles", scheme: "accents" },
 	];
 
-	function loadIcon(name: string, sch: SeriesScheme): void {
+	function loadIcon(name: string, sch: Palette): void {
 		scheme = sch;
 		applyName(name);
 	}
@@ -208,7 +218,11 @@
 	const DEFAULT_SHADOW: DropShadow = { color: 15, pos: 8, size: 2, soft: 50 };
 
 	let label = $state("Crest");
-	let scheme = $state<SeriesScheme>("accents");
+	let scheme = $state<Palette>("accents");
+	// Off, the scheme is the builder's own control (the host's `colors`) and the name says nothing about it.
+	// On, the name carries a `---ps-{scheme}` finish, so the mark pins its palette and colors the same
+	// wherever it lands, whatever the host hands it.
+	let pinScheme = $state(false);
 	let previewBg = $state("--body-bg");
 	let layers = $state<MarkLayer[]>([]);
 	let selectedId = $state<number | null>(null);
@@ -307,7 +321,7 @@
 		try {
 			const raw = localStorage.getItem(STORAGE_KEY);
 			if (!raw) return false;
-			const saved = JSON.parse(raw) as { name?: string; scheme?: SeriesScheme };
+			const saved = JSON.parse(raw) as { name?: string; scheme?: Palette };
 			if (!saved?.name) return false;
 			loadIcon(saved.name, saved.scheme ?? "accents");
 			return layers.length > 0;
@@ -398,6 +412,7 @@
 		const body = layers.map(serializeLayer).join("--");
 		const finish = [
 			...(dropShadow ? [serializeShadow(dropShadow)] : []),
+			...(pinScheme ? [`ps-${scheme}`] : []),
 			...(paletteOverrides ? serializePalette(paletteOverrides) : []),
 			...(fontOverrides ? serializeFonts(fontOverrides) : []),
 			...layers.map(serializeLocks).filter(Boolean),
@@ -423,7 +438,7 @@
 		id: string;
 		label: string;
 		name: string;
-		scheme: SeriesScheme;
+		scheme: Palette;
 	}
 	const LIBRARY_KEY = "xtyle:icon-library";
 	function loadLibrary(): SavedIcon[] {
@@ -609,6 +624,19 @@
 		return Object.keys(out).length ? out : null;
 	}
 
+	/** Read the `ps…` palette token from the finish: the palette the name pins for itself, validated
+	 * against the shipped set (null when absent or unknown, so the builder's own palette still stands). */
+	function parseScheme(flags: string): Palette | null {
+		for (const flag of flags.split("--")) {
+			const m = /^ps-(.+)$/.exec(flag);
+			if (m) {
+				const resolved = resolvePalette(m[1] as string);
+				if (resolved) return resolved;
+			}
+		}
+		return null;
+	}
+
 	/** Read every `f…` font-override token from the finish (`--`-delimited) into the slot→family map. */
 	function parseFonts(flags: string): Record<number, string> | null {
 		const out: Record<number, string> = {};
@@ -641,12 +669,23 @@
 		dropShadow = flags ? parseShadow(flags) : null;
 		paletteOverrides = flags ? parsePalette(flags) : null;
 		fontOverrides = flags ? parseFonts(flags) : null;
+		// A pinned scheme in the name is the truth: it drives the builder's own picker, so the preview shows
+		// what the mark will actually paint anywhere else. No `ps` and the picker keeps whatever it had.
+		const pinned = flags ? parseScheme(flags) : null;
+		pinScheme = pinned !== null;
+		if (pinned) scheme = pinned;
 	}
 
 	// `active` is `currentColor`, which is exactly what a layer with no `c` flag renders — so it maps to
 	// null (no slot) and drops out of the serialized name; an uncolored layer reads back as `active`.
 	function colorValue(c: number | null): string {
 		return c === null ? "a" : c.toString(16);
+	}
+	/** A palette slot's key in the name grammar: a hex nibble, never a decimal. Slots run past 9 (`a` active,
+	 * `b` bg, `f` fg), so a slot read or written in base 10 is a different slot from the tenth on, and no slot
+	 * at all past `f` — which is how the drop shadow ended up serializing `dNaN`. */
+	function slotKey(c: number): string {
+		return c.toString(16);
 	}
 	function setColor(l: MarkLayer, v: string): void {
 		l.c = v === "a" ? null : parseInt(v, 16);
@@ -672,7 +711,7 @@
 		if (typeof document === "undefined") return {};
 		const cs = getComputedStyle(document.documentElement);
 		const register: Record<string, string> = {};
-		for (const token of SERIES_TOKENS) {
+		for (const token of PALETTE_TOKENS) {
 			const value = cs.getPropertyValue(token).trim();
 			if (value) register[token] = value;
 		}
@@ -769,6 +808,7 @@
 		dropShadow = null;
 		paletteOverrides = null;
 		fontOverrides = null;
+		pinScheme = false;
 	}
 
 	// Reset returns each layer's *unlocked* properties to their factory defaults, leaving locked props and
@@ -882,12 +922,57 @@
 	let fontCopyState = $state<CopyState>("idle");
 	async function copyFontImports(): Promise<void> {
 		try {
-			await navigator.clipboard.writeText(fontImports.map((f) => f.googleLink).join("\n"));
+			const links = fontImports.map((f) => f.googleLink).filter((l): l is string => l !== null);
+			await navigator.clipboard.writeText(links.join("\n"));
 			fontCopyState = "done";
 		} catch {
 			fontCopyState = "fail";
 		}
 		setTimeout(() => (fontCopyState = "idle"), 1400);
+	}
+
+	// The typed family for a slot, before it becomes a mark: what the autocomplete and the "not a Google
+	// font" line read, so a typo reads as a typo instead of rendering in a silent fallback face.
+	function typedFamily(slot: number): string {
+		return (fontOverrides?.[slot] ?? "").replace(/\+/g, " ").trim();
+	}
+	function familySuggestions(slot: number): string[] {
+		const typed = typedFamily(slot);
+		return typed.length >= 2 ? suggestGoogleFonts(typed, 8) : [];
+	}
+	// `fontImports` reports the *resolved* family (`resolveFontSpec` capitalizes), while `fontOverrides`
+	// holds the raw typed value — so finding the slot a miss came from is a case-insensitive match, not `===`.
+	function slotForFamily(family: string): number {
+		const needle = family.toLowerCase();
+		return FONT_SLOTS.find((fs) => typedFamily(fs.slot).toLowerCase() === needle)?.slot ?? 0;
+	}
+
+	// Nothing reaches Google until this runs, and this only runs from a click. The engine's loaded-font
+	// record is a plain Set, not reactive state, so `loadedTick` is what re-derives `pendingFonts` and
+	// repaints the preview against the face that just arrived instead of the stale fallback.
+	let loadedTick = $state(0);
+	let loadingFont = $state<string | null>(null);
+	let fontError = $state<string | null>(null);
+
+	const pendingFonts = $derived.by(() => {
+		loadedTick;
+		return fontImports.filter((f) => f.google && !isFontLoaded(f.family));
+	});
+
+	async function loadFonts(): Promise<void> {
+		const families = pendingFonts.map((f) => f.family);
+		if (!families.length) return;
+		fontError = null;
+		for (const family of families) {
+			loadingFont = family;
+			try {
+				await loadGoogleFont(family);
+			} catch {
+				fontError = `Couldn't load ${family} from Google Fonts.`;
+			}
+			loadedTick += 1;
+		}
+		loadingFont = null;
 	}
 
 	// The export copy drops the `---` lock flags: the pinned style is authoring metadata, so a production
@@ -910,7 +995,7 @@
 		if (!parsed) return null;
 		const cs = getComputedStyle(document.documentElement);
 		const register: Record<string, string> = {};
-		for (const token of SERIES_TOKENS) {
+		for (const token of PALETTE_TOKENS) {
 			const value = cs.getPropertyValue(token).trim();
 			if (value) register[token] = value;
 		}
@@ -945,18 +1030,43 @@
 		setTimeout(() => URL.revokeObjectURL(url), 0);
 	}
 
-	function saveSvg(): void {
-		const svg = buildExportSvg(256);
-		if (!svg) return;
-		downloadBlob(`${slug(label) || "icon"}.svg`, new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+	// Bakes every Google family the mark draws into the SVG as a `data:`-URI `@font-face`, subsetted to the
+	// glyphs it actually uses. Without this a `letter` layer renders in whatever face the *viewer's* machine
+	// substitutes, so the export is only correct on the machine that made it. An external `@import` is not a
+	// fix: an SVG loaded as an image — which is how the PNG rasterizer sees it — refuses external resources
+	// outright, so the inlined face is also what makes the PNG show the right font.
+	async function withFonts(svg: string): Promise<string> {
+		const requests = fontImports.filter((f) => f.google).map((f) => ({ family: f.family, text: f.glyphs }));
+		if (!requests.length) return svg;
+		try {
+			return await embedFontsInSvg(svg, requests);
+		} catch {
+			return svg;
+		}
+	}
+
+	let exporting = $state(false);
+
+	async function saveSvg(): Promise<void> {
+		const base = buildExportSvg(256);
+		if (!base) return;
+		exporting = true;
+		try {
+			const svg = await withFonts(base);
+			downloadBlob(`${slug(label) || "icon"}.svg`, new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+		} finally {
+			exporting = false;
+		}
 	}
 
 	// Rasterizes the baked SVG through an untouched (transparent) canvas, so the PNG keeps the mark's own
 	// alpha rather than flattening onto a background. The blob URL is same-origin, so the canvas is not
 	// tainted and `toBlob` succeeds.
 	async function savePng(): Promise<void> {
-		const svg = buildExportSvg(512);
-		if (!svg) return;
+		const base = buildExportSvg(512);
+		if (!base) return;
+		exporting = true;
+		const svg = await withFonts(base);
 		const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
 		try {
 			const img = new Image();
@@ -975,6 +1085,7 @@
 			if (png) downloadBlob(`${slug(label) || "icon"}.png`, png);
 		} finally {
 			URL.revokeObjectURL(url);
+			exporting = false;
 		}
 	}
 </script>
@@ -1110,14 +1221,14 @@
 							</Button>
 						{/if}
 						<Button size="sm" variant="subtle" onclick={saveToLibrary} disabled={!iconName} title="Save this icon to your library"><Icon name={savedFlash === "done" ? "check" : "bookmark"} size="sm" /> Save</Button>
-						<Button size="sm" variant="subtle" onclick={saveSvg} disabled={!iconName} title="Download the mark as a scalable SVG"><Icon name="download" size="sm" /> SVG</Button>
-						<Button size="sm" variant="subtle" onclick={savePng} disabled={!iconName} title="Download the mark as a 512px transparent PNG"><Icon name="download" size="sm" /> PNG</Button>
+						<Button size="sm" variant="subtle" onclick={saveSvg} disabled={!iconName || exporting} title="Download the mark as a scalable SVG, with any Google font embedded"><Icon name="download" size="sm" /> SVG</Button>
+						<Button size="sm" variant="subtle" onclick={savePng} disabled={!iconName || exporting} title="Download the mark as a 512px transparent PNG, with any Google font embedded"><Icon name="download" size="sm" /> PNG</Button>
 					</div>
 				</div>
 			{/snippet}
 			{#snippet end()}
 				<div class="ib-meta">
-					<Segmented value={scheme} onchange={(e) => (scheme = (e.target as HTMLInputElement).value as SeriesScheme)} aria-label="Palette">
+					<Segmented value={scheme} onchange={(e) => (scheme = (e.target as HTMLInputElement).value as Palette)} aria-label="Palette">
 						{#each SCHEMES as s (s.value)}
 							<Segment value={s.value} label={s.label}>{#key themeTick}<Icon name={GRID} colors={s.value} />{/key}</Segment>
 						{/each}
@@ -1358,10 +1469,17 @@
 
 		<section class="ib__finish" aria-label="Whole-icon finish">
 			<h4>Finish</h4>
+			<Switch checked={pinScheme} onchange={(e) => (pinScheme = (e.target as HTMLInputElement).checked)} label="Pin palette in name" labelSide="end" />
+			{#if pinScheme}
+				<p class="ib__hint">The name carries <code>---ps-{scheme}</code>, so the mark keeps this palette wherever it lands instead of taking the host's <code>colors</code>. Switch the palette above and the pin follows it.</p>
+			{:else}
+				<p class="ib__hint">The palette above is the host's <code>colors</code>: the mark takes whatever scheme it's rendered under. Pin it to bake the choice into the name.</p>
+			{/if}
+
 			<Switch checked={!!dropShadow} onchange={(e) => toggleShadow((e.target as HTMLInputElement).checked)} label="Drop shadow" labelSide="end" />
 			{#if dropShadow}
 				<div class="ib__field">
-					<span class="ib__field-label">Shadow color <span class="ib__field-pick">· {slotLabel(String(dropShadow.color))}</span></span>
+					<span class="ib__field-label">Shadow color <span class="ib__field-pick">· {slotLabel(slotKey(dropShadow.color))}</span></span>
 					<div class="ib__swatches" role="radiogroup" aria-label="Shadow color">
 						{#each COLOR_SLOTS.filter((s) => s.value !== "inherit" && s.value !== "0") as slot (slot.value)}
 							<Swatch
@@ -1369,8 +1487,8 @@
 								title={slot.label}
 								size="lg"
 								interactive
-								selected={String(dropShadow.color) === slot.value}
-								onselect={() => (dropShadow!.color = Number(slot.value))}
+								selected={slotKey(dropShadow.color) === slot.value}
+								onselect={() => (dropShadow!.color = parseInt(slot.value, 16))}
 							/>
 						{/each}
 					</div>
@@ -1401,19 +1519,49 @@
 							placeholder={fs.placeholder}
 							spellcheck="false"
 							autocomplete="off"
+							list={`ib-fonts-${fs.slot}`}
 							aria-label={`${fs.label} font override`}
 						/>
+						<datalist id={`ib-fonts-${fs.slot}`}>
+							{#each familySuggestions(fs.slot) as family (family)}
+								<option value={family}></option>
+							{/each}
+						</datalist>
 					</div>
 				{/each}
-				{#if fontImports.length}
+
+				{#each fontImports.filter((f) => !f.google) as miss (miss.family)}
+					<p class="ib__hint ib__hint--warn">
+						Google Fonts has no <code>{miss.family}</code>.
+						{#if miss.suggestions.length}
+							Did you mean {#each miss.suggestions.slice(0, 3) as s, i (s)}{#if i > 0}, {/if}<button type="button" class="ib__suggest" onclick={() => setFont(slotForFamily(miss.family), s)}>{s}</button>{/each}?
+						{:else}
+							It will render in whatever font the viewer's machine substitutes.
+						{/if}
+					</p>
+				{/each}
+
+				{#if fontImports.some((f) => f.google)}
 					<div class="ib__field">
 						<div class="ib__fonts-load-head">
 							<span class="ib__field-label">Load these fonts</span>
 							<Button size="sm" variant="subtle" iconOnly onclick={copyFontImports} title="Copy the loading tags" aria-label="Copy font loading code"><Icon name={copyGlyph(fontCopyState)} /></Button>
 						</div>
-						{#each fontImports as f (f.family)}
+						{#each fontImports.filter((f) => f.google) as f (f.family)}
 							<code class="ib__fonts-load">{f.googleLink}</code>
 						{/each}
+						<div class="ib__fonts-fetch">
+							<Button size="sm" variant="subtle" onclick={loadFonts} disabled={!!loadingFont || !pendingFonts.length}>
+								<Icon name="download" size="sm" />
+								{#if loadingFont}Loading {loadingFont}…{:else if !pendingFonts.length}Loaded{:else}Load from Google Fonts{/if}
+							</Button>
+							<p class="ib__notice">
+								Fetches the font from Google. Your browser asks <code>fonts.googleapis.com</code> for it directly, which
+								tells Google your IP address. Nothing is fetched until you click; exports embed the font so they render
+								the same everywhere.
+							</p>
+						</div>
+						{#if fontError}<p class="ib__hint ib__hint--warn">{fontError}</p>{/if}
 					</div>
 				{/if}
 			{/if}
@@ -2365,6 +2513,38 @@
 		line-height: 1.4;
 	}
 	.ib__hint code {
+		font-family: var(--font-mono);
+		color: var(--fg-2);
+	}
+	.ib__hint--warn {
+		color: var(--warning, var(--fg-2));
+	}
+	.ib__suggest {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--accent);
+		font: inherit;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	.ib__suggest:hover {
+		color: var(--fg-0);
+	}
+
+	.ib__fonts-fetch {
+		margin-top: var(--space-2);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+	.ib__notice {
+		margin: 0;
+		color: var(--fg-3);
+		font-size: var(--text-xs);
+		line-height: 1.4;
+	}
+	.ib__notice code {
 		font-family: var(--font-mono);
 		color: var(--fg-2);
 	}

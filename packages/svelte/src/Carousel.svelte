@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/carousel.js";
 	import type { Snippet } from "svelte";
 
 	type CarouselTransition = "slide" | "fade" | "scale" | "flip";

@@ -1,6 +1,6 @@
-import { XtyleElement, define, escapeHtml, type StyleMode } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 import { barHostCss, type BarSeries, type BarScheme } from "../markup/index.js";
-import { seriesPalette, seriesColorsFor, SERIES_SCHEMES, SERIES_TOKENS, type SeriesScheme } from "../series.js";
+import { seriesPalette, seriesColorsFor, resolvePalette, PALETTE_TOKENS, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/bar/source.generated.js";
@@ -66,7 +66,7 @@ export class XtyleBar extends XtyleElement {
 		const raw = this.getAttribute("scheme");
 		if (!raw) return "accents";
 		if (raw.startsWith("[")) return parseJson<string[]>(raw) ?? "accents";
-		return raw as SeriesScheme;
+		return raw as Palette;
 	}
 	set scheme(value: BarScheme) {
 		this.schemeProp = value;
@@ -101,9 +101,9 @@ export class XtyleBar extends XtyleElement {
 		if (this.root.firstChild) this.render();
 	}
 
-	/** Reads the schemes' tokens off the live cascade, so the palette tracks the applied theme. */
+	/** Reads the palettes' tokens off the live cascade, so the colors track the applied theme. */
 	private paletteRegister(): Record<string, string> {
-		return readLiveRegister(this, SERIES_TOKENS, () => {
+		return readLiveRegister(this, PALETTE_TOKENS, () => {
 			if (this.root.firstChild) this.render();
 		});
 	}
@@ -111,7 +111,7 @@ export class XtyleBar extends XtyleElement {
 	private colors(items: readonly { tone?: string }[]): string[] {
 		const scheme = this.scheme;
 		if (Array.isArray(scheme)) return seriesPalette(scheme, items.length, {}, { reverse: this.reverse });
-		const resolved = SERIES_SCHEMES.includes(scheme) ? scheme : "accents";
+		const resolved = resolvePalette(scheme) ?? "accents";
 		return seriesColorsFor(resolved, items, this.paletteRegister(), { reverse: this.reverse });
 	}
 
@@ -140,16 +140,15 @@ export class XtyleBar extends XtyleElement {
 		const tooltip = this.root.querySelector<HTMLElement>(".xtyle-bar__tooltip");
 		if (!chart || !tooltip) return;
 		const bars = [...this.root.querySelectorAll<SVGRectElement>(".xtyle-bar__bar")];
+		const rows = [...tooltip.querySelectorAll<HTMLElement>("[data-tip-row]")];
 		const series = this.series;
 		const categories = this.categories;
 
+		/** The readout is the fill's markup: the host reveals the hovered bar's row and places the box
+		 * against the bar's own drawn geometry, and writes nothing into it. */
 		const show = (bar: SVGRectElement): void => {
-			const si = Number(bar.dataset.si);
-			const ci = Number(bar.dataset.ci);
-			const name = series[si]?.name ?? "";
-			const value = series[si]?.values[ci] ?? 0;
-			const category = categories[ci] ?? "";
-			tooltip.innerHTML = `<span class="xtyle-bar__tooltip-name">${escapeHtml(category)}${name ? ` · ${escapeHtml(name)}` : ""}</span> <span class="xtyle-bar__tooltip-value">${escapeHtml(String(value))}</span>`;
+			const key = `${bar.dataset.si}-${bar.dataset.ci}`;
+			for (const row of rows) row.hidden = row.dataset.tipRow !== key;
 			const chartRect = chart.getBoundingClientRect();
 			const barRect = bar.getBoundingClientRect();
 			tooltip.style.left = `${barRect.left + barRect.width / 2 - chartRect.left}px`;

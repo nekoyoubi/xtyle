@@ -1,0 +1,66 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-dropzone-default",
+	"version": "0.0.1",
+	"title": "Xtyle Dropzone (default)",
+	"description": "The built-in fill for the xtyle Dropzone component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.dropzone"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.dropzone": [
+			{
+				"id": "dropzone",
+				"format": "text/html+jsml",
+				"source": "dropzone.html",
+				"handlers": [
+					{ "selector": ".xtyle-dropzone__remove", "on": "click", "handler": "remove" },
+					{ "selector": ".xtyle-dropzone__clear", "on": "click", "handler": "clear" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-bg",
+						"--accent-text",
+						"--bg-0",
+						"--bg-1",
+						"--border-thick",
+						"--border-thin",
+						"--danger",
+						"--danger-bg",
+						"--danger-text",
+						"--duration-fast",
+						"--ease-standard",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--fg-3",
+						"--fg-disabled",
+						"--font-mono",
+						"--font-sans",
+						"--line",
+						"--line-2",
+						"--neutral-bg",
+						"--radius-full",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-4",
+						"--space-7",
+						"--state-disabled",
+						"--state-hover",
+						"--success",
+						"--text-2xl",
+						"--text-body",
+						"--text-sm",
+						"--text-xs",
+						"--weight-medium"
+					]
+				}
+			}
+		]
+	}
+}

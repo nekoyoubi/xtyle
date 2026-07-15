@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/bottom-nav.js";
 
 	interface BottomNavTab {
 		value: string;

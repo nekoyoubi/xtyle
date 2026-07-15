@@ -51,7 +51,9 @@ const wrapSource = `const message = "a deliberately long single line that would 
 		<Stack gap={3} slot="header">
 			<Heading level={2} size="sm">Line numbers &amp; highlights</Heading>
 			<Text size="sm" tone="muted">
-				<Text as="span" mono size="xs">line-numbers</Text> adds a counter gutter;
+				<Text as="span" mono size="xs">line-numbers</Text> adds a gutter column — a real
+				<Text as="span" mono size="xs">.xtyle-code-line__number</Text> node per row, drawn by the
+				block's fragment, so a mod can restyle or relocate it;
 				<Text as="span" mono size="xs">highlight</Text> tints the lines that matter (here
 				<Text as="span" mono size="xs">2,4</Text>) with the derived
 				<Text as="span" mono size="xs">--code-line-highlight</Text>.

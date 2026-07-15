@@ -5,7 +5,9 @@ export declare const xtyleHc: Algorithm;
 export declare const xtyleQuiet: Algorithm;
 export declare const xtyleLoud: Algorithm;
 export declare const nxiNite: Algorithm;
-export declare const algorithms: Record<string, Algorithm>;
+// The baked oracle — the blessed algorithms compiled natively, keyed by id. Not the set of algorithms
+// that exist (that is whatever is installed, discovered by scanning); the subset with a native twin.
+export declare const bakedAlgorithms: Record<string, Algorithm>;
 export declare function getAlgorithm(id: string): Algorithm;
 
 // The canonical (sandboxed, byte-identical) resolver on the importable surface. `resolveAlgorithm`

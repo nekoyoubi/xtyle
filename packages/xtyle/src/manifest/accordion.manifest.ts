@@ -43,7 +43,8 @@ import { Accordion } from "@xtyle/astro";
 export const accordionManifest: ComponentManifest = {
 	id: "accordion",
 	name: "Accordion",
-	category: "control",
+	category: "layout",
+	since: "0.1.0",
 	keywords: ["collapse", "expander", "disclosure", "faq", "collapsible sections"],
 	seeAlso: ["panel", "tabs", "tree"],
 	summary: "A stack of collapsible sections, one or many open at a time, driven by pointer or keyboard.",
@@ -80,7 +81,8 @@ export const accordionManifest: ComponentManifest = {
 		},
 		{
 			name: "chevron",
-			description: "The disclosure caret in the trigger corner; rotates 180° when the section is open.",
+			description:
+				"The disclosure caret in the trigger corner; rotates 180° when the section is open. It is an `<xtyle-icon name=\"chevron-down\">` inside the accordion's fragment, so the glyph renders through the Icon component and a mod can swap it without touching the accordion.",
 			selector: ".xtyle-accordion__chevron",
 			tokens: ["--fg-2", "--duration-fast", "--ease-standard"],
 		},

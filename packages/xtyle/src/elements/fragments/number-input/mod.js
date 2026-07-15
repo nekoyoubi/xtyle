@@ -23,11 +23,11 @@
     return `${label}<div class="xtyle-number__control" part="control"><button class="xtyle-number__step xtyle-number__step--dec" part="step-down" type="button" tabindex="-1" aria-label="Decrease"${decDisabled}>&#8722;</button><input class="xtyle-number__input" part="input" type="text" inputmode="decimal" role="spinbutton" autocomplete="off" spellcheck="false" value="${value}"${placeholderAttr}${nameAttr}${minAttr}${maxAttr} aria-valuenow="${value}"${disabledAttr} /><button class="xtyle-number__step xtyle-number__step--inc" part="step-up" type="button" tabindex="-1" aria-label="Increase"${incDisabled}>&#43;</button></div>`;
   }
   hooks.fragment.mount("number-input", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", numberClass(bindings));
+    ops.setAttr(".xtyle-number", "class", numberClass(bindings));
     ops.replaceChildren("[data-number]", inner(bindings));
   });
   hooks.fragment.update("number-input", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", numberClass(bindings));
+    ops.setAttr(".xtyle-number", "class", numberClass(bindings));
     const value = bindings.value ?? "";
     ops.setAttr(".xtyle-number__input", "value", value);
     ops.setAttr(".xtyle-number__input", "aria-valuenow", value);

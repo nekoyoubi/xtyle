@@ -1,9 +1,16 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 // side effect: defines the <xtyle-rating> custom element on the happy-dom registry
 import "../src/elements/rating.js";
+import { loadFill } from "../src/elements/fragment-host.js";
+import { manifest, fragmentSources } from "../src/elements/fragments/rating/source.generated.js";
 
 type RatingEl = HTMLElement & { value: number; max: number };
+
+/** Warm the shared fill so every element render below applies the star row's ops synchronously. */
+beforeAll(async () => {
+	await loadFill(manifest, fragmentSources);
+});
 
 function make(attrs: Record<string, string> = {}): RatingEl {
 	const el = document.createElement("xtyle-rating") as RatingEl;
@@ -64,11 +71,43 @@ describe("<xtyle-rating> rendering", () => {
 		expect(make({ size: "lg" }).classList.contains("xtyle-rating--lg")).toBe(true);
 	});
 
+	it("keeps a consumer's own class alongside its own", () => {
+		const el = make({ class: "promo", value: "3" });
+		expect(el.classList.contains("promo")).toBe(true);
+		expect(el.classList.contains("xtyle-rating")).toBe(true);
+	});
+
 	it("re-renders when the value attribute reflects through the setter", () => {
 		const el = make({ value: "2", max: "5" });
 		el.value = 4;
 		expect(el.getAttribute("value")).toBe("4");
 		expect((el.querySelector(".xtyle-rating__row--filled") as HTMLElement).style.width).toBe("80%");
+	});
+
+	it("redraws the row when max changes, so the glyph count follows", () => {
+		const el = make({ value: "2", max: "5" });
+		el.max = 3;
+		expect(el.querySelectorAll(".xtyle-rating__row--empty svg")).toHaveLength(3);
+		expect((el.querySelector(".xtyle-rating__row--filled") as HTMLElement).style.width).toBe("66.66666666666666%");
+	});
+});
+
+describe("<xtyle-rating> fill boundary", () => {
+	it("draws both rows inside the fill's scaffold, so a mod owns the whole row", () => {
+		const el = make({ value: "3", max: "5" });
+		const scaffold = el.querySelector("[data-root][data-rating]")!;
+		expect(scaffold).not.toBeNull();
+		expect(scaffold.querySelector('[part="track"]')).not.toBeNull();
+		expect(scaffold.querySelector('[part="fill"]')).not.toBeNull();
+		expect(el.querySelectorAll("svg")).toHaveLength(10);
+		expect(scaffold.querySelectorAll("svg")).toHaveLength(10);
+	});
+
+	it("keeps the hidden input out of the fill — it is plumbing, not chrome", () => {
+		const el = make({ value: "3", max: "5", name: "rating" });
+		const input = el.querySelector('input[type="hidden"]')!;
+		expect(input.parentElement).toBe(el);
+		expect(el.querySelector("[data-rating]")!.querySelector("input")).toBeNull();
 	});
 });
 
@@ -190,5 +229,18 @@ describe("<xtyle-rating> hidden input", () => {
 	it("carries no hidden input without a name, or when readonly", () => {
 		expect(make({ value: "3", max: "5" }).querySelector('input[type="hidden"]')).toBeNull();
 		expect(make({ value: "3", max: "5", name: "r", readonly: "" }).querySelector('input[type="hidden"]')).toBeNull();
+	});
+
+	it("posts the current value through a real form", () => {
+		const form = document.createElement("form");
+		document.body.appendChild(form);
+		const el = document.createElement("xtyle-rating") as RatingEl;
+		el.setAttribute("name", "score");
+		el.setAttribute("value", "3");
+		form.appendChild(el);
+
+		expect(new FormData(form).get("score")).toBe("3");
+		press(el, "ArrowRight");
+		expect(new FormData(form).get("score")).toBe("4");
 	});
 });

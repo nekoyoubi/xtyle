@@ -125,6 +125,7 @@ export const breadcrumbManifest: ComponentManifest = {
 	id: "breadcrumb",
 	name: "Breadcrumb",
 	category: "navigation",
+	since: "0.1.0",
 	keywords: ["trail", "path", "hierarchy", "navigation trail", "crumbs"],
 	seeAlso: ["link", "pagination", "steps"],
 	summary: "A hierarchy trail showing where a page sits, with linked ancestors and a marked current location.",

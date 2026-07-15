@@ -1,0 +1,87 @@
+---
+import Redact from "@xtyle/astro/Redact.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
+---
+
+<div class="rd-demo" data-redact-demo>
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={2} size="body">Hide it until it's asked for</Heading>
+			<Text tone="muted" size="sm">
+				Three ways to obscure a value, four ways to bring it back. The whole page can flip open at
+				once, too.
+			</Text>
+		</Stack>
+
+		<Stack gap={5}>
+			<Grid columns={3} gap={4}>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">Blur, on hover</Text>
+					<Text size="sm">
+						Recovery code
+						<Redact mode="blur" reveal="hover" label="recovery code">4XQ2-9F1K-77PL</Redact>
+					</Text>
+				</Stack>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">Mask, on click</Text>
+					<Text size="sm">
+						SSN <Redact mode="mask" reveal="click" label="social security number">123-45-6789</Redact>
+					</Text>
+				</Stack>
+				<Stack gap={1}>
+					<Text size="xs" tone="subtle" weight="semibold">Block, hold to read</Text>
+					<Text size="sm">
+						API key <Redact mode="block" reveal="hold" label="API key">key-9f2a7c1e4b6d</Redact>
+					</Text>
+				</Stack>
+			</Grid>
+
+			<div class="rd-demo__panel">
+				<Cluster justify="between" align="center">
+					<Text size="sm" weight="semibold">Payment details</Text>
+					<Button variant="outline" tone="neutral" size="sm" data-reveal-toggle><span data-reveal-label>Reveal all</span></Button>
+				</Cluster>
+				<Grid columns={2} gap={3}>
+					<Text size="sm">
+						Card <Redact mode="mask" reveal="never" label="card number" data-field>4242 4242 4242 4242</Redact>
+					</Text>
+					<Text size="sm">
+						CVC <Redact mode="mask" reveal="never" label="security code" data-field>039</Redact>
+					</Text>
+				</Grid>
+				<Text size="xs" tone="subtle">
+					These reveal only from the switch above — a screenful of fields flips open together.
+				</Text>
+			</div>
+		</Stack>
+	</Card>
+</div>
+
+<script>
+	import { revealAllRedactions, redactionsRevealed } from "@xtyle/core/elements";
+
+	const toggle = document.querySelector<HTMLElement>("[data-reveal-toggle]");
+	const label = document.querySelector<HTMLElement>("[data-reveal-label]");
+	toggle?.addEventListener("click", () => {
+		const next = !redactionsRevealed();
+		revealAllRedactions(next);
+		if (label) label.textContent = next ? "Hide all" : "Reveal all";
+	});
+</script>
+
+<style>
+	.rd-demo__panel {
+		display: grid;
+		gap: var(--space-3);
+		padding: var(--space-4);
+		border-radius: var(--radius-md);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+	}
+</style>

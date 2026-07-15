@@ -1,5 +1,5 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { codeHostCss, plainCodeHtml, splitCodeLines, codeGutterWidth, parseLineSpec } from "../markup/index.js";
+import { codeHostCss, plainCodeHtml, splitCodeLines, parseLineSpec } from "../markup/index.js";
 import {
 	highlight,
 	registerLanguage as registerGrammar,
@@ -83,7 +83,7 @@ export class XtyleCode extends XtyleElement {
 		else this.setAttribute("copy", "false");
 	}
 
-	/** Number each line in a counter gutter that stays put under horizontal scroll. */
+	/** Number each line in a gutter that stays put under horizontal scroll. */
 	get lineNumbers(): boolean {
 		return this.hasAttribute("line-numbers");
 	}
@@ -122,23 +122,11 @@ export class XtyleCode extends XtyleElement {
 		return this.textContent ?? "";
 	}
 
-	/**
-	 * Wrap each line into rows when numbering or highlighting is on — tagging the highlighted
-	 * ones and, when numbering, sizing the gutter to the block's largest line number so it never
-	 * clips or floats; otherwise pass the source through and drop the gutter override. Both the
-	 * wrapped markup and the line count come from one `splitCodeLines` call, so the gutter width
-	 * can never drift from the rows it labels.
-	 */
-	private withLines(html: string): string {
-		const spec = this.highlight ? parseLineSpec(this.highlight) : undefined;
-		if (!this.lineNumbers && !spec) {
-			this.style.removeProperty("--xtyle-code-gutter");
-			return html;
-		}
-		const split = splitCodeLines(html, spec);
-		if (this.lineNumbers) this.style.setProperty("--xtyle-code-gutter", codeGutterWidth(split.lines));
-		else this.style.removeProperty("--xtyle-code-gutter");
-		return split.html;
+	/** The line rows, the numbers in their gutter, and the highlight tint are all drawn by the
+	 * fragment fill, so the element hands it the raw tokenized source plus the two flags and lets
+	 * the fill compose the structure — a mod that restructures the gutter then owns every paint. */
+	private get bindings(): Record<string, unknown> {
+		return { language: resolveLanguage(this.lang), caption: this.caption, lineNumbers: this.lineNumbers, highlight: this.highlight };
 	}
 
 	protected template(): string {
@@ -149,10 +137,10 @@ export class XtyleCode extends XtyleElement {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(codeHostCss);
 		const language = resolveLanguage(this.lang);
-		const html = this.withLines(plainCodeHtml(this.source));
+		const html = plainCodeHtml(this.source);
 		this.seedScaffold(html, language);
 		this.seedCaption();
-		this.fragment.update({ html, language, caption: this.caption });
+		this.fragment.update({ ...this.bindings, html });
 		if (this.preload && this.lang) void warmLanguages([this.lang]);
 		this.recolor();
 		wireHostControls(
@@ -188,17 +176,20 @@ export class XtyleCode extends XtyleElement {
 	/**
 	 * Seed the freshly-painted scaffold with themed plain-text source synchronously, so a
 	 * client-only (no-DSD) first paint shows fully-populated source immediately rather than
-	 * an empty box until the async fragment runtime warms and the mount hook fills it. The
-	 * async `update` then upgrades an already-populated block.
+	 * an empty box until the async fragment runtime warms and the mount hook fills it. It runs
+	 * the same `splitCodeLines` the fill does, so the placeholder rows sit in the same gutter the
+	 * fill's mount will draw and the block doesn't reflow when the runtime lands; the fill's mount
+	 * then replaces this wholesale, so a mod's structure — not this seed — is what survives.
 	 */
 	private seedScaffold(html: string, language: string | null): void {
 		const code = this.root.querySelector("[data-code]");
 		if (!(code instanceof HTMLElement) || code.firstChild) return;
+		// add the highlighter's `language-x` contract class, never assign the whole class attribute: the names
+		// on these nodes belong to whichever fill drew them, and writing them from here overwrites a mod's
 		const languageClass = `language-${language ?? "none"}`;
-		code.className = languageClass;
-		code.innerHTML = html;
-		const pre = this.root.querySelector("[data-root]");
-		if (pre instanceof HTMLElement) pre.className = `xtyle-code ${languageClass}`;
+		code.classList.add(languageClass);
+		const spec = this.highlight ? parseLineSpec(this.highlight) : undefined;
+		code.innerHTML = this.lineNumbers || spec ? splitCodeLines(html, spec, this.lineNumbers).html : html;
 	}
 
 	/**
@@ -215,7 +206,7 @@ export class XtyleCode extends XtyleElement {
 		void highlight(source, lang).then((result) => {
 			if (token !== this.renderToken) return;
 			if (result.language === null) return;
-			this.fragment.update({ html: this.withLines(result.html), language: result.language, caption: this.caption });
+			this.fragment.update({ ...this.bindings, html: result.html, language: result.language });
 		});
 	}
 

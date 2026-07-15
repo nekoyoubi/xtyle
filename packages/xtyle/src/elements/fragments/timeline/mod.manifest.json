@@ -1,0 +1,40 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-timeline-default",
+	"version": "0.0.1",
+	"title": "Xtyle Timeline (default)",
+	"description": "The built-in fill for the xtyle Timeline component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.timeline"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.timeline": [
+			{
+				"id": "timeline",
+				"format": "text/html+jsml",
+				"source": "timeline.html",
+				"meta": {
+					"tokens": [
+						"--space-1",
+						"--space-4",
+						"--space-5",
+						"--accent",
+						"--bg-0",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--line",
+						"--border-thin",
+						"--border-thick",
+						"--radius-full",
+						"--text-sm",
+						"--text-xs",
+						"--weight-semibold",
+						"--leading-tight",
+						"--leading-normal"
+					]
+				}
+			}
+		]
+	}
+}

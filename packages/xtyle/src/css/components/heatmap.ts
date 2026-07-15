@@ -116,6 +116,7 @@ export const heatmapCss = `
 	white-space: nowrap;
 }
 .xtyle-heatmap__tooltip[hidden] { display: none; }
+.xtyle-heatmap__tooltip-row[hidden] { display: none; }
 .xtyle-heatmap__tooltip-name { color: var(--fg-2); }
 .xtyle-heatmap__tooltip-value { font-weight: var(--weight-semibold); }
 .xtyle-heatmap__a11y {

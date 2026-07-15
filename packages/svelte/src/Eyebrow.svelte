@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/eyebrow.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone } from "@xtyle/core";
 

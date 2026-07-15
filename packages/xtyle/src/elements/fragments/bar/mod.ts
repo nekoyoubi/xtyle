@@ -96,6 +96,26 @@ function legendHtml(series: { name: string }[], colors: string[]): string {
 	return `<div class="xtyle-bar__legend" part="legend">${items}</div>`;
 }
 
+/** The hover readout, one row per bar, drawn up front and revealed by index. The rows are the fill's
+ * markup rather than something the host writes on each hover, so a mod that reshapes a row (a swatch, a
+ * unit, a different order) survives every hover; the host only unhides the row the pointer is on. */
+function tooltipHtml(series: { name: string; values: number[] }[], categories: string[]): string {
+	const rows: string[] = [];
+	for (let ci = 0; ci < categories.length; ci++) {
+		for (let si = 0; si < series.length; si++) {
+			const name = series[si]?.name ?? "";
+			const value = series[si]?.values[ci] ?? 0;
+			const label = esc(categories[ci] ?? "") + (name ? ` · ${esc(name)}` : "");
+			rows.push(
+				`<span class="xtyle-bar__tooltip-row" part="tooltip-row" data-tip-row="${si}-${ci}" hidden>` +
+					`<span class="xtyle-bar__tooltip-name">${label}</span> ` +
+					`<span class="xtyle-bar__tooltip-value">${esc(String(value))}</span></span>`,
+			);
+		}
+	}
+	return `<div class="xtyle-bar__tooltip" part="tooltip" role="status" aria-hidden="true" hidden>${rows.join("")}</div>`;
+}
+
 function tableHtml(series: { name: string; values: number[] }[], categories: string[], caption: string): string {
 	const head = `<tr><th scope="col">Category</th>${series.map((s) => `<th scope="col">${esc(s.name)}</th>`).join("")}</tr>`;
 	const rows = categories
@@ -278,7 +298,7 @@ function barHtml(b: BarBindings): string {
 	const svg =
 		`<svg class="xtyle-bar__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${plot}</svg>`;
 	const legend = b.legend !== false && series.length > 1 ? legendHtml(series, colors) : "";
-	const tooltip = `<div class="xtyle-bar__tooltip" part="tooltip" role="status" aria-hidden="true" hidden></div>`;
+	const tooltip = tooltipHtml(series, categories);
 	const table = tableHtml(series, categories, b.title ?? b.ariaLabel ?? "");
 
 	return `<figure part="chart" class="${barClass(b)}" style="--bar-height:${height}px">${svg}${legend}${tooltip}${table}</figure>`;

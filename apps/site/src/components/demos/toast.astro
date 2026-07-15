@@ -35,6 +35,7 @@ const TONE_GROUPS = [
 				))
 			}
 			<Button size="sm" tone="accent" data-toast="action">With action</Button>
+			<Button size="sm" tone="neutral" variant="outline" data-toast="bare">No close button</Button>
 		</Cluster>
 	</Card>
 
@@ -53,6 +54,18 @@ const TONE_GROUPS = [
 		<Stack gap={3} class="demo-toast-static">
 			<Toast tone="success" variant="solid">Deployed to production.</Toast>
 			<Toast tone="danger" variant="solid" actionLabel="Undo">Project moved to trash.</Toast>
+		</Stack>
+	</Card>
+
+	<Card compact>
+		<Heading slot="header" level={3} size="sm">Without a close button</Heading>
+		<Text size="sm" tone="muted">
+			<code>{"closable={false}"}</code> drops the dismiss button, for a notice that leaves on its own.
+			A pushed toast takes the same option.
+		</Text>
+		<Stack gap={3} class="demo-toast-static">
+			<Toast severity="success" closable={false}>Copied to clipboard.</Toast>
+			<Toast tone="neutral" closable={false}>Autosaved a moment ago.</Toast>
 		</Stack>
 	</Card>
 
@@ -110,6 +123,15 @@ const TONE_GROUPS = [
 					actionLabel: "Undo",
 					onAction: () =>
 						region.toast({ message: "Restored.", tone: "success", duration: 3000 }),
+				});
+				return;
+			}
+			if (kind === "bare") {
+				region.toast({
+					message: "Copied to clipboard.",
+					severity: "success",
+					closable: false,
+					duration: 3000,
 				});
 				return;
 			}

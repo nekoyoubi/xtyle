@@ -1,0 +1,129 @@
+---
+import type { ComboboxFilter } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+type Size = "sm" | "md" | "lg";
+type FieldOption = { value: string; label?: string };
+
+interface Props {
+	label?: string;
+	name?: string;
+	placeholder?: string;
+	/** The selected value in the single-select posture. */
+	value?: string;
+	/** Every selected value — the multi-select surface. */
+	values?: string[];
+	/** The same option contract Field and Select speak: a `string[]` or a `{ value, label }[]`. */
+	options?: ReadonlyArray<string | FieldOption>;
+	/** Pick many: chips in the control, Backspace to take the last one back, a clear-all. */
+	multiple?: boolean;
+	/** How the typed query narrows the list. `none` hands the filtering to the consumer (the async path). */
+	filter?: ComboboxFilter;
+	/** Accept a value the list never offered: Enter commits whatever was typed. */
+	allowCustom?: boolean;
+	clearable?: boolean;
+	size?: Size;
+	disabled?: boolean;
+	readonly?: boolean;
+	invalid?: boolean;
+	required?: boolean;
+	description?: string;
+	error?: string;
+	emptyText?: string;
+	"aria-label"?: string;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	label,
+	name,
+	placeholder,
+	value,
+	values,
+	options,
+	multiple = false,
+	filter = "contains",
+	allowCustom = false,
+	clearable = false,
+	size = "md",
+	disabled = false,
+	readonly = false,
+	invalid = false,
+	required = false,
+	description,
+	error,
+	emptyText,
+	"aria-label": ariaLabel,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const uid = `xtyle-combobox-${Math.random().toString(36).slice(2, 8)}`;
+const selected = multiple ? (values ?? []) : value ? [value] : [];
+
+/** The text a selected value presents, resolved against the option list so the server-rendered chips and
+ * input read exactly what the element will paint once it upgrades — no label flicker on hydration. */
+const labelOf = (v: string): string => {
+	const found = (options ?? []).find((option) => (typeof option === "string" ? option === v : option.value === v));
+	if (found === undefined) return v;
+	return typeof found === "string" ? found : (found.label ?? found.value);
+};
+
+// the server paints the control, never the listbox: a closed combobox has no options in its markup, so the
+// zero-JS render is just the input, and the popover fills itself in once the element upgrades
+const bindings = {
+	inputId: `${uid}-input`,
+	listId: `${uid}-list`,
+	descriptionId: `${uid}-desc`,
+	errorId: `${uid}-error`,
+	label: label ?? null,
+	ariaLabel: ariaLabel ?? null,
+	placeholder: placeholder ?? null,
+	query: multiple ? "" : value ? labelOf(value) : "",
+	size,
+	multiple,
+	open: false,
+	disabled,
+	readonly,
+	invalid,
+	required,
+	clearable,
+	description: description ?? null,
+	error: error ?? null,
+	emptyText: emptyText ?? "No matches",
+	activeId: null,
+	showClear: clearable && !disabled && !readonly && selected.length > 0,
+	options: [],
+	chips: multiple ? selected.map((v) => ({ value: v, label: labelOf(v) })) : [],
+};
+const light = await renderFragmentLight("combobox", bindings);
+---
+
+<xtyle-combobox
+	label={label}
+	name={name}
+	placeholder={placeholder}
+	value={multiple ? undefined : value}
+	values={multiple ? JSON.stringify(values ?? []) : undefined}
+	options={options ? JSON.stringify(options) : undefined}
+	size={size}
+	filter={filter}
+	multiple={multiple || undefined}
+	allow-custom={allowCustom || undefined}
+	clearable={clearable || undefined}
+	disabled={disabled || undefined}
+	readonly={readonly || undefined}
+	invalid={invalid || undefined}
+	required={required || undefined}
+	description={description}
+	error={error}
+	empty-text={emptyText}
+	aria-label={ariaLabel}
+	class={extra}
+	set:html={light}
+	{...rest}
+/>
+
+<script>import "@xtyle/core/elements/combobox.js";</script>

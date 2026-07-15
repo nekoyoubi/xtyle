@@ -99,6 +99,7 @@ export const fieldManifest: ComponentManifest = {
 	id: "field",
 	name: "Field",
 	category: "form",
+	since: "0.1.0",
 	keywords: ["input", "text input", "text field", "search box", "textbox", "form input"],
 	seeAlso: ["textarea", "number-input", "form-group", "select"],
 	summary: "A labelled text input with helper text, validation, adornments, and built-in clear and reveal actions.",

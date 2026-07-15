@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/dot.js";
 	import type { FullTone as Tone } from "@xtyle/core";
 
 	type DotSize = "sm" | "md" | "lg";

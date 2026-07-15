@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/heading.js";
 	import type { Snippet } from "svelte";
 	import type { HeadingLevel, HeadingSize, HeadingTone } from "@xtyle/core";
 

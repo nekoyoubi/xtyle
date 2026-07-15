@@ -42,6 +42,10 @@ import NumberInput from "@xtyle/astro/NumberInput.astro";
 import Select from "@xtyle/astro/Select.astro";
 import Textarea from "@xtyle/astro/Textarea.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
+import Chart from "@xtyle/astro/Chart.astro";
+import Combobox from "@xtyle/astro/Combobox.astro";
+import DatePicker from "@xtyle/astro/DatePicker.astro";
+import SplitButton from "@xtyle/astro/SplitButton.astro";
 
 interface Props {
 	id: string;
@@ -51,6 +55,14 @@ const { id } = Astro.props;
 const statusTones = ["success", "warn", "danger", "info"] as const;
 const hueTones = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "cyan"] as const;
 
+const previewZones = [
+	{ value: "Europe/London", label: "London" },
+	{ value: "Europe/Berlin", label: "Berlin" },
+	{ value: "Asia/Tokyo", label: "Tokyo" },
+];
+const previewLoad = [
+	{ name: "Requests", points: [12, 18, 15, 26, 22, 34, 29, 41].map((value, at) => ({ at, value })) },
+];
 ---
 
 <div class="cxp" data-preview={id}>
@@ -86,6 +98,18 @@ const hueTones = ["red", "orange", "yellow", "green", "blue", "purple", "pink", 
 	{id === "rating" && <Rating value={4} max={5} readonly label="4 of 5" />}
 	{id === "segmented" && <Segmented label="View" options="Day,Week,Month" value="Week" />}
 	{id === "slider" && <Slider label="Volume" value={62} style="width: 13rem;" />}
+	{id === "split-button" && (
+		<SplitButton
+			tone="accent"
+			menuLabel="More save actions"
+			items={[
+				{ label: "Save and close", value: "save-close" },
+				{ label: "Save as draft", value: "save-draft" },
+			]}
+		>
+			Save
+		</SplitButton>
+	)}
 	{id === "swatch" && (
 		<Cluster gap={2} align="center">
 			<Swatch color="var(--accent)" label="Accent" />
@@ -202,6 +226,15 @@ const hueTones = ["red", "orange", "yellow", "green", "blue", "purple", "pink", 
 	{id === "number-input" && <NumberInput label="Qty" value={3} min={0} max={99} />}
 	{id === "select" && <Select label="Plan" options="Starter,Pro,Team" value="Pro" style="width: 11rem;" />}
 	{id === "textarea" && <Textarea label="Notes" value={"Two lines\nof notes"} rows={2} style="width: 13rem;" />}
+	{id === "combobox" && (
+		<Combobox label="Time zone" placeholder="Type a city…" options={previewZones} value="Europe/Berlin" clearable style="width: 13rem;" />
+	)}
+	{id === "date-picker" && <DatePicker label="Ship date" value="2026-07-14" style="width: 12rem;" />}
+	{id === "chart" && (
+		<div class="cxp-chart">
+			<Chart series={previewLoad} variant="area" curve="smooth" height={160} label="Requests over time" static style="width: 12rem;" />
+		</div>
+	)}
 
 	{/* Schematics: structural / whole-app / heavy components rendered as a token-built diagram. */}
 	{id === "card" && <div class="cxp-schema cxp-card"><span class="cxp-schema__head"></span><span class="cxp-schema__line" style="width: 80%"></span><span class="cxp-schema__line" style="width: 55%"></span></div>}
@@ -240,6 +273,77 @@ const hueTones = ["red", "orange", "yellow", "green", "blue", "purple", "pink", 
 	{id === "bar" && <div class="cxp-bars"><span style="height: 45%"></span><span style="height: 72%"></span><span style="height: 58%"></span><span style="height: 90%"></span><span style="height: 66%"></span></div>}
 	{id === "pie" && <div class="cxp-pie"></div>}
 	{id === "heatmap" && <div class="cxp-heatmap">{Array.from({ length: 28 }).map((_, i) => <span style={`opacity: ${0.15 + ((i * 37) % 100) / 118}`}></span>)}</div>}
+	{id === "spotlight" && (
+		<div class="cxp-spotlight">
+			<span class="cxp-spotlight__page">
+				<i></i><i></i><i></i><i></i>
+			</span>
+			<span class="cxp-spotlight__hole"></span>
+			<span class="cxp-spotlight__say"></span>
+		</div>
+	)}
+	{id === "tour" && (
+		<div class="cxp-tour">
+			<span class="cxp-tour__page">
+				<i></i><i></i><i></i><i></i>
+			</span>
+			<span class="cxp-tour__hole"></span>
+			<span class="cxp-tour__say">
+				<span class="cxp-tour__dots"><b class="is-on"></b><b></b><b></b></span>
+			</span>
+		</div>
+	)}
+	{id === "redact" && (
+		<div class="cxp-redact">
+			<span class="cxp-redact__row"><i></i><span class="cxp-redact__mask"></span></span>
+			<span class="cxp-redact__row"><span class="cxp-redact__blur"></span><i style="width: 40%"></i></span>
+		</div>
+	)}
+	{id === "popover" && (
+		<div class="cxp-popover">
+			<span class="cxp-popover__trigger">Details</span>
+			<span class="cxp-popover__panel">
+				<i style="width: 80%"></i>
+				<i style="width: 55%"></i>
+			</span>
+		</div>
+	)}
+	{id === "command-palette" && (
+		<div class="cxp-palette">
+			<span class="cxp-palette__query"><Icon name="search" size="sm" /><i></i><Kbd>⌘K</Kbd></span>
+			<span class="cxp-palette__row is-on"></span>
+			<span class="cxp-palette__row"></span>
+			<span class="cxp-palette__row"></span>
+		</div>
+	)}
+	{id === "sheet" && (
+		<div class="cxp-sheet">
+			<span class="cxp-sheet__scrim"></span>
+			<span class="cxp-sheet__panel">
+				<i class="cxp-sheet__grip"></i>
+				<i class="cxp-schema__line" style="width: 70%"></i>
+				<i class="cxp-schema__line" style="width: 45%"></i>
+			</span>
+		</div>
+	)}
+	{id === "dropzone" && (
+		<div class="cxp-dropzone">
+			<Icon name="arrow-up" size="md" />
+			<Text size="xs" tone="muted">Drop files</Text>
+		</div>
+	)}
+	{id === "calendar" && (
+		<div class="cxp-calendar">
+			<span class="cxp-calendar__head">
+				{["S", "M", "T", "W", "T", "F", "S"].map((d) => <i>{d}</i>)}
+			</span>
+			<span class="cxp-calendar__grid">
+				{Array.from({ length: 28 }).map((_, i) => (
+					<i class={i === 13 ? "is-on" : i === 20 ? "is-range" : undefined}>{i + 1}</i>
+				))}
+			</span>
+		</div>
+	)}
 </div>
 
 <style>
@@ -403,4 +507,55 @@ const hueTones = ["red", "orange", "yellow", "green", "blue", "purple", "pink", 
 
 	.cxp-heatmap { display: grid; grid-template-columns: repeat(7, 0.6rem); gap: 0.18rem; }
 	.cxp-heatmap > span { width: 0.6rem; height: 0.6rem; border-radius: 2px; background: var(--accent); }
+
+	/* Chart floors its own height at 160px (right for a real chart, too tall for a card), so the preview
+	   scales the rendered svg down to sit level with its rowmates. */
+	.cxp-chart { width: 12rem; }
+	.cxp-chart :global(.xtyle-chart__svg) { height: 4rem; }
+
+	.cxp-spotlight { position: relative; width: 10rem; height: 4.6rem; border-radius: var(--radius-sm); background: var(--scrim); border: var(--border-thin) solid var(--line); overflow: hidden; }
+	.cxp-spotlight__page { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; padding: 0.4rem; opacity: 0.25; }
+	.cxp-spotlight__page i { border-radius: 2px; background: var(--fg-3); }
+	.cxp-spotlight__hole { position: absolute; top: 0.7rem; left: 0.7rem; width: 2.6rem; height: 1.1rem; border-radius: var(--radius-sm); background: var(--bg-0); box-shadow: 0 0 0 2px var(--accent); }
+	.cxp-spotlight__say { position: absolute; right: 0.5rem; bottom: 0.5rem; width: 4.6rem; height: 1.9rem; border-radius: var(--radius-sm); background: var(--surface-overlay); border: var(--border-thin) solid var(--surface-overlay-border); box-shadow: var(--elevation-3); }
+
+	.cxp-tour { position: relative; width: 10rem; height: 4.6rem; border-radius: var(--radius-sm); background: var(--scrim); border: var(--border-thin) solid var(--line); overflow: hidden; }
+	.cxp-tour__page { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; padding: 0.4rem; opacity: 0.25; }
+	.cxp-tour__page i { border-radius: 2px; background: var(--fg-3); }
+	.cxp-tour__hole { position: absolute; top: 0.7rem; left: 0.7rem; width: 2.6rem; height: 1.1rem; border-radius: var(--radius-sm); background: var(--bg-0); box-shadow: 0 0 0 2px var(--accent); }
+	.cxp-tour__say { position: absolute; right: 0.5rem; bottom: 0.5rem; width: 4.8rem; height: 2.1rem; border-radius: var(--radius-sm); background: var(--surface-overlay); border: var(--border-thin) solid var(--surface-overlay-border); box-shadow: var(--elevation-3); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 0.3rem; }
+	.cxp-tour__dots { display: flex; gap: 0.25rem; }
+	.cxp-tour__dots b { width: 0.3rem; height: 0.3rem; border-radius: var(--radius-full); background: var(--line-2); }
+	.cxp-tour__dots b.is-on { background: var(--accent); }
+
+	.cxp-redact { display: grid; gap: 0.55rem; width: 9rem; }
+	.cxp-redact__row { display: flex; align-items: center; gap: 0.4rem; }
+	.cxp-redact__row i { height: 0.5rem; flex: 1; border-radius: 2px; background: var(--fg-3); opacity: 0.4; }
+	.cxp-redact__mask { width: 3.6rem; height: 0.95rem; border-radius: 3px; background-color: var(--bg-2); background-image: radial-gradient(var(--fg-3) 40%, transparent 42%); background-size: 0.35rem 0.35rem; }
+	.cxp-redact__blur { width: 3rem; height: 0.95rem; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--fg-2)); filter: blur(2px); }
+
+	.cxp-popover { display: grid; justify-items: center; gap: 0.35rem; }
+	.cxp-popover__trigger { font-size: var(--text-xs); padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); background: var(--accent-bg); color: var(--accent-text); border: var(--border-thin) solid var(--accent); }
+	.cxp-popover__panel { display: grid; gap: 0.3rem; width: 6.5rem; padding: 0.45rem; border-radius: var(--radius-sm); background: var(--surface-overlay); border: var(--border-thin) solid var(--surface-overlay-border); box-shadow: var(--elevation-2); }
+	.cxp-popover__panel i { height: 0.4rem; border-radius: var(--radius-full); background: var(--line-2); }
+
+	.cxp-palette { display: grid; gap: 0.3rem; width: 10rem; padding: 0.4rem; border-radius: var(--radius-md); background: var(--surface-overlay); border: var(--border-thin) solid var(--surface-overlay-border); box-shadow: var(--elevation-3); color: var(--fg-2); }
+	.cxp-palette__query { display: flex; align-items: center; gap: 0.35rem; padding-bottom: 0.3rem; border-bottom: var(--border-thin) solid var(--line); }
+	.cxp-palette__query i { flex: 1; height: 0.4rem; border-radius: var(--radius-full); background: var(--line-2); }
+	.cxp-palette__row { height: 0.55rem; border-radius: var(--radius-sm); background: var(--bg-2); }
+	.cxp-palette__row.is-on { background: var(--accent-bg); border-inline-start: var(--border-thick) solid var(--accent); }
+
+	.cxp-sheet { position: relative; display: flex; justify-content: flex-end; width: 10rem; height: 4.2rem; border-radius: var(--radius-sm); background: var(--bg-2); border: var(--border-thin) solid var(--line); overflow: hidden; }
+	.cxp-sheet__scrim { position: absolute; inset: 0; background: var(--scrim); }
+	.cxp-sheet__panel { position: relative; display: grid; align-content: start; gap: 0.3rem; width: 55%; padding: 0.4rem; background: var(--surface-overlay); border-inline-start: var(--border-thin) solid var(--surface-overlay-border); box-shadow: var(--elevation-3); }
+	.cxp-sheet__grip { justify-self: center; width: 1.6rem; height: 0.2rem; border-radius: var(--radius-full); background: var(--line-2); margin-bottom: 0.15rem; }
+
+	.cxp-dropzone { display: grid; justify-items: center; gap: 0.2rem; width: 9rem; padding: var(--space-3) var(--space-2); border-radius: var(--radius-md); background: var(--bg-1); border: var(--border-normal) dashed var(--line-2); color: var(--fg-2); }
+
+	.cxp-calendar { display: grid; gap: 0.2rem; }
+	.cxp-calendar__head, .cxp-calendar__grid { display: grid; grid-template-columns: repeat(7, 0.85rem); gap: 0.12rem; }
+	.cxp-calendar__head i { font-size: 0.5rem; font-style: normal; text-align: center; color: var(--fg-3); }
+	.cxp-calendar__grid i { display: grid; place-items: center; height: 0.85rem; font-size: 0.5rem; font-style: normal; border-radius: 2px; color: var(--fg-2); }
+	.cxp-calendar__grid i.is-on { background: var(--accent); color: var(--accent-fg); font-weight: var(--weight-semibold); }
+	.cxp-calendar__grid i.is-range { background: var(--accent-bg); color: var(--accent-text); }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/toc.js";
 
 	interface TocItem {
 		id: string;

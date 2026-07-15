@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/pagination.js";
 	import type { FullTone, Size } from "@xtyle/core";
 
 	type PageChange = CustomEvent<{ page: number }>;

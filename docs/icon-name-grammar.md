@@ -94,9 +94,12 @@ collides with a flag like `-x` or `-a`.
 ### color palette
 
 `c{n}` takes one **hex nibble** `0`–`f` into a 16-slot palette. Slots `1`–`9` are the nine **series
-colors**; the `colors="…"` attribute (a scheme: `accents`, `skittles`, `statuses`, `thermal`,
-`status`) picks what they draw from — `skittles` fills all nine with the crayon box, a smaller scheme
-cycles its own colors across the nine slots. The high nibbles are theme chrome.
+colors**; a named **palette** picks what they draw from. The six the engine ships are `accents`,
+`skittles`, `statuses`, `thermal`, `severity`, and `intensity`. Each is a set of stops, and a mark asks
+for nine colors off them, so `skittles` fills all nine with the crayon box while a ramp-shaped palette
+(`thermal`, `severity`, `intensity`) hands back nine samples along its scale. The palette comes from the
+host (`<xtyle-icon colors="skittles">`) unless the mark pins its own in the finish (`---ps-skittles`),
+which wins. The high nibbles are theme chrome.
 
 | slot | resolves to |
 |------|-------------|
@@ -112,14 +115,13 @@ cycles its own colors across the nine slots. The high nibbles are theme chrome.
 An object with no `c` inherits `currentColor`, so an un-colored spec renders like a flat
 functional glyph and tints with surrounding text.
 
-**Nine fixed slots.** Every `colors` scheme resolves to exactly nine evenly-spread colors
-(`ICON_SERIES_COUNT`), so slots `1`–`9` are always full and stable no matter the scheme: a nine-hue
-scheme (`skittles`) fills them with the whole box, a shorter one spreads its own colors across all nine.
-The count is fixed rather than sized to the highest slot a mark references — sizing to `index + 1` made
-each slot take the *last* color of its own little palette, collapsing a sequential scheme (`thermal`) to
-its endpoint and a sampled categorical (`skittles`) to its last color. A fixed nine keeps each slot a
-distinct, evenly-spread color, so `c1`…`c5` span the whole scheme and a slot addresses the same way in
-any theme.
+**Nine fixed slots.** Every `colors` palette resolves to exactly nine colors (`ICON_SERIES_COUNT`), so
+slots `1`–`9` are always full and stable no matter the palette: a nine-stop palette (`skittles`) fills
+them with the whole box, a shorter one spreads or interpolates its own stops across all nine. The count
+is fixed rather than sized to the highest slot a mark references — sizing to `index + 1` made each slot
+take the *last* color of its own little palette, collapsing a ramp-shaped palette (`thermal`) to its
+endpoint and a sampled categorical (`skittles`) to its last color. A fixed nine keeps each slot a
+distinct color, so `c1`…`c5` span the whole palette and a slot addresses the same way in any theme.
 
 ### finish
 
@@ -136,6 +138,9 @@ composite:
 | `pc{n}-{value}` | **palette override**: repaint one slot for this mark. The value is a **hex** (`pc3-ff00ff` forces slot 3 to magenta), a single **nibble** `0`–`f` (`pc3-1` borrows slot 1's series color), or a **token name** (`pc3-accent` → `--accent`; also `success`, a named hue, or the `fg`/`bg` aliases). | none |
 | `pc-{value}` | **silhouette**: force every painting slot to one color (transparent/reserved slots stay clear). Same three value shapes: `pc-424242` (fixed grey), `pc-fg` (the foreground token), `pc-a` (the active ink). | none |
 | `f{n}-{name}` | **font slot**: bind slot `n` (`0`+) for this mark's `letter` layers to a font; `f-{name}` sets the default slot `0`. `{name}` is a theme alias (`sans` / `display` / `mono` → a `--font-*` token, portable), or a literal family with `+` for spaces (`f1-noto+sans+symbols` → `Noto Sans Symbols`). | slots `0`–`2` = sans / display / mono |
+| `ps-{palette}` | **series palette**: pin the palette this mark's `c1`–`c9` slots draw from — one of `ps-accents`, `ps-skittles`, `ps-statuses`, `ps-thermal`, `ps-severity`, `ps-intensity` — so the *name* carries its palette instead of taking whatever the host hands it. | the host's `colors` |
+| `e{n}` | **expand canvas**: pad the viewBox by `n`% of the grid on every side (capped at 100) while the rendered box stays `1em`, so the art maps a little smaller inside the same footprint and gains a margin. The art is unmoved, just given room; bump the icon's size to keep it visually the same. Its purpose is edge-hugging art under a drop shadow: Firefox clips a filter at the SVG viewport edge, so a shadow cast from art flush against the box streaks — the margin moves the art off the edge. | no padding |
+| `o{1-3}[c{0-f}]` | **whole-mark outline**: one stroke ringing the union silhouette of *everything the mark paints* — glyphs, shapes, through knockouts — drawn behind the art and *before* any drop shadow (so the shadow wraps the outlined shape). Same size steps (`1`/`2`/`3` = thin/medium/thick) and optional color nibble as a layer's `o`, but this rings the composite instead of one shape. Rendered by dilating the composite's alpha, so it needs no vector union and works across text and masks alike. | no outline |
 
 A `pc` value stays **theme-reactive** when it's a nibble or a token — it resolves off the live register
 at paint time, so the override tracks the theme instead of baking a dead color; a hex value is fixed.
@@ -143,13 +148,78 @@ Hyphenated tokens ride the finish directly (`pc-neutral-bg`, `pc3-accent-2`): fi
 so a value keeps its single hyphens. Combine finish flags with `--`: `pc1-accent--d2p8s3t80` overrides *and*
 casts a shadow. A future whole-composite modifier slots in the same way.
 
+**`ps` and the two ways to pick a palette.** A palette reaches a mark from two places, and the narrower
+one wins: `<xtyle-icon colors="skittles">` (the host) sets it for whatever mark it renders, while
+`---ps-skittles` (the name) pins it *inside the mark*, so the spec is self-contained and colors the same
+wherever it lands. A mark with no `ps` inherits the host exactly as before.
+
+The value is any palette the engine ships. It validates against the `PALETTES` constant rather than a
+literal list, so a palette added to the engine is a valid `ps` value the day it lands, with no parser
+change. The retired names `ps-status` and `ps-accent` still resolve (to `severity` and `intensity`) with
+a deprecation warning; an unrecognized value is dropped and the host's palette still applies. `ps`
+re-points the slots, it does not repaint them: a `pc` override still wins over the pinned palette for the
+one slot it names, so `---ps-skittles--pc3-accent` is "the crayon box, but slot 3 is the accent."
+
 A `letter`'s font renders faithfully only where that family is **available**. A theme-alias slot
 (`f1-display`) is as portable as the page it lands on — it inherits the page's own `--font-*` stack. A
 literal family (`f-sigmar`, `f1-noto+sans+symbols`) must be loaded separately; the mark declares the
-font but does not carry it. `iconFontImports(composition)` returns ready-made Google Fonts `@import` /
-`<link>` snippets for exactly the literal families a mark uses (the `+`-joined grammar is already
-Google's `family=` syntax, and theme-token slots are skipped since they need nothing), so a builder can
-surface the loading code to the author.
+font but does not carry it. `iconFontImports(composition)` returns the families a mark uses, the glyphs
+it draws in each, and — for a family Google actually serves — ready-made `@import` / `<link>` snippets,
+so a builder can surface the loading code to the author.
+
+### The family gate
+
+**A family name is gated on its character set, not cleaned with a regex.** An icon name is untrusted
+input: it can arrive from a shared spec, a mod, or an MCP call, and its family lands in a CSS `url()`, an
+HTML `href`, and an SVG attribute. So `resolveFontSpec` admits a family only if it is either a theme alias
+or a name drawn strictly from letters, digits, spaces, and hyphens, under a 64-character cap. **Anything
+else returns `null` and the flag is dropped** — the slot falls back to the theme font rather than
+rendering, or emitting a URL for, a name carrying a quote, a `)`, a `;`, an angle bracket, or a newline.
+
+That charset is the whole safety property, and it stands on its own: a name that *cannot hold* those
+characters has nothing to break out of the context it lands in. Sanitizing a name proves nothing of the
+sort — and the gate deliberately runs on the name **as written**, because a pass that collapsed whitespace
+*before* validating would launder `Sigmar\nOne` into the perfectly legitimate `Sigmar One`. `strictEncode`
+on every URL segment and `escapeCssUrl` / `escapeAttr` on every emitted snippet sit behind it as defense in
+depth.
+
+### The Google catalogue is opt-in, and lives where names get typed
+
+The gate is all `@xtyle/core` ships. It does *not* carry the ~1,900-name Google Fonts list, because that
+list costs ~10 KB gzipped on the icon parse path — unshakeable weight for every library consumer, almost
+none of whom will ever type a family name.
+
+What the list buys is **exactness**, and exactness only matters where a human is typing: an autocomplete, the
+catalogue's own casing (Google's `family=` is case-sensitive, so a capitalize-each-word guess turns
+`ibm+plex+mono` into `Ibm Plex Mono`, which 404s and renders in a silent fallback where the real
+`IBM Plex Mono` loads), and an honest "Google Fonts has no such family" with a `suggestGoogleFonts` did-you-mean
+instead of a snippet that quietly loads nothing.
+
+So the list lives in the site (`apps/site/src/lib/google-fonts.ts`) and is handed to the engine with
+`useGoogleFontCatalogue(...)` at the one surface that needs it, the icon builder. Every font function
+sharpens from that point on. With no catalogue installed, the engine cannot tell an invented family from a
+real one — it builds the URL either way, and a name Google has never heard of simply loads nothing.
+
+Refresh the list with `node scripts/refresh-google-fonts.mjs`. It reads the keyless
+`fonts.google.com/metadata/fonts` endpoint (the Developer API needs an API key; this one does not, so it is
+refreshable from any checkout with no secret), and it *refuses* to write if Google ever ships a name outside
+the safe character set or over the length cap — which matters more now that a charset gate, rather than an
+exact list, is what stands between a name and a URL.
+
+### Carrying the font into an export
+
+An exported SVG whose `letter` layer names a font does **not** carry that font, so it renders in whatever
+face the *viewer's* machine substitutes — the export is correct only on the machine that authored it. An
+external `@import` does not fix this: an SVG loaded as an image (which is how a PNG rasterizer sees it)
+refuses external resources outright. `embedFontsInSvg(svg, requests)` bakes each family in as a `data:`-URI
+`@font-face`, **subsetted via Google's `&text=` param to just the glyphs the mark draws** — a `letter`
+layer uses one glyph, so the embedded face is a few KB rather than the whole font. That inlined face is
+also what makes the PNG export show the right font.
+
+`loadGoogleFont(family)` loads a family into the page for preview. It builds no markup: it creates a
+`<link>` through DOM APIs and assigns `.href`, so there is nothing to escape out of. Neither function
+fires on its own — reaching `fonts.googleapis.com` discloses the visitor's IP address to Google, so it
+must be an explicit choice.
 
 **Lock flags** (`l{index}{codes}`) are **authoring metadata the renderer ignores**: they pin an
 object's props against the icon builder's Randomize, so a *template* name carries its own re-roll
@@ -206,9 +276,20 @@ crest--shield-c1-o1--star-s45-cf---l1o-l2*                          a re-rollabl
                                                                     while the builder randomizes the rest
 badge--circle-c2--bolt-s52-cb---dfp8s3t60                            a bolt badge lifted off the page by
                                                                     a soft shadow cast down and behind
+chip--hex-c1--dot-s30-c2---ps-skittles                              a chip that carries its own palette:
+                                                                    the crayon box, whatever the host's
+                                                                    `colors` says
+heat--ring-c1--dot-s28-c9---ps-thermal--pc1-fg                      a thermal mark, slot 1 forced to the
+                                                                    foreground ink (a `pc` still beats the
+                                                                    pinned palette)
 mark--letter-A-cf                                                   a foreground "A" in the body font
 badge--circle-c1--letter-A-cb-s55---f0-display                      a display-font "A" on an accent disc
 tag--letter-x-f1---f1-noto+sans+symbols                            an "x" in a named web font (load separately)
+mono--letter-x-x-12-c8--letter-r-x18-cf---d8p8s1t20--e12           a shadowed monogram whose left-hugging "x"
+                                                                    would streak in Firefox; `e12` pads the
+                                                                    canvas so it doesn't
+seal--letter-x-c8--letter-r-x18-cf---o3cb                          a two-glyph mark ringed by one bg-colored
+                                                                    outline around the whole silhouette
 ```
 
 ## Extensibility

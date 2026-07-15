@@ -26,6 +26,12 @@ interface NamedSnap {
 	aria: string;
 }
 
+/** One related color from the active harmony scheme. The scheme fixes how many there are, so the
+ * chips are built once here and the host only repaints their color as the base color moves. */
+interface HarmonyChip {
+	hex: string;
+}
+
 /** The color-math-derived inputs the host computes (the sandbox can't run color conversion);
  * the mod assembles the structure from them, mirroring `colorPickerMarkup`. */
 interface ColorPickerBindings {
@@ -47,6 +53,7 @@ interface ColorPickerBindings {
 	channels?: Channel[];
 	snapTargets?: string[];
 	namedSnap?: NamedSnap | null;
+	harmonyChips?: HarmonyChip[];
 }
 
 declare const hooks: {
@@ -120,7 +127,14 @@ function alphaTrack(b: ColorPickerBindings): string {
 
 function harmonyRow(b: ColorPickerBindings): string {
 	if (!b.harmonyScheme) return "";
-	return `<div class="xtyle-color-picker__presets xtyle-color-picker__harmony" part="harmony" role="group" aria-label="${b.harmonyScheme} harmony"></div>`;
+	const disabledAttr = b.disabled ? " disabled" : "";
+	const chips = (b.harmonyChips ?? [])
+		.map(
+			(c) =>
+				`<button class="xtyle-color-picker__preset xtyle-color-picker__harmony-chip" part="harmony-chip" type="button" data-color="${c.hex}" data-hex="${c.hex}" style="--cp-chip: ${c.hex}" aria-label="${c.hex}" aria-pressed="false"${disabledAttr}></button>`,
+		)
+		.join("");
+	return `<div class="xtyle-color-picker__presets xtyle-color-picker__harmony" part="harmony" role="group" aria-label="${b.harmonyScheme} harmony">${chips}</div>`;
 }
 
 function channelRows(b: ColorPickerBindings): string {
@@ -218,7 +232,7 @@ function inner(b: ColorPickerBindings): string {
 }
 
 hooks.fragment.mount("color-picker", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", rootClass(bindings));
+	ops.setAttr(".xtyle-color-picker", "class", rootClass(bindings));
 	ops.setAttr("[data-root]", "role", "group");
 	const labelledby = rootLabelledby(bindings);
 	if (labelledby) ops.setAttr("[data-root]", "aria-labelledby", labelledby);
@@ -229,5 +243,5 @@ hooks.fragment.mount("color-picker", (bindings, ops) => {
  * painted in place by the host; any change ops can't express (presets, plane, channels, trigger,
  * accessible-name shape) triggers a host `remount()` rather than a rebuild here. */
 hooks.fragment.update("color-picker", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", rootClass(bindings));
+	ops.setAttr(".xtyle-color-picker", "class", rootClass(bindings));
 });

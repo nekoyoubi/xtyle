@@ -84,13 +84,13 @@ function list(bindings: BreadcrumbBindings): string {
 }
 
 hooks.fragment.mount("breadcrumb", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", breadcrumbClass(bindings));
+	ops.setAttr(".xtyle-breadcrumb", "class", breadcrumbClass(bindings));
 	ops.setAttr("[data-root]", "aria-label", bindings.label ?? "Breadcrumb");
 	ops.replaceChildren("[data-list]", list(bindings));
 });
 
 hooks.fragment.update("breadcrumb", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", breadcrumbClass(bindings));
+	ops.setAttr(".xtyle-breadcrumb", "class", breadcrumbClass(bindings));
 	ops.setAttr("[data-root]", "aria-label", bindings.label ?? "Breadcrumb");
 });
 

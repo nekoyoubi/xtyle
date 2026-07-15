@@ -82,6 +82,7 @@ export const selectManifest: ComponentManifest = {
 	id: "select",
 	name: "Select",
 	category: "form",
+	since: "0.1.0",
 	keywords: ["dropdown", "combobox", "picker", "options"],
 	seeAlso: ["menu", "field", "segmented"],
 	summary: "A styled native dropdown: `.xtyle-control` chrome, a custom chevron, and a label, with valid and invalid states across three sizes.",

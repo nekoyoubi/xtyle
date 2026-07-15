@@ -8,6 +8,7 @@ import {
 import { resolveAlgorithm } from "@xtyle/core/host";
 import { listLanguages } from "@xtyle/core/elements/code-highlight";
 import type { ComponentManifest } from "@xtyle/core";
+import { bindingName } from "../../components/reference/binding-name.ts";
 import Base from "../../layouts/Base.astro";
 import Card from "@xtyle/astro/Card.astro";
 import CardLink from "@xtyle/astro/CardLink.astro";
@@ -160,7 +161,7 @@ const crumbs = [
 					<Text size="xs" mono tone="subtle" class="ref-stage-card__label">
 						live · @xtyle/astro
 					</Text>
-					<Text size="xs" mono tone="subtle">{component.name}</Text>
+					<Text size="xs" mono tone="subtle">{bindingName(component.id)}</Text>
 				</Cluster>
 				<div class="ref-stage-card__canvas">
 					{Demo ? (

@@ -75,6 +75,23 @@ function legendHtml(data: { label: string }[], colors: string[]): string {
 	return `<div class="xtyle-pie__legend" part="legend">${items}</div>`;
 }
 
+/** The hover readout, one row per slice, drawn up front and revealed by index. The rows are the fill's
+ * markup rather than something the host writes on each hover, so a mod that reshapes a row (a swatch, a
+ * unit, a different order) survives every hover; the host only unhides the row the pointer is on. */
+function tooltipHtml(data: { label: string; value: number }[], total: number): string {
+	const rows = data
+		.map((d, i) => {
+			const percent = Math.round((d.value / total) * 100);
+			return (
+				`<span class="xtyle-pie__tooltip-row" part="tooltip-row" data-tip-row="${i}" hidden>` +
+				`<span class="xtyle-pie__tooltip-name">${esc(d.label)}</span> ` +
+				`<span class="xtyle-pie__tooltip-value">${esc(String(d.value))} · ${percent}%</span></span>`
+			);
+		})
+		.join("");
+	return `<div class="xtyle-pie__tooltip" part="tooltip" role="status" aria-hidden="true" hidden>${rows}</div>`;
+}
+
 function tableHtml(data: { label: string; value: number }[], total: number, caption: string): string {
 	const rows = data
 		.map(
@@ -136,7 +153,7 @@ function pieHtml(b: PieBindings): string {
 		`<g class="xtyle-pie__slices">${slices}</g><g class="xtyle-pie__labels">${labels}</g>${empty}${center}` +
 		`</svg>`;
 	const legend = b.legend !== false ? legendHtml(data, colors) : "";
-	const tooltip = `<div class="xtyle-pie__tooltip" part="tooltip" role="status" aria-hidden="true" hidden></div>`;
+	const tooltip = tooltipHtml(data, total || 1);
 	const table = tableHtml(data, total || 1, label);
 
 	return `<figure part="chart" class="${pieClass(b)}" style="--pie-size:${Math.max(80, b.size ?? 200)}px">${svg}${legend}${tooltip}${table}</figure>`;

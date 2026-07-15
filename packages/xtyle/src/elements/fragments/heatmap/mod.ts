@@ -52,6 +52,43 @@ function formatValue(value: number): string {
 	return Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100);
 }
 
+/** The hover readout, one row per cell, drawn up front and revealed by coordinate. The rows are the fill's
+ * markup rather than something the host writes on each hover, so a mod that reshapes a row (a swatch, a
+ * unit, a different order) survives every hover; the host only unhides the row the pointer is on. */
+function tooltipHtml(
+	values: number[][],
+	rows: string[],
+	cols: string[],
+	titles: string[][],
+	glowValues: number[][],
+	glowLabel: string | null,
+): string {
+	const out: string[] = [];
+	for (let r = 0; r < values.length; r++) {
+		for (let c = 0; c < (values[r]?.length ?? 0); c++) {
+			const title = titles[r]?.[c];
+			let body: string;
+			if (title) {
+				body = esc(title);
+			} else {
+				const name = esc([rows[r], cols[c]].filter(Boolean).join(" · "));
+				const gv = glowValues[r]?.[c];
+				const glowPart =
+					glowLabel && Number.isFinite(gv)
+						? ` <span class="xtyle-heatmap__tooltip-name">· ${esc(glowLabel)} ${gv}</span>`
+						: "";
+				body =
+					`<span class="xtyle-heatmap__tooltip-name">${name}</span> ` +
+					`<span class="xtyle-heatmap__tooltip-value">${esc(String(values[r]?.[c] ?? 0))}</span>${glowPart}`;
+			}
+			out.push(
+				`<span class="xtyle-heatmap__tooltip-row" part="tooltip-row" data-tip-row="${r}-${c}" hidden>${body}</span>`,
+			);
+		}
+	}
+	return `<div class="xtyle-heatmap__tooltip" part="tooltip" role="status" aria-hidden="true" hidden>${out.join("")}</div>`;
+}
+
 function tableHtml(values: number[][], rows: string[], cols: string[], caption: string): string {
 	const head = `<tr><th scope="col"></th>${cols.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr>`;
 	const body = values
@@ -158,7 +195,7 @@ function heatmapHtml(b: HeatmapBindings): string {
 		`<g class="xtyle-heatmap__rowlabels">${rowLabels}</g>` +
 		`<g class="xtyle-heatmap__collabels">${colLabels}</g>` +
 		`</svg>`;
-	const tooltip = `<div class="xtyle-heatmap__tooltip" part="tooltip" role="status" aria-hidden="true" hidden></div>`;
+	const tooltip = tooltipHtml(values, rows, cols, titles, glowValues, glowLabel);
 	const table = tableHtml(values, rows, cols, b.title ?? b.ariaLabel ?? "");
 
 	const scaleColors = b.scaleColors ?? [];

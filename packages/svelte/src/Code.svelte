@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/code.js";
 	import type { Snippet } from "svelte";
 
 	interface Props {

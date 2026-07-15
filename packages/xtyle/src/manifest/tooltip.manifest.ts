@@ -54,6 +54,7 @@ export const tooltipManifest: ComponentManifest = {
 	id: "tooltip",
 	name: "Tooltip",
 	category: "overlay",
+	since: "0.1.0",
 	keywords: ["hint", "popover", "hover text", "helptip", "title"],
 	seeAlso: ["menu", "dialog"],
 	summary: "A hover/focus hint that floats a short description beside its trigger, on any of four sides.",

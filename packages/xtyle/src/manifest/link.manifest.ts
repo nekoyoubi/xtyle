@@ -39,6 +39,7 @@ export const linkManifest: ComponentManifest = {
 	id: "link",
 	name: "Link",
 	category: "navigation",
+	since: "0.1.0",
 	keywords: ["anchor", "hyperlink", "href", "external link"],
 	seeAlso: ["button", "breadcrumb", "card-link"],
 	summary: "A text hyperlink: the anchor primitive, in three emphasis variants with an automatic external-link affordance.",

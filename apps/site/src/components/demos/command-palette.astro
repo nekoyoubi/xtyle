@@ -1,0 +1,123 @@
+---
+import CommandPalette from "@xtyle/astro/CommandPalette.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Kbd from "@xtyle/astro/Kbd.astro";
+
+const commands = [
+	{ id: "file.new", label: "New file", group: "File", shortcut: "Ctrl+N", keywords: ["create", "blank"] },
+	{ id: "file.open", label: "Open file…", group: "File", shortcut: "Ctrl+O", keywords: ["browse"] },
+	{ id: "file.save", label: "Save", group: "File", shortcut: "Ctrl+S" },
+	{ id: "file.saveAll", label: "Save all files", group: "File", shortcut: "Ctrl+Shift+S" },
+	{ id: "file.close", label: "Close editor", group: "File", shortcut: "Ctrl+W" },
+	{ id: "view.theme", label: "Toggle theme", group: "View", hint: "light / dark", shortcut: "Ctrl+Shift+T" },
+	{ id: "view.zen", label: "Zen mode", group: "View", keywords: ["focus", "distraction free"] },
+	{ id: "view.terminal", label: "Toggle terminal", group: "View", shortcut: "Ctrl+`" },
+	{ id: "view.sidebar", label: "Toggle sidebar", group: "View", shortcut: "Ctrl+B" },
+	{ id: "git.commit", label: "Git: Commit message", group: "Source control", shortcut: "Ctrl+Enter" },
+	{ id: "git.push", label: "Git: Push", group: "Source control", hint: "origin/main" },
+	{ id: "git.stash", label: "Git: Stash changes", group: "Source control", keywords: ["shelve"] },
+	{ id: "theme.derive", label: "Derive a theme", group: "xtyle", hint: "opens the generator" },
+	{ id: "theme.audit", label: "Audit contrast", group: "xtyle", hint: "WCAG AA", shortcut: "Ctrl+Shift+A" },
+	{ id: "theme.publish", label: "Publish algorithm", group: "xtyle", disabled: true },
+];
+
+const pinned = [
+	{ id: "pin.derive", label: "Derive a theme", group: "Pinned", hint: "always first" },
+	{ id: "pin.audit", label: "Audit contrast", group: "Pinned", hint: "always second" },
+	{ id: "cmd.new", label: "New file" },
+	{ id: "cmd.open", label: "Open file…" },
+	{ id: "cmd.settings", label: "Settings" },
+	{ id: "cmd.shortcuts", label: "Keyboard shortcuts" },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">The whole list, filtered</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Press <Kbd size="sm">Ctrl</Kbd> <Kbd size="sm">K</Kbd> anywhere on this page (<Kbd size="sm">⌘</Kbd>
+				<Kbd size="sm">K</Kbd> on a Mac) — the palette binds itself. Type <code>of</code> and "Open file…" surfaces:
+				the default ranker matches the query as a subsequence, so the characters do not have to be adjacent. Arrows
+				move, Enter runs, Escape dismisses, and focus lands back on whatever you left. Run a few and reopen it: they
+				lift to the top under <em>Recent</em>, and they survive a reload.
+			</Text>
+			<Cluster gap={3} align="center">
+				<Button id="cp-launch" variant="accent">Open the palette</Button>
+				<Text size="sm"><span id="cp-echo">Nothing run yet.</span></Text>
+			</Cluster>
+		</Stack>
+		<CommandPalette
+			id="cp-main"
+			items={commands}
+			hotkey="mod+k"
+			storageKey="xtyle.docs.command-palette.recent"
+		/>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Your ranking, not ours</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The same component with a <code>scorer</code> assigned: an exact-substring matcher that pins two commands to
+				the top on an empty query and drops everything the query does not literally contain. Type <code>of</code>
+				here and nothing matches — proof the palette is ranking with the supplied function, not its own. That hook is
+				the whole extension point: return <code>null</code> to drop an item, <code>&#123; score, indices &#125;</code>
+				to keep it.
+			</Text>
+			<Cluster gap={3} align="center">
+				<Button id="cp-scorer-launch" variant="neutral">Open the ranked palette</Button>
+				<Text size="sm"><span id="cp-scorer-echo">Nothing run yet.</span></Text>
+			</Cluster>
+		</Stack>
+		<CommandPalette
+			id="cp-scorer"
+			items={pinned}
+			label="Ranked palette"
+			placeholder="Substring only…"
+			emptyText="Nothing contains that"
+			noRecent
+			noFooter
+		/>
+	</Card>
+</Stack>
+
+<script>
+	import "@xtyle/core/elements";
+	import type { CommandItem, CommandMatch } from "@xtyle/core/elements";
+
+	type PaletteEl = HTMLElement & {
+		show(): void;
+		scorer: (query: string, item: CommandItem) => CommandMatch | null;
+	};
+
+	const main = document.querySelector<PaletteEl>("#cp-main");
+	const echo = document.querySelector<HTMLElement>("#cp-echo");
+	document.querySelector<HTMLElement>("#cp-launch")?.addEventListener("click", () => main?.show());
+	main?.addEventListener("select", (event) => {
+		const detail = (event as CustomEvent).detail;
+		if (echo) echo.textContent = `Ran ${detail.label} (${detail.id}).`;
+	});
+
+	// the override hook: one function decides what survives and in what order
+	const ranked = document.querySelector<PaletteEl>("#cp-scorer");
+	const rankedEcho = document.querySelector<HTMLElement>("#cp-scorer-echo");
+	if (ranked) {
+		ranked.scorer = (query, item) => {
+			if (query === "") return { score: item.group === "Pinned" ? 100 : 0 };
+			const at = item.label.toLowerCase().indexOf(query.toLowerCase());
+			if (at === -1) return null;
+			return { score: 100 - at, indices: Array.from({ length: query.length }, (_, i) => at + i) };
+		};
+	}
+	document.querySelector<HTMLElement>("#cp-scorer-launch")?.addEventListener("click", () => ranked?.show());
+	ranked?.addEventListener("select", (event) => {
+		const detail = (event as CustomEvent).detail;
+		if (rankedEcho) rankedEcho.textContent = `Ran ${detail.label}.`;
+	});
+</script>

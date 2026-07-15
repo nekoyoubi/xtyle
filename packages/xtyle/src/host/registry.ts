@@ -1,20 +1,17 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, parse } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Algorithm } from "../types.js";
-import { loadAlgorithm } from "./index.js";
+import { entryScriptKey, loadAlgorithm, staticAlgorithmManifest, type AlgorithmManifest } from "./index.js";
 
-const MOD_DIRS: Record<string, string> = {
-	"xtyle-default": "xtyle-default",
-	"xtyle-hc": "xtyle-hc",
-	"xtyle-quiet": "xtyle-quiet",
-	"xtyle-loud": "xtyle-loud",
-	"nxi-nite": "nxi-nite",
-};
-
-/** The ids of the bundled mods the host can resolve. */
-export function availableAlgorithms(): string[] {
-	return Object.keys(MOD_DIRS);
+/** One algorithm mod on disk: what it is, and where its manifest and entry script live. */
+export interface AlgorithmMod {
+	/** The algorithm id — the mod manifest's `name`, which is what a theme file records. */
+	id: string;
+	/** The directory the mod lives in. Names it, never identifies it. */
+	dir: string;
+	manifest: unknown;
+	sourcePath: string;
 }
 
 /**
@@ -42,6 +39,79 @@ let algorithmsRoot: string | undefined;
 function algorithmsDir(): string {
 	if (!algorithmsRoot) algorithmsRoot = findAlgorithmsRoot();
 	return algorithmsRoot;
+}
+
+/**
+ * Every algorithm mod in a directory, discovered rather than listed — a mod is a subdirectory with a
+ * `mod-manifest.json` and the entry script that manifest names.
+ *
+ * A hand-kept allow-list here would be a fourth copy of a list the build scripts already derive by
+ * scanning, and the browser bundle *is* scan-derived — so a curated Node list means a sixth algorithm
+ * that resolves in the browser and does not exist to the CLI.
+ *
+ * A mod is keyed by the `name` its manifest declares, not by the directory it happens to sit in: that
+ * name is what `Algorithm.id` carries, what a theme file's `algorithm` field records, and what every
+ * cache is keyed on. The directory is a filesystem detail; the manifest name is the identity, and a
+ * mod whose two disagree is resolved (and warned about) under its name.
+ */
+export function discoverAlgorithmMods(root: string): Map<string, AlgorithmMod> {
+	const found = new Map<string, AlgorithmMod>();
+	for (const dirent of readdirSync(root, { withFileTypes: true })) {
+		if (!dirent.isDirectory()) continue;
+		const manifestPath = join(root, dirent.name, "mod-manifest.json");
+		if (!existsSync(manifestPath)) continue;
+
+		const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { name?: string };
+		const id = manifest.name;
+		if (!id) {
+			throw new Error(`xtyle: ${dirent.name}/mod-manifest.json declares no name, so the mod has no id`);
+		}
+
+		const sourcePath = join(root, dirent.name, entryScriptKey(manifest));
+		if (!existsSync(sourcePath)) continue;
+
+		const clash = found.get(id);
+		if (clash) {
+			throw new Error(
+				`xtyle: two mods claim the algorithm id "${id}" (${clash.dir} and ${dirent.name}); ` +
+					"an id is the manifest name, and it must be unique",
+			);
+		}
+		if (id !== dirent.name) {
+			console.warn(
+				`xtyle: algorithm "${id}" lives in ${dirent.name}/; the manifest name is the id, and the directory is ignored`,
+			);
+		}
+		found.set(id, { id, dir: dirent.name, manifest, sourcePath });
+	}
+	return found;
+}
+
+let entries: Map<string, AlgorithmMod> | undefined;
+
+function mods(): Map<string, AlgorithmMod> {
+	if (!entries) entries = discoverAlgorithmMods(algorithmsDir());
+	return entries;
+}
+
+/** The ids of the mods the host can resolve, the default first, then the rest alphabetically. */
+export function availableAlgorithms(): string[] {
+	const ids = [...mods().keys()].sort();
+	const dflt = defaultAlgorithm();
+	return ids.includes(dflt) ? [dflt, ...ids.filter((id) => id !== dflt)] : ids;
+}
+
+/**
+ * What an algorithm declares about itself — produced tokens, knobs and their domains, invariant count,
+ * pass names — read straight off the packaged mod manifest, with no sandbox boot. `null` for a mod that
+ * ships no static block, which can then only be read by running it (see `resolveAlgorithm`).
+ *
+ * This is the discovery seam: listing what a pack accepts is the cheapest question a consumer asks, and
+ * it should not be the one that costs a QuickJS runtime per algorithm.
+ */
+export function algorithmManifest(id: string): AlgorithmManifest | null {
+	const entry = mods().get(id);
+	return entry ? staticAlgorithmManifest(entry.manifest) : null;
 }
 
 const cache = new Map<string, Promise<Algorithm>>();
@@ -86,8 +156,8 @@ function railFor(timeoutMs: number | undefined): number | undefined {
 
 /**
  * Resolves an algorithm by id to its host facade: loads the algorithm's xript mod
- * from `algorithms/<id>/`, runs it through the zero-authority sandbox, and returns
- * an `Algorithm`. Cached per id (and per rail; see {@link HARNESS_TIMEOUT_MS}). This
+ * from `algorithms/`, runs it through the zero-authority sandbox, and returns an
+ * `Algorithm`. Cached per id (and per rail; see {@link HARNESS_TIMEOUT_MS}). This
  * is the canonical resolution path — the whole CLI (`derive` / `coverage` / `gauntlet`)
  * and the site's SSR derive through it, so the gauntlet proves the sandboxed mod that
  * ships, not a baked copy. The baked `getAlgorithm` registry from `@xtyle/core/algorithms`
@@ -103,18 +173,16 @@ export function resolveAlgorithm(id: string, options: ResolveAlgorithmOptions = 
 	const cached = cache.get(key);
 	if (cached) return cached;
 
-	const dir = MOD_DIRS[id];
-	if (!dir) {
+	const entry = mods().get(id);
+	if (!entry) {
 		return Promise.reject(
-			new Error(`xtyle: no hosted mod for algorithm "${id}" (have: ${Object.keys(MOD_DIRS).join(", ")})`),
+			new Error(`xtyle: no hosted mod for algorithm "${id}" (have: ${availableAlgorithms().join(", ")})`),
 		);
 	}
 
-	const modDir = join(algorithmsDir(), dir);
-	const modManifest = JSON.parse(readFileSync(join(modDir, "mod-manifest.json"), "utf8"));
-	const source = readFileSync(join(modDir, "src/mod.js"), "utf8");
+	const source = readFileSync(entry.sourcePath, "utf8");
 
-	const loaded = loadAlgorithm(modManifest, source, { timeoutMs }).then((algorithm) => {
+	const loaded = loadAlgorithm(entry.manifest, source, { timeoutMs }).then((algorithm) => {
 		// `resolved` is the synchronous first-paint oracle, which wants the mod under whatever rail it
 		// was loaded with — the derivation is identical either way, so the default keeps its slot.
 		if (timeoutMs === undefined) resolved.set(id, algorithm);
@@ -140,4 +208,3 @@ export function defaultAlgorithm(): string {
 export function snapshotAlgorithm(id: string): Algorithm | null {
 	return resolved.get(id) ?? null;
 }
-

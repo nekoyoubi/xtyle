@@ -236,6 +236,45 @@ describe("registry token contract", () => {
 	});
 });
 
+describe("the display name", () => {
+	const manifests = listComponents();
+
+	// `name` titles the page, the breadcrumb, the nav and the card — it is read, not typed. Half the
+	// multi-word components used to declare it as the *identifier* instead (`SplitButton` beside
+	// `Date Picker`), which is a coin-flip a reader can see. The symbol a consumer imports is derived from
+	// the id, so the display name is free to read as words.
+	it("reads as words: a multi-word component never declares its name as an identifier", () => {
+		const jammed = manifests.filter((m) => m.id.includes("-") && !m.name.includes(" ")).map((m) => `${m.id} → ${m.name}`);
+		expect(jammed, `these declare an identifier where a display name belongs: ${JSON.stringify(jammed)}`).toEqual([]);
+	});
+
+	// a display name may say *more* than the id ("qr" → "QR Code"), never something else
+	it("says what the id says", () => {
+		for (const m of manifests) {
+			const name = m.name.replace(/[\s-]/g, "").toLowerCase();
+			const id = m.id.replace(/-/g, "");
+			expect(name.startsWith(id), `${m.id}: name "${m.name}" is not the component the id names`).toBe(true);
+		}
+	});
+});
+
+describe("the `since` provenance", () => {
+	const manifests = listComponents();
+
+	// an absent `since` reads as "not new" everywhere downstream, so a component that omits it lands with no
+	// badge, no announcement, and nothing to notice — the failure is silence, which is why it is a test
+	it("every registered component declares the version it first shipped in", () => {
+		const missing = manifests.filter((m) => !m.since || m.since.trim().length === 0).map((m) => m.id);
+		expect(missing, `components missing since: ${JSON.stringify(missing)}`).toEqual([]);
+	});
+
+	it("declares it as a bare semver version, never a `v` prefix or a range", () => {
+		for (const m of manifests) {
+			expect(m.since, `${m.id}: since "${m.since}" is not a bare x.y.z`).toMatch(/^\d+\.\d+\.\d+$/);
+		}
+	});
+});
+
 describe("keywords and seeAlso discovery metadata", () => {
 	const manifests = listComponents();
 	const ids = new Set(manifests.map((m) => m.id));

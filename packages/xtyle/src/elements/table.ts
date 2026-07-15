@@ -1,10 +1,11 @@
 import { XtyleDecoratorElement, define } from "./base.js";
 import { tableParts } from "../markup/table.js";
+import "./icon.js";
 
 type TableVariant = "default" | "striped" | "bordered";
 type TableSize = "normal" | "compact";
 
-const SORT_GLYPH = `<span class="${tableParts.sort}" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em"><path fill="currentColor" d="M12 8l5 6H7l5-6Z" /></svg></span>`;
+const SORT_ICON = "chevron-down";
 
 export class XtyleTable extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
@@ -173,10 +174,24 @@ export class XtyleTable extends XtyleDecoratorElement {
 			const content = document.createElement("span");
 			content.className = tableParts.headerContent;
 			while (header.firstChild) content.appendChild(header.firstChild);
-			content.insertAdjacentHTML("beforeend", SORT_GLYPH);
+			content.appendChild(sortGlyph());
 			header.appendChild(content);
 		}
 	}
+}
+
+/** The sort caret is an `<xtyle-icon>`, not an inline `<svg>`: the glyph then renders through the
+ * icon component's fragment, so a mod that reskins `component.icon` reshapes the caret too. A `<th>`
+ * cannot host a fragment of its own (`FragmentHost` binds one root per element), so the icon element
+ * is how this glyph reaches the mod surface — and it is why Table, like the other decorators over
+ * author-owned markup, declares no fill slot of its own in `component-host.json`: the `<table>` is the
+ * author's to edit, and this caret is the only chrome the component invents. */
+function sortGlyph(): HTMLElement {
+	const glyph = document.createElement("xtyle-icon");
+	glyph.className = tableParts.sort;
+	glyph.setAttribute("name", SORT_ICON);
+	glyph.setAttribute("aria-hidden", "true");
+	return glyph;
 }
 
 define("xtyle-table", XtyleTable);

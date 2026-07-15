@@ -1,13 +1,13 @@
 <script lang="ts">
-	import "./register.js";
-	import type { FullTone, IconName, IconSize, SeriesScheme } from "@xtyle/core";
+	import "@xtyle/core/elements/icon.js";
+	import type { FullTone, IconName, IconSize, Palette } from "@xtyle/core";
 
 	interface Props {
 		name: IconName | (string & {});
 		size?: IconSize;
 		tone?: FullTone;
 		/** The series scheme a generated mark's `c3+` color slots draw from. */
-		colors?: SeriesScheme;
+		colors?: Palette;
 		label?: string;
 		spin?: boolean;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */

@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import Logo from "../components/Logo.astro";
+import Icon from "@xtyle/astro/Icon.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Heading from "@xtyle/astro/Heading.astro";
@@ -15,7 +15,10 @@ import Button from "@xtyle/astro/Button.astro";
 	<div class="x-404">
 		<Stack gap={6} align="center">
 			<div class="x-404__lockup">
-				<Logo size={104} decorative class="x-404__mark" />
+				<Icon
+					class="x-404__mark"
+					name="xtyle--letter-x-x-2-y-6-s120-c9-o2cb--column-x22-s145-ko--letter-t-x16-s105-cf-o2cb---d9p8s1t20--f0-Sigmar--ps-skittles"
+				/>
 				<span class="x-404__word">xtyle</span>
 			</div>
 			<Stack gap={3} align="center">
@@ -61,12 +64,15 @@ import Button from "@xtyle/astro/Button.astro";
 			drop-shadow(0 0 9px color-mix(in oklab, var(--accent) 28%, transparent));
 		animation: x-404-glow 7s ease-in-out infinite;
 	}
+	.x-404 :global(.x-404__mark) {
+		font-size: 104px;
+	}
 	.x-404__word {
-		font-family: "Teko", var(--font-sans);
-		font-weight: 600;
-		font-size: 4.25rem;
+		font-family: "Knewave", var(--font-sans);
+		font-weight: 400;
+		font-size: 3.5rem;
 		line-height: 1;
-		letter-spacing: 0.01em;
+		letter-spacing: 0.005em;
 		color: var(--fg-0);
 	}
 	@keyframes x-404-glow {

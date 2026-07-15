@@ -1,0 +1,100 @@
+---
+import type { CommandItem } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+interface Props {
+	/** Every command the palette can run, unfiltered — the palette does the filtering. */
+	items?: CommandItem[];
+	open?: boolean;
+	/** A document-wide chord that opens the palette: `mod+k` (⌘ on Apple, Ctrl elsewhere). */
+	hotkey?: string;
+	label?: string;
+	placeholder?: string;
+	emptyText?: string;
+	recentLabel?: string;
+	recentLimit?: number;
+	/** Don't track or surface recently-run commands at all. */
+	noRecent?: boolean;
+	/** A `localStorage` key to persist recents under. */
+	storageKey?: string;
+	/** Drop the keyboard legend along the bottom edge. */
+	noFooter?: boolean;
+	/** Keep the palette open after a command runs. */
+	noCloseOnSelect?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	items = [],
+	open = false,
+	hotkey,
+	label = "Command palette",
+	placeholder = "Type a command or search…",
+	emptyText = "No matching commands",
+	recentLabel,
+	recentLimit,
+	noRecent = false,
+	storageKey,
+	noFooter = false,
+	noCloseOnSelect = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const uid = `xtyle-command-palette-${Math.random().toString(36).slice(2, 9)}`;
+
+/** The server render shows the unfiltered list, ungrouped-by-recency: no query has been typed yet, and
+ * recents are a client-side memory. The element re-ranks on its first paint. */
+const groups = [
+	{
+		id: `${uid}-group-0`,
+		options: items.map((item, index) => ({
+			id: item.id,
+			optionId: `${uid}-option-${index}`,
+			runs: [{ text: item.label, match: false }],
+			hint: item.hint,
+			shortcut: item.shortcut,
+			disabled: item.disabled,
+			active: index === 0,
+		})),
+	},
+];
+
+const bindings = {
+	label,
+	placeholder,
+	emptyText,
+	listId: `${uid}-list`,
+	inputId: `${uid}-input`,
+	groups: items.length > 0 ? groups : [],
+	count: items.length,
+	activeId: items.length > 0 ? `${uid}-option-0` : "",
+	footer: !noFooter,
+};
+const light = await renderFragmentLight("command-palette", bindings);
+---
+
+<xtyle-command-palette
+	items={items.length > 0 ? JSON.stringify(items) : undefined}
+	open={open || undefined}
+	hotkey={hotkey}
+	label={label}
+	placeholder={placeholder}
+	empty-text={emptyText}
+	recent-label={recentLabel}
+	recent-limit={recentLimit != null ? String(recentLimit) : undefined}
+	no-recent={noRecent || undefined}
+	storage-key={storageKey}
+	no-footer={noFooter || undefined}
+	no-close-on-select={noCloseOnSelect || undefined}
+	class={extra}
+	{...rest}
+	set:html={light}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

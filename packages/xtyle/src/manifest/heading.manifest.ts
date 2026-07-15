@@ -40,6 +40,7 @@ export const headingManifest: ComponentManifest = {
 	id: "heading",
 	name: "Heading",
 	category: "content",
+	since: "0.1.0",
 	keywords: ["title", "headline", "h1", "h2", "display text"],
 	seeAlso: ["text", "eyebrow", "hero"],
 	summary: "A semantic section heading whose visual size is decoupled from its document level.",

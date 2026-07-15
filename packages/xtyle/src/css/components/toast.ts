@@ -19,6 +19,14 @@ const solidRules = TONES.map(
 ).join("\n");
 
 export const toastCss = `
+xtyle-toast { display: block; }
+/* The region stacks <xtyle-toast> elements — pushed and placed alike — so the enter/leave motion
+   rides the host, one box outside the card the fill draws (and free for a mod to reshape). */
+.xtyle-toast-region > xtyle-toast {
+	transition:
+		opacity var(--duration-base) var(--ease-emphasized),
+		transform var(--duration-base) var(--ease-emphasized);
+}
 .xtyle-toast-region {
 	display: flex;
 	flex-direction: column;

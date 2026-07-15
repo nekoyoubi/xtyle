@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/color-picker.js";
 
 	type ColorFormat = "hex" | "rgb" | "hsl" | "oklch" | "lab" | "lch" | "oklab" | "cmyk";
 

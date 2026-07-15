@@ -61,7 +61,7 @@ const workByCategory = [
 		<Heading slot="header" level={3} size="sm">Activity grid</Heading>
 		<Stack gap={3}>
 			<Text tone="muted" size="sm">
-				Runs per hour across a week on the default <code>accent</code> ramp, the
+				Runs per hour across a week on the default <code>intensity</code> ramp, the
 				contribution-graph shape. The <code>scale</code> key reads a cell's shade as a
 				magnitude at a glance; hover or focus a cell for its exact value.
 			</Text>
@@ -81,13 +81,26 @@ const workByCategory = [
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Severity ramp</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A palette is a set of stops, and every palette answers both questions: ask for a ramp and
+				the stops interpolate, ask for N colors and they're sampled. <code>scheme="severity"</code>
+				reads the good-to-bad gradient (success → warn → danger) as a continuous scale, so a high
+				cell reads as a problem rather than just a big number.
+			</Text>
+			<Heatmap rows={hosts} cols={resources} values={load} scheme="severity" scale showValues label="Error rate by host and resource" />
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Selectable cells</Heading>
 		<Stack gap={3}>
 			<Text tone="muted" size="sm">
 				<code>selectable</code> makes each cell a button that fires <code>select</code> on click
 				or Enter/Space, carrying <code>{"{ row, col, value, … }"}</code> for a drill-in.
 			</Text>
-			<Heatmap id="runs-grid" rows={wdays} cols={buckets} values={runs} scheme="accent" selectable showValues label="Runs per bucket" />
+			<Heatmap id="runs-grid" rows={wdays} cols={buckets} values={runs} scheme="intensity" selectable showValues label="Runs per bucket" />
 			<Text size="sm" tone="muted">Selected: <Text as="span" mono size="xs" id="runs-grid-readout">(click a cell)</Text></Text>
 		</Stack>
 		<script is:inline>
@@ -113,7 +126,7 @@ const workByCategory = [
 				values={runCount}
 				glow={totalRuntime}
 				glowLabel="runtime"
-				scheme="accent"
+				scheme="intensity"
 				label="Runs (fill) and total runtime (glow) by day and bucket"
 			/>
 		</Stack>
@@ -135,7 +148,7 @@ const workByCategory = [
 				current={nowCell}
 				currentPulse
 				titles={runTitles}
-				scheme="accent"
+				scheme="intensity"
 				label="Runs per bucket, this week (Wed Midday is now)"
 			/>
 		</Stack>
@@ -145,7 +158,7 @@ const workByCategory = [
 		<Heading slot="header" level={3} size="sm">Categorical heat-grid</Heading>
 		<Stack gap={3}>
 			<Text tone="muted" size="sm">
-				<code>categorical</code> colors each column its own hue from a <code>SeriesScheme</code>
+				<code>categorical</code> colors each column its own hue sampled off a <code>Palette</code>
 				(<code>skittles</code> here) and washes it up by value, so a grid whose columns are
 				unrelated categories reads by hue rather than one shared ramp. It shares the palette the
 				<code>Bar</code> and <code>Pie</code> charts use; <code>scale</code> keys the hues in a legend.

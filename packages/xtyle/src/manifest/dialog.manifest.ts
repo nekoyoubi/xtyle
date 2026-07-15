@@ -54,6 +54,7 @@ export const dialogManifest: ComponentManifest = {
 	id: "dialog",
 	name: "Dialog",
 	category: "overlay",
+	since: "0.1.0",
 	keywords: ["modal", "popup", "overlay", "lightbox", "confirm", "sheet"],
 	seeAlso: ["tooltip", "menu", "toast"],
 	summary: "A centered modal built on the native `<dialog>` element: scrim, focus trap, and Esc-to-close come for free.",

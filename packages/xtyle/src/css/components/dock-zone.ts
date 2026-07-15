@@ -1,13 +1,25 @@
 export const dockZoneCss = `
+@property --dock-band {
+	syntax: "<length>";
+	inherits: true;
+	initial-value: 48px;
+}
 xtyle-dock-zone {
-	position: relative;
 	display: flex;
 	min-height: 0;
 	min-width: 0;
 	width: 100%;
 	height: 100%;
-	gap: var(--space-1);
 	font-family: var(--font-sans);
+	--dock-band: calc(var(--space-8) * 1.5);
+}
+.xtyle-dock-zone__root {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	gap: var(--space-1);
 }
 .xtyle-dock-split {
 	display: flex;
@@ -71,36 +83,10 @@ xtyle-dock-zone {
 	box-shadow: 0 0 0 var(--border-normal) var(--ring);
 }
 .xtyle-dock-zone__close:hover { color: var(--danger); }
-.xtyle-dock-zone__menu {
-	display: inline-flex;
-	align-items: center;
-	line-height: 0;
-}
-.xtyle-dock-zone__menu::part(trigger) {
-	position: relative;
-	width: var(--space-6);
-	min-width: var(--space-6);
-	height: var(--space-6);
-	padding: 0;
-	font-size: 0;
-	color: transparent;
-	background: transparent;
-	border: none;
-	overflow: hidden;
-	border-radius: var(--radius-sm);
-}
-.xtyle-dock-zone__menu::part(trigger)::after {
-	content: "\\22EE";
-	position: absolute;
-	inset: 0;
-	display: grid;
-	place-items: center;
-	color: var(--fg-2);
+.xtyle-dock-zone__kebab-glyph {
 	font-size: var(--text-lg);
 	line-height: 1;
 }
-.xtyle-dock-zone__menu::part(trigger):hover { background: var(--state-hover); }
-.xtyle-dock-zone__menu::part(trigger):hover::after { color: var(--fg-0); }
 .xtyle-dock-zone__tab {
 	appearance: none;
 	border: none;

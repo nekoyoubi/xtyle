@@ -1,0 +1,250 @@
+---
+import Calendar from "@xtyle/astro/Calendar.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Kbd from "@xtyle/astro/Kbd.astro";
+import { ACCENT_VARIANTS } from "@xtyle/core";
+
+const month = "2026-07";
+
+const locales = [
+	{ tag: "en-US", note: "week opens Sunday" },
+	{ tag: "en-GB", note: "week opens Monday" },
+	{ tag: "fr-FR", note: "French month names" },
+	{ tag: "ja-JP", note: "Japanese numerals and names" },
+] as const;
+
+const tones = ["accent", ...ACCENT_VARIANTS, "success", "warn", "danger", "purple"] as const;
+
+const sizes = [
+	{ name: "sm", label: "Small" },
+	{ name: "md", label: "Medium (default)" },
+	{ name: "lg", label: "Large" },
+] as const;
+
+const keys = [
+	["← →", "a day at a time, straight across week and month boundaries"],
+	["↑ ↓", "a week at a time"],
+	["Home / End", "the first and last day of the week (wherever the locale starts it)"],
+	["PageUp / PageDown", "the previous and next month"],
+	["Shift + PageUp / PageDown", "the previous and next year"],
+	["Enter / Space", "select the focused day"],
+	["Escape", "cancel a half-drawn range"],
+] as const;
+---
+
+<Stack gap={6}>
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">Three modes</Heading>
+			<Text size="sm" tone="muted">
+				<Text as="span" mono size="xs">single</Text> replaces the pick,
+				<Text as="span" mono size="xs">multiple</Text> toggles a set, and
+				<Text as="span" mono size="xs">range</Text> opens on the first day and closes on the second —
+				sweeping the pointer (or the arrow keys) across the grid previews the pending half before you commit it.
+			</Text>
+		</Stack>
+		<Grid minColWidth="16rem" gap={4}>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">single</Text>
+				<Calendar id="cal-single" mode="single" month={month} value="2026-07-14" label="A single day" />
+				<Text size="sm" tone="muted">
+					value: <Text as="span" mono size="xs" id="cal-single-out">2026-07-14</Text>
+				</Text>
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">multiple</Text>
+				<Calendar
+					id="cal-multi"
+					mode="multiple"
+					month={month}
+					value="2026-07-07,2026-07-09,2026-07-21"
+					tone="success"
+					label="A set of days"
+				/>
+				<Text size="sm" tone="muted">
+					value: <Text as="span" mono size="xs" id="cal-multi-out">2026-07-07,2026-07-09,2026-07-21</Text>
+				</Text>
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">range</Text>
+				<Calendar id="cal-range" mode="range" month={month} value="2026-07-13,2026-07-19" fixedWeeks label="A range of days" />
+				<Text size="sm" tone="muted">
+					value: <Text as="span" mono size="xs" id="cal-range-out">2026-07-13,2026-07-19</Text>
+				</Text>
+			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">Days you can mark</Heading>
+			<Text size="sm" tone="muted">
+				<Text as="span" mono size="xs">decorations</Text> hangs event dots and a busy bar on any day — real
+				elements in the fragment, not a stylesheet's pseudo-element — and each mark's
+				<Text as="span" mono size="xs">label</Text> rides into that day's accessible name, so the dot is
+				announced and not merely seen. Bounds, a disabled list, and an
+				<Text as="span" mono size="xs">isDateDisabled</Text> predicate (here: no Mondays) compose into which
+				days are refused.
+			</Text>
+		</Stack>
+		<Cluster gap={5} align="start">
+			<Calendar
+				id="cal-events"
+				month={month}
+				min="2026-07-05"
+				max="2026-07-27"
+				disabledDates={["2026-07-22"]}
+				weekNumbers
+				fixedWeeks
+				label="Availability"
+			/>
+			<Stack gap={2}>
+				<Text size="sm" tone="muted">Dots are events; the bar is a fully-booked day.</Text>
+				<Text size="sm" tone="muted">
+					Days before the 5th and after the 27th are out of bounds, every Monday is refused by the predicate,
+					and the 22nd is refused by name.
+				</Text>
+				<Text size="sm" tone="muted">
+					Picked: <Text as="span" mono size="xs" id="cal-events-out">nothing yet</Text>
+				</Text>
+			</Stack>
+		</Cluster>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">The locale decides</Heading>
+			<Text size="sm" tone="muted">
+				Month names, weekday names, the numbering system, and where the week starts all come from
+				<Text as="span" mono size="xs">Intl</Text> — no locale table ships with the component, and no date
+				library. Pass <Text as="span" mono size="xs">firstDayOfWeek</Text> to override the locale outright.
+			</Text>
+		</Stack>
+		<Grid minColWidth="15rem" gap={4}>
+			{locales.map((locale) => (
+				<Stack gap={2}>
+					<Text size="xs" tone="subtle" weight="semibold" mono>{locale.tag}</Text>
+					<Calendar month={month} locale={locale.tag} size="sm" label={`${locale.tag} calendar`} />
+					<Text size="xs" tone="subtle">{locale.note}</Text>
+				</Stack>
+			))}
+		</Grid>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">The keyboard grid</Heading>
+			<Text size="sm" tone="muted">
+				The grid is one tab stop; inside it the cursor roves. Tab into the calendar above and drive it —
+				every key of the WAI-ARIA date-grid pattern is here, and the arrows walk straight out of one month
+				and into the next.
+			</Text>
+		</Stack>
+		<Stack gap={2}>
+			{keys.map(([key, what]) => (
+				<Cluster gap={3} align="center">
+					<Kbd>{key}</Kbd>
+					<Text size="sm" tone="muted">{what}</Text>
+				</Cluster>
+			))}
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">Tones and sizes</Heading>
+			<Text size="sm" tone="muted">
+				The selected day and the range band speak the full tone vocabulary — 21 in all, every one AA-cleared —
+				and three sizes scale the cells against the type ramp.
+			</Text>
+		</Stack>
+		<Stack gap={5}>
+			<Grid minColWidth="14rem" gap={4}>
+				{tones.map((tone) => (
+					<Stack gap={2}>
+						<Text as="span" size="xs" tone="subtle" mono>tone="{tone}"</Text>
+						<Calendar
+							month={month}
+							mode="range"
+							value="2026-07-13,2026-07-17"
+							tone={tone}
+							size="sm"
+							hideOutsideDays
+							label={`${tone} calendar`}
+						/>
+					</Stack>
+				))}
+			</Grid>
+			<Grid minColWidth="16rem" gap={4}>
+				{sizes.map((s) => (
+					<Stack gap={2}>
+						<Text as="span" size="xs" tone="subtle">{s.label}</Text>
+						<Calendar month={month} value="2026-07-14" size={s.name} label={`${s.label} calendar`} />
+					</Stack>
+				))}
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">Read-only and disabled</Heading>
+			<Text size="sm" tone="muted">
+				A <Text as="span" mono size="xs">readonly</Text> calendar still navigates and announces — a published
+				schedule you can walk but not edit. A <Text as="span" mono size="xs">disabled</Text> one is wholly
+				inert: no tab stop, no steps, no picks.
+			</Text>
+		</Stack>
+		<Grid minColWidth="16rem" gap={4}>
+			<Stack gap={2}>
+				<Text as="span" size="xs" tone="subtle" mono>readonly</Text>
+				<Calendar month={month} mode="range" value="2026-07-06,2026-07-10" readonly label="Booked window" />
+			</Stack>
+			<Stack gap={2}>
+				<Text as="span" size="xs" tone="subtle" mono>disabled</Text>
+				<Calendar month={month} value="2026-07-14" disabled label="Unavailable calendar" />
+			</Stack>
+		</Grid>
+	</Card>
+</Stack>
+
+<script>
+	type CalendarElement = HTMLElement & {
+		value: string;
+		decorations: Record<string, { dots?: string[]; busy?: boolean; label?: string }>;
+		isDateDisabled?: (iso: string) => boolean;
+	};
+
+	const readout = (calendarId: string, outId: string): void => {
+		const calendar = document.getElementById(calendarId) as CalendarElement | null;
+		const out = document.getElementById(outId);
+		calendar?.addEventListener("change", (event) => {
+			const { value } = (event as CustomEvent<{ value: string }>).detail;
+			if (out) out.textContent = value || "nothing yet";
+		});
+	};
+
+	readout("cal-single", "cal-single-out");
+	readout("cal-multi", "cal-multi-out");
+	readout("cal-range", "cal-range-out");
+	readout("cal-events", "cal-events-out");
+
+	const events = document.getElementById("cal-events") as CalendarElement | null;
+	if (events) {
+		events.decorations = {
+			"2026-07-08": { dots: ["accent"], label: "1 event" },
+			"2026-07-09": { dots: ["accent", "success"], label: "2 events" },
+			"2026-07-15": { dots: ["warn"], label: "1 event" },
+			"2026-07-16": { busy: true, label: "fully booked" },
+			"2026-07-17": { dots: ["accent", "success", "danger"], label: "3 events" },
+			"2026-07-23": { busy: true, label: "fully booked" },
+		};
+		// a wall-clock date is a calendar square, so a UTC-anchored Date reads its weekday with no DST to cross
+		events.isDateDisabled = (iso) => new Date(`${iso}T00:00:00Z`).getUTCDay() === 1;
+	}
+</script>

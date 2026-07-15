@@ -114,6 +114,8 @@ export const tableCss = `
 }
 .xtyle-table__sort {
 	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	width: 1em;
 	height: 1em;
 	flex: none;
@@ -121,10 +123,6 @@ export const tableCss = `
 	transition:
 		color var(--duration-fast) var(--ease-standard),
 		transform var(--duration-fast) var(--ease-standard);
-}
-.xtyle-table__sort svg {
-	width: 1em;
-	height: 1em;
 }
 .xtyle-table__header-cell[aria-sort="ascending"] .xtyle-table__sort,
 .xtyle-table__header-cell[aria-sort="descending"] .xtyle-table__sort {

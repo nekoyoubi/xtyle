@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/pie.js";
 	import type { PieDatum, PieScheme, PieVariant } from "@xtyle/core";
 
 	interface Props {

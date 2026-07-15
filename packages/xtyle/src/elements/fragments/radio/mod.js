@@ -35,14 +35,14 @@
     const describedby = description.length > 0 ? ` aria-describedby="${escapeAttr(descriptionId)}"` : "";
     const descriptionHidden = description.length === 0 ? " hidden" : "";
     const labelText = label !== null ? label : "";
-    return `<input part="control" class="xtyle-radio__control" type="radio"${nameAttr}${valueAttr}${checkedAttr}${disabledAttr}${ariaInvalid}${ariaLabel}${ariaLabelledby}${describedby} /><span part="indicator" class="xtyle-radio__indicator" aria-hidden="true"></span><span class="xtyle-radio__text"><span part="label" class="xtyle-radio__label"><slot>${labelText}</slot></span><span part="description" class="xtyle-radio__description" id="${escapeAttr(descriptionId)}"${descriptionHidden}>${escapeHtml(description)}</span></span>`;
+    return `<input part="control" class="xtyle-radio__control" type="radio"${nameAttr}${valueAttr}${checkedAttr}${disabledAttr}${ariaInvalid}${ariaLabel}${ariaLabelledby}${describedby} /><span part="indicator" class="xtyle-radio__indicator" aria-hidden="true"><span part="dot" class="xtyle-radio__dot"></span></span><span class="xtyle-radio__text"><span part="label" class="xtyle-radio__label"><slot>${labelText}</slot></span><span part="description" class="xtyle-radio__description" id="${escapeAttr(descriptionId)}"${descriptionHidden}>${escapeHtml(description)}</span></span>`;
   }
   hooks.fragment.mount("radio", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", radioClass(bindings));
+    ops.setAttr(".xtyle-radio", "class", radioClass(bindings));
     ops.replaceChildren("[data-radio]", inner(bindings));
   });
   hooks.fragment.update("radio", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", radioClass(bindings));
+    ops.setAttr(".xtyle-radio", "class", radioClass(bindings));
     ops.setAttr(".xtyle-radio__control", "value", bindings.value ?? "on");
   });
   xript.exports.register("select", (payload) => {

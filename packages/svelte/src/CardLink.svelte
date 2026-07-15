@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/card-link.js";
 	import type { Snippet } from "svelte";
 
 	interface Props {

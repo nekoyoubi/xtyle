@@ -3,6 +3,7 @@ import Steps from "@xtyle/astro/Steps.astro";
 import Card from "@xtyle/astro/Card.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Stack from "@xtyle/astro/Stack.astro";
+import Badge from "@xtyle/astro/Badge.astro";
 ---
 
 <Stack gap={6}>
@@ -26,6 +27,28 @@ import Stack from "@xtyle/astro/Stack.astro";
 				<li>Profile</li>
 				<li>Preferences</li>
 				<li>Confirm</li>
+			</ol>
+		</Steps>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Nothing done yet</Heading>
+		<Steps current={0}>
+			<ol>
+				<li id="step-brief">Brief</li>
+				<li id="step-draft">Draft</li>
+				<li id="step-review">Review</li>
+			</ol>
+		</Steps>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Steps with real content</Heading>
+		<Steps current={2}>
+			<ol>
+				<li><strong>Upload</strong> <Badge tone="success" size="sm">done</Badge></li>
+				<li><strong>Transcode</strong> <Badge tone="success" size="sm">done</Badge></li>
+				<li><strong>Publish</strong> <Badge tone="accent" size="sm">now</Badge></li>
 			</ol>
 		</Steps>
 	</Card>

@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { RAMP_SCHEMES } from "../series.js";
+import { PALETTES } from "../series.js";
 
 const htmlExample = `<xtyle-heatmap
 	rows='["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]'
@@ -61,7 +61,7 @@ const values = [[42, 30, 18, 9], [26, 55, 22, 14], [12, 40, 8, 61]];
 <Heatmap rows={rows} cols={cols} values={values} scheme="thermal" showValues label="Load by host and resource" />`;
 
 const actionableHtmlExample = `<xtyle-heatmap
-	scheme="accent"
+	scheme="intensity"
 	selectable
 	label="Runs per hour"></xtyle-heatmap>
 <script>
@@ -87,7 +87,7 @@ const actionableSvelteExample = `<script lang="ts">
 	{rows}
 	{cols}
 	{values}
-	scheme="accent"
+	scheme="intensity"
 	selectable
 	label="Runs per hour"
 	onselect={(e) => openRuns(e.detail.row, e.detail.col)}
@@ -100,7 +100,7 @@ const cols = ["AM", "PM", "Night"];
 const values = [[3, 8, 1], [5, 2, 0], [0, 6, 4]];
 ---
 
-<Heatmap rows={rows} cols={cols} values={values} scheme="accent" selectable label="Runs per hour" />
+<Heatmap rows={rows} cols={cols} values={values} scheme="intensity" selectable label="Runs per hour" />
 <script>
 	document.querySelector("xtyle-heatmap").addEventListener("select", (e) => {
 		openRuns(e.detail.row, e.detail.col);
@@ -108,7 +108,7 @@ const values = [[3, 8, 1], [5, 2, 0], [0, 6, 4]];
 </script>`;
 
 const glowHtmlExample = `<xtyle-heatmap
-	scheme="accent"
+	scheme="intensity"
 	glow-label="runtime"
 	label="Runs (fill) and total runtime (glow) by day and bucket"></xtyle-heatmap>
 <script>
@@ -128,7 +128,7 @@ const glowSvelteExample = `<script lang="ts">
 	const glow = [[40, 12, 90], [8, 30, 0], [0, 15, 70]];
 </script>
 
-<Heatmap {rows} {cols} {values} {glow} glowLabel="runtime" scheme="accent" label="Runs (fill) and total runtime (glow)" />`;
+<Heatmap {rows} {cols} {values} {glow} glowLabel="runtime" scheme="intensity" label="Runs (fill) and total runtime (glow)" />`;
 
 const glowAstroExample = `---
 import { Heatmap } from "@xtyle/astro";
@@ -138,7 +138,7 @@ const values = [[3, 8, 1], [5, 2, 0], [0, 6, 4]];
 const glow = [[40, 12, 90], [8, 30, 0], [0, 15, 70]];
 ---
 
-<Heatmap rows={rows} cols={cols} values={values} glow={glow} glowLabel="runtime" scheme="accent" label="Runs (fill) and total runtime (glow)" />`;
+<Heatmap rows={rows} cols={cols} values={values} glow={glow} glowLabel="runtime" scheme="intensity" label="Runs (fill) and total runtime (glow)" />`;
 
 const nowHtmlExample = `<xtyle-heatmap
 	rows='["Mon","Tue","Wed"]'
@@ -216,7 +216,7 @@ export const heatmapManifest: ComponentManifest = {
 	seeAlso: ["bar", "pie", "sparkline"],
 	summary: "A 2D intensity grid (the activity-calendar / punch-card shape), colored on a theme-derived ramp, with a per-cell readout and opt-in clickable cells.",
 	description:
-		"Heatmap renders a matrix of values as a grid of colored cells, each cell's fill scaled by its value on an intensity ramp resolved off the live theme, the activity-calendar / punch-card shape (runs per hour over a week, load by host and resource, a GitHub-style contribution grid). Feed it a dense `values` matrix (row-major) plus optional `rows` and `cols` labels; the default `accent` ramp washes from a faint surface up to the accent, and `thermal` or `status` (or an explicit color array) swap the scale. Set `categorical` to color by category instead of intensity: each column (or each row, with `categoryAxis=\"row\"`) takes a distinct hue from a categorical `SeriesScheme` (`accents` / `skittles` / `statuses`), and the cell value washes that hue from the surface up. One grid, then, reads its categories by hue and their magnitude by fill: the categorical heat-grid. Turn `scale` on and a legend keys the hues. Every cell's intensity is normalized against the data's own maximum, or an explicit `max` so several grids share one scale. It's interactive: hovering or focusing a cell floats a value readout, and the whole grid is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make cells a drill-in surface, each firing a `select` event with its row, column, and value. `showValues` prints the number in each cell. Feed an optional second `glow` matrix (the same shape as `values`) to carry a second signal in one grid: the fill reads one metric while a per-cell halo reads another (run count vs total runtime, requests vs error rate). An empty matrix shows a muted `No data` message in place of the grid.",
+		"Heatmap renders a matrix of values as a grid of colored cells, each cell's fill scaled by its value on an intensity ramp resolved off the live theme, the activity-calendar / punch-card shape (runs per hour over a week, load by host and resource, a GitHub-style contribution grid). Feed it a dense `values` matrix (row-major) plus optional `rows` and `cols` labels; the default `intensity` ramp washes from a faint surface up to the accent, and `thermal` or `severity` (or an explicit color array) swap the scale. Set `categorical` to color by category instead of intensity: each column (or each row, with `categoryAxis=\"row\"`) takes a distinct color sampled off any `Palette` (`accents` / `skittles` / `statuses`), and the cell value washes that hue from the surface up. One grid, then, reads its categories by hue and their magnitude by fill: the categorical heat-grid. Turn `scale` on and a legend keys the hues. Every cell's intensity is normalized against the data's own maximum, or an explicit `max` so several grids share one scale. It's interactive: hovering or focusing a cell floats a value readout, and the whole grid is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make cells a drill-in surface, each firing a `select` event with its row, column, and value. `showValues` prints the number in each cell. Feed an optional second `glow` matrix (the same shape as `values`) to carry a second signal in one grid: the fill reads one metric while a per-cell halo reads another (run count vs total runtime, requests vs error rate). An empty matrix shows a muted `No data` message in place of the grid.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -239,9 +239,15 @@ export const heatmapManifest: ComponentManifest = {
 		},
 		{
 			name: "tooltip",
-			description: "The floating value readout shown on hover or focus of a cell.",
+			description: "The floating value readout shown on hover or focus of a cell; it holds one row per cell and reveals the one under the cursor.",
 			selector: ".xtyle-heatmap__tooltip",
 			tokens: ["--surface-overlay", "--surface-overlay-border", "--elevation-3", "--radius-md", "--fg-0"],
+		},
+		{
+			name: "tooltip-row",
+			description: "One cell's readout line: its row/column name, its value, and the glow channel's value when there is one (or the cell's own `title` in place of all three). The fill draws every row up front and the element only unhides the hovered one, so a mod's reshaped row (a swatch, a unit, its own order) survives the hover.",
+			selector: ".xtyle-heatmap__tooltip-row",
+			tokens: ["--fg-2", "--text-sm", "--weight-semibold"],
 		},
 		{
 			name: "scale",
@@ -277,11 +283,11 @@ export const heatmapManifest: ComponentManifest = {
 		},
 		{
 			name: "scheme",
-			type: "RampScheme | string[]",
-			default: "accent",
-			description: "The intensity ramp: `accent` (a faint-surface-to-accent wash), `thermal` (cool to hot), `status` (success to danger), or an explicit array of stop colors interpolated in OKLCH.",
+			type: "Palette | string[]",
+			default: "intensity",
+			description: "The palette the grid reads as a continuous ramp: `intensity` (a faint-surface-to-accent wash), `thermal` (cool to hot), `severity` (success to danger), or an explicit array of stop colors interpolated in OKLCH. Any palette works either way, so `skittles` or `statuses` ramp here too.",
 			bindings: ["html", "svelte", "astro"],
-			options: [...RAMP_SCHEMES],
+			options: [...PALETTES],
 		},
 		{
 			name: "reverse",
@@ -366,7 +372,7 @@ export const heatmapManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description:
-				"Colors by category instead of intensity: each column (or, with `categoryAxis=\"row\"`, each row) takes a distinct hue from a categorical `SeriesScheme` read off `scheme` (`accents` / `skittles` / `statuses`; defaults to `accents`), and each cell washes that hue from the surface up by its value. The categorical heat-grid, for a matrix whose axis is a set of unrelated categories rather than one low-to-high magnitude. Turn on `scale` for a hue legend.",
+				"Colors by category instead of intensity: each column (or, with `categoryAxis=\"row\"`, each row) takes a distinct color sampled off the `Palette` named in `scheme` (`accents` / `skittles` / `statuses`; defaults to `accents`), and each cell washes that hue from the surface up by its value. The categorical heat-grid, for a matrix whose axis is a set of unrelated categories rather than one low-to-high magnitude. Turn on `scale` for a hue legend.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -453,8 +459,8 @@ export const heatmapManifest: ComponentManifest = {
 		"--neutral",
 	],
 	composition: [
-		"The cell colors derive off the same register as the rest of the UI, so a grid matches its surrounding chrome without hand-picking a scale. `accent` is the neutral default (the contribution-graph wash); reach for `thermal` when the data is a true low-to-high magnitude and the extra hue helps read it.",
-		"Reach for `categorical` when the grid's axis is a set of unrelated categories rather than one low-to-high magnitude: each column (or `categoryAxis=\"row\"` each row) takes its own hue from a `SeriesScheme`, and the cell value washes it from the surface up, so a viewer reads which category by hue and how much by fill in one glance. It shares the same `seriesPalette` the `Bar` and `Pie` charts color with, so a categorical grid stays coherent with the rest of a dashboard; a continuous ramp (`accent` / `thermal`) is the wrong tool for distinct categories and vice versa.",
+		"The cell colors derive off the same register as the rest of the UI, so a grid matches its surrounding chrome without hand-picking a scale. `intensity` is the neutral default (the contribution-graph wash); reach for `thermal` when the data is a true low-to-high magnitude and the extra hue helps read it.",
+		"Reach for `categorical` when the grid's axis is a set of unrelated categories rather than one low-to-high magnitude: each column (or `categoryAxis=\"row\"` each row) takes its own sampled color off the palette, and the cell value washes it from the surface up, so a viewer reads which category by hue and how much by fill in one glance. It samples the same palette the `Bar` and `Pie` charts color with, so a categorical grid stays coherent with the rest of a dashboard. Sampling and ramping are two questions you can ask any palette, but the answers are not interchangeable: a palette built to separate (`skittles`) reads as noise when ramped, and one built to slide (`intensity`) reads as one color when sampled. Pick the palette for the question.",
 		"Pin `max` when two grids should be read against each other, so a cell of the same value takes the same color in both.",
 		"Turn on `scale` for a color-scale key so a cell's shade reads as a magnitude at a glance, not only on hover, the way a contribution graph carries its own low-to-high legend. The swatches sample the same ramp as the cells, so the key can't drift from what the grid shows.",
 		"Carry two metrics in one grid with `glow`: the fill reads the primary metric (say, run count) while a per-cell halo reads a second (total runtime), so a cell can be dim-but-glowing (few long runs) or bright-but-quiet (many short ones). The halo takes the ramp's hot-end color, so it stays theme-coherent; pin `glowMax` to share one glow scale across grids.",
@@ -475,7 +481,7 @@ export const heatmapManifest: ComponentManifest = {
 		{
 			id: "activity",
 			title: "Activity grid",
-			description: "A week-by-hour activity grid on the default `accent` ramp, the contribution-graph shape.",
+			description: "A week-by-hour activity grid on the default `intensity` ramp, the contribution-graph shape.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
 		},
 		{
@@ -505,7 +511,7 @@ export const heatmapManifest: ComponentManifest = {
 		{
 			id: "categorical",
 			title: "Categorical heat-grid",
-			description: "`categorical` colors each column a distinct hue from a `SeriesScheme` (`skittles` here) and washes it up by value, so a grid whose columns are unrelated categories reads by hue, not one shared ramp. `scale` keys the hues in a legend.",
+			description: "`categorical` colors each column a distinct hue sampled off a `Palette` (`skittles` here) and washes it up by value, so a grid whose columns are unrelated categories reads by hue, not one shared ramp. `scale` keys the hues in a legend.",
 			source: { html: categoricalHtmlExample, svelte: categoricalSvelteExample, astro: categoricalAstroExample },
 		},
 	],

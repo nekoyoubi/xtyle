@@ -1,0 +1,69 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-spotlight-default",
+	"version": "0.0.1",
+	"title": "Xtyle Spotlight (default)",
+	"description": "The built-in fill for the xtyle Spotlight component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": [
+		"xtyle.component.spotlight"
+	],
+	"entry": {
+		"script": "mod.js",
+		"format": "script"
+	},
+	"fills": {
+		"component.spotlight": [
+			{
+				"id": "spotlight",
+				"format": "text/html+jsml",
+				"source": "spotlight.html",
+				"handlers": [
+					{
+						"selector": "[data-sl-close]",
+						"on": "click",
+						"handler": "dismiss"
+					},
+					{
+						"selector": "[data-veil]",
+						"on": "click",
+						"handler": "veilClick"
+					}
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-fg",
+						"--border-normal",
+						"--border-thick",
+						"--border-thin",
+						"--duration-base",
+						"--duration-slow",
+						"--ease-emphasized",
+						"--ease-standard",
+						"--elevation-4",
+						"--fg-0",
+						"--fg-1",
+						"--font-sans",
+						"--leading-normal",
+						"--leading-tight",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--scrim",
+						"--space-2",
+						"--space-3",
+						"--space-4",
+						"--state-hover",
+						"--state-press",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--text-body",
+						"--text-lg",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

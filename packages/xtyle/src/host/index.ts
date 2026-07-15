@@ -24,7 +24,13 @@ interface ModManifestShape {
 	entry?: { script?: string } | string;
 }
 
-interface ModAlgorithmManifest {
+/**
+ * What an algorithm says about itself: the tokens it produces, the knobs it reads and their domains,
+ * how many invariants it evaluates, and the names of its passes. The value the `manifest` export
+ * returns, and — byte for byte — the value {@link STATIC_MANIFEST_KEY} carries in the packaged mod
+ * manifest.
+ */
+export interface AlgorithmManifest {
 	produces: TokenName[];
 	categories: TokenCategories;
 	knobs: string[];
@@ -32,6 +38,72 @@ interface ModAlgorithmManifest {
 	knobSpecs?: KnobSpec[];
 	invariantCount: number;
 	passNames?: string[];
+}
+
+/**
+ * The key a packaged mod manifest carries its {@link AlgorithmManifest} under. A discovery surface —
+ * an index listing an algorithm's knobs, a control rail rendering them — reads this instead of booting
+ * a sandbox per algorithm, which is the difference between listing a hundred packs and running them.
+ *
+ * The block is an *augmentation*, never a replacement: the `manifest` export stays the source of
+ * truth, because an in-browser authored source loads under a synthesized manifest with no packaged
+ * block to carry. A mod that ships one is checked against its own code at load time
+ * ({@link loadAlgorithm}), so a block that has drifted fails loudly rather than teaching a consumer to
+ * render controls for knobs the algorithm no longer reads.
+ */
+export const STATIC_MANIFEST_KEY = "x-xtyle";
+
+/**
+ * The {@link AlgorithmManifest} a packaged mod manifest declares, without executing the mod. `null`
+ * when the mod ships no block — the manifest is then only readable by running it.
+ */
+export function staticAlgorithmManifest(modManifest: unknown): AlgorithmManifest | null {
+	const block = (modManifest as Record<string, unknown> | null | undefined)?.[STATIC_MANIFEST_KEY];
+	return isAlgorithmManifest(block) ? block : null;
+}
+
+function isAlgorithmManifest(value: unknown): value is AlgorithmManifest {
+	if (!value || typeof value !== "object") return false;
+	const candidate = value as Partial<AlgorithmManifest>;
+	return (
+		Array.isArray(candidate.produces) &&
+		Array.isArray(candidate.knobs) &&
+		typeof candidate.categories === "object" &&
+		candidate.categories !== null &&
+		typeof candidate.invariantCount === "number"
+	);
+}
+
+const CHECKED_FIELDS = ["produces", "categories", "knobs", "knobSpecs", "invariantCount", "passNames"] as const;
+
+/** Structural equality, insensitive to object key order and treating an absent key as `undefined`. */
+function sameValue(a: unknown, b: unknown): boolean {
+	if (a === b) return true;
+	if (Array.isArray(a) || Array.isArray(b)) {
+		if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+		return a.every((item, i) => sameValue(item, b[i]));
+	}
+	if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+	const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+	for (const key of keys) {
+		if (!sameValue((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) return false;
+	}
+	return true;
+}
+
+/**
+ * The static block is a *claim*; the running code is the fact. A block that silently drifts from the
+ * mod is worse than no block at all — a consumer renders controls for knobs the algorithm no longer
+ * reads, and a discovery index publishes a token set it no longer produces. The one load that already
+ * happens is where the claim gets checked, so a drifted pack cannot be resolved at all.
+ */
+function crossCheckStaticManifest(claimed: AlgorithmManifest, actual: AlgorithmManifest, id: string): void {
+	const drifted = CHECKED_FIELDS.filter((field) => !sameValue(claimed[field], actual[field]));
+	if (drifted.length === 0) return;
+	throw new Error(
+		`xtyle: algorithm "${id}" declares a "${STATIC_MANIFEST_KEY}" block that does not match what its code reports ` +
+			`(${drifted.join(", ")}). Rebuild the mod so the declared block matches its manifest() export.`,
+	);
 }
 
 /**
@@ -112,8 +184,9 @@ function factory(): Promise<XriptFactory> {
 	return factoryPromise;
 }
 
-function entryScriptKey(modManifest: ModManifestShape): string {
-	const entry = modManifest.entry;
+/** The path, relative to the mod's directory, of the script a mod manifest names as its entry. */
+export function entryScriptKey(modManifest: unknown): string {
+	const entry = (modManifest as ModManifestShape | null | undefined)?.entry;
 	if (typeof entry === "string") return entry;
 	return entry?.script ?? "src/mod.js";
 }
@@ -145,10 +218,10 @@ export async function loadAlgorithm(
 		hardLimits: { timeout_ms: timeoutMs, memory_mb: HOST_LIMITS.memory_mb ?? 16, max_stack_depth: HOST_LIMITS.max_stack_depth ?? 128 },
 	});
 	rt.loadMod(modManifest, {
-		fragmentSources: { [entryScriptKey(modManifest as ModManifestShape)]: source },
+		fragmentSources: { [entryScriptKey(modManifest)]: source },
 	});
 
-	const manifest = rt.invokeExport("manifest", []) as ModAlgorithmManifest;
+	const manifest = rt.invokeExport("manifest", []) as AlgorithmManifest;
 
 	// The invariant list is *sized* from this number, so an absent one yields a zero-length list: the mod
 	// would load, report no invariants at all, and sail through the gauntlet having proven nothing. A mod
@@ -158,6 +231,10 @@ export async function loadAlgorithm(
 			`xtyle: algorithm mod's manifest() must report a non-negative integer invariantCount, got ${JSON.stringify(manifest.invariantCount)}`,
 		);
 	}
+
+	const id = (modManifest as { name?: string }).name ?? manifest.produces[0] ?? "unknown";
+	const claimed = staticAlgorithmManifest(modManifest);
+	if (claimed) crossCheckStaticManifest(claimed, manifest, id);
 
 	const graphCache = new Map<string, TokenNode[]>();
 	const graph = (opts: DeriveOptions): TokenNode[] => {
@@ -203,7 +280,7 @@ export async function loadAlgorithm(
 	const passes: Pass[] = passNames.map((name) => ({ name, run: hostPassRunUnsupported }));
 
 	return {
-		id: (modManifest as { name?: string }).name ?? manifest.produces[0] ?? "unknown",
+		id,
 		produces: manifest.produces,
 		knobs: manifest.knobs,
 		// Merged, not replaced. A mod that declares specs for *some* of its knobs — the Tier-3 case this

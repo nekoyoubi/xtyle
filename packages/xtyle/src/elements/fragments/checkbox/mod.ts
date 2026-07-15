@@ -64,12 +64,12 @@ function inner(b: CheckboxBindings): string {
 }
 
 hooks.fragment.mount("checkbox", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", checkboxClass(bindings));
+	ops.setAttr(".xtyle-checkbox", "class", checkboxClass(bindings));
 	ops.replaceChildren("[data-checkbox]", inner(bindings));
 });
 
 hooks.fragment.update("checkbox", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", checkboxClass(bindings));
+	ops.setAttr(".xtyle-checkbox", "class", checkboxClass(bindings));
 });
 
 xript.exports.register("toggle", (payload: unknown): Intent => {

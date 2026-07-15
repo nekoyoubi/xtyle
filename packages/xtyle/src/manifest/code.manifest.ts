@@ -96,6 +96,7 @@ export const codeManifest: ComponentManifest = {
 	id: "code",
 	name: "Code",
 	category: "content",
+	since: "0.1.0",
 	keywords: ["code block", "syntax highlight", "snippet", "pre", "monospace", "highlighting"],
 	seeAlso: ["kbd", "text"],
 	summary: "A read-only, syntax-highlighted code block themed entirely from the code-token family.",
@@ -130,10 +131,15 @@ export const codeManifest: ComponentManifest = {
 			tokens: ["--neutral-bg", "--field-border", "--radius-sm", "--success-vivid"],
 		},
 		{
+			name: "line",
+			description: "A single logical line of source, wrapped as a row when `line-numbers` or `highlight` is set.",
+			selector: ".xtyle-code-line",
+		},
+		{
 			name: "line-number",
 			description:
-				"The per-line counter gutter, shown when `line-numbers` is set; it sticks to the left edge as the code scrolls sideways and reads dimmed, like a comment.",
-			selector: ".xtyle-code-line::before",
+				"The per-line gutter cell, shown when `line-numbers` is set; it sticks to the left edge as the code scrolls sideways and reads dimmed, like a comment. It is a real node the fragment draws, one per row, so a mod can restyle it, move it to the trailing edge, or grow a fold column beside it.",
+			selector: ".xtyle-code-line__number",
 			tokens: ["--code-comment", "--field-border", "--code-bg", "--space-4", "--space-2"],
 		},
 		{

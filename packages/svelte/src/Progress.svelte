@@ -1,7 +1,7 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/progress.js";
 	import type { Snippet } from "svelte";
-	import type { FullTone as Tone, RampScheme } from "@xtyle/core";
+	import type { FullTone as Tone, Palette } from "@xtyle/core";
 
 	type ProgressVariant = "linear" | "circular";
 	type ProgressSize = "sm" | "md" | "lg";
@@ -26,9 +26,9 @@
 		colorizeValue?: boolean;
 		/** Report `role="meter"` (a capacity measurement) instead of `role="progressbar"` (a task). */
 		meter?: boolean;
-		/** Color the fill by its own value along a ramp instead of a flat `tone`: a built-in scheme
-		 * (`accent` / `thermal` / `status`) or an explicit list of stop colors. */
-		ramp?: RampScheme | string[];
+		/** Color the fill by its own value along a ramp instead of a flat `tone`: a built-in palette
+		 * (`intensity` / `thermal` / `severity`) or an explicit list of stop colors. */
+		ramp?: Palette | string[];
 		/** How a `ramp` paints: `solid` (one sampled color) or `gradient` (a pure-CSS sweep, linear only). */
 		rampMode?: ProgressRampMode;
 		/** Flip the ramp end for end (hot-to-cold). */

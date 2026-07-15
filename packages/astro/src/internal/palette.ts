@@ -1,4 +1,4 @@
-import { derive, seriesPalette, seriesColorsFor, rampColor, glowFilter, categoricalHeatColors, matrixCeiling, resolveIconMark, composeIconThemed, qrScannability, type SeriesScheme, type RampScheme, type QrMode } from "@xtyle/core";
+import { derive, seriesPalette, seriesColorsFor, rampColor, glowFilter, categoricalHeatColors, matrixCeiling, resolveIconMark, composeIconThemed, qrScannability, type Palette, type QrMode } from "@xtyle/core";
 import { resolveAlgorithm } from "@xtyle/core/host";
 
 /** Baking colors at build time needs a register; the runtime theme isn't known yet, so SSR uses the
@@ -14,7 +14,7 @@ async function defaultRegister(): Promise<Record<string, string>> {
  * upgraded element re-resolves its series off the live cascade. Returns null for a non-spec name. */
 export async function bakeIconMark(
 	name: string,
-	scheme: SeriesScheme | string[],
+	scheme: Palette | string[],
 	className?: string,
 ): Promise<string | null> {
 	const parsed = resolveIconMark(name);
@@ -23,7 +23,7 @@ export async function bakeIconMark(
 }
 
 export async function resolveSeriesColors(
-	scheme: SeriesScheme | string[],
+	scheme: Palette | string[],
 	count: number,
 	reverse: boolean,
 ): Promise<string[]> {
@@ -32,10 +32,10 @@ export async function resolveSeriesColors(
 }
 
 /** The by-name companion to `resolveSeriesColors` for SSR: a per-item resolver that honors each
- * item's semantic `tone` under the `statuses` scheme, so a static outcome chart pins by meaning even
- * when a zero-value category is filtered out. Positional for every other scheme. */
+ * item's semantic `tone` under the `statuses` palette, so a static outcome chart pins by meaning even
+ * when a zero-value category is filtered out. Positional for every other palette. */
 export async function resolveSeriesColorsFor(
-	scheme: SeriesScheme | string[],
+	scheme: Palette | string[],
 	items: readonly { tone?: string }[],
 	reverse: boolean,
 ): Promise<string[]> {
@@ -46,7 +46,7 @@ export async function resolveSeriesColorsFor(
 /** Bakes each cell's intensity color against the default register for the zero-JS SSR grid; the
  * upgraded element re-resolves against the live cascade. */
 export async function resolveHeatmapColors(
-	scheme: RampScheme | string[],
+	scheme: Palette | string[],
 	values: number[][],
 	reverse: boolean,
 	max?: number,
@@ -61,7 +61,7 @@ export async function resolveHeatmapColors(
  * per-category colors) and its `axis` to give each halo its cell's own category hue; otherwise every
  * halo takes the ramp's hot end. Mirrors the element's own `cellGlows`. */
 export async function resolveHeatmapGlows(
-	scheme: RampScheme | string[],
+	scheme: Palette | string[],
 	glow: number[][],
 	reverse: boolean,
 	glowMax?: number,
@@ -83,9 +83,9 @@ export async function resolveHeatmapGlows(
 
 /** Bakes a categorical grid's per-category hues and cell fills against the default register for SSR;
  * the upgraded element re-resolves against the live cascade. Each category (a column by default, or a
- * row) takes a distinct series hue, and each cell blends from the surface to its category hue by value. */
+ * row) takes a distinct sampled hue, and each cell blends from the surface to its category hue by value. */
 export async function resolveHeatmapCategorical(
-	scheme: SeriesScheme | string[],
+	scheme: Palette | string[],
 	values: number[][],
 	axis: "col" | "row",
 	reverse: boolean,
@@ -97,7 +97,7 @@ export async function resolveHeatmapCategorical(
 /** Bakes the scale key against the default register for SSR; the upgraded element re-resolves against
  * the live cascade. */
 export async function resolveHeatmapScale(
-	scheme: RampScheme | string[],
+	scheme: Palette | string[],
 	values: number[][],
 	reverse: boolean,
 	max?: number,

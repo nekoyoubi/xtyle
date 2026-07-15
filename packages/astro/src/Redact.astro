@@ -1,0 +1,66 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+type Mode = "blur" | "block" | "mask";
+type Reveal = "hover" | "click" | "hold" | "never";
+
+interface Props {
+	mode?: Mode;
+	reveal?: Reveal;
+	/** The blur radius in px, overriding the size-relative default. Only used by `blur` mode. */
+	amount?: number;
+	/** What the content is, for the cover's accessible name. */
+	label?: string;
+	/** Custom hint text on the cover, in place of the default eye glyph. */
+	cue?: string;
+	revealed?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	mode = "blur",
+	reveal = "hover",
+	amount,
+	label,
+	cue,
+	revealed = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const interactive = reveal !== "never";
+const coverLabel = revealed ? (label ? `Hide ${label}` : "Hide") : label ? `Reveal ${label}` : "Reveal";
+const bindings = {
+	mode,
+	reveal,
+	revealed,
+	interactive,
+	blur: amount == null ? null : `${Number(amount) || 0}px`,
+	cue: cue ?? null,
+	showCue: cue != null || (interactive && mode !== "blur"),
+	coverLabel,
+	contentHidden: !revealed,
+};
+const light = await renderFragmentLight("redact", bindings);
+const contentHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const composed = light.replace("<slot></slot>", () => contentHtml);
+---
+
+<xtyle-redact
+	mode={mode}
+	reveal={reveal}
+	amount={amount}
+	label={label}
+	cue={cue}
+	revealed={revealed || undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

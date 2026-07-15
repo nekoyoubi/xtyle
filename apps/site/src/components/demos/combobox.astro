@@ -1,0 +1,197 @@
+---
+import Combobox from "@xtyle/astro/Combobox.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Field from "@xtyle/astro/Field.astro";
+import Select from "@xtyle/astro/Select.astro";
+
+const zones = [
+	{ value: "Europe/London", label: "London" },
+	{ value: "Europe/Berlin", label: "Berlin" },
+	{ value: "Europe/Madrid", label: "Madrid" },
+	{ value: "America/New_York", label: "New York" },
+	{ value: "America/Los_Angeles", label: "Los Angeles" },
+	{ value: "America/Sao_Paulo", label: "São Paulo" },
+	{ value: "Asia/Tokyo", label: "Tokyo" },
+	{ value: "Asia/Kolkata", label: "Kolkata" },
+	{ value: "Australia/Sydney", label: "Sydney" },
+];
+
+const labels = ["bug", "docs", "enhancement", "good first issue", "help wanted", "question", "wontfix"];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Autocomplete a single value</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Type to filter, Arrow keys to move the cursor, Enter to commit. Focus never leaves the input — the row the
+				keyboard is on is carried by <code>aria-activedescendant</code>. The popup is drawn from the register, which is
+				the whole point: a <code>&lt;datalist&gt;</code> renders one no theme can reach.
+			</Text>
+			<div class="cb-row">
+				<Combobox
+					id="cb-zone"
+					label="Time zone"
+					placeholder="Start typing a city…"
+					description="Filters on the label and the value: type “london” or “europe”."
+					options={zones}
+					clearable
+				/>
+			</div>
+			<Text size="sm"><span id="cb-zone-echo">Nothing picked yet.</span></Text>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Multi-select — the tag input</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>multiple</code> turns it into the tag input: each pick becomes a removable chip, Backspace on an empty
+				query takes the last one back, and the clear action empties the lot. The list stays open, and the picked rows
+				keep their check. In a form it posts one entry per selection.
+			</Text>
+			<div class="cb-row">
+				<Combobox
+					id="cb-labels"
+					label="Labels"
+					name="labels"
+					placeholder="Add a label…"
+					multiple
+					clearable
+					options={labels}
+					values={["bug"]}
+				/>
+			</div>
+			<Text size="sm">Would post: <code id="cb-labels-echo">labels=bug</code></Text>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Server-filtered, and free text</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>filter="none"</code> hands the filtering to whatever fetched the list: read <code>query</code> on the
+				<code>input</code> event, and assign the answer back to <code>options</code>. <code>allow-custom</code> lets an
+				answer the list never offered through — Enter commits whatever was typed.
+			</Text>
+			<div class="cb-row">
+				<Combobox
+					id="cb-repo"
+					label="Repository"
+					placeholder="Search repositories…"
+					emptyText="No repositories match — press Enter to use it anyway."
+					filter="none"
+					allowCustom
+					clearable
+				/>
+			</div>
+			<Text size="sm"><span id="cb-repo-echo">Nothing picked yet.</span></Text>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Sizes and states</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The same rhythm as Field and Select, so a form stays on one grid — and the same postures: invalid, disabled,
+				and readonly.
+			</Text>
+			<div class="cb-grid">
+				<Combobox label="Small" size="sm" placeholder="sm" options={zones} clearable />
+				<Combobox label="Medium" placeholder="md" options={zones} clearable />
+				<Combobox label="Large" size="lg" placeholder="lg" options={zones} clearable />
+				<Combobox label="Invalid" placeholder="Pick one" options={zones} invalid error="Pick a time zone." required />
+				<Combobox label="Disabled" placeholder="Out of play" options={zones} disabled />
+				<Combobox label="Readonly" value="Asia/Tokyo" options={zones} readonly />
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Beside the native-first pair</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Field and Select stay exactly as they are — the native control is the right answer when it fits. Combobox is
+				what you reach for when it does not: a long list, a popup that has to carry the theme, or more than one answer.
+				All three read the same options.
+			</Text>
+			<div class="cb-grid">
+				<Field label="Field (native datalist)" placeholder="Type a city…" options={zones} />
+				<Select label="Select (native select)">
+					{zones.map((zone) => <option value={zone.value}>{zone.label}</option>)}
+				</Select>
+				<Combobox label="Combobox (themable)" placeholder="Type a city…" options={zones} clearable />
+			</div>
+		</Stack>
+	</Card>
+</Stack>
+
+<style>
+	.cb-row {
+		/* the panel matches the control's width, up to the popover's own 22rem panel cap */
+		max-width: 22rem;
+	}
+	.cb-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+		gap: var(--space-4);
+		align-items: start;
+	}
+</style>
+
+<script>
+	import "@xtyle/core/elements/combobox.js";
+
+	type ComboboxEl = HTMLElement & {
+		value: string;
+		values: string[];
+		query: string;
+		options: ReadonlyArray<string | { value: string; label?: string }>;
+	};
+
+	const zone = document.querySelector<ComboboxEl>("#cb-zone");
+	const zoneEcho = document.querySelector<HTMLElement>("#cb-zone-echo");
+	zone?.addEventListener("change", () => {
+		if (zoneEcho) zoneEcho.textContent = zone.value ? `Picked ${zone.value}.` : "Nothing picked yet.";
+	});
+
+	const labels = document.querySelector<ComboboxEl>("#cb-labels");
+	const labelsEcho = document.querySelector<HTMLElement>("#cb-labels-echo");
+	const renderPost = (): void => {
+		if (!labels || !labelsEcho) return;
+		labelsEcho.textContent = labels.values.length
+			? labels.values.map((value) => `labels=${value}`).join("&")
+			: "(nothing)";
+	};
+	labels?.addEventListener("change", renderPost);
+
+	// the async path: `filter="none"` means whatever comes back is shown verbatim
+	const REPOS = [
+		"nekoyoubi/xtyle",
+		"nekoyoubi/xript",
+		"nekoyoubi/xoji",
+		"withastro/astro",
+		"sveltejs/svelte",
+		"vitest-dev/vitest",
+	];
+	const repo = document.querySelector<ComboboxEl>("#cb-repo");
+	const repoEcho = document.querySelector<HTMLElement>("#cb-repo-echo");
+	let pending = 0;
+	repo?.addEventListener("input", () => {
+		const query = repo.query.trim().toLowerCase();
+		const ticket = ++pending;
+		// stand in for a fetch: the list is filtered *there*, not here
+		window.setTimeout(() => {
+			if (ticket !== pending) return;
+			repo.options = query.length === 0 ? [] : REPOS.filter((name) => name.toLowerCase().includes(query));
+		}, 120);
+	});
+	repo?.addEventListener("select", (event) => {
+		const detail = (event as CustomEvent<{ value: string }>).detail;
+		if (repoEcho) repoEcho.textContent = `Picked ${detail.value}.`;
+	});
+</script>

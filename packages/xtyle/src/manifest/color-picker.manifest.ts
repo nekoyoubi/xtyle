@@ -58,6 +58,7 @@ export const colorPickerManifest: ComponentManifest = {
 	id: "color-picker",
 	name: "Color Picker",
 	category: "form",
+	since: "0.1.0",
 	keywords: ["color input", "hsv", "hsl", "eyedropper", "palette", "swatch picker"],
 	seeAlso: ["swatch", "slider"],
 	summary: "An inline HSV color picker: a saturation/brightness field, a hue track with an opt-in alpha track, optional per-channel sliders for any model, and a switchable multi-format value field.",
@@ -145,7 +146,7 @@ export const colorPickerManifest: ComponentManifest = {
 		},
 		{
 			name: "harmony",
-			description: "The optional row of related-color chips from `harmony`, rebuilt live as the color changes; it reuses the preset chip styling.",
+			description: "The optional row of related-color chips from `harmony`. The scheme fixes how many chips there are, so they are built once and only recolored as the color changes; each reuses the preset chip styling.",
 			selector: ".xtyle-color-picker__harmony",
 		},
 		{

@@ -1,0 +1,17 @@
+<div class="xtyle-spotlight" part="spotlight" data-root hidden>
+	<div class="xtyle-spotlight__veil" part="veil" data-veil></div>
+	<div class="xtyle-spotlight__ring" part="ring" data-ring aria-hidden="true"></div>
+	<xtyle-popover class="xtyle-spotlight__callout" part="callout" panel-role="dialog" arrow focus-on-open="first" no-light-dismiss data-callout>
+		<div class="xtyle-spotlight__panel" part="panel">
+			<h2 class="xtyle-spotlight__heading" part="heading" data-sl-title hidden></h2>
+			<div class="xtyle-spotlight__body" part="body"><slot></slot></div>
+			<div class="xtyle-spotlight__actions" part="actions">
+				<slot name="actions"></slot>
+				<button class="xtyle-spotlight__close" part="close" type="button" data-sl-close>Got it</button>
+			</div>
+		</div>
+	</xtyle-popover>
+	<div class="xtyle-spotlight__pointer" part="pointer" data-pointer aria-hidden="true" hidden>
+		<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v14M6 13l6 6 6-6" /></svg>
+	</div>
+</div>

@@ -52,27 +52,31 @@ const cleanRun = [
 	</Card>
 
 	<Card>
-		<Heading slot="header" level={3} size="sm">One data set, five schemes</Heading>
+		<Heading slot="header" level={3} size="sm">One data set, six palettes</Heading>
 		<Grid minColWidth="12rem" gap={4}>
 			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">skittles</Text>
-				<Pie data={traffic} scheme="skittles" label="Skittles scheme" size={150} legend={false} />
+				<Pie data={traffic} scheme="skittles" label="Skittles palette" size={150} legend={false} />
 			</Stack>
 			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">accents</Text>
-				<Pie data={traffic} variant="donut" scheme="accents" label="Accents scheme" size={150} legend={false} />
+				<Pie data={traffic} variant="donut" scheme="accents" label="Accents palette" size={150} legend={false} />
 			</Stack>
 			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">statuses</Text>
-				<Pie data={traffic} variant="donut" scheme="statuses" label="Statuses scheme" size={150} legend={false} />
+				<Pie data={traffic} variant="donut" scheme="statuses" label="Statuses palette" size={150} legend={false} />
 			</Stack>
 			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">thermal, reversed</Text>
-				<Pie data={traffic} scheme="thermal" reverse label="Thermal reversed scheme" size={150} legend={false} />
+				<Pie data={traffic} scheme="thermal" reverse label="Thermal reversed palette" size={150} legend={false} />
 			</Stack>
 			<Stack gap={1}>
-				<Text size="xs" tone="subtle" weight="semibold">status</Text>
-				<Pie data={traffic} variant="donut" scheme="status" label="Status scheme" size={150} legend={false} />
+				<Text size="xs" tone="subtle" weight="semibold">severity</Text>
+				<Pie data={traffic} variant="donut" scheme="severity" label="Severity palette" size={150} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">intensity</Text>
+				<Pie data={traffic} variant="donut" scheme="intensity" label="Intensity palette" size={150} legend={false} />
 			</Stack>
 		</Grid>
 	</Card>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/qr.js";
 	import type { QrEcLevel, QrModuleShape, QrMode, QrIconSize } from "@xtyle/core";
 
 	interface Props {

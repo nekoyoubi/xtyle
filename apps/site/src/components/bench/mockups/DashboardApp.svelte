@@ -210,7 +210,7 @@
 							<Text size="sm" weight="medium">{c.label}</Text>
 							<Text size="xs" tone="subtle">{c.caption}</Text>
 						</div>
-						<Progress value={c.value} ramp="status" rampMode="gradient" meter showValue size="sm" ariaLabel={`${c.label} used`} />
+						<Progress value={c.value} ramp="severity" rampMode="gradient" meter showValue size="sm" ariaLabel={`${c.label} used`} />
 					</div>
 				{/each}
 			</Panel>

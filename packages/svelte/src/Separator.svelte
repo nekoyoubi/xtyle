@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/separator.js";
 	import type { Snippet } from "svelte";
 
 	type Orientation = "horizontal" | "vertical";

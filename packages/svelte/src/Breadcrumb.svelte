@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/breadcrumb.js";
 	import type { Snippet } from "svelte";
 	import type { Size, FullTone } from "@xtyle/core";
 

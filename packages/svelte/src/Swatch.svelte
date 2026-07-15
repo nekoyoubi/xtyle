@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/swatch.js";
 
 	type SwatchSize = "sm" | "md" | "lg";
 

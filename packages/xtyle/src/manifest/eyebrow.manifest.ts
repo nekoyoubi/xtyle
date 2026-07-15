@@ -34,6 +34,7 @@ export const eyebrowManifest: ComponentManifest = {
 	id: "eyebrow",
 	name: "Eyebrow",
 	category: "content",
+	since: "0.1.0",
 	keywords: ["kicker", "overline", "tagline", "pretitle", "label"],
 	seeAlso: ["heading", "text", "hero"],
 	summary: "The small uppercase kicker that sits above a heading.",

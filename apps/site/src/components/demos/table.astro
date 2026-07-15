@@ -33,7 +33,9 @@ const statusTone: Record<Row["status"], "success" | "warn" | "neutral"> = {
 	<Card>
 		<Heading slot="header" level={3} size="sm">Sortable, hover, sticky header</Heading>
 		<Text slot="header" size="xs" tone="muted">
-			Click a sortable column header (or focus it and press Enter) to re-order the rows.
+			Click a sortable column header (or focus it and press Enter) to re-order the rows. The caret
+			is an <Text as="span" mono size="xs">&lt;xtyle-icon&gt;</Text>, so it re-skins with the rest of
+			the icon set; it rotates and colors off <Text as="span" mono size="xs">aria-sort</Text>.
 		</Text>
 		<Table variant="default" hover sticky maxHeight="12rem" ariaLabel="Built-in xtyle algorithms">
 				<table>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/card.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as Tone } from "@xtyle/core";
 

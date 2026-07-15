@@ -1,0 +1,86 @@
+---
+import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+
+type Side = "top" | "right" | "bottom" | "left";
+type Size = "sm" | "md" | "lg" | "full";
+
+interface Props {
+	open?: boolean;
+	side?: Side;
+	size?: Size;
+	/** Opens beside a live page: no scrim, no focus trap, the rest of the app still interactive. */
+	nonModal?: boolean;
+	heading?: string;
+	label?: string;
+	labelledby?: string;
+	closeLabel?: string;
+	noCloseButton?: boolean;
+	noGrabber?: boolean;
+	noSwipe?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	open = false,
+	side = "bottom",
+	size = "md",
+	nonModal = false,
+	heading,
+	label,
+	labelledby,
+	closeLabel,
+	noCloseButton = false,
+	noGrabber = false,
+	noSwipe = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const hasHeader = Astro.slots.has("header");
+const hasFooter = Astro.slots.has("footer");
+const elementId = `xtyle-sheet-${Math.random().toString(36).slice(2, 8)}`;
+
+const bindings = {
+	side,
+	size,
+	heading: heading ?? null,
+	label: label ?? null,
+	labelledby: labelledby ?? null,
+	closeLabel: closeLabel ?? null,
+	noCloseButton,
+	noGrabber,
+	nonModal,
+	elementId,
+};
+const light = await renderFragmentLight("sheet", bindings);
+const headerHtml = hasHeader ? await Astro.slots.render("header") : null;
+const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const footerHtml = hasFooter ? await Astro.slots.render("footer") : "";
+const composed = composeFallbackSlot(light, "header", headerHtml)
+	.replace("<slot></slot>", () => bodyHtml)
+	.replace('<slot name="footer"></slot>', () => footerHtml);
+---
+
+<xtyle-sheet
+	open={open || undefined}
+	side={side}
+	size={size}
+	non-modal={nonModal || undefined}
+	heading={heading}
+	label={label}
+	labelledby={labelledby}
+	close-label={closeLabel}
+	no-close-button={noCloseButton || undefined}
+	no-grabber={noGrabber || undefined}
+	no-swipe={noSwipe || undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

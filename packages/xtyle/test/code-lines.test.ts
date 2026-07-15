@@ -62,6 +62,27 @@ describe("splitCodeLines", () => {
 	it("tags nothing without a highlight set", () => {
 		expect(splitCodeLines("a\nb").html).not.toContain("data-line-highlight");
 	});
+
+	it("numbers each row with a real gutter node when asked", () => {
+		const result = splitCodeLines("a\nb", undefined, true);
+		expect(result.html).toBe(
+			`<span class="xtyle-code-line"><span class="xtyle-code-line__number" aria-hidden="true">1</span>` +
+				`<span class="xtyle-code-line__text">a</span></span>` +
+				`<span class="xtyle-code-line"><span class="xtyle-code-line__number" aria-hidden="true">2</span>` +
+				`<span class="xtyle-code-line__text">b</span></span>`,
+		);
+	});
+
+	it("leaves the gutter out when numbering is off, so a highlight-only block stays lean", () => {
+		expect(splitCodeLines("a\nb", new Set([1])).html).not.toContain("xtyle-code-line__number");
+	});
+
+	it("numbers and tints the same row without them fighting", () => {
+		const result = splitCodeLines("a\nb", new Set([2]), true);
+		expect(result.html).toContain(
+			`<span class="xtyle-code-line" data-line-highlight><span class="xtyle-code-line__number" aria-hidden="true">2</span>`,
+		);
+	});
 });
 
 describe("parseLineSpec", () => {

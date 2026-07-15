@@ -90,12 +90,12 @@ function inner(b: SwitchBindings): string {
 }
 
 hooks.fragment.mount("switch", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", switchClass(bindings));
+	ops.setAttr(".xtyle-switch", "class", switchClass(bindings));
 	ops.replaceChildren("[data-switch]", inner(bindings));
 });
 
 hooks.fragment.update("switch", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", switchClass(bindings));
+	ops.setAttr(".xtyle-switch", "class", switchClass(bindings));
 	ops.setAttr('[role="switch"]', "aria-checked", String(bindings.checked ?? false));
 	const text = stateLabel(bindings);
 	if (text !== null) ops.setText('[part="state"]', text);

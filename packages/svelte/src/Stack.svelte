@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/stack.js";
 	import type { Snippet } from "svelte";
 
 	type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";

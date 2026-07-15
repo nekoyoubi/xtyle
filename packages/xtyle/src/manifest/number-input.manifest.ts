@@ -56,6 +56,7 @@ export const numberInputManifest: ComponentManifest = {
 	id: "number-input",
 	name: "Number Input",
 	category: "form",
+	since: "0.1.0",
 	keywords: ["stepper", "spinner input", "numeric field", "quantity", "increment", "counter"],
 	seeAlso: ["field", "slider"],
 	summary: "A numeric field with stepper buttons, bounds, and step snapping, driven by pointer or keyboard.",

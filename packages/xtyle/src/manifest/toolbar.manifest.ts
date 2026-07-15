@@ -65,6 +65,7 @@ export const toolbarManifest: ComponentManifest = {
 	id: "toolbar",
 	name: "Toolbar",
 	category: "shell",
+	since: "0.1.0",
 	keywords: ["header", "top bar", "app bar", "menu bar", "action bar"],
 	seeAlso: ["app-shell", "statusbar", "cluster"],
 	summary: "The header bar: a title plus structured start, center, and end regions for actions and navigation.",

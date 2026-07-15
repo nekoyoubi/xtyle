@@ -5,7 +5,7 @@ const checkedRules = TONES.map(
 	border-color: var(--${t});
 	background: var(--${t});
 }
-.xtyle-radio--${t} .xtyle-radio__control:checked ~ .xtyle-radio__indicator::after {
+.xtyle-radio--${t} .xtyle-radio__control:checked ~ .xtyle-radio__indicator .xtyle-radio__dot {
 	background: var(--${t}-fg);
 }`,
 ).join("\n");
@@ -47,8 +47,7 @@ export const radioCss = `
 		border-color var(--duration-fast) var(--ease-standard),
 		box-shadow var(--duration-fast) var(--ease-standard);
 }
-.xtyle-radio__indicator::after {
-	content: "";
+.xtyle-radio__dot {
 	width: 0.5em;
 	height: 0.5em;
 	border-radius: var(--radius-full);
@@ -120,7 +119,7 @@ export const radioCss = `
 	gap: var(--space-3);
 }
 ${checkedRules}
-.xtyle-radio__control:checked ~ .xtyle-radio__indicator::after {
+.xtyle-radio__control:checked ~ .xtyle-radio__indicator .xtyle-radio__dot {
 	transform: scale(1);
 }
 .xtyle-radio:hover .xtyle-radio__indicator {
@@ -131,7 +130,7 @@ ${checkedRules}
 	background: var(--accent);
 	border-color: var(--accent);
 }
-.xtyle-radio__control:checked ~ .xtyle-radio__indicator::after {
+.xtyle-radio__control:checked ~ .xtyle-radio__indicator .xtyle-radio__dot {
 	background: var(--accent-fg);
 }
 .xtyle-radio__control:focus-visible ~ .xtyle-radio__indicator {
@@ -154,7 +153,7 @@ ${checkedRules}
 	background: var(--state-disabled);
 	border-color: var(--line);
 }
-.xtyle-radio__control:disabled:checked ~ .xtyle-radio__indicator::after {
+.xtyle-radio__control:disabled:checked ~ .xtyle-radio__indicator .xtyle-radio__dot {
 	background: var(--fg-disabled);
 }
 .xtyle-radio-group {

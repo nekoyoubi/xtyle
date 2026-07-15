@@ -31,6 +31,7 @@ export const spinnerManifest: ComponentManifest = {
 	id: "spinner",
 	name: "Spinner",
 	category: "feedback",
+	since: "0.1.0",
 	keywords: ["loader", "loading", "busy", "progress ring", "activity indicator"],
 	seeAlso: ["skeleton", "progress"],
 	summary: "An indeterminate loading indicator: a spinning ring in any of the six semantic tones, in three sizes.",

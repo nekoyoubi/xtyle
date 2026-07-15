@@ -1,0 +1,45 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-redact-default",
+	"version": "0.0.1",
+	"title": "Xtyle Redact (default)",
+	"description": "The built-in fill for the xtyle Redact component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": [
+		"xtyle.component.redact"
+	],
+	"entry": {
+		"script": "mod.js",
+		"format": "script"
+	},
+	"fills": {
+		"component.redact": [
+			{
+				"id": "redact",
+				"format": "text/html+jsml",
+				"source": "redact.html",
+				"handlers": [],
+				"meta": {
+					"tokens": [
+						"--bg-2",
+						"--border-thin",
+						"--duration-base",
+						"--ease-standard",
+						"--elevation-1",
+						"--fg-1",
+						"--fg-3",
+						"--leading-tight",
+						"--radius-full",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--text-xs"
+					]
+				}
+			}
+		]
+	}
+}
