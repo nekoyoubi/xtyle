@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/spinner.js";
 	import type { Size, FullTone as Tone } from "@xtyle/core";
 
 	interface Props {

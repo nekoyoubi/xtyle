@@ -45,7 +45,7 @@ describe("light-DOM native slots", () => {
 	it("renders alert with native slots and a fallback-bearing icon slot", async () => {
 		const html = await renderFragmentLight("alert", { severity: "info", variant: "soft", dismissible: false });
 		// the severity glyph rides inside the icon slot's fallback content the consumer slot replaces
-		expect(html).toMatch(/<slot name="icon"><span data-icon><svg/);
+		expect(html).toMatch(/<slot name="icon"><span data-glyph><svg/);
 		// the body regions carry native slots for the binding to fill or strip — the same markup
 		// that drives shadow projection in the framework path
 		expect(html).toContain('<slot name="title"></slot>');
@@ -60,13 +60,13 @@ describe("light-DOM native slots", () => {
 		const composed = composeFallbackSlot(html, "icon", "<i data-custom></i>");
 		expect(composed).toContain("<i data-custom></i>");
 		expect(composed).not.toContain('<slot name="icon">');
-		expect(composed).not.toContain("data-icon");
+		expect(composed).not.toContain("data-glyph");
 	});
 
 	it("keeps the fallback glyph and strips the slot tags when the icon slot is empty", async () => {
 		const html = await renderFragmentLight("alert", { severity: "danger" });
 		const composed = composeFallbackSlot(html, "icon", null);
-		expect(composed).toMatch(/<span data-icon><svg/);
+		expect(composed).toMatch(/<span data-glyph><svg/);
 		expect(composed).not.toContain('<slot name="icon">');
 	});
 
@@ -92,7 +92,7 @@ describe("light-DOM native slots", () => {
 
 		it("inserts setAttr values with `$`-sequences verbatim", async () => {
 			const out = await renderFragmentLight("code", { html: "x", language: "lang-$1-$2", caption: null });
-			expect(out).toContain('class="language-lang-$1-$2"');
+			expect(out).toContain('class="xtyle-code__code language-lang-$1-$2"');
 			expect(out).toContain('aria-label="lang-$1-$2 code"');
 		});
 	});

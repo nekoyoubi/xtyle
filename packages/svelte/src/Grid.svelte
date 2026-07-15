@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/grid.js";
 	import type { Snippet } from "svelte";
 
 	type GridAlign = "start" | "center" | "end" | "stretch";

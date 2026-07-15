@@ -14,3 +14,15 @@ export function escapeHtml(value: string): string {
 export function escapeAttr(value: string): string {
 	return escapeHtml(value).replace(/"/g, "&quot;");
 }
+
+/**
+ * Escapes a value for interpolation inside a quoted CSS string — `url('…')`, a `content:`, a font family.
+ *
+ * A well-formed URL contains none of these characters, so this is a no-op on good input and a muzzle on
+ * bad: a quote can no longer close the string, a `)` can no longer close the `url()`, and a `<` can no
+ * longer open a `</style>` and escape the stylesheet entirely. CSS hex escapes (`\27 `) are inert
+ * everywhere the raw character would not be.
+ */
+export function escapeCssUrl(value: string): string {
+	return value.replace(/[\\'"()<>\s;]/g, (c) => `\\${(c.codePointAt(0) as number).toString(16)} `);
+}

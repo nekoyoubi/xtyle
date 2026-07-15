@@ -50,6 +50,11 @@ import { tabsManifest } from "./tabs.manifest.js";
 import { breadcrumbManifest } from "./breadcrumb.manifest.js";
 import { skeletonManifest } from "./skeleton.manifest.js";
 import { dialogManifest } from "./dialog.manifest.js";
+import { sheetManifest } from "./sheet.manifest.js";
+import { splitButtonManifest } from "./split-button.manifest.js";
+import { spotlightManifest } from "./spotlight.manifest.js";
+import { redactManifest } from "./redact.manifest.js";
+import { tourManifest } from "./tour.manifest.js";
 import { toastManifest } from "./toast.manifest.js";
 import { tableManifest } from "./table.manifest.js";
 import { timelineManifest } from "./timeline.manifest.js";
@@ -61,6 +66,7 @@ import { progressManifest } from "./progress.manifest.js";
 import { sliderManifest } from "./slider.manifest.js";
 import { colorPickerManifest } from "./color-picker.manifest.js";
 import { numberInputManifest } from "./number-input.manifest.js";
+import { datePickerManifest } from "./date-picker.manifest.js";
 import { segmentedManifest } from "./segmented.manifest.js";
 import { accordionManifest } from "./accordion.manifest.js";
 import { treeManifest } from "./tree.manifest.js";
@@ -76,15 +82,21 @@ import { carouselManifest } from "./carousel.manifest.js";
 import { parallaxManifest } from "./parallax.manifest.js";
 import { heroManifest } from "./hero.manifest.js";
 import { barManifest } from "./bar.manifest.js";
+import { chartManifest } from "./chart.manifest.js";
 import { sparklineManifest } from "./sparkline.manifest.js";
 import { heatmapManifest } from "./heatmap.manifest.js";
 import { pieManifest } from "./pie.manifest.js";
 import { swatchManifest } from "./swatch.manifest.js";
 import { menuManifest } from "./menu.manifest.js";
+import { popoverManifest } from "./popover.manifest.js";
+import { comboboxManifest } from "./combobox.manifest.js";
+import { commandPaletteManifest } from "./command-palette.manifest.js";
 import { splitterManifest } from "./splitter.manifest.js";
 import { codeManifest } from "./code.manifest.js";
 import { paginationManifest } from "./pagination.manifest.js";
+import { calendarManifest } from "./calendar.manifest.js";
 import { qrManifest } from "./qr.manifest.js";
+import { dropzoneManifest } from "./dropzone.manifest.js";
 
 export const components: ComponentRegistry = {
 	button: buttonManifest,
@@ -122,6 +134,11 @@ export const components: ComponentRegistry = {
 	breadcrumb: breadcrumbManifest,
 	skeleton: skeletonManifest,
 	dialog: dialogManifest,
+	sheet: sheetManifest,
+	"split-button": splitButtonManifest,
+	spotlight: spotlightManifest,
+	tour: tourManifest,
+	redact: redactManifest,
 	toast: toastManifest,
 	table: tableManifest,
 	timeline: timelineManifest,
@@ -133,6 +150,7 @@ export const components: ComponentRegistry = {
 	slider: sliderManifest,
 	"color-picker": colorPickerManifest,
 	"number-input": numberInputManifest,
+	"date-picker": datePickerManifest,
 	segmented: segmentedManifest,
 	accordion: accordionManifest,
 	tree: treeManifest,
@@ -148,15 +166,21 @@ export const components: ComponentRegistry = {
 	parallax: parallaxManifest,
 	hero: heroManifest,
 	bar: barManifest,
+	chart: chartManifest,
 	sparkline: sparklineManifest,
 	heatmap: heatmapManifest,
 	pie: pieManifest,
 	swatch: swatchManifest,
 	menu: menuManifest,
+	popover: popoverManifest,
+	combobox: comboboxManifest,
+	"command-palette": commandPaletteManifest,
 	splitter: splitterManifest,
 	code: codeManifest,
 	pagination: paginationManifest,
+	calendar: calendarManifest,
 	qr: qrManifest,
+	dropzone: dropzoneManifest,
 };
 
 export function getComponent(id: string): ComponentManifest | undefined {

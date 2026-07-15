@@ -7,6 +7,7 @@ import {
 	colorFormats,
 	colorToChannels,
 	formatColor,
+	harmony as relatedColors,
 	harmonySchemes,
 	hsvToRgb,
 	nearestNamedColor,
@@ -136,6 +137,15 @@ const namedSnap = snapTargets.includes("named")
 	? namedSnapLabel(nearestNamedColor(hsvToRgb({ ...hsv, alpha: currentAlpha })).name)
 	: null;
 
+// The chips are the fill's, so they have to be in the server render too: hydration upgrades over the
+// composed scaffold as an `update`, which never re-runs the fill's `mount`. The element repaints
+// their colors as the base color moves; it never rebuilds them.
+const harmonyBase = parseColor(currentHex);
+const harmonyChips =
+	harmonyScheme && harmonyBase
+		? relatedColors(harmonyBase, harmonyScheme).map((related) => ({ hex: formatColor(related, "hex") }))
+		: [];
+
 const bindings = {
 	disabled,
 	label: label ?? null,
@@ -155,6 +165,7 @@ const bindings = {
 	channels: resolvedChannels,
 	snapTargets,
 	namedSnap,
+	harmonyChips,
 };
 
 const light = await renderFragmentLight("color-picker", bindings);

@@ -1,0 +1,55 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-sheet-default",
+	"version": "0.0.1",
+	"title": "Xtyle Sheet (default)",
+	"description": "The built-in fill for the xtyle Sheet component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.sheet"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.sheet": [
+			{
+				"id": "sheet",
+				"format": "text/html+jsml",
+				"source": "sheet.html",
+				"handlers": [{ "selector": ".xtyle-sheet__close", "on": "click", "handler": "requestClose" }],
+				"meta": {
+					"tokens": [
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--font-sans",
+						"--text-body",
+						"--text-lg",
+						"--leading-normal",
+						"--leading-tight",
+						"--weight-semibold",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--scrim",
+						"--line",
+						"--border-thin",
+						"--border-normal",
+						"--border-thick",
+						"--radius-lg",
+						"--radius-sm",
+						"--radius-full",
+						"--elevation-5",
+						"--ring",
+						"--state-hover",
+						"--state-press",
+						"--duration-base",
+						"--duration-fast",
+						"--ease-emphasized",
+						"--ease-standard",
+						"--space-2",
+						"--space-3",
+						"--space-4",
+						"--space-5"
+					]
+				}
+			}
+		]
+	}
+}

@@ -1,0 +1,113 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { resolveChartPlot } from "@xtyle/core";
+import { resolveSeriesColorsFor } from "./internal/palette.ts";
+import type { ChartSeries, ChartScheme, ChartVariant, ChartCurve, ChartXScale } from "@xtyle/core";
+
+interface Props {
+	series?: ChartSeries[];
+	scheme?: ChartScheme;
+	reverse?: boolean;
+	variant?: ChartVariant;
+	curve?: ChartCurve;
+	markers?: boolean;
+	xScale?: ChartXScale;
+	/** An explicit `[start, end]` for the x axis instead of the data's own extent. */
+	domain?: [number | string, number | string];
+	/** A sliding window in ms ending at now, for a live time-domain feed. */
+	window?: number;
+	yMin?: number;
+	yMax?: number;
+	xTicks?: number;
+	yTicks?: number;
+	xLabel?: string;
+	yLabel?: string;
+	legend?: boolean;
+	height?: number;
+	label?: string;
+	/** Make the plot actionable: a click or Enter at the cursor fires `select`. */
+	selectable?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	series = [],
+	scheme = "accents",
+	reverse = false,
+	variant = "line",
+	curve = "linear",
+	markers = false,
+	xScale = "auto",
+	domain,
+	window: windowMs,
+	yMin,
+	yMax,
+	xTicks,
+	yTicks,
+	xLabel,
+	yLabel,
+	legend = true,
+	height = 320,
+	label,
+	selectable = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const plot = resolveChartPlot(series, { xScale, window: windowMs, domain: domain ?? null, now: Date.now() });
+const colors = await resolveSeriesColorsFor(scheme, series, reverse);
+const bindings = {
+	series: plot.series,
+	colors,
+	variant,
+	curve,
+	markers,
+	xScale: plot.xScale,
+	domainStart: plot.domainStart,
+	domainEnd: plot.domainEnd,
+	yMin,
+	yMax,
+	xTicks,
+	yTicks,
+	xLabel: xLabel ?? null,
+	yLabel: yLabel ?? null,
+	legend,
+	height,
+	title: label ?? null,
+	ariaLabel: label ?? null,
+	selectable,
+};
+const chrome = await renderFragmentLight("chart", bindings);
+---
+
+<xtyle-chart
+	series={JSON.stringify(series)}
+	scheme={Array.isArray(scheme) ? JSON.stringify(scheme) : scheme}
+	reverse={reverse || undefined}
+	variant={variant === "area" ? "area" : undefined}
+	curve={curve === "linear" ? undefined : curve}
+	markers={markers || undefined}
+	x-scale={xScale === "auto" ? undefined : xScale}
+	domain={domain ? JSON.stringify(domain) : undefined}
+	window={windowMs}
+	y-min={yMin}
+	y-max={yMax}
+	x-ticks={xTicks}
+	y-ticks={yTicks}
+	x-label={xLabel}
+	y-label={yLabel}
+	legend={legend ? undefined : "false"}
+	selectable={selectable || undefined}
+	height={height}
+	label={label}
+	class={extra}
+	set:html={chrome}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

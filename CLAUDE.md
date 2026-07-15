@@ -78,11 +78,21 @@ When you add or change a prop, variant, size, state, token, or behavior, you MUS
 
 **The failure this rule exists to prevent:** shipping a feature that works in code and passes tests but appears *nowhere* in the docs a user actually browses — so it's built, but undiscoverable. If you catch yourself thinking "the code's done, the demos can come later," stop: the demos are not later, they are now, in this change.
 
-## ⚠️ CHROME IS A FRAGMENT — NEVER IMPERATIVE MARKUP IN AN ELEMENT
+## ⚠️ CHROME IS A FRAGMENT — AND A STYLESHEET CAN BUILD CHROME TOO
 
-**If a component builds its own markup, that markup goes in an xript fragment. If you are writing `document.createElement` (or `innerHTML`, or a template string) in an element's `connectedCallback` to construct a control bar, a button, a dot, a handle, or a rail — stop. You are hardcoding the one surface a mod exists to reshape.**
+**If a component invents something the user sees, that thing goes in an xript fragment. If you are writing `document.createElement` (or `innerHTML`, or a template string) in an element's `connectedCallback` to construct a control bar, a button, a dot, a handle, or a rail — stop. You are hardcoding the one surface a mod exists to reshape. And if you are reaching for `::before { content: … }` to draw a marker, a checkmark, a connector, or a caret — stop for the same reason. The delivery mechanism does not matter. The reachability does.**
 
-The test is **who owns the markup**, and there are three answers, not two:
+**The one-line test: chrome is what a token cannot fix.** If the only useful override is a *value* — a color, a thickness, whether it's there at all — it's a **finish**, and CSS is the right home. If a plausible mod would want to change the thing's **identity or structure** — put an icon in it, swap the glyph, restructure it, hang something off it — it's a **part**, and it belongs in a fragment. No token reaches "what it is."
+
+Three ten-second probes. A pseudo-element is a **part** if *any* is true:
+
+1. **It has text.** Non-empty `content` — a counter, a glyph, a checkmark. `content: ""` alone is not text.
+2. **It has its own box.** An explicit `width`/`height`, or offsets that place it beside or outside the host box. `inset: 0; border-radius: inherit` is **not** its own box — that is the host's box, painted.
+3. **You would name it in the anatomy.** "marker", "rail", "dot", "connector", "gutter", "chevron" → part. "hover wash", "focus ring", "tap target" → not.
+
+One carve-out, and it is principled rather than convenient: **a pseudo-element whose existence is gated on a design token is a finish by construction.** The `--selection-cue: marker` glyphs (`tabs`, `tree`, `segmented`, `pagination`, `swatch`) draw a `✓` inside a container query on a derived token. They are the *algorithm's* accessibility policy, applied uniformly — which is the definitional opposite of a mod-surface hole. Without this carve-out the rule eats its own a11y layer.
+
+Then the question of **who owns it**, which has three answers, not two:
 
 - **The component owns it, and it renders → it MUST be a fragment.** Markup the component *invents* and the user *sees*: a track, a control bar, prev/next arrows, dots, a play toggle, a star row, a tab strip, a resize handle, a shell's app bar. The component conjured it, so the author has nothing to edit and a mod is the *only* way to change it. It renders through `packages/xtyle/src/elements/fragments/<id>/` with a `mod.manifest.json` `fills` entry and a matching slot in `component-host.json`. That is mod-zero: the built-in fill goes through the exact surface a third party would use.
 - **The author owns it → a decorator is correct.** Semantic content the *consumer* wrote, which the element merely classes and ARIAs in place: a real `<table>`, an `<ol>` of events, a set of slides. There is nothing for a mod to override that isn't already the author's to edit.
@@ -90,19 +100,27 @@ The test is **who owns the markup**, and there are three answers, not two:
 
 **A component can be more than one of these, and that is the trap.** `Carousel` receives the author's slides (content), invents a track, arrows, dots, and a play toggle (chrome), *and* invents an `aria-live` region (plumbing). Receiving content does not license building chrome imperatively, and having plumbing does not excuse the chrome next to it. Split it: behavior — scroll math, seam-clone looping, keyboard, autoplay — stays in the element, plumbing stays in the element, and the *chrome it draws* goes in the fragment.
 
-**How this actually goes wrong:** the first pass of `MobileShell` was built as a light-DOM decorator, which would have put an app's chrome outside the fragment model and quietly made the one surface an app most wants to reskin the one surface it *couldn't*. It got caught and rebuilt as a fragment. Others shipped the other way, because the line was never written down. As of this writing, the components that invent rendered chrome with no `fragments/<id>/` are:
+**How this actually goes wrong, twice.** The first pass of `MobileShell` was built as a light-DOM decorator, which would have put an app's chrome outside the fragment model and quietly made the one surface an app most wants to reskin the one surface it *couldn't*. It got caught and rebuilt as a fragment.
 
-| component | imperative DOM calls | what it invents |
+The second way is worse, because the rule itself was blind to it. This table used to be keyed on **imperative DOM calls** — which is precisely the metric that scores `steps` and `timeline` at *zero* and calls them clean, while they conjure a numbered marker, a checkmark, a connector track, a dot, and a rail that exist as **no node anywhere**, reachable by neither a mod nor the author. Worse still, their doc comments cited *each other* as precedent ("drawn from the theme in CSS"), so the mistake was self-propagating. **Never key this table on a mechanism.** Key it on the only thing that matters:
+
+**Invents rendered furniture no fill owns** — counting markup *and* stylesheet.
+
+| component | invents | via |
 |---|---|---|
-| `dock-zone` | 26 | tab strips, headers, chevrons, close buttons, floating windows, resize handles |
-| `carousel` | 9 | track, control bar, arrows, dots, play toggle |
-| `table` | 2 | a sort glyph inside the author's `<th>` |
-| `rating` | 2 | the whole star row (`innerHTML`), plus a hidden input (plumbing, fine) |
-| `lightbox` | 2 | an `<xtyle-dialog>` it fills — the dialog *is* fragment-backed, so most of this chrome is already reachable |
+| *none currently* | — | — |
 
-`dock-zone` is the worst of them, not `carousel`: it hand-builds an entire panel chrome tree, and dockable panel chrome is close to the top of what an app would want to reskin.
+The table is empty, and it stays. **Do not delete it** — it exists to catch the next offender, not to record the last one. Every component renders its chrome through `fragments/<id>/`, and the CSS-drawn markers, checkmarks, chevrons, gutters, rails and dots are real nodes in a fill.
 
-**When you add or touch a component, state which side of the line it is on and why.** If it draws rendered chrome and has no fragment, that is a defect to raise — not a style preference, and not something to work around. Keep the table above honest; a component that lands in it silently is the exact failure this rule exists to prevent.
+**A fragment's existence is not a pass** — this is the shape that fooled a whole audit. `bar`, `pie`, `heatmap`, `toast`, `image` and `color-picker` all *had* fragments and still wrote chrome into them from the element, which looks compliant and isn't: a mod's override gets clobbered on the next hover, the next edit, the next paint. When you check a component, check that the fill owns *everything* it draws, not that a fill exists.
+
+`lightbox` is the inverse and is correctly absent from the table: it composes an already-fragment-backed `<xtyle-dialog>` and fills it with the viewer's payload. So is the imperative `toast()` API, which creates `<xtyle-toast>` elements and lets each one render through its own fill.
+
+**And a fill only wins if it is loaded after mod-zero.** Fills share one runtime and their ops concatenate in registration order, last-op-wins. `loadFill()` pulls the built-in fill for a slot in *first*, so an override loaded at any point still wins — but if you add a new path that registers a fill, route it through `loadFill()` or you will silently reintroduce the bug where an app that installs its mods at boot has them painted over.
+
+**Plumbing that correctly stays in the element**, so nobody "fixes" it: `carousel`'s and `date-picker`'s `aria-live` announcers, the hidden mirror inputs in `rating` / `combobox` / `dropzone`, and `field`'s `<datalist>`. All invented, none reskinnable.
+
+**When you add or touch a component, state which side of the line it is on and why.** If it invents rendered furniture and has no fill that owns it, that is a defect to raise — not a style preference, and not something to work around. Keep the table honest; a component that lands in it silently is the exact failure this rule exists to prevent.
 
 ## Release Process
 

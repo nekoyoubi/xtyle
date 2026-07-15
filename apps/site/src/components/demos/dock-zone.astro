@@ -5,22 +5,27 @@ import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import DockZone from "@xtyle/astro/DockZone.astro";
 
+// A full `DockLayout`: the docked tree plus a window already torn off, so the float chrome (the
+// titlebar with its dock and close buttons, the resize grip) is on screen without a drag first.
 const initialLayout = {
-	kind: "split",
-	direction: "row",
-	sizes: [1, 2],
-	children: [
-		{ kind: "leaf", id: "zone-0", panels: ["files"], active: 0 },
-		{
-			kind: "split",
-			direction: "column",
-			sizes: [3, 2],
-			children: [
-				{ kind: "leaf", id: "zone-1", panels: ["preview"], active: 0 },
-				{ kind: "leaf", id: "zone-2", panels: ["problems", "outline"], active: 0 },
-			],
-		},
-	],
+	tree: {
+		kind: "split",
+		direction: "row",
+		sizes: [1, 2],
+		children: [
+			{ kind: "leaf", id: "zone-0", panels: ["files"], active: 0 },
+			{
+				kind: "split",
+				direction: "column",
+				sizes: [3, 2],
+				children: [
+					{ kind: "leaf", id: "zone-1", panels: ["preview"], active: 0 },
+					{ kind: "leaf", id: "zone-2", panels: ["problems", "outline"], active: 0 },
+				],
+			},
+		],
+	},
+	floating: [{ panelId: "terminal", x: 210, y: 46, w: 300, h: 130, origin: "zone-1" }],
 };
 ---
 
@@ -29,11 +34,17 @@ const initialLayout = {
 		<Heading slot="header" level={2} size="sm">A movable-panel workspace</Heading>
 		<Stack gap={3}>
 			<Text tone="muted">
-				The workspace opens already split into zones. Drag a tab onto another zone to move it:
-				drop over the center to join as a tab, or against an edge to split. Clicking a tab just
-				selects it. Float the Preview panel out with its <span aria-hidden="true">⧉</span> button, or drag
-					any tab out past the zones. Drag a window by its titlebar to move it, back over a zone to
-					re-dock, or its corner to resize. The layout is the drag physics only; the panels are your own content.
+				The workspace opens already split into zones, with the Terminal panel torn off into a
+				floating window. Drag a tab onto another zone to move it: drop over the center to join as a
+				tab, or against an edge to split. Clicking a tab just selects it. Float the Preview panel out
+				with its <span aria-hidden="true">⧉</span> button, or drag any tab out past the zones. Drag the
+					floating window by its titlebar and it just moves — the workspace is open floor. Push it up
+					against a zone's boundary and the drop films light up: release there and it re-docks as a
+					split. Its <span aria-hidden="true">⤓</span> button docks it back as a tab, and its corner
+					resizes it. The <span aria-hidden="true">⋮</span> kebab on a panel opens its overflow menu.
+					Every one of those surfaces — tab strip, section header, header buttons, kebab, float window,
+					drag film — is drawn by the component's xript fragment, so an app reskins or restructures them
+					the same way a mod would. The layout is the drag physics only; the panels are your own content.
 			</Text>
 			<DockZone layout={JSON.stringify(initialLayout)} style="height: 360px;" class="dock-demo">
 				<section
@@ -105,6 +116,11 @@ const initialLayout = {
 						<li class="dz-problems--error">Token <code>--border</code> consumed, not produced</li>
 						<li class="dz-problems--info">3 components consume <code>--accent-3</code></li>
 					</ul>
+				</section>
+				<section data-panel-id="terminal" data-title="Terminal" data-closable>
+					<pre class="dz-term">$ xtyle derive --bg #101418 --accent #4fd6be
+✓ 214 tokens · AA on every text pair
+$ _</pre>
 				</section>
 			</DockZone>
 		</Stack>
@@ -252,5 +268,13 @@ const initialLayout = {
 		font-family: var(--font-mono);
 		font-size: var(--text-xs);
 		color: var(--fg-1);
+	}
+	.dock-demo :global(.dz-term) {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		line-height: var(--leading-normal);
+		color: var(--fg-1);
+		white-space: pre-wrap;
 	}
 </style>

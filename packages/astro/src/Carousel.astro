@@ -1,4 +1,6 @@
 ---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
 type CarouselTransition = "slide" | "fade" | "scale" | "flip";
 type CarouselDirection = "right" | "left" | "up" | "down";
 
@@ -32,6 +34,24 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+
+// The slides ship inside the fill's track from the first byte. Server-rendering only the frame (no
+// dots, no arrows: the slide count is not knowable from a rendered slot string, and the controls are
+// a runtime enhancement anyway) means the element upgrades over a scaffold that already holds the
+// consumer's nodes, instead of tearing them out of the page while the sandbox loads.
+const slides = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const light = await renderFragmentLight("carousel", {
+	slideCount: 0,
+	index: 0,
+	controls: controls === "overlay" ? "overlay" : controls ? "bar" : "none",
+	dots,
+	showPlay: false,
+	playing: true,
+	loop,
+	label,
+	direction: direction ?? "right",
+});
+const composed = light.replace("<slot></slot>", () => slides);
 ---
 
 <xtyle-carousel
@@ -45,9 +65,8 @@ const {
 	transition={transition && transition !== "slide" ? transition : undefined}
 	direction={direction && direction !== "right" ? direction : undefined}
 	class={extra}
+	set:html={composed}
 	{...rest}
->
-	<slot />
-</xtyle-carousel>
+/>
 
 <script>import "@xtyle/core/elements";</script>

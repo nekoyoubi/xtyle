@@ -1,0 +1,40 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-popover-default",
+	"version": "0.0.1",
+	"title": "Xtyle Popover (default)",
+	"description": "The built-in fill for the xtyle Popover component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.popover"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.popover": [
+			{
+				"id": "popover",
+				"format": "text/html+jsml",
+				"source": "popover.html",
+				"meta": {
+					"tokens": [
+						"--border-thick",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--elevation-3",
+						"--fg-1",
+						"--font-sans",
+						"--leading-normal",
+						"--radius-md",
+						"--ring",
+						"--scrim",
+						"--space-2",
+						"--space-3",
+						"--space-8",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--text-sm"
+					]
+				}
+			}
+		]
+	}
+}

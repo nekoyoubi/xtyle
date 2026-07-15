@@ -1,0 +1,79 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { MenuItem } from "@xtyle/core";
+
+type Variant = "solid" | "outline" | "subtle" | "ghost";
+type Size = "xs" | "sm" | "md" | "lg";
+
+interface Props {
+	/** The dropdown's rows: the same `MenuItem` contract Menu speaks — actions, separators, headings. */
+	items?: MenuItem[];
+	variant?: Variant;
+	tone?: string;
+	size?: Size;
+	open?: boolean;
+	disabled?: boolean;
+	/** Puts the primary in flight: a spinner replaces its label and the press is blocked. The caret stays live. */
+	loading?: boolean;
+	/** Accessible name for the caret half. Name it for what the menu holds. */
+	menuLabel?: string;
+	block?: boolean;
+	/** The primary's native button type — `submit` makes the default action submit the surrounding form. */
+	type?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	items = [],
+	variant = "solid",
+	tone = "accent",
+	size = "md",
+	open = false,
+	disabled = false,
+	loading = false,
+	menuLabel,
+	block = false,
+	type = "button",
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const bindings = {
+	variant,
+	tone,
+	size,
+	type,
+	disabled,
+	loading,
+	block,
+	open,
+	menuLabel: menuLabel ?? null,
+	itemsJson: JSON.stringify(items),
+};
+const light = await renderFragmentLight("split-button", bindings);
+const labelHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const composed = light.replace("<slot></slot>", () => labelHtml);
+---
+
+<xtyle-split-button
+	variant={variant}
+	tone={tone}
+	size={size}
+	type={type}
+	items={JSON.stringify(items)}
+	open={open || undefined}
+	disabled={disabled || undefined}
+	loading={loading || undefined}
+	block={block || undefined}
+	menu-label={menuLabel}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

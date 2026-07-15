@@ -48,6 +48,7 @@ export const separatorManifest: ComponentManifest = {
 	id: "separator",
 	name: "Separator",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["divider", "hr", "rule", "hairline", "vertical rule"],
 	seeAlso: ["stack", "cluster"],
 	summary: "A hairline divider: horizontal or vertical, optionally with a centered label, in two weights.",

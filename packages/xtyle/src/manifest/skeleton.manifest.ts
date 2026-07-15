@@ -36,6 +36,7 @@ export const skeletonManifest: ComponentManifest = {
 	id: "skeleton",
 	name: "Skeleton",
 	category: "feedback",
+	since: "0.1.0",
 	keywords: ["placeholder", "loading", "shimmer", "ghost", "content loader"],
 	seeAlso: ["spinner", "empty", "image"],
 	summary: "A shimmering loading placeholder in four shapes: text, line, block, and circle.",

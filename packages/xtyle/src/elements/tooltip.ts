@@ -229,7 +229,7 @@ export class XtyleTooltip extends XtyleElement {
 			!!content &&
 			[...content.childNodes].some((node) =>
 				node instanceof Element
-					? !node.classList.contains("xtyle-tooltip__arrow") && !node.hasAttribute("data-text")
+					? !node.classList.contains("xtyle-tooltip__arrow") && !node.hasAttribute("data-label")
 					: (node.textContent ?? "").trim() !== "",
 			);
 		if (!hasContent) {

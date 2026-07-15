@@ -48,17 +48,23 @@ function closeTagFor(openTag: string): string {
 
 /**
  * Wrap each logical line of already-tokenized (or escaped-plain) code HTML in a
- * `.xtyle-code-line` row so a CSS counter can number it and a `highlight` set can tint
- * chosen lines. Tag-aware: a token span that straddles a newline (a block comment, a
- * multi-line string) is closed at the line end and re-opened on the next line, so each
- * row's markup is well-formed. The line's content is nested in a `__text` cell — the flex
- * sibling of the counter gutter — so it wraps cleanly under soft-wrap while the gutter
- * stays put. Any 1-based line number in `highlight` gets a `data-line-highlight` attribute
- * the CSS tints. A single trailing newline is dropped so a file ending in `\n` reads as N
- * lines, not N+1; an empty line keeps a zero-width space so its row still has height. Pure
- * and DOM-free — safe on the SSR path. `html` is already escaped/tokenized, never raw user text.
+ * `.xtyle-code-line` row, so a `highlight` set can tint chosen lines and — with `numbers` —
+ * each row can carry its line number as a real `.xtyle-code-line__number` node in the gutter.
+ * Tag-aware: a token span that straddles a newline (a block comment, a multi-line string) is
+ * closed at the line end and re-opened on the next line, so each row's markup is well-formed.
+ * The line's content is nested in a `__text` cell — the flex sibling of the gutter — so it wraps
+ * cleanly under soft-wrap while the gutter stays put. Any 1-based line number in `highlight` gets
+ * a `data-line-highlight` attribute the CSS tints. A single trailing newline is dropped so a file
+ * ending in `\n` reads as N lines, not N+1; an empty line keeps a zero-width space so its row
+ * still has height. Pure and DOM-free — safe on the SSR path. `html` is already escaped/tokenized,
+ * never raw user text. Called from the Code component's fragment fill, so the gutter is markup a
+ * mod can restructure rather than a `::before` counter it can only re-color.
  */
-export function splitCodeLines(html: string, highlight?: ReadonlySet<number>): { html: string; lines: number } {
+export function splitCodeLines(
+	html: string,
+	highlight?: ReadonlySet<number>,
+	numbers?: boolean,
+): { html: string; lines: number } {
 	const open: string[] = [];
 	const rows: string[] = [];
 	let row = "";
@@ -82,9 +88,11 @@ export function splitCodeLines(html: string, highlight?: ReadonlySet<number>): {
 	}
 	rows.push(row);
 	if (rows.length > 1 && rows[rows.length - 1] === "") rows.pop();
+	const number = (n: number): string =>
+		numbers ? `<span class="xtyle-code-line__number" aria-hidden="true">${n}</span>` : "";
 	return {
 		html: rows
-			.map((r, i) => `<span class="xtyle-code-line"${highlight?.has(i + 1) ? " data-line-highlight" : ""}><span class="xtyle-code-line__text">${r || "\u200b"}</span></span>`)
+			.map((r, i) => `<span class="xtyle-code-line"${highlight?.has(i + 1) ? " data-line-highlight" : ""}>${number(i + 1)}<span class="xtyle-code-line__text">${r || "\u200b"}</span></span>`)
 			.join(""),
 		lines: rows.length,
 	};

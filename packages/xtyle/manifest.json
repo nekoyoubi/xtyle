@@ -70,7 +70,7 @@
 				"knobs": { "type": { "array": "string" }, "description": "Declared knob names." },
 				"knobSpecs": {
 					"type": { "array": "KnobSpec" },
-					"description": "The domain of each scalar knob — what it accepts and how it is shaped — so a consumer renders a control from the algorithm's own declaration rather than a hardcoded table. A subset of `knobs`: composite groups a consumer expands itself (`anchors`, `fonts`) carry no spec. Omit and the host resolves domains for the shared knobs; a knob only this algorithm reads must declare its own here or it has no stated domain.",
+					"description": "The domain of each knob — what it accepts and how it is shaped — so a consumer renders a control from the algorithm's own declaration rather than a hardcoded table. Every knob carries one, including a composite group a consumer expands into a cluster of its own (`anchors`, `fonts`): only the scalar *control* is absent there, never the declaration. Omit and the host resolves domains for the shared knobs; a knob only this algorithm reads must declare its own here or it has no stated domain.",
 					"optional": true
 				},
 				"invariantCount": { "type": "number", "description": "How many per-algorithm invariants the `invariants` export evaluates. Required: the host sizes the invariant list from it, so a mod that omits it reports *no* invariants and passes the gauntlet vacuously." },
@@ -81,8 +81,9 @@
 			"description": "The valid-input domain an algorithm declares for one knob: the kind of control it is, and the values it accepts. The algorithm's contract, distinct from a consumer's cosmetics (a localized label, digit precision), which stay with the consumer.",
 			"fields": {
 				"name": { "type": "string", "description": "The knob name, matched against `knobs`." },
-				"kind": { "type": "string", "description": "How the control is rendered: `select`, `range`, or `text`." },
+				"kind": { "type": "string", "description": "How the control is rendered: `select`, `range`, `text`, or `composite` (a group the consumer expands into a cluster of its own, e.g. an anchor picker or a font stack — it has a declaration but no single scalar control)." },
 				"label": { "type": "string", "description": "A short human label hint; a consumer may override it.", "optional": true },
+				"undeclared": { "type": "boolean", "description": "Set by the host when an algorithm declared this knob but never described it. The control degrades to `text` so the knob stays reachable; this marks the crude control as a gap in the declaration rather than a deliberate free-text domain.", "optional": true },
 				"group": { "type": "string", "description": "Logical grouping for a consumer that sections its controls.", "optional": true },
 				"default": { "type": "string", "description": "The value the knob takes when first switched on from its default. A number crosses as a number.", "optional": true },
 				"defaultByScheme": { "type": "map", "description": "A default that depends on the resolved scheme (`dark` / `light`), winning over `default` for the matching one. For a signed knob like `surfaceRamp`, whose sign follows the scheme, one static default would seed the wrong sign on half of all themes.", "optional": true },

@@ -65,6 +65,7 @@ export const checkboxManifest: ComponentManifest = {
 	id: "checkbox",
 	name: "Checkbox",
 	category: "control",
+	since: "0.1.0",
 	keywords: ["tick", "check", "boolean", "indeterminate", "multi-select"],
 	seeAlso: ["radio", "switch"],
 	summary: "A styled native checkbox: checked, indeterminate, and disabled states.",

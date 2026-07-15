@@ -1,16 +1,22 @@
 {
 	"name": "@xtyle/svelte",
-	"version": "0.7.1",
+	"version": "0.8.0",
 	"description": "Thin Svelte wrappers over the @xtyle/core/elements custom elements.",
 	"type": "module",
 	"license": "MIT",
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"sideEffects": ["./dist/register.js"],
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
 			"svelte": "./dist/index.js",
 			"default": "./dist/index.js"
+		},
+		"./register": {
+			"types": "./dist/register.d.ts",
+			"svelte": "./dist/register.js",
+			"default": "./dist/register.js"
 		}
 	},
 	"files": [
@@ -21,7 +27,7 @@
 		"build": "svelte-package -i src -o dist"
 	},
 	"dependencies": {
-		"@xtyle/core": "^0.7.1"
+		"@xtyle/core": "^0.8.0"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"

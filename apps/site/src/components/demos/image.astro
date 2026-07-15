@@ -45,7 +45,8 @@ const motionSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"
 			<Text tone="muted" size="sm">
 				Hover or focus a cover and the still comes alive and plays a preview clip;
 				leaving resets it. The preview can be a moving image, a nested carousel, or a video via
-				<code>hover-src</code> (with an optional unmute toggle).
+				<code>hover-src</code>. Add <code>hover-audio</code> and a mute toggle rides the reveal into
+				the corner of the frame.
 			</Text>
 			<Grid minColWidth="14rem" gap={4}>
 				<Stack gap={1}>
@@ -79,8 +80,8 @@ const motionSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"
 					<Text size="xs" tone="subtle" weight="semibold" style="text-align: center;">a moving preview</Text>
 				</Stack>
 				<Stack gap={1}>
-					<Image src={scene} alt="Nebula Drifter, a landscape that comes alive" ratio="16/9" hoverSrc="/preview-scene.mp4" />
-					<Text size="xs" tone="subtle" weight="semibold" style="text-align: center;">hover-src video</Text>
+					<Image src={scene} alt="Nebula Drifter, a landscape that comes alive" ratio="16/9" hoverSrc="/preview-scene.mp4" hoverAudio="off" />
+					<Text size="xs" tone="subtle" weight="semibold" style="text-align: center;">hover-src video, with a mute toggle</Text>
 				</Stack>
 			</Grid>
 		</Stack>

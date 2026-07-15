@@ -82,11 +82,11 @@
     return `<label class="xtyle-field__label" part="label" for="${escapeAttr(inputId)}"${labelHidden}>${escapeHtml(label)}${star}</label><div class="xtyle-field__control" part="control"><span class="xtyle-field__adornment" part="adornment"><slot name="prefix"></slot></span><input ${inputAttrs} /><button type="button" class="xtyle-field__action" part="action-reveal" data-action="reveal"${revealHidden} aria-pressed="${revealPressed}" aria-label="${escapeAttr(revealLabel)}"><slot name="reveal-icon"><span aria-hidden="true">&#128065;</span></slot></button><button type="button" class="xtyle-field__action" part="action-clear" data-action="clear"${clearHidden} aria-label="Clear"><slot name="clear-icon"><span aria-hidden="true">&times;</span></slot></button><span class="xtyle-field__adornment" part="adornment"><slot name="suffix"></slot></span></div><span class="xtyle-field__description" part="description" id="${escapeAttr(descriptionId)}"${descriptionHidden}>${escapeHtml(description)}</span><span class="xtyle-field__error" part="error" id="${escapeAttr(errorId)}"${errorHidden}>${escapeHtml(error)}</span>`;
   }
   hooks.fragment.mount("field", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", fieldClass(bindings));
+    ops.setAttr(".xtyle-field", "class", fieldClass(bindings));
     ops.replaceChildren("[data-field]", inner(bindings));
   });
   hooks.fragment.update("field", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", fieldClass(bindings));
+    ops.setAttr(".xtyle-field", "class", fieldClass(bindings));
     const labelText = bindings.label ?? "";
     const star = bindings.required ? `<span class="xtyle-field__required" part="required" aria-hidden="true">*</span>` : "";
     ops.replaceChildren(".xtyle-field__label", `${escapeHtml(labelText)}${star}`);

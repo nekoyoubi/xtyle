@@ -96,6 +96,7 @@ export const tabsManifest: ComponentManifest = {
 	id: "tabs",
 	name: "Tabs",
 	category: "navigation",
+	since: "0.1.0",
 	keywords: ["tab bar", "tablist", "segmented content", "views", "panels"],
 	seeAlso: ["segmented", "accordion", "steps"],
 	summary: "Sectioned content switching with a full WAI-ARIA tablist: three visual treatments, keyboard-driven.",

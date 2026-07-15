@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/splitter.js";
 
 	type SplitterOrientation = "vertical" | "horizontal";
 	type SplitterSize = "sm" | "md" | "lg";

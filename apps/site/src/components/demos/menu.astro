@@ -4,6 +4,7 @@ import Card from "@xtyle/astro/Card.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
 import type { MenuItem } from "@xtyle/core/markup";
 
 const fileItems: MenuItem[] = [
@@ -26,6 +27,18 @@ const editItems: MenuItem[] = [
 	{ label: "Copy", value: "copy", hint: "Ctrl+C" },
 	{ label: "Paste", value: "paste", hint: "Ctrl+V" },
 ];
+
+const canvasItems: MenuItem[] = [
+	{ heading: "Selection" },
+	{ label: "Cut", value: "cut", hint: "Ctrl+X" },
+	{ label: "Copy", value: "copy", hint: "Ctrl+C" },
+	{ label: "Paste", value: "paste", hint: "Ctrl+V", disabled: true },
+	{ heading: "Layer" },
+	{ label: "Bring to front", value: "front", hint: "]" },
+	{ label: "Send to back", value: "back", hint: "[" },
+	{ separator: true },
+	{ label: "Delete", value: "delete", hint: "Del", intent: "danger" },
+];
 ---
 
 <Stack gap={6}>
@@ -36,10 +49,49 @@ const editItems: MenuItem[] = [
 			<Menu label="Edit" items={editItems} />
 		</Cluster>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Right-click menu</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The same Menu with <code>context</code>: no trigger, opened at the pointer with <code>openAt(x, y)</code>. Same
+				items, same keyboard, same <code>select</code> event. Near the right edge it right-aligns on the cursor instead of
+				sliding away from it.
+			</Text>
+			<div id="menu-canvas" class="menu-canvas" tabindex="0">
+				Right-click (or long-press) anywhere in this panel. Shift+F10 opens it from the keyboard.
+			</div>
+			<Text size="sm"><span id="menu-canvas-echo">No action chosen yet.</span></Text>
+		</Stack>
+		<Menu context items={canvasItems} id="menu-canvas-menu" />
+	</Card>
 </Stack>
+
+<style>
+	.menu-canvas {
+		display: grid;
+		place-items: center;
+		min-height: 12rem;
+		padding: var(--space-4);
+		text-align: center;
+		color: var(--fg-2);
+		font-size: var(--text-sm);
+		background: var(--bg-2);
+		border: var(--border-thin) dashed var(--line);
+		border-radius: var(--radius-md);
+		cursor: context-menu;
+	}
+	.menu-canvas:focus-visible {
+		outline: var(--border-thick) solid var(--ring);
+		outline-offset: 2px;
+	}
+</style>
 
 <script>
 	import "@xtyle/core/elements";
+	import type { MenuOpenAtOptions } from "@xtyle/core/elements";
+
+	type MenuEl = HTMLElement & { openAt(x: number, y: number, opts?: MenuOpenAtOptions): void };
 
 	document.addEventListener("select", (event) => {
 		const detail = (event as CustomEvent).detail;
@@ -47,6 +99,30 @@ const editItems: MenuItem[] = [
 			console.log("menu select", detail);
 		}
 	});
+
+	const canvas = document.querySelector<HTMLElement>("#menu-canvas");
+	const canvasMenu = document.querySelector<MenuEl>("#menu-canvas-menu");
+	const echo = document.querySelector<HTMLElement>("#menu-canvas-echo");
+
+	if (canvas && canvasMenu) {
+		canvas.addEventListener("contextmenu", (event) => {
+			event.preventDefault();
+			canvasMenu.openAt(event.clientX, event.clientY);
+		});
+
+		// the pointer surface needs a keyboard route to the same actions
+		canvas.addEventListener("keydown", (event) => {
+			if (!(event.key === "F10" && event.shiftKey) && event.key !== "ContextMenu") return;
+			event.preventDefault();
+			const rect = canvas.getBoundingClientRect();
+			canvasMenu.openAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+		});
+
+		canvasMenu.addEventListener("select", (event) => {
+			const detail = (event as CustomEvent).detail;
+			if (echo) echo.textContent = `Chose "${detail.label}" (${detail.value}).`;
+		});
+	}
 
 	requestAnimationFrame(() => {
 		document.querySelector("xtyle-menu")?.setAttribute("open", "");

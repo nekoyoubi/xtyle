@@ -57,6 +57,7 @@ export const clusterManifest: ComponentManifest = {
 	id: "cluster",
 	name: "Cluster",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["hstack", "row", "inline group", "wrap", "flex row", "tag list"],
 	seeAlso: ["stack", "grid", "toolbar"],
 	summary: "A horizontal flex row that wraps, for toolbars, tag lists, and inline action groups.",

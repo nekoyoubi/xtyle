@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/statusbar.js";
 	import type { Snippet } from "svelte";
 
 	type OverflowChange = CustomEvent<{ hidden: HTMLElement[]; visible: HTMLElement[] }>;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/cluster.js";
 	import type { Snippet } from "svelte";
 
 	type ClusterAlign = "start" | "center" | "end" | "stretch" | "baseline";

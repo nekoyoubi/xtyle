@@ -1,0 +1,220 @@
+---
+import Dropzone from "@xtyle/astro/Dropzone.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">The drop is one input, not the input</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				Inside a Tauri or Electron webview the OS hands a file drop to the shell, not to the document, so
+				<code>dragover</code> / <code>drop</code> never fire. Every ingress here lands on the same public seam instead:
+				<code>addFiles()</code> takes <code>File</code> objects, bare filesystem paths, or descriptors, and validates all
+				of them identically. The buttons below drive the zone exactly the way a native host does — no DOM drag involved.
+			</Text>
+			<Dropzone id="demo-native" label="Upload attachments" accept="image/*,.pdf" maxSize="5mb" maxFiles={4} multiple />
+			<Cluster gap={2}>
+				<Button size="sm" variant="subtle" id="demo-native-over">setDragging(true)</Button>
+				<Button size="sm" variant="subtle" id="demo-native-drop">addFiles([native paths])</Button>
+				<Button size="sm" variant="subtle" id="demo-native-bad">drop a rejected path</Button>
+				<Button size="sm" variant="ghost" id="demo-native-clear">clear()</Button>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Upload list, driven progress, removal</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				The component owns the surface and the list; the transport is yours. Every batch arrives as a
+				<code>file-drop</code> event — accepted, rejected, and which ingress it came through — and the host reports back with
+				<code>setProgress(id, percent)</code> and <code>setStatus(id, "done" | "error", message)</code>. Each row is a live
+				<code>role="progressbar"</code>, and removing one moves focus to the next.
+			</Text>
+			<Dropzone id="demo-upload" label="Upload files" multiple maxFiles={6} />
+			<Cluster gap={2}>
+				<Button size="sm" variant="subtle" id="demo-upload-seed">add three files</Button>
+				<Button size="sm" variant="subtle" id="demo-upload-fail">fail the first one</Button>
+			</Cluster>
+			<Text size="sm" tone="muted" id="demo-upload-log">Nothing dropped yet.</Text>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">The events</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				Four bare DOM events, all bubbling: <code>file-drop</code> for every batch, <code>file-reject</code> for the refusals
+				alone, <code>file-remove</code> when a row is dropped, and <code>change</code> whenever the accepted list moves. In
+				Svelte they are props — <code>onfiledrop</code>, <code>onfilereject</code>, <code>onfileremove</code>,
+				<code>onchange</code>. Drop files below (a <code>.exe</code> gets refused) and watch the log.
+			</Text>
+			<Dropzone id="demo-events" label="Watch the events" accept="image/*,.pdf" multiple maxFiles={4} />
+			<Cluster gap={2}>
+				<Button size="sm" variant="subtle" id="demo-events-good">drop two good files</Button>
+				<Button size="sm" variant="subtle" id="demo-events-bad">drop a rejected one</Button>
+			</Cluster>
+			<Text size="sm" tone="muted" id="demo-events-log">No events yet.</Text>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Zero JavaScript</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				The Astro binding renders the whole zone on the server — the surface, the derived hint, the browse chip, and the real
+				<code>&lt;input type="file"&gt;</code> — so it picks and posts files before any script arrives. <code>static</code>
+				keeps it that way: the instance below never asks for the runtime, and on a page with no other xtyle element it stays a
+				plain, working file field with zero JavaScript. Drag-and-drop, paste, the rejection surface, and the upload list are
+				what hydration adds on top.
+			</Text>
+			<Dropzone static name="resume" label="Attach a résumé" accept=".pdf,.docx" prompt="Attach a résumé" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Validation and the rejection surface</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				Images only, 200 KB apiece. A refused file never disappears in silence: it lands in a <code>role="alert"</code>
+				list with the reason. Drag a PDF (or a big photo) onto it — the surface turns you down before you even let go.
+			</Text>
+			<Dropzone
+				id="demo-validate"
+				label="Upload an avatar"
+				accept="image/png,image/jpeg"
+				maxSize="200kb"
+				prompt="Drop an image"
+				hint="PNG or JPEG, up to 200 KB — one file, and a new one replaces it" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Paste to upload</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				Take a screenshot and press <kbd>Ctrl</kbd>+<kbd>V</kbd> anywhere on this page. The zone claims a paste when focus
+				is inside it, and never steals one aimed at a text field.
+			</Text>
+			<Dropzone id="demo-paste" label="Paste a screenshot" accept="image/*" paste multiple prompt="Paste or drop a screenshot" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">In a form</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				With a <code>name</code>, the accepted files post through the hidden <code>&lt;input type="file"&gt;</code> on a normal
+				submit — and a rejected file is written back out of it, so it can never ride along.
+			</Text>
+			<form id="demo-form">
+				<Stack gap={3}>
+					<Dropzone name="attachments" label="Attach files" multiple maxFiles={3} required />
+					<Cluster gap={2} align="center">
+						<Button type="submit" size="sm">Submit</Button>
+						<Text size="sm" tone="muted" id="demo-form-out">Nothing submitted yet.</Text>
+					</Cluster>
+				</Stack>
+			</form>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Custom prompt, and disabled</Heading>
+		<Stack gap={3}>
+			<Dropzone id="demo-slotted" label="Upload a build" accept=".zip,.tar,.gz" hint="Archives only">
+				<strong>Drop a release archive</strong>
+			</Dropzone>
+			<Dropzone label="Uploads are closed" prompt="Uploads are closed" hint="Reopens Monday" disabled />
+		</Stack>
+	</Card>
+</Stack>
+
+<script>
+	import "@xtyle/core/elements";
+	import type { XtyleDropzone } from "@xtyle/core/elements";
+
+	const zone = (id: string) => document.getElementById(id) as XtyleDropzone | null;
+	const on = (id: string, run: () => void) => document.getElementById(id)?.addEventListener("click", run);
+
+	// The native path: paths in, validated files out. This is exactly what a Tauri
+	// `onDragDropEvent` handler does with `payload.paths` — no DOM drag event exists there.
+	on("demo-native-over", () => zone("demo-native")?.setDragging(true));
+	on("demo-native-drop", () =>
+		zone("demo-native")?.addFiles(["C:/shots/hero-render.png", "C:/docs/press-kit.pdf"], "host"),
+	);
+	on("demo-native-bad", () => zone("demo-native")?.addFiles(["C:/build/installer.exe"], "host"));
+	on("demo-native-clear", () => zone("demo-native")?.clear());
+
+	on("demo-upload-seed", () =>
+		zone("demo-upload")?.addFiles(
+			[
+				{ name: "quarterly-report.pdf", size: 2_400_000 },
+				{ name: "logo-final-v3.png", size: 184_320 },
+				{ name: "demo-reel.mp4", size: 41_900_000 },
+			],
+			"host",
+		),
+	);
+
+	// The transport is the host's, and `file-drop` is where it starts: every batch — dropped, pasted, picked,
+	// or handed over by a native shell — arrives here, and the bars are driven back through `setProgress`.
+	zone("demo-upload")?.addEventListener("file-drop", (event) => {
+		const target = zone("demo-upload");
+		const { accepted, source } = (event as CustomEvent).detail;
+		const log = document.getElementById("demo-upload-log");
+		if (log) log.textContent = `file-drop: ${accepted.length} accepted from "${source}" — uploading…`;
+		for (const file of accepted) {
+			let percent = 0;
+			const tick = window.setInterval(() => {
+				percent = Math.min(100, percent + 4 + Math.random() * 10);
+				target?.setProgress(file.id, percent);
+				if (percent >= 100) window.clearInterval(tick);
+			}, 120);
+		}
+	});
+
+	on("demo-upload-fail", () => {
+		const target = zone("demo-upload");
+		const first = target?.files[0];
+		if (target && first) target.setStatus(first.id, "error", "The server refused the upload (413).");
+	});
+
+	const eventLog: string[] = [];
+	const note = (line: string) => {
+		eventLog.unshift(line);
+		const out = document.getElementById("demo-events-log");
+		if (out) out.textContent = eventLog.slice(0, 4).join(" · ");
+	};
+
+	zone("demo-events")?.addEventListener("file-drop", (event) => {
+		const { accepted, rejected, source } = (event as CustomEvent).detail;
+		note(`file-drop (${source}): ${accepted.length} in, ${rejected.length} refused`);
+	});
+	zone("demo-events")?.addEventListener("file-reject", (event) => {
+		note(`file-reject: ${(event as CustomEvent).detail.rejected[0].message}`);
+	});
+	zone("demo-events")?.addEventListener("file-remove", (event) => {
+		note(`file-remove: ${(event as CustomEvent).detail.file.name}`);
+	});
+	zone("demo-events")?.addEventListener("change", (event) => {
+		note(`change: ${(event as CustomEvent).detail.files.length} file(s) held`);
+	});
+
+	on("demo-events-good", () => zone("demo-events")?.addFiles(["C:/shots/hero.png", "C:/docs/brief.pdf"], "host"));
+	on("demo-events-bad", () => zone("demo-events")?.addFiles(["C:/build/installer.exe"], "host"));
+
+	document.getElementById("demo-form")?.addEventListener("submit", (event) => {
+		event.preventDefault();
+		const data = new FormData(event.target as HTMLFormElement);
+		const names = data.getAll("attachments").map((entry) => (entry instanceof File ? entry.name : String(entry)));
+		const out = document.getElementById("demo-form-out");
+		if (out) out.textContent = names.length > 0 ? `Submitted: ${names.join(", ")}` : "Nothing submitted yet.";
+	});
+</script>

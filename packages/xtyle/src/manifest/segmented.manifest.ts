@@ -109,6 +109,7 @@ export const segmentedManifest: ComponentManifest = {
 	id: "segmented",
 	name: "Segmented",
 	category: "control",
+	since: "0.1.0",
 	keywords: ["segmented control", "toggle group", "button group", "single select", "pills"],
 	seeAlso: ["tabs", "switch", "radio", "button"],
 	summary: "A single-select toggle bar: pick one of a few options from a connected button group.",

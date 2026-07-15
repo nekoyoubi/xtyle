@@ -37,11 +37,11 @@
     return leadingLabel + `<button class="xtyle-switch__track" part="track" type="button" role="switch" aria-checked="${String(checked)}"${nameAttr}${disabledAttr}><span class="xtyle-switch__thumb" part="thumb" aria-hidden="true"></span></button>` + trailingState;
   }
   hooks.fragment.mount("switch", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", switchClass(bindings));
+    ops.setAttr(".xtyle-switch", "class", switchClass(bindings));
     ops.replaceChildren("[data-switch]", inner(bindings));
   });
   hooks.fragment.update("switch", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", switchClass(bindings));
+    ops.setAttr(".xtyle-switch", "class", switchClass(bindings));
     ops.setAttr('[role="switch"]', "aria-checked", String(bindings.checked ?? false));
     const text = stateLabel(bindings);
     if (text !== null) ops.setText('[part="state"]', text);

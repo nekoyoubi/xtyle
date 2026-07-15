@@ -1,12 +1,14 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { composeIcon, composeIconThemed, resolveIconMark, resolvePrimitiveName, type IconComposition } from "../icon-builder.js";
 import { readLiveRegister } from "./live-register.js";
-import { SERIES_TOKENS, type SeriesScheme } from "../series.js";
+import { PALETTE_TOKENS, type Palette } from "../series.js";
+import { FragmentHost } from "./fragment-host.js";
+import { manifest, fragmentSources } from "./fragments/rating/source.generated.js";
 
 /** The neutral track/surface color (the `e` "empty" nibble, shared with the Progress groove); also every
  * register token the icon marks read, so a browser-only consumer can reconstruct the minimal register the
- * silhouette + series colors need. */
-const RATING_TOKENS: readonly string[] = ["--neutral-bg", ...SERIES_TOKENS];
+ * silhouette + palette colors need. */
+const RATING_TOKENS: readonly string[] = ["--neutral-bg", ...PALETTE_TOKENS];
 
 /** Resolve an icon name to a composition: a `--` spec composes through the mark grammar (so a colorful
  * taco works), a bare name is a single-layer primitive (`star` → `symbol-star`, any functional glyph by
@@ -24,25 +26,32 @@ function clamp(min: number, max: number, v: number): number {
 }
 
 /**
- * A rating control. It draws `max` icons and overlays a colored copy clipped to `value / max`, so a
- * fractional value shows an exact partial icon. The base layer is the same icon forced to a neutral
- * track color (a `---pc` silhouette for a colorful mark, `currentColor` for a monochrome glyph), the
- * overlay is the icon in full color. Read-only by opt-in (`readonly`) it is a display; interactive (the
- * default) it is a real slider — focusable, arrow-key and pointer driven, emitting `input` / `change`
- * and syncing a hidden input when `name` is set. Client-rendered: the element's text is the no-JS
- * fallback and the accessible label.
+ * A rating control. The row of glyphs is the fill's: it draws `max` icons and overlays a colored copy
+ * clipped to `value / max`, so a fractional value shows an exact partial icon — a mod filling
+ * `component.rating` can swap the glyph, restructure the row, or clip the fill some other way. The
+ * element keeps the behavior: pointer and keyboard input, the hover preview, the committed value, the
+ * ARIA it carries as the host, and the hidden input that posts the value in a `<form>`. Read-only by
+ * opt-in (`readonly`) it is a display; interactive (the default) it is a real slider — focusable,
+ * arrow-key and pointer driven, emitting `input` / `change`. Client-rendered: the element's text is the
+ * no-JS fallback and the accessible label.
  */
 export class XtyleRating extends XtyleElement {
-	/** Rating is the host: the element itself carries `role="slider"` and the icon rows are its
-	 * direct children, so it always renders into its own light DOM (never a shadow scaffold). */
+	/** Rating is the host: the element itself carries `role="slider"`, sizes the glyphs, and is the box a
+	 * pointer position is measured against, so it always renders into its own light DOM (never a shadow
+	 * scaffold) and the fill's rows lay out as its own children. */
 	protected override get styleMode(): StyleMode {
 		return "scoped";
 	}
 
-	/** Bakes series colors from the live cascade, so it re-resolves on a live theme swap. */
+	/** Bakes palette colors from the live cascade, so it re-resolves on a live theme swap. */
 	protected override get resolvesThemeAtRuntime(): boolean {
 		return true;
 	}
+
+	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "rating", {
+		applyIntent: () => {},
+		afterApply: () => this.adoptFill(),
+	});
 
 	static get observedAttributes(): string[] {
 		return ["value", "max", "size", "icon", "colors", "tone", "readonly", "allowhalf", "name", "label"];
@@ -84,8 +93,8 @@ export class XtyleRating extends XtyleElement {
 	private get icon(): string {
 		return this.getAttribute("icon") || "star";
 	}
-	private get scheme(): SeriesScheme {
-		return (this.getAttribute("colors") as SeriesScheme) ?? "accents";
+	private get palette(): Palette {
+		return (this.getAttribute("colors") as Palette) ?? "accents";
 	}
 	private get step(): number {
 		return this.allowHalf ? 0.5 : 1;
@@ -122,30 +131,54 @@ export class XtyleRating extends XtyleElement {
 		return this.getAttribute("label") || this.fallbackLabel || `${value} out of ${this.max} stars`;
 	}
 
+	/** The two glyphs the fill repeats across the row. A colorful mark silhouettes to the neutral track
+	 * surface (`--neutral-bg`, the same tone the Progress groove uses, the `e` "empty" chrome nibble);
+	 * a monochrome glyph keeps `currentColor` and takes that same track color from the row's CSS. */
+	private glyphs(): { empty: string; filled: string } {
+		const register = this.register();
+		const comp = ratingComposition(this.icon);
+		const emptyComp: IconComposition = { ...comp, palette: { "*": "--neutral-bg" } };
+		return {
+			empty: composeIcon(emptyComp, { register, scheme: this.palette }),
+			filled: composeIconThemed(comp, { register, scheme: this.palette }),
+		};
+	}
+
+	/** Re-resolve the overlay row after every fill apply: a mount rebuilds the row (and the first one
+	 * lands asynchronously, once the sandbox is warm), so the node the hover preview writes to is only
+	 * knowable here. A fill that restructures the row keeps the preview by keeping the `fill` part. */
+	private adoptFill(): void {
+		this.filledRow = this.querySelector('[part="fill"]');
+	}
+
 	protected override render(): void {
 		const max = this.max;
 		const value = clamp(0, max, this.value);
-		const register = this.register();
-		const comp = ratingComposition(this.icon);
-		const filled = composeIconThemed(comp, { register, scheme: this.scheme });
-		// A colorful mark silhouettes to the neutral track surface (`--neutral-bg`, the same tone the
-		// Progress groove uses, the `e` "empty" chrome nibble); a monochrome glyph keeps `currentColor`
-		// and takes that same track color from the row's CSS instead.
-		const emptyComp: IconComposition = { ...comp, palette: { "*": "--neutral-bg" } };
-		const empty = composeIcon(emptyComp, { register, scheme: this.scheme });
 
-		this.className = "xtyle-rating";
+		this.classList.add("xtyle-rating");
 		this.classList.toggle("xtyle-rating--sm", this.getAttribute("size") === "sm");
 		this.classList.toggle("xtyle-rating--lg", this.getAttribute("size") === "lg");
 		this.classList.toggle("xtyle-rating--interactive", !this.readonly);
 		const tone = this.getAttribute("tone");
 		this.style.setProperty("--rating-fill", tone ? `var(--${tone})` : "");
 
-		const pct = max > 0 ? (value / max) * 100 : 0;
-		this.innerHTML =
-			`<span class="xtyle-rating__row xtyle-rating__row--empty" aria-hidden="true">${empty.repeat(max)}</span>` +
-			`<span class="xtyle-rating__row xtyle-rating__row--filled" aria-hidden="true" style="width: ${pct}%">${filled.repeat(max)}</span>`;
-		this.filledRow = this.querySelector(".xtyle-rating__row--filled");
+		const { empty, filled } = this.glyphs();
+		this.adoptComponentSheet();
+		this.fragment.ensureScaffold("");
+		// The glyph count and the glyphs themselves (a new icon, a new palette, a theme swap) are a
+		// structural change the fill's patch ops can't express, so they rebuild the row; a value change
+		// only moves the clip, so it stays a patch.
+		this.fragment.reshapeIfChanged(`${max}|${empty}|${filled}`);
+		this.fragment.update({
+			max,
+			value,
+			icon: this.icon,
+			emptyIcon: empty,
+			filledIcon: filled,
+			readonly: this.readonly,
+			allowHalf: this.allowHalf,
+			size: this.getAttribute("size") ?? "md",
+		});
 
 		this.applyA11y(value);
 		this.syncHidden(value);
@@ -173,6 +206,8 @@ export class XtyleRating extends XtyleElement {
 		}
 	}
 
+	/** The hidden input is plumbing, not chrome: it never renders, so it stays out of the fill and is
+	 * appended to the host itself, where a `<form>` collects it. */
 	private syncHidden(value: number): void {
 		const name = this.getAttribute("name");
 		if (!name || this.readonly) {

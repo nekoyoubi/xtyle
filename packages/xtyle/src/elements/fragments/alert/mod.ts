@@ -74,18 +74,18 @@ function live(b: AlertBindings): string {
 }
 
 hooks.fragment.mount("alert", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", alertClass(bindings));
+	ops.setAttr(".xtyle-alert", "class", alertClass(bindings));
 	ops.setAttr("[data-root]", "role", role(bindings));
 	ops.setAttr("[data-root]", "aria-live", live(bindings));
-	ops.replaceChildren("[data-icon]", iconSvg(bindings));
+	ops.replaceChildren("[data-glyph]", iconSvg(bindings));
 	ops.replaceChildren("[data-dismiss]", dismissButton(bindings));
 });
 
 hooks.fragment.update("alert", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", alertClass(bindings));
+	ops.setAttr(".xtyle-alert", "class", alertClass(bindings));
 	ops.setAttr("[data-root]", "role", role(bindings));
 	ops.setAttr("[data-root]", "aria-live", live(bindings));
-	ops.replaceChildren("[data-icon]", iconSvg(bindings));
+	ops.replaceChildren("[data-glyph]", iconSvg(bindings));
 });
 
 xript.exports.register("dismiss", (): Intent => {

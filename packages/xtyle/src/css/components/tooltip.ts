@@ -6,6 +6,7 @@ const toneVars = FULL_TONES.map(
 ).join("\n");
 
 export const tooltipCss = `
+.xtyle-tooltip__text { display: contents; }
 .xtyle-tooltip {
 	display: inline-flex;
 	position: relative;

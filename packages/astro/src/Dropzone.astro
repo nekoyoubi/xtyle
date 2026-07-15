@@ -1,0 +1,118 @@
+---
+import { dropzoneBindings, escapeAttr } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+interface Props {
+	/** Comma-separated extensions (`.png`) and mime patterns (`image/*`). */
+	accept?: string;
+	/** Hold more than one file. Without it a new accepted file replaces the current one. */
+	multiple?: boolean;
+	/** Per-file byte ceiling: `5mb`, `500kb`, or a raw byte count. */
+	maxSize?: string | number;
+	/** How many files the zone will hold (needs `multiple`). */
+	maxFiles?: number;
+	/** Ctrl/Cmd+V of a file or screenshot adds it. */
+	paste?: boolean;
+	/** Form field name; the accepted files post through the hidden file input. */
+	name?: string;
+	required?: boolean;
+	disabled?: boolean;
+	/** Accessible name of the file input. */
+	label?: string;
+	/** Headline on the surface. */
+	prompt?: string;
+	/** Constraint line; derived from `accept` / `maxSize` / `maxFiles` when unset. */
+	hint?: string;
+	/** Text on the faux browse chip. */
+	browseLabel?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup (surface, hint, and the real file input) but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	accept,
+	multiple = false,
+	maxSize,
+	maxFiles,
+	paste = false,
+	name,
+	required = false,
+	disabled = false,
+	label,
+	prompt,
+	hint,
+	browseLabel,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const uid = `xtyle-dropzone-${Math.random().toString(36).slice(2, 8)}`;
+const promptHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : null;
+
+// The server paints the surface, the hint, and the browse chip — never a file row: nothing has been
+// dropped yet, so the zero-JS render is the empty zone the element paints on its first frame, and
+// hydration patches it rather than rebuilding it.
+const bindings = dropzoneBindings({
+	inputId: uid,
+	accept,
+	multiple,
+	disabled,
+	maxSize: maxSize ?? null,
+	maxFiles: maxFiles ?? null,
+	prompt: prompt ?? null,
+	hint: hint ?? null,
+	browseLabel: browseLabel ?? null,
+	slotted: promptHtml !== null,
+});
+const light = await renderFragmentLight("dropzone", bindings);
+
+// The default slot carries a fallback (the prompt line the fill just painted): with consumer content
+// the whole slot gives way to it; without, the slot tags are stripped and the fallback stands.
+const composed = light.replace(/<slot>([\s\S]*?)<\/slot>/, (_match, fallback: string) =>
+	promptHtml === null ? fallback : promptHtml,
+);
+
+// The `<input type="file">` is the element's plumbing, not the fill's chrome, so it is emitted here
+// rather than in the fragment: without it a static (zero-JS) zone would be a `<label>` pointing at
+// nothing — no picker, no keyboard path, no form value. The element adopts this input (and its id) on
+// upgrade instead of minting a second one.
+const inputAttrs = [
+	`type="file"`,
+	`class="xtyle-dropzone__input"`,
+	`id="${uid}"`,
+	accept ? `accept="${escapeAttr(accept)}"` : "",
+	name ? `name="${escapeAttr(name)}"` : "",
+	multiple ? "multiple" : "",
+	disabled ? "disabled" : "",
+	required ? "required" : "",
+	`aria-label="${escapeAttr(label ?? "Upload files")}"`,
+	`aria-describedby="${uid}-hint"`,
+]
+	.filter(Boolean)
+	.join(" ");
+const html = `${composed}<input ${inputAttrs}>`;
+---
+
+<xtyle-dropzone
+	accept={accept}
+	name={name}
+	label={label}
+	prompt={prompt}
+	hint={hint}
+	max-size={maxSize === undefined ? undefined : String(maxSize)}
+	max-files={maxFiles === undefined ? undefined : String(maxFiles)}
+	browse-label={browseLabel}
+	multiple={multiple ? "" : undefined}
+	paste={paste ? "" : undefined}
+	required={required ? "" : undefined}
+	disabled={disabled ? "" : undefined}
+	class={["xtyle-dropzone", extra].filter(Boolean).join(" ")}
+	set:html={html}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

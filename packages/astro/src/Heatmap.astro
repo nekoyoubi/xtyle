@@ -6,7 +6,7 @@ import {
 	resolveHeatmapScale,
 	resolveHeatmapCategorical,
 } from "./internal/palette.ts";
-import { categoricalLegend, type HeatmapScheme, type SeriesScheme } from "@xtyle/core";
+import { categoricalLegend, type HeatmapScheme, type Palette } from "@xtyle/core";
 
 interface Props {
 	values?: number[][];
@@ -34,7 +34,7 @@ interface Props {
 	/** Show a key below the grid: a ramp scale (intensity mode) or a category legend (categorical mode). */
 	scale?: boolean;
 	/** Color by category instead of intensity: each column (or row) takes a distinct series hue, and the
-	 * cell value washes it from the surface up. `scheme` is read as a categorical `SeriesScheme`. */
+	 * cell value washes it from the surface up. `scheme` is read as a `Palette` and sampled, one color per category. */
 	categorical?: boolean;
 	/** Which axis carries the categories in `categorical` mode: `col` (default) or `row`. */
 	categoryAxis?: "col" | "row";
@@ -75,9 +75,9 @@ const {
 	...rest
 } = Astro.props;
 
-const effectiveScheme = (scheme ?? (categorical ? "accents" : "accent")) as HeatmapScheme;
+const effectiveScheme = (scheme ?? (categorical ? "accents" : "intensity")) as HeatmapScheme;
 const categoricalPalette = categorical
-	? await resolveHeatmapCategorical(effectiveScheme as SeriesScheme | string[], values, categoryAxis, reverse, max)
+	? await resolveHeatmapCategorical(effectiveScheme as Palette | string[], values, categoryAxis, reverse, max)
 	: null;
 const cellColors = categoricalPalette
 	? categoricalPalette.cellColors

@@ -1,6 +1,6 @@
-import { XtyleElement, define, escapeHtml, type StyleMode } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 import { pieHostCss, type PieDatum, type PieScheme, type PieVariant } from "../markup/index.js";
-import { seriesPalette, seriesColorsFor, SERIES_SCHEMES, SERIES_TOKENS, type SeriesScheme } from "../series.js";
+import { seriesPalette, seriesColorsFor, resolvePalette, PALETTE_TOKENS, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/pie/source.generated.js";
@@ -49,7 +49,7 @@ export class XtylePie extends XtyleElement {
 		const raw = this.getAttribute("scheme");
 		if (!raw) return "skittles";
 		if (raw.startsWith("[")) return parseJson<string[]>(raw) ?? "skittles";
-		return raw as SeriesScheme;
+		return raw as Palette;
 	}
 	set scheme(value: PieScheme) {
 		this.schemeProp = value;
@@ -77,7 +77,7 @@ export class XtylePie extends XtyleElement {
 	}
 
 	private paletteRegister(): Record<string, string> {
-		return readLiveRegister(this, SERIES_TOKENS, () => {
+		return readLiveRegister(this, PALETTE_TOKENS, () => {
 			if (this.root.firstChild) this.render();
 		});
 	}
@@ -85,7 +85,7 @@ export class XtylePie extends XtyleElement {
 	private colors(items: readonly PieDatum[]): string[] {
 		const scheme = this.scheme;
 		if (Array.isArray(scheme)) return seriesPalette(scheme, items.length, {}, { reverse: this.reverse });
-		const resolved = SERIES_SCHEMES.includes(scheme) ? scheme : "skittles";
+		const resolved = resolvePalette(scheme) ?? "skittles";
 		return seriesColorsFor(resolved, items, this.paletteRegister(), { reverse: this.reverse });
 	}
 
@@ -108,15 +108,13 @@ export class XtylePie extends XtyleElement {
 		const tooltip = this.root.querySelector<HTMLElement>(".xtyle-pie__tooltip");
 		if (!chart || !tooltip) return;
 		const slices = [...this.root.querySelectorAll<SVGElement>(".xtyle-pie__slice")];
-		const data = this.data.filter((d) => Number(d.value) > 0);
-		const total = data.reduce((sum, d) => sum + Number(d.value), 0) || 1;
+		const rows = [...tooltip.querySelectorAll<HTMLElement>("[data-tip-row]")];
 
+		/** The readout is the fill's markup: the host reveals the hovered slice's row and places the box
+		 * against the slice's own drawn geometry, and writes nothing into it. */
 		const show = (slice: SVGElement): void => {
-			const i = Number(slice.dataset.i);
-			const d = data[i];
-			if (!d) return;
-			const percent = Math.round((Number(d.value) / total) * 100);
-			tooltip.innerHTML = `<span class="xtyle-pie__tooltip-name">${escapeHtml(d.label)}</span> <span class="xtyle-pie__tooltip-value">${escapeHtml(String(d.value))} · ${percent}%</span>`;
+			const key = slice.dataset.i ?? "";
+			for (const row of rows) row.hidden = row.dataset.tipRow !== key;
 			const chartRect = chart.getBoundingClientRect();
 			const sliceRect = slice.getBoundingClientRect();
 			tooltip.style.left = `${sliceRect.left + sliceRect.width / 2 - chartRect.left}px`;

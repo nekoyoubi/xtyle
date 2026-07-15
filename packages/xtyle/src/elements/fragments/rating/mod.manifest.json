@@ -1,0 +1,49 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-rating-default",
+	"version": "0.0.1",
+	"title": "Xtyle Rating (default)",
+	"description": "The built-in fill for the xtyle Rating component: the mod-zero star row every app inherits and may override.",
+	"capabilities": ["xtyle.component.rating"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.rating": [
+			{
+				"id": "rating",
+				"format": "text/html+jsml",
+				"source": "rating.html",
+				"meta": {
+					"tokens": [
+						"--neutral-bg",
+						"--accent",
+						"--accent-2",
+						"--accent-3",
+						"--accent-4",
+						"--neutral",
+						"--success",
+						"--danger",
+						"--warn",
+						"--info",
+						"--bg-2",
+						"--red",
+						"--orange",
+						"--yellow",
+						"--green",
+						"--blue",
+						"--purple",
+						"--brown",
+						"--pink",
+						"--cyan",
+						"--text-sm",
+						"--text-lg",
+						"--text-2xl",
+						"--radius-sm",
+						"--border-thick",
+						"--ring"
+					]
+				}
+			}
+		]
+	}
+}

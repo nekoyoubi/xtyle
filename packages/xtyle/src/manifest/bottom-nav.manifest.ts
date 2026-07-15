@@ -42,10 +42,10 @@ import BottomNav from "@xtyle/astro/BottomNav.astro";
 
 export const bottomNavManifest: ComponentManifest = {
 	id: "bottom-nav",
-	name: "BottomNav",
+	name: "Bottom Nav",
 	since: "0.7.0",
 	category: "navigation",
-	keywords: ["bottom nav", "tab bar", "mobile", "phone", "touch", "tabs", "sections"],
+	keywords: ["tab bar", "mobile", "phone", "touch", "tabs", "sections"],
 	seeAlso: ["mobile-shell", "tabs", "segmented"],
 	summary: "A thumb-reachable bottom tab bar: a real tablist with roving focus and an accent indicator.",
 	description:

@@ -9,6 +9,9 @@ export const ratingCss = `
 	line-height: 1;
 	color: var(--rating-track);
 }
+.xtyle-rating__rows {
+	display: contents;
+}
 .xtyle-rating__row {
 	display: inline-flex;
 	gap: 0.1em;

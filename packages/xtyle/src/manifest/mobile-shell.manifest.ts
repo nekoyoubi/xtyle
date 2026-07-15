@@ -61,7 +61,7 @@ import BottomNav from "@xtyle/astro/BottomNav.astro";
 
 export const mobileShellManifest: ComponentManifest = {
 	id: "mobile-shell",
-	name: "MobileShell",
+	name: "Mobile Shell",
 	since: "0.7.0",
 	category: "shell",
 	keywords: ["mobile", "phone", "touch", "app bar", "frame", "layout", "shell"],

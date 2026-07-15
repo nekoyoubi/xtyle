@@ -1,0 +1,50 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-carousel-default",
+	"version": "0.0.1",
+	"title": "Xtyle Carousel (default)",
+	"description": "The built-in fill for the xtyle Carousel component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.carousel"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.carousel": [
+			{
+				"id": "carousel",
+				"format": "text/html+jsml",
+				"source": "carousel.html",
+				"handlers": [
+					{ "selector": ".xtyle-carousel__nav--prev", "on": "click", "handler": "prevSlide" },
+					{ "selector": ".xtyle-carousel__nav--next", "on": "click", "handler": "nextSlide" },
+					{ "selector": ".xtyle-carousel__nav--play", "on": "click", "handler": "togglePlay" },
+					{ "selector": ".xtyle-carousel__dot", "on": "click", "handler": "selectDot" }
+				],
+				"meta": {
+					"tokens": [
+						"--bg-1",
+						"--bg-2",
+						"--bg-3",
+						"--fg-1",
+						"--fg-2",
+						"--fg-3",
+						"--accent",
+						"--line-2",
+						"--surface-overlay",
+						"--surface-overlay-border",
+						"--radius-full",
+						"--border-thin",
+						"--border-thick",
+						"--ring",
+						"--elevation-2",
+						"--selection-cue",
+						"--space-2",
+						"--space-3",
+						"--space-6",
+						"--duration-fast",
+						"--ease-standard"
+					]
+				}
+			}
+		]
+	}
+}

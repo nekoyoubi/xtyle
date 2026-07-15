@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/avatar.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as BadgeTone, Tone } from "@xtyle/core";
 

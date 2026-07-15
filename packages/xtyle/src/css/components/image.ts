@@ -73,11 +73,12 @@ xtyle-image { display: block; }
 .xtyle-image__error {
 	position: absolute;
 	inset: 0;
-	display: flex;
+	display: none;
 	align-items: center;
 	justify-content: center;
 	color: var(--fg-2);
 }
+.xtyle-image__frame[data-error] .xtyle-image__error { display: flex; }
 .xtyle-image__frame[role="button"] { cursor: zoom-in; }
 .xtyle-image__zoom {
 	${cornerButton}
@@ -119,24 +120,41 @@ xtyle-image { display: block; }
    Both skip script / style nodes: a slotted island (a nested carousel) carries its own hydration
    script, and sizing that non-visual node to the frame would push the real content out of view. */
 .xtyle-image__hover ::slotted(:not(script):not(style)),
-.xtyle-image__hover > :not(slot):not(script):not(style):not(.xtyle-image__audio),
+.xtyle-image__hover > :not(slot):not(script):not(style),
 .xtyle-image__hover-media {
 	display: block;
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
 }
+/* A frame control, not a child of the hover overlay (a rebuild refills that region with the
+   consumer's preview), so it rides the same reveal the overlay does and stacks above it. */
 .xtyle-image__audio {
 	${cornerButton}
 	top: auto;
 	bottom: var(--space-2);
 	right: var(--space-2);
-	pointer-events: auto;
+	z-index: 2;
 	cursor: pointer;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity var(--duration-slow) var(--ease-standard), visibility 0s linear var(--duration-slow);
+}
+.xtyle-image__frame[data-hover-active] .xtyle-image__audio {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity var(--duration-slow) var(--ease-standard);
 }
 .xtyle-image__audio:focus-visible {
 	outline: var(--border-thick) solid var(--ring);
 	outline-offset: 2px;
+}
+/* Both glyphs ship with the button; the pressed state picks one, so muting is a state flip on a
+   node the fill owns rather than markup the element writes over it. */
+.xtyle-image__audio-glyph { display: none; }
+.xtyle-image__audio[aria-pressed="false"] .xtyle-image__audio-glyph--muted,
+.xtyle-image__audio[aria-pressed="true"] .xtyle-image__audio-glyph--live {
+	display: inline-flex;
 }
 .xtyle-image__caption {
 	margin-top: var(--space-2);
@@ -153,6 +171,7 @@ xtyle-image { display: block; }
 	.xtyle-image__img { transition: none; }
 	.xtyle-image__zoom { transition: none; }
 	.xtyle-image__hover { transition: none; }
+	.xtyle-image__audio { transition: none; }
 }
 `.trim();
 

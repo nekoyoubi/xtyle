@@ -61,6 +61,7 @@ export const panelManifest: ComponentManifest = {
 	id: "panel",
 	name: "Panel",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["pane", "collapsible", "titled region", "section", "card"],
 	seeAlso: ["card", "accordion", "dock"],
 	summary: "A titled content region: a header with a configurable heading and actions, a body, an optional footer, and an optional collapsible or scrollable form.",
@@ -90,6 +91,13 @@ export const panelManifest: ComponentManifest = {
 			name: "spacer",
 			description: "A flexible gap that pushes the actions slot to the trailing edge of the header.",
 			selector: ".xtyle-panel__spacer",
+		},
+		{
+			name: "marker",
+			description:
+				"The collapsible variant's disclosure caret, leading the toggle; rotates 90° to point down when the panel is open. It is an `<xtyle-icon name=\"chevron-right\">` inside the panel's fragment, so the glyph renders through the Icon component and a mod can swap it without touching the panel.",
+			selector: ".xtyle-panel__marker",
+			tokens: ["--fg-2", "--duration-fast", "--ease-emphasized"],
 		},
 		{
 			name: "body",

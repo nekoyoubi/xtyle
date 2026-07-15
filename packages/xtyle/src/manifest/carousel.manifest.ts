@@ -76,19 +76,38 @@ export const carouselManifest: ComponentManifest = {
 	seeAlso: ["image", "hero", "tabs"],
 	summary: "A scroll-snap track of slides with prev/next controls, dots, keyboard, and opt-in autoplay.",
 	description:
-		"Carousel lays its slotted children out as a horizontal scroll-snap track: each child is a slide, and the browser's own scrolling does the paging, so the track is swipeable and keyboard-scrollable with no JavaScript at all. When the runtime is present it grows a control bar, prev and next buttons (drawn with the chevron icons), a row of pagination dots that track and drive the active slide, and arrow-key and Home/End navigation, all wired over the same native scroll. An opt-in `autoplay` advances the track on an `interval`, pausing on hover and focus and standing still entirely under `prefers-reduced-motion`; `loop` wraps the ends seamlessly, scrolling into an inert clone of the far slide and then silently snapping to the real one so the wrap never rewinds. The `transition` prop swaps the paging model: `slide` keeps the scroll-snap track, while `fade`, `scale`, and `flip` stack the slides and cross-fade the active one, so a testimonial or hero rotator can dissolve rather than slide. It is content-agnostic: the slides can be `Image`s, `Card`s, or any markup, and it exposes itself as a labelled carousel region with each slide named for assistive tech.",
+		"Carousel lays its slotted children out as a horizontal scroll-snap track: each child is a slide, and the browser's own scrolling does the paging, so the track is swipeable and keyboard-scrollable with no JavaScript at all. When the runtime is present it grows a control bar, prev and next buttons (drawn with the chevron icons), a row of pagination dots that track and drive the active slide, and arrow-key and Home/End navigation, all wired over the same native scroll. An opt-in `autoplay` advances the track on an `interval`, pausing on hover and focus and standing still entirely under `prefers-reduced-motion`; `loop` wraps the ends seamlessly, scrolling into an inert clone of the far slide and then silently snapping to the real one so the wrap never rewinds. The `transition` prop swaps the paging model: `slide` keeps the scroll-snap track, while `fade`, `scale`, and `flip` stack the slides and cross-fade the active one, so a testimonial or hero rotator can dissolve rather than slide. It is content-agnostic: the slides can be `Image`s, `Card`s, or any markup, and it exposes itself as a labelled carousel region with each slide named for assistive tech.\n\nEverything the carousel draws — the viewport, the track, the control bar, the arrows, the dots, and the play toggle — is its fragment's markup, so a mod can restyle or restructure the chrome (swap the chevrons for arrows, turn the dots into thumbnails, move the bar) without touching the scroll math, the keyboard, or the loop. The slides themselves are never re-authored: the fill's track is filled with the consumer's own nodes, so framework content stays live.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
+			name: "viewport",
+			description: "The clipping frame around the track. It sets the vertical carousel's height from `--carousel-height`.",
+			selector: ".xtyle-carousel__viewport",
+			tokens: [],
+		},
+		{
 			name: "track",
-			description: "The horizontal scroll-snap container that holds and pages the slides.",
+			description:
+				"The scroll-snap container that holds and pages the slides. The consumer's slides are relocated into it, so they stay the same live nodes they were authored as.",
 			selector: ".xtyle-carousel__track",
-			tokens: ["--space-3"],
+			tokens: ["--space-3", "--ring", "--border-thick"],
+		},
+		{
+			name: "controls",
+			description: "The bar the arrows, dots, and play toggle sit in, below the track — or floated over the slides under `controls=\"overlay\"`.",
+			selector: ".xtyle-carousel__controls",
+			tokens: ["--space-3", "--surface-overlay", "--surface-overlay-border"],
 		},
 		{
 			name: "nav",
-			description: "The prev/next buttons.",
+			description: "The prev/next buttons, each drawn with the chevron pointing the way the track advances.",
 			selector: ".xtyle-carousel__nav",
+			tokens: ["--bg-1", "--bg-2", "--fg-1", "--line-2", "--radius-full", "--elevation-2"],
+		},
+		{
+			name: "play",
+			description: "The play/pause toggle an autoplay carousel grows, so the motion can always be stopped outright.",
+			selector: ".xtyle-carousel__nav--play",
 			tokens: ["--bg-1", "--fg-1", "--line-2", "--radius-full"],
 		},
 		{
@@ -96,7 +115,7 @@ export const carouselManifest: ComponentManifest = {
 			description:
 				"The pagination dots; the active one takes the accent. When the theme's `--selection-cue` resolves to `marker`, the active dot also elongates into a pill so the current slide reads by shape, not color alone.",
 			selector: ".xtyle-carousel__dot",
-			tokens: ["--bg-3", "--accent", "--selection-cue"],
+			tokens: ["--bg-3", "--fg-2", "--fg-3", "--accent", "--selection-cue", "--space-2", "--duration-fast", "--ease-standard"],
 		},
 	],
 	props: [

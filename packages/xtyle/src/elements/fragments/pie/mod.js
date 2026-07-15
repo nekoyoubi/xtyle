@@ -41,6 +41,13 @@
     ).join("");
     return `<div class="xtyle-pie__legend" part="legend">${items}</div>`;
   }
+  function tooltipHtml(data, total) {
+    const rows = data.map((d, i) => {
+      const percent = Math.round(d.value / total * 100);
+      return `<span class="xtyle-pie__tooltip-row" part="tooltip-row" data-tip-row="${i}" hidden><span class="xtyle-pie__tooltip-name">${esc(d.label)}</span> <span class="xtyle-pie__tooltip-value">${esc(String(d.value))} \xB7 ${percent}%</span></span>`;
+    }).join("");
+    return `<div class="xtyle-pie__tooltip" part="tooltip" role="status" aria-hidden="true" hidden>${rows}</div>`;
+  }
   function tableHtml(data, total, caption) {
     const rows = data.map(
       (d) => `<tr><th scope="row">${esc(d.label)}</th><td>${esc(String(d.value))}</td><td>${esc(`${Math.round(d.value / total * 100)}%`)}</td></tr>`
@@ -83,7 +90,7 @@
     const empty = total > 0 ? "" : `<text class="xtyle-pie__empty" x="${CX}" y="${CY}" text-anchor="middle" dy="0.32em">No data</text>`;
     const svg = `<svg class="xtyle-pie__svg" viewBox="0 0 ${SZ} ${SZ}" role="img"${a11y}><g class="xtyle-pie__slices">${slices}</g><g class="xtyle-pie__labels">${labels}</g>${empty}${center}</svg>`;
     const legend = b.legend !== false ? legendHtml(data, colors) : "";
-    const tooltip = `<div class="xtyle-pie__tooltip" part="tooltip" role="status" aria-hidden="true" hidden></div>`;
+    const tooltip = tooltipHtml(data, total || 1);
     const table = tableHtml(data, total || 1, label);
     return `<figure part="chart" class="${pieClass(b)}" style="--pie-size:${Math.max(80, b.size ?? 200)}px">${svg}${legend}${tooltip}${table}</figure>`;
   }

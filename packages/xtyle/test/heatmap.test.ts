@@ -218,20 +218,20 @@ describe("categoricalHeatColors", () => {
 
 describe("rampColor", () => {
 	it("maps the ends of a ramp to distinct colors", () => {
-		const low = rampColor("accent", 0, register);
-		const high = rampColor("accent", 1, register);
+		const low = rampColor("intensity", 0, register);
+		const high = rampColor("intensity", 1, register);
 		expect(low).not.toBe(high);
 		expect(low).toMatch(/^#[0-9a-f]{6}$/i);
 		expect(high).toMatch(/^#[0-9a-f]{6}$/i);
 	});
 
 	it("clamps out-of-range intensities to the ramp ends", () => {
-		expect(rampColor("accent", -5, register)).toBe(rampColor("accent", 0, register));
-		expect(rampColor("accent", 5, register)).toBe(rampColor("accent", 1, register));
+		expect(rampColor("intensity", -5, register)).toBe(rampColor("intensity", 0, register));
+		expect(rampColor("intensity", 5, register)).toBe(rampColor("intensity", 1, register));
 	});
 
 	it("reverse swaps the ends", () => {
-		expect(rampColor("accent", 0, register, { reverse: true })).toBe(rampColor("accent", 1, register));
+		expect(rampColor("intensity", 0, register, { reverse: true })).toBe(rampColor("intensity", 1, register));
 	});
 
 	it("interpolates an explicit stop array in OKLCH", () => {

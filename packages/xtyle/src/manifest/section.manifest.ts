@@ -40,6 +40,7 @@ export const sectionManifest: ComponentManifest = {
 	id: "section",
 	name: "Section",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["band", "region", "stage", "page section", "container"],
 	seeAlso: ["stack", "grid", "hero", "card"],
 	summary: "A page band or a framed stage: the full-width strips and demo grounds a page is built from.",

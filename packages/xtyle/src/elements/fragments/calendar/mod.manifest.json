@@ -1,0 +1,56 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-calendar-default",
+	"version": "0.0.1",
+	"title": "Xtyle Calendar (default)",
+	"description": "The built-in fill for the xtyle Calendar component: the mod-zero month grid every app inherits and may override — the header, the weekday row, every day cell, and the day decorations.",
+	"capabilities": ["xtyle.component.calendar"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.calendar": [
+			{
+				"id": "calendar",
+				"format": "text/html+jsml",
+				"source": "calendar.html",
+				"meta": {
+					"markers": {
+						"data-date": "An ISO `YYYY-MM-DD` day cell. The element delegates pointer and keyboard selection off this marker, so a fill that renames it keeps the chrome but loses the behavior.",
+						"data-nav": "A month step: `prev` or `next`. The element wires the click.",
+						"data-title": "The month heading; the element's `aria-live` announcement target.",
+						"data-body": "The row container an update repaints."
+					},
+					"tokens": [
+						"--accent",
+						"--accent-bg",
+						"--accent-fg",
+						"--border-normal",
+						"--border-thick",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--fg-3",
+						"--fg-disabled",
+						"--font-sans",
+						"--leading-normal",
+						"--radius-full",
+						"--radius-sm",
+						"--ring",
+						"--selection-cue",
+						"--space-0",
+						"--space-1",
+						"--state-hover",
+						"--text-body",
+						"--text-sm",
+						"--text-xs",
+						"--weight-medium",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

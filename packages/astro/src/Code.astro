@@ -1,5 +1,5 @@
 ---
-import { plainCodeHtml, splitCodeLines, codeGutterWidth, parseLineSpec } from "@xtyle/core/markup";
+import { plainCodeHtml } from "@xtyle/core/markup";
 import { highlight } from "@xtyle/core/elements/code-highlight";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
@@ -14,7 +14,7 @@ interface Props {
 	copy?: boolean;
 	/** Soft-wrap long lines instead of scrolling them horizontally. Works on the zero-JS path. */
 	wrap?: boolean;
-	/** Number each line in a counter gutter. Works on the zero-JS path. */
+	/** Number each line in a gutter. Works on the zero-JS path. */
 	lineNumbers?: boolean;
 	/** Tint chosen lines; a 1-based spec like `2`, `2,4`, or `4-6`. Works on the zero-JS path. */
 	highlight?: string;
@@ -28,15 +28,19 @@ interface Props {
 const { lang, code = "", preload = false, static: isStatic = false, copy = true, wrap = false, lineNumbers = false, highlight: highlightSpec, caption, class: extra, ...rest } = Astro.props;
 
 const result = await highlight(code, lang ?? null);
-const base = result.language === null ? plainCodeHtml(code) : result.html;
-const litSet = highlightSpec ? parseLineSpec(highlightSpec) : undefined;
-const split = lineNumbers || litSet ? splitCodeLines(base, litSet) : null;
-const inner = split ? split.html : base;
-const gutter = split && lineNumbers ? `--xtyle-code-gutter: ${codeGutterWidth(split.lines)}` : undefined;
-const bindings = { html: inner, language: result.language, caption: caption ?? null };
+// The fill owns the line rows, the number gutter, and the highlight tint — hand it the tokenized
+// source and the two flags and let it compose, so the build-time markup is the same structure the
+// browser paints (and the same one a mod replacing `component.code` gets to reshape).
+const bindings = {
+	html: result.language === null ? plainCodeHtml(code) : result.html,
+	language: result.language,
+	caption: caption ?? null,
+	lineNumbers,
+	highlight: highlightSpec ?? null,
+};
 const light = await renderFragmentLight("code", bindings);
 ---
 
-<xtyle-code language={lang ?? undefined} code={code} preload={preload || undefined} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlightSpec || undefined} caption={caption || undefined} style={gutter} class={extra} set:html={light} {...rest} />
+<xtyle-code language={lang ?? undefined} code={code} preload={preload || undefined} copy={copy ? undefined : "false"} wrap={wrap || undefined} line-numbers={lineNumbers || undefined} highlight={highlightSpec || undefined} caption={caption || undefined} class={extra} set:html={light} {...rest} />
 
 {!isStatic && <script>import "@xtyle/core/elements";</script>}

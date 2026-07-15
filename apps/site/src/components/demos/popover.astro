@@ -1,0 +1,340 @@
+---
+import Popover from "@xtyle/astro/Popover.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Checkbox from "@xtyle/astro/Checkbox.astro";
+import Avatar from "@xtyle/astro/Avatar.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Separator from "@xtyle/astro/Separator.astro";
+
+const sides = ["top", "bottom", "left", "right"] as const;
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">A trigger-anchored panel</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Slot a trigger, slot a body. Popover places the panel, points the arrow back at the trigger's center, moves focus
+				in, and hands it back on close.
+			</Text>
+			<Cluster gap={3} align="center">
+				<Popover label="Filters" arrow placement="bottom" align="start" id="pop-filters">
+					<Button slot="trigger">Filters</Button>
+					<Stack gap={2}>
+						<Text size="sm" weight="semibold">Show</Text>
+						<Checkbox checked>Open</Checkbox>
+						<Checkbox>Merged</Checkbox>
+						<Checkbox>Draft</Checkbox>
+						<Separator />
+						<Button variant="accent" size="sm">Apply</Button>
+					</Stack>
+				</Popover>
+
+				<Popover label="Ada Lovelace" arrow placement="bottom" align="center">
+					<Button slot="trigger" variant="neutral">Profile card</Button>
+					<Stack gap={2}>
+						<Cluster gap={2} align="center">
+							<Avatar name="Ada Lovelace" size="md" />
+							<Stack gap={0}>
+								<Text weight="semibold">Ada Lovelace</Text>
+								<Text size="sm" tone="muted">Analytical engines</Text>
+							</Stack>
+						</Cluster>
+						<Cluster gap={1}>
+							<Badge tone="info" size="sm">maintainer</Badge>
+							<Badge tone="neutral" size="sm">since 1843</Badge>
+						</Cluster>
+					</Stack>
+				</Popover>
+
+				<Text size="sm"><span id="pop-echo">Nothing opened yet.</span></Text>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Placement, and the flip</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Each panel prefers the side it names and takes the opposite one when there is no room. Scroll the page with one
+				open: it stays tethered, and it flips when the anchor runs out of room on its preferred side.
+			</Text>
+			<Cluster gap={2}>
+				{sides.map((side) => (
+					<Popover label={`Placed ${side}`} arrow placement={side} align="center">
+						<Button slot="trigger" variant="neutral" size="sm">{side}</Button>
+						<Text size="sm">Preferred side: <code>{side}</code>. It flips when the viewport says otherwise.</Text>
+					</Popover>
+				))}
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">The modal posture</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Same surface, a different posture — and a different platform door. The modal one opens as a modal
+				<code>&lt;dialog&gt;</code>, so the page behind it is made <em>inert by the browser</em>: the pointer cannot
+				reach it, Tab cannot walk into it, and a screen reader in browse mode cannot either. That last one is why the
+				posture is not just a scrim: <code>aria-modal</code> is a promise, and only real inertness keeps it.
+			</Text>
+			<Text tone="muted" size="sm">
+				Each panel carries the same probe: it hit-tests the counter behind it and says what the page can still reach.
+				From the modal one nothing can — the counter is under the platform's inertness, so a click on it is swallowed
+				and the counter never moves. From the non-modal one everything can, and the counter counts.
+			</Text>
+			<Cluster gap={3} align="center">
+				<Popover label="Confirm delete" modal arrow>
+					<Button slot="trigger" variant="danger">Delete…</Button>
+					<Stack gap={2}>
+						<Text size="sm">This cannot be undone. The page behind this panel is out of play until you answer.</Text>
+						<Cluster gap={2} align="center">
+							<Button variant="neutral" size="sm" data-pop-probe="pop-inert-modal">Probe the page</Button>
+							<Text size="sm" tone="muted"><span id="pop-inert-modal">—</span></Text>
+						</Cluster>
+						<Cluster gap={2}>
+							<Button variant="danger" size="sm" id="pop-confirm">Delete</Button>
+							<Button variant="neutral" size="sm" id="pop-cancel">Cancel</Button>
+						</Cluster>
+					</Stack>
+				</Popover>
+
+				<Popover label="A non-modal panel" arrow>
+					<Button slot="trigger" variant="neutral">Non-modal</Button>
+					<Stack gap={2}>
+						<Text size="sm">Click the counter with this open: it still counts, and this dismisses.</Text>
+						<Cluster gap={2} align="center">
+							<Button variant="neutral" size="sm" data-pop-probe="pop-inert-open">Probe the page</Button>
+							<Text size="sm" tone="muted"><span id="pop-inert-open">—</span></Text>
+						</Cluster>
+					</Stack>
+				</Popover>
+
+				<Button id="pop-counter" variant="neutral">Clicks reaching the page: <span id="pop-count">0</span></Button>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Opened at a point</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				No trigger at all: <code>openAt(x, y)</code> anchors the panel to a bare viewport point. The host takes no layout
+				until it opens, so it can be declared anywhere. Near an edge it right-aligns on the point rather than sliding
+				off it.
+			</Text>
+			<div id="pop-canvas" class="pop-canvas" tabindex="0">
+				Click (or right-click) anywhere in this panel. Enter opens it at the center.
+			</div>
+		</Stack>
+		<Popover id="pop-point" label="Point details" arrow>
+			<Stack gap={1}>
+				<Text size="sm" weight="semibold">Opened at the pointer</Text>
+				<Text size="sm" tone="muted"><span id="pop-coords">—</span></Text>
+			</Stack>
+		</Popover>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">As a substrate</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The shape the anchored siblings build on: the anchor is an element they own (<code>openFrom</code>), focus stays
+				in the input (<code>focus: "none"</code>), the panel is <code>flush</code> and carries the role its content
+				really is, and a bubbling <code>select</code> closes it. No placement math is re-derived.
+			</Text>
+			<div class="pop-combo">
+				<input
+					id="pop-input"
+					class="pop-input"
+					type="text"
+					role="combobox"
+					aria-autocomplete="list"
+					aria-expanded="false"
+					placeholder="Filter algorithms…"
+					autocomplete="off"
+				/>
+			</div>
+			<Text size="sm"><span id="pop-picked">Nothing picked yet.</span></Text>
+		</Stack>
+		<Popover id="pop-results" panelRole="listbox" flush align="start" gap={4} focusOnOpen="none">
+			<ul class="pop-list" id="pop-list" role="none"></ul>
+		</Popover>
+	</Card>
+</Stack>
+
+<style>
+	.pop-canvas {
+		display: grid;
+		place-items: center;
+		min-height: 10rem;
+		padding: var(--space-4);
+		text-align: center;
+		color: var(--fg-2);
+		font-size: var(--text-sm);
+		background: var(--bg-2);
+		border: var(--border-thin) dashed var(--line);
+		border-radius: var(--radius-md);
+		cursor: crosshair;
+	}
+	.pop-canvas:focus-visible {
+		outline: var(--border-thick) solid var(--ring);
+		outline-offset: 2px;
+	}
+	.pop-combo {
+		max-width: 22rem;
+	}
+	.pop-input {
+		width: 100%;
+		padding: var(--space-2) var(--space-3);
+		font-family: var(--font-sans);
+		font-size: var(--text-sm);
+		color: var(--fg-0);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+	}
+	.pop-input:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 var(--border-thick) var(--ring);
+	}
+	.pop-list {
+		margin: 0;
+		padding: var(--space-1);
+		list-style: none;
+		min-width: 14rem;
+	}
+	.pop-list li {
+		padding: var(--space-1) var(--space-3);
+		font-size: var(--text-sm);
+		color: var(--fg-1);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+	}
+	.pop-list li:hover,
+	.pop-list li[data-active] {
+		background: var(--accent-bg);
+		color: var(--accent-text);
+	}
+</style>
+
+<script>
+	import "@xtyle/core/elements";
+	import type { PopoverOpenOptions } from "@xtyle/core/elements";
+
+	type PopoverEl = HTMLElement & {
+		open: boolean;
+		show(opts?: PopoverOpenOptions): void;
+		openAt(x: number, y: number, opts?: PopoverOpenOptions): void;
+		openFrom(anchor: HTMLElement, opts?: PopoverOpenOptions): void;
+		hide(): void;
+		reposition(): void;
+	};
+
+	const echo = document.querySelector<HTMLElement>("#pop-echo");
+	document.querySelector<PopoverEl>("#pop-filters")?.addEventListener("close", (event) => {
+		if (echo) echo.textContent = `Filters closed: ${(event as CustomEvent).detail.reason}.`;
+	});
+
+	// the modal posture swallows the click; the non-modal one lets it through
+	const counter = document.querySelector<HTMLElement>("#pop-counter");
+	const count = document.querySelector<HTMLElement>("#pop-count");
+	let clicks = 0;
+	counter?.addEventListener("click", () => {
+		clicks += 1;
+		if (count) count.textContent = String(clicks);
+	});
+
+	// the inertness probe: hit-test the counter behind the open panel. A modal <dialog> is in the top
+	// layer, so the platform's hit test never reaches the page under it — which is the same inertness a
+	// screen reader in browse mode is held to, and the reason `aria-modal` is honest here
+	for (const button of document.querySelectorAll<HTMLElement>("[data-pop-probe]")) {
+		button.addEventListener("click", () => {
+			const readout = document.querySelector<HTMLElement>(`#${button.dataset.popProbe}`);
+			if (!counter || !readout) return;
+			const rect = counter.getBoundingClientRect();
+			const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+			const reachable = hit === counter || (hit instanceof Node && counter.contains(hit));
+			readout.textContent = reachable
+				? "reachable: the hit test lands on the counter"
+				: "inert: the hit test never reaches the counter";
+		});
+	}
+
+	// a `select` bubbling out of the panel closes it — nothing else is wired
+	for (const id of ["#pop-confirm", "#pop-cancel"]) {
+		document.querySelector<HTMLElement>(id)?.addEventListener("click", (event) => {
+			event.currentTarget?.dispatchEvent(
+				new CustomEvent("select", { bubbles: true, composed: true, detail: { value: id } }),
+			);
+		});
+	}
+
+	// the point anchor
+	const canvas = document.querySelector<HTMLElement>("#pop-canvas");
+	const point = document.querySelector<PopoverEl>("#pop-point");
+	const coords = document.querySelector<HTMLElement>("#pop-coords");
+	const openPointAt = (x: number, y: number): void => {
+		if (coords) coords.textContent = `${Math.round(x)}, ${Math.round(y)} in the viewport`;
+		point?.openAt(x, y);
+	};
+	canvas?.addEventListener("click", (event) => openPointAt(event.clientX, event.clientY));
+	canvas?.addEventListener("contextmenu", (event) => {
+		event.preventDefault();
+		openPointAt(event.clientX, event.clientY);
+	});
+	canvas?.addEventListener("keydown", (event) => {
+		if (event.key !== "Enter") return;
+		const rect = canvas.getBoundingClientRect();
+		openPointAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+	});
+
+	// the substrate shape: anchor to an input the caller owns, keep the caret in it, close on select
+	const ALGORITHMS = ["xtyle-default", "xtyle-hc", "xtyle-quiet", "xtyle-loud", "nxi-nite"];
+	const input = document.querySelector<HTMLInputElement>("#pop-input");
+	const results = document.querySelector<PopoverEl>("#pop-results");
+	const list = document.querySelector<HTMLElement>("#pop-list");
+	const picked = document.querySelector<HTMLElement>("#pop-picked");
+
+	const paint = (query: string): number => {
+		if (!list) return 0;
+		const matches = ALGORITHMS.filter((name) => name.includes(query.trim().toLowerCase()));
+		list.replaceChildren(
+			...matches.map((name) => {
+				const li = document.createElement("li");
+				li.setAttribute("role", "option");
+				li.textContent = name;
+				li.addEventListener("click", () => {
+					if (input) input.value = name;
+					if (picked) picked.textContent = `Picked ${name}.`;
+					// the same `select` the rest of the overlay family speaks — the popover closes itself
+					li.dispatchEvent(new CustomEvent("select", { bubbles: true, composed: true, detail: { value: name } }));
+				});
+				return li;
+			}),
+		);
+		return matches.length;
+	};
+
+	const refresh = (): void => {
+		if (!input || !results) return;
+		const hits = paint(input.value);
+		if (hits === 0) {
+			results.hide();
+			return;
+		}
+		results.openFrom(input, { focus: "none" });
+		results.reposition();
+	};
+
+	input?.addEventListener("focus", refresh);
+	input?.addEventListener("input", refresh);
+	results?.addEventListener("open", () => input?.setAttribute("aria-expanded", "true"));
+	results?.addEventListener("close", () => input?.setAttribute("aria-expanded", "false"));
+</script>

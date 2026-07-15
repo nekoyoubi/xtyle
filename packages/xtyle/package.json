@@ -1,6 +1,6 @@
 {
 	"name": "@xtyle/core",
-	"version": "0.7.1",
+	"version": "0.8.0",
 	"description": "A themable-derivation engine: an algorithm plus a few anchors derive a full register of CSS-ready tokens.",
 	"type": "module",
 	"license": "MIT",
@@ -12,6 +12,7 @@
 		"./elements": "./dist/elements/index.js",
 		"./elements/ssr": "./dist/elements/fragment-ssr.js",
 		"./elements/code-highlight": "./dist/elements/code-highlight.js",
+		"./elements/*": "./dist/elements/*",
 		"./algorithms": {
 			"types": "./algorithms.d.ts",
 			"default": "./dist/batteries.js"

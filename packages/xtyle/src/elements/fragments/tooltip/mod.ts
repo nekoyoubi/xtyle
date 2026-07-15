@@ -31,20 +31,20 @@ function tooltipClass(b: TooltipBindings): string {
 /** Set the bound tip text on its own node and leave the `content` slot untouched, so a hydration
  * `update` can't clobber the consumer's SSR-composed rich content (a panel-wide `replaceChildren`
  * would re-emit an inert light-DOM `<slot>` and drop it). Text and slot are mutually exclusive at
- * the call site; an empty `data-text` node in the slot case is inert. */
+ * the call site; an empty `data-label` node in the slot case is inert. */
 function textValue(b: TooltipBindings): string {
 	return b.text ?? "";
 }
 
 hooks.fragment.mount("tooltip", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", tooltipClass(bindings));
+	ops.setAttr(".xtyle-tooltip", "class", tooltipClass(bindings));
 	ops.setAttr("[data-content]", "id", bindings.contentId ?? "");
 	ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-	ops.setText("[data-text]", textValue(bindings));
+	ops.setText("[data-label]", textValue(bindings));
 });
 
 hooks.fragment.update("tooltip", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", tooltipClass(bindings));
+	ops.setAttr(".xtyle-tooltip", "class", tooltipClass(bindings));
 	ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-	ops.setText("[data-text]", textValue(bindings));
+	ops.setText("[data-label]", textValue(bindings));
 });

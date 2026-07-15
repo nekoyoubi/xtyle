@@ -15,5 +15,7 @@ export interface MenuAction {
  */
 export type MenuItem = MenuAction | { separator: true } | { heading: string };
 
-/** The host-layout rule for a menu — the one `:host` rule, shared by the element's `styles()` and the SSR declarative shadow root. */
-export const menuHostCss = ":host { display: inline-block; }";
+/** The host-layout rules for a menu — the `:host` rules, shared by the element's `styles()` and the SSR declarative shadow root.
+ * A cursor-anchored (`context`) menu draws no trigger, so it collapses to `display: contents` rather than `none`: a popover
+ * inside a `display: none` subtree cannot be shown at all. */
+export const menuHostCss = ":host { display: inline-block; } :host([context]) { display: contents; }";

@@ -57,6 +57,7 @@ export const stackManifest: ComponentManifest = {
 	id: "stack",
 	name: "Stack",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["vstack", "column", "vertical layout", "spacing", "flex column"],
 	seeAlso: ["cluster", "grid", "section"],
 	summary: "A vertical flex column with a token-driven gap, the primitive for stacking content.",

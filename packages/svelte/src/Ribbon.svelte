@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/ribbon.js";
 	import type { FullTone as Tone } from "@xtyle/core";
 
 	type RibbonCorner = "top-right" | "top-left" | "bottom-right" | "bottom-left";

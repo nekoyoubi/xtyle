@@ -364,6 +364,30 @@ export class XtyleColorPicker extends XtyleElement {
 		return this.root.querySelector(selector);
 	}
 
+	/** The related colors of the active scheme. A scheme's chip count is fixed, so the fill builds
+	 * the chips once and the host only recolors them here — a chip a mod reshaped survives every
+	 * edit, where a rebuild would have overwritten it on the next pointer move. */
+	private harmonyColors(): string[] {
+		const scheme = this.harmonyScheme;
+		if (!scheme) return [];
+		const base = parseColor(hexOpaque(this.hsv));
+		return base ? harmony(base, scheme).map((related) => formatColor(related, "hex")) : [];
+	}
+
+	private paintHarmony(): void {
+		const chips = this.root.querySelectorAll<HTMLElement>(".xtyle-color-picker__harmony-chip");
+		if (!chips.length) return;
+		const related = this.harmonyColors();
+		chips.forEach((chip, index) => {
+			const hex = related[index];
+			if (!hex) return;
+			chip.dataset.color = hex;
+			chip.dataset.hex = hex;
+			chip.style.setProperty("--cp-chip", hex);
+			chip.setAttribute("aria-label", hex);
+		});
+	}
+
 	/** In-place visual update — keeps focus on the handles (no innerHTML rebuild). */
 	private paint(): void {
 		const opaque = hexOpaque(this.hsv);
@@ -397,6 +421,7 @@ export class XtyleColorPicker extends XtyleElement {
 		});
 		set(".xtyle-color-picker__swatch", (el) => el.style.setProperty("--cp-color", css));
 		set(".xtyle-color-picker__trigger", (el) => el.style.setProperty("--cp-color", css));
+		this.paintHarmony();
 		this.root.querySelectorAll<HTMLElement>(".xtyle-color-picker__preset").forEach((chip) => {
 			chip.setAttribute("aria-pressed", String((chip.dataset.hex ?? "").toLowerCase() === css.toLowerCase()));
 		});
@@ -435,17 +460,6 @@ export class XtyleColorPicker extends XtyleElement {
 			set(".xtyle-color-picker__trigger", (el) => {
 				el.setAttribute("aria-label", `Open color picker — contrast ${ratio.toFixed(2)} to 1, ${tier.label}`);
 			});
-		}
-		const harmonyEl = this.el(".xtyle-color-picker__harmony");
-		if (harmonyEl && this.harmonyScheme) {
-			const base = parseColor(opaque);
-			const related = base ? harmony(base, this.harmonyScheme) : [];
-			harmonyEl.innerHTML = related
-				.map((rc) => {
-					const hex = formatColor(rc, "hex");
-					return `<button class="xtyle-color-picker__preset xtyle-color-picker__harmony-chip" part="harmony-chip" type="button" data-color="${hex}" data-hex="${hex}" style="--cp-chip: ${hex}" aria-label="${hex}"${this.disabled ? " disabled" : ""}></button>`;
-				})
-				.join("");
 		}
 		const channelModel = this.channelModel;
 		if (channelModel) {
@@ -652,24 +666,18 @@ export class XtyleColorPicker extends XtyleElement {
 		});
 		this.el(".xtyle-color-picker__format")?.addEventListener("click", () => this.cycleFormat());
 		this.el(".xtyle-color-picker__eyedropper")?.addEventListener("click", () => void this.openEyeDropper());
-		this.root.querySelectorAll<HTMLElement>(".xtyle-color-picker__preset").forEach((chip) => {
-			chip.addEventListener("click", () => {
+		// One delegated handler per chip row (the swatch presets and the harmony chips are both
+		// `__preset` rows), so a chip the fill reshapes still adopts its color, and a chip that is in
+		// both sets can't be handled twice.
+		this.root.querySelectorAll<HTMLElement>(".xtyle-color-picker__presets").forEach((row) => {
+			row.addEventListener("click", (event) => {
 				if (this.disabled) return;
-				const parsed = parseColor(chip.dataset.color ?? "");
-				if (parsed) {
-					const { h, s, v } = rgbToHsv(parsed);
-					this.setColor({ h, s, v }, parsed.alpha, "change");
-				}
-			});
-		});
-		this.el(".xtyle-color-picker__harmony")?.addEventListener("click", (event) => {
-			if (this.disabled) return;
-			const chip = (event.target as HTMLElement).closest<HTMLElement>(".xtyle-color-picker__harmony-chip");
-			const parsed = chip ? parseColor(chip.dataset.color ?? "") : null;
-			if (parsed) {
+				const chip = (event.target as HTMLElement).closest<HTMLElement>(".xtyle-color-picker__preset");
+				const parsed = chip ? parseColor(chip.dataset.color ?? "") : null;
+				if (!parsed) return;
 				const { h, s, v } = rgbToHsv(parsed);
 				this.setColor({ h, s, v }, parsed.alpha, "change");
-			}
+			});
 		});
 	}
 
@@ -743,6 +751,7 @@ export class XtyleColorPicker extends XtyleElement {
 			channels,
 			snapTargets,
 			namedSnap,
+			harmonyChips: this.harmonyColors().map((hex) => ({ hex })),
 		};
 	}
 

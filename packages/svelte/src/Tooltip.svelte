@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/tooltip.js";
 	import type { Snippet } from "svelte";
 
 	type Placement = "top" | "bottom" | "left" | "right";

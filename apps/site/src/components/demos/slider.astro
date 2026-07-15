@@ -41,6 +41,20 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Reskinning the rail</Heading>
+		<Text size="xs" tone="subtle">
+			The unfilled channel is the <code>groove</code> part: a real node inside the <code>rail</code>,
+			not a pseudo-element. It can take tick marks, segments, or a gradient, or be restructured
+			outright by a mod that fills <code>component.slider</code>. Below, the same Slider with a
+			notched groove; drag, keyboard, and the value readout are untouched.
+		</Text>
+		<Stack gap={5} class="demo__rows demo__reskin">
+			<Slider label="Chapters" min={0} max={100} step={10} value={40} showValue />
+			<Slider label="Zoom" tone="success" min={0} max={100} step={10} value={70} showValue />
+		</Stack>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={2} size="sm" tone="muted">Sizes</Heading>
 		<Stack gap={5} class="demo__rows">
 			<Slider label="Small" size="sm" value={25} />
@@ -85,5 +99,14 @@ const TONE_GROUPS = [
 	}
 	.demo__rows {
 		max-width: 28rem;
+	}
+	.demo__reskin :global(.xtyle-slider__groove) {
+		background:
+			repeating-linear-gradient(
+				to right,
+				var(--line-2) 0 var(--border-thick),
+				transparent var(--border-thick) 10%
+			),
+			var(--neutral-bg);
 	}
 </style>

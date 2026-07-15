@@ -2,14 +2,14 @@
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { bakeIconMark } from "./internal/palette.ts";
 import { ICON_NAMES, iconClass } from "@xtyle/core";
-import type { FullTone, IconName, IconSize, SeriesScheme } from "@xtyle/core";
+import type { FullTone, IconName, IconSize, Palette } from "@xtyle/core";
 
 interface Props {
 	name: IconName | (string & {});
 	size?: IconSize;
 	tone?: FullTone;
 	/** The series scheme a generated mark's `c3+` color slots draw from. */
-	colors?: SeriesScheme;
+	colors?: Palette;
 	label?: string;
 	spin?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */

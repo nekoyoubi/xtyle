@@ -37,6 +37,7 @@ export const textareaManifest: ComponentManifest = {
 	id: "textarea",
 	name: "Textarea",
 	category: "form",
+	since: "0.1.0",
 	keywords: ["multiline", "text area", "text input", "comment box"],
 	seeAlso: ["field", "form-group"],
 	summary: "A multi-line text input: styled, labelled, and resizable, in three sizes with an invalid state.",

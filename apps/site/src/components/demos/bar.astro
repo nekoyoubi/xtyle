@@ -83,15 +83,19 @@ const runs = [{ name: "Runs", values: [42, 30, 18, 9] }];
 	</Card>
 
 	<Card>
-		<Heading slot="header" level={3} size="sm">One scheme, four flavors</Heading>
+		<Heading slot="header" level={3} size="sm">One data set, five palettes</Heading>
 		<Grid minColWidth="16rem" gap={4}>
 			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">skittles</Text>
-				<Bar categories={quarters} series={revenue} scheme="skittles" label="Skittles scheme" height={180} legend={false} />
+				<Bar categories={quarters} series={revenue} scheme="skittles" label="Skittles palette" height={180} legend={false} />
 			</Stack>
 			<Stack gap={1}>
-				<Text size="xs" tone="subtle" weight="semibold">status</Text>
-				<Bar categories={quarters} series={revenue} scheme="status" label="Status scheme" height={180} legend={false} />
+				<Text size="xs" tone="subtle" weight="semibold">severity</Text>
+				<Bar categories={quarters} series={revenue} scheme="severity" label="Severity palette" height={180} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">intensity</Text>
+				<Bar categories={quarters} series={revenue} scheme="intensity" label="Intensity palette" height={180} legend={false} />
 			</Stack>
 			<Stack gap={1}>
 				<Text size="xs" tone="subtle" weight="semibold">thermal, reversed</Text>

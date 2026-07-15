@@ -8,7 +8,6 @@ export const stepsCss = `
 	margin: 0;
 	padding: 0;
 	display: flex;
-	counter-reset: xtyle-step;
 }
 .xtyle-steps__step {
 	flex: 1;
@@ -19,12 +18,10 @@ export const stepsCss = `
 	align-items: center;
 	text-align: center;
 	gap: var(--space-2);
-	counter-increment: xtyle-step;
 	font-size: var(--text-sm);
 	color: var(--fg-1);
 }
-.xtyle-steps__step::before {
-	content: counter(xtyle-step);
+.xtyle-steps__marker {
 	z-index: 1;
 	display: flex;
 	align-items: center;
@@ -39,8 +36,7 @@ export const stepsCss = `
 	border: var(--border-thick) solid var(--line);
 	box-sizing: border-box;
 }
-.xtyle-steps__step::after {
-	content: "";
+.xtyle-steps__connector {
 	position: absolute;
 	top: 0.9rem;
 	left: -50%;
@@ -49,16 +45,16 @@ export const stepsCss = `
 	background: var(--line);
 	z-index: 0;
 }
-.xtyle-steps__step:first-child::after {
-	display: none;
+.xtyle-steps__label {
+	display: block;
+	max-width: 100%;
 }
-.xtyle-steps__step--done::before {
-	content: "\\2713";
+.xtyle-steps__step--done .xtyle-steps__marker {
 	background: var(--accent);
 	color: var(--accent-fg);
 	border-color: var(--accent);
 }
-.xtyle-steps__step--current::before {
+.xtyle-steps__step--current .xtyle-steps__marker {
 	background: var(--bg-0);
 	color: var(--accent-text);
 	border-color: var(--accent);
@@ -67,8 +63,8 @@ export const stepsCss = `
 	color: var(--fg-0);
 	font-weight: var(--weight-medium);
 }
-.xtyle-steps__step--done::after,
-.xtyle-steps__step--current::after {
+.xtyle-steps__step--done .xtyle-steps__connector,
+.xtyle-steps__step--current .xtyle-steps__connector {
 	background: var(--accent);
 }
 `.trim();

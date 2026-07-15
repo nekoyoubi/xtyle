@@ -1,0 +1,19 @@
+<div class="xtyle-combobox" part="combobox" data-root>
+	<label class="xtyle-combobox__label" part="label" data-label hidden></label>
+	<div class="xtyle-combobox__control" part="control" data-control>
+		<span class="xtyle-combobox__chips" part="chips" data-chips hidden></span>
+		<input class="xtyle-combobox__input" part="input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" autocomplete="off" data-input />
+		<button class="xtyle-combobox__action" part="clear" type="button" tabindex="-1" aria-label="Clear" data-clear hidden>
+			<svg class="xtyle-combobox__clear-glyph" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+		</button>
+		<button class="xtyle-combobox__action" part="toggle" type="button" tabindex="-1" aria-label="Show options" data-toggle>
+			<svg class="xtyle-combobox__caret" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+		</button>
+	</div>
+	<span class="xtyle-combobox__description" part="description" data-description hidden></span>
+	<span class="xtyle-combobox__error" part="error" data-error hidden></span>
+	<xtyle-popover class="xtyle-combobox__pop" part="popup" panel-role="none" flush align="start" gap="4" focus-on-open="none" no-close-on-select data-pop>
+		<ul class="xtyle-combobox__list" part="list" role="listbox" data-list></ul>
+		<p class="xtyle-combobox__empty" part="empty" data-empty hidden></p>
+	</xtyle-popover>
+</div>

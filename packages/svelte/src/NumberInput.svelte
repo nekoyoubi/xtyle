@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/number-input.js";
 	import type { Size } from "@xtyle/core";
 
 	interface Props {

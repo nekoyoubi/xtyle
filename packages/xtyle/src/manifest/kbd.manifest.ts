@@ -43,6 +43,7 @@ export const kbdManifest: ComponentManifest = {
 	id: "kbd",
 	name: "Kbd",
 	category: "content",
+	since: "0.1.0",
 	keywords: ["keycap", "shortcut", "hotkey", "key", "keyboard key"],
 	seeAlso: ["code", "badge"],
 	summary: "A keycap for the keys in a shortcut.",

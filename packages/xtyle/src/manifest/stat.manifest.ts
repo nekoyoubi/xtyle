@@ -45,6 +45,7 @@ export const statManifest: ComponentManifest = {
 	id: "stat",
 	name: "Stat",
 	category: "metrics",
+	since: "0.1.0",
 	keywords: ["metric", "kpi", "number", "figure", "trend", "delta", "big number"],
 	seeAlso: ["sparkline", "bar", "badge"],
 	summary: "A single metric: a prominent value with its label, optional trend delta, and caption.",

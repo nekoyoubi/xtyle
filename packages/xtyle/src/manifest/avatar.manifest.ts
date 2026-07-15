@@ -66,6 +66,7 @@ export const avatarManifest: ComponentManifest = {
 	id: "avatar",
 	name: "Avatar",
 	category: "media",
+	since: "0.1.0",
 	keywords: ["profile picture", "user photo", "identity", "initials", "gravatar"],
 	seeAlso: ["avatar-group", "badge"],
 	summary: "An identity chip: a photo when one loads, a tinted initials-or-icon fallback when it doesn't.",

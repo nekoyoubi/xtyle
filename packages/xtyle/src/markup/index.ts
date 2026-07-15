@@ -1,4 +1,4 @@
-export { escapeHtml, escapeAttr } from "./escape.js";
+export { escapeHtml, escapeAttr, escapeCssUrl } from "./escape.js";
 export { cardHostCss } from "./card.js";
 export { badgeHostCss } from "./badge.js";
 export { dotHostCss, dotClass } from "./dot.js";
@@ -18,6 +18,17 @@ export { imageHostCss, hoverMediaHtml } from "./image.js";
 export type { ImageFit, ImageRadius, ImageLoading, ImageTrigger, ImageHoverAudio } from "./image.js";
 export { barHostCss } from "./bar.js";
 export type { BarSeries, BarScheme } from "./bar.js";
+export { chartHostCss, resolveChartPlot, CHART_VARIANTS, CHART_CURVES, CHART_X_SCALES } from "./chart.js";
+export type {
+	ChartSeries,
+	ChartScheme,
+	ChartVariant,
+	ChartCurve,
+	ChartXScale,
+	ChartPlot,
+	ChartPlotSeries,
+	ChartPlotOptions,
+} from "./chart.js";
 export { sparklineHostCss, resolveSparklineBounds, formatSparklineValue } from "./sparkline.js";
 export type { SparklineVariant, SparklineTone, SparklineBounds, SparklineFormat } from "./sparkline.js";
 export { heatmapHostCss } from "./heatmap.js";
@@ -96,9 +107,62 @@ export { colorPickerMarkup, colorPickerHostCss, channelSliders, clamp01, formatC
 export type { ColorPickerMarkupProps, Hsv } from "./color-picker.js";
 export { dialogHostCss } from "./dialog.js";
 export type { DialogSize } from "./dialog.js";
+export { sheetHostCss } from "./sheet.js";
+export type { SheetSide, SheetSize } from "./sheet.js";
+export { splitButtonHostCss } from "./split-button.js";
+export type { SplitButtonSize } from "./split-button.js";
+export { spotlightHostCss, cutoutPath } from "./spotlight.js";
+export type { SpotlightShape, SpotlightArrow, SpotlightRect, CutoutOptions } from "./spotlight.js";
 export { menuHostCss } from "./menu.js";
 export type { MenuItem, MenuAction } from "./menu.js";
+export { popoverHostCss } from "./popover.js";
+export type {
+	PopoverPlacement,
+	PopoverAlign,
+	PopoverFocus,
+	PopoverPanelRole,
+	PopoverCloseReason,
+} from "./popover.js";
+export { commandPaletteHostCss, subsequenceMatch, subsequenceScorer, highlightRuns } from "./command-palette.js";
+export type { CommandItem, CommandMatch, CommandScorer, CommandCloseReason } from "./command-palette.js";
+export { comboboxHostCss, filterOptions, optionLabel } from "./combobox.js";
+export type { ComboboxFilter } from "./combobox.js";
 export { numberInputHostCss, clampNumber, type ClampSpec } from "./number-input.js";
+export {
+	datePickerHostCss,
+	EMPTY_VALUE,
+	TIME_LIST_FLOOR_SECONDS,
+	clampCivilValue,
+	compareCivilTime,
+	compareCivilValue,
+	datePlaceholder,
+	effectiveTimeBounds,
+	formatDateDisplay,
+	formatIsoTime,
+	formatIsoValue,
+	formatTimeDisplay,
+	isValidDate,
+	isValidTime,
+	isWithinBounds,
+	localeDateOrder,
+	localeDayPeriods,
+	localeHour12,
+	nudgeTime,
+	parseDateText,
+	parseDisabledDays,
+	parseIsoTime,
+	parseIsoValue,
+	parseTimeText,
+	resolveHour12,
+	resolveListStep,
+	secondsOfDay,
+	snapTimeToStep,
+	stepShowsSeconds,
+	timeFromSeconds,
+	timeListOptions,
+	timePlaceholder,
+} from "./date-picker.js";
+export type { CivilTime, CivilValue, DatePickerMode, HourCyclePosture } from "./date-picker.js";
 export { segmentedHostCss, parseSegments, normalizeSegments, selectedValue } from "./segmented.js";
 export type { Segment, SegmentInput } from "./segmented.js";
 export { sliderHostCss } from "./slider.js";
@@ -112,3 +176,57 @@ export { codeMarkup, codeClass, codeHostCss, plainCodeHtml, splitCodeLines, code
 export type { CodeMarkupProps } from "./code.js";
 export { paginationMarkup, paginationClass, paginationHostCss, paginationRange, paginationHref } from "./pagination.js";
 export type { PaginationMarkupProps } from "./pagination.js";
+export {
+	calendarBindings,
+	calendarHostCss,
+	civilToDate,
+	toIso,
+	toMonthKey,
+	parseIso,
+	parseMonth,
+	daysInMonth,
+	weekdayOf,
+	addDays,
+	addMonths,
+	compareDates,
+	clampDate,
+	todayIn,
+	resolveWeekInfo,
+	startOfWeek,
+	weekNumber,
+	weekdayNames,
+	monthTitle,
+	dayNumeral,
+	fullDateLabel,
+	parseCalendarValue,
+	formatCalendarValue,
+	isDayDisabled,
+	selectDate,
+	isSelectionComplete,
+} from "./calendar.js";
+export type {
+	CalendarMode,
+	CivilDate,
+	WeekInfo,
+	CalendarDecoration,
+	CalendarDecorations,
+	CalendarLimits,
+	CalendarDayBinding,
+	CalendarWeekBinding,
+	CalendarBindings,
+	CalendarBindingProps,
+} from "./calendar.js";
+export { dropzoneBindings, dropzoneHint, dropzoneMaxFiles, formatBytes, parseByteSize } from "./dropzone.js";
+export type {
+	DropzoneBindingProps,
+	DropzoneFileBinding,
+	DropzoneRejectionBinding,
+	DropFile,
+	DropFileDescriptor,
+	DropFileStatus,
+	DropItem,
+	DropRejectReason,
+	DropRejection,
+	DropResult,
+	DropSource,
+} from "./dropzone.js";

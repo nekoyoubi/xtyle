@@ -16,7 +16,7 @@ export class XtyleSlider extends XtyleElement {
 	private formatFn: ((value: number) => string) | null = null;
 	private lastShape = "";
 	private lastNamed = false;
-	private pointerWired = false;
+	private hostWired = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "slider", {
 		context: (handler) => (handler === "keyAdjust" ? this.keyContext() : undefined),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
@@ -237,10 +237,11 @@ export class XtyleSlider extends XtyleElement {
 		};
 	}
 
-	/** Structural state ops can't patch incrementally: whether the label / value spans exist
-	 * and the header arrangement. A change here rebuilds; a value move is a cheap patch. */
+	/** Structural state ops can't patch incrementally: whether the label / value spans exist, the header
+	 * arrangement, and whether the readout is currently an editor. A change here rebuilds; a value move is
+	 * a cheap patch. */
 	private shapeSignature(): string {
-		return `${this.getAttribute("label") != null}|${this.showValue}|${this.hideLabel}`;
+		return `${this.getAttribute("label") != null}|${this.showValue}|${this.hideLabel}|${this.editing}`;
 	}
 
 	private keyContext(): { value: number; min: number; max: number; step: number } {
@@ -312,11 +313,12 @@ export class XtyleSlider extends XtyleElement {
 		this.rail?.addEventListener("pointerup", up);
 	}
 
-	/** The pointer (geometry) path stays host-side: it reads the rail's bounding rect, which the
-	 * sandbox can't see. Delegated on the shadow root once, so a remount keeps it live. */
-	private wirePointer(): void {
-		if (this.pointerWired) return;
-		this.pointerWired = true;
+	/** The paths the sandbox can't take stay host-side: the pointer reads the rail's bounding rect, and the
+	 * value editor parses and commits the typed number. Both are delegated on the root once, so a remount —
+	 * and a mod's own markup — keeps them live. */
+	private wireHostEvents(): void {
+		if (this.hostWired) return;
+		this.hostWired = true;
 		this.root.addEventListener("pointerdown", (e) => {
 			const target = e.target as HTMLElement | null;
 			if (target?.closest(".xtyle-slider__rail")) this.onPointerdown(e as PointerEvent);
@@ -331,79 +333,90 @@ export class XtyleSlider extends XtyleElement {
 			const target = e.target as HTMLElement | null;
 			if (this.editableValue && target?.closest(".xtyle-slider__value")) this.enterValueEdit();
 		});
+		this.root.addEventListener("keydown", (e) => {
+			const target = e.target as HTMLElement | null;
+			if (this.editing && target?.closest(".xtyle-slider__value-input")) this.onEditKeydown(e as KeyboardEvent);
+		});
+		this.root.addEventListener("focusout", (e) => {
+			const target = e.target as HTMLElement | null;
+			if (this.editing && target?.closest(".xtyle-slider__value-input")) this.finishValueEdit(true);
+		});
 	}
 
-	/** Swap the shown value for an inline numeric editor that reads like the number field: Arrow / Page keys
-	 * step (the modifier swaps base <-> alt step for big/small jumps), Enter or blur commits, Escape cancels.
-	 * Where `overflow` is set the committed value may pass min/max; otherwise it clamps to the rail. */
+	private get valueInput(): HTMLInputElement | null {
+		return this.root.querySelector<HTMLInputElement>(".xtyle-slider__value-input");
+	}
+
+	/** Turn the readout into the inline numeric editor. The field itself is the fill's markup — flipping the
+	 * `editing` binding is what draws it — so the host only opens the session and takes the focus. */
 	private enterValueEdit(): void {
-		if (this.disabled) return;
-		const valueSpan = this.root.querySelector(".xtyle-slider__value") as HTMLElement | null;
-		if (!valueSpan || valueSpan.querySelector("input")) return;
-		const input = document.createElement("input");
-		input.type = "text";
-		input.inputMode = "decimal";
-		input.className = "xtyle-slider__value-input";
-		input.value = String(this.value);
-		input.setAttribute("aria-label", "Edit value");
-		valueSpan.removeAttribute("aria-hidden");
-		valueSpan.replaceChildren(input);
+		if (this.disabled || this.editing) return;
 		this.editing = true;
+		this.render();
+		const input = this.valueInput;
+		if (!input) {
+			this.editing = false;
+			this.render();
+			return;
+		}
 		input.focus();
 		input.select();
-		let done = false;
-		const finish = (save: boolean): void => {
-			if (done) return;
-			done = true;
-			input.removeEventListener("keydown", onKey);
-			input.removeEventListener("blur", onBlur);
-			this.editing = false;
-			valueSpan.setAttribute("aria-hidden", "true");
-			const next = Number(input.value.trim());
-			if (save && input.value.trim() !== "" && !Number.isNaN(next)) this.commit(next, "change");
-			else this.render();
-		};
-		// The thumb tracks live while the editor stays open: `editing` keeps the update from rebuilding the
-		// value span (which holds the input), so a step doesn't tear down the field mid-edit.
-		const stepEditor = (dir: 1 | -1, event: KeyboardEvent, forceAlt: boolean): void => {
-			const current = Number(input.value.trim());
-			const base = Number.isNaN(current) ? this.value : current;
-			const step = forceAlt ? this.altStep : this.stepFor(event);
-			const nextVal = this.clamp(base + dir * step);
-			input.value = String(nextVal);
-			this.commit(nextVal, "input");
-		};
-		const onKey = (e: KeyboardEvent): void => {
-			switch (e.key) {
-				case "Enter":
-					e.preventDefault();
-					finish(true);
-					break;
-				case "Escape":
-					e.preventDefault();
-					finish(false);
-					break;
-				case "ArrowUp":
-					e.preventDefault();
-					stepEditor(1, e, false);
-					break;
-				case "ArrowDown":
-					e.preventDefault();
-					stepEditor(-1, e, false);
-					break;
-				case "PageUp":
-					e.preventDefault();
-					stepEditor(1, e, true);
-					break;
-				case "PageDown":
-					e.preventDefault();
-					stepEditor(-1, e, true);
-					break;
-			}
-		};
-		const onBlur = (): void => finish(true);
-		input.addEventListener("keydown", onKey);
-		input.addEventListener("blur", onBlur);
+	}
+
+	/** The editor reads like the number field: Arrow / Page keys step (the modifier swaps base <-> alt step
+	 * for big/small jumps), Enter commits, Escape cancels. */
+	private onEditKeydown(event: KeyboardEvent): void {
+		switch (event.key) {
+			case "Enter":
+				event.preventDefault();
+				this.finishValueEdit(true);
+				return;
+			case "Escape":
+				event.preventDefault();
+				this.finishValueEdit(false);
+				return;
+			case "ArrowUp":
+				event.preventDefault();
+				this.stepValueEdit(1, event, false);
+				return;
+			case "ArrowDown":
+				event.preventDefault();
+				this.stepValueEdit(-1, event, false);
+				return;
+			case "PageUp":
+				event.preventDefault();
+				this.stepValueEdit(1, event, true);
+				return;
+			case "PageDown":
+				event.preventDefault();
+				this.stepValueEdit(-1, event, true);
+				return;
+			default:
+		}
+	}
+
+	/** The thumb tracks live while the editor stays open: `editing` holds the shape, so the update patches
+	 * the rail without rebuilding the value span the field sits in. */
+	private stepValueEdit(dir: 1 | -1, event: KeyboardEvent, forceAlt: boolean): void {
+		const input = this.valueInput;
+		if (!input) return;
+		const current = Number(input.value.trim());
+		const base = Number.isNaN(current) ? this.value : current;
+		const step = forceAlt ? this.altStep : this.stepFor(event);
+		const next = this.clamp(base + dir * step);
+		input.value = String(next);
+		this.commit(next, "input");
+	}
+
+	/** Close the editor. A saved value is parsed and committed (with `overflow` it may pass min/max;
+	 * otherwise it clamps to the rail); either way dropping `editing` renders the readout back. */
+	private finishValueEdit(save: boolean): void {
+		if (!this.editing) return;
+		const typed = this.valueInput?.value.trim() ?? "";
+		this.editing = false;
+		const next = Number(typed);
+		if (save && typed !== "" && !Number.isNaN(next)) this.commit(next, "change");
+		else this.render();
 	}
 
 	protected template(): string {
@@ -418,7 +431,7 @@ export class XtyleSlider extends XtyleElement {
 		if (this.lastShape && signature !== this.lastShape) this.fragment.remount();
 		this.lastShape = signature;
 		this.fragment.update(this.bindings);
-		this.wirePointer();
+		this.wireHostEvents();
 		const named = !!this.getAttribute("label") || !!this.getAttribute("labelledby");
 		if (firstPaint || named !== this.lastNamed) this.warnIfUnnamed();
 		this.lastNamed = named;

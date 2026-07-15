@@ -84,6 +84,7 @@ export const barCss = `
 	white-space: nowrap;
 }
 .xtyle-bar__tooltip[hidden] { display: none; }
+.xtyle-bar__tooltip-row[hidden] { display: none; }
 .xtyle-bar__tooltip-name { color: var(--fg-2); }
 .xtyle-bar__tooltip-value { font-weight: var(--weight-semibold); }
 .xtyle-bar__a11y {

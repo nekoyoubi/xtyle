@@ -1,0 +1,62 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-date-picker-default",
+	"version": "0.0.1",
+	"title": "Xtyle Date Picker (default)",
+	"description": "The built-in fill for the xtyle DatePicker component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.date-picker"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.date-picker": [
+			{
+				"id": "date-picker",
+				"format": "text/html+jsml",
+				"source": "date-picker.html",
+				"handlers": [
+					{ "selector": ".xtyle-datepicker__input", "on": "change", "handler": "commit" },
+					{ "selector": ".xtyle-datepicker__input", "on": "keydown", "handler": "inputKeydown" },
+					{ "selector": ".xtyle-datepicker__trigger", "on": "click", "handler": "trigger" },
+					{ "selector": ".xtyle-datepicker__clear", "on": "click", "handler": "clear" },
+					{ "selector": ".xtyle-datepicker__time-option", "on": "click", "handler": "pickTime" },
+					{ "selector": ".xtyle-datepicker__time-option", "on": "keydown", "handler": "timeKeydown" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-fg",
+						"--bg-0",
+						"--bg-1",
+						"--border-thin",
+						"--border-thick",
+						"--danger",
+						"--duration-fast",
+						"--ease-standard",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--fg-disabled",
+						"--font-sans",
+						"--line-2",
+						"--neutral-bg",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-4",
+						"--space-5",
+						"--space-6",
+						"--space-7",
+						"--state-disabled",
+						"--state-hover",
+						"--state-press",
+						"--text-body",
+						"--text-sm"
+					]
+				}
+			}
+		]
+	}
+}

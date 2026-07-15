@@ -1,0 +1,63 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-tour-default",
+	"version": "0.0.1",
+	"title": "Xtyle Tour (default)",
+	"description": "The built-in fill for the xtyle Tour component: the mod-zero navigation chrome every app inherits and may override.",
+	"capabilities": [
+		"xtyle.component.tour"
+	],
+	"entry": {
+		"script": "mod.js",
+		"format": "script"
+	},
+	"fills": {
+		"component.tour": [
+			{
+				"id": "tour",
+				"format": "text/html+jsml",
+				"source": "tour.html",
+				"handlers": [
+					{
+						"selector": "[data-tour-back]",
+						"on": "click",
+						"handler": "back"
+					},
+					{
+						"selector": "[data-tour-next]",
+						"on": "click",
+						"handler": "next"
+					},
+					{
+						"selector": "[data-tour-skip]",
+						"on": "click",
+						"handler": "skip"
+					}
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-fg",
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--fg-1",
+						"--fg-2",
+						"--line-2",
+						"--radius-full",
+						"--radius-sm",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--state-hover",
+						"--state-press",
+						"--text-xs",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

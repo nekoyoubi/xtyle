@@ -4,11 +4,19 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { derive, migratedTarget, resolveKnobSpecs, schemeOf, validateKnobs } from "../src/index.js";
 import { SHARED_KNOB_SPECS } from "../src/algorithms/factory.js";
-import { bakedAlgorithm } from "../src/baked.js";
+import { algorithmDomains, bakedAlgorithm } from "../src/baked.js";
 import { availableAlgorithms, resolveAlgorithm, HARNESS_TIMEOUT_MS } from "../src/host/registry.js";
 import { formatInput } from "../src/mcp/tools.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * The blessed set, pinned. These tests grade *first-party* invariants — that the shared knobs are live
+ * on every algorithm we ship, that none of them leaks another's knob — so the matrix is the algorithms
+ * we are responsible for, not whatever happens to be installed. The registry discovers algorithms now,
+ * and a stranger's pack showing up in this matrix would fail it for behavior we never promised.
+ */
+const BLESSED = ["xtyle-default", "xtyle-hc", "xtyle-quiet", "xtyle-loud", "nxi-nite"] as const;
 
 /**
  * The knob tier is a contract between three parties that never meet: an algorithm declares a knob's
@@ -47,6 +55,12 @@ describe("the knob contract", () => {
 	});
 
 	describe("an algorithm owns the domain of the knobs only it reads", () => {
+		it("ships every blessed algorithm, whatever else the registry discovers", () => {
+			// The matrix below is pinned to the blessed set; this is what keeps the pin honest — an
+			// algorithm quietly dropped from `algorithms/` would otherwise leave its row silently untested.
+			expect(availableAlgorithms()).toEqual(expect.arrayContaining([...BLESSED]));
+		});
+
 		it("keeps `hour` out of the engine's shared registry", () => {
 			// `hour` is nxi-nite's alone. A shared registry holding it is the hardcoded name-keyed table
 			// `knobSpecs` exists to delete, moved one layer down.
@@ -57,7 +71,7 @@ describe("the knob contract", () => {
 			const nite = await bakedAlgorithm("nxi-nite");
 			expect(nite.knobSpecs.find((s) => s.name === "hour")).toMatchObject({ kind: "range", min: 0, max: 24 });
 
-			for (const id of availableAlgorithms().filter((a) => a !== "nxi-nite")) {
+			for (const id of BLESSED.filter((a) => a !== "nxi-nite")) {
 				const algorithm = await bakedAlgorithm(id);
 				expect(algorithm.knobSpecs.map((s) => s.name), `${id} should not carry nxi-nite's knob`).not.toContain("hour");
 			}
@@ -68,7 +82,7 @@ describe("the knob contract", () => {
 		// A rail that renders only from the declaration silently drops a knob the derivation still honors,
 		// while a saved recipe that sets it keeps working — declaration and behavior can point opposite ways.
 		it.each(["accentStrategy", "surfaceRamp"])("declares `%s` on every algorithm whose derivation honors it", async (knob) => {
-			for (const id of availableAlgorithms()) {
+			for (const id of BLESSED) {
 				const algorithm = await bakedAlgorithm(id);
 				expect(algorithm.knobs, `${id} reads ${knob} but never declares it`).toContain(knob);
 				expect(algorithm.knobSpecs.map((s) => s.name), `${id} declares ${knob} with no domain`).toContain(knob);
@@ -76,7 +90,7 @@ describe("the knob contract", () => {
 		});
 
 		it("proves the knob is live on every algorithm by deriving a different theme with it", async () => {
-			for (const id of availableAlgorithms()) {
+			for (const id of BLESSED) {
 				const algorithm = await bakedAlgorithm(id);
 				const base = derive(algorithm, {});
 				const shaded = derive(algorithm, { knobs: { accentStrategy: "shade" } });
@@ -187,6 +201,27 @@ describe("the knob contract", () => {
 			const algorithm = await algorithmFor();
 			const fonts = { sans: "Inter, sans-serif" };
 			expect(validateKnobs(algorithm, { fonts })).toEqual({ fonts });
+		});
+	});
+
+	describe("a discovery surface reads a knob's domain without running the algorithm", () => {
+		// `xtyle knobs` and `xtyle_list_algorithms` are asked before a caller has picked any value, so
+		// booting a QuickJS runtime per algorithm to report a static domain made the cheapest question the
+		// most expensive one — and unanswerable at all for a pack with no baked twin. The domain now comes
+		// off the mod's own declared manifest; these pin that the shortcut answers the same thing running it
+		// would.
+		it("reports the domain the algorithm itself declares, for every algorithm", async () => {
+			const domains = await algorithmDomains(BLESSED);
+			for (const domain of domains) {
+				const algorithm = await bakedAlgorithm(domain.id);
+				expect(domain.knobs, `${domain.id} lists knobs it does not read`).toEqual(algorithm.knobs);
+				expect(domain.knobSpecs, `${domain.id} advertises a domain it does not derive with`).toEqual(algorithm.knobSpecs);
+			}
+		});
+
+		it("carries a novel knob's domain through the shortcut, not just the shared ones", async () => {
+			const [nite] = await algorithmDomains(["nxi-nite"]);
+			expect(nite?.knobSpecs.find((s) => s.name === "hour")).toMatchObject({ kind: "range", min: 0, max: 24 });
 		});
 	});
 

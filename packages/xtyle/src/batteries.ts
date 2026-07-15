@@ -21,7 +21,13 @@ export const xtyleQuiet: Algorithm = makeXtyleAlgorithm(toPreset(xtyleQuietSpec)
 export const xtyleLoud: Algorithm = makeXtyleAlgorithm(toPreset(xtyleLoudSpec));
 export const nxiNite: Algorithm = makeXtylePipelineAlgorithm(toPreset(nxiNiteSpec), nxiNitePasses);
 
-export const algorithms: Record<string, Algorithm> = {
+/**
+ * The baked oracle: the blessed algorithms compiled natively, keyed by id. Not the set of algorithms
+ * that *exist* — that is whatever is installed, and the host discovers it by scanning. This is the
+ * subset that ships a native twin of its mod, kept byte-identical to it, so a caller can derive
+ * synchronously and the suite has something to prove the sandboxed mod against.
+ */
+export const bakedAlgorithms: Record<string, Algorithm> = {
 	[xtyleDefault.id]: xtyleDefault,
 	[xtyleHc.id]: xtyleHc,
 	[xtyleQuiet.id]: xtyleQuiet,
@@ -29,11 +35,12 @@ export const algorithms: Record<string, Algorithm> = {
 	[nxiNite.id]: nxiNite,
 };
 
+/** The baked twin of an algorithm. Throws for any algorithm that has none — most do not; see {@link bakedAlgorithms}. */
 export function getAlgorithm(id: string): Algorithm {
-	const algorithm = algorithms[id];
+	const algorithm = bakedAlgorithms[id];
 	if (!algorithm) {
 		throw new Error(
-			`xtyle: unknown algorithm "${id}" (known: ${Object.keys(algorithms).join(", ")})`,
+			`xtyle: no baked algorithm "${id}" (baked: ${Object.keys(bakedAlgorithms).join(", ")})`,
 		);
 	}
 	return algorithm;

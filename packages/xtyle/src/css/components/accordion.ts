@@ -60,6 +60,9 @@ export const accordionCss = `
 .xtyle-accordion__trigger:disabled::after,
 .xtyle-accordion__trigger[aria-disabled="true"]::after { background: transparent; }
 .xtyle-accordion__chevron {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	width: 1em;
 	height: 1em;
 	flex: none;

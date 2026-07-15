@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/stat.js";
 	import type { Snippet } from "svelte";
 
 	type StatTrend = "up" | "down" | "flat";

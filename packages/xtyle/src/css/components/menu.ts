@@ -2,6 +2,10 @@ export const menuCss = `
 .xtyle-menu {
 	display: inline-block;
 }
+xtyle-menu[context],
+.xtyle-menu[data-context] {
+	display: contents;
+}
 .xtyle-menu__trigger {
 	display: inline-flex;
 	align-items: center;
@@ -18,6 +22,9 @@ export const menuCss = `
 	transition:
 		background-color var(--duration-fast) var(--ease-standard),
 		color var(--duration-fast) var(--ease-standard);
+}
+.xtyle-menu__trigger[hidden] {
+	display: none;
 }
 .xtyle-menu__trigger:hover {
 	background: var(--state-hover);

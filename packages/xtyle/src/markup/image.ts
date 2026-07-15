@@ -10,6 +10,11 @@ export const imageHostCss = ":host { display: block; }";
 
 const VIDEO_EXT = /\.(mp4|webm|ogv|mov|m4v)(\?|#|$)/i;
 
+/** Whether a `hover-src` resolves to a `<video>` (and so can carry sound) rather than an `<img>`. */
+export function isHoverVideo(src: string | null | undefined): boolean {
+	return !!src && VIDEO_EXT.test(src);
+}
+
 function escAttr(value: string): string {
 	return value
 		.replace(/&/g, "&amp;")

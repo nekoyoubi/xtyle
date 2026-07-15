@@ -1,0 +1,38 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-split-button-default",
+	"version": "0.0.1",
+	"title": "Xtyle Split Button (default)",
+	"description": "The built-in fill for the xtyle SplitButton component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.split-button"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.split-button": [
+			{
+				"id": "split-button",
+				"format": "text/html+jsml",
+				"source": "split-button.html",
+				"handlers": [
+					{ "selector": "[data-toggle]", "on": "click", "handler": "toggleClick" },
+					{ "selector": "[data-toggle]", "on": "keydown", "handler": "groupKeydown" },
+					{ "selector": "[data-primary]", "on": "keydown", "handler": "groupKeydown" }
+				],
+				"meta": {
+					"tokens": [
+						"--border-thin",
+						"--duration-fast",
+						"--ease-standard",
+						"--line",
+						"--radius-md",
+						"--ring",
+						"--space-1",
+						"--space-2",
+						"--state-hover",
+						"--state-press"
+					]
+				}
+			}
+		]
+	}
+}

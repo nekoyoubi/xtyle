@@ -23,8 +23,7 @@ export const sliderCss = `
 	cursor: pointer;
 	touch-action: none;
 }
-.xtyle-slider__rail::before {
-	content: "";
+.xtyle-slider__groove {
 	position: absolute;
 	inset-inline: 0;
 	height: var(--rail-h);

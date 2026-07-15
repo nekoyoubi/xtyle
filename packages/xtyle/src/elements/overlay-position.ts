@@ -5,9 +5,10 @@
  * viewport size (from `getBoundingClientRect` / `innerWidth` at the call site).
  *
  * The contract: honor the preferred side when the content fits there, flip to the
- * opposite side when it does not, and clamp the cross-axis so the overlay never
- * spills past a viewport edge. This is the portable fallback for browsers without
- * CSS anchor positioning (`position-try`), which is not yet cross-engine.
+ * opposite side when it does not, flip the cross-axis alignment (`start` ↔ `end`)
+ * when the preferred one would overflow, and clamp the cross-axis as the last resort
+ * so the overlay never spills past a viewport edge. This is the portable fallback for
+ * browsers without CSS anchor positioning (`position-try`), which is not yet cross-engine.
  */
 
 export type OverlayPlacement = "top" | "bottom" | "left" | "right";
@@ -55,6 +56,10 @@ export interface PlaceOverlayResult {
 	left: number;
 	/** True when the opposite of `preferred` was chosen. */
 	flipped: boolean;
+	/** The cross-axis alignment actually used — equal to `align` unless it had to flip. */
+	align: OverlayAlign;
+	/** True when the opposite of `align` was chosen (`start` ↔ `end`). */
+	alignFlipped: boolean;
 }
 
 const OPPOSITE: Record<OverlayPlacement, OverlayPlacement> = {
@@ -87,6 +92,37 @@ function crossAxisStart(
 function clamp(value: number, min: number, max: number): number {
 	if (max < min) return min;
 	return Math.min(Math.max(value, min), max);
+}
+
+const OPPOSITE_ALIGN: Record<OverlayAlign, OverlayAlign> = {
+	start: "end",
+	end: "start",
+	center: "center",
+};
+
+/**
+ * Pick the cross-axis alignment and its unclamped start coordinate: keep the requested
+ * alignment when the content fits inside the viewport margins, otherwise flip `start` ↔ `end`
+ * when the opposite one fits. A cursor-anchored menu near the right edge right-aligns at the
+ * cursor (native OS behavior) instead of sliding sideways off its anchor point; a `center`
+ * overlay (the tooltip) has no opposite, so it goes straight to the clamp.
+ */
+function resolveCrossAxis(
+	align: OverlayAlign,
+	anchorStart: number,
+	anchorExtent: number,
+	contentExtent: number,
+	viewportExtent: number,
+	margin: number,
+): { align: OverlayAlign; start: number; alignFlipped: boolean } {
+	const start = crossAxisStart(align, anchorStart, anchorExtent, contentExtent);
+	const fits = (value: number): boolean =>
+		value >= margin && value + contentExtent <= viewportExtent - margin;
+	if (align === "center" || fits(start)) return { align, start, alignFlipped: false };
+	const opposite = OPPOSITE_ALIGN[align];
+	const alternate = crossAxisStart(opposite, anchorStart, anchorExtent, contentExtent);
+	if (fits(alternate)) return { align: opposite, start: alternate, alignFlipped: true };
+	return { align, start, alignFlipped: false };
 }
 
 function spaceOnSide(
@@ -131,9 +167,10 @@ function choosePlacement(input: Required<PlaceOverlayInput>): {
 }
 
 /**
- * Resolve the on-screen coordinates for an overlay anchored to a trigger,
- * flipping to the opposite side when the preferred side lacks room and clamping
- * the cross-axis to the viewport.
+ * Resolve the on-screen coordinates for an overlay anchored to a trigger (or, with a
+ * zero-size rect, to a cursor point): flip to the opposite side when the preferred side
+ * lacks room, flip `start` ↔ `end` when the preferred cross-axis alignment would overflow,
+ * and clamp to the viewport margin as the final fallback.
  */
 export function placeOverlay(input: PlaceOverlayInput): PlaceOverlayResult {
 	const resolved: Required<PlaceOverlayInput> = {
@@ -150,24 +187,69 @@ export function placeOverlay(input: PlaceOverlayInput): PlaceOverlayResult {
 
 	let top: number;
 	let left: number;
+	let cross: { align: OverlayAlign; start: number; alignFlipped: boolean };
 
 	if (isVertical(placement)) {
 		top =
 			placement === "bottom"
 				? anchor.top + anchor.height + gap
 				: anchor.top - content.height - gap;
-		const cross = crossAxisStart(align, anchor.left, anchor.width, content.width);
-		left = clamp(cross, margin, viewport.width - content.width - margin);
+		cross = resolveCrossAxis(align, anchor.left, anchor.width, content.width, viewport.width, margin);
+		left = clamp(cross.start, margin, viewport.width - content.width - margin);
 	} else {
 		left =
 			placement === "right"
 				? anchor.left + anchor.width + gap
 				: anchor.left - content.width - gap;
-		const cross = crossAxisStart(align, anchor.top, anchor.height, content.height);
-		top = clamp(cross, margin, viewport.height - content.height - margin);
+		cross = resolveCrossAxis(align, anchor.top, anchor.height, content.height, viewport.height, margin);
+		top = clamp(cross.start, margin, viewport.height - content.height - margin);
 	}
 
-	return { placement, top: Math.round(top), left: Math.round(left), flipped };
+	return {
+		placement,
+		top: Math.round(top),
+		left: Math.round(left),
+		flipped,
+		align: cross.align,
+		alignFlipped: cross.alignFlipped,
+	};
+}
+
+export interface ArrowOffsetInput {
+	/** The side the overlay landed on (from `placeOverlay`). */
+	placement: OverlayPlacement;
+	/** The clamped left from `placeOverlay`. */
+	placedLeft: number;
+	/** The clamped top from `placeOverlay`. */
+	placedTop: number;
+	/** Anchor rect (or zero-size cursor point) in viewport coordinates. */
+	anchor: OverlayRect;
+	/** The overlay content's intrinsic size. */
+	content: OverlaySize;
+	/** Keep the arrow's center at least this far from the content's corner, in px. Defaults to `12`. */
+	arrowInset?: number;
+}
+
+/**
+ * Where an arrow sits along the placed overlay's near edge, measured from that edge's leading corner
+ * (left for a `top`/`bottom` placement, top for `left`/`right`). The arrow tracks the anchor's center
+ * whatever the alignment did — so a `start`-aligned panel points at the middle of its trigger, and a
+ * panel the viewport clamp shoved sideways keeps pointing at the anchor rather than sliding off with
+ * the box. Bounded by `arrowInset` so it can never round the panel's own corner.
+ *
+ * The generalization of `tooltipTetherShift`, which solves the same problem for the center-aligned,
+ * CSS-absolute tooltip: that one counter-shifts a centered arrow, this one just names the position
+ * outright, which is what a `position: fixed` overlay (Popover) needs.
+ */
+export function anchorArrowOffset(input: ArrowOffsetInput): number {
+	const { placement, placedLeft, placedTop, anchor, content } = input;
+	const arrowInset = input.arrowInset ?? 12;
+	const vertical = isVertical(placement);
+	const anchorCenter = vertical ? anchor.left + anchor.width / 2 : anchor.top + anchor.height / 2;
+	const start = vertical ? placedLeft : placedTop;
+	const extent = vertical ? content.width : content.height;
+	const max = Math.max(arrowInset, extent - arrowInset);
+	return clamp(anchorCenter - start, arrowInset, max);
 }
 
 export interface TetherShiftInput {

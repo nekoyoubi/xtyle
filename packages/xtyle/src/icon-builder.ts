@@ -16,8 +16,9 @@
  * The full name grammar is documented in `docs/icon-name-grammar.md`.
  */
 
-import { escapeAttr } from "./markup/escape.js";
-import { seriesPalette, type SeriesScheme } from "./series.js";
+import { escapeAttr, escapeCssUrl } from "./markup/escape.js";
+import { MAX_FONT_FAMILY_LENGTH, googleFontCatalogue, googleFontCssUrl, googleFontFamily, suggestGoogleFonts } from "./fonts/google.js";
+import { seriesPalette, resolvePalette, type Palette } from "./series.js";
 import type { TokenRegister } from "./types.js";
 import { ICONS } from "./icons.js";
 
@@ -100,13 +101,27 @@ export interface IconComposition {
 	 * override falls back to `FONT_SLOT_TABLE`. Values are a resolved `font-family`: a `var(--font-*)`
 	 * theme token (portable) or a literal family name (renders only where that font is loaded). */
 	fonts?: Record<number, string>;
+	/** The palette this mark pins for itself, from a `---ps-{palette}` finish. Set, it wins over the
+	 * host's `ComposeIconOptions.scheme`, so a mark carries its own palette in its name instead of taking
+	 * whatever the control hands it; unset, the mark inherits the host's palette. */
+	scheme?: Palette;
+	/** Canvas expansion from a `---e{n}` finish: pads the viewBox by `n`% of the grid on every side while
+	 * the rendered box stays `1em`, so the art maps a little smaller inside the same footprint, gaining a
+	 * margin. Its reason to exist is edge-hugging art under a drop shadow: Firefox clips a filter at the SVG
+	 * viewport edge, so content flush against the box casts a hard streak; the margin moves it off the edge. */
+	expand?: number;
+	/** A whole-mark outline from a `---o{1-3}[c{0-f}]` finish: a single stroke hugging the union silhouette
+	 * of everything the mark paints, drawn behind the art and *before* any drop shadow (so the shadow wraps
+	 * the outlined shape). Unlike a layer's `o`, which strokes one shape, this rings the composite. */
+	outline?: IconOutline;
 }
 
 export interface ComposeIconOptions {
 	/** A derived register: when present, token and series colors bake to concrete values; without it they emit `var(--…)`. */
 	register?: TokenRegister;
-	/** The scheme a `series:N` slot draws from (default `accents`). */
-	scheme?: SeriesScheme | string[];
+	/** The palette a `series:N` slot draws from (default `accents`). A composition that names its own
+	 * palette (a `---ps` finish) overrides this. */
+	scheme?: Palette | string[];
 	/** A class on the root `<svg>`, so a host can size / spin / tone the mark like a functional glyph. */
 	className?: string;
 	/** A `part` on the root `<svg>`, for `::part()` styling from a consumer. */
@@ -187,19 +202,42 @@ const THEME_FONT_ALIASES: Record<string, string> = {
 };
 
 /**
+ * The characters a literal family name may use. An icon name is untrusted input — it can arrive from a
+ * shared spec, a mod, or an MCP call — and its family lands in a CSS `url()`, an HTML `href`, and an SVG
+ * attribute. Admitting only letters, digits, spaces, and hyphens means a name carrying a quote, a `)`, a
+ * `;`, an angle bracket, or a newline has nothing to break out of, because it never becomes a family at all.
+ * Hyphens are legal here and not in {@link SAFE_GOOGLE_FAMILY}: a self-hosted `my-brand-sans` is a real
+ * family a page may already load, and no Google family carries one.
+ */
+const SAFE_LITERAL_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 -]*$/;
+
+/**
  * Resolve a `---f` finish value to a `font-family`. `+` reads as a space (so a Google-style
  * `noto+sans+symbols` is one family), a bare theme alias (`sans` / `display` / `mono`) binds to that
  * `--font-*` token, and anything else is a literal family name. A literal family only renders where the
  * font is actually loaded; `iconFontImports` surfaces the loading snippets for the ones that need it.
+ *
+ * With a Google Fonts catalogue installed ({@link useGoogleFontCatalogue}), a family Google serves resolves
+ * to the catalogue's own spelling, so a hand-typed `ibm+plex+mono` becomes the real `IBM Plex Mono` rather
+ * than the `Ibm Plex Mono` that a capitalize-each-word guess produces — which 404s and silently renders in a
+ * fallback face the author never chose. With none, the guess is all the engine has, and a caller who spells
+ * the family the way Google spells it gets a working URL regardless.
+ *
+ * @returns The `font-family`, or `null` when the value carries characters a family name may not
+ * ({@link SAFE_LITERAL_FAMILY}); the caller drops the slot, and it falls back to the theme font.
  */
-export function resolveFontSpec(raw: string): string {
+export function resolveFontSpec(raw: string): string | null {
 	const name = raw.replace(/\+/g, " ").trim();
 	const alias = THEME_FONT_ALIASES[name.toLowerCase()];
 	if (alias) return alias;
-	// Capitalize each word so a lowercase-typed `sigmar` / `noto+sans+symbols` reads and loads as the
-	// canonical family (CSS family matching is case-insensitive, but Google's `family=` param is not); an
-	// already-capped word like `IBM` is left as typed.
-	return name
+	// The gate runs on the name as written, and only a name it has already admitted gets its spaces
+	// collapsed. Normalizing first would launder a newline or a tab into a space and admit exactly the name
+	// the gate exists to reject.
+	if (name.length > MAX_FONT_FAMILY_LENGTH || !SAFE_LITERAL_FAMILY.test(name)) return null;
+	const collapsed = name.replace(/ +/g, " ");
+	const catalogued = googleFontCatalogue()?.canonical(collapsed);
+	if (catalogued) return catalogued;
+	return collapsed
 		.split(" ")
 		.map((w) => (w ? (w[0] as string).toUpperCase() + w.slice(1) : w))
 		.join(" ");
@@ -521,6 +559,17 @@ function specId(composition: IconComposition): string {
 	return (hash >>> 0).toString(36);
 }
 
+/** The options a composition's colors resolve against: the caller's, with the mark's own palette
+ * overrides and its own series scheme (a `---ps` finish) layered over them, so a name that pins a
+ * scheme wins over the one the host passes. */
+function paintOptions(composition: IconComposition, opts: ComposeIconOptions): ComposeIconOptions {
+	if (!composition.palette && !composition.scheme) return opts;
+	const out: ComposeIconOptions = { ...opts };
+	if (composition.palette) out.palette = composition.palette;
+	if (composition.scheme) out.scheme = composition.scheme;
+	return out;
+}
+
 /**
  * Composes a layered icon into an SVG string. Layers paint back to front; a
  * `knockout` layer punches its shape through everything beneath it (a later layer
@@ -532,7 +581,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 	const defs: string[] = [];
 	let body = "";
 	let holes = 0;
-	const paletteOpts: ComposeIconOptions = composition.palette ? { ...opts, palette: composition.palette } : opts;
+	const paintOpts: ComposeIconOptions = paintOptions(composition, opts);
 
 	for (const layer of composition.layers) {
 		// A `letter` layer typesets its glyph at compose time (font resolved from the slot table + any
@@ -557,7 +606,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				`<mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${GRID}" height="${GRID}"><rect width="${GRID}" height="${GRID}" fill="${fieldFill}"/>${cut}</mask>`,
 			);
 			body = `<g mask="url(#${maskId})">${body}</g>`;
-			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, layer.scale, transform, paletteOpts);
+			if (layer.outline) body += outlineGroup(primitive.body, layer.outline, layer.scale, transform, paintOpts);
 		} else if (layer.invert) {
 			// Paint the fill everywhere *except* the shape — a filled field with a shape-hole.
 			const maskId = `xi-${id}-${holes++}`;
@@ -566,21 +615,36 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				`<mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${GRID}" height="${GRID}"><rect width="${GRID}" height="${GRID}" fill="#fff"/>${cut}</mask>`,
 			);
 			const alpha = layer.opacity != null && layer.opacity !== 1 ? ` fill-opacity="${n(layer.opacity)}"` : "";
-			body += `<g mask="url(#${maskId})"><rect width="${GRID}" height="${GRID}" fill="${resolveColor(layer.fill, paletteOpts)}"${alpha}/></g>`;
+			body += `<g mask="url(#${maskId})"><rect width="${GRID}" height="${GRID}" fill="${resolveColor(layer.fill, paintOpts)}"${alpha}/></g>`;
 		} else {
-			body += paintGroup(primitive.body, resolveColor(layer.fill, paletteOpts), layer, transform, paletteOpts);
+			body += paintGroup(primitive.body, resolveColor(layer.fill, paintOpts), layer, transform, paintOpts);
 		}
+	}
+
+	// A whole-mark outline: one stroke ringing the union silhouette of everything painted, drawn behind the
+	// art. `feMorphology` dilates the composite's alpha, `feFlood`+`feComposite` colors that fattened
+	// silhouette, and `feMerge` lays the art back on top. It runs before the drop shadow so a shadow (added
+	// next, wrapping this result) casts from the outlined shape, not the bare art.
+	let overflow = "";
+	if (composition.outline) {
+		const ow = STROKE_WIDTH[composition.outline.size] ?? (STROKE_WIDTH[2] as number);
+		const ocolor = resolveColor(composition.outline.color, paintOpts);
+		const outlineId = `xol-${id}`;
+		defs.push(
+			`<filter id="${outlineId}" filterUnits="userSpaceOnUse" x="-${GRID}" y="-${GRID}" width="${GRID * 3}" height="${GRID * 3}"><feMorphology in="SourceAlpha" operator="dilate" radius="${n(ow)}" result="d"/><feFlood flood-color="${ocolor}" result="c"/><feComposite in="c" in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`,
+		);
+		body = `<g filter="url(#${outlineId})">${body}</g>`;
+		overflow = ` style="overflow:visible"`;
 	}
 
 	// A whole-icon drop shadow: a colored, offset, blurred copy of the accumulated art cast behind it.
 	// The shadow can reach past the 24-unit box, so the svg is allowed to overflow when one is present.
-	let overflow = "";
 	if (composition.dropShadow) {
 		const ds = composition.dropShadow;
-		const color = resolveColor(ds.color, paletteOpts);
+		const color = resolveColor(ds.color, paintOpts);
 		const filterId = `xds-${id}`;
 		defs.push(
-			`<filter id="${filterId}" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="${n(ds.dx)}" dy="${n(ds.dy)}" stdDeviation="${n(ds.blur)}" flood-opacity="0.5" style="flood-color:${color}"/></filter>`,
+			`<filter id="${filterId}" filterUnits="userSpaceOnUse" x="-${GRID}" y="-${GRID}" width="${GRID * 3}" height="${GRID * 3}"><feDropShadow dx="${n(ds.dx)}" dy="${n(ds.dy)}" stdDeviation="${n(ds.blur)}" flood-opacity="0.5" style="flood-color:${color}"/></filter>`,
 		);
 		body = `<g filter="url(#${filterId})">${body}</g>`;
 		overflow = ` style="overflow:visible"`;
@@ -591,7 +655,13 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 	const head = defs.length ? `<defs>${defs.join("")}</defs>` : "";
 	const cls = opts.className ? `class="${escapeAttr(opts.className)}" ` : "";
 	const part = opts.part ? `part="${escapeAttr(opts.part)}" ` : "";
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${GRID} ${GRID}" width="1em" height="1em" focusable="false"${overflow} ${cls}${part}${a11y}>${title}${head}${body}</svg>`;
+	// `---e{n}` pads the viewBox by n% of the grid on every side while the box stays `1em`, so the art maps
+	// a little smaller inside the same footprint, gaining margin. That margin is the cure for a drop shadow
+	// that streaks in Firefox when the art it wraps runs up against the viewport edge; keeping the box at
+	// `1em` (rather than growing it) means the mark still sizes and aligns like any other icon in its host.
+	const pad = composition.expand ? (composition.expand / 100) * GRID : 0;
+	const vb = pad ? `${n(-pad)} ${n(-pad)} ${n(GRID + 2 * pad)} ${n(GRID + 2 * pad)}` : `0 0 ${GRID} ${GRID}`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="1em" height="1em" focusable="false"${overflow} ${cls}${part}${a11y}>${title}${head}${body}</svg>`;
 }
 
 /**
@@ -601,6 +671,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
  */
 export function composeIconThemed(composition: IconComposition, opts: ComposeIconOptions = {}): string {
 	const palette = composition.palette;
+	const paintOpts = paintOptions(composition, opts);
 	// Resolve a deferred `slot:{n}` (applying any `---pc` override), then bake only a series color to a
 	// concrete value; a token / currentColor / transparent / literal is left for `composeIcon` to emit as
 	// `var(--…)` so the mark re-colors live with the theme.
@@ -608,7 +679,7 @@ export function composeIconThemed(composition: IconComposition, opts: ComposeIco
 		// implicit ink (no fill / currentColor) also takes the `*` silhouette
 		if (!spec || spec === "currentColor") return palette?.["*"] ?? spec;
 		const s = spec.startsWith("slot:") ? resolveSlot(Number(spec.slice(5)), palette) : spec;
-		return s.startsWith("series:") ? resolveColor(s, opts) : s;
+		return s.startsWith("series:") ? resolveColor(s, paintOpts) : s;
 	};
 	const layers = composition.layers.map((layer) => ({
 		...layer,
@@ -618,40 +689,81 @@ export function composeIconThemed(composition: IconComposition, opts: ComposeIco
 	const dropShadow = composition.dropShadow
 		? { ...composition.dropShadow, color: bake(composition.dropShadow.color) ?? composition.dropShadow.color }
 		: undefined;
-	return composeIcon({ layers, label: composition.label, dropShadow, fonts: composition.fonts }, { scheme: opts.scheme, className: opts.className, part: opts.part });
+	const outline = composition.outline
+		? { ...composition.outline, color: bake(composition.outline.color) ?? composition.outline.color }
+		: undefined;
+	return composeIcon(
+		{ layers, label: composition.label, dropShadow, outline, expand: composition.expand, fonts: composition.fonts, scheme: composition.scheme },
+		{ scheme: paintOpts.scheme, className: opts.className, part: opts.part },
+	);
 }
 
 /** A font a `letter` layer needs loaded, with ready-made Google Fonts loading snippets. */
 export interface IconFontRequirement {
 	/** The `font-family` the mark references. */
 	family: string;
-	/** A CSS `@import` that loads the family from Google Fonts. */
-	googleImport: string;
-	/** A `<link>` that loads the family from Google Fonts. */
-	googleLink: string;
+	/** The distinct glyphs the mark draws in this family — the subset an export needs, and no more. */
+	glyphs: string;
+	/**
+	 * Whether a Google Fonts URL can be built for this family. When false, xtyle has no way to load it for
+	 * you. With a catalogue installed ({@link useGoogleFontCatalogue}) this means Google really does serve
+	 * the family; with none, it means only that the name is a legal one — a hyphenated or over-long family
+	 * is still false, but an invented one Google has never heard of reads as true.
+	 */
+	google: boolean;
+	/**
+	 * The stylesheet URL, unescaped — what a framework binding wants (`<link href={googleHref}>`), where
+	 * the binding does its own escaping. `null` when Google does not serve the family.
+	 */
+	googleHref: string | null;
+	/** A CSS `@import` that loads the family from Google Fonts; `null` when Google does not serve it. */
+	googleImport: string | null;
+	/** A `<link>` to paste into HTML, escaped for that context; `null` when Google does not serve it. */
+	googleLink: string | null;
+	/** The nearest catalogue families when {@link google} is false — a "did you mean" for a typo. Empty
+	 * unless a catalogue is installed; there is nothing to be near. */
+	suggestions: string[];
 }
 
 /**
- * The external font families a composition's `letter` layers need loaded, each with ready-made Google
- * Fonts loading code. Theme-token fonts (`var(--font-*)`) are skipped: they inherit the page's own
- * stacks and need nothing. This is the "help" for the expectation that a named font must be available
- * for a text mark to render as authored, and the grammar's `+`-joined family is already Google's
- * `family=` syntax, so the mapping is exact.
+ * The external font families a composition's `letter` layers need loaded, each with the glyphs it draws
+ * and ready-made Google Fonts loading code. Theme-token fonts (`var(--font-*)`) are skipped: they inherit
+ * the page's own stacks and need nothing.
+ *
+ * With a Google Fonts catalogue installed ({@link useGoogleFontCatalogue}), loading code is emitted **only**
+ * for a family Google actually serves; a family it does not gets `google: false` and a set of
+ * {@link IconFontRequirement.suggestions}, because a URL built from a name Google has never heard of loads
+ * nothing and renders in a fallback — better to say so than to hand over a snippet that quietly does not
+ * work. With no catalogue, the engine cannot tell an invented family from a real one and emits the snippet
+ * either way.
+ *
+ * The snippets are safe to paste into a page regardless: the family has passed the character-set gate, the
+ * URL is built by {@link googleFontCssUrl}, and both snippets are escaped for the context they land in.
  */
 export function iconFontImports(composition: IconComposition): IconFontRequirement[] {
-	const families = new Set<string>();
+	const families = new Map<string, Set<string>>();
 	for (const layer of composition.layers) {
 		if (layer.glyph == null) continue;
 		const spec = fontForSlot(layer.font, composition);
 		if (spec.startsWith("var(")) continue; // a theme token is as portable as the page; nothing to load
-		families.add(spec);
+		const glyphs = families.get(spec) ?? new Set<string>();
+		glyphs.add(layer.glyph);
+		families.set(spec, glyphs);
 	}
-	return [...families].map((family) => {
-		const param = family.replace(/\s+/g, "+");
+	return [...families].map(([family, glyphs]) => {
+		const canonical = googleFontFamily(family);
+		if (!canonical) {
+			return { family, glyphs: [...glyphs].join(""), google: false, googleHref: null, googleImport: null, googleLink: null, suggestions: suggestGoogleFonts(family) };
+		}
+		const url = googleFontCssUrl(canonical);
 		return {
-			family,
-			googleImport: `@import url('https://fonts.googleapis.com/css2?family=${param}&display=swap');`,
-			googleLink: `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${param}&display=swap">`,
+			family: canonical,
+			glyphs: [...glyphs].join(""),
+			google: true,
+			googleHref: url,
+			googleImport: `@import url('${escapeCssUrl(url)}');`,
+			googleLink: `<link rel="stylesheet" href="${escapeAttr(url)}">`,
+			suggestions: [],
 		};
 	});
 }
@@ -748,6 +860,18 @@ const PC_TOKEN_ALIAS: Record<string, string> = { fg: "fg-0", bg: "bg-0" };
  * runs to the end of the flag (finishes are `--`-delimited), so a multi-word family like `noto+sans` fits. */
 const F_FLAG = /^f(\d)?-(.+)$/;
 
+/** One `ps` palette flag: `ps-{palette}` pins the palette this mark's `c1`–`c9` slots draw from.
+ * The value runs to the end of the flag, so a hyphenated palette name rides it fine. */
+const PS_FLAG = /^ps-(.+)$/;
+
+/** One `e` expand flag: `e{n}` pads the canvas by `n`% of the grid on every side. Capped at 100 (a full
+ * grid of margin each way); a value past that is clamped rather than dropped. */
+const E_FLAG = /^e(\d{1,3})$/;
+
+/** One whole-mark `o` outline flag: `o{1-3}[c{0-f}]` — the same size steps and optional color nibble as a
+ * layer's outline, but ringing the whole composite. Distinct from the per-layer `o` by living in the finish. */
+const O_FLAG = /^o([1-3])(?:c([0-9a-f]))?$/;
+
 /**
  * Resolve a `---pc` override value to a color spec that flows through `resolveColor`. Three shapes, so an
  * override can stay theme-reactive instead of baking a literal color: a **hex** (`3`/`4`/`6`/`8` digits)
@@ -765,13 +889,16 @@ function pcOverrideSpec(raw: string): string | null {
 
 /**
  * The `---` finish grammar: whole-icon metadata after the last object, its flags delimited by `--` (the
- * same separator as objects), so a flag's value can carry a single hyphen. Three kinds of flag coexist and
+ * same separator as objects), so a flag's value can carry a single hyphen. Two kinds of flag coexist and
  * each reader skips the others' — render finishes the mark acts on (`d…` drop shadow, `pc…` palette
- * override), and `l…` lock flags that are authoring metadata for the builder's Randomize, invisible to
- * the rendered mark. A `pc{nibble}-{value}` repaints that one palette slot; a bare `pc-{value}` silhouettes
- * every painting slot to one color (the transparent/reserved slots stay clear). The value is a hex color, a
- * palette nibble (`0`–`f`, theme-reactive), or a token name (`accent`, `success`, a hue, `fg`/`bg`, or a
- * hyphenated token like `neutral-bg`).
+ * override, `f…` font slot, `ps…` series palette, `e…` canvas expand, `o…` whole-mark outline), and `l…`
+ * lock flags that are authoring metadata for the
+ * builder's Randomize, invisible to the rendered mark. A `pc{nibble}-{value}` repaints that one palette
+ * slot; a bare `pc-{value}` silhouettes every painting slot to one color (the transparent/reserved slots
+ * stay clear). The value is a hex color, a palette nibble (`0`–`f`, theme-reactive), or a token name
+ * (`accent`, `success`, a hue, `fg`/`bg`, or a hyphenated token like `neutral-bg`). A `ps-{scheme}` pins
+ * the series scheme the mark's own `c1`–`c9` slots draw from, so the name carries its palette instead of
+ * inheriting the host's; an unknown scheme is dropped and the host's still applies.
  */
 function parseFinish(segment: string): Partial<IconComposition> {
 	const out: Partial<IconComposition> = {};
@@ -788,10 +915,29 @@ function parseFinish(segment: string): Partial<IconComposition> {
 			}
 			continue;
 		}
+		const ps = PS_FLAG.exec(flag);
+		if (ps) {
+			const scheme = resolvePalette(ps[1] as string);
+			if (scheme) out.scheme = scheme;
+			continue;
+		}
+		const e = E_FLAG.exec(flag);
+		if (e) {
+			out.expand = Math.min(100, Number(e[1]));
+			continue;
+		}
+		const o = O_FLAG.exec(flag);
+		if (o) {
+			out.outline = { size: Number(o[1]), color: o[2] != null ? colorSlot(parseInt(o[2], 16)) : "currentColor" };
+			continue;
+		}
 		const f = F_FLAG.exec(flag);
 		if (f) {
 			const slot = f[1] != null ? Number(f[1]) : 0;
-			fonts[slot] = resolveFontSpec(f[2] as string);
+			// A family carrying characters a family name may not is dropped, not cleaned: the slot falls back
+			// to the theme font rather than rendering — or emitting a URL for — an attacker-shaped name.
+			const family = resolveFontSpec(f[2] as string);
+			if (family != null) fonts[slot] = family;
 			continue;
 		}
 		if (flag.startsWith("d")) {

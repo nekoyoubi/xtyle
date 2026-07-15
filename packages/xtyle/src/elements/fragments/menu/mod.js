@@ -47,6 +47,9 @@
     const label = triggerLabel(bindings);
     const popupId = bindings.popupId ?? "xtyle-menu-popup";
     const open = bindings.open ?? false;
+    const context = bindings.context ?? false;
+    ops.setAttr("[data-root]", "data-context", context ? "true" : "");
+    ops.setAttr("[data-trigger]", "hidden", context ? "hidden" : "");
     ops.setAttr("[data-trigger]", "aria-controls", popupId);
     ops.setAttr("[data-trigger]", "popovertarget", popupId);
     ops.setAttr("[data-trigger]", "aria-expanded", String(open));

@@ -112,12 +112,12 @@ function body(bindings: PaginationBindings): string {
 }
 
 hooks.fragment.mount("pagination", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", paginationClass(bindings));
+	ops.setAttr(".xtyle-pagination", "class", paginationClass(bindings));
 	ops.setAttr("[data-root]", "aria-label", bindings.label ?? "Pagination");
 	ops.replaceChildren("[data-root]", body(bindings));
 });
 
 hooks.fragment.update("pagination", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", paginationClass(bindings));
+	ops.setAttr(".xtyle-pagination", "class", paginationClass(bindings));
 	ops.setAttr("[data-root]", "aria-label", bindings.label ?? "Pagination");
 });

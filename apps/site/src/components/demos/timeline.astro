@@ -3,6 +3,7 @@ import Timeline from "@xtyle/astro/Timeline.astro";
 import Card from "@xtyle/astro/Card.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Stack from "@xtyle/astro/Stack.astro";
+import Badge from "@xtyle/astro/Badge.astro";
 ---
 
 <Stack gap={6}>
@@ -39,6 +40,28 @@ import Stack from "@xtyle/astro/Stack.astro";
 				<li><strong>Deploy succeeded</strong><time>12:04</time></li>
 				<li><strong>Build passed</strong><time>12:01</time></li>
 				<li><strong>Pushed 3 commits</strong><time>11:58</time></li>
+			</ol>
+		</Timeline>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Statused events</Heading>
+		<Timeline>
+			<ol>
+				<li id="event-deploy">
+					<strong>Deploy <Badge tone="success" size="sm">green</Badge></strong>
+					<time datetime="2026-07-13T12:04">12:04</time>
+					<p>Rolled out to every region with no failed health check.</p>
+				</li>
+				<li id="event-rollback">
+					<strong>Rollback <Badge tone="danger" size="sm">failed</Badge></strong>
+					<time datetime="2026-07-13T11:47">11:47</time>
+				</li>
+				<li id="event-open">
+					<strong>Opened the incident <Badge tone="warn" size="sm">sev-2</Badge></strong>
+					<time datetime="2026-07-13T11:02">11:02</time>
+					<p>The rail stops here: the last event ends at its dot rather than trailing a line into nothing.</p>
+				</li>
 			</ol>
 		</Timeline>
 	</Card>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/panel.js";
 	import type { Snippet } from "svelte";
 
 	type PanelVariant = "default" | "collapsible";

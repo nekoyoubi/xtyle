@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/radio.js";
 	import type { Snippet } from "svelte";
 	import type { Size, FullTone as Tone } from "@xtyle/core";
 

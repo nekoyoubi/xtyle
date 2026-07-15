@@ -59,6 +59,7 @@ export const radioManifest: ComponentManifest = {
 	id: "radio",
 	name: "Radio",
 	category: "control",
+	since: "0.1.0",
 	keywords: ["radio group", "single choice", "option", "choice"],
 	seeAlso: ["checkbox", "segmented", "select"],
 	summary: "A single-choice input: a styled native radio plus a group that manages roving focus and arrow-key navigation.",
@@ -85,7 +86,7 @@ export const radioManifest: ComponentManifest = {
 		},
 		{
 			name: "indicator",
-			description: "The painted circle that fills with the tone color and shows the dot when checked.",
+			description: "The painted circle that fills with the tone color when checked; it holds the selection glyph.",
 			selector: ".xtyle-radio__indicator",
 			tokens: [
 				"--border-normal",
@@ -94,8 +95,13 @@ export const radioManifest: ComponentManifest = {
 				"--radius-full",
 				"--duration-fast",
 				"--ease-standard",
-				"--ease-emphasized",
 			],
+		},
+		{
+			name: "dot",
+			description: "The selection glyph inside the indicator: a node in the fill's markup, not a pseudo-element, so a mod can restructure it (swap the dot for a checkmark or an icon) rather than only recolor it.",
+			selector: ".xtyle-radio__dot",
+			tokens: ["--radius-full", "--accent-fg", "--duration-fast", "--ease-emphasized", "--ease-standard"],
 		},
 		{
 			name: "label",

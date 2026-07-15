@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { contrast, derive, FULL_TONES } from "../src/index.js";
-import { algorithms } from "../src/batteries.js";
+import { bakedAlgorithms } from "../src/batteries.js";
 
 // The gauntlet fires random and extreme constraint sets, but never these specific
 // real-world brand colors. This pins a handful of them across every shipped
@@ -18,7 +18,7 @@ const PALETTES: Array<{ name: string; constraints: Record<string, string> }> = [
 const TONES = ["accent", "accent-2", "accent-3", "accent-4", "danger", "success", "warn", "info"];
 const AA = 4.5;
 
-for (const [id, algorithm] of Object.entries(algorithms)) {
+for (const [id, algorithm] of Object.entries(bakedAlgorithms)) {
 	describe(`${id}: real-world brand palettes derive AA-clean`, () => {
 		for (const { name, constraints } of PALETTES) {
 			const register = derive(algorithm, { constraints });

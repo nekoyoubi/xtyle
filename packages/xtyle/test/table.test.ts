@@ -34,6 +34,20 @@ describe("xtyle-table scroll-region focus", () => {
 	});
 });
 
+describe("xtyle-table sort caret", () => {
+	it("invents no glyph markup of its own — the caret is an <xtyle-icon>", () => {
+		expect(source).not.toContain("viewBox");
+		expect(source).not.toContain("<path");
+		expect(source).not.toContain("insertAdjacentHTML");
+		expect(source).toContain('createElement("xtyle-icon")');
+	});
+
+	it("styles the caret host, not a nested svg it no longer owns", () => {
+		expect(tableCss).toContain(".xtyle-table__sort");
+		expect(tableCss).not.toContain(".xtyle-table__sort svg");
+	});
+});
+
 describe("tableParts export", () => {
 	it("names the part classes the decorator writes, as the single source of truth", () => {
 		expect(tableParts.row).toBe("xtyle-table__row");

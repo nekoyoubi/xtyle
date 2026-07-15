@@ -59,6 +59,7 @@ export const alertManifest: ComponentManifest = {
 	id: "alert",
 	name: "Alert",
 	category: "feedback",
+	since: "0.1.0",
 	keywords: ["banner", "notice", "message", "callout", "warning", "error", "notification"],
 	seeAlso: ["toast", "empty"],
 	summary: "An inline message banner with an optional severity glyph, a title, actions, and a dismissible form; color and meaning on independent axes.",

@@ -17,6 +17,11 @@ import {
 	type FloatingPanel,
 	type FloatRect,
 } from "./dock-model.js";
+import { FragmentHost } from "./fragment-host.js";
+import { manifest, fragmentSources } from "./fragments/dock-zone/source.generated.js";
+// The fill's kebab opens a real `<xtyle-menu>` it renders, so the tag must be defined wherever the
+// zone is: importing the class both registers the element and types the popup the zone drives.
+import { XtyleMenu } from "./menu.js";
 import type { MenuItem } from "../markup/index.js";
 
 /** A direct control button in a panel's header: a glyph and the accessible name that fires a `panel-action`. */
@@ -41,18 +46,27 @@ interface PanelMeta {
 	menu: MenuItem[] | null;
 }
 
-const CLOSE_GLYPH = "✕";
-
 /**
  * A drag-and-drop dockable-panel workspace. Its direct children are the panels (any element
  * carrying `data-panel-id`, and a `data-title` or `title` for its tab); the zone reads them,
- * arranges them into a {@link DockNode} layout, and renders the tab strips and splits around
- * them. Dragging a tab re-docks its panel into another zone as a tab (`center`) or a split (an
- * edge), and the new layout dispatches a `layout-change` event carrying the serializable tree.
+ * arranges them into a {@link DockNode} layout, and its fragment renders the tab strips, splits,
+ * float windows, and drag films around them. Dragging a tab re-docks its panel into another zone as
+ * a tab (`center`) or a split (an edge), and the new layout dispatches a `layout-change` event
+ * carrying the serializable tree.
+ *
+ * The chrome is a fragment (`fragments/dock-zone`), so an app can reshape a tab, a section header,
+ * a float window, or the kebab the same way a third-party mod would; the element keeps the parts a
+ * sandbox cannot own — the dock math, the pointer gestures, panel custody, and the persisted layout —
+ * and reaches the chrome only by selector, so a re-render never strands a handler on a dead node.
  *
  * The layout physics are xtyle's: the zone wires pointer drags through `resolveDrop` (the drop
  * geometry) and `dockPanel` (the tree mutation), the same headless engine a consumer can drive
  * directly. Set `.layout` to restore a persisted tree; read it back from `layout-change.detail`.
+ *
+ * A floating window's titlebar *moves* it. Because the zones tile the whole workspace, a drop resolver
+ * asked for every pointer position answers everywhere — so a float earns a re-dock only inside the
+ * `--dock-band` along a zone's boundary, and the drop films appear only there. Everywhere else is open
+ * floor. The window's own dock button is the way back to a tab.
  *
  * A panel carries its own header chrome, declared on the panel child: `data-closable` renders a
  * close button (a cancelable `panel-close` event; unless prevented, the zone removes the panel and
@@ -66,18 +80,27 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	private _layout: DockNode | null = null;
 	private _floating: FloatingPanel[] = [];
 	private panels = new Map<string, PanelMeta>();
-	/** Drag-preview films painted over the live zones during a drag: the drop target, the remnant a
-	 * split would leave behind, and a pooled film over every other zone (each tinted by its modifier
-	 * class). All inert; re-attached above the zones after each render replaces the children. */
-	private dropFilm: HTMLDivElement | null = null;
-	private remnantFilm: HTMLDivElement | null = null;
-	private restFilms: HTMLDivElement[] = [];
-	/** The container holding the floating panel windows, layered above the docked zones. */
-	private floatLayer: HTMLDivElement | null = null;
+	private collected = false;
+	private delegated = false;
+	/** Drag-preview films the fill renders over the live zones: the drop target, the remnant a split
+	 * would leave behind, and one per other zone (each tinted by its modifier class). All inert; the
+	 * element only places and reveals them, re-resolving them after every re-render. */
+	private dropFilm: HTMLElement | null = null;
+	private remnantFilm: HTMLElement | null = null;
+	private restFilms: HTMLElement[] = [];
+	/** The cursor-anchored `<xtyle-menu>` the fill renders once; every panel's kebab opens it with
+	 * that panel's rows. */
+	private overflow: XtyleMenu | null = null;
+	private overflowPanelId: string | null = null;
 	/** An in-flight tab gesture. `active` flips true only once the pointer travels past
 	 * `DRAG_THRESHOLD`, so a click (no travel) activates the tab instead of re-docking it. */
 	private drag: { panelId: string; zoneId: string; index: number; startX: number; startY: number; active: boolean } | null =
 		null;
+
+	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "dock-zone", {
+		applyIntent: () => {},
+		afterApply: () => this.afterApply(),
+	});
 
 	/** Pointer travel, in px, before a tab press becomes a drag rather than a click. */
 	private static readonly DRAG_THRESHOLD = 5;
@@ -114,14 +137,15 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 
 	connectedCallback(): void {
 		// Setup precedes `super.connectedCallback()` here (unlike the other elements): the base's first-connect
-		// render calls this override, and an un-collected, un-seeded render would `replaceChildren()` the panel
-		// children away before `collectPanels` could capture them. Seed first, then let the base render.
+		// render calls this override, and an un-collected, un-seeded render would paint the fill's scaffold over
+		// the panel children before `collectPanels` could capture them. Seed first, then let the base render.
 		this.collectPanels();
 		if (!this._layout) {
 			const init = this.initialLayout();
 			this._layout = init.tree;
 			this._floating = init.floating;
 		}
+		this.delegate();
 		super.connectedCallback();
 		this.render();
 	}
@@ -158,11 +182,15 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		this.leafId = max;
 	}
 
+	/** Read the authored panel children once. The fill's scaffold replaces the element's children, and
+	 * a placed panel then lives inside the chrome rather than beside it, so a second pass (a re-connect
+	 * after a move in the DOM) would find no panels and empty the workspace. Custody stays in the map. */
 	private collectPanels(): void {
-		this.panels.clear();
+		if (this.collected) return;
+		this.collected = true;
 		for (const child of Array.from(this.children) as HTMLElement[]) {
 			const id = child.getAttribute("data-panel-id");
-			if (!id || child.dataset.dockChrome != null) continue;
+			if (!id) continue;
 			child.dataset.dockPanelHost = "";
 			this.panels.set(id, {
 				id,
@@ -209,22 +237,41 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		return `zone-${this.leafId}`;
 	}
 
+	protected template(): string {
+		return "";
+	}
+
 	protected override render(): void {
-		if (!this._layout) {
-			this.replaceChildren();
-			return;
+		this.fragment.ensureScaffold("");
+		if (this._layout) {
+			const known = new Set(this.panels.keys());
+			const floating = new Set(this._floating.map((f) => f.panelId));
+			const live = allPanels(this._layout).filter((p) => known.has(p));
+			for (const id of known) {
+				// A floating panel is legitimately absent from the tree; only re-dock a truly orphaned one.
+				if (!live.includes(id) && !floating.has(id)) this._layout = dockPanel(this._layout, { panel: id, target: this.rootLeafId(), region: "center" });
+			}
 		}
-		const known = new Set(this.panels.keys());
-		const floating = new Set(this._floating.map((f) => f.panelId));
-		const live = allPanels(this._layout).filter((p) => known.has(p));
-		for (const id of known) {
-			// A floating panel is legitimately absent from the tree; only re-dock a truly orphaned one.
-			if (!live.includes(id) && !floating.has(id)) this._layout = dockPanel(this._layout, { panel: id, target: this.rootLeafId(), region: "center" });
-		}
-		this.replaceChildren(this.renderNode(this._layout));
-		this.ensureOverlays();
+		// The chrome's structure changes on nearly every render (a split appears, a tab moves zones, a
+		// window floats), which the patch ops cannot express — so each render rebuilds it.
+		this.fragment.remount();
+		this.fragment.update(this.bindings());
+	}
+
+	/** Re-resolve the chrome the fill just (re)built and hand the panels back to it. The panels are the
+	 * consumer's own elements, held in the map across every rebuild, so their content and state survive
+	 * a re-render; a panel that is neither active nor floating stays detached. */
+	private afterApply(): void {
+		this.dropFilm = this.queryChrome('[data-film="drop"]');
+		this.remnantFilm = this.queryChrome('[data-film="remnant"]');
+		this.restFilms = Array.from(this.querySelectorAll<HTMLElement>('[data-film="rest"]'));
+		this.overflow = this.queryChrome<XtyleMenu>("[data-panel-menu-popup]");
 		this.placeActivePanels();
-		this.renderFloats();
+		this.placeFloatPanels();
+	}
+
+	private queryChrome<T extends Element = HTMLElement>(selector: string): T | null {
+		return this.querySelector<T>(selector);
 	}
 
 	private rootLeafId(): string {
@@ -238,161 +285,56 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		return leaf ? (leaf as DockLeaf).id : "zone-0";
 	}
 
-	private renderNode(node: DockNode): HTMLElement {
+	/** The whole workspace, flattened to the JSON the fill renders from: the tree with each panel's
+	 * title, badge, and controls resolved, the floating windows with their rects, one spare film per
+	 * other zone, and whether any panel carries an overflow menu at all. */
+	private bindings(): Record<string, unknown> {
+		if (!this._layout) return { tree: null, floats: [], restFilms: 0, hasMenu: false };
+		return {
+			tree: this.nodeBinding(this._layout, 1),
+			floats: this._floating.map((f) => ({
+				panelId: f.panelId,
+				title: this.panels.get(f.panelId)?.title ?? f.panelId,
+				x: f.x,
+				y: f.y,
+				w: f.w,
+				h: f.h,
+			})),
+			restFilms: Math.max(0, allLeaves(this._layout).length - 1),
+			hasMenu: [...this.panels.values()].some((p) => p.menu !== null),
+		};
+	}
+
+	private nodeBinding(node: DockNode, flex: number): Record<string, unknown> {
 		if (node.kind === "split") {
-			const el = document.createElement("div");
-			el.className = `xtyle-dock-split xtyle-dock-split--${node.direction}`;
-			el.dataset.dockChrome = "";
-			node.children.forEach((child, i) => {
-				const wrap = this.renderNode(child);
-				wrap.style.flex = String(node.sizes?.[i] ?? 1);
-				el.appendChild(wrap);
-			});
-			return el;
+			return {
+				kind: "split",
+				direction: node.direction,
+				flex,
+				children: node.children.map((child, i) => this.nodeBinding(child, node.sizes?.[i] ?? 1)),
+			};
 		}
-		if (node.mode === "stack") return this.renderStackLeaf(node);
-		const zone = document.createElement("div");
-		zone.className = "xtyle-dock-zone__leaf";
-		zone.dataset.dockChrome = "";
-		zone.dataset.zoneId = node.id;
-		zone.style.flex = "1";
-		const head = document.createElement("div");
-		head.className = "xtyle-dock-zone__head";
-		const tabs = document.createElement("div");
-		tabs.className = "xtyle-dock-zone__tabs";
-		node.panels.forEach((pid, i) => {
-			const meta = this.panels.get(pid);
-			const tab = document.createElement("button");
-			tab.type = "button";
-			tab.className = "xtyle-dock-zone__tab" + (i === node.active ? " is-active" : "");
-			tab.textContent = meta?.title ?? pid;
-			const tabBadge = this.badgeEl(meta);
-			if (tabBadge) tab.appendChild(tabBadge);
-			tab.dataset.panelId = pid;
-			tab.setAttribute("role", "tab");
-			tab.setAttribute("aria-selected", String(i === node.active));
-			tab.addEventListener("pointerdown", (e) => this.onTabPointerdown(e as PointerEvent, pid, node.id, i));
-			// Keyboard activation only (`detail === 0`); pointer presses route through the drag gesture
-			// so a click-vs-drag is decided by travel, not by a second, racing handler.
-			tab.addEventListener("click", (e) => {
-				if (e.detail === 0) this.activate(node.id, i);
-			});
-			tabs.appendChild(tab);
-		});
-		head.appendChild(tabs);
-		const activePid = node.panels[node.active];
-		const activeMeta = activePid ? this.panels.get(activePid) : undefined;
-		const actions = activeMeta ? this.renderActions(activeMeta) : null;
-		if (actions) head.appendChild(actions);
-		const body = document.createElement("div");
-		body.className = "xtyle-dock-zone__body";
-		body.dataset.bodyFor = node.id;
-		zone.append(head, body);
-		return zone;
-	}
-
-	/**
-	 * A `stack`-mode leaf: every panel is a collapsible section (a header with a disclosure toggle and
-	 * the panel's own controls, a body shown when expanded), stacked top-to-bottom, the tool/inspector
-	 * rail shape. The header drags to re-dock the panel just like a tab; a plain click toggles collapse.
-	 */
-	private renderStackLeaf(node: DockLeaf): HTMLElement {
-		const zone = document.createElement("div");
-		zone.className = "xtyle-dock-zone__leaf xtyle-dock-zone__leaf--stack";
-		zone.dataset.dockChrome = "";
-		zone.dataset.zoneId = node.id;
-		zone.style.flex = "1";
 		const collapsed = new Set(node.collapsed ?? []);
-		node.panels.forEach((pid, i) => {
-			const meta = this.panels.get(pid);
-			const isCollapsed = collapsed.has(pid);
-			const section = document.createElement("div");
-			section.className = "xtyle-dock-zone__section" + (isCollapsed ? " is-collapsed" : "");
-			const head = document.createElement("div");
-			head.className = "xtyle-dock-zone__section-head";
-			const toggle = document.createElement("button");
-			toggle.type = "button";
-			toggle.className = "xtyle-dock-zone__section-toggle";
-			toggle.dataset.panelId = pid;
-			toggle.setAttribute("aria-expanded", String(!isCollapsed));
-			const chevron = document.createElement("span");
-			chevron.className = "xtyle-dock-zone__chevron";
-			chevron.setAttribute("aria-hidden", "true");
-			const title = document.createElement("span");
-			title.className = "xtyle-dock-zone__section-title";
-			title.textContent = meta?.title ?? pid;
-			toggle.append(chevron, title);
-			const sectionBadge = this.badgeEl(meta);
-			if (sectionBadge) toggle.appendChild(sectionBadge);
-			toggle.addEventListener("pointerdown", (e) => this.onTabPointerdown(e as PointerEvent, pid, node.id, i));
-			// Keyboard toggle only (`detail === 0`); a pointer press routes through the drag gesture, so a
-			// click-vs-drag is decided by travel, matching how a tab decides activate-vs-redock.
-			toggle.addEventListener("click", (e) => {
-				if (e.detail === 0) this.toggleCollapse(pid);
-			});
-			head.appendChild(toggle);
-			const actions = meta ? this.renderActions(meta) : null;
-			if (actions) head.appendChild(actions);
-			const body = document.createElement("div");
-			body.className = "xtyle-dock-zone__section-body";
-			body.dataset.sectionBodyFor = pid;
-			body.hidden = isCollapsed;
-			section.append(head, body);
-			zone.appendChild(section);
-		});
-		return zone;
-	}
-
-	/** A panel's trailing status badge for its tab / section header. Decorative (`aria-hidden`),
-	 * so a tab's accessible name stays its title; a consumer that needs the count announced puts it in `data-title`. */
-	private badgeEl(meta: PanelMeta | undefined): HTMLElement | null {
-		if (!meta?.badge) return null;
-		const badge = document.createElement("span");
-		badge.className = "xtyle-dock-zone__badge";
-		badge.setAttribute("aria-hidden", "true");
-		badge.textContent = meta.badge;
-		return badge;
-	}
-
-	/** The active panel's header controls: direct action buttons, then a kebab overflow menu, then close. */
-	private renderActions(meta: PanelMeta): HTMLElement | null {
-		if (!meta.closable && meta.actions.length === 0 && !meta.menu) return null;
-		const area = document.createElement("div");
-		area.className = "xtyle-dock-zone__actions";
-		area.dataset.dockChrome = "";
-		for (const action of meta.actions) {
-			const btn = document.createElement("button");
-			btn.type = "button";
-			btn.className = "xtyle-dock-zone__action";
-			btn.dataset.actionId = action.id;
-			btn.setAttribute("aria-label", action.label);
-			btn.title = action.label;
-			btn.textContent = action.icon ?? action.label;
-			btn.addEventListener("click", () => this.emitAction(meta.id, action.id));
-			area.appendChild(btn);
-		}
-		if (meta.menu) {
-			const menu = document.createElement("xtyle-menu") as HTMLElement & { items: MenuItem[] };
-			menu.className = "xtyle-dock-zone__menu";
-			menu.setAttribute("label", `${meta.title} options`);
-			menu.items = meta.menu;
-			menu.addEventListener("select", (e) => {
-				const value = (e as CustomEvent<{ value?: string }>).detail?.value;
-				if (value != null) this.emitAction(meta.id, value);
-			});
-			area.appendChild(menu);
-		}
-		if (meta.closable) {
-			const close = document.createElement("button");
-			close.type = "button";
-			close.className = "xtyle-dock-zone__action xtyle-dock-zone__close";
-			close.setAttribute("aria-label", `Close ${meta.title}`);
-			close.title = `Close ${meta.title}`;
-			close.textContent = CLOSE_GLYPH;
-			close.addEventListener("click", () => this.closePanel(meta.id));
-			area.appendChild(close);
-		}
-		return area;
+		return {
+			kind: "leaf",
+			id: node.id,
+			mode: node.mode === "stack" ? "stack" : "tabs",
+			active: node.active,
+			flex,
+			panels: node.panels.map((pid, index) => {
+				const meta = this.panels.get(pid);
+				return {
+					id: pid,
+					index,
+					title: meta?.title ?? pid,
+					badge: meta?.badge ?? null,
+					closable: meta?.closable === true,
+					actions: meta?.actions ?? [],
+					hasMenu: meta?.menu != null,
+					collapsed: collapsed.has(pid),
+				};
+			}),
+		};
 	}
 
 	private emitAction(panelId: string, actionId: string): void {
@@ -484,18 +426,23 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	}
 
 	private placeActivePanels(): void {
-		// Panels not currently placed stay detached (held by the Map), so their content and state survive
-		// a re-render; a collapsed stacked panel is placed but its body is hidden.
+		if (!this._layout) return;
 		const walk = (n: DockNode): void => {
 			if (n.kind === "leaf") {
 				if (n.mode === "stack") {
-					for (const pid of n.panels) this.placePanel(pid, this.querySelector<HTMLElement>(`[data-section-body-for="${pid}"]`));
+					for (const pid of n.panels) this.placePanel(pid, this.querySelector<HTMLElement>(`[data-section-body-for="${CSS.escape(pid)}"]`));
 				} else {
-					this.placePanel(n.panels[n.active], this.querySelector<HTMLElement>(`[data-body-for="${n.id}"]`));
+					this.placePanel(n.panels[n.active], this.querySelector<HTMLElement>(`[data-body-for="${CSS.escape(n.id)}"]`));
 				}
 			} else n.children.forEach(walk);
 		};
-		walk(this._layout!);
+		walk(this._layout);
+	}
+
+	private placeFloatPanels(): void {
+		for (const f of this._floating) {
+			this.placePanel(f.panelId, this.querySelector<HTMLElement>(`[data-float-body-for="${CSS.escape(f.panelId)}"]`));
+		}
 	}
 
 	private placePanel(panelId: string | undefined, body: HTMLElement | null): void {
@@ -506,66 +453,89 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		}
 	}
 
-	/** Render the floating windows over the docked zones, each holding its panel's live content, with a
-	 * draggable titlebar plus dock and close buttons. Rebuilt each render; the panel content is re-placed
-	 * from the Map, so it survives a re-render exactly as a docked panel does. */
-	private renderFloats(): void {
-		if (this._floating.length === 0) {
-			this.floatLayer?.remove();
-			this.floatLayer = null;
-			return;
-		}
-		if (!this.floatLayer) {
-			this.floatLayer = document.createElement("div");
-			this.floatLayer.className = "xtyle-dock-zone__floats";
-			this.floatLayer.dataset.dockChrome = "";
-		}
-		this.floatLayer.replaceChildren();
-		// Re-attach last so the float layer sits above the zones and the drop films.
-		this.appendChild(this.floatLayer);
-		for (const f of this._floating) {
-			const meta = this.panels.get(f.panelId);
-			const displayTitle = meta?.title ?? f.panelId;
-			const win = document.createElement("div");
-			win.className = "xtyle-dock-zone__float";
-			win.dataset.dockChrome = "";
-			win.dataset.floatId = f.panelId;
-			Object.assign(win.style, { left: `${f.x}px`, top: `${f.y}px`, width: `${f.w}px`, height: `${f.h}px` });
-			const head = document.createElement("div");
-			head.className = "xtyle-dock-zone__float-head";
-			const title = document.createElement("span");
-			title.className = "xtyle-dock-zone__float-title";
-			title.textContent = displayTitle;
-			head.appendChild(title);
-			head.appendChild(this.floatButton("⤓", `Dock ${displayTitle}`, () => this.dockFloating(f.panelId)));
-			head.appendChild(this.floatButton(CLOSE_GLYPH, `Close ${displayTitle}`, () => this.closePanel(f.panelId)));
-			head.addEventListener("pointerdown", (e) => this.onFloatPointerdown(e as PointerEvent, f.panelId));
-			const body = document.createElement("div");
-			body.className = "xtyle-dock-zone__float-body";
-			const resize = document.createElement("div");
-			resize.className = "xtyle-dock-zone__float-resize";
-			resize.setAttribute("aria-hidden", "true");
-			resize.addEventListener("pointerdown", (e) => this.onFloatResizedown(e as PointerEvent, f.panelId));
-			win.append(head, body, resize);
-			this.floatLayer.appendChild(win);
-			if (meta) {
-				meta.el.hidden = false;
-				body.appendChild(meta.el);
-			}
-		}
+	/** One pointerdown / click / select listener on the host, resolving every control by selector. The
+	 * chrome is rebuilt on every render, so a handler bound to a node the fill built would be stranded
+	 * the first time the layout changes; delegation means the gestures never hold a chrome reference. */
+	private delegate(): void {
+		if (this.delegated) return;
+		this.delegated = true;
+		this.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
+		this.addEventListener("click", (e) => this.onClick(e as MouseEvent));
+		this.addEventListener("select", (e) => this.onOverflowSelect(e as CustomEvent<{ value?: string }>));
 	}
 
-	private floatButton(glyph: string, label: string, onClick: () => void): HTMLButtonElement {
-		const btn = document.createElement("button");
-		btn.type = "button";
-		btn.className = "xtyle-dock-zone__action";
-		btn.setAttribute("aria-label", label);
-		btn.title = label;
-		btn.textContent = glyph;
-		// Stop the titlebar's own drag from arming when a control is pressed.
-		btn.addEventListener("pointerdown", (e) => e.stopPropagation());
-		btn.addEventListener("click", onClick);
-		return btn;
+	private onPointerdown(event: PointerEvent): void {
+		const target = event.target as HTMLElement | null;
+		if (!target?.closest) return;
+		const resize = target.closest<HTMLElement>("[data-float-resize]");
+		if (resize) {
+			this.onFloatResizedown(event, resize.dataset.ownerPanel ?? "");
+			return;
+		}
+		// A press on a float's own control must not also arm the titlebar drag under it.
+		if (target.closest("[data-float-control]")) return;
+		const head = target.closest("[data-float-head]");
+		if (head) {
+			const win = head.closest<HTMLElement>("[data-float-id]");
+			if (win?.dataset.floatId) this.onFloatPointerdown(event, win.dataset.floatId);
+			return;
+		}
+		const grip = target.closest<HTMLElement>("[data-tab], [data-section-toggle]");
+		if (!grip?.dataset.panelId) return;
+		this.onTabPointerdown(event, grip.dataset.panelId, grip.dataset.zoneId ?? "", Number(grip.dataset.index ?? "0"));
+	}
+
+	private onClick(event: MouseEvent): void {
+		const target = event.target as HTMLElement | null;
+		if (!target?.closest) return;
+		const action = target.closest<HTMLElement>("[data-panel-action]");
+		if (action) {
+			this.emitAction(action.dataset.ownerPanel ?? "", action.dataset.actionId ?? "");
+			return;
+		}
+		const kebab = target.closest<HTMLElement>("[data-panel-menu]");
+		if (kebab) {
+			this.openOverflow(kebab);
+			return;
+		}
+		const close = target.closest<HTMLElement>("[data-panel-close]");
+		if (close) {
+			this.closePanel(close.dataset.ownerPanel ?? "");
+			return;
+		}
+		const dock = target.closest<HTMLElement>("[data-float-dock]");
+		if (dock) {
+			this.dockFloating(dock.dataset.ownerPanel ?? "");
+			return;
+		}
+		// Keyboard activation only (`detail === 0`); a pointer press on a tab or a section header routes
+		// through the drag gesture, so click-vs-drag is decided by travel, not by a second racing handler.
+		if (event.detail !== 0) return;
+		const tab = target.closest<HTMLElement>("[data-tab]");
+		if (tab) {
+			this.activate(tab.dataset.zoneId ?? "", Number(tab.dataset.index ?? "0"));
+			return;
+		}
+		const toggle = target.closest<HTMLElement>("[data-section-toggle]");
+		if (toggle?.dataset.panelId) this.toggleCollapse(toggle.dataset.panelId);
+	}
+
+	/** Open the shared overflow menu at a panel's kebab, loaded with that panel's rows. */
+	private openOverflow(kebab: HTMLElement): void {
+		const panelId = kebab.dataset.ownerPanel ?? "";
+		const meta = this.panels.get(panelId);
+		if (!this.overflow || !meta?.menu) return;
+		this.overflowPanelId = panelId;
+		this.overflow.items = meta.menu;
+		this.overflow.label = `${meta.title} options`;
+		const rect = kebab.getBoundingClientRect();
+		this.overflow.openAt(rect.right, rect.bottom, { align: "end" });
+	}
+
+	private onOverflowSelect(event: CustomEvent<{ value?: string }>): void {
+		if (event.target !== this.overflow || !this.overflowPanelId) return;
+		const value = event.detail?.value;
+		if (value != null) this.emitAction(this.overflowPanelId, value);
 	}
 
 	/** The smallest a floating window resizes to, in px; kept in step with the CSS `min-width` / `min-height`. */
@@ -573,6 +543,44 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	private static readonly FLOAT_MIN_H = 112;
 	/** Roughly the titlebar height, in px; offsets a drag-out float so the pointer lands on the titlebar. */
 	private static readonly FLOAT_TITLE_H = 16;
+
+	/** The band's width comes from the theme's spacing scale through `--dock-band`, registered as a
+	 * `<length>` so it computes to px; the literal is what a host with no register applied falls back to. */
+	private static readonly DOCK_BAND_PROP = "--dock-band";
+	private static readonly DOCK_BAND_PX = 48;
+
+	/** How close, in px, the pointer must come to a zone's boundary before a re-dock is on offer. */
+	private dockBand(): number {
+		const raw = getComputedStyle(this).getPropertyValue(XtyleDockZone.DOCK_BAND_PROP).trim();
+		const px = raw.endsWith("px") ? Number.parseFloat(raw) : Number.NaN;
+		return Number.isFinite(px) && px > 0 ? px : XtyleDockZone.DOCK_BAND_PX;
+	}
+
+	/**
+	 * The dock a float's titlebar drag is offering, or `null` for a plain move.
+	 *
+	 * The zones tile the whole workspace, so `resolveDrop` answers *everywhere* inside it — asking it alone
+	 * would re-dock a window the moment its titlebar was nudged, and a pure move would only be possible by
+	 * dragging clean out of the workspace. So a float has to earn its dock: the pointer must come within
+	 * {@link dockBand} px of a zone's boundary, which is the seam a split would land against anyway. Every
+	 * other point in the workspace is open floor.
+	 *
+	 * Inside the band the drop is always a split. A `center` there means the zone is too narrow to have an
+	 * outside, and there is nothing to split; the window's dock button is the way back to a tab.
+	 */
+	private floatDockOffer(pointer: { x: number; y: number }, zones: Array<{ id: string; rect: DockRect }>): DropResolution | null {
+		const res = resolveDrop({ pointer, targets: zones });
+		if (!res || res.region === "center") return null;
+		const rect = zones.find((z) => z.id === res.targetId)?.rect;
+		if (!rect) return null;
+		const toBoundary = Math.min(
+			pointer.x - rect.left,
+			rect.left + rect.width - pointer.x,
+			pointer.y - rect.top,
+			rect.top + rect.height - pointer.y,
+		);
+		return toBoundary <= this.dockBand() ? res : null;
+	}
 
 	/** Wire a pointer-drag loop (`onMove` per pointermove, `onCommit` on release), tearing the listeners
 	 * down on release or cancel. The callers own their own pending state through closures. */
@@ -588,14 +596,21 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		window.addEventListener("pointercancel", up);
 	}
 
+	private floatWindow(panelId: string): HTMLElement | null {
+		return this.querySelector<HTMLElement>(`[data-float-id="${CSS.escape(panelId)}"]`);
+	}
+
 	/**
-	 * Drag a floating window's titlebar. Moving over open space repositions it (clamped to the workspace);
-	 * moving over a zone previews a re-dock, and releasing there docks the panel back into the tree.
+	 * Drag a floating window's titlebar. This is a **move**: the window follows the pointer, clamped to the
+	 * workspace, and releasing it leaves it where it lies.
+	 *
+	 * It becomes a re-dock only where one is actually on offer — {@link floatDockOffer}, the band along a
+	 * zone's boundary. There, the drop films light up to promise the split, and releasing takes it.
 	 */
 	private onFloatPointerdown(event: PointerEvent, panelId: string): void {
 		if (event.button !== 0) return;
 		const start = this._floating.find((f) => f.panelId === panelId);
-		const win = this.floatLayer?.querySelector<HTMLElement>(`[data-float-id="${CSS.escape(panelId)}"]`);
+		const win = this.floatWindow(panelId);
 		if (!start || !win) return;
 		event.preventDefault();
 		const host = this.getBoundingClientRect();
@@ -603,7 +618,6 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		const maxY = Math.max(0, host.height - start.h);
 		const offsetX = event.clientX - start.x;
 		const offsetY = event.clientY - start.y;
-		this.ensureOverlays();
 		win.classList.add("is-dragging");
 		let next: FloatRect = { x: start.x, y: start.y, w: start.w, h: start.h };
 		let redock: DropResolution | null = null;
@@ -615,7 +629,7 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 				win.style.top = `${y}px`;
 				next = { x, y, w: start.w, h: start.h };
 				const zones = this.zoneTargets();
-				redock = resolveDrop({ pointer: { x: e.clientX, y: e.clientY }, targets: zones });
+				redock = this.floatDockOffer({ x: e.clientX, y: e.clientY }, zones);
 				if (redock) this.paintDropFilms(redock, zones, host);
 				else this.hideFilms();
 			},
@@ -636,10 +650,9 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	private onFloatResizedown(event: PointerEvent, panelId: string): void {
 		if (event.button !== 0) return;
 		const start = this._floating.find((f) => f.panelId === panelId);
-		const win = this.floatLayer?.querySelector<HTMLElement>(`[data-float-id="${CSS.escape(panelId)}"]`);
+		const win = this.floatWindow(panelId);
 		if (!start || !win) return;
 		event.preventDefault();
-		event.stopPropagation();
 		const host = this.getBoundingClientRect();
 		const maxW = Math.max(XtyleDockZone.FLOAT_MIN_W, host.width - start.x);
 		const maxH = Math.max(XtyleDockZone.FLOAT_MIN_H, host.height - start.y);
@@ -659,23 +672,6 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		);
 	}
 
-	private film(modifier: string): HTMLDivElement {
-		const el = document.createElement("div");
-		el.className = `xtyle-dock-zone__film xtyle-dock-zone__film--${modifier}`;
-		el.dataset.dockChrome = "";
-		el.hidden = true;
-		return el;
-	}
-
-	private ensureOverlays(): void {
-		this.dropFilm ??= this.film("drop");
-		this.remnantFilm ??= this.film("remnant");
-		// Re-attach last so the films layer above the freshly rendered zones.
-		this.appendChild(this.dropFilm);
-		this.appendChild(this.remnantFilm);
-		for (const f of this.restFilms) this.appendChild(f);
-	}
-
 	private placeFilm(el: HTMLElement, rect: DockRect, host: DOMRect): void {
 		Object.assign(el.style, {
 			top: `${rect.top - host.top}px`,
@@ -692,14 +688,12 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		for (const f of this.restFilms) f.hidden = true;
 	}
 
-	/** Grow the film pool to cover every non-target zone, hiding any surplus. */
+	/** Place a film over every non-target zone, hiding any spare. */
 	private placeRestFilms(rects: DockRect[], host: DOMRect): void {
-		while (this.restFilms.length < rects.length) {
-			const f = this.film("rest");
-			this.restFilms.push(f);
-			this.appendChild(f);
-		}
-		rects.forEach((r, i) => this.placeFilm(this.restFilms[i]!, r, host));
+		rects.forEach((r, i) => {
+			const film = this.restFilms[i];
+			if (film) this.placeFilm(film, r, host);
+		});
 		for (let i = rects.length; i < this.restFilms.length; i += 1) this.restFilms[i]!.hidden = true;
 	}
 
@@ -755,7 +749,6 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 
 	private onDragMove(event: PointerEvent): void {
 		if (!this.armDrag(event)) return;
-		this.ensureOverlays();
 		const zones = this.zoneTargets();
 		const res = resolveDrop({ pointer: { x: event.clientX, y: event.clientY }, targets: zones });
 		if (!res) {
@@ -768,10 +761,11 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	/** Paint the drop preview for a resolved target: the drop half, the split remnant (none for a tab drop),
 	 * and a film over every other zone. */
 	private paintDropFilms(res: DropResolution, zones: Array<{ id: string; rect: DockRect }>, host: DOMRect): void {
-		this.placeFilm(this.dropFilm!, res.highlight, host);
+		if (!this.dropFilm) return;
+		this.placeFilm(this.dropFilm, res.highlight, host);
 		const zoneRect = zones.find((z) => z.id === res.targetId)?.rect;
 		const remnant = zoneRect ? this.remnantRect(zoneRect, res.highlight, res.region) : null;
-		if (remnant) this.placeFilm(this.remnantFilm!, remnant, host);
+		if (remnant && this.remnantFilm) this.placeFilm(this.remnantFilm, remnant, host);
 		else if (this.remnantFilm) this.remnantFilm.hidden = true;
 		this.placeRestFilms(
 			zones.filter((z) => z.id !== res.targetId).map((z) => z.rect),

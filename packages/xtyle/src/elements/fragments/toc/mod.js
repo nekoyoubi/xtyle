@@ -18,14 +18,14 @@
   }
   hooks.fragment.mount("toc", (bindings, ops) => {
     const label = bindings.label ?? "On this page";
-    ops.setAttr("[data-root]", "class", tocClass(bindings));
+    ops.setAttr(".xtyle-toc", "class", tocClass(bindings));
     ops.setAttr("[data-root]", "aria-label", label);
     ops.setText("[data-label]", label);
     ops.replaceChildren("[data-list]", links(bindings));
   });
   hooks.fragment.update("toc", (bindings, ops) => {
     const label = bindings.label ?? "On this page";
-    ops.setAttr("[data-root]", "class", tocClass(bindings));
+    ops.setAttr(".xtyle-toc", "class", tocClass(bindings));
     ops.setAttr("[data-root]", "aria-label", label);
     ops.setText("[data-label]", label);
   });

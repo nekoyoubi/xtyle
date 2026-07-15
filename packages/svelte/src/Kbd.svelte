@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/kbd.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as KbdTone } from "@xtyle/core";
 

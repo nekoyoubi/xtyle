@@ -1,7 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { FullTone } from "../index.js";
 import { progressHostCss } from "../markup/index.js";
-import { rampColor, rampGradientStops, RAMP_TOKENS, RAMP_SCHEMES, type RampScheme } from "../series.js";
+import { rampColor, rampGradientStops, resolvePalette, PALETTE_TOKENS, type Palette } from "../series.js";
 import { readLiveRegister } from "./live-register.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/progress/source.generated.js";
@@ -124,10 +124,10 @@ export class XtyleProgress extends XtyleElement {
 		this.reflectBoolean("meter", value);
 	}
 
-	/** Color the fill by its own value along a ramp instead of a flat tone: a built-in `RampScheme`
-	 * (`accent` / `thermal` / `status`), a JSON array of stop colors (`["#00f","#f00"]`), or a
+	/** Color the fill by its own value along a ramp instead of a flat tone: a built-in `Palette`
+	 * (`intensity` / `thermal` / `severity` / …), a JSON array of stop colors (`["#00f","#f00"]`), or a
 	 * comma-separated stop list (`var(--info),var(--danger)`). Absent leaves the tone in charge. */
-	get ramp(): RampScheme | string[] | null {
+	get ramp(): Palette | string[] | null {
 		const raw = this.getAttribute("ramp");
 		if (!raw) return null;
 		if (raw.startsWith("[")) {
@@ -142,9 +142,9 @@ export class XtyleProgress extends XtyleElement {
 			const stops = raw.split(",").map((s) => s.trim()).filter(Boolean);
 			return stops.length ? stops : null;
 		}
-		return RAMP_SCHEMES.includes(raw as RampScheme) ? (raw as RampScheme) : null;
+		return resolvePalette(raw);
 	}
-	set ramp(value: RampScheme | string[] | null) {
+	set ramp(value: Palette | string[] | null) {
 		if (value === null) this.removeAttribute("ramp");
 		else this.setAttribute("ramp", Array.isArray(value) ? JSON.stringify(value) : value);
 	}
@@ -176,9 +176,9 @@ export class XtyleProgress extends XtyleElement {
 		return (clamped - this.min) / span;
 	}
 
-	/** Reads the ramp's anchor tokens off the live cascade so a solid fill's color tracks the theme. */
+	/** Reads the palette stop tokens off the live cascade so a solid fill's color tracks the theme. */
 	private paletteRegister(): Record<string, string> {
-		return readLiveRegister(this, RAMP_TOKENS, () => {
+		return readLiveRegister(this, PALETTE_TOKENS, () => {
 			if (this.root.firstChild) this.render();
 		});
 	}
@@ -188,7 +188,7 @@ export class XtyleProgress extends XtyleElement {
 		return this.rampMode === "gradient" && this.variant !== "circular" ? "gradient" : "solid";
 	}
 
-	private rampBindings(scheme: RampScheme | string[]): Record<string, unknown> {
+	private rampBindings(scheme: Palette | string[]): Record<string, unknown> {
 		const reverse = this.reverse;
 		if (this.effectiveRampMode() === "gradient") {
 			return { ramp: true, rampMode: "gradient", rampStops: rampGradientStops(scheme, { reverse }) };

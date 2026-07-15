@@ -1,0 +1,181 @@
+---
+import Chart from "@xtyle/astro/Chart.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const now = Date.now();
+const minutesAgo = (n: number) => now - n * 60_000;
+
+const traffic = [
+	{
+		name: "Edge",
+		points: [18, 24, 21, 30, 44, 38, 52, 47, 61, 55, 68, 64].map((value, i) => ({ at: minutesAgo(11 - i), value })),
+	},
+	{
+		name: "Origin",
+		points: [10, 12, 15, 14, 22, 19, 26, 24, 31, 28, 34, 30].map((value, i) => ({ at: minutesAgo(11 - i), value })),
+	},
+];
+
+const memory = [
+	{ name: "Heap", points: [2.1, 2.4, 3.0, 2.8, 3.6, 4.1, 3.9, 4.6].map((value, at) => ({ at, value })) },
+	{ name: "Cache", points: [1.0, 1.2, 1.1, 1.6, 1.5, 2.0, 2.2, 2.1].map((value, at) => ({ at, value })) },
+];
+
+const concurrency = [1, 2, 4, 8, 16, 32];
+const latency = [
+	{ name: "p50", points: concurrency.map((at, i) => ({ at, value: [12, 14, 19, 28, 46, 91][i]! })) },
+	{ name: "p99", points: concurrency.map((at, i) => ({ at, value: [30, 38, 55, 92, 170, 320][i]! })) },
+];
+
+const drift = [
+	{ name: "Drift", points: [-4, -2, 1, -3, 2, 5, 3, 6].map((value, at) => ({ at, value })) },
+];
+
+const errors = [
+	{ name: "5xx", points: [0.2, 0.3, 0.4, 1.9, 0.6, 0.4, 0.3].map((value, i) => ({ at: minutesAgo(6 - i), value })) },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Time series</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Two series over a time domain. The x axis labels itself as a clock, and the cursor snaps to the
+				nearest sample and reads <em>both</em> series at once. Focus the plot and use the arrow keys:
+				the same readout works without a mouse.
+			</Text>
+			<Chart
+				series={traffic}
+				scheme="accents"
+				label="Requests per second"
+				xLabel="Time"
+				yLabel="req/s"
+				height={280}
+			/>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Area, smoothed</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>variant="area"</code> fills beneath each line and <code>curve="smooth"</code> rounds the
+				joins, on the <code>thermal</code> scale.
+			</Text>
+			<Chart
+				series={memory}
+				variant="area"
+				curve="smooth"
+				scheme="thermal"
+				label="Memory in use"
+				yLabel="GB"
+				height={260}
+			/>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Numeric domain, stepped</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>xScale="linear"</code> plots against a plain number rather than a clock.
+				<code>curve="step"</code> holds each value until the next measurement, and <code>markers</code>
+				pins every sample, which suits a sparse, discrete series.
+			</Text>
+			<Chart
+				series={latency}
+				xScale="linear"
+				curve="step"
+				markers
+				scheme="severity"
+				label="Latency by concurrency"
+				xLabel="Concurrency"
+				yLabel="ms"
+				height={260}
+			/>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Crossing zero</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The value axis always includes zero, and draws a zero line when the data crosses it, so a
+				negative reads as negative rather than as "low".
+			</Text>
+			<Chart series={drift} markers label="Clock drift" yLabel="ms" height={220} />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Drill in</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				<code>selectable</code> fires <code>select</code> on click or Enter at the keyboard cursor,
+				carrying <code>{"{ x, label, index, points }"}</code> — where the cursor sat and every series'
+				value there. Click the spike.
+			</Text>
+			<Chart
+				id="errors-chart"
+				series={errors}
+				variant="area"
+				selectable
+				scheme={["var(--danger)"]}
+				label="Error rate"
+				yLabel="%"
+				height={220}
+			/>
+			<Text size="sm" tone="muted">
+				Selected: <Text as="span" mono size="xs" id="errors-readout">(click a point)</Text>
+			</Text>
+		</Stack>
+		<script is:inline>
+			const chart = document.getElementById("errors-chart");
+			const out = document.getElementById("errors-readout");
+			chart?.addEventListener("select", (e) => {
+				const [first] = e.detail.points;
+				out.textContent = first ? `${e.detail.label} · ${first.value}% 5xx` : "(no sample here)";
+			});
+		</script>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">One data set, five palettes</Heading>
+		<Grid minColWidth="18rem" gap={4}>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">accents</Text>
+				<Chart series={traffic} scheme="accents" label="Accents palette" height={160} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">skittles</Text>
+				<Chart series={traffic} scheme="skittles" label="Skittles palette" height={160} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">severity, area</Text>
+				<Chart series={traffic} scheme="severity" variant="area" label="Severity palette" height={160} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">thermal, reversed</Text>
+				<Chart series={traffic} scheme="thermal" reverse label="Thermal reversed" height={160} legend={false} />
+			</Stack>
+			<Stack gap={1}>
+				<Text size="xs" tone="subtle" weight="semibold">intensity</Text>
+				<Chart series={traffic} scheme="intensity" label="Intensity palette" height={160} legend={false} />
+			</Stack>
+		</Grid>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Empty state</Heading>
+		<Text tone="muted" size="sm">
+			With nothing to plot, the chart shows a muted <code>No data</code> message in place of the axes,
+			so a quiet period reads as intentional rather than broken.
+		</Text>
+		<Chart series={[]} label="Requests per second" height={200} />
+	</Card>
+</Stack>

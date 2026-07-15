@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/link.js";
 	import type { Snippet } from "svelte";
 
 	type LinkVariant = "default" | "muted" | "quiet";

@@ -50,6 +50,7 @@ export const swatchManifest: ComponentManifest = {
 	id: "swatch",
 	name: "Swatch",
 	category: "control",
+	since: "0.1.0",
 	keywords: ["color chip", "color swatch", "palette", "color sample", "token chip"],
 	seeAlso: ["color-picker", "badge", "icon"],
 	summary: "A color chip pairing a colored dot with an optional label and value.",

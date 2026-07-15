@@ -14,6 +14,8 @@ import {
 	primitiveSince,
 	primitiveTags,
 	derive,
+	PALETTES,
+	type Palette,
 } from "../src/index.js";
 import { xtyleDefault } from "../src/batteries.js";
 
@@ -393,6 +395,39 @@ describe("parseIconName", () => {
 		expect(svg).not.toContain("series:0");
 	});
 
+	it("expands the canvas with `---e{n}` while keeping the box at 1em", () => {
+		expect(parseIconName("mark--square-c1---e12")!.composition.expand).toBe(12);
+		const svg = composeIcon(parseIconName("mark--square-c1---e12")!.composition);
+		// pad = 12% of 24 = 2.88 → viewBox -2.88 -2.88 29.76 29.76, box unchanged at 1em
+		expect(svg).toContain('viewBox="-2.88 -2.88 29.76 29.76"');
+		expect(svg).toContain('width="1em" height="1em"');
+		// no expand → the plain viewBox and box
+		expect(composeIcon(parseIconName("mark--square-c1")!.composition)).toContain('viewBox="0 0 24 24"');
+	});
+
+	it("clamps `---e{n}` at 100", () => {
+		expect(parseIconName("mark--square-c1---e250")!.composition.expand).toBe(100);
+	});
+
+	it("rings the whole mark with a `---o{1-3}[c]` outline via feMorphology, before any shadow", () => {
+		const composition = parseIconName("mark--square-c1--dot-c2---o2cf")!.composition;
+		expect(composition.outline).toEqual({ size: 2, color: "slot:15" });
+		const svg = composeIcon(composition);
+		expect(svg).toContain("feMorphology");
+		expect(svg).toContain('operator="dilate"');
+		// the composite outline is distinct from a per-layer outline: no layer here declares one
+		expect(composition.layers.every((l) => l.outline == null)).toBe(true);
+	});
+
+	it("carries `outline` and `expand` through composeIconThemed, baking a series outline color", () => {
+		const composition = parseIconName("mark--square-c1---o3c3--e10")!.composition;
+		const svg = composeIconThemed(composition, { register, scheme: "accents" });
+		// o3 renders, e10 expands, and c3 (series slot 0) bakes to a concrete flood-color, not `series:0`
+		expect(svg).toContain("feMorphology");
+		expect(svg).toContain('viewBox="-2.4 -2.4 28.8 28.8"');
+		expect(svg).not.toContain("series:0");
+	});
+
 	it("places p on a phone-keypad grid: 1 top-left, 5 center, 9 bottom-right", () => {
 		const bl = parseObjectLayer("dot-p7");
 		expect(bl.x).toBeCloseTo(-8);
@@ -546,6 +581,75 @@ describe("parseIconName", () => {
 	it("registers `letter` in the primitive library for palette discovery", () => {
 		expect(hasPrimitive("letter")).toBe(true);
 		expect(primitiveSince("letter")).toBe("0.7.0");
+	});
+});
+
+describe("---ps series palette", () => {
+	const seriesFill = (name: string, scheme?: Palette): string =>
+		/fill="(#[0-9a-fA-F]{3,8})"/.exec(composeIconThemed(parseIconName(name)!.composition, { register, scheme }))?.[1] ?? "";
+
+	it("parses every shipped palette, so a palette added to PALETTES needs no parser change", () => {
+		for (const scheme of PALETTES) {
+			expect(parseIconName(`x--square-c1---ps-${scheme}`)?.composition.scheme, scheme).toBe(scheme);
+		}
+	});
+
+	it("picks up the renamed palettes with no parser edit", () => {
+		expect(parseIconName("x--square-c1---ps-severity")?.composition.scheme).toBe("severity");
+		expect(parseIconName("x--square-c1---ps-intensity")?.composition.scheme).toBe("intensity");
+		expect(seriesFill("x--square-c1---ps-severity", "accents")).toBe(seriesFill("x--square-c1", "severity"));
+		expect(seriesFill("x--square-c1---ps-intensity", "accents")).toBe(seriesFill("x--square-c1", "intensity"));
+	});
+
+	it("still honors the retired names, resolving them to the renamed palettes", () => {
+		expect(parseIconName("x--square-c1---ps-status")?.composition.scheme).toBe("severity");
+		expect(parseIconName("x--square-c1---ps-accent")?.composition.scheme).toBe("intensity");
+		// never onto the look-alike palettes: `status` is not `statuses`, `accent` is not `accents`
+		expect(parseIconName("x--square-c1---ps-status")?.composition.scheme).not.toBe("statuses");
+		expect(parseIconName("x--square-c1---ps-accent")?.composition.scheme).not.toBe("accents");
+	});
+
+	it("lets the name's scheme beat the host's", () => {
+		const host = seriesFill("x--square-c1", "skittles");
+		expect(host).not.toBe(seriesFill("x--square-c1", "accents"));
+		// the same spec, pinning its own palette, colors as skittles even though the host says accents
+		expect(seriesFill("x--square-c1---ps-skittles", "accents")).toBe(host);
+		// and through the unbaked path too, so an export/SSR compose honors the pin
+		const svg = composeIcon(parseIconName("x--square-c1---ps-skittles")!.composition, { register, scheme: "accents" });
+		expect(svg).toContain(host);
+	});
+
+	it("inherits the host's scheme when the name pins none", () => {
+		expect(parseIconName("x--square-c1")?.composition.scheme).toBeUndefined();
+		expect(seriesFill("x--square-c1", "statuses")).toBe(seriesFill("x--square-c1---ps-statuses", "accents"));
+	});
+
+	it("drops an unknown scheme instead of throwing or painting garbage", () => {
+		const parsed = parseIconName("x--square-c1---ps-crayons");
+		expect(parsed?.composition.scheme).toBeUndefined();
+		// the host's scheme still applies, and the mark renders clean
+		expect(seriesFill("x--square-c1---ps-crayons", "skittles")).toBe(seriesFill("x--square-c1", "skittles"));
+		const svg = composeIcon(parsed!.composition, { register, scheme: "accents" });
+		expect(svg.startsWith("<svg")).toBe(true);
+		expect(/NaN|undefined/.test(svg)).toBe(false);
+	});
+
+	it("coexists with the other finish flags in one `---` tail", () => {
+		const c = parseIconName("x--square-c1--letter-A-f1---d2p8s3t80--ps-statuses--pc9-accent--f1-display--l1*")?.composition;
+		expect(c?.scheme).toBe("statuses");
+		expect(c?.dropShadow).toBeDefined();
+		expect(c?.palette).toEqual({ "9": "--accent" });
+		expect(c?.fonts).toEqual({ 1: "var(--font-display)" });
+		// a `ps` reading as the first flag after `---` is the same flag, just in a different position
+		expect(parseIconName("x--square-c1---ps-thermal--d2p8s3t80")?.composition.scheme).toBe("thermal");
+	});
+
+	it("colors a whole mark's slots off the pinned scheme, not just the first", () => {
+		const pinned = composeIconThemed(parseIconName("x--square-c1--dot-c5-s50--star-c9-s30---ps-thermal")!.composition, { register, scheme: "accents" });
+		const host = composeIconThemed(parseIconName("x--square-c1--dot-c5-s50--star-c9-s30")!.composition, { register, scheme: "thermal" });
+		expect([...pinned.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((m) => m[1])).toEqual(
+			[...host.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((m) => m[1]),
+		);
 	});
 });
 

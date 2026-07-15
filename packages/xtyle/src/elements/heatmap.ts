@@ -1,4 +1,4 @@
-import { XtyleElement, define, escapeHtml, type StyleMode } from "./base.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 import { heatmapHostCss, type HeatmapScheme } from "../markup/index.js";
 import {
 	rampColor,
@@ -7,10 +7,8 @@ import {
 	categoricalLegend,
 	matrixCeiling,
 	GLOW_MAX_BLUR,
-	RAMP_TOKENS,
-	SERIES_TOKENS,
-	type RampScheme,
-	type SeriesScheme,
+	PALETTE_TOKENS,
+	type Palette,
 } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { readLiveRegister } from "./live-register.js";
@@ -102,11 +100,11 @@ export class XtyleHeatmap extends XtyleElement {
 
 	get scheme(): HeatmapScheme {
 		if (this.schemeProp) return this.schemeProp;
-		const fallback = this.categorical ? "accents" : "accent";
+		const fallback: Palette = this.categorical ? "accents" : "intensity";
 		const raw = this.getAttribute("scheme");
-		if (!raw) return fallback as HeatmapScheme;
-		if (raw.startsWith("[")) return parseJson<string[]>(raw) ?? (fallback as HeatmapScheme);
-		return raw as RampScheme;
+		if (!raw) return fallback;
+		if (raw.startsWith("[")) return parseJson<string[]>(raw) ?? fallback;
+		return raw as Palette;
 	}
 	set scheme(value: HeatmapScheme) {
 		this.schemeProp = value;
@@ -159,11 +157,9 @@ export class XtyleHeatmap extends XtyleElement {
 		if (this.root.firstChild) this.render();
 	}
 
-	/** Reads the palette anchor tokens off the live cascade, so the scale tracks the theme. A
-	 * categorical grid also needs the series-hue tokens for its per-category colors. */
+	/** Reads the palette stop tokens off the live cascade, so the scale tracks the theme. */
 	private paletteRegister(): Record<string, string> {
-		const tokens = this.categorical ? [...RAMP_TOKENS, ...SERIES_TOKENS] : RAMP_TOKENS;
-		return readLiveRegister(this, tokens, () => {
+		return readLiveRegister(this, PALETTE_TOKENS, () => {
 			if (this.root.firstChild) this.render();
 		});
 	}
@@ -177,7 +173,7 @@ export class XtyleHeatmap extends XtyleElement {
 	/** A categorical grid's per-category hues plus each cell's fill (surface → its category hue by
 	 * value); the intensity-ramp sibling is {@link rampCellColors}. */
 	private categoricalPalette(values: number[][]): { cellColors: string[][]; hues: string[] } {
-		return categoricalHeatColors(this.scheme as SeriesScheme | string[], values, this.paletteRegister(), {
+		return categoricalHeatColors(this.scheme, values, this.paletteRegister(), {
 			axis: this.categoryAxis,
 			reverse: this.reverse,
 			max: this.ceiling("max", values),
@@ -186,7 +182,7 @@ export class XtyleHeatmap extends XtyleElement {
 
 	private rampCellColors(values: number[][]): string[][] {
 		const register = this.paletteRegister();
-		const scheme = this.scheme as RampScheme | string[];
+		const scheme = this.scheme;
 		const reverse = this.reverse;
 		const max = this.ceiling("max", values);
 		return values.map((row) => row.map((v) => rampColor(scheme, (Number.isFinite(v) ? v : 0) / max, register, { reverse })));
@@ -206,7 +202,7 @@ export class XtyleHeatmap extends XtyleElement {
 				row.map((v, c) => glowFilter((Number.isFinite(v) ? v : 0) / max, hues[axis === "col" ? c : r] ?? "currentColor", maxBlur)),
 			);
 		}
-		const color = rampColor(this.scheme as RampScheme | string[], 1, this.paletteRegister(), { reverse: this.reverse });
+		const color = rampColor(this.scheme, 1, this.paletteRegister(), { reverse: this.reverse });
 		return glow.map((row) => row.map((v) => glowFilter((Number.isFinite(v) ? v : 0) / max, color, maxBlur)));
 	}
 
@@ -221,7 +217,7 @@ export class XtyleHeatmap extends XtyleElement {
 	private scaleKey(values: number[][]): { scaleColors: string[]; scaleLow: number; scaleHigh: number } {
 		const register = this.paletteRegister();
 		const reverse = this.reverse;
-		const scheme = this.scheme as RampScheme | string[];
+		const scheme = this.scheme;
 		const scaleColors = [0, 0.25, 0.5, 0.75, 1].map((t) => rampColor(scheme, t, register, { reverse }));
 		return { scaleColors, scaleLow: 0, scaleHigh: this.ceiling("max", values) };
 	}
@@ -263,29 +259,16 @@ export class XtyleHeatmap extends XtyleElement {
 		const tooltip = this.root.querySelector<HTMLElement>(".xtyle-heatmap__tooltip");
 		if (!chart || !tooltip) return;
 		const cells = [...this.root.querySelectorAll<SVGRectElement>(".xtyle-heatmap__cell")];
+		const tipRows = [...tooltip.querySelectorAll<HTMLElement>("[data-tip-row]")];
 		const values = this.values;
-		const glowValues = this.glow;
-		const glowLabel = this.glowLabel(glowValues);
-		const titles = this.titles;
 		const rows = this.rows;
 		const cols = this.cols;
 
+		/** The readout is the fill's markup: the host reveals the hovered cell's row and places the box
+		 * against the cell's own drawn geometry, and writes nothing into it. */
 		const show = (cell: SVGRectElement): void => {
-			const r = Number(cell.dataset.r);
-			const c = Number(cell.dataset.c);
-			const value = values[r]?.[c] ?? 0;
-			const title = titles[r]?.[c];
-			if (title) {
-				tooltip.textContent = title;
-			} else {
-				const name = escapeHtml([rows[r], cols[c]].filter(Boolean).join(" · "));
-				const glowVal = glowValues[r]?.[c];
-				const glowPart =
-					glowLabel && Number.isFinite(glowVal)
-						? ` <span class="xtyle-heatmap__tooltip-name">· ${escapeHtml(glowLabel)} ${glowVal}</span>`
-						: "";
-				tooltip.innerHTML = `<span class="xtyle-heatmap__tooltip-name">${name}</span> <span class="xtyle-heatmap__tooltip-value">${value}</span>${glowPart}`;
-			}
+			const key = `${cell.dataset.r}-${cell.dataset.c}`;
+			for (const row of tipRows) row.hidden = row.dataset.tipRow !== key;
 			const chartRect = chart.getBoundingClientRect();
 			const cellRect = cell.getBoundingClientRect();
 			tooltip.style.left = `${cellRect.left + cellRect.width / 2 - chartRect.left}px`;

@@ -1,0 +1,97 @@
+---
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+type Shape = "auto" | "rect" | "circle";
+type Arrow = "none" | "static" | "bounce";
+type Placement = "top" | "right" | "bottom" | "left";
+
+interface Props {
+	/** A CSS selector for the element to isolate. */
+	target?: string;
+	open?: boolean;
+	shape?: Shape;
+	padding?: number;
+	radius?: number;
+	/** How dark the veil goes, 0–1. */
+	dim?: number;
+	/** How far the page behind the veil blurs, in px. Costs a compositor layer the size of the viewport. */
+	blur?: number;
+	placement?: Placement;
+	heading?: string;
+	arrow?: Arrow;
+	pulse?: "none" | "slow" | "fast";
+	scrollIntoView?: boolean;
+	/** Makes the veil and Escape inert. Leave the actions slot a way out. */
+	noDismiss?: boolean;
+	closeLabel?: string;
+	noCloseButton?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	target,
+	open = false,
+	shape = "auto",
+	padding = 8,
+	radius,
+	dim,
+	blur,
+	placement = "bottom",
+	heading,
+	arrow = "bounce",
+	pulse = "none",
+	scrollIntoView = false,
+	noDismiss = false,
+	closeLabel,
+	noCloseButton = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const bindings = {
+	open,
+	heading: heading ?? null,
+	closeLabel: closeLabel ?? null,
+	noCloseButton,
+	arrow,
+	pulse,
+	dim: dim == null ? null : String(dim),
+	blur: blur == null ? null : `${Number(blur) || 0}px`,
+	showPointer: false,
+	headingId: `xtyle-spotlight-${Math.random().toString(36).slice(2, 8)}-heading`,
+};
+const light = await renderFragmentLight("spotlight", bindings);
+const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const actionsHtml = Astro.slots.has("actions") ? await Astro.slots.render("actions") : "";
+const composed = light
+	.replace("<slot></slot>", () => bodyHtml)
+	.replace('<slot name="actions"></slot>', () => actionsHtml);
+---
+
+<xtyle-spotlight
+	target={target}
+	open={open || undefined}
+	shape={shape}
+	padding={padding}
+	radius={radius}
+	dim={dim}
+	blur={blur}
+	placement={placement}
+	heading={heading}
+	arrow={arrow}
+	pulse={pulse === "none" ? undefined : pulse}
+	scroll-into-view={scrollIntoView || undefined}
+	no-dismiss={noDismiss || undefined}
+	close-label={closeLabel}
+	no-close-button={noCloseButton || undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

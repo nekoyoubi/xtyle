@@ -30,6 +30,7 @@ export const cardLinkManifest: ComponentManifest = {
 	id: "card-link",
 	name: "Card Link",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["clickable card", "link card", "tile link", "whole-card link"],
 	seeAlso: ["card", "link", "button"],
 	summary: "A whole card that is a single link: the click target is the card, not a button inside it.",

@@ -85,6 +85,7 @@ export const cardManifest: ComponentManifest = {
 	id: "card",
 	name: "Card",
 	category: "layout",
+	since: "0.1.0",
 	keywords: ["surface", "container", "tile", "box", "panel"],
 	seeAlso: ["card-link", "panel", "section"],
 	summary: "A surface container that groups related content, with optional header and footer regions.",

@@ -22,7 +22,7 @@
     return `<label class="xtyle-form-group__label" part="label" data-label id="${b.labelId ?? ""}"${labelFor}${labelHidden}><span data-label-text>${escape(label)}</span><span class="xtyle-form-group__required" part="required-indicator" data-required aria-hidden="true"${requiredHidden}>*</span></label><span class="xtyle-form-group__description" part="description" data-description id="${b.descriptionId ?? ""}"${descriptionHidden}>${escape(description)}</span><div class="xtyle-form-group__control" part="control"><slot></slot></div><span class="xtyle-form-group__error" part="error" data-error id="${b.errorId ?? ""}" role="alert"${errorHidden}>${escape(error)}</span>`;
   }
   hooks.fragment.mount("form-group", (bindings, ops) => {
-    ops.setAttr("[data-group]", "class", groupClass(bindings));
+    ops.setAttr(".xtyle-form-group", "class", groupClass(bindings));
     ops.replaceChildren("[data-group]", inner(bindings));
   });
   hooks.fragment.update("form-group", (bindings, ops) => {
@@ -31,7 +31,7 @@
     const error = bindings.error ?? "";
     const invalid = bindings.invalid === true;
     const required = bindings.required === true;
-    ops.setAttr("[data-group]", "class", groupClass(bindings));
+    ops.setAttr(".xtyle-form-group", "class", groupClass(bindings));
     ops.setText("[data-label-text]", label);
     ops.toggle("[data-label]", label.length > 0);
     ops.toggle("[data-required]", required);

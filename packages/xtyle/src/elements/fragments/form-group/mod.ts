@@ -59,7 +59,7 @@ function inner(b: FormGroupBindings): string {
 }
 
 hooks.fragment.mount("form-group", (bindings, ops) => {
-	ops.setAttr("[data-group]", "class", groupClass(bindings));
+	ops.setAttr(".xtyle-form-group", "class", groupClass(bindings));
 	ops.replaceChildren("[data-group]", inner(bindings));
 });
 
@@ -70,7 +70,7 @@ hooks.fragment.update("form-group", (bindings, ops) => {
 	const invalid = bindings.invalid === true;
 	const required = bindings.required === true;
 
-	ops.setAttr("[data-group]", "class", groupClass(bindings));
+	ops.setAttr(".xtyle-form-group", "class", groupClass(bindings));
 
 	ops.setText("[data-label-text]", label);
 	ops.toggle("[data-label]", label.length > 0);

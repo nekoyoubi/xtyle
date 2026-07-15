@@ -77,12 +77,12 @@ function inner(b: NumberInputBindings): string {
 }
 
 hooks.fragment.mount("number-input", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", numberClass(bindings));
+	ops.setAttr(".xtyle-number", "class", numberClass(bindings));
 	ops.replaceChildren("[data-number]", inner(bindings));
 });
 
 hooks.fragment.update("number-input", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", numberClass(bindings));
+	ops.setAttr(".xtyle-number", "class", numberClass(bindings));
 	const value = bindings.value ?? "";
 	ops.setAttr(".xtyle-number__input", "value", value);
 	ops.setAttr(".xtyle-number__input", "aria-valuenow", value);

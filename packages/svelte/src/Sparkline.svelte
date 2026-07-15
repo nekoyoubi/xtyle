@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/sparkline.js";
 	import type {
 		SparklineVariant,
 		SparklineTone,

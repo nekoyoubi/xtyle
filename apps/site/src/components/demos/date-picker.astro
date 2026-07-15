@@ -1,0 +1,138 @@
+---
+import DatePicker from "@xtyle/astro/DatePicker.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+---
+
+<Stack gap={6} class="demo">
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">The three modes</Heading>
+		<Cluster gap={5} align="end" class="demo__row">
+			<Stack gap={2}>
+				<DatePicker label="Start date" value="2026-03-08" />
+				<Text size="xs" tone="subtle">type 3/8/26, 2026-03-08, or just 22</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="Appointment" mode="datetime" value="2026-03-08T09:30" step={900} />
+				<Text size="xs" tone="subtle">datetime → two fields, one value</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="Opens at" mode="time" value="09:00" step={1800} />
+				<Text size="xs" tone="subtle">time → a step-quantized list</Text>
+			</Stack>
+		</Cluster>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Typing is the fast path</Heading>
+		<Cluster gap={5} align="end" class="demo__row">
+			<Stack gap={2}>
+				<DatePicker label="Keyboard only" value="2026-03-08" />
+				<Text size="xs" tone="subtle">↑/↓ a day · PageUp/Dn a month · Alt+↓ opens the grid</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="Reject, don't revert" value="2026-03-08" />
+				<Text size="xs" tone="subtle">type 2/31/2026 → flagged in place, not silently undone</Text>
+			</Stack>
+		</Cluster>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Bounds, weekends, and holidays</Heading>
+		<Cluster gap={5} align="end" class="demo__row">
+			<Stack gap={2}>
+				<DatePicker
+					label="Delivery date"
+					id="demo-delivery"
+					min="2026-03-08"
+					max="2026-04-30"
+					disabledWeekdays={[0, 6]}
+					name="delivery"
+					required
+				/>
+				<Text size="xs" tone="subtle">weekdays only, Mar 8 – Apr 30, minus two holidays</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="Business hours" mode="time" value="09:00" min="09:00" max="17:00" step={1800} />
+				<Text size="xs" tone="subtle">the list only offers what's in range</Text>
+			</Stack>
+		</Cluster>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Locale drives the order and the clock</Heading>
+		<Cluster gap={5} align="end" class="demo__row">
+			<Stack gap={2}>
+				<DatePicker label="en-US" locale="en-US" value="2026-03-08" />
+				<Text size="xs" tone="subtle">MM/DD/YYYY</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="en-GB" locale="en-GB" value="2026-03-08" />
+				<Text size="xs" tone="subtle">DD/MM/YYYY</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="ja-JP" locale="ja-JP" value="2026-03-08" />
+				<Text size="xs" tone="subtle">YYYY/MM/DD</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="Forced 24h" mode="time" locale="en-US" hourCycle="24" value="21:30" step={1800} />
+				<Text size="xs" tone="subtle">hour-cycle overrides the locale</Text>
+			</Stack>
+			<Stack gap={2}>
+				<DatePicker label="Doors open (Tokyo)" timezone="Asia/Tokyo" firstDayOfWeek={1} />
+				<Text size="xs" tone="subtle">timezone pins "today"; the grid opens on Monday</Text>
+			</Stack>
+		</Cluster>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Sizes &amp; states</Heading>
+		<Cluster gap={5} align="end" class="demo__row">
+			<Stack gap={2} align="center">
+				<DatePicker label="Small" size="sm" value="2026-03-08" />
+				<Text size="xs" tone="subtle">sm</Text>
+			</Stack>
+			<Stack gap={2} align="center">
+				<DatePicker label="Large" size="lg" value="2026-03-08" />
+				<Text size="xs" tone="subtle">lg</Text>
+			</Stack>
+			<Stack gap={2} align="center">
+				<DatePicker label="Read-only" value="2026-03-08" readonly />
+				<Text size="xs" tone="subtle">readonly</Text>
+			</Stack>
+			<Stack gap={2} align="center">
+				<DatePicker label="Locked" value="2026-03-08" disabled />
+				<Text size="xs" tone="subtle">disabled</Text>
+			</Stack>
+			<Stack gap={2} align="center">
+				<DatePicker label="No clear" value="2026-03-08" noClear />
+				<Text size="xs" tone="subtle">no-clear</Text>
+			</Stack>
+		</Cluster>
+	</section>
+</Stack>
+
+<script>
+	// the predicate is a function, so it reaches the element as a property — the grid and the typed
+	// field both refuse these days
+	const holidays = new Set(["2026-03-17", "2026-04-03"]);
+	const delivery = document.querySelector("#demo-delivery") as (HTMLElement & {
+		isDateDisabled?: (iso: string) => boolean;
+	}) | null;
+	if (delivery) delivery.isDateDisabled = (iso: string) => holidays.has(iso);
+</script>
+
+<style>
+	.demo {
+		width: 100%;
+	}
+	.demo__group {
+		display: grid;
+		gap: var(--space-3);
+	}
+	.demo__row {
+		flex-wrap: wrap;
+	}
+</style>

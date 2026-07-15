@@ -1,5 +1,85 @@
 # Changelog
 
+## v0.8.0: Overlays & Fragments
+
+The promise is that any component's markup is yours to replace. It wasn't true. A component could invent a marker, a checkmark, a connector, a whole panel chrome tree, and hand you no way to reach any of it; the rule we used to catch that only looked for one of the two ways it happens. This release fixes the rule, then fixes everything the corrected rule catches, and builds the overlay surfaces the set never had.
+
+### Chrome rule
+
+- **A stylesheet can build chrome, and the old test couldn't see it.** The rule asked whether a component wrote markup imperatively, which scores `Steps` and `Timeline` at zero: they add classes and nothing else. Their CSS then conjures a numbered marker, a done-checkmark, a connector track, a dot, and a rail out of `content:` on the author's own list items. None of it exists as a node anywhere, so a mod couldn't reshape it and neither could the author. They were the least reachable furniture in the library, and they passed inspection
+  - worse, the doc comments cited each other as precedent. `Timeline` pointed at `Table`, `Steps` pointed at `Timeline`, and "drawn from the theme in CSS" got treated as a justification rather than a symptom. That's how a defect class propagates instead of getting caught
+- **The test is now what a mod can actually do.** Chrome is what a token cannot fix: if the only useful override is a value, it's a finish and CSS is the right home; if a plausible mod would want to change what the thing *is*, it's a part and it belongs in a fragment. Three probes settle it: does the pseudo-element have text, does it have its own box, and would you name it in the anatomy
+  - a pseudo-element gated on a design token is a finish by construction. The `--selection-cue` marks are the algorithm's accessibility policy applied across every component, which is the opposite of a component hoarding its own chrome
+- **A fragment's existence was never a pass, and three components proved it.** `Toast` shipped two renderers: a mod could reshape the declarative element and nothing an app pushed through `toast()`, which is the call apps actually make. `Image` appended its zoom, mute, and error controls into a frame the mod never declared. `ColorPicker` rewrote its harmony chips over markup the mod owned, so an override survived until the next click. All three looked compliant
+
+### Fragments
+
+- **`DockZone` went from roughly fifty imperative DOM calls to zero.** Tab strips, headers, chevrons, close buttons, floating windows, the resize grip, the drop films, and the kebab, which had been a blanked-out trigger with a glyph painted on by CSS. Dockable panel chrome is near the top of what an app wants to reskin, and it was the one surface entirely closed
+  - the gestures were the hard part: every handler was bound at construction to a node the component built. They delegate from the host by selector now, so the chrome can be replaced wholesale and nothing strands
+- **`Carousel`, `Rating`, `Steps`, and `Timeline` followed**, along with the `Table` sort caret, the `Accordion` and `Panel` chevrons, and the `Code` line-number gutter. `Rating`'s star row *was* the component, and it was written with `innerHTML`
+- **A floating panel can be moved now.** Zones tile the workspace, so the drop resolver answered everywhere, and any titlebar drag put the window straight back into a tab strip. Dragging a window thirty pixels re-docked it. A dock is only offered inside an edge band now, and the drop films only light up when one is actually on offer
+  - the docs had been promising "drag by the titlebar to move" the entire time
+- **And the override all of this exists for is reachable, and wins.** `loadFill` is on the public surface instead of behind a deep import, and a fill installed at boot now beats the built-in instead of losing to it
+  - fills share a runtime and their ops apply in the order they registered, last one winning, and the built-in registered lazily on first paint. So the natural thing an app does, installing its mods before anything renders, registered the override first and the built-in second, and the built-in painted straight over it
+  - a fill that arrives after its component has already painted now repaints it, rather than waiting for a state change that may never come
+
+### Overlays
+
+The overlay family was three components, and none of them was a generic anchored surface, a filterable list, or an edge panel. Eight new components, and the first one is the substrate for three of the others.
+
+- **`Popover`** is the anchored surface the family never had. `Menu` and `Tooltip` had each re-derived their own popup while the placement math sat in the engine with no component in front of it. It anchors to a trigger, to a bare viewport point, or to any element you hand it. Opened modal, it eats the click that dismissed it, so closing the panel doesn't also press the button underneath
+- **`CommandPalette`**, with a subsequence scorer you can replace. `Kbd` had been sitting in the set with nothing to put it in
+- **`Combobox`**, because a theming engine was handing autocomplete to an unthemable native `<datalist>`. It reuses the existing option model, so a `Select` or a `Field` moves across without rewriting its options, and its multi-select mode closes the tag-input gap on the way past. `Field` and `Select` stay exactly as they are; native-first is still right for the common case
+- **`Sheet`** slides in from any of the four edges, dismisses on a swipe, and knows where the notch is. It's built on the native `<dialog>`, so the scrim, the focus trap and the escape key come from the platform rather than from us reimplementing them. It's the panel the mobile shells from v0.7.0 had nowhere to open
+- **`Chart`**, a real line and area chart with axes. `Sparkline` is deliberately axis-free, so there had been nowhere to put a time series
+- **`Dropzone`**, which takes a programmatic "files were dropped" path as a first-class input rather than only listening for a DOM drop. An OS drop in a desktop webview doesn't arrive as a DOM drop, so a dropzone that only hears the browser does nothing in the apps that need it
+- **`Calendar` and `DatePicker`**, with a typable and parseable input, a locale-driven first day of week, and an explicit answer to whether a value is a wall-clock date or an instant
+
+### Coachmarks
+
+- **`Spotlight`** isolates one thing on the page and says something about it. Everything but the target dims and, if you ask, blurs; a hole is cut over it; a ring traces it; and a callout points at it. The isolation is a single clipped veil rather than four boxes packed around the target, which is what lets the hole take real corner radii or be a circle, and lets the element underneath stay live: the veil takes the pointer and the hole does not, so the thing you are pointing at is still the thing the user can press. The hole follows the target through scrolls, resizes, and layouts settling in; an unresolvable target yields a solid scrim rather than a hole at the origin. The callout is a real `Popover`, so the placement, the flipping, the arrow, and the focus are the ones already proven there
+- **`Tour`** is a Spotlight with more than one step. It owns the sequence, the Back / Next / Skip / Done buttons, and the progress readout, and drives one composed spotlight through it, re-pointing at each step's target so every step gets the same isolation. A step is an `<xtyle-tour-step>` carrying a target and, as its content, whatever the callout should say; any spotlight knob set on a step overrides the tour's default for that step alone. The step-to-step focus handling, the part that goes wrong when a sequence is hand-rolled, is the spotlight's
+  - the callout re-anchors to each step's target instead of staying where the first one opened it. Re-pointing the spotlight ran its geometry but left the callout put, because a target swap never touched the open state the re-anchor hung off of. It hangs off the target itself now, so the veil, the ring, and the callout all move together
+
+### Redact
+
+- **`Redact`** hides a piece of content until it is revealed: blur it, block it under a solid bar, or mask it with a dotted fill, and bring it back on hover, on a click, while a key is held, or with a page-wide switch. While it is concealed the content can't be selected, so an obscured value can't be dragged out with a mouse, and it is out of the accessibility tree until it is revealed. The cover and its reveal hint render through a fragment; the reveal behavior stays in the element, because which trigger brings the content back is logic no token carries
+
+### Fixes
+
+- **`Tree` kept its state, and it never should have lost it.** Assigning `items` nulled expansion and selection, so a tree fed live data threw away the user's collapse on every keystroke. Three defects, not one
+  - the roving tab stop was never cleared either, so a swap that removed the focused row left it pointing at a dead key, every row went to `tabindex="-1"`, and **the whole tree fell out of the tab order**
+  - and `Tree` was the only items-array element that never re-rendered on a data change, so the live per-row counts that prompted the report would have shown stale numbers forever
+  - `resetState()` is the explicit way to start over, now that assignment doesn't do it by accident
+- **`Menu` opens at the cursor.** A context menu is a `Menu` with a different anchor, not a second component, so `openAt(x, y)` is the whole of it: same items, same keyboard, same event. A menu near the right edge right-aligns on the cursor the way a real one does
+- **Rendering one component stopped shipping the whole library.** Per-element subpath exports and a side-effect-free binding cut entry JavaScript from 871,688 to 313,723 bytes
+  - importing a single component no longer registers every element in the library. `@xtyle/svelte/register` puts the old behavior back in one line
+- **A dock rail fills the height it is given, and the demo finally gives it one.** A dock sizes to `height: 100%`, which needs a container with a definite height; the demo stage used `min-height`, which is not one, so a short rail stopped partway down and its divider hung in the air, worst on the narrower size where the content ran shorter still. The stage carries a real height now, and the sizing contract is written into the component's guidance, because the rule is the browser's and the demo was the thing breaking it
+
+### Algorithm registry
+
+- **The algorithm registry discovers algorithms instead of being told about them.** A hand-kept five-entry allow-list decided what existed, while the browser derived its list from a directory scan, so the two had already drifted: drop in a sixth algorithm and the browser resolved it while the CLI insisted it didn't exist
+- **An algorithm's id is the name in its manifest**, not the folder it happens to sit in. That id is written into every theme file forever, so it settles now rather than after something depends on the ambiguity
+- **A discovery index can read an algorithm without running it.** The knobs, the tokens it produces, its categories: all static, all emitted at build, with the executable path kept as the fallback for in-browser authored sources and a load-time check that errors if the two ever disagree. A static block that quietly drifts is worse than no static block, because a consumer renders controls for knobs the algorithm stopped reading
+
+### Icons, palettes, and fonts
+
+- **An icon can pin its own palette.** A `---ps-` finish flag names the series a mark draws from, so the palette rides in the name instead of only in the control: `---ps-skittles`, `---ps-severity`. It validates against the palette list itself, so a palette added tomorrow is a valid flag with no parser change
+- **A palette is a set of stops.** Sample it for discrete colors, interpolate it for a ramp, and every palette answers both. The two vocabularies collapsed into one
+  - the old names had a trap in them: `accent` and `accents` sat one character apart, `status` and `statuses` two, and each pair meant genuinely different things. The ramps are `severity` and `intensity` now. The old names still resolve, and deliberately do not resolve to their near-namesakes, which would have silently repainted every chart that used them
+  - asking a ramp for a single color used to lerp from its first stop to its last, straight past everything between, so `thermal` handed back a purple it doesn't contain. A lone color is the true midpoint of the walk now, and agrees with the ramp read at its halfway mark
+- **The icon builder fetches a Google font only when you ask for one.** Nothing hits the network on page load, and opting in is a single deliberate click that the button and the footer both spell out, so the fetch is always your call
+- **An exported icon carries its font with it.** A letter mark used to render in whatever face the viewer happened to have, which made the export quietly wrong everywhere but the machine that drew it. The face is subset to the glyphs the mark actually uses and baked into the file
+- **A font name can no longer smuggle anything into a URL.** The name was unconstrained and went straight into the `@import` and `<link>` snippets the builder hands you to paste into your own site, so a quote in a family name was an injection with our name on it. A character-set gate closes it in the engine at no cost, and the site carries the full font list for autocomplete and an honest "no such font"
+
+### Test count
+
+| | v0.7.1 | v0.8.0 |
+|---|---|---|
+| test files | 64 | 116 |
+| tests | 980 | 2095 |
+| components | 70 | 82 |
+
 ## v0.7.1: Turn the Dial
 
 v0.7.0 made the accent family a knob and retired an algorithm into it. That knob turned out to be unreachable from anywhere but the site, the retirement only half-landed, and the one algorithm with a knob of its own had that knob held for it by the engine. This is the repair.

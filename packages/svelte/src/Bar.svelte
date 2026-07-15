@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/bar.js";
 	import type { BarSeries, BarScheme } from "@xtyle/core";
 
 	interface Props {

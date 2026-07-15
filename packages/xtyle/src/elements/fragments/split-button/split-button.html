@@ -1,0 +1,11 @@
+<span class="xtyle-split-button" part="split-button" role="group" data-root>
+	<button class="xtyle-split-button__primary" part="primary" type="button" data-primary>
+		<span class="xtyle-button__spinner" part="spinner" aria-hidden="true" data-busy hidden></span>
+		<span class="xtyle-button__label" part="label"><slot></slot></span>
+	</button>
+	<button class="xtyle-split-button__toggle" part="toggle" type="button" aria-haspopup="menu" aria-expanded="false" data-toggle>
+		<span class="xtyle-split-button__divider" part="divider" aria-hidden="true"></span>
+		<svg class="xtyle-split-button__caret" part="caret" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+	</button>
+	<xtyle-menu class="xtyle-split-button__menu" part="menu" context data-dropdown></xtyle-menu>
+</span>

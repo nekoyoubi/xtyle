@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { SERIES_SCHEMES } from "../series.js";
+import { PALETTES } from "../series.js";
 
 const htmlExample = `<xtyle-bar
 	categories='["Q1","Q2","Q3","Q4"]'
@@ -154,7 +154,7 @@ export const barManifest: ComponentManifest = {
 	seeAlso: ["pie", "sparkline", "heatmap", "stat"],
 	summary: "A grouped or stacked bar chart, colored from a theme-derived series palette, with an interactive value readout and opt-in clickable bars.",
 	description:
-		"Bar plots one or more numeric series across a set of categories as an SVG chart that renders from data alone. Each series takes its color from a `scheme` resolved off the live theme (the `accents` fan, the `skittles` hue ring, a `thermal` cold-to-hot scale, or the `status` roster), so a chart is coherent with the rest of the UI out of the box; pass an explicit color array for full control, and `reverse` to flip any scheme. Bars sit side by side by default or stack with `stacked`, and run vertically or horizontally (`orientation`) for long category labels. It's interactive: hovering or focusing a bar dims the rest and floats a value readout, and the whole chart is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: each bar becomes a button that fires a `select` event with its series, category, and value, so a click filters, navigates, or drills into that data. A value axis with gridlines and category labels come derived; a legend appears for multi-series data. Set `height` for the plot area; the chart fills its container's width. With no categories or series to plot, it shows a muted `No data` message in place of the axes.",
+		"Bar plots one or more numeric series across a set of categories as an SVG chart that renders from data alone. Each series takes its color from a `scheme` naming a palette resolved off the live theme (the `accents` fan, the `skittles` hue ring, the `statuses` roster, a `thermal` cold-to-hot scale, `severity` good-to-bad), so a chart is coherent with the rest of the UI out of the box; pass an explicit color array for full control, and `reverse` to flip any palette. Bars sit side by side by default or stack with `stacked`, and run vertically or horizontally (`orientation`) for long category labels. It's interactive: hovering or focusing a bar dims the rest and floats a value readout, and the whole chart is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: each bar becomes a button that fires a `select` event with its series, category, and value, so a click filters, navigates, or drills into that data. A value axis with gridlines and category labels come derived; a legend appears for multi-series data. Set `height` for the plot area; the chart fills its container's width. With no categories or series to plot, it shows a muted `No data` message in place of the axes.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -183,9 +183,15 @@ export const barManifest: ComponentManifest = {
 		},
 		{
 			name: "tooltip",
-			description: "The floating value readout shown on hover or focus of a bar.",
+			description: "The floating value readout shown on hover or focus of a bar; it holds one row per bar and reveals the one under the cursor.",
 			selector: ".xtyle-bar__tooltip",
 			tokens: ["--surface-overlay", "--surface-overlay-border", "--elevation-3", "--radius-md", "--fg-0"],
+		},
+		{
+			name: "tooltip-row",
+			description: "One bar's readout line, pairing its category and series name with its value. The fill draws every row up front and the element only unhides the hovered one, so a mod's reshaped row (a swatch, a unit, its own order) survives the hover.",
+			selector: ".xtyle-bar__tooltip-row",
+			tokens: ["--fg-2", "--text-sm", "--weight-semibold"],
 		},
 	],
 	props: [
@@ -203,11 +209,11 @@ export const barManifest: ComponentManifest = {
 		},
 		{
 			name: "scheme",
-			type: "SeriesScheme | string[]",
+			type: "Palette | string[]",
 			default: "accents",
-			description: "How series are colored: a built-in scheme resolved off the theme, or an explicit color array.",
+			description: "How series are colored: a built-in palette sampled off the theme, or an explicit color array.",
 			bindings: ["html", "svelte", "astro"],
-			options: [...SERIES_SCHEMES],
+			options: [...PALETTES],
 		},
 		{
 			name: "reverse",
@@ -319,7 +325,7 @@ export const barManifest: ComponentManifest = {
 		"--leading-normal",
 	],
 	composition: [
-		"Colors come from the same register the rest of the UI does, so a chart matches its surrounding chrome without hand-picking colors. Pick a `scheme` that fits the data: `accents` for a branded set, `skittles` for many distinct categories, `thermal` or `status` for a scale.",
+		"Colors come from the same register the rest of the UI does, so a chart matches its surrounding chrome without hand-picking colors. Pick a `scheme` that fits the data: `accents` for a branded set, `skittles` for many distinct categories, `statuses` for outcomes, `thermal` or `severity` when the series are a scale.",
 		"Pair a Bar with `Stat` cards in the Metrics family for a headline number beside its breakdown.",
 		"For a single-series chart, drop the legend (`legend={false}`) and let the category labels carry the meaning.",
 		"Make a dashboard chart a drill-in with `selectable` and a `select` listener: click a bar to filter the table beside it, open that category's detail, or route to a filtered view. The event's `detail` names the exact `series` / `category` / `value` clicked, so the handler needs no lookup.",

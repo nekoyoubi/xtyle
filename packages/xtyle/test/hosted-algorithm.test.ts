@@ -35,7 +35,7 @@ describe("hostedAlgorithm", () => {
 		}
 	});
 
-	it("throws on an unknown id, like getAlgorithm", () => {
-		expect(() => hostedAlgorithm("nope")).toThrow(/unknown algorithm/);
+	it("throws on an id with no baked twin, like getAlgorithm", () => {
+		expect(() => hostedAlgorithm("nope")).toThrow(/no baked algorithm/);
 	});
 });

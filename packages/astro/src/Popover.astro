@@ -1,0 +1,93 @@
+---
+import type { PopoverAlign, PopoverFocus, PopoverPanelRole, PopoverPlacement } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+interface Props {
+	open?: boolean;
+	placement?: PopoverPlacement;
+	align?: PopoverAlign;
+	gap?: number;
+	/** Draw the arrow — a real node in the fragment, tethered to the anchor's center. */
+	arrow?: boolean;
+	/** Modal posture: the panel opens as a modal `<dialog>`, so the platform makes the page behind it inert, and
+	 * clicks outside are swallowed rather than passed through. */
+	modal?: boolean;
+	/** Drop the panel's padding so slotted content reaches its edges (a list, a menu, an image). */
+	flush?: boolean;
+	/** The `id` of an element elsewhere in the document that anchors and toggles the popover. */
+	for?: string;
+	label?: string;
+	labelledby?: string;
+	panelRole?: PopoverPanelRole;
+	focusOnOpen?: PopoverFocus;
+	noCloseOnSelect?: boolean;
+	noLightDismiss?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	open = false,
+	placement = "bottom",
+	align = "center",
+	gap,
+	arrow = false,
+	modal = false,
+	flush = false,
+	for: anchorFor,
+	label,
+	labelledby,
+	panelRole = "dialog",
+	focusOnOpen,
+	noCloseOnSelect = false,
+	noLightDismiss = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const hasTrigger = Astro.slots.has("trigger");
+const panelId = `xtyle-popover-${Math.random().toString(36).slice(2, 9)}-panel`;
+
+const bindings = {
+	panelId,
+	hasTrigger,
+	arrow,
+	modal,
+	flush,
+	panelRole,
+	label: label ?? null,
+	labelledby: labelledby ?? null,
+};
+const light = await renderFragmentLight("popover", bindings);
+const triggerHtml = hasTrigger ? await Astro.slots.render("trigger") : "";
+const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const composed = light
+	.replace('<slot name="trigger"></slot>', () => triggerHtml)
+	.replace("<slot></slot>", () => bodyHtml);
+---
+
+<xtyle-popover
+	open={open || undefined}
+	placement={placement}
+	align={align}
+	gap={gap != null ? String(gap) : undefined}
+	arrow={arrow || undefined}
+	modal={modal || undefined}
+	flush={flush || undefined}
+	for={anchorFor}
+	label={label}
+	labelledby={labelledby}
+	panel-role={panelRole}
+	focus-on-open={focusOnOpen}
+	no-close-on-select={noCloseOnSelect || undefined}
+	no-light-dismiss={noLightDismiss || undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

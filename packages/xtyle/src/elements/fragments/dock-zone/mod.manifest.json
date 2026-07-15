@@ -1,0 +1,53 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-dock-zone-default",
+	"version": "0.0.1",
+	"title": "Xtyle DockZone (default)",
+	"description": "The built-in fill for the xtyle DockZone component: the mod-zero panel chrome every app inherits and may override.",
+	"capabilities": ["xtyle.component.dock-zone"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.dock-zone": [
+			{
+				"id": "dock-zone",
+				"format": "text/html+jsml",
+				"source": "dock-zone.html",
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-2",
+						"--accent-3",
+						"--bg-1",
+						"--bg-2",
+						"--border-normal",
+						"--border-thick",
+						"--border-thin",
+						"--danger",
+						"--duration-fast",
+						"--ease-standard",
+						"--elevation-4",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--font-sans",
+						"--line",
+						"--radius-md",
+						"--radius-sm",
+						"--ring",
+						"--space-0",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-4",
+						"--space-6",
+						"--state-hover",
+						"--text-lg",
+						"--text-sm",
+						"--weight-medium"
+					]
+				}
+			}
+		]
+	}
+}

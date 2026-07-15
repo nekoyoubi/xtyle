@@ -173,6 +173,13 @@ xtyle-carousel[data-controls="overlay"] .xtyle-carousel__dots {
 }
 xtyle-carousel[data-controls="overlay"] .xtyle-carousel__dot { background: var(--fg-3); }
 xtyle-carousel[data-controls="overlay"] .xtyle-carousel__dot.is-active { background: var(--accent); }
+/* A carousel with no arrows, no dots, and no play toggle has an empty bar; the fill hides it rather
+   than omit it, so the two display rules above (and the overlay one, which outweighs them) must
+   both yield to hidden. */
+xtyle-carousel[data-enhanced] .xtyle-carousel__controls[hidden],
+xtyle-carousel[data-enhanced][data-controls="overlay"] .xtyle-carousel__controls[hidden] {
+	display: none;
+}
 @media (prefers-reduced-motion: reduce) {
 	.xtyle-carousel__track { scroll-behavior: auto; }
 }

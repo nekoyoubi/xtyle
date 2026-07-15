@@ -1,5 +1,5 @@
 import type { FragmentOp } from "@xriptjs/runtime";
-import { loadFill, fillSource } from "./fragment-host.js";
+import { loadFill, fillSource, type FillManifest } from "./fragment-host.js";
 import { manifest as tabsManifest, fragmentSources as tabsSources } from "./fragments/tabs/source.generated.js";
 import {
 	manifest as accordionManifest,
@@ -33,13 +33,20 @@ import { manifest as kbdManifest, fragmentSources as kbdSources } from "./fragme
 import { manifest as iconManifest, fragmentSources as iconSources } from "./fragments/icon/source.generated.js";
 import { manifest as imageManifest, fragmentSources as imageSources } from "./fragments/image/source.generated.js";
 import { manifest as barManifest, fragmentSources as barSources } from "./fragments/bar/source.generated.js";
+import { manifest as chartManifest, fragmentSources as chartSources } from "./fragments/chart/source.generated.js";
 import { manifest as sparklineManifest, fragmentSources as sparklineSources } from "./fragments/sparkline/source.generated.js";
 import { manifest as heatmapManifest, fragmentSources as heatmapSources } from "./fragments/heatmap/source.generated.js";
 import { manifest as pieManifest, fragmentSources as pieSources } from "./fragments/pie/source.generated.js";
 import { manifest as qrManifest, fragmentSources as qrSources } from "./fragments/qr/source.generated.js";
 import { manifest as linkManifest, fragmentSources as linkSources } from "./fragments/link/source.generated.js";
 import { manifest as menuManifest, fragmentSources as menuSources } from "./fragments/menu/source.generated.js";
+import { manifest as popoverManifest, fragmentSources as popoverSources } from "./fragments/popover/source.generated.js";
+import {
+	manifest as commandPaletteManifest,
+	fragmentSources as commandPaletteSources,
+} from "./fragments/command-palette/source.generated.js";
 import { manifest as numberInputManifest, fragmentSources as numberInputSources } from "./fragments/number-input/source.generated.js";
+import { manifest as datePickerManifest, fragmentSources as datePickerSources } from "./fragments/date-picker/source.generated.js";
 import { manifest as panelManifest, fragmentSources as panelSources } from "./fragments/panel/source.generated.js";
 import { manifest as progressManifest, fragmentSources as progressSources } from "./fragments/progress/source.generated.js";
 import { manifest as radioManifest, fragmentSources as radioSources } from "./fragments/radio/source.generated.js";
@@ -64,9 +71,28 @@ import { manifest as tooltipManifest, fragmentSources as tooltipSources } from "
 import { manifest as treeManifest, fragmentSources as treeSources } from "./fragments/tree/source.generated.js";
 import { manifest as codeManifest, fragmentSources as codeSources } from "./fragments/code/source.generated.js";
 import { manifest as paginationManifest, fragmentSources as paginationSources } from "./fragments/pagination/source.generated.js";
+import { manifest as calendarManifest, fragmentSources as calendarSources } from "./fragments/calendar/source.generated.js";
+import { manifest as carouselManifest, fragmentSources as carouselSources } from "./fragments/carousel/source.generated.js";
+import { manifest as dockZoneManifest, fragmentSources as dockZoneSources } from "./fragments/dock-zone/source.generated.js";
+import { manifest as stepsManifest, fragmentSources as stepsSources } from "./fragments/steps/source.generated.js";
+import { manifest as timelineManifest, fragmentSources as timelineSources } from "./fragments/timeline/source.generated.js";
+import { manifest as ratingManifest, fragmentSources as ratingSources } from "./fragments/rating/source.generated.js";
+import { manifest as dropzoneManifest, fragmentSources as dropzoneSources } from "./fragments/dropzone/source.generated.js";
+import { manifest as comboboxManifest, fragmentSources as comboboxSources } from "./fragments/combobox/source.generated.js";
+import { manifest as sheetManifest, fragmentSources as sheetSources } from "./fragments/sheet/source.generated.js";
+import {
+	manifest as splitButtonManifest,
+	fragmentSources as splitButtonSources,
+} from "./fragments/split-button/source.generated.js";
+import {
+	manifest as spotlightManifest,
+	fragmentSources as spotlightSources,
+} from "./fragments/spotlight/source.generated.js";
+import { manifest as redactManifest, fragmentSources as redactSources } from "./fragments/redact/source.generated.js";
+import { manifest as tourManifest, fragmentSources as tourSources } from "./fragments/tour/source.generated.js";
 
 interface FragmentEntry {
-	manifest: unknown;
+	manifest: FillManifest;
 	fragmentSources: Record<string, string>;
 }
 
@@ -106,13 +132,17 @@ const fragments: Record<string, FragmentEntry> = {
 	icon: { manifest: iconManifest, fragmentSources: iconSources },
 	image: { manifest: imageManifest, fragmentSources: imageSources },
 	bar: { manifest: barManifest, fragmentSources: barSources },
+	chart: { manifest: chartManifest, fragmentSources: chartSources },
 	sparkline: { manifest: sparklineManifest, fragmentSources: sparklineSources },
 	heatmap: { manifest: heatmapManifest, fragmentSources: heatmapSources },
 	pie: { manifest: pieManifest, fragmentSources: pieSources },
 	qr: { manifest: qrManifest, fragmentSources: qrSources },
 	link: { manifest: linkManifest, fragmentSources: linkSources },
 	menu: { manifest: menuManifest, fragmentSources: menuSources },
+	popover: { manifest: popoverManifest, fragmentSources: popoverSources },
+	"command-palette": { manifest: commandPaletteManifest, fragmentSources: commandPaletteSources },
 	"number-input": { manifest: numberInputManifest, fragmentSources: numberInputSources },
+	"date-picker": { manifest: datePickerManifest, fragmentSources: datePickerSources },
 	panel: { manifest: panelManifest, fragmentSources: panelSources },
 	progress: { manifest: progressManifest, fragmentSources: progressSources },
 	radio: { manifest: radioManifest, fragmentSources: radioSources },
@@ -137,6 +167,19 @@ const fragments: Record<string, FragmentEntry> = {
 	tree: { manifest: treeManifest, fragmentSources: treeSources },
 	code: { manifest: codeManifest, fragmentSources: codeSources },
 	pagination: { manifest: paginationManifest, fragmentSources: paginationSources },
+	calendar: { manifest: calendarManifest, fragmentSources: calendarSources },
+	carousel: { manifest: carouselManifest, fragmentSources: carouselSources },
+	"dock-zone": { manifest: dockZoneManifest, fragmentSources: dockZoneSources },
+	steps: { manifest: stepsManifest, fragmentSources: stepsSources },
+	timeline: { manifest: timelineManifest, fragmentSources: timelineSources },
+	rating: { manifest: ratingManifest, fragmentSources: ratingSources },
+	dropzone: { manifest: dropzoneManifest, fragmentSources: dropzoneSources },
+	combobox: { manifest: comboboxManifest, fragmentSources: comboboxSources },
+	sheet: { manifest: sheetManifest, fragmentSources: sheetSources },
+	"split-button": { manifest: splitButtonManifest, fragmentSources: splitButtonSources },
+	spotlight: { manifest: spotlightManifest, fragmentSources: spotlightSources },
+	redact: { manifest: redactManifest, fragmentSources: redactSources },
+	tour: { manifest: tourManifest, fragmentSources: tourSources },
 };
 
 /** The component ids that have a built-in SSR fill registered, so a parity test can guard the set. */
@@ -148,8 +191,23 @@ function escapeAttr(value: string): string {
 	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function marker(selector: string): string | null {
-	return selector.match(/^\[([a-z-]+)\]$/i)?.[1] ?? null;
+/**
+ * The open tag this selector resolves against, as a regex. Two shapes are understood, and the pair is the
+ * whole reason a fill can be both server-rendered and overridable:
+ *
+ * - `[data-x]` — an attribute marker. The handler contract: the hooks a mod keeps in order to inherit the
+ *   built-in's behavior.
+ * - `.xtyle-foo` — a class. The built-in fill's *own* name for a node. A fill paints its bindings onto its
+ *   chrome through these, so a mod that renamed the node matches none of them and is left alone; keyed to
+ *   the shared `data-*` hook instead, the built-in's classes get stamped onto the mod's markup on the way
+ *   to the screen and the reskin is dead on arrival.
+ */
+function nodeMatcher(selector: string): RegExp | null {
+	const attr = selector.match(/^\[([a-z-]+)\]$/i)?.[1];
+	if (attr) return new RegExp(`<(\\w+)([^>]*\\b${attr}\\b[^>]*)>`);
+	const className = selector.match(/^\.([\w-]+)$/)?.[1];
+	if (className) return new RegExp(`<(\\w+)([^>]*\\sclass="[^"]*\\b${className}\\b[^"]*"[^>]*)>`);
+	return null;
 }
 
 function setAttrInTag(openTag: string, attr: string, value: string): string {
@@ -160,23 +218,27 @@ function setAttrInTag(openTag: string, attr: string, value: string): string {
 	return openTag.replace(/\s*\/?>$/, (close) => `${attrStr}${close}`);
 }
 
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * Applies a fill's `FragmentOp` command buffer to its scaffold HTML in Node, where
  * there is no live DOM — the build-time counterpart of the browser op-applier. It
- * targets attribute-marker selectors (`[data-x]`) against the inert scaffolds xtyle
- * authors for its built-in fills; arbitrary app-fill structures are a runtime concern,
- * served by the live-DOM path.
+ * targets attribute-marker (`[data-x]`) and class (`.xtyle-foo`) selectors against the
+ * inert scaffolds xtyle authors for its built-in fills; arbitrary app-fill structures
+ * are a runtime concern, served by the live-DOM path.
  */
 export function applyOpsToHtml(html: string, ops: FragmentOp[]): string {
 	let out = html;
 	for (const op of ops) {
-		const name = marker(op.selector);
-		if (!name) continue;
-		const openRe = new RegExp(`<(\\w+)([^>]*\\b${name}\\b[^>]*)>`);
+		const openRe = nodeMatcher(op.selector);
+		if (!openRe) continue;
 		const match = out.match(openRe);
 		const openTag = match?.[0];
 		const tag = match?.[1];
 		if (!openTag || !tag) continue;
+		const empty = new RegExp(`(${escapeRegExp(openTag)})(</${tag}>)`);
 		switch (op.op) {
 			case "setAttr":
 				if (op.attr) {
@@ -185,13 +247,11 @@ export function applyOpsToHtml(html: string, ops: FragmentOp[]): string {
 				}
 				break;
 			case "replaceChildren": {
-				const empty = new RegExp(`(<${tag}[^>]*\\b${name}\\b[^>]*>)(</${tag}>)`);
 				const value = String(op.value ?? "");
 				out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
 				break;
 			}
 			case "setText": {
-				const empty = new RegExp(`(<${tag}[^>]*\\b${name}\\b[^>]*>)(</${tag}>)`);
 				const value = escapeAttr(String(op.value ?? ""));
 				out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
 				break;

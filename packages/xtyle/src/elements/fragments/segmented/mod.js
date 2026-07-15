@@ -62,7 +62,7 @@
   }
   hooks.fragment.mount("segmented", (bindings, ops) => {
     const selected = selectedValue(bindings);
-    ops.replaceChildren("[data-field]", fieldInner(bindings, selected));
+    ops.replaceChildren("[data-control]", fieldInner(bindings, selected));
   });
   hooks.fragment.update("segmented", (bindings, ops) => {
     const selected = selectedValue(bindings);

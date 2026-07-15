@@ -88,8 +88,9 @@ import { AppShell } from "@xtyle/astro";
 
 export const appShellManifest: ComponentManifest = {
 	id: "app-shell",
-	name: "AppShell",
+	name: "App Shell",
 	category: "shell",
+	since: "0.1.0",
 	keywords: ["layout", "scaffold", "chrome", "shell", "application frame", "workspace"],
 	seeAlso: ["toolbar", "statusbar", "dock", "dock-zone"],
 	summary: "The three-row application scaffold: toolbar over a left/main/right body over a status bar.",

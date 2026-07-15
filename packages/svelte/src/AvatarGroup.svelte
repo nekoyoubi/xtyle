@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/avatar-group.js";
 	import type { Snippet } from "svelte";
 
 	type AvatarGroupSize = "sm" | "md" | "lg" | "xl";

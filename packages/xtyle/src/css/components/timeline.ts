@@ -13,8 +13,10 @@ export const timelineCss = `
 	padding-left: var(--space-5);
 	padding-bottom: var(--space-4);
 }
-.xtyle-timeline__item::before {
-	content: "";
+.xtyle-timeline__item:last-child {
+	padding-bottom: 0;
+}
+.xtyle-timeline__dot {
 	position: absolute;
 	left: 0;
 	top: 0.2rem;
@@ -26,8 +28,7 @@ export const timelineCss = `
 	box-sizing: border-box;
 	z-index: 1;
 }
-.xtyle-timeline__item::after {
-	content: "";
+.xtyle-timeline__rail {
 	position: absolute;
 	left: 0.3rem;
 	top: 0.6rem;
@@ -35,13 +36,10 @@ export const timelineCss = `
 	width: var(--border-thin);
 	background: var(--line);
 }
-.xtyle-timeline__item:last-child {
-	padding-bottom: 0;
+.xtyle-timeline__content {
+	display: block;
 }
-.xtyle-timeline__item:last-child::after {
-	display: none;
-}
-.xtyle-timeline__item > :is(strong, .xtyle-timeline__title) {
+.xtyle-timeline__content > :is(strong, .xtyle-timeline__title) {
 	display: block;
 	margin: 0;
 	font-size: var(--text-sm);
@@ -49,12 +47,12 @@ export const timelineCss = `
 	color: var(--fg-0);
 	line-height: var(--leading-tight);
 }
-.xtyle-timeline__item > :is(time, .xtyle-timeline__meta) {
+.xtyle-timeline__content > :is(time, .xtyle-timeline__meta) {
 	display: block;
 	font-size: var(--text-xs);
 	color: var(--fg-2);
 }
-.xtyle-timeline__item > :is(p, .xtyle-timeline__body) {
+.xtyle-timeline__content > :is(p, .xtyle-timeline__body) {
 	margin: var(--space-1) 0 0;
 	font-size: var(--text-sm);
 	color: var(--fg-1);

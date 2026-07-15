@@ -57,6 +57,7 @@ export const statusbarManifest: ComponentManifest = {
 	id: "statusbar",
 	name: "Statusbar",
 	category: "shell",
+	since: "0.1.0",
 	keywords: ["footer", "status strip", "status line", "bottom bar"],
 	seeAlso: ["app-shell", "toolbar"],
 	summary: "The footer status strip: a compact, monospace row of status items separated by flexible spacers.",

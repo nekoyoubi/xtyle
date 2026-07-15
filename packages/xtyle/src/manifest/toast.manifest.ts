@@ -29,6 +29,13 @@ const htmlExample = `<xtyle-toast-region id="toasts" placement="bottom-right"></
 		message: "Sync paused while offline.",
 		duration: 0,
 	});
+
+	region.toast({
+		severity: "success",
+		message: "Copied to clipboard.",
+		closable: false,
+		duration: 2000,
+	});
 </script>`;
 
 const svelteExample = `<script lang="ts">
@@ -57,6 +64,7 @@ export const toastManifest: ComponentManifest = {
 	id: "toast",
 	name: "Toast",
 	category: "feedback",
+	since: "0.1.0",
 	keywords: ["notification", "snackbar", "flash", "transient message", "alert"],
 	seeAlso: ["alert", "dialog"],
 	summary: "A transient notification that announces itself and slips away; color and meaning on independent axes, in a live-region stack.",
@@ -171,7 +179,7 @@ export const toastManifest: ComponentManifest = {
 			name: "closable",
 			type: "boolean",
 			default: "true",
-			description: "Whether to render the close button.",
+			description: "Whether to render the close button. On by default; pass `false` (`closable=\"false\"` in raw HTML) to drop it, and pair that with a `duration` so the toast can still leave.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -285,6 +293,7 @@ export const toastManifest: ComponentManifest = {
 	],
 	composition: [
 		"Mount one `xtyle-toast-region` near the document root and push toasts from anywhere via its `toast(opts)` method.",
+		"A pushed toast *is* an `xtyle-toast`: the region builds the element and the same fill draws the card, so a restyle or an override lands on both paths at once.",
 		"Use the `action` slot/`actionLabel` to pair a toast with a single Button-like recovery action (Retry, Undo); keep it to one.",
 		"For persistent, in-flow status that should not auto-dismiss, reach for Alert instead; Toast is for the transient.",
 	],

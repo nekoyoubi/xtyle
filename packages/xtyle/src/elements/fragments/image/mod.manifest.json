@@ -13,19 +13,33 @@
 				"id": "image",
 				"format": "text/html+jsml",
 				"source": "image.html",
+				"handlers": [
+					{ "selector": ".xtyle-image__zoom", "on": "click", "handler": "zoom" },
+					{ "selector": ".xtyle-image__audio", "on": "click", "handler": "audio" }
+				],
 				"meta": {
 					"tokens": [
+						"--bg-1",
 						"--bg-2",
 						"--bg-3",
+						"--fg-1",
 						"--fg-2",
 						"--radius-sm",
 						"--radius-md",
 						"--radius-lg",
+						"--radius-full",
+						"--border-thin",
+						"--border-thick",
+						"--surface-overlay-border",
+						"--elevation-3",
+						"--ring",
+						"--duration-fast",
 						"--duration-slow",
 						"--ease-standard",
 						"--text-sm",
 						"--leading-normal",
-						"--space-2"
+						"--space-2",
+						"--space-7"
 					]
 				}
 			}

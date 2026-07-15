@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { contrast, derive, gauntlet, toOklchColor } from "../src/index.js";
 import { GAUNTLET_DEPTH_RUNS, resolveDepth } from "../src/gauntlet.js";
-import { algorithms, nxiNite, xtyleDefault, xtyleHc, xtyleLoud, xtyleQuiet } from "../src/batteries.js";
+import { bakedAlgorithms, nxiNite, xtyleDefault, xtyleHc, xtyleLoud, xtyleQuiet } from "../src/batteries.js";
 
 const SET = [xtyleDefault, xtyleHc, xtyleQuiet, xtyleLoud, nxiNite];
 // Routine `npm test` (no env) is the fast feedback gate — a quick spread of the property battery.
@@ -38,8 +38,8 @@ describe.each(SET.map((a) => [a.id, a] as const))("gauntlet(%s)", (_id, algorith
 });
 
 describe("algorithm set", () => {
-	it("registers all five by id", () => {
-		expect(Object.keys(algorithms).sort()).toEqual([
+	it("bakes all five by id", () => {
+		expect(Object.keys(bakedAlgorithms).sort()).toEqual([
 			"nxi-nite",
 			"xtyle-default",
 			"xtyle-hc",

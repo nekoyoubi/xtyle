@@ -38,6 +38,30 @@ import Text from "@xtyle/astro/Text.astro";
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Colorful marks</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				A composed mark spec rates in full color: the base row silhouettes it to the track, the filled row draws it from the
+				<code>colors</code> palette.
+			</Text>
+			<Cluster gap={5} align="center">
+				<Rating value={4} size="lg" icon="crest--shield-c1--star-s45-cf" colors="accents" label="Rate this guild (accents)" />
+				<Rating value={3.5} size="lg" icon="crest--shield-c1--star-s45-cf" colors="skittles" readonly label="3.5 out of 5 (skittles)" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">In a form</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">With a <code>name</code>, the value posts through a hidden input, so it rides along in a normal form submit.</Text>
+			<form>
+				<Rating value={4} size="lg" name="score" label="Rate this stay" />
+			</form>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Sizes and values</Heading>
 		<Stack gap={3}>
 			<Rating value={5} readonly label="5 out of 5 stars" />

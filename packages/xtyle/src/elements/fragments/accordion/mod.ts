@@ -1,3 +1,5 @@
+import { renderIcon } from "../../../icons";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -51,9 +53,14 @@ declare const hooks: {
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
+// The inline glyph is the zero-JS fallback: `<xtyle-icon>` only paints once the custom element
+// upgrades, and the `static` render never loads the runtime. Once it does upgrade, the icon's
+// shadow root has no `<slot>`, so this light child stops rendering and the fragment-backed glyph
+// takes over.
 const CHEVRON =
-	'<svg class="xtyle-accordion__chevron" viewBox="0 0 24 24" aria-hidden="true">' +
-	'<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" /></svg>';
+	'<xtyle-icon class="xtyle-accordion__chevron" part="chevron" name="chevron-down" aria-hidden="true">' +
+	renderIcon("chevron-down") +
+	"</xtyle-icon>";
 
 function accordionClass(bindings: AccordionBindings): string {
 	const size = bindings.size ?? "md";
@@ -93,7 +100,7 @@ function items(bindings: AccordionBindings): string {
 }
 
 hooks.fragment.mount("accordion", (bindings, ops) => {
-	ops.setAttr("[data-root]", "class", accordionClass(bindings));
+	ops.setAttr(".xtyle-accordion", "class", accordionClass(bindings));
 	ops.replaceChildren("[data-items]", items(bindings));
 });
 

@@ -6,6 +6,8 @@ interface Props {
 	items?: MenuItem[];
 	label?: string;
 	open?: boolean;
+	/** Cursor-anchored mode: no trigger is rendered; the menu opens at a point via `el.openAt(x, y)` (a `contextmenu` handler). */
+	context?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -13,7 +15,7 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { items = [], label, open = false, static: isStatic = false, class: extra, ...rest } = Astro.props;
+const { items = [], label, open = false, context = false, static: isStatic = false, class: extra, ...rest } = Astro.props;
 
 const popupId = `xtyle-menu-${Math.random().toString(36).slice(2, 9)}-popup`;
 
@@ -21,6 +23,7 @@ const bindings = {
 	items,
 	label: label ?? null,
 	open,
+	context,
 	popupId,
 };
 const light = await renderFragmentLight("menu", bindings);
@@ -30,6 +33,7 @@ const light = await renderFragmentLight("menu", bindings);
 	items={items && items.length > 0 ? JSON.stringify(items) : undefined}
 	label={label}
 	open={open || undefined}
+	context={context || undefined}
 	class={extra}
 	{...rest}
 	set:html={light}

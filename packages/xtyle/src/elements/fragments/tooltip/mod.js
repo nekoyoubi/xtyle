@@ -13,14 +13,14 @@
     return b.text ?? "";
   }
   hooks.fragment.mount("tooltip", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", tooltipClass(bindings));
+    ops.setAttr(".xtyle-tooltip", "class", tooltipClass(bindings));
     ops.setAttr("[data-content]", "id", bindings.contentId ?? "");
     ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-    ops.setText("[data-text]", textValue(bindings));
+    ops.setText("[data-label]", textValue(bindings));
   });
   hooks.fragment.update("tooltip", (bindings, ops) => {
-    ops.setAttr("[data-root]", "class", tooltipClass(bindings));
+    ops.setAttr(".xtyle-tooltip", "class", tooltipClass(bindings));
     ops.setAttr("[data-content]", "data-open", String(bindings.open ?? false));
-    ops.setText("[data-text]", textValue(bindings));
+    ops.setText("[data-label]", textValue(bindings));
   });
 })();

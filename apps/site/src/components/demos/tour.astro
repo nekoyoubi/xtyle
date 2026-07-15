@@ -1,0 +1,90 @@
+---
+import Tour from "@xtyle/astro/Tour.astro";
+import TourStep from "@xtyle/astro/TourStep.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Field from "@xtyle/astro/Field.astro";
+import Avatar from "@xtyle/astro/Avatar.astro";
+---
+
+<div class="tr-demo" data-tour-demo>
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={2} size="body">Point at things, in order</Heading>
+			<Text tone="muted" size="sm">
+				One spotlight, re-aimed step by step, with Back / Next / Skip and a progress readout. Each
+				target stays live underneath.
+			</Text>
+		</Stack>
+
+		<Stack gap={5}>
+			<div class="tr-demo__stage">
+				<Cluster justify="between" align="center">
+					<Cluster gap={2} align="center">
+						<Avatar id="tr-avatar" tone="teal" alt="Grace Hopper">GH</Avatar>
+						<Text size="sm" weight="semibold">Grace's workspace</Text>
+					</Cluster>
+					<Button id="tr-compose" variant="solid" tone="accent" size="sm">Compose</Button>
+				</Cluster>
+				<Grid columns={2} gap={3}>
+					<Field id="tr-search" label="Search" placeholder="Find anything" />
+					<Cluster gap={2} justify="end" align="end">
+						<Button id="tr-settings" variant="outline" tone="neutral" size="sm">Settings</Button>
+					</Cluster>
+				</Grid>
+			</div>
+
+			<Cluster gap={3}>
+				<Button variant="solid" tone="accent" data-start-tour="tr-dots">Take the tour (dots)</Button>
+				<Button variant="outline" tone="neutral" data-start-tour="tr-count">Take the tour (count)</Button>
+			</Cluster>
+		</Stack>
+	</Card>
+</div>
+
+<Tour id="tr-dots" progress="dots">
+	<TourStep target="#tr-compose" heading="Start a message" placement="bottom">
+		Everything begins here. The button still works while the tour points at it.
+	</TourStep>
+	<TourStep target="#tr-search" heading="Find anything" placement="bottom">
+		Search across every thread, contact, and file.
+	</TourStep>
+	<TourStep target="#tr-avatar" heading="That's you" placement="right" shape="circle">
+		Your account and status live behind your avatar.
+	</TourStep>
+	<TourStep target="#tr-settings" heading="Make it yours" placement="left" pulse="slow">
+		Theme, shortcuts, and accounts. That's the tour.
+	</TourStep>
+</Tour>
+
+<Tour id="tr-count" progress="count">
+	<TourStep target="#tr-compose" heading="Compose" placement="bottom">Where a new message begins.</TourStep>
+	<TourStep target="#tr-search" heading="Search" placement="bottom">Find anything, fast.</TourStep>
+	<TourStep target="#tr-settings" heading="Settings" placement="left">Theme, shortcuts, accounts.</TourStep>
+</Tour>
+
+<script>
+	type TourEl = HTMLElement & { start(): void };
+	for (const trigger of document.querySelectorAll<HTMLElement>("[data-start-tour]")) {
+		trigger.addEventListener("click", () => {
+			const id = trigger.dataset.startTour!;
+			(document.getElementById(id) as TourEl | null)?.start();
+		});
+	}
+</script>
+
+<style>
+	.tr-demo__stage {
+		display: grid;
+		gap: var(--space-4);
+		padding: var(--space-4);
+		border-radius: var(--radius-md);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+	}
+</style>

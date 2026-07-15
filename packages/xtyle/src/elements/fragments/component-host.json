@@ -107,6 +107,16 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.calendar",
+			"description": "The built-in fill for the xtyle Calendar component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.calendar",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.card",
 			"description": "The built-in fill for the xtyle Card component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
@@ -123,6 +133,26 @@
 				"text/html+jsml"
 			],
 			"capability": "xtyle.component.card-link",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.carousel",
+			"description": "The built-in fill for the xtyle Carousel component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.carousel",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.chart",
+			"description": "The built-in fill for the xtyle Chart component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.chart",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -167,6 +197,36 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.combobox",
+			"description": "The built-in fill for the xtyle Combobox component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.combobox",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.command-palette",
+			"description": "The built-in fill for the xtyle CommandPalette component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.command-palette",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.date-picker",
+			"description": "The built-in fill for the xtyle DatePicker component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.date-picker",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.dialog",
 			"description": "The built-in fill for the xtyle Dialog component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
@@ -187,12 +247,32 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.dock-zone",
+			"description": "The built-in fill for the xtyle DockZone component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.dock-zone",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.dot",
 			"description": "The built-in fill for the xtyle Dot component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
 			"capability": "xtyle.component.dot",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.dropzone",
+			"description": "The built-in fill for the xtyle Dropzone component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.dropzone",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -357,6 +437,16 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.popover",
+			"description": "The built-in fill for the xtyle Popover component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.popover",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.progress",
 			"description": "The built-in fill for the xtyle Progress component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
@@ -383,6 +473,16 @@
 				"text/html+jsml"
 			],
 			"capability": "xtyle.component.radio",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.rating",
+			"description": "The built-in fill for the xtyle Rating component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.rating",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -437,6 +537,16 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.sheet",
+			"description": "The built-in fill for the xtyle Sheet component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.sheet",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.skeleton",
 			"description": "The built-in fill for the xtyle Skeleton component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
@@ -477,12 +587,52 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.split-button",
+			"description": "The built-in fill for the xtyle SplitButton component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.split-button",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.splitter",
 			"description": "The built-in fill for the xtyle Splitter component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
 				"text/html+jsml"
 			],
 			"capability": "xtyle.component.splitter",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.spotlight",
+			"description": "The built-in fill for the xtyle Spotlight component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.spotlight",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.tour",
+			"description": "The built-in fill for the xtyle Tour component: the mod-zero navigation chrome every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.tour",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.redact",
+			"description": "The built-in fill for the xtyle Redact component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.redact",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -513,6 +663,16 @@
 				"text/html+jsml"
 			],
 			"capability": "xtyle.component.statusbar",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.steps",
+			"description": "The built-in fill for the xtyle Steps component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.steps",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -563,6 +723,16 @@
 				"text/html+jsml"
 			],
 			"capability": "xtyle.component.textarea",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.timeline",
+			"description": "The built-in fill for the xtyle Timeline component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.timeline",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -618,20 +788,8 @@
 		}
 	],
 	"capabilities": {
-		"xtyle.component.tabs": {
-			"description": "Permits a mod to provide the markup and behavior of the xtyle Tabs component.",
-			"risk": "low"
-		},
 		"xtyle.component.accordion": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Accordion component.",
-			"risk": "low"
-		},
-		"xtyle.component.button": {
-			"description": "Permits a mod to provide the markup of the xtyle Button component.",
-			"risk": "low"
-		},
-		"xtyle.component.switch": {
-			"description": "Permits a mod to provide the markup and behavior of the xtyle Switch component.",
 			"risk": "low"
 		},
 		"xtyle.component.alert": {
@@ -654,8 +812,24 @@
 			"description": "Permits a mod to provide the markup of the xtyle Badge component.",
 			"risk": "low"
 		},
+		"xtyle.component.bar": {
+			"description": "Permits a mod to provide the markup of the xtyle Bar chart component.",
+			"risk": "low"
+		},
+		"xtyle.component.bottom-nav": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle BottomNav component.",
+			"risk": "low"
+		},
 		"xtyle.component.breadcrumb": {
 			"description": "Permits a mod to provide the markup of the xtyle Breadcrumb component.",
+			"risk": "low"
+		},
+		"xtyle.component.button": {
+			"description": "Permits a mod to provide the markup of the xtyle Button component.",
+			"risk": "low"
+		},
+		"xtyle.component.calendar": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Calendar component.",
 			"risk": "low"
 		},
 		"xtyle.component.card": {
@@ -666,6 +840,14 @@
 			"description": "Permits a mod to provide the markup of the xtyle Card Link component.",
 			"risk": "low"
 		},
+		"xtyle.component.carousel": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Carousel component.",
+			"risk": "low"
+		},
+		"xtyle.component.chart": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Chart component.",
+			"risk": "low"
+		},
 		"xtyle.component.checkbox": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Checkbox component.",
 			"risk": "low"
@@ -674,8 +856,24 @@
 			"description": "Permits a mod to provide the markup of the xtyle Cluster component.",
 			"risk": "low"
 		},
+		"xtyle.component.code": {
+			"description": "Permits a mod to provide the markup of the xtyle Code component.",
+			"risk": "low"
+		},
 		"xtyle.component.color-picker": {
 			"description": "Permits a mod to provide the markup of the xtyle Color Picker component.",
+			"risk": "low"
+		},
+		"xtyle.component.combobox": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Combobox component.",
+			"risk": "low"
+		},
+		"xtyle.component.command-palette": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle CommandPalette component.",
+			"risk": "low"
+		},
+		"xtyle.component.date-picker": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle DatePicker component.",
 			"risk": "low"
 		},
 		"xtyle.component.dialog": {
@@ -686,12 +884,16 @@
 			"description": "Permits a mod to provide the markup of the xtyle Dock component.",
 			"risk": "low"
 		},
+		"xtyle.component.dock-zone": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle DockZone component.",
+			"risk": "low"
+		},
 		"xtyle.component.dot": {
 			"description": "Permits a mod to provide the markup of the xtyle Dot component.",
 			"risk": "low"
 		},
-		"xtyle.component.ribbon": {
-			"description": "Permits a mod to provide the markup of the xtyle Ribbon component.",
+		"xtyle.component.dropzone": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Dropzone component.",
 			"risk": "low"
 		},
 		"xtyle.component.eyebrow": {
@@ -714,8 +916,8 @@
 			"description": "Permits a mod to provide the markup of the xtyle Heading component.",
 			"risk": "low"
 		},
-		"xtyle.component.kbd": {
-			"description": "Permits a mod to provide the markup of the xtyle Kbd component.",
+		"xtyle.component.heatmap": {
+			"description": "Permits a mod to provide the markup of the xtyle Heatmap component.",
 			"risk": "low"
 		},
 		"xtyle.component.icon": {
@@ -726,6 +928,10 @@
 			"description": "Permits a mod to provide the markup of the xtyle Image component.",
 			"risk": "low"
 		},
+		"xtyle.component.kbd": {
+			"description": "Permits a mod to provide the markup of the xtyle Kbd component.",
+			"risk": "low"
+		},
 		"xtyle.component.link": {
 			"description": "Permits a mod to provide the markup of the xtyle Link component.",
 			"risk": "low"
@@ -734,20 +940,48 @@
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Menu component.",
 			"risk": "low"
 		},
+		"xtyle.component.mobile-shell": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle MobileShell component.",
+			"risk": "low"
+		},
 		"xtyle.component.number-input": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Number Input component.",
+			"risk": "low"
+		},
+		"xtyle.component.pagination": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Pagination component.",
 			"risk": "low"
 		},
 		"xtyle.component.panel": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Panel component.",
 			"risk": "low"
 		},
+		"xtyle.component.pie": {
+			"description": "Permits a mod to provide the markup of the xtyle Pie chart component.",
+			"risk": "low"
+		},
+		"xtyle.component.popover": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Popover component.",
+			"risk": "low"
+		},
 		"xtyle.component.progress": {
 			"description": "Permits a mod to provide the markup of the xtyle Progress component.",
 			"risk": "low"
 		},
+		"xtyle.component.qr": {
+			"description": "Permits a mod to provide the markup of the xtyle QR Code component.",
+			"risk": "low"
+		},
 		"xtyle.component.radio": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Radio component.",
+			"risk": "low"
+		},
+		"xtyle.component.rating": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Rating component.",
+			"risk": "low"
+		},
+		"xtyle.component.ribbon": {
+			"description": "Permits a mod to provide the markup of the xtyle Ribbon component.",
 			"risk": "low"
 		},
 		"xtyle.component.section": {
@@ -766,6 +1000,10 @@
 			"description": "Permits a mod to provide the markup of the xtyle Separator component.",
 			"risk": "low"
 		},
+		"xtyle.component.sheet": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Sheet component.",
+			"risk": "low"
+		},
 		"xtyle.component.skeleton": {
 			"description": "Permits a mod to provide the markup of the xtyle Skeleton component.",
 			"risk": "low"
@@ -774,12 +1012,32 @@
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Slider component.",
 			"risk": "low"
 		},
+		"xtyle.component.sparkline": {
+			"description": "Permits a mod to provide the markup of the xtyle Sparkline component.",
+			"risk": "low"
+		},
 		"xtyle.component.spinner": {
 			"description": "Permits a mod to provide the markup of the xtyle Spinner component.",
 			"risk": "low"
 		},
+		"xtyle.component.split-button": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle SplitButton component.",
+			"risk": "low"
+		},
 		"xtyle.component.splitter": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Splitter component.",
+			"risk": "low"
+		},
+		"xtyle.component.spotlight": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Spotlight component.",
+			"risk": "low"
+		},
+		"xtyle.component.tour": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Tour component.",
+			"risk": "low"
+		},
+		"xtyle.component.redact": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Redact component.",
 			"risk": "low"
 		},
 		"xtyle.component.stack": {
@@ -794,8 +1052,20 @@
 			"description": "Permits a mod to provide the markup of the xtyle Statusbar component.",
 			"risk": "low"
 		},
+		"xtyle.component.steps": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Steps component.",
+			"risk": "low"
+		},
 		"xtyle.component.swatch": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Swatch component.",
+			"risk": "low"
+		},
+		"xtyle.component.switch": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Switch component.",
+			"risk": "low"
+		},
+		"xtyle.component.tabs": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Tabs component.",
 			"risk": "low"
 		},
 		"xtyle.component.text": {
@@ -804,6 +1074,10 @@
 		},
 		"xtyle.component.textarea": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Textarea component.",
+			"risk": "low"
+		},
+		"xtyle.component.timeline": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Timeline component.",
 			"risk": "low"
 		},
 		"xtyle.component.toast": {
@@ -824,42 +1098,6 @@
 		},
 		"xtyle.component.tree": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Tree component.",
-			"risk": "low"
-		},
-		"xtyle.component.code": {
-			"description": "Permits a mod to provide the markup of the xtyle Code component.",
-			"risk": "low"
-		},
-		"xtyle.component.pagination": {
-			"description": "Permits a mod to provide the markup and behavior of the xtyle Pagination component.",
-			"risk": "low"
-		},
-		"xtyle.component.bar": {
-			"description": "Permits a mod to provide the markup of the xtyle Bar chart component.",
-			"risk": "low"
-		},
-		"xtyle.component.sparkline": {
-			"description": "Permits a mod to provide the markup of the xtyle Sparkline component.",
-			"risk": "low"
-		},
-		"xtyle.component.pie": {
-			"description": "Permits a mod to provide the markup of the xtyle Pie chart component.",
-			"risk": "low"
-		},
-		"xtyle.component.qr": {
-			"description": "Permits a mod to provide the markup of the xtyle QR Code component.",
-			"risk": "low"
-		},
-		"xtyle.component.heatmap": {
-			"description": "Permits a mod to provide the markup of the xtyle Heatmap component.",
-			"risk": "low"
-		},
-		"xtyle.component.mobile-shell": {
-			"description": "Permits a mod to provide the markup and behavior of the xtyle MobileShell component.",
-			"risk": "low"
-		},
-		"xtyle.component.bottom-nav": {
-			"description": "Permits a mod to provide the markup and behavior of the xtyle BottomNav component.",
 			"risk": "low"
 		}
 	},

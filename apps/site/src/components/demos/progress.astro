@@ -146,12 +146,12 @@ const TONE_GROUPS = [
 				}
 			</Stack>
 			<Stack gap={2}>
-				<Text size="xs" tone="subtle" weight="semibold">Schemes</Text>
+				<Text size="xs" tone="subtle" weight="semibold">Palettes</Text>
 				{
-					(["accent", "thermal", "status"] as const).map((scheme) => (
+					(["intensity", "thermal", "severity", "accents", "skittles"] as const).map((palette) => (
 						<Cluster gap={3} align="center" nowrap>
-							<Text as="span" size="xs" tone="muted" class="demo-progress-label">{scheme}</Text>
-							<Progress ramp={scheme} value={72} aria-label={`${scheme} ramp`} class="demo-progress-bar" />
+							<Text as="span" size="xs" tone="muted" class="demo-progress-label">{palette}</Text>
+							<Progress ramp={palette} value={72} aria-label={`${palette} ramp`} class="demo-progress-bar" />
 						</Cluster>
 					))
 				}

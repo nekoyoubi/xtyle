@@ -1,0 +1,65 @@
+---
+type Progress = "count" | "dots" | "none";
+type Placement = "top" | "right" | "bottom" | "left";
+type Shape = "auto" | "rect" | "circle";
+type Pulse = "none" | "slow" | "fast";
+
+interface Props {
+	open?: boolean;
+	index?: number;
+	progress?: Progress;
+	backLabel?: string;
+	nextLabel?: string;
+	doneLabel?: string;
+	skipLabel?: string;
+	noSkip?: boolean;
+	placement?: Placement;
+	shape?: Shape;
+	pulse?: Pulse;
+	noDismiss?: boolean;
+	/** Render zero-JS: emit the markup but never load the runtime. A tour is invisible until started, so this is a bare element. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	open = false,
+	index,
+	progress = "count",
+	backLabel,
+	nextLabel,
+	doneLabel,
+	skipLabel,
+	noSkip = false,
+	placement,
+	shape,
+	pulse,
+	noDismiss = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+---
+
+<xtyle-tour
+	open={open || undefined}
+	index={index}
+	progress={progress}
+	back-label={backLabel}
+	next-label={nextLabel}
+	done-label={doneLabel}
+	skip-label={skipLabel}
+	no-skip={noSkip || undefined}
+	placement={placement}
+	shape={shape}
+	pulse={pulse}
+	no-dismiss={noDismiss || undefined}
+	class={extra}
+	{...rest}
+>
+	<slot />
+</xtyle-tour>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

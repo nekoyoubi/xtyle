@@ -92,6 +92,7 @@ export const buttonManifest: ComponentManifest = {
 	id: "button",
 	name: "Button",
 	category: "control",
+	since: "0.1.0",
 	keywords: ["cta", "action", "submit", "link button", "icon button", "toggle"],
 	seeAlso: ["link", "segmented", "card-link"],
 	summary: "A clickable action: five variants across six semantic tones.",

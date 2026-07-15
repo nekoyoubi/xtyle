@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "./register.js";
+	import "@xtyle/core/elements/tree.js";
 	import type { Size, TreeNode } from "@xtyle/core";
 
 	type TreeActionEvent = CustomEvent<{ value: string; action: string }>;

@@ -47,6 +47,11 @@ import { tabsCss } from "./components/tabs.js";
 import { breadcrumbCss } from "./components/breadcrumb.js";
 import { skeletonCss } from "./components/skeleton.js";
 import { dialogCss } from "./components/dialog.js";
+import { sheetCss } from "./components/sheet.js";
+import { splitButtonCss } from "./components/split-button.js";
+import { spotlightCss } from "./components/spotlight.js";
+import { redactCss } from "./components/redact.js";
+import { tourCss } from "./components/tour.js";
 import { toastCss } from "./components/toast.js";
 import { tableCss } from "./components/table.js";
 import { timelineCss } from "./components/timeline.js";
@@ -57,6 +62,7 @@ import { progressCss } from "./components/progress.js";
 import { sliderCss } from "./components/slider.js";
 import { colorPickerCss } from "./components/color-picker.js";
 import { numberInputCss } from "./components/number-input.js";
+import { datePickerCss } from "./components/date-picker.js";
 import { segmentedCss } from "./components/segmented.js";
 import { accordionCss } from "./components/accordion.js";
 import { treeCss } from "./components/tree.js";
@@ -73,14 +79,20 @@ import { carouselCss } from "./components/carousel.js";
 import { parallaxCss } from "./components/parallax.js";
 import { heroCss } from "./components/hero.js";
 import { barCss } from "./components/bar.js";
+import { chartCss } from "./components/chart.js";
 import { sparklineCss } from "./components/sparkline.js";
 import { heatmapCss } from "./components/heatmap.js";
 import { pieCss } from "./components/pie.js";
 import { qrCss } from "./components/qr.js";
 import { swatchCss } from "./components/swatch.js";
 import { menuCss } from "./components/menu.js";
+import { popoverCss } from "./components/popover.js";
+import { commandPaletteCss } from "./components/command-palette.js";
+import { comboboxCss } from "./components/combobox.js";
 import { codeCss } from "./components/code.js";
 import { paginationCss } from "./components/pagination.js";
+import { calendarCss } from "./components/calendar.js";
+import { dropzoneCss } from "./components/dropzone.js";
 
 /** Host-layout rules for elements that render to light DOM (host slot `style: "inherit"`).
  * Their `:host { display: … }` rule can't apply with no shadow, so it lives here as an
@@ -106,6 +118,7 @@ const hostDisplayCss = [
 	"xtyle-icon { display: inline-flex; }",
 	"xtyle-image { display: block; }",
 	"xtyle-bar { display: block; }",
+	"xtyle-chart { display: block; }",
 	"xtyle-sparkline { display: inline-block; }",
 	"xtyle-heatmap { display: block; }",
 	"xtyle-pie { display: block; }",
@@ -125,6 +138,7 @@ const hostDisplayCss = [
 	"xtyle-code { display: block; position: relative; }",
 	"xtyle-switch { display: inline-flex; }",
 	"xtyle-pagination { display: block; }",
+	"xtyle-calendar { display: block; }",
 	"xtyle-segmented { display: inline-block; }",
 	"xtyle-swatch { display: inline-flex; }",
 	"xtyle-toc { display: block; }",
@@ -133,18 +147,30 @@ const hostDisplayCss = [
 	"xtyle-radio { display: inline-flex; } xtyle-radio[card] { display: block; } xtyle-radio[hidden] { display: none; }",
 	"xtyle-textarea { display: block; }",
 	"xtyle-number-input { display: inline-block; }",
+	"xtyle-date-picker { display: inline-block; }",
 	"xtyle-slider { display: block; }",
 	"xtyle-menu { display: inline-block; }",
+	"xtyle-combobox { display: block; }",
 	"xtyle-tree { display: block; }",
 	"xtyle-tooltip { display: inline-flex; }",
 	// `> option`/`> optgroup` are the consumer's config children, kept in light DOM (hidden) for the
 	// element to read on a rebuild; the visible options live inside the chrome's `<select>`.
 	"xtyle-select { display: block; } xtyle-select > option, xtyle-select > optgroup { display: none; }",
 	"xtyle-dialog { display: contents; }",
+	"xtyle-sheet { display: contents; }",
+	"xtyle-split-button { display: inline-flex; }",
+	"xtyle-spotlight { display: contents; }",
+	"xtyle-redact { display: inline-block; }",
+	"xtyle-tour { display: contents; }",
+	// a fill's own fallback glyph wrapper: transparent by declaration, so the icon inside lays out in the
+	// component's box. It used to borrow Icon's `[data-icon]` rule for this, which coupled Alert's layout to
+	// Icon's stylesheet by accident.
+	"[data-glyph] { display: contents; }",
 	'xtyle-dock { display: block; min-height: 0; height: 100%; width: 18rem; } xtyle-dock[size="sm"] { width: 14rem; } xtyle-dock[size="lg"] { width: 22rem; }',
 	"xtyle-field { display: block; }",
 	"xtyle-splitter { display: block; flex: none; } xtyle-splitter[line] { position: relative; z-index: 1; }",
 	"xtyle-color-picker { display: inline-block; }",
+	"xtyle-dropzone { display: block; }",
 	"xtyle-tabs { display: block; }",
 	"xtyle-accordion { display: block; }",
 	'xtyle-toolbar { display: block; } xtyle-toolbar[sticky] { position: sticky; top: 0; z-index: var(--elevation-3); }',
@@ -194,6 +220,11 @@ export const componentsCss: string = [
 	breadcrumbCss,
 	skeletonCss,
 	dialogCss,
+	sheetCss,
+	splitButtonCss,
+	spotlightCss,
+	redactCss,
+	tourCss,
 	toastCss,
 	tableCss,
 	timelineCss,
@@ -204,6 +235,7 @@ export const componentsCss: string = [
 	sliderCss,
 	colorPickerCss,
 	numberInputCss,
+	datePickerCss,
 	segmentedCss,
 	accordionCss,
 	treeCss,
@@ -220,12 +252,18 @@ export const componentsCss: string = [
 	parallaxCss,
 	heroCss,
 	barCss,
+	chartCss,
 	sparklineCss,
 	heatmapCss,
 	pieCss,
 	qrCss,
 	swatchCss,
 	menuCss,
+	popoverCss,
+	commandPaletteCss,
+	comboboxCss,
 	codeCss,
 	paginationCss,
+	calendarCss,
+	dropzoneCss,
 ].join("\n");

@@ -1,27 +1,47 @@
-import { XtyleDecoratorElement, define } from "./base.js";
-import { renderIcon } from "../icons.js";
+import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { CarouselTransition, CarouselDirection } from "../vocab.js";
+import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { manifest, fragmentSources } from "./fragments/carousel/source.generated.js";
 
 const DEFAULT_INTERVAL = 5000;
 const SETTLE_MS = 600;
 
+let carouselSeq = 0;
+
 /**
- * A scroll-snap carousel of slotted slides. It is a standalone light-DOM element
- * (like `table`): the slides are the consumer's own children, decorated in place
- * rather than projected through a shadow slot, so framework content stays live.
- * The native scroll-snap track works with no JavaScript; the prev/next controls,
- * the pagination dots, the keyboard nav, and autoplay are enhancements wired only
- * when the runtime is present.
+ * A scroll-snap carousel of slotted slides. The chrome it invents — the viewport, the track, the
+ * control bar, the prev/next arrows, the dots rail, and the play toggle — is drawn by the
+ * `component.carousel` fragment, so an app can reskin or restructure any of it. The element keeps
+ * the behavior: the scroll math, the intersection observer, the keyboard, autoplay, and the seam
+ * clones that make `loop` continuous. The slides stay the consumer's own nodes, relocated into the
+ * fill's track, so framework content stays live.
  */
-export class XtyleCarousel extends XtyleDecoratorElement {
+export class XtyleCarousel extends XtyleElement {
+	/**
+	 * Light DOM, never a shadow root: the shared component sheet styles the carousel through
+	 * `xtyle-carousel …` descendant selectors (the direction axis, the overlay controls, the
+	 * stacked transitions), and a descendant combinator cannot cross a shadow boundary.
+	 */
+	protected override get styleMode(): StyleMode {
+		return "scoped";
+	}
+
+	private uid = `xtyle-carousel-${carouselSeq++}`;
+	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "carousel", {
+		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		afterApply: () => this.afterApply(),
+	});
+
 	static get observedAttributes(): string[] {
-		return ["label", "autoplay", "interval", "loop"];
+		return ["label", "autoplay", "interval", "loop", "controls", "dots", "transition", "direction"];
 	}
 
 	private controller: AbortController | null = null;
 	private observer: IntersectionObserver | null = null;
 	private autoplayTimer = 0;
 	private settleTimer = 0;
+	private retryHandle = 0;
+	private retried = false;
 	// Suppresses the observer's index writes while a programmatic scroll is in flight, so a
 	// fast click-through doesn't flutter the active dot as the smooth scroll passes intermediate slides.
 	private programmatic = false;
@@ -29,15 +49,12 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 	private index = 0;
 	private slides: HTMLElement[] = [];
 	private track: HTMLElement | null = null;
-	private dotEls: HTMLButtonElement[] = [];
-	private prevBtn: HTMLButtonElement | null = null;
-	private nextBtn: HTMLButtonElement | null = null;
 	// The user's explicit pause intent (via the play/pause toggle), distinct from the transient
 	// hover/focus pause, so resuming on pointer-leave never overrides a deliberate pause.
 	private paused = false;
-	private playToggle: HTMLButtonElement | null = null;
 	// A polite live region announcing the current slide, so a screen reader hears the change even
-	// though scrolling (or a stacked cross-fade) never moves focus.
+	// though scrolling (or a stacked cross-fade) never moves focus. It renders nothing, so it is the
+	// element's plumbing rather than the fill's chrome.
 	private liveEl: HTMLElement | null = null;
 	private announcedIndex = 0;
 	// Seam clones for the smooth infinite loop: inert copies of the first/last slide sitting just past
@@ -47,6 +64,8 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 	private trailingClone: HTMLElement | null = null;
 	private hasClones = false;
 	private pendingSeam: number | null = null;
+	private shape = "";
+	private remounting = true;
 
 	get label(): string {
 		return this.getAttribute("label") ?? "";
@@ -132,129 +151,228 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 		this.track?.scrollTo(this.vertical ? { top: offset, behavior } : { left: offset, behavior });
 	}
 
-	/** The prev/next chevron glyphs, pointed along the track's axis and sense: `next` points the way the
-	 * content advances (so a vertical or reversed carousel's arrows never contradict its motion). */
-	private get chevrons(): { prev: string; next: string } {
-		const opposite = { right: "left", left: "right", up: "down", down: "up" } as const;
-		return { next: `chevron-${this.direction}`, prev: `chevron-${opposite[this.direction]}` };
-	}
-
 	/** The track's current scroll position along its axis. */
 	private get trackScroll(): number {
 		if (!this.track) return 0;
 		return this.vertical ? this.track.scrollTop : this.track.scrollLeft;
 	}
-	private set trackScroll(value: number) {
-		if (!this.track) return;
-		if (this.vertical) this.track.scrollTop = value;
-		else this.track.scrollLeft = value;
-	}
 
-	connectedCallback(): void {
+	override connectedCallback(): void {
 		super.connectedCallback();
-		if (!this.querySelector(":scope > .xtyle-carousel__viewport")) this.enhance();
+		this.activate();
 	}
 
 	override disconnectedCallback(): void {
 		super.disconnectedCallback();
+		if (this.retryHandle && typeof cancelAnimationFrame === "function") cancelAnimationFrame(this.retryHandle);
+		this.retryHandle = 0;
 		this.teardown();
 	}
 
 	attributeChangedCallback(name: string): void {
-		if (name === "label") {
-			this.setAttribute("aria-label", this.label || "Carousel");
-			this.track?.setAttribute("aria-label", this.label || "Carousel");
-		} else if (this.hasAttribute("data-enhanced")) {
-			this.syncAutoplay();
-		}
+		if (name === "label") this.setAttribute("aria-label", this.label || "Carousel");
+		if (!this.scaffolded) return;
+		this.render();
+		if (name === "autoplay" || name === "interval") this.syncAutoplay();
 	}
 
 	private get reducedMotion(): boolean {
 		return this.mq?.matches ?? false;
 	}
 
-	private get firstSlide(): HTMLElement | undefined {
-		return this.slides[0];
-	}
-
-	private get lastSlide(): HTMLElement | undefined {
-		return this.slides[this.slides.length - 1];
+	private get showPlay(): boolean {
+		return this.autoplay && !this.reducedMotion;
 	}
 
 	private get lastIndex(): number {
 		return this.slides.length - 1;
 	}
 
-	/** Scroll to a real slide by index and mark it active. */
-	private snapToIndex(index: number, behavior: ScrollBehavior): void {
-		const slide = this.slides[index];
-		if (!slide || !this.track) return;
-		this.scrollTrackTo(this.offsetOf(slide), behavior);
-		this.index = index;
-		this.update();
+	/**
+	 * The nearest element carrying `marker` that belongs to *this* carousel's own fill. A carousel can
+	 * hold another carousel in a slide, and in light DOM both trees are one — so a plain query would
+	 * happily return the inner track, or (since the host reflects `data-controls` for the overlay mode)
+	 * the inner carousel element itself. The fill's chrome is always plain markup under this element and
+	 * under no other component, which is what this walk asks for.
+	 */
+	private own<T extends HTMLElement>(marker: string): T | null {
+		for (const candidate of this.querySelectorAll<T>(`[${marker}]`)) {
+			if (candidate.tagName.includes("-")) continue;
+			let parent = candidate.parentElement;
+			let foreign = false;
+			while (parent && parent !== this) {
+				if (parent.tagName.includes("-")) {
+					foreign = true;
+					break;
+				}
+				parent = parent.parentElement;
+			}
+			if (!foreign) return candidate;
+		}
+		return null;
 	}
 
-	private enhance(): void {
-		const slides = Array.from(this.children).filter((n): n is HTMLElement => n instanceof HTMLElement);
-		if (slides.length === 0) return;
-		this.slides = slides;
+	private get scaffolded(): boolean {
+		return this.own("data-root") !== null;
+	}
 
-		const viewport = document.createElement("div");
-		viewport.className = "xtyle-carousel__viewport";
-		const track = document.createElement("div");
-		track.className = "xtyle-carousel__track";
-		track.tabIndex = 0;
-		track.setAttribute("role", "group");
-		track.setAttribute("aria-roledescription", "carousel");
-		track.setAttribute("aria-label", this.label || "Carousel");
-		for (const slide of slides) track.appendChild(slide);
-		viewport.appendChild(track);
-		this.track = track;
+	private get bindings(): Record<string, unknown> {
+		return {
+			uid: this.uid,
+			slideCount: this.slides.length,
+			index: this.index,
+			controls: this.controlsMode,
+			dots: this.dots,
+			showPlay: this.showPlay,
+			playing: !this.paused,
+			loop: this.loop,
+			label: this.label,
+			direction: this.direction,
+		};
+	}
 
-		for (const [i, slide] of slides.entries()) {
-			slide.classList.add("xtyle-carousel__slide");
-			slide.setAttribute("role", "group");
-			slide.setAttribute("aria-roledescription", "slide");
-			slide.setAttribute("aria-label", `${i + 1} of ${slides.length}`);
+	/** What the fill's structure depends on: a change here rebuilds the control bar (and, through the
+	 * mount's slot relocation, the track's children), rather than patching the nodes in place. */
+	private shapeSignature(): string {
+		return [
+			this.slides.length,
+			this.controlsMode,
+			this.dots,
+			this.showPlay,
+			this.loop,
+			this.stacked,
+			this.direction,
+		].join("|");
+	}
+
+	protected template(): string {
+		return "";
+	}
+
+	/**
+	 * A framework binding can connect the element before it has appended the slides (Svelte creates
+	 * the custom element, then fills it), and the scaffold paint captures whatever children are there
+	 * at that moment — so scaffolding an empty carousel would strand every slide that arrives after.
+	 * Wait a frame for the children to land before painting anything.
+	 */
+	private scheduleRetry(): void {
+		if (this.retried || typeof requestAnimationFrame !== "function") return;
+		this.retried = true;
+		this.retryHandle = requestAnimationFrame(() => {
+			this.retryHandle = 0;
+			if (this.isConnected) this.render();
+		});
+	}
+
+	private hasSlideChildren(): boolean {
+		return Array.from(this.children).some((child) => child instanceof HTMLElement);
+	}
+
+	protected override render(): void {
+		if (!this.scaffolded && !this.hasSlideChildren()) {
+			this.scheduleRetry();
+			return;
 		}
+		this.adoptComponentSheet();
+		this.fragment.ensureScaffold("");
+		this.claimScaffold();
+		this.slides = this.fragment.slottedNodes().filter((node): node is HTMLElement => node instanceof HTMLElement);
+		if (this.slides.length === 0) return;
+		this.index = Math.min(this.index, this.lastIndex);
+		const shape = this.shapeSignature();
+		if (shape !== this.shape) {
+			this.fragment.remount();
+			this.remounting = true;
+			this.shape = shape;
+		}
+		this.reflectHostState();
+		this.fragment.update(this.bindings);
+		this.announce();
+	}
 
-		if (!this.stacked) this.buildClones();
+	/** Stamp this instance's id onto the two scaffold nodes the fill's ops address, so an outer
+	 * carousel's ops can never land on an inner one's track or control bar. Every control the fill
+	 * draws carries the same id, keyed from `bindings.uid`. */
+	private claimScaffold(): void {
+		this.own("data-track")?.setAttribute("data-uid", this.uid);
+		this.own("data-controls")?.setAttribute("data-uid", this.uid);
+	}
 
+	private reflectHostState(): void {
 		this.setAttribute("role", "region");
 		this.setAttribute("aria-roledescription", "carousel");
 		this.setAttribute("aria-label", this.label || "Carousel");
-
-		this.append(viewport);
-		// The bar also appears for a bare autoplay carousel, so the pause toggle always has a home.
-		if (this.controls || this.dots || (this.autoplay && !this.reducedMotion)) {
-			this.append(this.buildControls());
-		}
-
-		this.liveEl = document.createElement("div");
-		this.liveEl.className = "xtyle-carousel__live";
-		this.liveEl.setAttribute("role", "status");
-		this.liveEl.setAttribute("aria-live", "polite");
-		this.append(this.liveEl);
-
-		this.controller = new AbortController();
-		this.wire(this.controller.signal);
-		if (!this.stacked) this.observeSlides();
-		this.setAttribute("data-enhanced", "");
 		if (this.controlsMode === "overlay") this.setAttribute("data-controls", "overlay");
-		this.update();
-		this.restStartOffset();
-		this.syncAutoplay();
+		else this.removeAttribute("data-controls");
+	}
+
+	/**
+	 * The seam between the fill and the behavior. A `mount` rebuilds the control bar and re-places the
+	 * consumer's slides into the fill's track, which drops the seam clones with them — so they are
+	 * rebuilt here, after every mount, or `loop` silently stops wrapping.
+	 */
+	private afterApply(): void {
+		const mounted = this.remounting;
+		this.remounting = false;
+		const track = this.own<HTMLElement>("data-track");
+		if (track !== this.track) {
+			this.teardown();
+			this.track = track;
+		}
+		if (!this.track) return;
+		this.decorateSlides();
+		if (mounted) {
+			this.syncClones();
+			this.parkScroll();
+		}
+		this.ensureLive();
+		this.activate();
+		this.setAttribute("data-enhanced", "");
+	}
+
+	private decorateSlides(): void {
+		for (const [i, slide] of this.slides.entries()) {
+			slide.classList.add("xtyle-carousel__slide");
+			slide.setAttribute("role", "group");
+			slide.setAttribute("aria-roledescription", "slide");
+			slide.setAttribute("aria-label", `${i + 1} of ${this.slides.length}`);
+			// In a stacked transition the slides overlay, so only the active one is shown and reachable; the
+			// rest are hidden from assistive tech and made inert so a hidden slide's content can't be tabbed to.
+			if (!this.stacked) continue;
+			const active = i === this.index;
+			slide.classList.toggle("is-active", active);
+			slide.inert = !active;
+			if (active) slide.removeAttribute("aria-hidden");
+			else slide.setAttribute("aria-hidden", "true");
+		}
+	}
+
+	/** Build the seam clones when the loop wants them and they are absent (a fresh mount, or a `loop`
+	 * that just turned on), and clear them when it doesn't. */
+	private syncClones(): void {
+		const wanted = this.loop && !this.stacked && this.slides.length >= 2 && this.track !== null;
+		if (wanted && this.leadingClone?.isConnected && this.trailingClone?.isConnected) return;
+		this.dropClones();
+		if (wanted) this.buildClones();
+	}
+
+	private dropClones(): void {
+		this.leadingClone?.remove();
+		this.trailingClone?.remove();
+		this.leadingClone = null;
+		this.trailingClone = null;
+		this.hasClones = false;
 	}
 
 	/** Prepend a clone of the last slide and append a clone of the first, so scrolling off either end
-	 * lands on a look-alike that we then silently snap back from. Only for a `loop` of 2+ real slides. */
+	 * lands on a look-alike that we then silently snap back from. */
 	private buildClones(): void {
-		const first = this.firstSlide;
-		const last = this.lastSlide;
-		if (!this.loop || this.slides.length < 2 || !this.track || !first || !last) return;
+		const first = this.slides[0];
+		const last = this.slides[this.lastIndex];
+		if (!this.track || !first || !last) return;
 		this.leadingClone = this.makeClone(last);
 		this.trailingClone = this.makeClone(first);
-		this.track.insertBefore(this.leadingClone, first);
+		this.track.insertBefore(this.leadingClone, this.track.firstChild);
 		this.track.appendChild(this.trailingClone);
 		this.hasClones = true;
 	}
@@ -271,78 +389,73 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 		return clone;
 	}
 
-	/** Park the track on the first real slide (just past the leading clone) so the loop has room to
-	 * scroll backward into the clone on the very first `prev`. */
-	private restStartOffset(): void {
-		if (!this.hasClones || !this.track) return;
+	/** Park the track on the active slide. With clones that also means resting just past the leading
+	 * one, so the loop has room to scroll backward into it on the very first `prev`. The second pass
+	 * runs after layout, when the freshly-placed slides finally have offsets. */
+	private parkScroll(): void {
+		if (this.stacked || !this.track) return;
 		const park = (): void => {
-			if (this.track && this.firstSlide) this.trackScroll = this.offsetOf(this.firstSlide);
+			const slide = this.slides[this.index];
+			if (this.track && slide) this.scrollTrackTo(this.offsetOf(slide), "instant");
 		};
 		park();
-		requestAnimationFrame(park);
+		if (typeof requestAnimationFrame === "function") requestAnimationFrame(park);
 	}
 
-	private buildControls(): HTMLElement {
-		const bar = document.createElement("div");
-		bar.className = "xtyle-carousel__controls";
-
-		// A live carousel that moves on its own needs a discoverable, persistent way to stop it
-		// (WCAG 2.2.2), beyond the transient hover/focus pause. Only shown when autoplay can run.
-		if (this.autoplay && !this.reducedMotion) {
-			this.playToggle = this.controlButton("play", "Pause automatic slideshow", "pause");
-			this.syncPlayToggle();
-			bar.appendChild(this.playToggle);
-		}
-
-		if (this.controls) {
-			this.prevBtn = this.controlButton("prev", "Previous slide", this.chevrons.prev);
-			bar.appendChild(this.prevBtn);
-		}
-
-		if (this.dots) {
-			const dots = document.createElement("div");
-			dots.className = "xtyle-carousel__dots";
-			dots.setAttribute("role", "tablist");
-			dots.setAttribute("aria-label", "Choose slide");
-			this.dotEls = this.slides.map((_, i) => {
-				const dot = document.createElement("button");
-				dot.type = "button";
-				dot.className = "xtyle-carousel__dot";
-				dot.setAttribute("role", "tab");
-				dot.setAttribute("aria-label", `Go to slide ${i + 1}`);
-				dots.appendChild(dot);
-				return dot;
-			});
-			bar.appendChild(dots);
-		}
-
-		if (this.controls) {
-			this.nextBtn = this.controlButton("next", "Next slide", this.chevrons.next);
-			bar.appendChild(this.nextBtn);
-		}
-		return bar;
+	private ensureLive(): void {
+		if (this.liveEl?.isConnected) return;
+		const live = document.createElement("div");
+		live.className = "xtyle-carousel__live";
+		live.setAttribute("role", "status");
+		live.setAttribute("aria-live", "polite");
+		this.append(live);
+		this.liveEl = live;
 	}
 
-	private controlButton(kind: string, label: string, icon: string): HTMLButtonElement {
-		const button = document.createElement("button");
-		button.type = "button";
-		button.className = `xtyle-carousel__nav xtyle-carousel__nav--${kind}`;
-		button.setAttribute("aria-label", label);
-		button.innerHTML = renderIcon(icon);
-		return button;
+	/** Announce only real changes, leaving the initial slide unspoken so nothing fires on load. */
+	private announce(): void {
+		if (!this.liveEl || this.index === this.announcedIndex) return;
+		this.liveEl.textContent = `Slide ${this.index + 1} of ${this.slides.length}`;
+		this.announcedIndex = this.index;
+	}
+
+	private activate(): void {
+		if (!this.track || this.controller) return;
+		this.controller = new AbortController();
+		this.wire(this.controller.signal);
+		if (!this.stacked) this.observeSlides();
+		this.syncAutoplay();
+	}
+
+	/**
+	 * Whether an event came from this carousel's own chrome rather than from a carousel nested inside
+	 * one of its slides. Both the fill's delegated handlers and the keyboard listener sit on the host,
+	 * so an inner carousel's button click or arrow key bubbles straight through this one — and would
+	 * page both.
+	 */
+	private ownsEvent(event: Event): boolean {
+		for (const node of event.composedPath()) {
+			if (node === this) return true;
+			if (node instanceof HTMLElement && node !== event.target && node.tagName.includes("-")) return false;
+		}
+		return false;
+	}
+
+	private applyIntent(intent: FragmentIntent, event: Event): void {
+		if (!this.ownsEvent(event)) return;
+		if (intent.nudge) this.go(this.index + (intent.nudge > 0 ? 1 : -1));
+		if (intent.select !== undefined) {
+			const target = Number(intent.select);
+			if (Number.isFinite(target)) this.go(target);
+		}
+		if (intent.togglePlay) this.togglePlay();
 	}
 
 	private wire(signal: AbortSignal): void {
-		this.prevBtn?.addEventListener("click", () => this.go(this.index - 1), { signal });
-		this.nextBtn?.addEventListener("click", () => this.go(this.index + 1), { signal });
-		this.playToggle?.addEventListener("click", () => this.togglePlay(), { signal });
-		for (const [i, dot] of this.dotEls.entries()) {
-			dot.addEventListener("click", () => this.go(i), { signal });
-		}
-
 		this.addEventListener(
 			"keydown",
 			(event) => {
+				if (!this.ownsEvent(event)) return;
 				// The arrow pair follows the track's axis: Up/Down for a vertical carousel, Left/Right for
 				// a horizontal one. `prev`/`next` stay logical (index-1 / index+1) as the buttons do.
 				const prevKey = this.vertical ? "ArrowUp" : "ArrowLeft";
@@ -394,12 +507,21 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 				}
 				if (best && best.i !== this.index) {
 					this.index = best.i;
-					this.update();
+					this.render();
 				}
 			},
 			{ root: this.track, threshold: [0.5, 0.75, 1] },
 		);
 		for (const slide of this.slides) this.observer.observe(slide);
+	}
+
+	/** Scroll to a real slide by index and mark it active. */
+	private snapToIndex(index: number, behavior: ScrollBehavior): void {
+		const slide = this.slides[index];
+		if (!slide || !this.track) return;
+		this.scrollTrackTo(this.offsetOf(slide), behavior);
+		this.index = index;
+		this.render();
 	}
 
 	private go(target: number): void {
@@ -410,7 +532,7 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 		// cross-fades. Looping is inherently seamless here, so no seam clones are involved.
 		if (this.stacked) {
 			this.index = this.loop ? (target + n) % n : Math.max(0, Math.min(n - 1, target));
-			this.update();
+			this.render();
 			return;
 		}
 
@@ -436,7 +558,7 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 		this.programmatic = true;
 		this.pendingSeam = this.offsetOf(real);
 		this.index = realIndex;
-		this.update();
+		this.render();
 		this.scrollTrackTo(this.offsetOf(clone), "smooth");
 		this.armSettle();
 	}
@@ -478,50 +600,13 @@ export class XtyleCarousel extends XtyleDecoratorElement {
 		else if (near(this.leadingClone)) this.snapToIndex(this.lastIndex, "instant");
 	}
 
-	private update(): void {
-		for (const [i, dot] of this.dotEls.entries()) {
-			const active = i === this.index;
-			dot.setAttribute("aria-selected", active ? "true" : "false");
-			dot.classList.toggle("is-active", active);
-		}
-		// In a stacked transition the slides overlay, so only the active one is shown and reachable; the
-		// rest are hidden from assistive tech and made inert so a hidden slide's content can't be tabbed to.
-		if (this.stacked) {
-			for (const [i, slide] of this.slides.entries()) {
-				const active = i === this.index;
-				slide.classList.toggle("is-active", active);
-				slide.inert = !active;
-				if (active) slide.removeAttribute("aria-hidden");
-				else slide.setAttribute("aria-hidden", "true");
-			}
-		}
-		if (!this.loop) {
-			if (this.prevBtn) this.prevBtn.disabled = this.index === 0;
-			if (this.nextBtn) this.nextBtn.disabled = this.index === this.lastIndex;
-		}
-		// Announce only real changes; leaving the initial slide unspoken so nothing fires on load.
-		if (this.liveEl && this.index !== this.announcedIndex) {
-			this.liveEl.textContent = `Slide ${this.index + 1} of ${this.slides.length}`;
-			this.announcedIndex = this.index;
-		}
-	}
-
-	/** Toggle the user's persistent play/pause intent, and reflect it on the control. Delegates the
-	 * start/stop to `syncAutoplay` so the one autoplay-eligibility guard stays the single source. */
+	/** Toggle the user's persistent play/pause intent. Delegates the start/stop to `syncAutoplay` so
+	 * the one autoplay-eligibility guard stays the single source, and re-renders so the fill repaints
+	 * the toggle. */
 	private togglePlay(): void {
 		this.paused = !this.paused;
 		this.syncAutoplay();
-		this.syncPlayToggle();
-	}
-
-	private syncPlayToggle(): void {
-		if (!this.playToggle) return;
-		const playing = !this.paused;
-		this.playToggle.innerHTML = renderIcon(playing ? "pause" : "play");
-		this.playToggle.setAttribute(
-			"aria-label",
-			playing ? "Pause automatic slideshow" : "Play automatic slideshow",
-		);
+		this.render();
 	}
 
 	private syncAutoplay(): void {

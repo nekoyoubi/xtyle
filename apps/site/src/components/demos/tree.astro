@@ -1,6 +1,9 @@
 ---
 import Tree from "@xtyle/astro/Tree.astro";
 import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Text from "@xtyle/astro/Text.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import type { TreeNode } from "@xtyle/core/markup";
 
@@ -85,6 +88,26 @@ const binder: TreeNode[] = [
 	{ label: "Chapter 2", value: "ch2", badge: "812", actions: [{ id: "rename", label: "Rename", icon: "✎" }] },
 	{ label: "Notes", value: "notes", badge: "12" },
 ];
+
+const live: TreeNode[] = [
+	{
+		label: "Act I",
+		value: "act1",
+		expanded: true,
+		badge: "1,204",
+		children: [
+			{ label: "Opening", value: "act1-1", selected: true, badge: "512" },
+			{ label: "Rising action", value: "act1-2", badge: "692" },
+		],
+	},
+	{
+		label: "Act II",
+		value: "act2",
+		expanded: true,
+		badge: "640",
+		children: [{ label: "Turn", value: "act2-1", badge: "640" }],
+	},
+];
 ---
 
 <Stack gap={6} class="demo">
@@ -102,6 +125,19 @@ const binder: TreeNode[] = [
 		<Heading level={3} size="sm" tone="muted">Binder · row badges & actions</Heading>
 		<Tree label="Binder" items={binder} class="binder" />
 	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Live data · state survives the feed</Heading>
+		<Text size="sm" tone="muted">
+			Collapse Act II, select a row, then keep typing: the counts stream in while the collapse,
+			the selection, and the tab stop stay where you put them. Reset re-seeds from the flags.
+		</Text>
+		<Tree label="Manuscript" items={live} class="live" />
+		<Cluster gap={2}>
+			<Button size="sm" variant="subtle" data-live="type">Type a word</Button>
+			<Button size="sm" variant="ghost" data-live="reset">Reset state</Button>
+		</Cluster>
+	</section>
 </Stack>
 
 <script>
@@ -117,6 +153,53 @@ const binder: TreeNode[] = [
 		if (row) {
 			row.animate([{ background: "var(--accent-bg)" }, { background: "transparent" }], { duration: 500 });
 		}
+	});
+
+	type LiveNode = {
+		label: string;
+		value: string;
+		badge?: string;
+		expanded?: boolean;
+		selected?: boolean;
+		children?: LiveNode[];
+	};
+	type LiveTree = HTMLElement & { items: LiveNode[]; resetState(): void };
+
+	const liveTree = document.querySelector("xtyle-tree.live") as LiveTree | null;
+	const counts: Record<string, number> = { "act1-1": 512, "act1-2": 692, "act2-1": 640 };
+
+	// The feed keeps declaring `expanded` / `selected` on every push, exactly as a real data source
+	// would. Those flags only seed a node the tree has never seen before, so a branch the user
+	// collapsed stays collapsed no matter how many times the counts land.
+	function manuscript(): LiveNode[] {
+		return [
+			{
+				label: "Act I",
+				value: "act1",
+				expanded: true,
+				badge: (counts["act1-1"] + counts["act1-2"]).toLocaleString(),
+				children: [
+					{ label: "Opening", value: "act1-1", selected: true, badge: counts["act1-1"].toLocaleString() },
+					{ label: "Rising action", value: "act1-2", badge: counts["act1-2"].toLocaleString() },
+				],
+			},
+			{
+				label: "Act II",
+				value: "act2",
+				expanded: true,
+				badge: counts["act2-1"].toLocaleString(),
+				children: [{ label: "Turn", value: "act2-1", badge: counts["act2-1"].toLocaleString() }],
+			},
+		];
+	}
+
+	document.querySelector('[data-live="type"]')?.addEventListener("click", () => {
+		counts["act1-1"] += 1;
+		if (liveTree) liveTree.items = manuscript();
+	});
+
+	document.querySelector('[data-live="reset"]')?.addEventListener("click", () => {
+		liveTree?.resetState();
 	});
 </script>
 
