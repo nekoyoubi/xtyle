@@ -309,6 +309,7 @@ export const sheetManifest: ComponentManifest = {
 		{ name: "footer", description: "Footer actions, right-aligned. Collapses entirely when unfilled.", bindings: ["html", "svelte", "astro"] },
 	],
 	consumedTokens: [
+		"--layer-overlay",
 		"--border-normal",
 		"--border-thick",
 		"--border-thin",

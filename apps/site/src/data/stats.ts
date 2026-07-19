@@ -1,5 +1,5 @@
 import { listComponents, coverComponents, derive, ICON_PRIMITIVE_NAMES } from "@xtyle/core";
-import { resolveAlgorithm } from "@xtyle/core/host";
+import { resolveAlgorithm } from "@xtyle/core/algorithms";
 import baseline from "./stats-baseline.json";
 import { BENCH_TOOLS } from "./bench-tools";
 import pkg from "../../package.json";

@@ -1,9 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/app-shell/mod.ts
-  function escapeAttr(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/elements/fragments/app-shell/mod.ts
   function skipText(b) {
     const explicit = b.skipLinkText;
     return explicit && explicit.length > 0 ? explicit : "Skip to main content";

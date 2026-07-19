@@ -1,30 +1,57 @@
 ---
-type TableVariant = "default" | "striped" | "bordered";
-type TableSize = "normal" | "compact";
+import { checkAuthoring } from "./internal/diagnose.js";
+import { tableParts } from "@xtyle/core/markup";
+import { decorateTable } from "@xtyle/core/elements/ssr";
+import { TABLE_VARIANTS, resolveVocab, TABLE_SIZES } from "@xtyle/core";
+
+type TableVariant = (typeof TABLE_VARIANTS)[number];
+type TableSize = (typeof TABLE_SIZES)[number];
 
 interface Props {
 	variant?: TableVariant;
 	size?: TableSize;
 	hover?: boolean;
 	sticky?: boolean;
+	/** Row selection: `none` (default) leaves the native table alone; otherwise the body rows become a selectable, arrow-navigable grid keyed by each row's `data-value`. */
+	selection?: "none" | "single" | "multi" | "range";
 	/** Cap the wrapper's height so it scrolls internally — required for `sticky` to have a scrollport to stick within. Any CSS length. */
 	maxHeight?: string;
 	ariaLabel?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
 const {
-	variant = "default",
-	size = "normal",
+	variant: variantInput,
+	size: sizeInput,
 	hover = false,
 	sticky = false,
+	selection = "none",
 	maxHeight,
 	ariaLabel,
+	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("table", Astro.props);
+const variant = resolveVocab(variantInput, TABLE_VARIANTS, "default", "table variant");
+const size = resolveVocab(sizeInput, TABLE_SIZES, "normal", "table size");
+
+// Every rule in the table stylesheet keys off the part classes the element writes onto the authored
+// `<table>` at upgrade, so the server applies the same ones — otherwise a zero-JS table is bare HTML.
+const tableClasses = [
+	tableParts.table,
+	variant !== "default" && `xtyle-table--${variant}`,
+	size === "compact" && "xtyle-table--compact",
+	hover && "xtyle-table--hover",
+	sticky && "xtyle-table--sticky",
+].filter(Boolean) as string[];
+
+const authored = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const composed = decorateTable(authored, tableParts, tableClasses, ariaLabel);
 ---
 
 <xtyle-table
@@ -32,15 +59,14 @@ const {
 	size={size}
 	hover={hover ? "" : undefined}
 	sticky={sticky ? "" : undefined}
+	selection={selection !== "none" ? selection : undefined}
 	max-height={maxHeight || undefined}
 	style={maxHeight ? `--xtyle-table-max-height: ${maxHeight}` : undefined}
 	aria-label={ariaLabel || undefined}
-	class:list={["xtyle-table-wrap", extra]}
+	part="wrap"
+	class:list={[tableParts.wrap, extra]}
+	set:html={composed}
 	{...rest}
->
-	<slot />
-</xtyle-table>
+/>
 
-<script>
-	import "@xtyle/core/elements";
-</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

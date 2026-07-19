@@ -1,0 +1,164 @@
+---
+import Markdown from "@xtyle/astro/Markdown.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+
+const document = `# Derivation
+
+An **algorithm** maps a few anchors and knobs into a full, internally consistent
+token set. The algorithm is the durable asset; a theme is a materialized
+invocation of one. See [the derivation model](/start) for the long version.
+
+## What it covers
+
+1. the anchors you pin
+2. the knobs you turn
+3. everything else, derived
+
+> A theme is a print. The algorithm is the press.
+
+Inline \`--accent\` reads the same as a fence:
+
+\`\`\`ts
+const theme = derive({ bg: "#0f1115", accent: "#5b8cff" });
+\`\`\`
+
+---
+
+Rendered with ~~a sanitizer~~ no sanitizer at all.`;
+
+const gfm = `| component | state | notes |
+| --- | --- | --- |
+| tooltip | fixed | tracks its trigger through scroll |
+| swatch | fixed | same promotion, same defects |
+| markdown | new | this one |
+
+- [x] escape raw HTML to text
+- [x] allowlist link and image URLs
+- [ ] name the version
+
+Autolinks too: https://xtyle.dev`;
+
+const untrusted = `This came from an LLM and is rendered **as-is**:
+
+<script>alert("this never runs")</script>
+<img src=x onerror=alert("nor this")>
+
+[a link that looks fine](javascript:alert("refused"))
+and [one that is fine](https://xtyle.dev).`;
+
+const draft = `# Edit me
+
+Switch to **source** with the toggle, change something, and switch back.
+
+- the textarea is the source of truth while editing
+- \`input\` fires with the markdown as you type`;
+
+const labels = [
+	"Fix **tooltip** placement",
+	"Refactor `AnchorTracker` in *xtyle*",
+	"~~Drop~~ keep the swatch fix",
+	"Review [PR #12](https://xtyle.dev)",
+	"# Heading in a label",
+];
+---
+
+<Stack gap={6} class="md-demo">
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">A document</Heading>
+			<Text tone="muted" size="sm">
+				Headings ride the type scale, rules and quotes ride the border ramp, and
+				fences borrow the same <code>--code-*</code> family the Code component owns.
+			</Text>
+		</Stack>
+		<Markdown source={document} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">Tables and task lists</Heading>
+			<Text tone="muted" size="sm">
+				GFM is on by default. A wide table scrolls inside its own box rather than
+				pushing the document sideways.
+			</Text>
+		</Stack>
+		<Markdown source={gfm} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">An inline label</Heading>
+			<Text tone="muted" size="sm">
+				<code>inline</code> renders emphasis with no blocks and no paragraph wrapper,
+				so it inherits whatever type surrounds it. Note the last one: a leading
+				<code>#</code> stays literal text instead of erupting a heading into the row.
+			</Text>
+		</Stack>
+		<Stack gap={3}>
+			<Cluster gap={2} align="center">
+				{labels.map((label) => (
+					<span class="md-demo__tab">
+						<Markdown inline source={label} />
+					</span>
+				))}
+			</Cluster>
+			<p class="md-demo__prose">
+				The same label inside running text: a task titled <Markdown
+					inline
+					source="Fix **tooltip** in `AnchorTracker`"
+				/> inherits this sentence's size, weight, and color rather than imposing its own.
+			</p>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Cluster gap={2} align="center" justify="between">
+				<Heading level={3} size="body">Untrusted input</Heading>
+				<Badge variant="soft" tone="success">no sanitizer</Badge>
+			</Cluster>
+			<Text tone="muted" size="sm">
+				Raw HTML is escaped to text and refused URLs lose their <code>href</code> —
+				so nothing here is live. The markup below is inert text, and the first link
+				is a real <code>&lt;a&gt;</code> with no destination.
+			</Text>
+		</Stack>
+		<Markdown source={untrusted} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">An editable source view</Heading>
+			<Text tone="muted" size="sm">
+				<code>editable</code> adds a toggle between the render and its markdown.
+				The switch is a real node in the fragment fill, so a mod can reword it,
+				make it an icon, or move it.
+			</Text>
+		</Stack>
+		<Markdown editable source={draft} />
+	</Card>
+</Stack>
+
+<style>
+	.md-demo__prose {
+		margin: 0;
+		font-size: var(--text-sm);
+		color: var(--fg-2);
+		line-height: var(--leading-normal);
+	}
+	.md-demo__tab {
+		display: inline-flex;
+		align-items: center;
+		padding: var(--space-1, 0.25rem) var(--space-3, 0.75rem);
+		border: var(--border-thin, 1px) solid var(--field-border);
+		border-radius: var(--radius-full, 999px);
+		background: var(--bg-2);
+		font-size: var(--text-sm);
+		color: var(--fg-1);
+	}
+</style>

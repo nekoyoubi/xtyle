@@ -34,11 +34,21 @@ export function declaredPropsInCss(css: string): Set<string> {
 	return found;
 }
 
+/**
+ * `--xtyle-*` is the component-local namespace — a knob a component reads from its own host or an
+ * author's rule (`--xtyle-progress-size`, `--xtyle-app-left`), never a token an algorithm derives.
+ * It sits outside the coverage contract in both directions: a manifest must not declare one as a
+ * consumed token (no register produces it, so the component would read as uncovered), and the lint
+ * must not demand one be declared. Sheets that also set a default are already excluded by
+ * `declaredPropsInCss`; this covers the read-only case, where the author supplies the value.
+ */
+const isComponentLocalProp = (name: string): boolean => name.startsWith("--xtyle-");
+
 export function consumedTokensInCss(css: string): Set<string> {
 	const declared = declaredPropsInCss(css);
 	const consumed = new Set<string>(styleQueriedTokensInCss(css));
 	for (const token of tokensInCss(css)) {
-		if (!declared.has(token)) consumed.add(token);
+		if (!declared.has(token) && !isComponentLocalProp(token)) consumed.add(token);
 	}
 	return consumed;
 }

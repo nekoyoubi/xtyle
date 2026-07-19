@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, DOT_SIZES, resolveVocab, DOT_PULSES, resolveOptionalVocab } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xtyle/core";
-type DotSize = "sm" | "md" | "lg";
-type DotPulse = "slow" | "fast";
+type DotSize = (typeof DOT_SIZES)[number];
+type DotPulse = (typeof DOT_PULSES)[number];
 
 interface Props {
 	tone?: Tone;
@@ -21,9 +23,9 @@ interface Props {
 }
 
 const {
-	tone = "neutral",
-	size = "md",
-	pulse,
+	tone: toneInput,
+	size: sizeInput,
+	pulse: pulseInput,
 	ping = false,
 	glow = false,
 	color,
@@ -32,6 +34,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("dot", Astro.props);
+const size = resolveVocab(sizeInput, DOT_SIZES, "md", "dot size");
+const pulse = resolveOptionalVocab(pulseInput, DOT_PULSES, "dot pulse");
+const tone = resolveTone(toneInput, "neutral");
 
 const bindings = {
 	tone,

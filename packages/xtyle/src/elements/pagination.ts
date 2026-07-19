@@ -3,6 +3,7 @@ import { paginationHostCss } from "../markup/index.js";
 import type { FullTone, Size } from "../index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/pagination/source.generated.js";
+import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 
 /**
  * A page navigator: previous/next controls around a windowed list of page numbers with ellipses.
@@ -59,14 +60,14 @@ export class XtylePagination extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "pagination size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

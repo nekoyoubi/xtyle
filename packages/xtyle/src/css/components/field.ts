@@ -64,7 +64,6 @@ export const fieldCss = `
 	font-size: var(--text-sm);
 	line-height: var(--leading-tight);
 }
-.xtyle-field__adornment:empty { display: none; }
 .xtyle-field__action {
 	display: inline-flex;
 	align-items: center;
@@ -130,5 +129,6 @@ export const fieldCss = `
 .xtyle-field__description[hidden],
 .xtyle-field__error[hidden],
 .xtyle-field__label[hidden],
+.xtyle-field__adornment[hidden],
 .xtyle-field__action[hidden] { display: none; }
 `.trim();

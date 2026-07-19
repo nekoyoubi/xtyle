@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { FULL_TONES } from "../vocab.js";
+import { FULL_TONES, BUTTON_SIZES } from "../vocab.js";
 
 /** The four-token family every tone exposes: the exact set a tone-driven component consumes. */
 const toneTokens = FULL_TONES.flatMap((t) => [`--${t}`, `--${t}-bg`, `--${t}-fg`, `--${t}-text`]);
@@ -159,11 +159,11 @@ export const buttonManifest: ComponentManifest = {
 		},
 		{
 			name: "size",
-			type: "Size",
+			type: "ButtonSize",
 			default: "md",
 			description: "Control size.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["sm", "md", "lg"],
+			options: [...BUTTON_SIZES],
 		},
 		{
 			name: "type",

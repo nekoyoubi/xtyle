@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { sheetHostCss, type SheetSide, type SheetSize } from "../markup/sheet.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/sheet/source.generated.js";
+import { resolveVocab, SHEET_SIDES, SHEET_SIZES } from "../vocab.js";
 
 /** How far along its own extent a sheet must be dragged before release dismisses it. */
 const DISMISS_FRACTION = 0.35;
@@ -75,7 +76,7 @@ export class XtyleSheet extends XtyleElement {
 
 	/** Which viewport edge the sheet is anchored to; also the axis it slides and swipes along. */
 	get side(): SheetSide {
-		return (this.getAttribute("side") as SheetSide) ?? "bottom";
+		return resolveVocab(this.getAttribute("side"), SHEET_SIDES, "bottom", "sheet side");
 	}
 	set side(value: SheetSide) {
 		this.setAttribute("side", value);
@@ -83,7 +84,7 @@ export class XtyleSheet extends XtyleElement {
 
 	/** The sheet's extent across its anchored edge: a height for `top` / `bottom`, a width for `left` / `right`. */
 	get size(): SheetSize {
-		return (this.getAttribute("size") as SheetSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SHEET_SIZES, "md", "sheet size");
 	}
 	set size(value: SheetSize) {
 		this.setAttribute("size", value);
@@ -144,6 +145,7 @@ export class XtyleSheet extends XtyleElement {
 			noGrabber: this.hasAttribute("no-grabber"),
 			nonModal: this.nonModal,
 			elementId: this.elementId,
+			hasFooter: this.fragment.hasSlotted("footer"),
 		};
 	}
 

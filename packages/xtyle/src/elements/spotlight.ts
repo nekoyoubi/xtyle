@@ -13,6 +13,7 @@ import { manifest, fragmentSources } from "./fragments/spotlight/source.generate
 import "./popover.js";
 import type { XtylePopover } from "./popover.js";
 import type { OverlayPlacement } from "./overlay-position.js";
+import { resolveVocab, SPOTLIGHT_SHAPES, SPOTLIGHT_ARROWS, POPOVER_PLACEMENTS } from "../vocab.js";
 
 export type { SpotlightShape, SpotlightArrow, SpotlightPulse } from "../markup/spotlight.js";
 
@@ -105,7 +106,7 @@ export class XtyleSpotlight extends XtyleElement {
 	}
 
 	get shape(): SpotlightShape {
-		return (this.getAttribute("shape") as SpotlightShape) ?? "auto";
+		return resolveVocab(this.getAttribute("shape"), SPOTLIGHT_SHAPES, "auto", "spotlight shape");
 	}
 	set shape(value: SpotlightShape) {
 		this.setAttribute("shape", value);
@@ -125,7 +126,7 @@ export class XtyleSpotlight extends XtyleElement {
 
 	/** How the callout's pointer behaves. `bounce` animates it toward the target, and stills under `prefers-reduced-motion`. */
 	get arrow(): SpotlightArrow {
-		return (this.getAttribute("arrow") as SpotlightArrow) ?? "bounce";
+		return resolveVocab(this.getAttribute("arrow"), SPOTLIGHT_ARROWS, "bounce", "spotlight arrow");
 	}
 	set arrow(value: SpotlightArrow) {
 		this.setAttribute("arrow", value);
@@ -398,7 +399,12 @@ export class XtyleSpotlight extends XtyleElement {
 			callout.reposition();
 			return;
 		}
-		const placement = (this.getAttribute("placement") as OverlayPlacement | null) ?? "bottom";
+		const placement = resolveVocab<OverlayPlacement>(
+			this.getAttribute("placement"),
+			POPOVER_PLACEMENTS,
+			"bottom",
+			"spotlight placement",
+		);
 		this.calloutTarget = target;
 		callout.reanchor(target, { placement, gap: this.padding + 12, focus: "first" });
 	}

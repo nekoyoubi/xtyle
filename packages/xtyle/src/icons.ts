@@ -1,3 +1,4 @@
+import { ICON_SIZES } from "./vocab.js";
 /**
  * The functional icon set: a name to inline-SVG-body map plus the `renderIcon`
  * helper that wraps a named body in a themeable `<svg>`. It is deliberately
@@ -53,7 +54,7 @@ export type IconName =
 	| "bookmark"
 	| "download";
 
-export type IconSize = "sm" | "md" | "lg" | "xl";
+export type IconSize = (typeof ICON_SIZES)[number];
 
 export interface RenderIconOptions {
 	/** The rendered size, stepping in `em` off the surrounding text: `sm`, `md`, `lg`, `xl`. */

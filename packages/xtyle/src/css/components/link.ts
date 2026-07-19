@@ -1,5 +1,5 @@
 export const linkCss = `
-[data-link] { display: contents; }
+[data-root][data-link] { display: contents; }
 .xtyle-link {
 	display: inline;
 	font-family: var(--font-sans);

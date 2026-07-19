@@ -7,7 +7,8 @@ import { manifest, fragmentSources } from "./fragments/icon/source.generated.js"
 import { resolveIconMark, composeIconThemed, iconClass } from "../icon-builder.js";
 import { readLiveRegister } from "./live-register.js";
 import { ICON_NAMES } from "../icons.js";
-import { PALETTE_TOKENS, type Palette } from "../series.js";
+import { PALETTE_TOKENS, resolvePaletteName, type Palette } from "../series.js";
+import { resolveOptionalTone, resolveVocab, ICON_SIZES } from "../vocab.js";
 
 const FUNCTIONAL_GLYPHS = new Set<string>(ICON_NAMES);
 
@@ -37,14 +38,14 @@ export class XtyleIcon extends XtyleElement {
 	}
 
 	get size(): IconSize {
-		return (this.getAttribute("size") as IconSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), ICON_SIZES, "md", "icon size");
 	}
 	set size(value: IconSize) {
 		this.setAttribute("size", value);
 	}
 
 	get tone(): FullTone | null {
-		return this.getAttribute("tone") as FullTone | null;
+		return resolveOptionalTone<FullTone>(this.getAttribute("tone"));
 	}
 	set tone(value: FullTone | null) {
 		if (value) this.setAttribute("tone", value);
@@ -54,7 +55,7 @@ export class XtyleIcon extends XtyleElement {
 	/** The palette a generated mark's `c1`–`c9` color slots draw from. A mark that pins its own
 	 * palette in its name (a `---ps-{palette}` finish) overrides this. */
 	get colors(): Palette {
-		return (this.getAttribute("colors") as Palette) ?? "accents";
+		return resolvePaletteName(this.getAttribute("colors"), "accents", "icon colors");
 	}
 	set colors(value: Palette) {
 		this.setAttribute("colors", value);

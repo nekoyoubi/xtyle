@@ -4,6 +4,8 @@
 	interface TocItem {
 		id: string;
 		label: string;
+		/** Outline depth, 1-based; entries deeper than their predecessor nest inside it. */
+		level?: number;
 	}
 
 	interface Props {

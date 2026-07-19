@@ -1,8 +1,10 @@
+import { AnchorTracker } from "./anchor-tracker.js";
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { placeOverlay, tooltipTetherShift } from "./overlay-position.js";
 import { tooltipHostCss, type TooltipPlacement } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/tooltip/source.generated.js";
+import { resolveOptionalTone, resolveVocab, TOOLTIP_PLACEMENTS } from "../vocab.js";
 
 type Placement = TooltipPlacement;
 
@@ -17,7 +19,12 @@ export class XtyleTooltip extends XtyleElement {
 	private hideTimer = 0;
 	private wiredTriggers = new Set<HTMLElement>();
 	private wiredContent: HTMLElement | null = null;
-	private rootWired = false;
+	private tracker = new AnchorTracker(() => this.reposition());
+	private boundWhileOpen = false;
+	/** True while `open` is the author's, not ours — see `hide()`. */
+	private forcedOpen = false;
+	/** Set around our own `open` writes so `attributeChangedCallback` can tell them from the author's. */
+	private selfDriven = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "tooltip", {
 		applyIntent: () => {},
 	});
@@ -34,14 +41,14 @@ export class XtyleTooltip extends XtyleElement {
 	}
 
 	get placement(): Placement {
-		return (this.getAttribute("placement") as Placement) ?? "top";
+		return resolveVocab(this.getAttribute("placement"), TOOLTIP_PLACEMENTS, "top", "tooltip placement");
 	}
 	set placement(value: Placement) {
 		this.setAttribute("placement", value);
 	}
 
 	get tone(): string | null {
-		return this.getAttribute("tone");
+		return resolveOptionalTone(this.getAttribute("tone"));
 	}
 	set tone(value: string) {
 		this.setAttribute("tone", value);
@@ -84,12 +91,22 @@ export class XtyleTooltip extends XtyleElement {
 	}
 
 	attributeChangedCallback(name: string): void {
+		// Ahead of the render guard: an authored `open` arrives at upgrade, before there is a scaffold
+		// to sync, and it is the only signal that the author — not a hover — asked for the tip.
+		if (name === "open" && !this.selfDriven) this.forcedOpen = this.open;
 		if (!this.root.firstChild) return;
 		if (name === "open") {
 			this.syncOpen();
 			return;
 		}
 		this.render();
+	}
+
+	/** Drive `open` as our own state, so the author's `forcedOpen` survives the round trip. */
+	private setOpen(next: boolean): void {
+		this.selfDriven = true;
+		this.open = next;
+		this.selfDriven = false;
 	}
 
 	private get bindings(): Record<string, unknown> {
@@ -134,15 +151,31 @@ export class XtyleTooltip extends XtyleElement {
 
 	private show = (): void => {
 		window.clearTimeout(this.hideTimer);
-		this.open = true;
+		this.setOpen(true);
 		this.reposition();
 	};
 
+	/**
+	 * The gap between the tip and its trigger, measured off the arrow rather than hardcoded: both are
+	 * `--space-2`, so a theme that scales its space scale keeps them agreeing. It has to be a number
+	 * here — the tip is placed from viewport coordinates now, so a CSS margin would be an offset the
+	 * flip math couldn't see, which is exactly how the old model let the two drift apart.
+	 */
+	private gapPx(): number {
+		const arrow = this.content?.querySelector<HTMLElement>(".xtyle-tooltip__arrow");
+		const measured = arrow?.offsetWidth ?? 0;
+		return measured > 0 ? measured : 8;
+	}
+
 	/** Flip to the placement that fits the viewport, then clamp the cross-axis so the tip never
-	 * spills past a viewport edge — shifting the content via `--xtyle-tt-shift` and counter-shifting
-	 * the arrow via `--xtyle-tt-arrow` so it keeps pointing at the anchor. Keeps the CSS-absolute
-	 * model and the arrow (the chosen side's modifier class drives both); with the vars unset the
-	 * scaffold's centered no-JS/SSR layout is unchanged. */
+	 * spills past a viewport edge, and counter-shift the arrow via `--xtyle-tt-arrow` so it keeps
+	 * pointing at the anchor through the clamp.
+	 *
+	 * The tip lives in the top layer, whose containing block is the viewport, so `placeOverlay`'s
+	 * coordinates are written straight onto the element. That is the whole point of the promotion:
+	 * nothing between the tip and the viewport can crop it, so a scrolling rail can keep its
+	 * `overflow` and the tip still escapes. It also means placement is JS-only — with no script the
+	 * tip never opens, which was already true (visibility has always been script-driven). */
 	private reposition(): void {
 		const trigger = this.triggerEls()[0];
 		const content = this.content;
@@ -156,7 +189,7 @@ export class XtyleTooltip extends XtyleElement {
 			viewport: { width: window.innerWidth, height: window.innerHeight },
 			preferred: this.placement,
 			align: "center",
-			gap: 8,
+			gap: this.gapPx(),
 		});
 		for (const side of ["top", "bottom", "left", "right"]) root.classList.remove(`xtyle-tooltip--${side}`);
 		root.classList.add(`xtyle-tooltip--${placed.placement}`);
@@ -167,8 +200,35 @@ export class XtyleTooltip extends XtyleElement {
 			anchor,
 			content: size,
 		});
-		content.style.setProperty("--xtyle-tt-shift", `${shift.content}px`);
+		// `shift.content` is the clamp the placement already applied; position carries it now, so only
+		// the arrow's counter-shift is left to hand to CSS.
+		content.style.left = `${placed.left}px`;
+		content.style.top = `${placed.top}px`;
 		content.style.setProperty("--xtyle-tt-arrow", `${shift.arrow}px`);
+	}
+
+	/** A pinned tip's "open time" is hydration, so it is placed against a trigger that may not have been
+	 * scrolled into view yet — `AnchorTracker` is what keeps it honest afterwards. Escape shares the
+	 * lifetime for the same reason it has to reach the document at all: both are concerns of an open
+	 * tip that the tip's own subtree can't observe. */
+	private bindWhileOpen(): void {
+		if (this.boundWhileOpen) return;
+		this.boundWhileOpen = true;
+		this.tracker.start(this.triggerEls()[0], this.content);
+		document.addEventListener("keydown", this.onKeydown, { capture: true });
+	}
+
+	private unbindWhileOpen(): void {
+		if (!this.boundWhileOpen) return;
+		this.boundWhileOpen = false;
+		this.tracker.stop();
+		document.removeEventListener("keydown", this.onKeydown, { capture: true });
+	}
+
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
+		this.unbindWhileOpen();
+		window.clearTimeout(this.hideTimer);
 	}
 
 	private scheduleHide = (): void => {
@@ -176,21 +236,52 @@ export class XtyleTooltip extends XtyleElement {
 		this.hideTimer = window.setTimeout(() => this.hide(), HIDE_DELAY);
 	};
 
+	/** `open` is documented as settable "to force the hint open", so a pointer leaving the trigger — or
+	 * an Escape — must not take the author's tip away. Only a tip we opened is ours to close. */
 	private hide = (): void => {
 		window.clearTimeout(this.hideTimer);
-		this.open = false;
+		if (this.forcedOpen) return;
+		this.setOpen(false);
 	};
 
+	/** `manual` popovers get no Escape from the platform, and WCAG 1.4.13 wants hover content
+	 * dismissible *without moving pointer or focus* — so the key never lands on the trigger, and a
+	 * listener on the host only ever caught the focus case. The document sees it wherever focus is;
+	 * the tip swallows the key only when it actually closed on it, leaving an unrelated Escape alone. */
 	private onKeydown = (event: KeyboardEvent): void => {
-		if (event.key === "Escape" && this.open) {
-			event.stopPropagation();
-			this.hide();
-		}
+		if (event.key !== "Escape" || !this.open || this.forcedOpen) return;
+		event.stopPropagation();
+		this.hide();
 	};
 
+	/**
+	 * Drive the tip's popover. `showPopover()` throws if the element isn't in a state to take it —
+	 * mid-rebuild, or already showing — so the call is guarded on `:popover-open` and swallowed;
+	 * a tip that fails to open is not worth an exception in a hover handler.
+	 *
+	 * `data-open` stays on the node as the state a fill can read and style against, but it no longer
+	 * drives visibility: the platform does, off `:popover-open`.
+	 */
 	private syncOpen(): void {
 		const content = this.content;
-		if (content) content.setAttribute("data-open", String(this.open));
+		if (!content) return;
+		content.setAttribute("data-open", String(this.open));
+		const shown = content.matches(":popover-open");
+		try {
+			if (this.open && !shown) {
+				content.showPopover();
+				// Placement is JS-only now, so every path that opens the tip has to place it — not just
+				// the hover. A tip opened declaratively (`open` on the element, the always-on case) never
+				// passes through `show()`, and an unplaced fixed popover renders at the viewport corner.
+				this.reposition();
+				this.bindWhileOpen();
+			} else if (!this.open && shown) {
+				this.unbindWhileOpen();
+				content.hidePopover();
+			}
+		} catch {
+			/* not in a state to take it; the next hover will try again */
+		}
 	}
 
 	/** Wire the trigger and content listeners the fragment scaffold can't express as shadow-DOM
@@ -211,10 +302,6 @@ export class XtyleTooltip extends XtyleElement {
 			this.wiredContent = content;
 			content.addEventListener("pointerenter", this.show);
 			content.addEventListener("pointerleave", this.scheduleHide);
-		}
-		if (!this.rootWired) {
-			this.rootWired = true;
-			this.addEventListener("keydown", this.onKeydown);
 		}
 	}
 

@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 }
@@ -36,15 +38,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: QrBindings, ops: OpsBuilder) => void) => void };
 };
 
-const AMP = /&/g;
-const LT = /</g;
-const GT = />/g;
-const QUOT = /"/g;
-
-function esc(value: string): string {
-	return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
-}
-
 /** A CSS color the element resolved (a hex literal or a bare keyword); keep only characters a color
  * can legitimately contain so it can never break out of the inline `style`. */
 function safeColor(value: string): string {
@@ -60,15 +53,15 @@ function logoHtml(b: QrBindings): string {
 	const mod = b.iconOverlay ? " xtyle-qr__logo--overlay" : " xtyle-qr__logo--knockout";
 	const outline = b.iconOutline ? " xtyle-qr__logo--outline" : "";
 	const inner = b.iconName
-		? `<xtyle-icon class="xtyle-qr__icon" name="${esc(b.iconName)}"></xtyle-icon>`
-		: `<img class="xtyle-qr__img" src="${esc(b.logoSrc as string)}" alt="" />`;
+		? `<xtyle-icon class="xtyle-qr__icon" name="${escapeAttr(b.iconName)}"></xtyle-icon>`
+		: `<img class="xtyle-qr__img" src="${escapeAttr(b.logoSrc as string)}" alt="" />`;
 	return `<div class="xtyle-qr__logo${mod}${outline}" part="logo" style="${style}"><span class="xtyle-qr__logo-inner">${inner}</span></div>`;
 }
 
 function qrHtml(b: QrBindings): string {
 	const size = Math.max(48, b.size ?? 200);
 	const shape = b.shape ?? "square";
-	const label = esc(b.label ?? "QR code");
+	const label = escapeAttr(b.label ?? "QR code");
 	const pinned = b.moduleColor && b.bgColor;
 	const colorVars = pinned ? `;--qr-module:${safeColor(b.moduleColor as string)};--qr-bg:${safeColor(b.bgColor as string)}` : "";
 	const contrastAttr = b.lowContrast ? ' data-contrast="low"' : "";
@@ -77,9 +70,9 @@ function qrHtml(b: QrBindings): string {
 	// curved, so they keep the default smoothing or they look jagged.
 	const rendering = shape === "square" ? "crispEdges" : "geometricPrecision";
 	const svg =
-		`<svg class="xtyle-qr__svg" viewBox="${esc(b.viewBox ?? "0 0 29 29")}" role="img" aria-label="${label}" shape-rendering="${rendering}">` +
+		`<svg class="xtyle-qr__svg" viewBox="${escapeAttr(b.viewBox ?? "0 0 29 29")}" role="img" aria-label="${label}" shape-rendering="${rendering}">` +
 		`<rect class="xtyle-qr__bg" part="background" x="0" y="0" width="100%" height="100%"></rect>` +
-		`<path class="xtyle-qr__modules" part="modules" d="${b.path ?? ""}"></path>` +
+		`<path class="xtyle-qr__modules" part="modules" d="${escapeAttr(b.path ?? "")}"></path>` +
 		`</svg>`;
 
 	const code = `<div class="xtyle-qr__code">${svg}${logoHtml(b)}</div>`;
@@ -103,9 +96,9 @@ function footerHtml(b: QrBindings): string {
 	if (!showCaption && !showToggle) return "";
 	let caption = "";
 	if (showCaption) {
-		const text = esc(b.caption as string);
+		const text = escapeAttr(b.caption as string);
 		caption = b.linkHref
-			? `<a class="xtyle-qr__caption xtyle-link" part="caption" href="${esc(b.linkHref)}" rel="noopener noreferrer">${text}</a>`
+			? `<a class="xtyle-qr__caption xtyle-link" part="caption" href="${escapeAttr(b.linkHref)}" rel="noopener noreferrer">${text}</a>`
 			: `<figcaption class="xtyle-qr__caption" part="caption">${text}</figcaption>`;
 	}
 	const toggle = showToggle

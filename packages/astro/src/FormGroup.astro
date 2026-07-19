@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SIZES, resolveVocab } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	label?: string;
@@ -22,7 +24,7 @@ const {
 	label = "",
 	description = "",
 	error = "",
-	size = "md",
+	size: sizeInput,
 	invalid = false,
 	required = false,
 	for: htmlFor,
@@ -30,6 +32,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("form-group", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "form-group size");
 
 const seed = Math.random().toString(36).slice(2, 9);
 const labelId = `xtyle-form-group-label-${seed}`;

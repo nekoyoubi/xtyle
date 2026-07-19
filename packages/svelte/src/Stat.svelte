@@ -1,11 +1,12 @@
 <script lang="ts">
 	import "@xtyle/core/elements/stat.js";
 	import type { Snippet } from "svelte";
+	import { STAT_TRENDS, STAT_SENTIMENTS, STAT_ALIGNS, SIZES } from "@xtyle/core";
 
-	type StatTrend = "up" | "down" | "flat";
-	type StatSentiment = "positive" | "negative" | "neutral";
-	type StatAlign = "start" | "center";
-	type Size = "sm" | "md" | "lg";
+	type StatTrend = (typeof STAT_TRENDS)[number];
+	type StatSentiment = (typeof STAT_SENTIMENTS)[number];
+	type StatAlign = (typeof STAT_ALIGNS)[number];
+	type Size = (typeof SIZES)[number];
 
 	interface Props {
 		label?: string;

@@ -3,7 +3,7 @@ import { FULL_TONES as TONES } from "../../vocab.js";
 const toneVars = TONES.map((t) => `.xtyle-sparkline--${t} { --spark-color: var(--${t}); }`).join("\n");
 
 export const sparklineCss = `
-[data-sparkline] { display: inline-block; }
+[data-root][data-sparkline] { display: inline-block; }
 .xtyle-sparkline {
 	--spark-color: var(--accent);
 	--spark-width: 8rem;

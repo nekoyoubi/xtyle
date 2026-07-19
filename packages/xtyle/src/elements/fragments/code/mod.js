@@ -1,5 +1,13 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+
   // packages/xtyle/src/markup/code.ts
   function closeTagFor(openTag) {
     const name = /^<\s*([a-z0-9-]+)/i.exec(openTag)?.[1] ?? "span";
@@ -57,9 +65,6 @@
   }
 
   // packages/xtyle/src/elements/fragments/code/mod.ts
-  function escapeCaption(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
   function codeClass(b) {
     const lang = b.language ?? "none";
     return `xtyle-code__code language-${lang}`;
@@ -85,7 +90,7 @@
     ops.setAttr("[data-root]", "style", out.gutter);
     ops.setAttr(".xtyle-code__code", "class", codeClass(bindings));
     ops.replaceChildren("[data-code]", out.html);
-    ops.replaceChildren("[data-caption]", bindings.caption ? escapeCaption(bindings.caption) : "");
+    ops.replaceChildren("[data-caption]", bindings.caption ? escapeHtml(bindings.caption) : "");
   }
   hooks.fragment.mount("code", (bindings, ops) => {
     ops.setAttr("[data-root]", "tabindex", "0");

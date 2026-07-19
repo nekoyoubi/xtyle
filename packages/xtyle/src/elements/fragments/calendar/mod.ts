@@ -1,3 +1,4 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
 import { renderIcon } from "../../../icons";
 
 interface OpsBuilder {
@@ -57,14 +58,6 @@ interface CalendarBindings {
 declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: CalendarBindings, ops: OpsBuilder) => void) => void };
 };
-
-function escapeAttr(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 
 function calendarClass(bindings: CalendarBindings): string {
 	const size = bindings.size ?? "md";

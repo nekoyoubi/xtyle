@@ -18,8 +18,9 @@ xtyle/
 │   └── xtyle-default/ #   the neutral default; xtyle-hc / xtyle-quiet / xtyle-loud / nxi-nite follow
 ├── apps/
 │   └── site/         # xtyle.dev: Astro (docs, examples, marketplace, generator)
-├── docs/             # design record (derivation-model, dimensional-contract, repo-layout, open-questions)
-└── scripts/          # version:bump · release
+├── docs/             # design record (derivation-model, dimensional-contract, collection-substrate, component-fragments, code-component, icon-name-grammar, repo-layout, roadmap, open-questions)
+├── tests/visual/     # the cross-algorithm visual regression baseline (Playwright)
+└── scripts/          # version:bump · release · stats:snapshot · the build/check helpers
 ```
 
 ## Tech Stack
@@ -38,6 +39,9 @@ npm run build                             # build all packages
 npm test                                  # routine gate: baked gauntlet + sampled hosted matrix (fast)
 XTYLE_GAUNTLET_DEPTH=full npm test         # production battery: full gauntlet + whole hosted byte-identical matrix
 npm run dev                               # run the site locally (when apps/site exists)
+
+npm run test:visual                       # the cross-algorithm visual regression baseline
+npm run test:visual:update                # re-baseline it after an intended visual change
 
 npm run build --workspace=packages/xtyle   # build just the engine
 npm test --workspace=packages/xtyle        # test just the engine
@@ -61,6 +65,7 @@ npx xtyle mcp                                          # start the MCP server (t
 - Commit messages follow the project style: short header < 50 chars, past tense, markdown bullets for details
 - Branches: `feature/` new work · `fix/` bug fixes · `clean/` refactor/cleanup/docs
 - **Tests and dogfood passes clean up after themselves.** Anything a test or a manual derive-and-look session starts (a site preview server, a spawned `node` process, a temp file, a held port) gets torn down before the work is considered done. Don't leave orphaned preview servers or sockets bound; a pass that walks away with processes still running hasn't finished. Kill a stray preview by its PID on the port, never with a blanket `node` kill (that takes unrelated processes with it).
+- **The visual suite cannot run concurrently with itself.** `npm run test:visual` pins a fixed port and spawns its own preview server, so a second instance kills the first one's server mid-run. The symptom is a confusing cascade of "server is gone" failures rather than a clear port conflict, so check for an already-running instance before blaming the baseline.
 
 ## ⚠️ DEMOS, DOCS, AND CODE SAMPLES ARE PART OF THE FEATURE — NEVER OPTIONAL
 
@@ -124,10 +129,11 @@ The table is empty, and it stays. **Do not delete it** — it exists to catch th
 
 ## Release Process
 
-Mirrors xript. The version is cut at the **start** of a development cycle, not on the tail of finished work: a full spread bump across every lib up front, so all of `@xtyle/*` always share one version. Two scripts handle the mechanics:
+Mirrors xript. The version is cut at the **start** of a development cycle, not on the tail of finished work: a full spread bump across every lib up front, so all of `@xtyle/*` always share one version. Three scripts handle the mechanics:
 
 1. **`npm run version:bump <version>`** syncs the version across the root and every workspace `package.json` (and internal `xtyle` / `@xtyle/*` dep ranges). Run `npm install` after to refresh the lockfile.
 2. **`npm run release`** cuts a GitHub Release from the current version and the matching `CHANGELOG.md` section. The user runs this after the cycle's work has merged.
+3. **`npm run stats:snapshot -- --release`** re-baselines `apps/site/src/data/stats-baseline.json` once a version has actually shipped. The baseline is the *last released* snapshot and every growth figure on the site is measured against it, so the script refuses to write without `--release` — a mid-cycle run must not silently move the mark.
 
 The `/start` command runs the whole version kickoff at the beginning of a cycle (validate → branch off `main` → bump all libs → changelog stub → verify → commit → push); work then lands on that version's branch. The `/bootstrap-npm` command handles a package's first publish, required to claim the npm name before CI can take over.
 
@@ -136,7 +142,7 @@ The `/start` command runs the whole version kickoff at the beginning of a cycle 
 Top-level `CHANGELOG.md`:
 
 - **When**: every PR shipping user-facing changes. Skip internal refactors, CI tweaks, doc typos.
-- **Format**: themed version header (`## v0.2.0: Open Register`), past-tense bullets, sub-bullets for detail, backtick all code references.
+- **Format**: bare version header (`## v0.10.0`), past-tense bullets, sub-bullets for detail, backtick all code references. Entries through `v0.9.0` carry themed titles and keep them; do not add a title to a new entry, and do not retitle an old one.
 - **Voice**: entries are user-facing copy; pass them through a voice review before committing.
 - **No dates in headers**: git tags them; dates rot in text.
 - **Test-count table** at the bottom of each version entry.
@@ -156,3 +162,4 @@ Pre-alpha. The architecture is settled and recorded in `docs/`. The engine (`pac
 - **The runtime is optional, not required.** Once derived, a theme is just CSS custom properties + the browser cascade; no engine needs to be running to use it. The engine *can* run live (the generator, novel-at-runtime inputs), but nothing about consuming a finished theme depends on it.
 - **Dual-entry.** One `@xtyle/core` package exposes a neutral importable API *and* a Node CLI bin (`xtyle`) *and* a browser DOM helper; the core stays environment-neutral (no `fs` / `path` / `process` outside the CLI).
 - **Manifest-as-source-of-truth.** Packs declare their own contents; discovery is an index over npm, not a hosted registry.
+- **The collection substrate.** The components that rope off items and move a cursor across them (`menu`, `tree`, `combobox`, `command-palette`, `tabs`, `segmented`, plus `<xtyle-list>` as the reference skin) share one keyboard reducer, roving tab stop, and selection model rather than each hand-rolling arrow wrapping, `Home`/`End`, typeahead, and the selection-cue contract. `table` consumes the selection core but keeps its own 2-D column identity; `pagination` stays out on purpose, because a page cursor is not a selection. Do not add a bespoke roving-tabindex handler to a new component — see [`docs/collection-substrate.md`](docs/collection-substrate.md).

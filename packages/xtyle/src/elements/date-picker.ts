@@ -33,6 +33,7 @@ import {
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/date-picker/source.generated.js";
+import { resolveVocab, SIZES } from "../vocab.js";
 
 export type { DatePickerMode, HourCyclePosture, CivilDate, CivilTime, CivilValue } from "../markup/index.js";
 
@@ -293,7 +294,7 @@ export class XtyleDatePicker extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "date-picker size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

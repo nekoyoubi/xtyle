@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { cardHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/card/source.generated.js";
+import { resolveOptionalTone } from "../vocab.js";
 
 export class XtyleCard extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "card", {
@@ -20,7 +21,7 @@ export class XtyleCard extends XtyleElement {
 	}
 
 	get tone(): string | null {
-		return this.getAttribute("tone");
+		return resolveOptionalTone(this.getAttribute("tone"));
 	}
 	set tone(value: string | null | undefined) {
 		this.reflectString("tone", value);
@@ -73,6 +74,8 @@ export class XtyleCard extends XtyleElement {
 			compact: this.compact,
 			tone: this.tone,
 			depthStrength: this.depthStrength,
+			hasHeader: this.fragment.hasSlotted("header"),
+			hasFooter: this.fragment.hasSlotted("footer"),
 		};
 	}
 

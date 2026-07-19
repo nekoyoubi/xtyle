@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -48,15 +50,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: SliderBindings, ops: OpsBuilder) => void) => void };
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
-
-const AMP = /&/g;
-const LT = /</g;
-const GT = />/g;
-const QUOT = /"/g;
-
-function esc(value: string): string {
-	return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
-}
 
 function sliderClass(b: SliderBindings): string {
 	const size = b.size ?? "md";
@@ -117,21 +110,21 @@ function inner(b: SliderBindings): string {
 	const pct = `${(fraction(rail, railMin, railMax) * 100).toFixed(3)}%`;
 
 	const nameAttr = b.labelledby
-		? ` aria-labelledby="${b.labelledby}"`
+		? ` aria-labelledby="${escapeAttr(b.labelledby)}"`
 		: b.label
 			? ` aria-labelledby="${labelId}"`
 			: "";
 	const disabledAttr = b.disabled ? ' aria-disabled="true"' : "";
 	const tabindex = b.disabled ? "-1" : "0";
 	const valueText = readout(b, value);
-	const valueTextAttr = valueText !== String(value) ? ` aria-valuetext="${esc(valueText)}"` : "";
+	const valueTextAttr = valueText !== String(value) ? ` aria-valuetext="${escapeAttr(valueText)}"` : "";
 
 	const labelClass = b.hideLabel ? "xtyle-slider__label xtyle-slider__label--hidden" : "xtyle-slider__label";
 	const label = b.label
-		? `<span class="${labelClass}" part="label" id="${labelId}">${esc(b.label)}</span>`
+		? `<span class="${labelClass}" part="label" id="${labelId}">${escapeAttr(b.label)}</span>`
 		: "";
 
-	const readoutMarkup = `<span class="xtyle-slider__value-text" part="value-text" data-value-text>${esc(valueText)}</span>`;
+	const readoutMarkup = `<span class="xtyle-slider__value-text" part="value-text" data-value-text>${escapeAttr(valueText)}</span>`;
 	const valueMarkup = b.showValue
 		? b.editing
 			? `<span class="xtyle-slider__value" part="value">${editorHtml(value)}</span>`

@@ -43,6 +43,6 @@ hooks.fragment.mount("dot", (bindings, ops) => {
 });
 
 hooks.fragment.update("dot", (bindings, ops) => {
-	ops.setAttr('[part="dot"]', "class", dotClass(bindings));
+	ops.setAttr(".xtyle-dot", "class", dotClass(bindings));
 	ops.setAttr('[part="dot"]', "style", dotStyle(bindings));
 });

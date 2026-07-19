@@ -1,13 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/slider/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
   var AMP = /&/g;
   var LT = /</g;
   var GT = />/g;
-  var QUOT = /"/g;
-  function esc(value) {
-    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/elements/fragments/slider/mod.ts
   function sliderClass(b) {
     const size = b.size ?? "md";
     const tone = b.tone ?? "accent";
@@ -47,14 +53,14 @@
     const uid = b.elementId ?? "xtyle-slider";
     const labelId = `${uid}-label`;
     const pct = `${(fraction(rail, railMin, railMax) * 100).toFixed(3)}%`;
-    const nameAttr = b.labelledby ? ` aria-labelledby="${b.labelledby}"` : b.label ? ` aria-labelledby="${labelId}"` : "";
+    const nameAttr = b.labelledby ? ` aria-labelledby="${escapeAttr(b.labelledby)}"` : b.label ? ` aria-labelledby="${labelId}"` : "";
     const disabledAttr = b.disabled ? ' aria-disabled="true"' : "";
     const tabindex = b.disabled ? "-1" : "0";
     const valueText = readout(b, value);
-    const valueTextAttr = valueText !== String(value) ? ` aria-valuetext="${esc(valueText)}"` : "";
+    const valueTextAttr = valueText !== String(value) ? ` aria-valuetext="${escapeAttr(valueText)}"` : "";
     const labelClass = b.hideLabel ? "xtyle-slider__label xtyle-slider__label--hidden" : "xtyle-slider__label";
-    const label = b.label ? `<span class="${labelClass}" part="label" id="${labelId}">${esc(b.label)}</span>` : "";
-    const readoutMarkup = `<span class="xtyle-slider__value-text" part="value-text" data-value-text>${esc(valueText)}</span>`;
+    const label = b.label ? `<span class="${labelClass}" part="label" id="${labelId}">${escapeAttr(b.label)}</span>` : "";
+    const readoutMarkup = `<span class="xtyle-slider__value-text" part="value-text" data-value-text>${escapeAttr(valueText)}</span>`;
     const valueMarkup = b.showValue ? b.editing ? `<span class="xtyle-slider__value" part="value">${editorHtml(value)}</span>` : `<span class="xtyle-slider__value" part="value" aria-hidden="true">${readoutMarkup}</span>` : "";
     const headerLabel = b.hideLabel ? "" : label;
     const header = valueMarkup ? `<span class="xtyle-slider__header" part="header">${headerLabel}${valueMarkup}</span>${b.hideLabel ? label : ""}` : label;

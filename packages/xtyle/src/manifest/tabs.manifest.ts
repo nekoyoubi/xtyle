@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { TABS_SIZES } from "../vocab.js";
 
 const htmlExample = `<xtyle-tabs variant="underline" label="Account settings" value="profile">
 	<button slot="tab" value="profile">Profile</button>
@@ -40,14 +41,16 @@ const astroExample = `---
 import { Tabs } from "@xtyle/astro";
 ---
 
+<!-- Astro consumes a child's \`slot\` attribute to route it, so mark tabs and
+     panels with \`data-xtyle-tab\` / \`data-xtyle-panel\` here. -->
 <Tabs variant="enclosed" label="Account settings" value="profile">
-	<button slot="tab" value="profile">Profile</button>
-	<div slot="panel">
+	<span data-xtyle-tab value="profile">Profile</span>
+	<div data-xtyle-panel>
 		<p>Your public profile information.</p>
 	</div>
 
-	<button slot="tab" value="billing">Billing</button>
-	<div slot="panel">
+	<span data-xtyle-tab value="billing">Billing</span>
+	<div data-xtyle-panel>
 		<p>Manage your subscription and payment methods.</p>
 	</div>
 </Tabs>`;
@@ -101,7 +104,7 @@ export const tabsManifest: ComponentManifest = {
 	seeAlso: ["segmented", "accordion", "steps"],
 	summary: "Sectioned content switching with a full WAI-ARIA tablist: three visual treatments, keyboard-driven.",
 	description:
-		"Tabs presents one panel of content at a time, switched by a row of tab triggers. It implements the complete WAI-ARIA tabs pattern: a `role=\"tablist\"` of `role=\"tab\"` buttons paired with `role=\"tabpanel\"` regions, roving tabindex (only the selected tab is in the tab order), arrow-key navigation with Home/End jumps, and `aria-selected` / `aria-controls` / `aria-labelledby` wiring done for you. The `activation` knob chooses automatic activation (arrowing selects as you move) or manual (arrow to move focus, Enter/Space to select). Three visual treatments (underline, pill, and enclosed) change the chrome without touching the semantics. Authors declare each tab as a `slot=\"tab\"` element and its content as the matching `slot=\"panel\"` element; the element pairs them by order, assigns ids, and owns the selection state.",
+		"Tabs presents one panel of content at a time, switched by a row of tab triggers. It implements the complete WAI-ARIA tabs pattern: a `role=\"tablist\"` of `role=\"tab\"` buttons paired with `role=\"tabpanel\"` regions, roving tabindex (only the selected tab is in the tab order), arrow-key navigation with Home/End jumps, and `aria-selected` / `aria-controls` / `aria-labelledby` wiring done for you. The `activation` knob chooses automatic activation (arrowing selects as you move) or manual (arrow to move focus, Enter/Space to select). Three visual treatments (underline, pill, and enclosed) change the chrome without touching the semantics. Authors declare each tab as a `slot=\"tab\"` (or `data-xtyle-tab`) element and its content as the matching `slot=\"panel\"` (or `data-xtyle-panel`) element; the element pairs them by order, assigns ids, and owns the selection state. Astro consumes a child's `slot` attribute to route it, so the `data-` markers are the ones that survive there.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -157,11 +160,11 @@ export const tabsManifest: ComponentManifest = {
 		},
 		{
 			name: "size",
-			type: "Size",
+			type: "TabsSize",
 			default: "md",
-			description: "Tab trigger size. Only `sm` and `md` are supported.",
+			description: "Tab trigger size.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["sm", "md"],
+			options: [...TABS_SIZES],
 		},
 		{
 			name: "activation",
@@ -283,13 +286,14 @@ export const tabsManifest: ComponentManifest = {
 	slots: [
 		{
 			name: "tab",
-			description: "A tab trigger's label. Each `slot=\"tab\"` element becomes a tab; its `value` attribute keys it and `disabled` marks it unselectable. (html / astro)",
+			description:
+				"A tab trigger's label. Each `slot=\"tab\"` or `data-xtyle-tab` element becomes a tab; its `value` attribute keys it and `disabled` marks it unselectable. Astro consumes `slot` to route children, so use `data-xtyle-tab` there. (html / astro)",
 			bindings: ["html", "astro"],
 		},
 		{
 			name: "panel",
 			description:
-				"A tab's content. Each `slot=\"panel\"` element is paired with the `slot=\"tab\"` of the same order. In Svelte this is a `panel` snippet receiving the active value.",
+				"A tab's content. Each `slot=\"panel\"` or `data-xtyle-panel` element is paired with the tab of the same order (use `data-xtyle-panel` under Astro). In Svelte this is a `panel` snippet receiving the active value.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],

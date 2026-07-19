@@ -2,7 +2,7 @@
 // reachable only through `::slotted()` and the `+N` chip only as a `> ` child, while in light DOM
 // every item is a `> ` child (and `::slotted` is inert), so each rule set touches a disjoint layer.
 export const avatarGroupCss = `
-[data-avatar-group] { display: contents; }
+[data-root][data-avatar-group] { display: contents; }
 .xtyle-avatar-group {
 	display: inline-flex;
 	align-items: center;

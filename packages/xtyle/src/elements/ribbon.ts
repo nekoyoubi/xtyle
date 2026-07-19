@@ -3,6 +3,7 @@ import type { FullTone } from "../index.js";
 import { ribbonHostCss, type RibbonCorner, type RibbonSize, type RibbonVariant } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/ribbon/source.generated.js";
+import { resolveTone, resolveVocab, RIBBON_CORNERS, RIBBON_SIZES, RIBBON_VARIANTS } from "../vocab.js";
 
 /**
  * A corner ribbon: a diagonal banner pinned to a corner of its positioned container (a card, a tile,
@@ -27,28 +28,28 @@ export class XtyleRibbon extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get corner(): RibbonCorner {
-		return (this.getAttribute("corner") as RibbonCorner) ?? "top-right";
+		return resolveVocab(this.getAttribute("corner"), RIBBON_CORNERS, "top-right", "ribbon corner");
 	}
 	set corner(value: RibbonCorner) {
 		this.setAttribute("corner", value);
 	}
 
 	get size(): RibbonSize {
-		return (this.getAttribute("size") as RibbonSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), RIBBON_SIZES, "md", "ribbon size");
 	}
 	set size(value: RibbonSize) {
 		this.setAttribute("size", value);
 	}
 
 	get variant(): RibbonVariant {
-		return (this.getAttribute("variant") as RibbonVariant) ?? "solid";
+		return resolveVocab(this.getAttribute("variant"), RIBBON_VARIANTS, "solid", "ribbon variant");
 	}
 	set variant(value: RibbonVariant) {
 		this.setAttribute("variant", value);

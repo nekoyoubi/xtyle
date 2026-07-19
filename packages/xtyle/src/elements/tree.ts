@@ -2,7 +2,9 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
 import { treeHostCss, firstSelectedValue, type TreeNode } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { resolveRoving } from "./collection/index.js";
 import { manifest, fragmentSources } from "./fragments/tree/source.generated.js";
+import { resolveVocab, SIZES } from "../vocab.js";
 
 export type { TreeNode };
 
@@ -27,6 +29,10 @@ export class XtyleTree extends XtyleElement {
 	private expandedKeys: Set<string> | null = null;
 	private rovingValue: string | null = null;
 	private knownKeys: Set<string> | null = null;
+	/** The keys that were *branches* last render. Kept apart from `knownKeys`, which holds every key:
+	 * "have I seen this node?" and "have I already decided this branch's expansion?" are different
+	 * questions, and a leaf that gains its first child answers them differently. */
+	private knownBranchKeys: Set<string> | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "tree", {
 		context: (handler) => (handler === "navKeydown" ? this.navContext() : undefined),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
@@ -55,7 +61,7 @@ export class XtyleTree extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "tree size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
@@ -77,6 +83,7 @@ export class XtyleTree extends XtyleElement {
 		this.selectedValue = null;
 		this.rovingValue = null;
 		this.knownKeys = null;
+		this.knownBranchKeys = null;
 		if (this.root.firstChild) this.render();
 	}
 
@@ -102,11 +109,17 @@ export class XtyleTree extends XtyleElement {
 	 * re-expand every collapsed branch and re-seat the tab stop mid-keystroke. So expansion,
 	 * selection, and roving focus survive, intersected with the new key set: a branch the user
 	 * collapsed stays collapsed, a key that vanished is dropped, and only a *genuinely new* branch
-	 * (one `knownKeys` has never seen) seeds from its `expanded` / `locked` flags.
+	 * (one `knownBranchKeys` has never seen) seeds from its `expanded` / `locked` flags.
+	 *
+	 * "New branch" is keyed on the branch, not the node. A leaf that gains its first child is an old
+	 * *key* but a new *branch*, and nobody has decided its expansion yet — so the author's `expanded`
+	 * wins, exactly as it does for a node that appears from nothing. Keying this on `knownKeys` instead
+	 * collapses the branch the user just created and hides the child they just moved into it.
 	 */
 	private reconcileItems(): void {
 		const known = this.knownKeys;
 		if (!known) return;
+		const knownBranches = this.knownBranchKeys ?? new Set<string>();
 		const items = this.items;
 		const live = this.collectKeys(items);
 		const expanded = this.expandedKeys ?? new Set<string>();
@@ -117,7 +130,7 @@ export class XtyleTree extends XtyleElement {
 			for (const node of nodes) {
 				if (!this.hasChildren(node)) continue;
 				const key = this.nodeKey(node);
-				if (!known.has(key) && ((node.locked ?? false) || node.expanded)) expanded.add(key);
+				if (!knownBranches.has(key) && ((node.locked ?? false) || node.expanded)) expanded.add(key);
 				seedNew(node.children as TreeNode[]);
 			}
 		};
@@ -126,6 +139,17 @@ export class XtyleTree extends XtyleElement {
 		if (this.selectedValue !== null && !live.has(this.selectedValue)) this.selectedValue = null;
 		if (this.rovingValue !== null && !live.has(this.rovingValue)) this.rovingValue = null;
 		this.knownKeys = live;
+		this.knownBranchKeys = this.collectBranchKeys(items);
+	}
+
+	/** Only the keys that currently have children — the branches whose expansion has been decided. */
+	private collectBranchKeys(nodes: TreeNode[], into = new Set<string>()): Set<string> {
+		for (const node of nodes) {
+			if (!this.hasChildren(node)) continue;
+			into.add(this.nodeKey(node));
+			this.collectBranchKeys(node.children as TreeNode[], into);
+		}
+		return into;
 	}
 
 	/** The expanded-key set, seeded once from each branch's `expanded`/`locked` flags, then host-owned. */
@@ -144,6 +168,7 @@ export class XtyleTree extends XtyleElement {
 		seed(this.items);
 		this.expandedKeys = expanded;
 		this.knownKeys = this.collectKeys(this.items);
+		this.knownBranchKeys = this.collectBranchKeys(this.items);
 		return expanded;
 	}
 
@@ -160,12 +185,8 @@ export class XtyleTree extends XtyleElement {
 	 * tree in the tab order — a stale target would leave every row at `tabindex="-1"`.
 	 */
 	private ensureRoving(): string | null {
-		const rows = this.navContext().rows.filter((row) => !(row.locked && !row.isLink));
-		const live = (key: string | null): boolean => key !== null && rows.some((row) => row.key === key);
-		if (live(this.rovingValue)) return this.rovingValue;
-		const selected = this.ensureSelected();
-		if (live(selected)) return selected;
-		return rows[0]?.key ?? null;
+		const navItems = this.navContext().rows.map((row) => ({ key: row.key, skip: row.locked && !row.isLink }));
+		return resolveRoving(navItems, [this.rovingValue, this.ensureSelected()]);
 	}
 
 	private get bindings(): Record<string, unknown> {

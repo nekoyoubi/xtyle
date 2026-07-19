@@ -1,8 +1,9 @@
 ---
-import { formatColor, parseColor, type ColorFormat } from "@xtyle/core";
+import { checkAuthoring } from "./internal/diagnose.js";
+import { formatColor, parseColor, type ColorFormat, SWATCH_SIZES, resolveVocab } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-type SwatchSize = "sm" | "md" | "lg";
+type SwatchSize = (typeof SWATCH_SIZES)[number];
 
 interface Props {
 	color: string;
@@ -23,7 +24,7 @@ const {
 	color,
 	label,
 	value,
-	size = "md",
+	size: sizeInput,
 	interactive = false,
 	selected = false,
 	details = false,
@@ -31,6 +32,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("swatch", Astro.props);
+const size = resolveVocab(sizeInput, SWATCH_SIZES, "md", "swatch size");
 
 const detailsId = `xtyle-swatch-details-${crypto.randomUUID().slice(0, 8)}`;
 

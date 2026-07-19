@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -60,13 +62,13 @@ function buttonHtml(b: ButtonBindings): string {
 	const selected = b.selected ?? null;
 	const ariaCurrent = selected ? ' aria-current="true"' : "";
 	const name = b.ariaLabelledby
-		? ` aria-labelledby="${b.ariaLabelledby}"`
+		? ` aria-labelledby="${escapeAttr(b.ariaLabelledby)}"`
 		: b.ariaLabel
-			? ` aria-label="${b.ariaLabel}"`
+			? ` aria-label="${escapeAttr(b.ariaLabel)}"`
 			: "";
 	const body = inner(b);
 	if (b.href != null) {
-		const hrefAttr = blocked ? "" : ` href="${b.href}"`;
+		const hrefAttr = blocked ? "" : ` href="${escapeAttr(b.href)}"`;
 		const ariaDisabled = blocked ? ' aria-disabled="true"' : "";
 		const ariaBusy = b.loading ? ' aria-busy="true"' : "";
 		return `<a part="button" class="${buttonClass(b)}"${hrefAttr}${ariaDisabled}${ariaBusy}${ariaPressed}${ariaCurrent}${name} role="button">${body}</a>`;
@@ -74,7 +76,7 @@ function buttonHtml(b: ButtonBindings): string {
 	const disabledAttr = blocked ? " disabled" : "";
 	const ariaBusy = b.loading ? ' aria-busy="true"' : "";
 	const type = b.type ?? "button";
-	return `<button part="button" class="${buttonClass(b)}" type="${type}"${disabledAttr}${ariaBusy}${ariaPressed}${ariaCurrent}${name}>${body}</button>`;
+	return `<button part="button" class="${buttonClass(b)}" type="${escapeAttr(type)}"${disabledAttr}${ariaBusy}${ariaPressed}${ariaCurrent}${name}>${body}</button>`;
 }
 
 hooks.fragment.mount("button", (bindings, ops) => {
@@ -82,7 +84,7 @@ hooks.fragment.mount("button", (bindings, ops) => {
 });
 
 hooks.fragment.update("button", (bindings, ops) => {
-	ops.setAttr('[part="button"]', "class", buttonClass(bindings));
+	ops.setAttr(".xtyle-button", "class", buttonClass(bindings));
 	if (bindings.pressed != null) ops.setAttr('[part="button"]', "aria-pressed", String(bindings.pressed));
 	if (bindings.selected != null) ops.setAttr('[part="button"]', "aria-current", bindings.selected ? "true" : "false");
 });

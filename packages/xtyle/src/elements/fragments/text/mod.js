@@ -23,6 +23,6 @@
     ops.replaceChildren("[data-text]", textHtml(bindings));
   });
   hooks.fragment.update("text", (bindings, ops) => {
-    ops.setAttr('[part="text"]', "class", textClass(bindings));
+    ops.setAttr(".xtyle-text", "class", textClass(bindings));
   });
 })();

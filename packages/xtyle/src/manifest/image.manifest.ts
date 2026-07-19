@@ -258,19 +258,19 @@ export const imageManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "hover-src",
+			name: "hoverSrc",
 			type: "string",
 			description: "A video (`.mp4`/`.webm`) or gif revealed on hover and focus: the still shows at rest, the media plays on hover (muted, looping), and it resets to the still on leave. The video is auto-detected by extension; the still `src` is its poster. A convenience over the `hover` slot for the single-media case. Wired only when the runtime is present.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "hover-poster",
+			name: "hoverPoster",
 			type: "string",
 			description: "An explicit poster still for the `hover-src` video, shown before it plays. Defaults to the image's own `src`.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "hover-audio",
+			name: "hoverAudio",
 			type: "ImageHoverAudio",
 			description: "Allows sound on the hover video and shows a mute/unmute toggle: `off` starts muted (click to unmute), `on` starts with sound where the browser permits. Omit for a silent preview with no toggle (the default).",
 			bindings: ["html", "svelte", "astro"],

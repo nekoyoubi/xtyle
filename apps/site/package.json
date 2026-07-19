@@ -1,10 +1,12 @@
 {
 	"name": "@xtyle/site",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
 		"dev": "astro dev",
+		"gen:regression": "node scripts/gen-regression-registries.mjs",
+		"prebuild": "node scripts/gen-regression-registries.mjs",
 		"build": "astro build",
 		"preview": "astro preview",
 		"check": "astro check"
@@ -17,9 +19,9 @@
 		"@fontsource/poppins": "^5.2.7",
 		"@fontsource/sigmar": "^5.2.7",
 		"@fontsource/teko": "^5.2.7",
-		"@xtyle/astro": "^0.8.0",
-		"@xtyle/core": "^0.8.0",
-		"@xtyle/svelte": "^0.8.0",
+		"@xtyle/astro": "^0.9.0",
+		"@xtyle/core": "^0.9.0",
+		"@xtyle/svelte": "^0.9.0",
 		"astro": "^6.4.8",
 		"svelte": "^5.0.0"
 	},

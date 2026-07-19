@@ -1,18 +1,24 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 interface Props {
 	minHeight?: string;
 	amplitude?: number;
 	mode?: "scroll" | "cursor";
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it.
+	 * The layers stack and paint from CSS either way; only the drift is lost, exactly as it is under
+	 * `prefers-reduced-motion`. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
-const { minHeight, amplitude, mode, class: extra, ...rest } = Astro.props;
+const { minHeight, amplitude, mode, static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("parallax", Astro.props);
 ---
 
 <xtyle-parallax min-height={minHeight} amplitude={amplitude} mode={mode} class={extra} {...rest}>
 	<slot />
 </xtyle-parallax>
 
-<script>import "@xtyle/core/elements";</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

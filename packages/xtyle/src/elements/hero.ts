@@ -1,6 +1,7 @@
 import { XtyleDecoratorElement, define } from "./base.js";
+import { HERO_ALIGNS, resolveVocab } from "../vocab.js";
 
-type HeroAlign = "center" | "start";
+type HeroAlign = (typeof HERO_ALIGNS)[number];
 
 /**
  * A top-of-page hero band. It is a thin, presentational light-DOM element: it adds
@@ -11,7 +12,7 @@ type HeroAlign = "center" | "start";
  */
 export class XtyleHero extends XtyleDecoratorElement {
 	get align(): HeroAlign {
-		return (this.getAttribute("align") as HeroAlign) ?? "center";
+		return resolveVocab(this.getAttribute("align"), HERO_ALIGNS, "center", "hero align");
 	}
 	set align(value: HeroAlign) {
 		this.setAttribute("align", value);

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import "@xtyle/core/elements/cluster.js";
 	import type { Snippet } from "svelte";
+	import { CLUSTER_ALIGNS, CLUSTER_JUSTIFIES } from "@xtyle/core";
 
-	type ClusterAlign = "start" | "center" | "end" | "stretch" | "baseline";
-	type ClusterJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
+	type ClusterAlign = (typeof CLUSTER_ALIGNS)[number];
+	type ClusterJustify = (typeof CLUSTER_JUSTIFIES)[number];
 
 	interface Props {
 		gap?: number;

@@ -12,13 +12,17 @@ export const tooltipCss = `
 	position: relative;
 	--tt-edge-w: 0px;
 }
+/* The tip renders in the top layer, so no ancestor's overflow can crop it and no z-index can bury
+   it — the case a scrolling rail made unfixable from the consumer's side, because the rail has to
+   scroll. The cost of that promotion: a popover's containing block is the viewport rather than the
+   trigger, so the tip can't lean on the anchor in CSS. The inset reset drops the UA's centering and
+   the element is placed from measured coordinates instead. */
 .xtyle-tooltip__content {
-	--xtyle-tt-shift: 0px;
 	--xtyle-tt-arrow: 0px;
 	--tt-pad-y: var(--space-1);
 	--tt-pad-x: var(--space-2);
-	position: absolute;
-	z-index: 1;
+	position: fixed;
+	inset: auto;
 	width: max-content;
 	max-width: min(18rem, calc(100vw - var(--space-8)));
 	margin: 0;
@@ -32,18 +36,20 @@ export const tooltipCss = `
 	border: var(--border-thin) solid var(--surface-overlay-border);
 	border-radius: var(--radius-sm);
 	box-shadow: var(--elevation-2);
-	display: none;
 	opacity: 0;
+	/* The overlay property rides the transition so the tip stays in the top layer while it fades out;
+	   without it the platform pulls it the instant it closes and the exit never plays. */
 	transition:
 		opacity var(--duration-fast) var(--ease-standard),
+		overlay var(--duration-fast) var(--ease-standard) allow-discrete,
 		display var(--duration-fast) var(--ease-standard) allow-discrete;
 }
-.xtyle-tooltip__content[data-open="true"] {
+.xtyle-tooltip__content:popover-open {
 	display: block;
 	opacity: 1;
 }
 @starting-style {
-	.xtyle-tooltip__content[data-open="true"] {
+	.xtyle-tooltip__content:popover-open {
 		opacity: 0;
 	}
 }
@@ -97,12 +103,6 @@ ${toneVars}
 	background: var(--tt-tone);
 	border-color: var(--tt-tone);
 }
-.xtyle-tooltip--top .xtyle-tooltip__content {
-	bottom: 100%;
-	left: 50%;
-	transform: translateX(calc(-50% + var(--xtyle-tt-shift)));
-	margin-bottom: var(--space-2);
-}
 .xtyle-tooltip--top .xtyle-tooltip__arrow {
 	bottom: calc(var(--space-2) * -1 / 2);
 	left: 50%;
@@ -110,12 +110,6 @@ ${toneVars}
 	transform: translateX(var(--xtyle-tt-arrow)) rotate(45deg);
 	border-top: none;
 	border-left: none;
-}
-.xtyle-tooltip--bottom .xtyle-tooltip__content {
-	top: 100%;
-	left: 50%;
-	transform: translateX(calc(-50% + var(--xtyle-tt-shift)));
-	margin-top: var(--space-2);
 }
 .xtyle-tooltip--bottom .xtyle-tooltip__arrow {
 	top: calc(var(--space-2) * -1 / 2);
@@ -125,12 +119,6 @@ ${toneVars}
 	border-bottom: none;
 	border-right: none;
 }
-.xtyle-tooltip--left .xtyle-tooltip__content {
-	right: 100%;
-	top: 50%;
-	transform: translateY(calc(-50% + var(--xtyle-tt-shift)));
-	margin-right: var(--space-2);
-}
 .xtyle-tooltip--left .xtyle-tooltip__arrow {
 	right: calc(var(--space-2) * -1 / 2);
 	top: 50%;
@@ -138,12 +126,6 @@ ${toneVars}
 	transform: translateY(var(--xtyle-tt-arrow)) rotate(45deg);
 	border-bottom: none;
 	border-left: none;
-}
-.xtyle-tooltip--right .xtyle-tooltip__content {
-	left: 100%;
-	top: 50%;
-	transform: translateY(calc(-50% + var(--xtyle-tt-shift)));
-	margin-left: var(--space-2);
 }
 .xtyle-tooltip--right .xtyle-tooltip__arrow {
 	left: calc(var(--space-2) * -1 / 2);

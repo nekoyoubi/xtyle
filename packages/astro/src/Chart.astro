@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { resolveChartPlot } from "@xtyle/core";
 import { resolveSeriesColorsFor } from "./internal/palette.ts";
@@ -58,6 +59,7 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("chart", Astro.props);
 
 const plot = resolveChartPlot(series, { xScale, window: windowMs, domain: domain ?? null, now: Date.now() });
 const colors = await resolveSeriesColorsFor(scheme, series, reverse);

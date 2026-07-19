@@ -38,5 +38,5 @@ hooks.fragment.mount("cluster", (bindings, ops) => {
 });
 
 hooks.fragment.update("cluster", (bindings, ops) => {
-	ops.setAttr('[part="cluster"]', "class", clusterClass(bindings));
+	ops.setAttr(".xtyle-cluster", "class", clusterClass(bindings));
 });

@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -31,10 +33,6 @@ const TONE_ICONS: { [tone: string]: string } = {
 
 const ASSERTIVE: { [severity: string]: boolean } = { danger: true, warn: true };
 
-function esc(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 /** The severity drives the glyph + politeness (not the color). An explicit `severity` wins; else a
  * status-named `tone` implies its severity (back-compat); a non-status tone carries none; a bare
  * toast defaults to `info`. Returns `""` for no severity. */
@@ -67,14 +65,14 @@ function live(b: ToastBindings): string {
 function actionButton(b: ToastBindings): string {
 	const label = b.actionLabel ?? null;
 	if (!label) return "";
-	return `<button class="xtyle-toast__action" part="action" type="button">${esc(label)}</button>`;
+	return `<button class="xtyle-toast__action" part="action" type="button">${escapeHtml(label)}</button>`;
 }
 
 function closeButton(b: ToastBindings): string {
 	if (!(b.closable ?? true)) return "";
-	const label = esc(b.closeLabel ?? "Dismiss");
+	const label = b.closeLabel ?? "Dismiss";
 	return (
-		`<button class="xtyle-toast__close" part="close" type="button" aria-label="${label}">` +
+		`<button class="xtyle-toast__close" part="close" type="button" aria-label="${escapeAttr(label)}">` +
 		'<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true">' +
 		'<path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg></button>'
 	);

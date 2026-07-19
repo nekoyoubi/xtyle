@@ -46,6 +46,8 @@ import Chart from "@xtyle/astro/Chart.astro";
 import Combobox from "@xtyle/astro/Combobox.astro";
 import DatePicker from "@xtyle/astro/DatePicker.astro";
 import SplitButton from "@xtyle/astro/SplitButton.astro";
+import Markdown from "@xtyle/astro/Markdown.astro";
+import List from "@xtyle/astro/List.astro";
 
 interface Props {
 	id: string;
@@ -63,6 +65,14 @@ const previewZones = [
 const previewLoad = [
 	{ name: "Requests", points: [12, 18, 15, 26, 22, 34, 29, 41].map((value, at) => ({ at, value })) },
 ];
+const previewMarkdown = [
+	"### Derivation",
+	"",
+	"An **algorithm** maps anchors into a *full* token set.",
+	"",
+	"- pin the anchors",
+	"- turn the `knobs`",
+].join("\n");
 ---
 
 <div class="cxp" data-preview={id}>
@@ -97,6 +107,20 @@ const previewLoad = [
 	)}
 	{id === "rating" && <Rating value={4} max={5} readonly label="4 of 5" />}
 	{id === "segmented" && <Segmented label="View" options="Day,Week,Month" value="Week" />}
+	{id === "list" && (
+		<div class="cxp-list">
+			<List
+				label="Views"
+				interaction="selectable"
+				selection="single"
+				items={[
+					{ value: "inbox", label: "Inbox", lead: "folder" },
+					{ value: "starred", label: "Starred", lead: "check", selected: true },
+					{ value: "sent", label: "Sent", lead: "search" },
+				]}
+			/>
+		</div>
+	)}
 	{id === "slider" && <Slider label="Volume" value={62} style="width: 13rem;" />}
 	{id === "split-button" && (
 		<SplitButton
@@ -192,6 +216,7 @@ const previewLoad = [
 		</div>
 	)}
 	{id === "text" && <Text size="sm">The quick brown fox jumps over the lazy dog.</Text>}
+	{id === "markdown" && <div class="cxp-md"><Markdown source={previewMarkdown} /></div>}
 	{id === "separator" && (
 		<div style="width: 12rem; display: grid; gap: 0.4rem;">
 			<Text as="span" size="xs" tone="muted">Above</Text>
@@ -362,6 +387,13 @@ const previewLoad = [
 	.cxp > :global(*) { max-width: 100%; }
 
 	.cxp-empty { display: grid; justify-items: center; gap: 0.2rem; color: var(--fg-2); }
+
+	.cxp-list { width: 12rem; text-align: left; }
+
+	.cxp-md { width: 13rem; text-align: left; }
+	.cxp-md :global(.xtyle-markdown) { font-size: var(--text-sm); }
+	.cxp-md :global(.xtyle-markdown__body h3) { font-size: var(--text-body); margin-block: 0 var(--space-2); }
+	.cxp-md :global(.xtyle-markdown__body ul) { margin-block: 0; }
 
 	.cxp-ribbon {
 		position: relative;

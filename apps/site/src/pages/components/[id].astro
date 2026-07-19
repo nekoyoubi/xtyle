@@ -5,7 +5,7 @@ import {
 	coverComponent,
 	derive,
 } from "@xtyle/core";
-import { resolveAlgorithm } from "@xtyle/core/host";
+import { resolveAlgorithm } from "@xtyle/core/algorithms";
 import { listLanguages } from "@xtyle/core/elements/code-highlight";
 import type { ComponentManifest } from "@xtyle/core";
 import { bindingName } from "../../components/reference/binding-name.ts";
@@ -116,7 +116,7 @@ const crumbs = [
 ---
 
 <Base
-	title={`${component.name}: xtyle components`}
+	title={`Components · ${component.name}`}
 	description={component.summary}
 >
 	{sections.length > 1 && (

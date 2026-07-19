@@ -1,10 +1,11 @@
 <script lang="ts">
 	import "@xtyle/core/elements/separator.js";
 	import type { Snippet } from "svelte";
+	import { ORIENTATIONS, SEPARATOR_VARIANTS, SEPARATOR_SIZES } from "@xtyle/core";
 
-	type Orientation = "horizontal" | "vertical";
-	type SeparatorVariant = "default" | "with-label";
-	type SeparatorSize = "thin" | "normal";
+	type Orientation = (typeof ORIENTATIONS)[number];
+	type SeparatorVariant = (typeof SEPARATOR_VARIANTS)[number];
+	type SeparatorSize = (typeof SEPARATOR_SIZES)[number];
 
 	interface Props {
 		orientation?: Orientation;

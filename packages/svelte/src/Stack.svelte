@@ -1,9 +1,10 @@
 <script lang="ts">
 	import "@xtyle/core/elements/stack.js";
 	import type { Snippet } from "svelte";
+	import { STACK_ALIGNS, STACK_JUSTIFIES } from "@xtyle/core";
 
-	type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";
-	type StackJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
+	type StackAlign = (typeof STACK_ALIGNS)[number];
+	type StackJustify = (typeof STACK_JUSTIFIES)[number];
 
 	interface Props {
 		gap?: number;

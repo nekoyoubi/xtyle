@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { derive, migratedTarget, resolveKnobSpecs, schemeOf, validateKnobs } from "../src/index.js";
 import { SHARED_KNOB_SPECS } from "../src/algorithms/factory.js";
 import { algorithmDomains, bakedAlgorithm } from "../src/baked.js";
-import { availableAlgorithms, resolveAlgorithm, HARNESS_TIMEOUT_MS } from "../src/host/registry.js";
+import { availableAlgorithms, resolveInstalledAlgorithm, HARNESS_TIMEOUT_MS } from "../src/host/registry.js";
 import { formatInput } from "../src/mcp/tools.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -238,8 +238,8 @@ describe("the knob contract", () => {
 		it("keeps a raised-rail mod distinct from the production-rail one in the cache", async () => {
 			// Keyed on id alone, a harness would be handed whichever instance a production caller warmed
 			// first, and the raise would silently do nothing.
-			const production = await resolveAlgorithm("xtyle-default");
-			const harness = await resolveAlgorithm("xtyle-default", { timeoutMs: HARNESS_TIMEOUT_MS });
+			const production = await resolveInstalledAlgorithm("xtyle-default");
+			const harness = await resolveInstalledAlgorithm("xtyle-default", { timeoutMs: HARNESS_TIMEOUT_MS });
 			expect(harness).not.toBe(production);
 			// ...while still deriving the same theme: the rail is a wall-clock guard, never an input.
 			expect(derive(harness, {})).toEqual(derive(production, {}));

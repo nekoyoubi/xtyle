@@ -113,6 +113,14 @@ export const heroManifest: ComponentManifest = {
 			description: "Lays the band out as two columns (content and media) that fold to one column on a narrow screen. Give it two children: a content block and a media block.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: emit the band's markup but never load the runtime to hydrate it. The layout is pure CSS keyed off `align` and `split`, so a static hero is byte-for-byte the hydrated one minus the script. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
+		},
 	],
 	variants: [],
 	sizes: [],

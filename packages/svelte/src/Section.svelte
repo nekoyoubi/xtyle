@@ -2,11 +2,12 @@
 	import "@xtyle/core/elements/section.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone } from "@xtyle/core";
+	import { SECTION_TAGS, SECTION_VARIANTS, SECTION_PADDINGS } from "@xtyle/core";
 
-	type SectionTag = "section" | "div" | "header" | "footer";
-	type SectionVariant = "band" | "stage";
+	type SectionTag = (typeof SECTION_TAGS)[number];
+	type SectionVariant = (typeof SECTION_VARIANTS)[number];
 	type SectionTone = "plain" | "quiet" | FullTone;
-	type SectionPadding = "none" | "sm" | "md" | "lg";
+	type SectionPadding = (typeof SECTION_PADDINGS)[number];
 
 	interface Props {
 		as?: SectionTag;

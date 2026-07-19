@@ -7,8 +7,9 @@ const register = derive(xtyleDefault, { constraints: { "--bg-0": "#0e1116", "--a
 describe("auditRegister", () => {
 	it("audits xtyle's canonical text/fill pairs and the default theme clears AA", () => {
 		const audit = auditRegister(register);
-		// fg-0 + 6 surface inks × 3 surfaces + placeholder + 9 on-fill + 3 accent-text + 4 tint-text = 36
-		expect(audit.tallies.total).toBe(36);
+		// fg-0 + 6 surface inks × 3 surfaces + placeholder + 9 on-fill + 3 accent-text + 5 tint-text
+		// + fg-0 / fg-1 on the accent tint = 39
+		expect(audit.tallies.total).toBe(39);
 		expect(audit.tallies.fail).toBe(0);
 		expect(audit.passes).toBe(true);
 		expect(audit.level).toBe("AA");
@@ -23,6 +24,26 @@ describe("auditRegister", () => {
 		expect(audit.entries.some((e) => e.fg === "--danger-text" && e.bg === "--danger-bg")).toBe(true);
 		expect(audit.entries.some((e) => e.fg === "--danger-text" && e.bg === "--bg-0")).toBe(false);
 		expect(audit.entries.some((e) => e.fg === "--accent-2-fg" && e.bg === "--accent-2")).toBe(true);
+	});
+
+	it("holds every ink a component can lay on the accent tint", () => {
+		// Selection / active states (table row, list item, tree row, menu item, combobox and
+		// command-palette options) fill with `--accent-bg` and ink with `--fg-0`; the soft tone
+		// surfaces (ribbon soft, dropzone dragging, combobox chip) ink with `--accent-text`, the
+		// same shape the status tones use on their own tint. Both pairs are consumed, so both are
+		// contracted — an algorithm that satisfies one and not the other is not conforming.
+		const pairs = canonicalContrastPairs();
+		expect(pairs).toContainEqual({ fg: "--fg-0", bg: "--accent-bg" });
+		expect(pairs).toContainEqual({ fg: "--accent-text", bg: "--accent-bg" });
+		// the calendar inks its in-range band with the secondary body ink
+		expect(pairs).toContainEqual({ fg: "--fg-1", bg: "--accent-bg" });
+
+		const audit = auditRegister(register);
+		for (const ink of ["--fg-0", "--fg-1", "--accent-text"]) {
+			const entry = audit.entries.find((e) => e.fg === ink && e.bg === "--accent-bg");
+			expect(entry, `${ink} on --accent-bg is audited`).toBeDefined();
+			expect(entry?.tier).not.toBe("fail");
+		}
 	});
 
 	it("grades tiers at the WCAG normal-text floors", () => {
@@ -74,7 +95,7 @@ describe("auditRegister", () => {
 
 	it("exports the canonical pairs as data a consumer can read and extend", () => {
 		const pairs = canonicalContrastPairs();
-		expect(pairs).toHaveLength(36);
+		expect(pairs).toHaveLength(39);
 		expect(pairs[0]).toEqual({ fg: "--fg-0", bg: "--bg-0" });
 		// the same list the audit grades, so the exported data and the audit can't drift
 		expect(auditRegister(register).tallies.total).toBe(pairs.length);

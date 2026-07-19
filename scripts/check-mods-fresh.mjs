@@ -16,23 +16,44 @@ import { discoverAlgorithms } from "./algorithms.mjs";
 const root = process.cwd();
 const mods = discoverAlgorithms(root);
 
-const generated = [
+const committed = [
 	...mods.flatMap((mod) => [relative(root, mod.scriptPath), relative(root, mod.manifestPath)]),
 	"packages/xtyle/src/host/algorithms-bundle.generated.ts",
 	"packages/xtyle/src/host/authoring-prelude.generated.ts",
 ];
 
-const hashAll = () =>
-	generated
-		.map((f) => `${f}:${existsSync(f) ? createHash("sha256").update(readFileSync(f)).digest("hex") : "absent"}`)
-		.join("\n");
+// `build-mods.mjs` also emits this one, and it is the *only* producer of it — `tsconfig.json` excludes
+// `src/batteries.ts` from the `tsc` build, so a plain `npm run build` leaves it untouched. It is
+// gitignored, so its drift can never land in git and failing the run over it would break `npm test` on
+// a clean checkout, where it legitimately does not exist yet. But it was previously rewritten as an
+// unlisted side effect, which is worse than it sounds: a stale copy poisons the CLI and any consumer
+// reading the published bundle, and running this check *repaired it while reporting green* — so the
+// one command that could have explained the failure instead made it disappear. Reported, never fatal.
+const buildOutputs = ["packages/xtyle/dist/batteries.js"];
 
-const before = hashAll();
+const hashOne = (f) =>
+	existsSync(f) ? createHash("sha256").update(readFileSync(f)).digest("hex") : "absent";
+const hashAll = (files) => files.map(hashOne);
+
+const beforeCommitted = hashAll(committed);
+const beforeOutputs = hashAll(buildOutputs);
 execSync("node scripts/build-mods.mjs", { stdio: "inherit" });
-const after = hashAll();
+const afterCommitted = hashAll(committed);
+const afterOutputs = hashAll(buildOutputs);
 
-if (before !== after) {
-	const stale = generated.filter((_, i) => before.split("\n")[i] !== after.split("\n")[i]);
+const refreshed = buildOutputs.filter(
+	(_, i) => beforeOutputs[i] !== "absent" && beforeOutputs[i] !== afterOutputs[i],
+);
+if (refreshed.length) {
+	console.warn(
+		"\nBuild outputs were stale and have been refreshed:\n  " +
+			refreshed.join("\n  ") +
+			"\nNot a failure (they are gitignored), but if a test or the CLI just misbehaved, this is why.",
+	);
+}
+
+const stale = committed.filter((_, i) => beforeCommitted[i] !== afterCommitted[i]);
+if (stale.length) {
 	console.error(
 		"\nGenerated mods are stale — they no longer match the engine source.\n" +
 			"The rebuild just refreshed them; commit the result. Drifted files:\n  " +

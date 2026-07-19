@@ -6,7 +6,7 @@ export const spotlightCss = `
 	--spotlight-motion: 1.8s;
 	position: fixed;
 	inset: 0;
-	z-index: 90;
+	z-index: var(--layer-veil);
 	/* the host paints nothing itself: the veil takes the pointer, the hole lets it through */
 	pointer-events: none;
 }

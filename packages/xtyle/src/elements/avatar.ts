@@ -3,9 +3,10 @@ import type { FullTone, Tone } from "../index.js";
 import { avatarHostCss, avatarInitials } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/avatar/source.generated.js";
+import { resolveTone, resolveOptionalTone, resolveVocab, AVATAR_SIZES, AVATAR_SHAPES } from "../vocab.js";
 
-export type AvatarSize = "sm" | "md" | "lg" | "xl";
-export type AvatarShape = "circle" | "square";
+import type { AvatarSize, AvatarShape } from "../markup/avatar.js";
+export type { AvatarSize, AvatarShape };
 
 export class XtyleAvatar extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "avatar", {
@@ -45,28 +46,28 @@ export class XtyleAvatar extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "neutral";
+		return resolveTone(this.getAttribute("tone"), "neutral");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): AvatarSize {
-		return (this.getAttribute("size") as AvatarSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), AVATAR_SIZES, "md", "avatar size");
 	}
 	set size(value: AvatarSize) {
 		this.setAttribute("size", value);
 	}
 
 	get shape(): AvatarShape {
-		return (this.getAttribute("shape") as AvatarShape) ?? "circle";
+		return resolveVocab(this.getAttribute("shape"), AVATAR_SHAPES, "circle", "avatar shape");
 	}
 	set shape(value: AvatarShape) {
 		this.setAttribute("shape", value);
 	}
 
 	get status(): Tone | null {
-		return this.getAttribute("status") as Tone | null;
+		return resolveOptionalTone(this.getAttribute("status"));
 	}
 	set status(value: Tone | null | undefined) {
 		this.reflectString("status", value);

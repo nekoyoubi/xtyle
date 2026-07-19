@@ -1,4 +1,6 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone } from "@xtyle/core";
 import { type BreadcrumbItem } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import type { Size, FullTone } from "@xtyle/core";
@@ -19,13 +21,15 @@ interface Props {
 const {
 	items,
 	separator = "/",
-	tone = "accent",
+	tone: toneInput,
 	size = "md",
 	label = "Breadcrumb",
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("breadcrumb", Astro.props);
+const tone = resolveTone(toneInput, "accent");
 
 const bindings = {
 	items: items ?? [],

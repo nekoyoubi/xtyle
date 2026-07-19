@@ -10,6 +10,7 @@ import {
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/toast/source.generated.js";
+import { resolveOptionalTone, resolveOptionalVocab, TOAST_SEVERITIES, resolveVocab, TOAST_VARIANTS } from "../vocab.js";
 
 /**
  * Toasts a region pushed hand their removal back to it — the region owns the leave transition, the
@@ -58,21 +59,21 @@ export class XtyleToast extends XtyleElement {
 	}
 
 	get tone(): ToastTone | null {
-		return this.getAttribute("tone") as ToastTone | null;
+		return resolveOptionalTone<ToastTone>(this.getAttribute("tone"));
 	}
 	set tone(value: ToastTone | null | undefined) {
 		this.reflectString("tone", value);
 	}
 
 	get severity(): ToastSeverity | null {
-		return this.getAttribute("severity") as ToastSeverity | null;
+		return resolveOptionalVocab(this.getAttribute("severity"), TOAST_SEVERITIES, "toast severity");
 	}
 	set severity(value: ToastSeverity | null | undefined) {
 		this.reflectString("severity", value);
 	}
 
 	get variant(): ToastVariant {
-		return (this.getAttribute("variant") as ToastVariant) ?? "soft";
+		return resolveVocab(this.getAttribute("variant"), TOAST_VARIANTS, "soft", "toast variant");
 	}
 	set variant(value: ToastVariant) {
 		this.setAttribute("variant", value);

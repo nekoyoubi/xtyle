@@ -60,6 +60,18 @@ export const splitterManifest: ComponentManifest = {
 	],
 	props: [
 		{
+			name: "label",
+			type: "string",
+			description: "Accessible name for the separator handle, which has no visible text of its own. Provide this or `labelledby` so the control is announced.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "labelledby",
+			type: "string",
+			description: "Id of an existing element naming the separator, as an alternative to `label`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "value",
 			type: "number",
 			description: "The current size of the managed pane in px. Controlled: the consumer owns it and updates on `resize`.",

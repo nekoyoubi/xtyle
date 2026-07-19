@@ -1,9 +1,10 @@
 import type { FullTone } from "../vocab.js";
+import { SECTION_TAGS, SECTION_VARIANTS, SECTION_PADDINGS } from "../vocab.js";
 
-export type SectionTag = "section" | "div" | "header" | "footer";
-export type SectionVariant = "band" | "stage";
+export type SectionTag = (typeof SECTION_TAGS)[number];
+export type SectionVariant = (typeof SECTION_VARIANTS)[number];
 export type SectionTone = "plain" | "quiet" | FullTone;
-export type SectionPadding = "none" | "sm" | "md" | "lg";
+export type SectionPadding = (typeof SECTION_PADDINGS)[number];
 
 export interface SectionMarkupProps {
 	as?: SectionTag;

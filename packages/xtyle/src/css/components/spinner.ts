@@ -7,7 +7,7 @@ const toneRules = TONES.map(
 ).join("\n");
 
 export const spinnerCss = `
-[data-spinner] { display: contents; }
+[data-root][data-spinner] { display: contents; }
 .xtyle-spinner {
 	display: inline-flex;
 	width: 1.5em;

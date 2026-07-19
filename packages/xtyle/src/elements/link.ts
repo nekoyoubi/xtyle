@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { linkHostCss, type LinkVariant } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/link/source.generated.js";
+import { resolveVocab, LINK_VARIANTS } from "../vocab.js";
 
 export type { LinkVariant };
 
@@ -19,7 +20,7 @@ export class XtyleLink extends XtyleElement {
 	}
 
 	get variant(): LinkVariant {
-		return (this.getAttribute("variant") as LinkVariant) ?? "default";
+		return resolveVocab(this.getAttribute("variant"), LINK_VARIANTS, "default", "link variant");
 	}
 	set variant(value: LinkVariant) {
 		this.setAttribute("variant", value);

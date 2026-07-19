@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -18,6 +20,8 @@ interface ProgressBindings {
 	colorizeValue?: boolean;
 	valuePosition?: string;
 	pulse?: string | null;
+	track?: string | null;
+	thickness?: string | null;
 	role?: string;
 	ariaLabel?: string | null;
 	ariaLabelledby?: string | null;
@@ -34,11 +38,27 @@ declare const hooks: {
 const RADIUS = 16;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
+/** A thickness is a bare number or a number with a CSS unit, and nothing else. Anything outside that
+ * shape is dropped rather than interpolated: this string lands in an inline `style` attribute built by
+ * template literal, where the sandbox has no escaping helper to reach for. */
+function thicknessValue(b: ProgressBindings): string | null {
+	const t = b.thickness?.trim();
+	return t && /^[0-9]*\.?[0-9]+(?:[a-z]+|%)?$/i.test(t) ? t : null;
+}
+
+/** A unitless thickness is in ring units and scales with the diameter; one carrying a CSS unit is an
+ * absolute weight, which only holds if the stroke opts out of the viewBox transform. */
+function fixedStroke(b: ProgressBindings): boolean {
+	const t = thicknessValue(b);
+	return !!t && !/^[0-9]*\.?[0-9]+$/.test(t);
+}
+
 function progressClass(b: ProgressBindings): string {
 	const variant = b.variant ?? "linear";
 	const tone = b.tone ?? "accent";
 	const size = b.size ?? "md";
 	const pulse = b.pulse === "fast" || b.pulse === "slow" ? b.pulse : null;
+	const track = b.track ?? null;
 	return [
 		"xtyle-progress",
 		`xtyle-progress--${variant}`,
@@ -48,9 +68,19 @@ function progressClass(b: ProgressBindings): string {
 		b.colorizeValue && "xtyle-progress--colorize-value",
 		b.valuePosition === "inset" && "xtyle-progress--value-inset",
 		pulse && `xtyle-progress--pulse-${pulse}`,
+		track === "none" && "xtyle-progress--no-track",
+		track && track !== "none" && `xtyle-progress--track-${track}`,
+		fixedStroke(b) && "xtyle-progress--fixed-stroke",
 	]
 		.filter(Boolean)
 		.join(" ");
+}
+
+/** The root's inline style carries the author's thickness as the custom property the stylesheet reads,
+ * so a mod restyling the groove or the arc sees the same value the element resolved. */
+function rootStyle(b: ProgressBindings): string {
+	const t = thicknessValue(b);
+	return t ? `--xtyle-progress-stroke:${t}` : "";
 }
 
 function fraction(b: ProgressBindings): number {
@@ -70,7 +100,7 @@ function ariaAttrs(b: ProgressBindings): string {
 	const label = b.ariaLabel ?? null;
 	const labelledby = b.ariaLabelledby ?? null;
 	const name =
-		label !== null ? ` aria-label="${label}"` : labelledby !== null ? ` aria-labelledby="${labelledby}"` : "";
+		label !== null ? ` aria-label="${escapeAttr(label)}"` : labelledby !== null ? ` aria-labelledby="${escapeAttr(labelledby)}"` : "";
 	return `${min}${max}${now}${name}`;
 }
 
@@ -127,11 +157,16 @@ function circularIndicatorStyle(b: ProgressBindings): string {
 	return parts.join(";");
 }
 
+function rootAttrs(b: ProgressBindings): string {
+	const style = rootStyle(b);
+	return `part="progress" class="${progressClass(b)}" role="${escapeAttr(b.role ?? "progressbar")}"${ariaAttrs(b)}${style ? ` style="${style}"` : ""}`;
+}
+
 function linearHtml(b: ProgressBindings): string {
 	const style = linearIndicatorStyle(b);
 	const styleAttr = style ? ` style="${style}"` : "";
 	const readout = b.showValue ? valueReadout(b) : "";
-	return `<div part="progress" class="${progressClass(b)}" role="${b.role ?? "progressbar"}"${ariaAttrs(b)}><div class="xtyle-progress__track" part="track"><div class="xtyle-progress__indicator" part="indicator"${styleAttr}></div></div>${readout}</div>`;
+	return `<div ${rootAttrs(b)}><div class="xtyle-progress__track" part="track"><div class="xtyle-progress__indicator" part="indicator"${styleAttr}></div></div>${readout}</div>`;
 }
 
 function circularHtml(b: ProgressBindings): string {
@@ -139,7 +174,7 @@ function circularHtml(b: ProgressBindings): string {
 	const readout = b.showValue && !b.indeterminate ? valueReadout(b) : "";
 	const size = b.size ?? "md";
 	const sw = size === "sm" ? 3 : size === "lg" ? 5 : 4;
-	return `<div part="progress" class="${progressClass(b)}" role="${b.role ?? "progressbar"}"${ariaAttrs(b)}><svg class="xtyle-progress__svg" viewBox="0 0 40 40" aria-hidden="true"><circle class="xtyle-progress__track-ring" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"></circle><circle class="xtyle-progress__indicator" part="indicator" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"${dashStyle}></circle></svg>${readout}</div>`;
+	return `<div ${rootAttrs(b)}><svg class="xtyle-progress__svg" viewBox="0 0 40 40" aria-hidden="true"><circle class="xtyle-progress__track-ring" part="track" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"></circle><circle class="xtyle-progress__indicator" part="indicator" cx="20" cy="20" r="${RADIUS}" stroke-width="${sw}"${dashStyle}></circle></svg>${readout}</div>`;
 }
 
 function progressHtml(b: ProgressBindings): string {
@@ -151,7 +186,8 @@ hooks.fragment.mount("progress", (bindings, ops) => {
 });
 
 hooks.fragment.update("progress", (bindings, ops) => {
-	ops.setAttr('[part="progress"]', "class", progressClass(bindings));
+	ops.setAttr(".xtyle-progress", "class", progressClass(bindings));
+	ops.setAttr('[part="progress"]', "style", rootStyle(bindings));
 	ops.setAttr('[part="progress"]', "role", bindings.role ?? "progressbar");
 	ops.setAttr('[part="progress"]', "aria-valuemin", String(bindings.min ?? 0));
 	ops.setAttr('[part="progress"]', "aria-valuemax", String(bindings.max ?? 100));

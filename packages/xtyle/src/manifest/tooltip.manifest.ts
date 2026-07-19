@@ -122,7 +122,7 @@ export const tooltipManifest: ComponentManifest = {
 			name: "open",
 			type: "boolean",
 			default: "false",
-			description: "Reflects/controls visibility. Normally driven by hover and focus; settable to force the hint open.",
+			description: "Reflects/controls visibility. Normally driven by hover and focus; settable to force the hint open, and a forced hint stays until the author lowers it — a hover that comes and goes over it, or an Escape, won't.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -244,7 +244,7 @@ export const tooltipManifest: ComponentManifest = {
 	a11y: [
 		"The hint carries `role=\"tooltip\"` and is linked to the trigger via `aria-describedby`, so it is announced as the trigger's description.",
 		"Shows on BOTH pointer hover and keyboard focus, so the hint is reachable without a mouse.",
-		"WCAG 1.4.13 dismissible: Escape hides the hint while the trigger keeps focus.",
+		"WCAG 1.4.13 dismissible: Escape hides the hint without moving the pointer or focus, so a hint raised by hover alone is dismissible too. A hint the author forced open with `open` is theirs, and stays.",
 		"WCAG 1.4.13 hoverable: the pointer can move onto the tooltip itself without it disappearing.",
 		"WCAG 1.4.13 persistent: the hint stays until focus leaves or the pointer departs both trigger and tooltip.",
 		"The arrow is decorative (`aria-hidden`); the binding warns at runtime when neither `text` nor a `content` slot is supplied.",

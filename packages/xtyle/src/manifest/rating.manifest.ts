@@ -172,6 +172,14 @@ export const ratingManifest: ComponentManifest = {
 			description: "Accessible label. Defaults to the element's text content, then to a generated `\"{value} out of {max} stars\"`.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: keep the server-rendered glyph row and its clipped fill but never load the runtime to hydrate them — a static rating reads correctly, including a fractional value. Pointer and keyboard input are what hydration adds, which is what `readonly` already opts out of. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
+		},
 	],
 	variants: [],
 	sizes: [

@@ -219,7 +219,7 @@ export const comboboxManifest: ComponentManifest = {
 			description:
 				"One row: its label, and the check that marks it selected. The keyboard cursor lands on it as `data-active`, which is a different thing from being chosen (`aria-selected`) — a multi-select shows both at once.",
 			selector: ".xtyle-combobox__option",
-			tokens: ["--fg-1", "--fg-0", "--accent-bg", "--accent-text", "--state-selected", "--radius-sm", "--text-sm", "--space-1", "--space-2"],
+			tokens: ["--fg-1", "--fg-0", "--accent-bg", "--state-selected", "--radius-sm", "--text-sm", "--space-1", "--space-2"],
 		},
 		{
 			name: "empty",
@@ -374,6 +374,14 @@ export const comboboxManifest: ComponentManifest = {
 			description: "Read-only: the options left after the current query — exactly what the listbox is showing.",
 			bindings: ["html", "svelte"],
 		},
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: keep the server-rendered control, its resolved label, and any chips, but never load the runtime to hydrate them. The listbox is a runtime surface and never opens, so reach for `Select` when a zero-JS page still has to take a choice. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
+		},
 	],
 	variants: [
 		{
@@ -400,7 +408,7 @@ export const comboboxManifest: ComponentManifest = {
 			description:
 				"The keyboard cursor: the row `aria-activedescendant` points at. It is not a selection — an unpicked row can be active, and in multi-select a picked row can be passed over.",
 			selector: '.xtyle-combobox__option[data-active="true"]',
-			tokens: ["--accent-bg", "--accent-text"],
+			tokens: ["--accent-bg", "--fg-0"],
 		},
 		{
 			name: "selected option",

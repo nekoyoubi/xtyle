@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -56,11 +58,11 @@ function splitterClass(b: SplitterBindings): string {
 
 function inner(b: SplitterBindings): string {
 	const orientation = b.orientation === "horizontal" ? "horizontal" : "vertical";
-	const name = b.labelledby ? ` aria-labelledby="${b.labelledby}"` : b.label ? ` aria-label="${b.label}"` : "";
+	const name = b.labelledby ? ` aria-labelledby="${escapeAttr(b.labelledby)}"` : b.label ? ` aria-label="${escapeAttr(b.label)}"` : "";
 	const disabled = b.disabled ? ` aria-disabled="true"` : "";
 	const tabindex = b.disabled ? "" : ` tabindex="0"`;
 	return (
-		`<div part="splitter" class="${splitterClass(b)}" role="separator" aria-orientation="${orientation}" ` +
+		`<div part="splitter" class="${splitterClass(b)}" role="separator" aria-orientation="${escapeAttr(orientation)}" ` +
 		`aria-valuenow="${b.value ?? 0}" aria-valuemin="${b.min ?? 0}" aria-valuemax="${b.max ?? 0}"${name}${disabled}${tabindex}>` +
 		`<span class="xtyle-splitter__grip" part="grip" aria-hidden="true"></span></div>`
 	);

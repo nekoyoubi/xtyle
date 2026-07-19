@@ -1,8 +1,9 @@
+import { SPOTLIGHT_SHAPES, SPOTLIGHT_ARROWS } from "../vocab.js";
 /** The shape of the hole cut in the veil. `auto` follows the target's own corner radius. */
-export type SpotlightShape = "auto" | "rect" | "circle";
+export type SpotlightShape = (typeof SPOTLIGHT_SHAPES)[number];
 
 /** How the callout's pointer behaves: still, or animated toward the target (gated by `prefers-reduced-motion`). */
-export type SpotlightArrow = "none" | "static" | "bounce";
+export type SpotlightArrow = (typeof SPOTLIGHT_ARROWS)[number];
 
 /** Whether (and how fast) the ring around the hole pulses. `slow` is the default cadence; both stop under
  * `prefers-reduced-motion`, and neither is fast enough to be a flashing hazard. */

@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, SIZES, resolveVocab, BADGE_VARIANTS } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as BadgeTone } from "@xtyle/core";
-type Size = "sm" | "md" | "lg";
-type BadgeVariant = "solid" | "soft" | "outline";
+type Size = (typeof SIZES)[number];
+type BadgeVariant = (typeof BADGE_VARIANTS)[number];
 
 interface Props {
 	variant?: BadgeVariant;
@@ -22,9 +24,9 @@ interface Props {
 }
 
 const {
-	variant = "soft",
-	tone = "neutral",
-	size = "md",
+	variant: variantInput,
+	tone: toneInput,
+	size: sizeInput,
 	dot = false,
 	pulse,
 	count,
@@ -34,6 +36,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("badge", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "badge size");
+const variant = resolveVocab(variantInput, BADGE_VARIANTS, "soft", "badge variant");
+const tone = resolveTone(toneInput, "neutral");
 
 const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 // Compose the dismiss button's accessible name from the label text when the consumer didn't name

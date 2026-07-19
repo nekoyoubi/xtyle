@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -10,10 +12,6 @@ interface AppShellBindings {
 	mainId?: string | null;
 	leftResizable?: boolean;
 	rightResizable?: boolean;
-}
-
-function escapeAttr(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 declare const hooks: {

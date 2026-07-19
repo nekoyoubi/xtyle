@@ -33,13 +33,16 @@ export const alertCss = `
 }
 /* The fragment always emits the title/actions wrappers; they're only real when filled. A filled
    title or actions stacks content, so the icon aligns to the first line; a message-only alert
-   centers the icon against its (possibly wrapped) text, and the empty wrappers collapse. */
-.xtyle-alert:has(.xtyle-alert__title:not(:empty)),
-.xtyle-alert:has(.xtyle-alert__actions:not(:empty)) {
+   centers the icon against its (possibly wrapped) text, and the unfilled wrappers collapse.
+   Filled-ness is the host's hidden attribute rather than :empty — each wrapper holds a slot, which
+   is a child node, while the nodes assigned to it are not, so :empty never matches under a shadow
+   root and every alert would stack and reserve both boxes. */
+.xtyle-alert:has(.xtyle-alert__title:not([hidden])),
+.xtyle-alert:has(.xtyle-alert__actions:not([hidden])) {
 	align-items: flex-start;
 }
-.xtyle-alert__title:empty,
-.xtyle-alert__actions:empty {
+.xtyle-alert__title[hidden],
+.xtyle-alert__actions[hidden] {
 	display: none;
 }
 ${softRules}

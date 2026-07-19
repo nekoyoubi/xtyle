@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/switch/mod.ts
   function switchClass(b) {
     const size = b.size ?? "md";
@@ -28,11 +41,11 @@
     const stateText = stateLabel(b);
     const hasState = stateText !== null;
     let nameAttr = "";
-    if (b.labelledby) nameAttr = ` aria-labelledby="${b.labelledby}"`;
+    if (b.labelledby) nameAttr = ` aria-labelledby="${escapeAttr(b.labelledby)}"`;
     else if (b.label) nameAttr = ` aria-labelledby="${labelId}"`;
     else if (hasState) nameAttr = ` aria-labelledby="${stateId}"`;
     const disabledAttr = disabled ? ' disabled aria-disabled="true"' : "";
-    const leadingLabel = b.label ? `<span class="xtyle-switch__label" part="label" id="${labelId}">${b.label}</span>` : "";
+    const leadingLabel = b.label ? `<span class="xtyle-switch__label" part="label" id="${labelId}">${escapeHtml(b.label)}</span>` : "";
     const trailingState = hasState ? `<span class="xtyle-switch__state" part="state" id="${stateId}">${stateText}</span>` : "";
     return leadingLabel + `<button class="xtyle-switch__track" part="track" type="button" role="switch" aria-checked="${String(checked)}"${nameAttr}${disabledAttr}><span class="xtyle-switch__thumb" part="thumb" aria-hidden="true"></span></button>` + trailingState;
   }

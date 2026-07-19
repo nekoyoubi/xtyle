@@ -1,8 +1,12 @@
-import { derive, seriesPalette, seriesColorsFor, rampColor, glowFilter, categoricalHeatColors, matrixCeiling, resolveIconMark, composeIconThemed, qrScannability, type Palette, type QrMode } from "@xtyle/core";
-import { resolveAlgorithm } from "@xtyle/core/host";
+import { derive, seriesPalette, seriesColorsFor, rampColor, glowFilter, categoricalHeatColors, matrixCeiling, resolveIconMark, composeIcon, composeIconThemed, iconComposition, qrScannability, type IconComposition, type Palette, type QrMode } from "@xtyle/core";
+import { resolveAlgorithm } from "@xtyle/core/algorithms";
 
 /** Baking colors at build time needs a register; the runtime theme isn't known yet, so SSR uses the
- * default one and the upgraded element re-resolves against the live cascade. Memoized per build. */
+ * default one and the upgraded element re-resolves against the live cascade. Memoized per build.
+ *
+ * Resolved from `@xtyle/core/algorithms`, which runs the shipped mod from the embedded bundle. The
+ * identically-named `resolveAlgorithm` on `@xtyle/core/host` is the Node/disk twin and reads an
+ * `algorithms/` directory that a published install does not have. */
 let cached: Promise<Record<string, string>> | null = null;
 async function defaultRegister(): Promise<Record<string, string>> {
 	cached ??= (async () => derive(await resolveAlgorithm("xtyle-default"), {}))();
@@ -20,6 +24,19 @@ export async function bakeIconMark(
 	const parsed = resolveIconMark(name);
 	if (!parsed) return null;
 	return composeIconThemed(parsed.composition, { register: await defaultRegister(), scheme, className, part: "icon" });
+}
+
+/** The two glyphs the rating fill repeats across its row, baked for SSR. Mirrors the element's own
+ * `glyphs()`: a colorful mark silhouettes to the neutral track surface for the base row and keeps its
+ * palette for the clipped overlay, so a static rating shows the same partial fill the runtime would. */
+export async function bakeRatingGlyphs(icon: string, scheme: Palette | string[]): Promise<{ empty: string; filled: string }> {
+	const register = await defaultRegister();
+	const composition = iconComposition(icon);
+	const silhouette: IconComposition = { ...composition, palette: { "*": "--neutral-bg" } };
+	return {
+		empty: composeIcon(silhouette, { register, scheme }),
+		filled: composeIconThemed(composition, { register, scheme }),
+	};
 }
 
 export async function resolveSeriesColors(

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import "@xtyle/core/elements/carousel.js";
 	import type { Snippet } from "svelte";
+	import { CAROUSEL_TRANSITIONS, CAROUSEL_DIRECTIONS } from "@xtyle/core";
 
-	type CarouselTransition = "slide" | "fade" | "scale" | "flip";
-	type CarouselDirection = "right" | "left" | "up" | "down";
+	type CarouselTransition = (typeof CAROUSEL_TRANSITIONS)[number];
+	type CarouselDirection = (typeof CAROUSEL_DIRECTIONS)[number];
 
 	interface Props {
 		label?: string;

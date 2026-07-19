@@ -78,14 +78,17 @@ const SURFACE_INKS = ["--fg-1", "--fg-2", "--fg-3", "--link", "--accent-text", "
 /** The surfaces those inks are contracted to read on: the page base and the two panel steps. */
 const READING_SURFACES = ["--bg-0", "--bg-1", "--bg-2"] as const;
 /** Tones whose readable `--{tone}-text` variant sits on the tone's own soft `--{tone}-bg` tint. */
-const TINT_TEXT_TONES = ["success", "warn", "danger", "info"] as const;
+const TINT_TEXT_TONES = ["success", "warn", "danger", "info", "accent"] as const;
 
 /** xtyle's canonical text/fill pairs, each token audited against its *intended* surface rather than a
  * naive fg×bg cross that cries wolf. This mirrors the token contract xtyle-default's own invariants
  * enforce: the primary ink on the page base; the neutral / brand inks readable on the base *and* on
  * both panel surfaces (so "does secondary text read on a card?" is a real check, not a false green);
  * the placeholder on the field surface; each tone's on-fill text (`-fg` on the solid fill); the accent
- * ramp's readable inks on the base; and the status readable inks on their soft tint. */
+ * ramp's readable inks on the base; every tinted tone's readable ink on its own soft tint (accent
+ * included, since the soft chip / ribbon / drag surfaces ink themselves that way); and the body inks
+ * on the accent tint, which is what a selected row, option, or menu item (`--fg-0`) and a calendar's
+ * in-range band (`--fg-1`) read as. */
 /**
  * xtyle's canonical text/fill pairs as data. Exported so a consumer can read the token contract
  * directly — extend it with `opts.pairs`, or (for a QuickJS/xript sandbox that can't `import` from
@@ -100,6 +103,7 @@ export function canonicalContrastPairs(): PairSpec[] {
 	for (const tone of FILL_TONES) pairs.push({ fg: `--${tone}-fg`, bg: `--${tone}` });
 	for (const tone of ACCENT_VARIANTS) pairs.push({ fg: `--${tone}-text`, bg: "--bg-0" });
 	for (const tone of TINT_TEXT_TONES) pairs.push({ fg: `--${tone}-text`, bg: `--${tone}-bg` });
+	for (const ink of ["--fg-0", "--fg-1"] as const) pairs.push({ fg: ink, bg: "--accent-bg" });
 	return pairs;
 }
 

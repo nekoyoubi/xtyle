@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import type { PopoverAlign, PopoverFocus, PopoverPanelRole, PopoverPlacement } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
@@ -48,6 +49,7 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("popover", Astro.props);
 
 const hasTrigger = Astro.slots.has("trigger");
 const panelId = `xtyle-popover-${Math.random().toString(36).slice(2, 9)}-panel`;

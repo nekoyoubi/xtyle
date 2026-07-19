@@ -1,7 +1,8 @@
 <script lang="ts">
 	import "@xtyle/core/elements/swatch.js";
+	import { SWATCH_SIZES } from "@xtyle/core";
 
-	type SwatchSize = "sm" | "md" | "lg";
+	type SwatchSize = (typeof SWATCH_SIZES)[number];
 
 	interface SwatchSelectDetail {
 		color: string | null;

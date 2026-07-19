@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -19,10 +21,6 @@ interface PaginationBindings {
 declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: PaginationBindings, ops: OpsBuilder) => void) => void };
 };
-
-function escapeAttr(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 
 function span(lo: number, hi: number): number[] {
 	const out: number[] = [];

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/link.js";
 	import type { Snippet } from "svelte";
+	import { LINK_VARIANTS } from "@xtyle/core";
 
-	type LinkVariant = "default" | "muted" | "quiet";
+	type LinkVariant = (typeof LINK_VARIANTS)[number];
 
 	interface Props {
 		variant?: LinkVariant;

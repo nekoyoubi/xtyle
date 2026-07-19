@@ -56,6 +56,8 @@ export class XtyleCardLink extends XtyleElement {
 			interactive: this.interactive,
 			overlay: this.overlay,
 			compact: this.compact,
+			hasHeader: this.fragment.hasSlotted("header"),
+			hasFooter: this.fragment.hasSlotted("footer"),
 		};
 	}
 

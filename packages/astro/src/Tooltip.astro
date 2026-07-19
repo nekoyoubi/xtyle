@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveOptionalTone, TOOLTIP_PLACEMENTS, resolveVocab } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
-type Placement = "top" | "bottom" | "left" | "right";
+type Placement = (typeof TOOLTIP_PLACEMENTS)[number];
 
 interface Props {
 	text?: string;
@@ -20,9 +22,9 @@ interface Props {
 
 const {
 	text,
-	placement = "top",
+	placement: placementInput,
 	open = false,
-	tone,
+	tone: toneInput,
 	variant,
 	mode,
 	size,
@@ -30,6 +32,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("tooltip", Astro.props);
+const placement = resolveVocab(placementInput, TOOLTIP_PLACEMENTS, "top", "tooltip placement");
+const tone = resolveOptionalTone(toneInput);
 
 const hasContent = Astro.slots.has("content");
 const contentId = `xtyle-tooltip-${Math.random().toString(36).slice(2, 8)}`;

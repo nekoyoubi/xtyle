@@ -4,6 +4,7 @@ import { textareaHostCss, type TextareaResize } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/textarea/source.generated.js";
 import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attrs.js";
+import { resolveVocab, TEXTAREA_RESIZES, SIZES } from "../vocab.js";
 
 export type { TextareaResize };
 
@@ -70,14 +71,14 @@ export class XtyleTextarea extends XtyleElement {
 	}
 
 	get resize(): TextareaResize {
-		return (this.getAttribute("resize") as TextareaResize) ?? "vertical";
+		return resolveVocab(this.getAttribute("resize"), TEXTAREA_RESIZES, "vertical", "textarea resize");
 	}
 	set resize(value: TextareaResize) {
 		this.setAttribute("resize", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "textarea size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

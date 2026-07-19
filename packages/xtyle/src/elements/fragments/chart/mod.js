@@ -1,13 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/chart/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
   var AMP = /&/g;
   var LT = /</g;
   var GT = />/g;
-  var QUOT = /"/g;
-  function esc(value) {
-    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/elements/fragments/chart/mod.ts
   var IW = 640;
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var MINUTE = 6e4;
@@ -116,13 +122,13 @@
   }
   function legendHtml(series, colors) {
     const items = series.map(
-      (s, i) => `<span class="xtyle-chart__legend-item" part="legend-item"><span class="xtyle-chart__legend-swatch" part="legend-swatch" style="background:${esc(colors[i] ?? "currentColor")}"></span>${esc(s.name)}</span>`
+      (s, i) => `<span class="xtyle-chart__legend-item" part="legend-item"><span class="xtyle-chart__legend-swatch" part="legend-swatch" style="background:${escapeAttr(colors[i] ?? "currentColor")}"></span>${escapeAttr(s.name)}</span>`
     ).join("");
     return `<div class="xtyle-chart__legend" part="legend">${items}</div>`;
   }
   function tooltipHtml(series, colors) {
     const rows = series.map(
-      (s, i) => `<li class="xtyle-chart__tooltip-row" part="tooltip-row" data-tip-row="${i}" hidden><span class="xtyle-chart__tooltip-swatch" style="background:${esc(colors[i] ?? "currentColor")}"></span><span class="xtyle-chart__tooltip-name">${esc(s.name)}</span><span class="xtyle-chart__tooltip-value" data-tip-value="${i}"></span></li>`
+      (s, i) => `<li class="xtyle-chart__tooltip-row" part="tooltip-row" data-tip-row="${i}" hidden><span class="xtyle-chart__tooltip-swatch" style="background:${escapeAttr(colors[i] ?? "currentColor")}"></span><span class="xtyle-chart__tooltip-name">${escapeAttr(s.name)}</span><span class="xtyle-chart__tooltip-value" data-tip-value="${i}"></span></li>`
     ).join("");
     return `<div class="xtyle-chart__tooltip" part="tooltip" role="status" aria-live="polite" hidden><span class="xtyle-chart__tooltip-x" data-tip-x></span><ul class="xtyle-chart__tooltip-rows">${rows}</ul></div>`;
   }
@@ -130,20 +136,20 @@
     const anchors = [];
     for (const s of series) for (const p of s.points) if (anchors.indexOf(p.x) === -1) anchors.push(p.x);
     anchors.sort((a, b) => a - b);
-    const head = `<tr><th scope="col">${xScale === "time" ? "Time" : "X"}</th>${series.map((s) => `<th scope="col">${esc(s.name)}</th>`).join("")}</tr>`;
+    const head = `<tr><th scope="col">${xScale === "time" ? "Time" : "X"}</th>${series.map((s) => `<th scope="col">${escapeAttr(s.name)}</th>`).join("")}</tr>`;
     const rows = anchors.map((x) => {
       const cells = series.map((s) => {
         const hit = s.points.filter((p) => p.x === x)[0];
-        return `<td>${hit ? esc(formatValue(hit.value)) : ""}</td>`;
+        return `<td>${hit ? escapeAttr(formatValue(hit.value)) : ""}</td>`;
       }).join("");
-      return `<tr><th scope="row">${esc(formatPointX(toDomain(x), xScale, span))}</th>${cells}</tr>`;
+      return `<tr><th scope="row">${escapeAttr(formatPointX(toDomain(x), xScale, span))}</th>${cells}</tr>`;
     }).join("");
-    const cap = caption ? `<caption>${esc(caption)}</caption>` : "";
+    const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
     return `<table class="xtyle-chart__a11y">${cap}<thead>${head}</thead><tbody>${rows}</tbody></table>`;
   }
   function emptyHtml(b, height) {
     const label = b.title ?? b.ariaLabel ?? "";
-    const svg = `<svg class="xtyle-chart__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${label ? esc(label) : "No data"}"><text class="xtyle-chart__empty" x="${IW / 2}" y="${height / 2}" text-anchor="middle" dy="0.32em">No data</text></svg>`;
+    const svg = `<svg class="xtyle-chart__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${label ? escapeAttr(label) : "No data"}"><text class="xtyle-chart__empty" x="${IW / 2}" y="${height / 2}" text-anchor="middle" dy="0.32em">No data</text></svg>`;
     return `<figure part="chart" class="${chartClass(b)}" style="--chart-height:${height}px"><div class="xtyle-chart__plot" part="plot">${svg}</div></figure>`;
   }
   function chartHtml(b) {
@@ -190,15 +196,15 @@
     const yOf = (v) => y1 - (v - yMin) / ySpan * plotH;
     const gridlines = yTicks.map((t) => {
       const y = f(yOf(t));
-      return `<line class="xtyle-chart__grid" part="grid" x1="${x0}" y1="${y}" x2="${x1}" y2="${y}"></line><text class="xtyle-chart__ytick" part="ytick" x="${x0 - 8}" y="${y}" dy="0.32em" text-anchor="end">${esc(formatTick(t))}</text>`;
+      return `<line class="xtyle-chart__grid" part="grid" x1="${x0}" y1="${y}" x2="${x1}" y2="${y}"></line><text class="xtyle-chart__ytick" part="ytick" x="${x0 - 8}" y="${y}" dy="0.32em" text-anchor="end">${escapeAttr(formatTick(t))}</text>`;
     }).join("");
     const xTickMarks = Array.from({ length: xTickCount + 1 }, (_, i) => i / xTickCount).map((t) => {
       const x = f(xOf(t));
-      return `<line class="xtyle-chart__grid xtyle-chart__grid--x" part="grid" x1="${x}" y1="${y0}" x2="${x}" y2="${y1}"></line><text class="xtyle-chart__xtick" part="xtick" x="${x}" y="${f(y1 + 18)}" text-anchor="middle">${esc(formatX(toDomain(t), b.xScale, domainSpan))}</text>`;
+      return `<line class="xtyle-chart__grid xtyle-chart__grid--x" part="grid" x1="${x}" y1="${y0}" x2="${x}" y2="${y1}"></line><text class="xtyle-chart__xtick" part="xtick" x="${x}" y="${f(y1 + 18)}" text-anchor="middle">${escapeAttr(formatX(toDomain(t), b.xScale, domainSpan))}</text>`;
     }).join("");
     const zero = yMin < 0 && yMax > 0 ? `<line class="xtyle-chart__zero" part="zero" x1="${x0}" y1="${f(yOf(0))}" x2="${x1}" y2="${f(yOf(0))}"></line>` : "";
     const axes = `<line class="xtyle-chart__axis" part="axis" x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}"></line><line class="xtyle-chart__axis" part="axis" x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}"></line>`;
-    const axisTitles = (hasXLabel ? `<text class="xtyle-chart__axis-title" part="axis-title" x="${f(x0 + plotW / 2)}" y="${height - 6}" text-anchor="middle">${esc(String(b.xLabel))}</text>` : "") + (hasYLabel ? `<text class="xtyle-chart__axis-title" part="axis-title" transform="rotate(-90 14 ${f(y0 + plotH / 2)})" x="14" y="${f(y0 + plotH / 2)}" text-anchor="middle">${esc(String(b.yLabel))}</text>` : "");
+    const axisTitles = (hasXLabel ? `<text class="xtyle-chart__axis-title" part="axis-title" x="${f(x0 + plotW / 2)}" y="${height - 6}" text-anchor="middle">${escapeAttr(String(b.xLabel))}</text>` : "") + (hasYLabel ? `<text class="xtyle-chart__axis-title" part="axis-title" transform="rotate(-90 14 ${f(y0 + plotH / 2)})" x="14" y="${f(y0 + plotH / 2)}" text-anchor="middle">${escapeAttr(String(b.yLabel))}</text>` : "");
     const area = b.variant === "area";
     const plots = series.map((s, si) => {
       if (s.points.length === 0) return "";
@@ -207,10 +213,10 @@
       const d = pathOf(pts, b.curve);
       const first = pts[0];
       const last = pts[pts.length - 1];
-      const fill = area ? `<path class="xtyle-chart__area" part="area" d="${d} L${f(last[0])} ${f(y1)} L${f(first[0])} ${f(y1)} Z" fill="${esc(color)}"></path>` : "";
-      const line = `<path class="xtyle-chart__line" part="line" d="${d}" fill="none" stroke="${esc(color)}"></path>`;
+      const fill = area ? `<path class="xtyle-chart__area" part="area" d="${escapeAttr(d)} L${f(last[0])} ${f(y1)} L${f(first[0])} ${f(y1)} Z" fill="${escapeAttr(color)}"></path>` : "";
+      const line = `<path class="xtyle-chart__line" part="line" d="${escapeAttr(d)}" fill="none" stroke="${escapeAttr(color)}"></path>`;
       const dots = s.points.map(
-        (p, i) => `<circle class="xtyle-chart__point" part="point" data-si="${si}" data-i="${i}" cx="${f(xOf(p.x))}" cy="${f(yOf(p.value))}" r="3" fill="${esc(color)}" data-x-label="${esc(formatPointX(toDomain(p.x), b.xScale, domainSpan))}" data-value="${esc(formatValue(p.value))}"></circle>`
+        (p, i) => `<circle class="xtyle-chart__point" part="point" data-si="${si}" data-i="${i}" cx="${f(xOf(p.x))}" cy="${f(yOf(p.value))}" r="3" fill="${escapeAttr(color)}" data-x-label="${escapeAttr(formatPointX(toDomain(p.x), b.xScale, domainSpan))}" data-value="${escapeAttr(formatValue(p.value))}"></circle>`
       ).join("");
       return `<g class="xtyle-chart__series" part="series" data-si="${si}">${fill}${line}<g class="xtyle-chart__points">${dots}</g></g>`;
     }).join("");
@@ -218,7 +224,7 @@
     const label = b.title ?? b.ariaLabel ?? "Chart";
     const hint = b.selectable ? "Use arrow keys to read values, Enter to select a point." : "Use arrow keys to read values.";
     const svg = `<svg class="xtyle-chart__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g class="xtyle-chart__grid-layer">${xTickMarks}${gridlines}</g>${zero}${axes}${axisTitles}<g class="xtyle-chart__plots">${plots}</g>${guide}</svg>`;
-    const plot = `<div class="xtyle-chart__plot" part="plot" tabindex="0" role="img" aria-label="${esc(`${label}. ${hint}`)}">${svg}${tooltipHtml(series, colors)}</div>`;
+    const plot = `<div class="xtyle-chart__plot" part="plot" tabindex="0" role="img" aria-label="${escapeAttr(`${label}. ${hint}`)}">${svg}${tooltipHtml(series, colors)}</div>`;
     const legend = b.legend !== false && series.length > 1 ? legendHtml(series, colors) : "";
     const table = tableHtml(series, b.title ?? b.ariaLabel ?? "", toDomain, b.xScale, domainSpan);
     return `<figure part="chart" class="${chartClass(b)}" style="--chart-height:${height}px">${plot}${legend}${table}</figure>`;

@@ -10,6 +10,7 @@ import {
 } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/popover/source.generated.js";
+import { resolveVocab, POPOVER_PLACEMENTS, POPOVER_ALIGNS, POPOVER_PANEL_ROLES, POPOVER_FOCUS } from "../vocab.js";
 
 export type { PopoverPlacement, PopoverAlign, PopoverFocus, PopoverPanelRole, PopoverCloseReason } from "../markup/index.js";
 
@@ -118,7 +119,7 @@ export class XtylePopover extends XtyleElement {
 
 	/** Preferred side of the anchor. Flips to the opposite side when the panel does not fit. Defaults to `bottom`. */
 	get placement(): PopoverPlacement {
-		return (this.getAttribute("placement") as PopoverPlacement) ?? "bottom";
+		return resolveVocab(this.getAttribute("placement"), POPOVER_PLACEMENTS, "bottom", "popover placement");
 	}
 	set placement(value: PopoverPlacement) {
 		this.reflectString("placement", value);
@@ -126,7 +127,7 @@ export class XtylePopover extends XtyleElement {
 
 	/** Cross-axis alignment against the anchor. Defaults to `center`. */
 	get align(): PopoverAlign {
-		return (this.getAttribute("align") as PopoverAlign) ?? "center";
+		return resolveVocab(this.getAttribute("align"), POPOVER_ALIGNS, "center", "popover align");
 	}
 	set align(value: PopoverAlign) {
 		this.reflectString("align", value);
@@ -197,7 +198,7 @@ export class XtylePopover extends XtyleElement {
 	/** The ARIA role the panel carries. Defaults to `dialog`; a surface whose content brings its own
 	 * semantics names the role it really is (`listbox`, `menu`) or `none` to get out of the way. */
 	get panelRole(): PopoverPanelRole {
-		return (this.getAttribute("panel-role") as PopoverPanelRole) ?? "dialog";
+		return resolveVocab(this.getAttribute("panel-role"), POPOVER_PANEL_ROLES, "dialog", "popover panel-role");
 	}
 	set panelRole(value: PopoverPanelRole) {
 		this.reflectString("panel-role", value);
@@ -206,7 +207,7 @@ export class XtylePopover extends XtyleElement {
 	/** Where focus lands when the panel opens through `show` / `openAt` / `openFrom`. Defaults to `first`.
 	 * A type-ahead surface passes `none` so the caret never leaves its input. */
 	get focusOnOpen(): PopoverFocus {
-		return (this.getAttribute("focus-on-open") as PopoverFocus) ?? "first";
+		return resolveVocab(this.getAttribute("focus-on-open"), POPOVER_FOCUS, "first", "popover focus-on-open");
 	}
 	set focusOnOpen(value: PopoverFocus) {
 		this.reflectString("focus-on-open", value);

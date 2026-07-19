@@ -26,6 +26,10 @@ export interface PropDef {
 	description: string;
 	bindings: Binding[];
 	options?: string[];
+	/** Names an author is likely to reach for instead of this one, so the authoring diagnostic can
+	 * redirect them. Worth declaring when the near-miss is a real HTML attribute (`title` for
+	 * `heading`), since those land somewhere real and fail without vanishing. */
+	aliases?: string[];
 }
 export interface VariantDef {
 	name: string;
@@ -49,6 +53,9 @@ export interface SlotDef {
 	name: string;
 	description: string;
 	bindings: Binding[];
+	/** Prop names an author is likely to pass instead of projecting content into this slot, so the
+	 * authoring diagnostic can point at the slot rather than reporting an anonymous unknown prop. */
+	aliases?: string[];
 }
 export interface ComponentExample {
 	id: string;

@@ -3,6 +3,7 @@ import type { Size } from "../index.js";
 import { formGroupHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/form-group/source.generated.js";
+import { resolveVocab, SIZES } from "../vocab.js";
 
 let formGroupCounter = 0;
 
@@ -48,7 +49,7 @@ export class XtyleFormGroup extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "form-group size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

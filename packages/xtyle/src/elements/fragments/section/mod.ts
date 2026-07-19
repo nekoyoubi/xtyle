@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -35,10 +37,6 @@ function sectionClass(b: SectionBindings): string {
 	return classes.join(" ");
 }
 
-function escapeAttr(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 function hasStageLabel(b: SectionBindings): boolean {
 	return (b.variant ?? "band") === "stage" && b.label != null && b.label !== "";
 }
@@ -50,7 +48,7 @@ function isLandmarkTag(tag: string): boolean {
 function sectionHtml(b: SectionBindings): string {
 	const tag = b.as ?? "section";
 	const label = hasStageLabel(b)
-		? `<span part="label" class="xtyle-section__label">${String(b.label)}</span>`
+		? `<span part="label" class="xtyle-section__label">${escapeHtml(String(b.label))}</span>`
 		: "";
 	const named = isLandmarkTag(tag) && b.label != null && b.label !== "";
 	const nameAttr = named ? ` aria-label="${escapeAttr(String(b.label))}"` : "";
@@ -62,7 +60,7 @@ hooks.fragment.mount("section", (bindings, ops) => {
 });
 
 hooks.fragment.update("section", (bindings, ops) => {
-	ops.setAttr('[part="section"]', "class", sectionClass(bindings));
+	ops.setAttr(".xtyle-section", "class", sectionClass(bindings));
 	if (hasStageLabel(bindings)) ops.setText('[part="label"]', String(bindings.label));
 	const tag = bindings.as ?? "section";
 	const named = isLandmarkTag(tag) && bindings.label != null && bindings.label !== "";

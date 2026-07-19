@@ -31,12 +31,12 @@ const sides = ["top", "bottom", "left", "right"] as const;
 						<Checkbox>Merged</Checkbox>
 						<Checkbox>Draft</Checkbox>
 						<Separator />
-						<Button variant="accent" size="sm">Apply</Button>
+						<Button tone="accent" size="sm">Apply</Button>
 					</Stack>
 				</Popover>
 
 				<Popover label="Ada Lovelace" arrow placement="bottom" align="center">
-					<Button slot="trigger" variant="neutral">Profile card</Button>
+					<Button slot="trigger" tone="neutral">Profile card</Button>
 					<Stack gap={2}>
 						<Cluster gap={2} align="center">
 							<Avatar name="Ada Lovelace" size="md" />
@@ -67,7 +67,7 @@ const sides = ["top", "bottom", "left", "right"] as const;
 			<Cluster gap={2}>
 				{sides.map((side) => (
 					<Popover label={`Placed ${side}`} arrow placement={side} align="center">
-						<Button slot="trigger" variant="neutral" size="sm">{side}</Button>
+						<Button slot="trigger" tone="neutral" size="sm">{side}</Button>
 						<Text size="sm">Preferred side: <code>{side}</code>. It flips when the viewport says otherwise.</Text>
 					</Popover>
 				))}
@@ -91,32 +91,32 @@ const sides = ["top", "bottom", "left", "right"] as const;
 			</Text>
 			<Cluster gap={3} align="center">
 				<Popover label="Confirm delete" modal arrow>
-					<Button slot="trigger" variant="danger">Delete…</Button>
+					<Button slot="trigger" tone="danger">Delete…</Button>
 					<Stack gap={2}>
 						<Text size="sm">This cannot be undone. The page behind this panel is out of play until you answer.</Text>
 						<Cluster gap={2} align="center">
-							<Button variant="neutral" size="sm" data-pop-probe="pop-inert-modal">Probe the page</Button>
+							<Button tone="neutral" size="sm" data-pop-probe="pop-inert-modal">Probe the page</Button>
 							<Text size="sm" tone="muted"><span id="pop-inert-modal">—</span></Text>
 						</Cluster>
 						<Cluster gap={2}>
-							<Button variant="danger" size="sm" id="pop-confirm">Delete</Button>
-							<Button variant="neutral" size="sm" id="pop-cancel">Cancel</Button>
+							<Button tone="danger" size="sm" id="pop-confirm">Delete</Button>
+							<Button tone="neutral" size="sm" id="pop-cancel">Cancel</Button>
 						</Cluster>
 					</Stack>
 				</Popover>
 
 				<Popover label="A non-modal panel" arrow>
-					<Button slot="trigger" variant="neutral">Non-modal</Button>
+					<Button slot="trigger" tone="neutral">Non-modal</Button>
 					<Stack gap={2}>
 						<Text size="sm">Click the counter with this open: it still counts, and this dismisses.</Text>
 						<Cluster gap={2} align="center">
-							<Button variant="neutral" size="sm" data-pop-probe="pop-inert-open">Probe the page</Button>
+							<Button tone="neutral" size="sm" data-pop-probe="pop-inert-open">Probe the page</Button>
 							<Text size="sm" tone="muted"><span id="pop-inert-open">—</span></Text>
 						</Cluster>
 					</Stack>
 				</Popover>
 
-				<Button id="pop-counter" variant="neutral">Clicks reaching the page: <span id="pop-count">0</span></Button>
+				<Button id="pop-counter" tone="neutral">Clicks reaching the page: <span id="pop-count">0</span></Button>
 			</Cluster>
 		</Stack>
 	</Card>

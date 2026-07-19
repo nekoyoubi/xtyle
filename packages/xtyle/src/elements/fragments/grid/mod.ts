@@ -63,6 +63,6 @@ hooks.fragment.mount("grid", (bindings, ops) => {
 });
 
 hooks.fragment.update("grid", (bindings, ops) => {
-	ops.setAttr('[part="grid"]', "class", gridClass(bindings));
+	ops.setAttr(".xtyle-grid", "class", gridClass(bindings));
 	ops.setAttr('[part="grid"]', "style", gridStyle(bindings));
 });

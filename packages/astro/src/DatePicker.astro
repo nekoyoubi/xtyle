@@ -1,5 +1,7 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SIZES, resolveVocab } from "@xtyle/core";
 import {
 	datePlaceholder,
 	effectiveTimeBounds,
@@ -15,7 +17,7 @@ import {
 	type HourCyclePosture,
 } from "@xtyle/core/markup";
 
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	/** The canonical wall-clock value: `YYYY-MM-DD`, `HH:mm[:ss]`, or `YYYY-MM-DDTHH:mm[:ss]`. No timezone, no offset. */
@@ -74,7 +76,7 @@ const {
 	required = false,
 	invalid = false,
 	noClear = false,
-	size = "md",
+	size: sizeInput,
 	name,
 	label,
 	labelledby,
@@ -87,6 +89,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("date-picker", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "date-picker size");
 
 const uid = `xtyle-datepicker-${Math.random().toString(36).slice(2, 8)}`;
 const parsed = parseIsoValue(value, mode);

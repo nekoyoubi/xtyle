@@ -3,6 +3,7 @@ import type { Size, FullTone } from "../index.js";
 import { segmentedHostCss, normalizeSegments, selectedValue, type Segment, type SegmentInput } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/segmented/source.generated.js";
+import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 
 interface NavContext {
 	enabledKeys: string[];
@@ -63,9 +64,10 @@ export class XtyleSegmented extends XtyleElement {
 	 * `[slot^="segment-"]` after — the rich-content authoring mode where each segment projects an
 	 * icon or other framework-owned markup instead of a plain text label. */
 	private get segChildren(): HTMLElement[] {
-		return Array.from(
-			this.querySelectorAll<HTMLElement>(':scope > [slot="segment"], :scope > [slot^="segment-"]'),
-		);
+		return (Array.from(this.children) as HTMLElement[]).filter((el) => {
+			const slot = el.getAttribute("slot");
+			return slot === "segment" || (slot?.startsWith("segment-") ?? false);
+		});
 	}
 
 	/** Derive segments from the light-DOM children: `value` / `label` / `disabled` read off each child
@@ -124,14 +126,14 @@ export class XtyleSegmented extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "segmented size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);

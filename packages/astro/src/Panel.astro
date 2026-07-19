@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { PANEL_VARIANTS, resolveVocab } from "@xtyle/core";
 
-type PanelVariant = "default" | "collapsible";
+type PanelVariant = (typeof PANEL_VARIANTS)[number];
 
 interface Props {
 	title?: string;
@@ -22,13 +24,15 @@ const {
 	title,
 	label,
 	level = 2,
-	variant = "default",
+	variant: variantInput,
 	open = false,
 	scroll = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("panel", Astro.props);
+const variant = resolveVocab(variantInput, PANEL_VARIANTS, "default", "panel variant");
 
 const hasActions = Astro.slots.has("actions");
 const titleId = `xtyle-panel-${Math.random().toString(36).slice(2, 9)}`;

@@ -1,19 +1,36 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { renderFragmentLight, listItems, fillRegion } from "@xtyle/core/elements/ssr";
+
 interface Props {
 	/** Zero-based index of the current step. */
 	current?: number;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
-const { current = 0, class: extra, ...rest } = Astro.props;
+const { current = 0, static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("steps", Astro.props);
+
+// The marker and the connector track are the fill's, and the browser path draws them only once the
+// runtime lands. Splitting the authored `<li>`s against `current` here lets the server render the
+// same indicator, so the steps arrive already marked done / current / upcoming; the element then
+// finds a composed `[data-root]` and adopts it rather than rebuilding.
+const authored = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const items = listItems(authored);
+const light = await renderFragmentLight("steps", {
+	steps: items.map((item, index) => ({
+		index,
+		state: index < current ? "done" : index === current ? "current" : "upcoming",
+		attrs: item.attrs,
+	})),
+});
+const composed = items.reduce((html, item, index) => fillRegion(html, `step-${index}`, item.html), light);
 ---
 
-<xtyle-steps current={current} class:list={["xtyle-steps", extra]} {...rest}>
-	<slot />
-</xtyle-steps>
+<xtyle-steps current={current} class:list={["xtyle-steps", extra]} set:html={composed} {...rest} />
 
-<script>
-	import "@xtyle/core/elements";
-</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

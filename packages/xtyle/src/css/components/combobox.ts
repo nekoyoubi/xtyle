@@ -201,7 +201,7 @@ export const comboboxCss = `
 }
 .xtyle-combobox__option:hover,
 .xtyle-combobox__option[data-active="true"] {
-	color: var(--accent-text);
+	color: var(--fg-0);
 	background: var(--accent-bg);
 }
 .xtyle-combobox__option-label {

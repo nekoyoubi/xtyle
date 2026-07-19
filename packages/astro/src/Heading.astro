@@ -1,5 +1,6 @@
 ---
-import { headingSizeForLevel } from "@xtyle/core";
+import { checkAuthoring } from "./internal/diagnose.js";
+import { headingSizeForLevel, resolveTone, EMPHASIS_TONES } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import type { HeadingLevel, HeadingSize, HeadingTone } from "@xtyle/core";
 
@@ -14,8 +15,10 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { level = 2, size, tone = "default", static: isStatic = false, class: extra, ...rest } =
+const { level = 2, size, tone: toneInput, static: isStatic = false, class: extra, ...rest } =
 	Astro.props;
+await checkAuthoring("heading", Astro.props);
+const tone = resolveTone(toneInput, "default", EMPHASIS_TONES);
 
 const resolvedSize = size ?? headingSizeForLevel(level);
 

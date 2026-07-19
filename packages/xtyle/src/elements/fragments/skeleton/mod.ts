@@ -29,5 +29,5 @@ hooks.fragment.mount("skeleton", (bindings, ops) => {
 });
 
 hooks.fragment.update("skeleton", (bindings, ops) => {
-	ops.setAttr('[part="skeleton"]', "class", skeletonClass(bindings));
+	ops.setAttr(".xtyle-skeleton", "class", skeletonClass(bindings));
 });

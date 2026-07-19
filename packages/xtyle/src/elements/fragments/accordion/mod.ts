@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 import { renderIcon } from "../../../icons";
 
 interface OpsBuilder {
@@ -84,13 +86,13 @@ function items(bindings: AccordionBindings): string {
 			const triggerId = `${uid}-h-${i}`;
 			const panelId = `${uid}-p-${i}`;
 			const disabledAttr = section.disabled ? " disabled aria-disabled=\"true\"" : "";
-			const body = section.panelSlot ? `<slot name="${section.panelSlot}"></slot>` : (section.panel ?? "");
+			const body = section.panelSlot ? `<slot name="${escapeAttr(section.panelSlot)}"></slot>` : (section.panel ?? "");
 			return (
 				`<div class="xtyle-accordion__item${isOpen ? " is-open" : ""}" part="item" data-key="${key}">` +
 				`<h${level} class="xtyle-accordion__heading" part="heading">` +
 				`<button class="xtyle-accordion__trigger" part="trigger" type="button" id="${triggerId}" ` +
 				`data-key="${key}" aria-expanded="${String(isOpen)}" aria-controls="${panelId}"${disabledAttr}>` +
-				`<span class="xtyle-accordion__label">${section.header}</span>${CHEVRON}</button></h${level}>` +
+				`<span class="xtyle-accordion__label">${escapeHtml(section.header)}</span>${CHEVRON}</button></h${level}>` +
 				`<div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" ` +
 				`aria-labelledby="${triggerId}"${isOpen ? "" : " hidden"}>` +
 				`<div class="xtyle-accordion__content">${body}</div></div></div>`

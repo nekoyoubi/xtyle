@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -17,16 +19,8 @@ declare const hooks: {
 	};
 };
 
-function esc(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
-
 function titleText(b: MobileShellBindings): string {
-	return b.heading ? esc(b.heading) : "";
+	return b.heading ? escapeAttr(b.heading) : "";
 }
 
 /**
@@ -34,7 +28,7 @@ function titleText(b: MobileShellBindings): string {
  * chrome (so a mod can reshape them) and the consumer's content arrives through the slots.
  */
 function shellHtml(b: MobileShellBindings): string {
-	const mainId = esc(b.mainId ?? "main");
+	const mainId = escapeAttr(b.mainId ?? "main");
 	return (
 		`<div class="xtyle-mshell" part="shell">` +
 		`<header class="xtyle-mshell__bar" part="bar">` +
@@ -60,7 +54,7 @@ function mount(bindings: MobileShellBindings, ops: OpsBuilder): void {
 // re-render can't discard the consumer's bar actions, content, or nav.
 function patch(bindings: MobileShellBindings, ops: OpsBuilder): void {
 	ops.replaceChildren("[data-mshell-title]", titleText(bindings));
-	ops.setAttr('[part="content"]', "id", esc(bindings.mainId ?? "main"));
+	ops.setAttr('[part="content"]', "id", escapeAttr(bindings.mainId ?? "main"));
 }
 
 hooks.fragment.mount("mobile-shell", mount);

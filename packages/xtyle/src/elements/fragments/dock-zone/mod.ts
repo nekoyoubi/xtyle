@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -56,17 +58,9 @@ const CLOSE_GLYPH = "✕";
 const DOCK_GLYPH = "⤓";
 const KEBAB_GLYPH = "⋮";
 
-function esc(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escAttr(value: string): string {
-	return esc(value).replace(/"/g, "&quot;");
-}
-
 function badge(panel: DockPanel): string {
 	if (!panel.badge) return "";
-	return `<span class="xtyle-dock-zone__badge" part="badge" aria-hidden="true">${esc(panel.badge)}</span>`;
+	return `<span class="xtyle-dock-zone__badge" part="badge" aria-hidden="true">${escapeHtml(panel.badge)}</span>`;
 }
 
 /** A panel's header controls: its direct action buttons, then the kebab that opens its overflow menu,
@@ -74,24 +68,24 @@ function badge(panel: DockPanel): string {
  * target by selector rather than by holding a reference to a node the fill built. */
 function controls(panel: DockPanel): string {
 	if (!panel.closable && !panel.hasMenu && (panel.actions ?? []).length === 0) return "";
-	const owner = escAttr(panel.id);
+	const owner = escapeAttr(panel.id);
 	let html = `<div class="xtyle-dock-zone__actions" part="actions">`;
 	for (const action of panel.actions ?? []) {
-		const label = escAttr(action.label);
+		const label = escapeAttr(action.label);
 		html +=
 			`<button type="button" class="xtyle-dock-zone__action" part="action" data-panel-action ` +
-			`data-owner-panel="${owner}" data-action-id="${escAttr(action.id)}" aria-label="${label}" title="${label}">` +
-			`${esc(action.icon ?? action.label)}</button>`;
+			`data-owner-panel="${owner}" data-action-id="${escapeAttr(action.id)}" aria-label="${label}" title="${label}">` +
+			`${escapeHtml(action.icon ?? action.label)}</button>`;
 	}
 	if (panel.hasMenu) {
-		const label = escAttr(`${panel.title} options`);
+		const label = escapeAttr(`${panel.title} options`);
 		html +=
 			`<button type="button" class="xtyle-dock-zone__action xtyle-dock-zone__kebab" part="kebab" data-panel-menu ` +
 			`data-owner-panel="${owner}" aria-haspopup="menu" aria-label="${label}" title="${label}">` +
 			`<span class="xtyle-dock-zone__kebab-glyph" part="kebab-glyph" aria-hidden="true">${KEBAB_GLYPH}</span></button>`;
 	}
 	if (panel.closable) {
-		const label = escAttr(`Close ${panel.title}`);
+		const label = escapeAttr(`Close ${panel.title}`);
 		html +=
 			`<button type="button" class="xtyle-dock-zone__action xtyle-dock-zone__close" part="close" data-panel-close ` +
 			`data-owner-panel="${owner}" aria-label="${label}" title="${label}">${CLOSE_GLYPH}</button>`;
@@ -103,8 +97,8 @@ function tab(panel: DockPanel, zoneId: string, active: boolean): string {
 	const isActive = active ? " is-active" : "";
 	return (
 		`<button type="button" class="xtyle-dock-zone__tab${isActive}" part="tab" role="tab" ` +
-		`aria-selected="${active}" data-tab data-panel-id="${escAttr(panel.id)}" data-zone-id="${escAttr(zoneId)}" ` +
-		`data-index="${panel.index}">${esc(panel.title)}${badge(panel)}</button>`
+		`aria-selected="${active}" data-tab data-panel-id="${escapeAttr(panel.id)}" data-zone-id="${escapeAttr(zoneId)}" ` +
+		`data-index="${panel.index}">${escapeHtml(panel.title)}${badge(panel)}</button>`
 	);
 }
 
@@ -115,12 +109,12 @@ function tabsLeaf(node: DockNode): string {
 	const strip = panels.map((panel, i) => tab(panel, zoneId, i === active)).join("");
 	const activePanel = panels[active];
 	return (
-		`<div class="xtyle-dock-zone__leaf" part="zone" data-zone-id="${escAttr(zoneId)}" style="flex:${node.flex ?? 1}">` +
+		`<div class="xtyle-dock-zone__leaf" part="zone" data-zone-id="${escapeAttr(zoneId)}" style="flex:${node.flex ?? 1}">` +
 		`<div class="xtyle-dock-zone__head" part="head">` +
 		`<div class="xtyle-dock-zone__tabs" part="tabs">${strip}</div>` +
 		`${activePanel ? controls(activePanel) : ""}` +
 		`</div>` +
-		`<div class="xtyle-dock-zone__body" part="body" data-body-for="${escAttr(zoneId)}"></div>` +
+		`<div class="xtyle-dock-zone__body" part="body" data-body-for="${escapeAttr(zoneId)}"></div>` +
 		`</div>`
 	);
 }
@@ -132,15 +126,15 @@ function stackLeaf(node: DockNode): string {
 	const sections = (node.panels ?? [])
 		.map((panel) => {
 			const collapsed = panel.collapsed === true;
-			const pid = escAttr(panel.id);
+			const pid = escapeAttr(panel.id);
 			return (
 				`<div class="xtyle-dock-zone__section${collapsed ? " is-collapsed" : ""}" part="section">` +
 				`<div class="xtyle-dock-zone__section-head" part="section-head">` +
 				`<button type="button" class="xtyle-dock-zone__section-toggle" part="section-toggle" ` +
 				`aria-expanded="${!collapsed}" data-section-toggle data-panel-id="${pid}" ` +
-				`data-zone-id="${escAttr(zoneId)}" data-index="${panel.index}">` +
+				`data-zone-id="${escapeAttr(zoneId)}" data-index="${panel.index}">` +
 				`<span class="xtyle-dock-zone__chevron" part="chevron" aria-hidden="true"></span>` +
-				`<span class="xtyle-dock-zone__section-title" part="section-title">${esc(panel.title)}</span>` +
+				`<span class="xtyle-dock-zone__section-title" part="section-title">${escapeHtml(panel.title)}</span>` +
 				`${badge(panel)}</button>` +
 				`${controls(panel)}` +
 				`</div>` +
@@ -151,7 +145,7 @@ function stackLeaf(node: DockNode): string {
 		.join("");
 	return (
 		`<div class="xtyle-dock-zone__leaf xtyle-dock-zone__leaf--stack" part="zone" ` +
-		`data-zone-id="${escAttr(zoneId)}" style="flex:${node.flex ?? 1}">${sections}</div>`
+		`data-zone-id="${escapeAttr(zoneId)}" style="flex:${node.flex ?? 1}">${sections}</div>`
 	);
 }
 
@@ -180,10 +174,10 @@ function films(count: number): string {
 }
 
 function floatControl(panelId: string, verb: string, label: string, glyph: string): string {
-	const name = escAttr(label);
+	const name = escapeAttr(label);
 	return (
 		`<button type="button" class="xtyle-dock-zone__action" part="float-action" data-float-control ${verb} ` +
-		`data-owner-panel="${escAttr(panelId)}" aria-label="${name}" title="${name}">${glyph}</button>`
+		`data-owner-panel="${escapeAttr(panelId)}" aria-label="${name}" title="${name}">${glyph}</button>`
 	);
 }
 
@@ -191,12 +185,12 @@ function floats(list: DockFloat[]): string {
 	if (list.length === 0) return "";
 	const windows = list
 		.map((f) => {
-			const pid = escAttr(f.panelId);
+			const pid = escapeAttr(f.panelId);
 			return (
 				`<div class="xtyle-dock-zone__float" part="float" data-float-id="${pid}" ` +
 				`style="left:${f.x}px;top:${f.y}px;width:${f.w}px;height:${f.h}px">` +
 				`<div class="xtyle-dock-zone__float-head" part="float-head" data-float-head>` +
-				`<span class="xtyle-dock-zone__float-title" part="float-title">${esc(f.title)}</span>` +
+				`<span class="xtyle-dock-zone__float-title" part="float-title">${escapeHtml(f.title)}</span>` +
 				floatControl(f.panelId, "data-float-dock", `Dock ${f.title}`, DOCK_GLYPH) +
 				floatControl(f.panelId, "data-panel-close", `Close ${f.title}`, CLOSE_GLYPH) +
 				`</div>` +

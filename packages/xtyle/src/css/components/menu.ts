@@ -97,7 +97,7 @@ xtyle-menu[context],
 .xtyle-menu__item:focus-visible {
 	outline: none;
 	background: var(--accent-bg);
-	color: var(--accent-text);
+	color: var(--fg-0);
 }
 .xtyle-menu__item[data-intent="danger"]:not([aria-disabled="true"]) {
 	color: var(--danger-text);

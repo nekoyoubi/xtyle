@@ -1,0 +1,60 @@
+---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { renderMarkdown, renderMarkdownInline } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+interface Props {
+	/** The markdown to render. Falls back to the slotted text content. */
+	source?: string;
+	/** Render as a label rather than a document: emphasis and links, no blocks, no paragraph wrapper. */
+	inline?: boolean;
+	/** Offer a source view the reader can switch to. Needs the runtime, so it is inert on the `static` path. */
+	editable?: boolean;
+	/** Whether the source view starts open. Only meaningful alongside `editable`. */
+	editing?: boolean;
+	/** Render zero-JS: emit the pre-rendered light-DOM markup but never load the runtime. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	source,
+	inline = false,
+	editable = false,
+	editing = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+await checkAuthoring("markdown", Astro.props);
+
+// The slot is markdown *text*, not markup, so take it raw rather than rendering it as HTML — a
+// slot render would hand back an escaped string and the fences and asterisks would arrive mangled.
+const slotted = source === undefined && Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const markdown = source ?? slotted;
+
+// The body is built here, at build time, exactly as the Code binding tokenizes at build: the fill
+// receives finished HTML and composes the structure, so the static markup is the same one the
+// browser paints and the same one a mod replacing `component.markdown` gets to reshape.
+const bindings = {
+	html: inline ? renderMarkdownInline(markdown) : renderMarkdown(markdown),
+	inline,
+	editable,
+	editing: editable && editing,
+};
+const light = await renderFragmentLight("markdown", bindings);
+---
+
+<xtyle-markdown
+	source={source}
+	inline={inline || undefined}
+	editable={editable || undefined}
+	editing={editable && editing ? "" : undefined}
+	class={extra}
+	set:html={light}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

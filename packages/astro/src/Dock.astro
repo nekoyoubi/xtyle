@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
+import { resolveOptionalTone, DOCK_SIDES, resolveVocab, SIZES } from "@xtyle/core";
 import type { FullTone as Tone } from "@xtyle/core";
-type DockSide = "left" | "right";
-type Size = "sm" | "md" | "lg";
+type DockSide = (typeof DOCK_SIDES)[number];
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	side?: DockSide;
@@ -24,9 +26,9 @@ interface Props {
 }
 
 const {
-	side = "left",
-	size = "md",
-	tone,
+	side: sideInput,
+	size: sizeInput,
+	tone: toneInput,
 	reverseEdge = false,
 	edgeWidth,
 	nav = false,
@@ -37,6 +39,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("dock", Astro.props);
+const side = resolveVocab(sideInput, DOCK_SIDES, "left", "dock side");
+const size = resolveVocab(sizeInput, SIZES, "md", "dock size");
+const tone = resolveOptionalTone(toneInput);
 
 const hasHeader = Astro.slots.has("header");
 const hasFooter = Astro.slots.has("footer");

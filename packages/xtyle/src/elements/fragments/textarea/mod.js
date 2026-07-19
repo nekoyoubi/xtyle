@@ -1,14 +1,24 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/textarea/mod.ts
   var RESIZE_CLASS = {
     none: "xtyle-textarea--resize-none",
     horizontal: "xtyle-textarea--resize-horizontal",
     both: "xtyle-textarea--resize-both"
   };
-  function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
   function rootClass(b) {
     const size = b.size ?? "md";
     const resize = b.resize ?? "vertical";
@@ -29,8 +39,8 @@
     const labelHidden = labelText.length === 0 ? " hidden" : "";
     const errorHidden = errorText.length === 0 ? " hidden" : "";
     const ariaInvalid = b.invalid ? "true" : "false";
-    const describedBy = errorText.length > 0 ? ` aria-describedby="${errorId}"` : "";
-    return `<label class="xtyle-textarea__label" part="label" for="${fieldId}" data-label${labelHidden}>${escapeHtml(labelText)}</label><textarea class="xtyle-control xtyle-textarea__control" part="textarea control" id="${fieldId}" data-field aria-invalid="${ariaInvalid}"${describedBy}></textarea><span class="xtyle-textarea__error" part="error" id="${errorId}" data-error${errorHidden}>${escapeHtml(errorText)}</span>`;
+    const describedBy = errorText.length > 0 ? ` aria-describedby="${escapeAttr(errorId)}"` : "";
+    return `<label class="xtyle-textarea__label" part="label" for="${escapeAttr(fieldId)}" data-label${labelHidden}>${escapeHtml(labelText)}</label><textarea class="xtyle-control xtyle-textarea__control" part="textarea control" id="${escapeAttr(fieldId)}" data-field aria-invalid="${ariaInvalid}"${describedBy}></textarea><span class="xtyle-textarea__error" part="error" id="${escapeAttr(errorId)}" data-error${errorHidden}>${escapeHtml(errorText)}</span>`;
   }
   hooks.fragment.mount("textarea", (bindings, ops) => {
     ops.setAttr(".xtyle-textarea", "class", rootClass(bindings));

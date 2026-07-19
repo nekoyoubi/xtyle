@@ -9,7 +9,7 @@ const sentimentRules = SENTIMENTS.map(
 ).join("\n");
 
 export const statCss = `
-[data-stat] { display: contents; }
+[data-root][data-stat] { display: contents; }
 .xtyle-stat {
 	display: flex;
 	flex-direction: column;

@@ -39,7 +39,7 @@ const linkRules = TONES.map(
 ).join("\n");
 
 export const buttonCss = `
-[data-button] { display: contents; }
+[data-root][data-button] { display: contents; }
 .xtyle-button {
 	display: inline-flex;
 	align-items: center;

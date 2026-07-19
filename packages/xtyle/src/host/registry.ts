@@ -2,7 +2,25 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, parse } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Algorithm } from "../types.js";
-import { entryScriptKey, loadAlgorithm, staticAlgorithmManifest, type AlgorithmManifest } from "./index.js";
+import {
+	entryScriptKey,
+	HARNESS_TIMEOUT_MS,
+	loadAlgorithm,
+	railFor,
+	staticAlgorithmManifest,
+	type AlgorithmManifest,
+	type ResolveAlgorithmOptions,
+} from "./index.js";
+
+// The rail vocabulary is shared with the filesystem-free resolver, so it is defined beside
+// `loadAlgorithm` and re-exported here for the callers that have always imported it from this module.
+export { HARNESS_TIMEOUT_MS, type ResolveAlgorithmOptions };
+
+/**
+ * The pointer every error here hands the caller, because the two resolvers share a name and only one
+ * of them needs a filesystem.
+ */
+const FILESYSTEM_FREE_PATH = '`import { resolveAlgorithm } from "@xtyle/core/algorithms"`';
 
 /** One algorithm mod on disk: what it is, and where its manifest and entry script live. */
 export interface AlgorithmMod {
@@ -19,8 +37,14 @@ export interface AlgorithmMod {
  * `algorithms/` directory that holds the mods. A fixed relative offset breaks the
  * moment a consumer bundles this file to a different depth (the site's SSR build
  * does exactly that), so the directory is discovered by marker instead.
+ *
+ * `null` when there is no such directory, which is the normal case for anyone who installed
+ * `@xtyle/core` from npm: `algorithms/` sits at the repo root, a sibling of `packages/`, and npm
+ * cannot pack files above a package directory — so a published tarball never carries it. Discovery
+ * then reports an empty set rather than failing; it is asking to *resolve* an algorithm from a
+ * directory that does not exist that is the error, and {@link resolveInstalledAlgorithm} says so.
  */
-function findAlgorithmsRoot(): string {
+function findAlgorithmsRoot(): string | null {
 	let dir = dirname(fileURLToPath(import.meta.url));
 	const { root } = parse(dir);
 	while (true) {
@@ -31,13 +55,13 @@ function findAlgorithmsRoot(): string {
 		if (dir === root) break;
 		dir = dirname(dir);
 	}
-	throw new Error("xtyle: could not locate the algorithms/ directory");
+	return null;
 }
 
-let algorithmsRoot: string | undefined;
+let algorithmsRoot: string | null | undefined;
 
-function algorithmsDir(): string {
-	if (!algorithmsRoot) algorithmsRoot = findAlgorithmsRoot();
+function algorithmsDir(): string | null {
+	if (algorithmsRoot === undefined) algorithmsRoot = findAlgorithmsRoot();
 	return algorithmsRoot;
 }
 
@@ -90,11 +114,19 @@ export function discoverAlgorithmMods(root: string): Map<string, AlgorithmMod> {
 let entries: Map<string, AlgorithmMod> | undefined;
 
 function mods(): Map<string, AlgorithmMod> {
-	if (!entries) entries = discoverAlgorithmMods(algorithmsDir());
+	if (!entries) {
+		const root = algorithmsDir();
+		entries = root ? discoverAlgorithmMods(root) : new Map();
+	}
 	return entries;
 }
 
-/** The ids of the mods the host can resolve, the default first, then the rest alphabetically. */
+/**
+ * The ids of the mods **on disk**, the default first, then the rest alphabetically. Empty when there is
+ * no `algorithms/` directory, which is what a published install looks like — this reports what is
+ * installed, so it must not pad itself with the embedded blessed set. For the ids resolvable without a
+ * filesystem, ask `bundledAlgorithms()` on `@xtyle/core/host/bundle`.
+ */
 export function availableAlgorithms(): string[] {
 	const ids = [...mods().keys()].sort();
 	const dflt = defaultAlgorithm();
@@ -104,7 +136,7 @@ export function availableAlgorithms(): string[] {
 /**
  * What an algorithm declares about itself — produced tokens, knobs and their domains, invariant count,
  * pass names — read straight off the packaged mod manifest, with no sandbox boot. `null` for a mod that
- * ships no static block, which can then only be read by running it (see `resolveAlgorithm`).
+ * ships no static block, which can then only be read by running it (see `resolveInstalledAlgorithm`).
  *
  * This is the discovery seam: listing what a pack accepts is the cheapest question a consumer asks, and
  * it should not be the one that costs a QuickJS runtime per algorithm.
@@ -118,53 +150,28 @@ const cache = new Map<string, Promise<Algorithm>>();
 const resolved = new Map<string, Algorithm>();
 
 /**
- * The rail a *correctness harness* loads a mod under, as opposed to the production rail the host
- * manifest declares.
- *
- * `limits.timeout_ms` (5s) is an anti-runaway rail: it exists so a mod with an infinite loop cannot
- * hang the browser generator, and it must stay tight for that. But it is not a performance budget,
- * and a single interpreted derivation against a hostile seed already runs ~3s — so a battery that
- * sweeps hundreds of adversarial seeds through the sandbox trips the rail on the slowest of them and
- * reports an interrupt that says nothing about the algorithm. The harness raises the rail for itself
- * rather than every consumer paying for it: a gauntlet run is developer-supervised and bounded by the
- * suite, so the runaway case it guards against is already covered by the person watching it.
- */
-export const HARNESS_TIMEOUT_MS = 60_000;
-
-export interface ResolveAlgorithmOptions {
-	/**
-	 * Raise the sandbox's wall-clock rail, up to {@link HARNESS_TIMEOUT_MS}. Only a correctness harness
-	 * should reach for this; a request above the ceiling is clamped to it rather than honored.
-	 *
-	 * This is a patience dial, not a confinement boundary: it governs how long the host waits before
-	 * killing a mod that is spinning, and touches nothing else. The memory and stack limits hold, and
-	 * the capability set a mod runs under (`color-math`, and a no-op `log`) is fixed and never
-	 * parameterized — so a longer rail grants a mod no authority it did not already have.
-	 */
-	timeoutMs?: number;
-}
-
-/**
- * The rail a load actually runs under. Clamped to {@link HARNESS_TIMEOUT_MS} so the ceiling is a real
- * bound rather than a suggestion a doc comment makes: the anti-runaway guarantee survives whatever a
- * caller asks for, and the mod cache cannot be grown without limit by varying the rail (it is part of
- * the cache key, so an unbounded rail means an unbounded number of QuickJS runtimes).
- */
-function railFor(timeoutMs: number | undefined): number | undefined {
-	return timeoutMs === undefined ? undefined : Math.min(timeoutMs, HARNESS_TIMEOUT_MS);
-}
-
-/**
  * Resolves an algorithm by id to its host facade: loads the algorithm's xript mod
  * from `algorithms/`, runs it through the zero-authority sandbox, and returns an
- * `Algorithm`. Cached per id (and per rail; see {@link HARNESS_TIMEOUT_MS}). This
- * is the canonical resolution path — the whole CLI (`derive` / `coverage` / `gauntlet`)
- * and the site's SSR derive through it, so the gauntlet proves the sandboxed mod that
- * ships, not a baked copy. The baked `getAlgorithm` registry from `@xtyle/core/algorithms`
- * remains as the byte-identical test oracle and as the synchronous first-paint fallback
- * in the browser, where the async mod load may not have completed yet.
+ * `Algorithm`. Cached per id (and per rail; see {@link HARNESS_TIMEOUT_MS}).
+ *
+ * **Node-only, and it needs an `algorithms/` directory on disk.** There is a second function with this
+ * exact name, exported from `@xtyle/core/algorithms`, which resolves the same shipped mods from an
+ * embedded bundle with no filesystem. They are not interchangeable, and the wrong one is silent in a checkout
+ * (the walk-up finds the repo's own `algorithms/` either way) and fatal once published, which is the
+ * single easiest mistake to make against this module. Pick by what the caller needs:
+ *
+ * - **This one** when the point is *discovery* — resolving whatever packs are installed on disk,
+ *   including third-party ones this package has never heard of. The CLI, the MCP server and the
+ *   gauntlet all want exactly this.
+ * - **`@xtyle/core/algorithms`** when the caller only ever asks for a blessed id, and especially when
+ *   the code runs at build time, in a browser, or inside a published package.
+ *
+ * Both run the same mod through the same `loadAlgorithm`, so the choice costs no fidelity — the
+ * gauntlet proves the sandboxed mod that ships, not a baked copy. The baked `getAlgorithm` registry
+ * from `@xtyle/core/algorithms` is neither of these: it is the byte-identical test oracle and the
+ * synchronous first-paint fallback, and it is not a substitute for either resolver.
  */
-export function resolveAlgorithm(id: string, options: ResolveAlgorithmOptions = {}): Promise<Algorithm> {
+export function resolveInstalledAlgorithm(id: string, options: ResolveAlgorithmOptions = {}): Promise<Algorithm> {
 	const timeoutMs = railFor(options.timeoutMs);
 	// The rail is part of the identity of the loaded mod: a cache keyed on id alone would hand a
 	// harness the 5s-railed instance that a production caller warmed first, and the raise would silently
@@ -175,8 +182,18 @@ export function resolveAlgorithm(id: string, options: ResolveAlgorithmOptions = 
 
 	const entry = mods().get(id);
 	if (!entry) {
+		// Two different failures wearing one message helps nobody: an id missing from a directory that
+		// exists is a typo or an uninstalled pack, while no directory at all almost always means this
+		// resolver was imported where its filesystem-free twin was wanted.
+		const root = algorithmsDir();
 		return Promise.reject(
-			new Error(`xtyle: no hosted mod for algorithm "${id}" (have: ${availableAlgorithms().join(", ")})`),
+			new Error(
+				root
+					? `xtyle: no algorithm "${id}" in ${root} (installed: ${availableAlgorithms().join(", ") || "none"})`
+					: `xtyle: no algorithm "${id}" — \`@xtyle/core/host\` resolves mods from an \`algorithms/\` ` +
+						"directory and there is none here, which is what a published install looks like. For the " +
+						`blessed set with no filesystem, use ${FILESYSTEM_FREE_PATH}.`,
+			),
 		);
 	}
 
@@ -192,6 +209,15 @@ export function resolveAlgorithm(id: string, options: ResolveAlgorithmOptions = 
 	return loaded;
 }
 
+/**
+ * @deprecated Renamed to {@link resolveInstalledAlgorithm}, because `@xtyle/core/algorithms` exports a
+ * `resolveAlgorithm` too and the two are not interchangeable — this one needs an `algorithms/`
+ * directory on disk, that one resolves the blessed set from an embedded bundle. Use
+ * `resolveInstalledAlgorithm` for disk discovery, or `@xtyle/core/algorithms` when you only ever ask
+ * for a blessed id. Kept so nothing published breaks.
+ */
+export const resolveAlgorithm = resolveInstalledAlgorithm;
+
 /** The algorithm an id-less caller derives with. One literal, rather than a `"xtyle-default"` in every consumer. */
 export function defaultAlgorithm(): string {
 	return "xtyle-default";
@@ -199,9 +225,9 @@ export function defaultAlgorithm(): string {
 
 /**
  * Synchronous accessor for an already-resolved mod: returns the cached `Algorithm`
- * once `resolveAlgorithm(id)` has settled, else `null`. The hosted resolution is
+ * once `resolveInstalledAlgorithm(id)` has settled, else `null`. The hosted resolution is
  * async (the sandbox load), but a synchronous caller — a framework reactive
- * computation, a first-paint path — can warm the cache with `resolveAlgorithm`,
+ * computation, a first-paint path — can warm the cache with `resolveInstalledAlgorithm`,
  * then read the canonical mod here without awaiting, falling back only for the
  * window before the load lands.
  */

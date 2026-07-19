@@ -76,7 +76,7 @@ export const toastManifest: ComponentManifest = {
 			name: "toast-region",
 			description: "The fixed, non-focus-stealing live-region container that stacks and announces toasts.",
 			selector: ".xtyle-toast-region",
-			tokens: ["--space-3", "--space-5", "--space-6", "--elevation-5"],
+			tokens: ["--space-3", "--space-5", "--space-6", "--layer-toast"],
 		},
 		{
 			name: "toast",
@@ -258,6 +258,7 @@ export const toastManifest: ComponentManifest = {
 		},
 	],
 	consumedTokens: [
+		"--layer-toast",
 		"--font-sans",
 		"--text-body",
 		"--text-sm",
@@ -281,7 +282,6 @@ export const toastManifest: ComponentManifest = {
 		"--duration-fast",
 		"--ease-standard",
 		"--ease-emphasized",
-		"--elevation-5",
 		"--shadow",
 		"--ring",
 		"--state-hover",

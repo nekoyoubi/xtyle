@@ -1,5 +1,37 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/vocab.ts
+  var TONES = ["accent", "neutral", "danger", "success", "warn", "info"];
+  var ACCENT_VARIANTS = ["accent-2", "accent-3", "accent-4"];
+  var HUES = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "brown",
+    "pink",
+    "cyan",
+    "gray",
+    "white",
+    "black"
+  ];
+  var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
+
   // packages/xtyle/src/icons.ts
   var stroke = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   var dot = (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="1.8" fill="currentColor"/>`;
@@ -57,7 +89,7 @@
   function hasIcon(name) {
     return Object.prototype.hasOwnProperty.call(ICONS, name);
   }
-  function escapeAttr(value) {
+  function escapeAttr2(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function iconClass(opts) {
@@ -73,17 +105,14 @@
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
     const body = hasIcon(name) ? ICONS[name] : MISSING;
-    const part = opts.part ? ` part="${escapeAttr(opts.part)}"` : "";
-    const a11y = opts.label ? `role="img" aria-label="${escapeAttr(opts.label)}"` : `aria-hidden="true"`;
-    const title = opts.label ? `<title>${escapeAttr(opts.label)}</title>` : "";
+    const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
+    const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
+    const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
     return `<svg${part} class="${iconClass(opts)}" viewBox="0 0 24 24" width="1em" height="1em" focusable="false" ${a11y}>${title}${body}</svg>`;
   }
 
   // packages/xtyle/src/elements/fragments/carousel/mod.ts
   var OPPOSITE = { right: "left", left: "right", up: "down", down: "up" };
-  function esc(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
   function uid(b) {
     return b.uid ?? "";
   }
@@ -126,10 +155,10 @@
   }
   function navButton(b, kind, label, edge) {
     const disabled = atEdge(b, edge) ? " disabled" : "";
-    return `<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--${kind}" part="nav" data-${kind}="${uid(b)}" aria-label="${esc(label)}"${disabled}>${renderIcon(chevron(b, kind))}</button>`;
+    return `<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--${kind}" part="nav" data-${kind}="${uid(b)}" aria-label="${escapeAttr(label)}"${disabled}>${renderIcon(chevron(b, kind))}</button>`;
   }
   function playButton(b) {
-    return `<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--play" part="play" data-play="${uid(b)}" aria-label="${esc(playLabel(b))}">${playIcon(b)}</button>`;
+    return `<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--play" part="play" data-play="${uid(b)}" aria-label="${escapeAttr(playLabel(b))}">${playIcon(b)}</button>`;
   }
   function dotClass(isActive) {
     return isActive ? "xtyle-carousel__dot is-active" : "xtyle-carousel__dot";

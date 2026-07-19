@@ -1,19 +1,24 @@
 {
 	"name": "xtyle-workspace",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"private": true,
 	"type": "module",
 	"workspaces": [
 		"packages/*",
-		"apps/*"
+		"apps/*",
+		"tests/*"
 	],
 	"scripts": {
 		"build": "node scripts/build-fragments.mjs && npm run build -w @xtyle/core && node scripts/build-mods.mjs && npm run build --workspaces --if-present",
 		"build:fragments": "node scripts/build-fragments.mjs",
 		"build:mods": "node scripts/build-mods.mjs",
 		"check:mods": "node scripts/check-mods-fresh.mjs",
+		"check:packaging": "node scripts/check-packaged-resolution.mjs",
+		"audit:css": "node scripts/audit-css.mjs",
 		"pretest": "node scripts/check-mods-fresh.mjs",
 		"test": "npm run test --workspaces --if-present",
+		"test:visual": "npm run test -w tests/visual",
+		"test:visual:update": "npm run test:update -w tests/visual",
 		"dev": "node scripts/dev.mjs",
 		"version:bump": "node scripts/bump-version.mjs",
 		"stats:snapshot": "node scripts/snapshot-stats.mjs",

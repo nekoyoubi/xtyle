@@ -1,13 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/bar/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
   var AMP = /&/g;
   var LT = /</g;
   var GT = />/g;
-  var QUOT = /"/g;
-  function esc(value) {
-    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/elements/fragments/bar/mod.ts
   var IW = 640;
   function niceMax(raw) {
     if (raw <= 0) return 1;
@@ -35,11 +41,11 @@
   }
   function rect(x, y, w, h, fill, si, ci, label, selectable) {
     const role = selectable ? "button" : "img";
-    return `<rect class="xtyle-bar__bar" part="bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0, w).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" fill="${esc(fill)}" data-si="${si}" data-ci="${ci}" tabindex="0" role="${role}" aria-label="${esc(label)}"></rect>`;
+    return `<rect class="xtyle-bar__bar" part="bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0, w).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" fill="${escapeAttr(fill)}" data-si="${si}" data-ci="${ci}" tabindex="0" role="${role}" aria-label="${escapeAttr(label)}"></rect>`;
   }
   function legendHtml(series, colors) {
     const items = series.map(
-      (s, i) => `<span class="xtyle-bar__legend-item" part="legend-item"><span class="xtyle-bar__legend-dot" style="background:${esc(colors[i] ?? "currentColor")}"></span>${esc(s.name)}</span>`
+      (s, i) => `<span class="xtyle-bar__legend-item" part="legend-item"><span class="xtyle-bar__legend-dot" style="background:${escapeAttr(colors[i] ?? "currentColor")}"></span>${escapeAttr(s.name)}</span>`
     ).join("");
     return `<div class="xtyle-bar__legend" part="legend">${items}</div>`;
   }
@@ -49,20 +55,20 @@
       for (let si = 0; si < series.length; si++) {
         const name = series[si]?.name ?? "";
         const value = series[si]?.values[ci] ?? 0;
-        const label = esc(categories[ci] ?? "") + (name ? ` \xB7 ${esc(name)}` : "");
+        const label = (categories[ci] ?? "") + (name ? ` \xB7 ${name}` : "");
         rows.push(
-          `<span class="xtyle-bar__tooltip-row" part="tooltip-row" data-tip-row="${si}-${ci}" hidden><span class="xtyle-bar__tooltip-name">${label}</span> <span class="xtyle-bar__tooltip-value">${esc(String(value))}</span></span>`
+          `<span class="xtyle-bar__tooltip-row" part="tooltip-row" data-tip-row="${si}-${ci}" hidden><span class="xtyle-bar__tooltip-name">${escapeHtml(label)}</span> <span class="xtyle-bar__tooltip-value">${escapeAttr(String(value))}</span></span>`
         );
       }
     }
     return `<div class="xtyle-bar__tooltip" part="tooltip" role="status" aria-hidden="true" hidden>${rows.join("")}</div>`;
   }
   function tableHtml(series, categories, caption) {
-    const head = `<tr><th scope="col">Category</th>${series.map((s) => `<th scope="col">${esc(s.name)}</th>`).join("")}</tr>`;
+    const head = `<tr><th scope="col">Category</th>${series.map((s) => `<th scope="col">${escapeAttr(s.name)}</th>`).join("")}</tr>`;
     const rows = categories.map(
-      (cat, ci) => `<tr><th scope="row">${esc(cat)}</th>${series.map((s) => `<td>${esc(String(s.values[ci] ?? 0))}</td>`).join("")}</tr>`
+      (cat, ci) => `<tr><th scope="row">${escapeAttr(cat)}</th>${series.map((s) => `<td>${escapeAttr(String(s.values[ci] ?? 0))}</td>`).join("")}</tr>`
     ).join("");
-    const cap = caption ? `<caption>${esc(caption)}</caption>` : "";
+    const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
     return `<table class="xtyle-bar__a11y">${cap}<thead>${head}</thead><tbody>${rows}</tbody></table>`;
   }
   function verticalPlot(b, series, colors, height) {
@@ -83,7 +89,7 @@
     const yOf = (v) => plotY1 - Math.max(0, v) / max * plotH;
     const grid = ticks(max, 4).map((t) => {
       const y = yOf(t).toFixed(1);
-      return `<line class="xtyle-bar__grid" x1="${plotX0}" y1="${y}" x2="${plotX1}" y2="${y}"></line><text class="xtyle-bar__ytick" x="${plotX0 - 6}" y="${y}" dy="0.32em" text-anchor="end">${esc(formatTick(t))}</text>`;
+      return `<line class="xtyle-bar__grid" x1="${plotX0}" y1="${y}" x2="${plotX1}" y2="${y}"></line><text class="xtyle-bar__ytick" x="${plotX0 - 6}" y="${y}" dy="0.32em" text-anchor="end">${escapeAttr(formatTick(t))}</text>`;
     }).join("");
     const bandW = n > 0 ? plotW / n : plotW;
     const rects = [];
@@ -93,7 +99,7 @@
       const bandX = plotX0 + ci * bandW;
       const centerX = bandX + bandW / 2;
       xLabels.push(
-        `<text class="xtyle-bar__xtick" x="${centerX.toFixed(1)}" y="${(plotY1 + 18).toFixed(1)}" text-anchor="middle">${esc(categories[ci] ?? "")}</text>`
+        `<text class="xtyle-bar__xtick" x="${centerX.toFixed(1)}" y="${(plotY1 + 18).toFixed(1)}" text-anchor="middle">${escapeAttr(categories[ci] ?? "")}</text>`
       );
       if (stacked) {
         const barW = bandW * 0.6;
@@ -117,7 +123,7 @@
           rects.push(rect(x + barW * 0.08, yTop, barW * 0.84, plotY1 - yTop, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`, selectable));
           if (b.showValues && v > 0) {
             valueLabels.push(
-              `<text class="xtyle-bar__value" x="${(x + barW / 2).toFixed(1)}" y="${(yTop - 4).toFixed(1)}" text-anchor="middle">${esc(formatTick(v))}</text>`
+              `<text class="xtyle-bar__value" x="${(x + barW / 2).toFixed(1)}" y="${(yTop - 4).toFixed(1)}" text-anchor="middle">${escapeAttr(formatTick(v))}</text>`
             );
           }
         }
@@ -144,7 +150,7 @@
     const xOf = (v) => plotX0 + Math.max(0, v) / max * plotW;
     const grid = ticks(max, 4).map((t) => {
       const x = xOf(t).toFixed(1);
-      return `<line class="xtyle-bar__grid" x1="${x}" y1="${plotY0}" x2="${x}" y2="${plotY1}"></line><text class="xtyle-bar__xtick" x="${x}" y="${(plotY1 + 18).toFixed(1)}" text-anchor="middle">${esc(formatTick(t))}</text>`;
+      return `<line class="xtyle-bar__grid" x1="${x}" y1="${plotY0}" x2="${x}" y2="${plotY1}"></line><text class="xtyle-bar__xtick" x="${x}" y="${(plotY1 + 18).toFixed(1)}" text-anchor="middle">${escapeAttr(formatTick(t))}</text>`;
     }).join("");
     const bandH = n > 0 ? plotH / n : plotH;
     const rects = [];
@@ -154,7 +160,7 @@
       const bandY = plotY0 + ci * bandH;
       const centerY = bandY + bandH / 2;
       catLabels.push(
-        `<text class="xtyle-bar__ytick" x="${(plotX0 - 8).toFixed(1)}" y="${centerY.toFixed(1)}" dy="0.32em" text-anchor="end">${esc(categories[ci] ?? "")}</text>`
+        `<text class="xtyle-bar__ytick" x="${(plotX0 - 8).toFixed(1)}" y="${centerY.toFixed(1)}" dy="0.32em" text-anchor="end">${escapeAttr(categories[ci] ?? "")}</text>`
       );
       if (stacked) {
         const barH = bandH * 0.6;
@@ -178,7 +184,7 @@
           rects.push(rect(plotX0, y + barH * 0.08, w, barH * 0.84, colorAt(colors, b.colorBy, si, ci), si, ci, `${series[si]?.name ?? ""}, ${categories[ci] ?? ""}: ${v}`, selectable));
           if (b.showValues && v > 0) {
             valueLabels.push(
-              `<text class="xtyle-bar__value" x="${(plotX0 + w + 4).toFixed(1)}" y="${(y + barH / 2).toFixed(1)}" dy="0.32em" text-anchor="start">${esc(formatTick(v))}</text>`
+              `<text class="xtyle-bar__value" x="${(plotX0 + w + 4).toFixed(1)}" y="${(y + barH / 2).toFixed(1)}" dy="0.32em" text-anchor="start">${escapeAttr(formatTick(v))}</text>`
             );
           }
         }
@@ -195,7 +201,7 @@
     const horizontal = b.orientation === "horizontal";
     if (categories.length === 0 || series.length === 0) {
       const label = b.title ?? b.ariaLabel ?? "";
-      const emptySvg = `<svg class="xtyle-bar__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${label ? esc(label) : "No data"}"><text class="xtyle-bar__empty" x="${IW / 2}" y="${height / 2}" text-anchor="middle" dy="0.32em">No data</text></svg>`;
+      const emptySvg = `<svg class="xtyle-bar__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${label ? escapeAttr(label) : "No data"}"><text class="xtyle-bar__empty" x="${IW / 2}" y="${height / 2}" text-anchor="middle" dy="0.32em">No data</text></svg>`;
       return `<figure part="chart" class="${barClass(b)}" style="--bar-height:${height}px">${emptySvg}</figure>`;
     }
     const plot = horizontal ? horizontalPlot(b, series, colors, height) : verticalPlot(b, series, colors, height);

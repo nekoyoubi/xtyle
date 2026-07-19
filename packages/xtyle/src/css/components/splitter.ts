@@ -1,5 +1,5 @@
 export const splitterCss = `
-[data-splitter] { display: contents; }
+[data-root][data-splitter] { display: contents; }
 .xtyle-splitter {
 	display: flex;
 	align-items: center;

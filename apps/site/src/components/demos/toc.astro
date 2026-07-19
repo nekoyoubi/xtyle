@@ -8,9 +8,12 @@ import Text from "@xtyle/astro/Text.astro";
 
 const sections = [
 	{ id: "toc-demo-intro", label: "Introduction" },
-	{ id: "toc-demo-anchors", label: "Anchors" },
-	{ id: "toc-demo-knobs", label: "Knobs" },
-	{ id: "toc-demo-coverage", label: "Coverage" },
+	{ id: "toc-demo-anchors", label: "Anchors", level: 1 },
+	{ id: "toc-demo-hues", label: "Named hues", level: 2 },
+	{ id: "toc-demo-ramps", label: "Ramps", level: 2 },
+	{ id: "toc-demo-knobs", label: "Knobs", level: 1 },
+	{ id: "toc-demo-strategy", label: "Accent strategy", level: 2 },
+	{ id: "toc-demo-coverage", label: "Coverage", level: 1 },
 ];
 const body = "Scroll this column and watch the active link track the heading in view. Every entry is a real anchor, so it jumps on click and works with no script at all.";
 ---

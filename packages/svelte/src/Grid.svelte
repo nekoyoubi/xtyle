@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/grid.js";
 	import type { Snippet } from "svelte";
+	import { GRID_ALIGNS } from "@xtyle/core";
 
-	type GridAlign = "start" | "center" | "end" | "stretch";
+	type GridAlign = (typeof GRID_ALIGNS)[number];
 
 	interface Props {
 		gap?: number;

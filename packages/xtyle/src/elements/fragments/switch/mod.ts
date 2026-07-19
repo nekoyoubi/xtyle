@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -68,13 +70,13 @@ function inner(b: SwitchBindings): string {
 	const hasState = stateText !== null;
 
 	let nameAttr = "";
-	if (b.labelledby) nameAttr = ` aria-labelledby="${b.labelledby}"`;
+	if (b.labelledby) nameAttr = ` aria-labelledby="${escapeAttr(b.labelledby)}"`;
 	else if (b.label) nameAttr = ` aria-labelledby="${labelId}"`;
 	else if (hasState) nameAttr = ` aria-labelledby="${stateId}"`;
 
 	const disabledAttr = disabled ? ' disabled aria-disabled="true"' : "";
 	const leadingLabel = b.label
-		? `<span class="xtyle-switch__label" part="label" id="${labelId}">${b.label}</span>`
+		? `<span class="xtyle-switch__label" part="label" id="${labelId}">${escapeHtml(b.label)}</span>`
 		: "";
 	const trailingState = hasState
 		? `<span class="xtyle-switch__state" part="state" id="${stateId}">${stateText}</span>`

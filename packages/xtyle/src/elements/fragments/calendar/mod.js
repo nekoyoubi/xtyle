@@ -1,5 +1,37 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/vocab.ts
+  var TONES = ["accent", "neutral", "danger", "success", "warn", "info"];
+  var ACCENT_VARIANTS = ["accent-2", "accent-3", "accent-4"];
+  var HUES = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "brown",
+    "pink",
+    "cyan",
+    "gray",
+    "white",
+    "black"
+  ];
+  var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
+
   // packages/xtyle/src/icons.ts
   var stroke = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   var dot = (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="1.8" fill="currentColor"/>`;
@@ -57,7 +89,7 @@
   function hasIcon(name) {
     return Object.prototype.hasOwnProperty.call(ICONS, name);
   }
-  function escapeAttr(value) {
+  function escapeAttr2(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function iconClass(opts) {
@@ -73,19 +105,13 @@
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
     const body = hasIcon(name) ? ICONS[name] : MISSING;
-    const part = opts.part ? ` part="${escapeAttr(opts.part)}"` : "";
-    const a11y = opts.label ? `role="img" aria-label="${escapeAttr(opts.label)}"` : `aria-hidden="true"`;
-    const title = opts.label ? `<title>${escapeAttr(opts.label)}</title>` : "";
+    const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
+    const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
+    const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
     return `<svg${part} class="${iconClass(opts)}" viewBox="0 0 24 24" width="1em" height="1em" focusable="false" ${a11y}>${title}${body}</svg>`;
   }
 
   // packages/xtyle/src/elements/fragments/calendar/mod.ts
-  function escapeAttr2(value) {
-    return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
   function calendarClass(bindings) {
     const size = bindings.size ?? "md";
     return [
@@ -101,18 +127,18 @@
   function navButton(rel, label, disabled) {
     const glyph = chevron(rel === "prev" ? "chevron-left" : "chevron-right");
     const dis = disabled ? ' aria-disabled="true"' : "";
-    return `<button type="button" class="xtyle-calendar__nav xtyle-calendar__nav--${rel}" part="nav" data-nav="${rel}" aria-label="${escapeAttr2(label)}"${dis}>${glyph}</button>`;
+    return `<button type="button" class="xtyle-calendar__nav xtyle-calendar__nav--${rel}" part="nav" data-nav="${rel}" aria-label="${escapeAttr(label)}"${dis}>${glyph}</button>`;
   }
   function header(bindings) {
     const uid = bindings.uid ?? "xtyle-calendar";
-    const title = `<div class="xtyle-calendar__title" part="title" data-title id="${escapeAttr2(uid)}-title" aria-live="polite">${escapeHtml(bindings.title ?? "")}</div>`;
+    const title = `<div class="xtyle-calendar__title" part="title" data-title id="${escapeAttr(uid)}-title" aria-live="polite">${escapeHtml(bindings.title ?? "")}</div>`;
     if (bindings.hideNav) return `<div class="xtyle-calendar__header" part="header">${title}</div>`;
     const prev = navButton("prev", bindings.prevLabel ?? "Previous month", bindings.prevDisabled === true);
     const next = navButton("next", bindings.nextLabel ?? "Next month", bindings.nextDisabled === true);
     return `<div class="xtyle-calendar__header" part="header">${prev}${title}${next}</div>`;
   }
   function marks(day) {
-    const dots = (day.dots ?? []).map((tone) => `<span class="xtyle-calendar__dot" part="dot" data-tone="${escapeAttr2(tone)}"></span>`).join("");
+    const dots = (day.dots ?? []).map((tone) => `<span class="xtyle-calendar__dot" part="dot" data-tone="${escapeAttr(tone)}"></span>`).join("");
     const row = dots ? `<span class="xtyle-calendar__marks" part="marks">${dots}</span>` : "";
     const busy = day.busy ? `<span class="xtyle-calendar__busy" part="busy"></span>` : "";
     const cue = day.filled ? `<span class="xtyle-calendar__cue" part="cue"></span>` : "";
@@ -143,7 +169,7 @@
     const disabled = day.disabled ? ' aria-disabled="true"' : "";
     const tabindex = day.focused ? "0" : "-1";
     const body = `<span class="xtyle-calendar__day" part="day"><span class="xtyle-calendar__num" part="num">${escapeHtml(day.day)}</span>${marks(day)}</span>`;
-    return `<td class="xtyle-calendar__cell" part="cell" role="gridcell" tabindex="${tabindex}" data-date="${escapeAttr2(day.date)}" aria-label="${escapeAttr2(day.label)}"${selected}${disabled}${flags(day)}>${body}</td>`;
+    return `<td class="xtyle-calendar__cell" part="cell" role="gridcell" tabindex="${tabindex}" data-date="${escapeAttr(day.date)}" aria-label="${escapeAttr(day.label)}"${selected}${disabled}${flags(day)}>${body}</td>`;
   }
   function weekRow(week, bindings) {
     const mode = bindings.mode ?? "single";
@@ -152,9 +178,9 @@
     return `<tr class="xtyle-calendar__week" part="week">${number}${days}</tr>`;
   }
   function head(bindings) {
-    const spacer = bindings.weekNumbers ? `<th class="xtyle-calendar__weeknum" part="weeknum" scope="col" abbr="${escapeAttr2(bindings.weekLabel ?? "Wk")}">${escapeHtml(bindings.weekLabel ?? "Wk")}</th>` : "";
+    const spacer = bindings.weekNumbers ? `<th class="xtyle-calendar__weeknum" part="weeknum" scope="col" abbr="${escapeAttr(bindings.weekLabel ?? "Wk")}">${escapeHtml(bindings.weekLabel ?? "Wk")}</th>` : "";
     const days = (bindings.weekdays ?? []).map(
-      (weekday) => `<th class="xtyle-calendar__weekday" part="weekday" scope="col" abbr="${escapeAttr2(weekday.long)}">${escapeHtml(weekday.short)}</th>`
+      (weekday) => `<th class="xtyle-calendar__weekday" part="weekday" scope="col" abbr="${escapeAttr(weekday.long)}">${escapeHtml(weekday.short)}</th>`
     ).join("");
     return `<thead><tr>${spacer}${days}</tr></thead>`;
   }
@@ -164,7 +190,7 @@
   function grid(bindings) {
     const uid = bindings.uid ?? "xtyle-calendar";
     const readonly = bindings.readonly ? ' aria-readonly="true"' : "";
-    return `<table class="xtyle-calendar__grid" part="grid" role="grid" aria-labelledby="${escapeAttr2(uid)}-title"${readonly}>${head(bindings)}<tbody data-body>${rows(bindings)}</tbody></table>`;
+    return `<table class="xtyle-calendar__grid" part="grid" role="grid" aria-labelledby="${escapeAttr(uid)}-title"${readonly}>${head(bindings)}<tbody data-body>${rows(bindings)}</tbody></table>`;
   }
   function shell(bindings, ops) {
     ops.setAttr(".xtyle-calendar", "class", calendarClass(bindings));

@@ -1,5 +1,5 @@
 export const barCss = `
-[data-bar] { display: block; }
+[data-root][data-bar] { display: block; }
 .xtyle-bar {
 	--bar-height: 320px;
 	display: block;

@@ -166,7 +166,7 @@ export const statusbarManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "manual-overflow",
+			name: "manualOverflow",
 			type: "boolean",
 			default: "false",
 			description:

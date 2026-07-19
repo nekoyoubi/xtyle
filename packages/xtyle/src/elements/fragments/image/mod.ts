@@ -1,3 +1,4 @@
+import { escapeAttr } from "../escape.js";
 import { renderIcon } from "../../../icons";
 
 interface OpsBuilder {
@@ -32,10 +33,6 @@ interface Intent {
 	activate?: string;
 }
 
-function esc(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 function imageClass(b: ImageBindings): string {
 	const radius = b.radius ?? "md";
 	return [
@@ -48,21 +45,21 @@ function imageClass(b: ImageBindings): string {
 }
 
 function mediaHtml(b: ImageBindings): string {
-	const src = esc(b.src ?? "");
+	const src = escapeAttr(b.src ?? "");
 	if (!src) return "";
-	const alt = esc(b.alt ?? "");
+	const alt = escapeAttr(b.alt ?? "");
 	const loading = b.loading === "eager" ? "eager" : "lazy";
-	return `<img class="xtyle-image__img" part="image" src="${src}" alt="${alt}" loading="${loading}" decoding="async" />`;
+	return `<img class="xtyle-image__img" part="image" src="${src}" alt="${alt}" loading="${escapeAttr(loading)}" decoding="async" />`;
 }
 
 function captionHtml(b: ImageBindings): string {
-	return b.caption ? `<figcaption class="xtyle-image__caption" part="caption">${esc(b.caption)}</figcaption>` : "";
+	return b.caption ? `<figcaption class="xtyle-image__caption" part="caption">${escapeAttr(b.caption)}</figcaption>` : "";
 }
 
 function zoomHtml(b: ImageBindings): string {
 	if (!b.zoom) return "";
 	return (
-		`<button class="xtyle-image__zoom" part="zoom" type="button" aria-label="${esc(b.zoomLabel ?? "View image")}">` +
+		`<button class="xtyle-image__zoom" part="zoom" type="button" aria-label="${escapeAttr(b.zoomLabel ?? "View image")}">` +
 		`${renderIcon("maximize")}</button>`
 	);
 }
@@ -74,7 +71,7 @@ function audioHtml(b: ImageBindings): string {
 	const muted = b.audioMuted !== false;
 	return (
 		`<button class="xtyle-image__audio" part="audio" type="button" aria-pressed="${muted ? "false" : "true"}"` +
-		` aria-label="${esc(b.audioLabel ?? (muted ? "Unmute preview" : "Mute preview"))}">` +
+		` aria-label="${escapeAttr(b.audioLabel ?? (muted ? "Unmute preview" : "Mute preview"))}">` +
 		`<span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--muted">${renderIcon("volume-off")}</span>` +
 		`<span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--live">${renderIcon("volume")}</span>` +
 		`</button>`
@@ -88,7 +85,7 @@ function errorHtml(): string {
 }
 
 function imageHtml(b: ImageBindings): string {
-	const ratioStyle = b.ratio ? ` style="aspect-ratio: ${esc(b.ratio)}"` : "";
+	const ratioStyle = b.ratio ? ` style="aspect-ratio: ${escapeAttr(b.ratio)}"` : "";
 	const placeholder = `<span class="xtyle-image__placeholder" part="placeholder" aria-hidden="true"></span>`;
 	const media = `<span class="xtyle-image__media" data-image-media>${mediaHtml(b)}</span>`;
 	// The hover-preview overlay: hidden until the element reveals it. Marked `data-slot="hover"` so the
@@ -114,8 +111,8 @@ function mount(bindings: ImageBindings, ops: OpsBuilder): void {
 // the first hydration apply, and would drop focus off a control mid-interaction. Chrome that has to
 // appear or disappear (the zoom button, the audio toggle) is a shape change: the element remounts.
 function patch(bindings: ImageBindings, ops: OpsBuilder): void {
-	ops.setAttr('[part="figure"]', "class", imageClass(bindings));
-	ops.setAttr('[part="frame"]', "style", bindings.ratio ? `aspect-ratio: ${esc(bindings.ratio)}` : "");
+	ops.setAttr(".xtyle-image", "class", imageClass(bindings));
+	ops.setAttr('[part="frame"]', "style", bindings.ratio ? `aspect-ratio: ${escapeAttr(bindings.ratio)}` : "");
 	ops.replaceChildren("[data-image-media]", mediaHtml(bindings));
 	if (bindings.zoom) ops.setAttr(".xtyle-image__zoom", "aria-label", bindings.zoomLabel ?? "View image");
 }

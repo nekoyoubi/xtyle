@@ -8,6 +8,7 @@ import {
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/radio/source.generated.js";
+import { resolveTone, resolveVocab, SIZES, ORIENTATIONS } from "../vocab.js";
 
 export class XtyleRadio extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -35,14 +36,14 @@ export class XtyleRadio extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "radio size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
@@ -205,7 +206,7 @@ export class XtyleRadioGroup extends XtyleElement {
 	}
 
 	get orientation(): "vertical" | "horizontal" {
-		return (this.getAttribute("orientation") as "vertical" | "horizontal") ?? "vertical";
+		return resolveVocab(this.getAttribute("orientation"), ORIENTATIONS, "vertical", "radio orientation");
 	}
 	set orientation(value: "vertical" | "horizontal") {
 		this.setAttribute("orientation", value);

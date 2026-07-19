@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -29,9 +31,9 @@ function titleMarkup(b: ToolbarBindings): string {
 	if (heading === null) return "";
 	const href = b.href ?? null;
 	if (href !== null) {
-		return `<a class="xtyle-toolbar__title" part="title" href="${href}">${heading}</a>`;
+		return `<a class="xtyle-toolbar__title" part="title" href="${escapeAttr(href)}">${escapeHtml(heading)}</a>`;
 	}
-	return `<span class="xtyle-toolbar__title" part="title">${heading}</span>`;
+	return `<span class="xtyle-toolbar__title" part="title">${escapeHtml(heading)}</span>`;
 }
 
 function inner(b: ToolbarBindings): string {
@@ -46,7 +48,7 @@ function inner(b: ToolbarBindings): string {
 
 function toolbarHtml(b: ToolbarBindings): string {
 	const tag = b.landmark ? "header" : "div";
-	const nameAttr = b.landmark && b.heading ? ` aria-label="${b.heading}"` : "";
+	const nameAttr = b.landmark && b.heading ? ` aria-label="${escapeAttr(b.heading)}"` : "";
 	return `<${tag} part="toolbar" class="${toolbarClass(b)}"${nameAttr}>${inner(b)}</${tag}>`;
 }
 
@@ -55,7 +57,7 @@ hooks.fragment.mount("toolbar", (bindings, ops) => {
 });
 
 hooks.fragment.update("toolbar", (bindings, ops) => {
-	ops.setAttr('[part="toolbar"]', "class", toolbarClass(bindings));
+	ops.setAttr(".xtyle-toolbar", "class", toolbarClass(bindings));
 	const heading = bindings.heading ?? null;
 	if (heading !== null) {
 		ops.setText('[part="title"]', heading);

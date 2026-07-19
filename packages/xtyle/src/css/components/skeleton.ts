@@ -1,5 +1,5 @@
 export const skeletonCss = `
-[data-skeleton] { display: contents; }
+[data-root][data-skeleton] { display: contents; }
 .xtyle-skeleton {
 	display: block;
 	position: relative;

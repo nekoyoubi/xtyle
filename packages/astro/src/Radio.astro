@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, SIZES, resolveVocab } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xtyle/core";
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	tone?: Tone;
@@ -26,8 +28,8 @@ interface Props {
 }
 
 const {
-	tone = "accent",
-	size = "md",
+	tone: toneInput,
+	size: sizeInput,
 	name,
 	value,
 	checked = false,
@@ -41,6 +43,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("radio", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "radio size");
+const tone = resolveTone(toneInput, "accent");
 
 const descriptionId = `xtyle-radio-desc-${Math.random().toString(36).slice(2, 8)}`;
 const bindings = {

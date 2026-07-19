@@ -1,19 +1,26 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/breadcrumb/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
   function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
   function escapeAttr(value) {
-    return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
+
+  // packages/xtyle/src/elements/fragments/breadcrumb/mod.ts
   function breadcrumbClass(bindings) {
     const tone = bindings.tone ?? "accent";
     const size = bindings.size ?? "md";
     return ["xtyle-breadcrumb", `xtyle-breadcrumb--${tone}`, size !== "md" && `xtyle-breadcrumb--${size}`].filter(Boolean).join(" ");
   }
   function separatorMarkup(separator) {
-    return `<li class="xtyle-breadcrumb__separator" part="separator" aria-hidden="true">${escapeHtml(separator)}</li>`;
+    return `<li class="xtyle-breadcrumb__separator" part="separator" aria-hidden="true">${escapeAttr(separator)}</li>`;
   }
   function crumbCell(item, isCurrent, label) {
     const title = item.title ? ` title="${escapeAttr(item.title)}"` : "";
@@ -30,7 +37,7 @@
     const lastIndex = items.length - 1;
     return items.map((item, index) => {
       const isCurrent = item.current === true || item.current === void 0 && index === lastIndex;
-      const label = escapeHtml(item.label ?? "");
+      const label = escapeAttr(item.label ?? "");
       const cell = crumbCell(item, isCurrent, label);
       const row = `<li class="xtyle-breadcrumb__item" part="item-wrap">${cell}</li>`;
       return index < lastIndex ? `${row}${separatorMarkup(separator)}` : row;

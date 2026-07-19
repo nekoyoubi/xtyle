@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -70,14 +72,6 @@ const LEGEND: { keys: string[]; text: string }[] = [
 	{ keys: ["↵"], text: "run" },
 	{ keys: ["Esc"], text: "dismiss" },
 ];
-
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
-}
 
 function keycap(key: string): string {
 	return `<kbd class="xtyle-kbd xtyle-kbd--sm" part="key">${escapeHtml(key)}</kbd>`;

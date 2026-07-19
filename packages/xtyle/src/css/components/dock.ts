@@ -5,7 +5,7 @@ const dockToneEdges = FULL_TONES.map(
 ).join("\n");
 
 export const dockCss = `
-[data-dock] { display: contents; }
+[data-root][data-dock] { display: contents; }
 .xtyle-dock {
 	display: flex;
 	flex-direction: column;

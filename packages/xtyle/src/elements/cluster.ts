@@ -1,13 +1,14 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
+import { CLUSTER_ALIGNS, CLUSTER_JUSTIFIES } from "../vocab.js";
 import { clusterHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/cluster/source.generated.js";
 
-type ClusterAlign = "start" | "center" | "end" | "stretch" | "baseline";
-type ClusterJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
+type ClusterAlign = (typeof CLUSTER_ALIGNS)[number];
+type ClusterJustify = (typeof CLUSTER_JUSTIFIES)[number];
 
-const ALIGNS: readonly ClusterAlign[] = ["start", "center", "end", "stretch", "baseline"];
-const JUSTIFIES: readonly ClusterJustify[] = ["start", "center", "end", "between", "around", "evenly"];
+const ALIGNS: readonly ClusterAlign[] = CLUSTER_ALIGNS;
+const JUSTIFIES: readonly ClusterJustify[] = CLUSTER_JUSTIFIES;
 
 function clampGap(raw: string | null): number | null {
 	if (raw === null) return null;

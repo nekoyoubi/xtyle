@@ -2,8 +2,9 @@
 	import "@xtyle/core/elements/kbd.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as KbdTone } from "@xtyle/core";
+	import { KBD_SIZES } from "@xtyle/core";
 
-	type KbdSize = "sm" | "md" | "lg";
+	type KbdSize = (typeof KBD_SIZES)[number];
 
 	interface Props {
 		size?: KbdSize;

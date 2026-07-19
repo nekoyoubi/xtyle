@@ -231,10 +231,27 @@ export const tableManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "selection",
+			type: '"none" | "single" | "multi" | "range"',
+			default: "none",
+			description:
+				"Row selection, consumed from the shared collection core. Beyond `none` the body rows become a selectable, arrow-navigable grid keyed by each row's `data-value` (or index): click or Enter selects, Space toggles, Ctrl/Cmd-click toggles, Shift-click (or Shift+Arrow in range mode) extends a span. A row with `data-selected` starts selected, and an `<input type=\"checkbox\" data-row-select>` inside a row mirrors its state.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["none", "single", "multi", "range"],
+		},
+		{
 			name: "ariaLabel",
 			type: "string",
 			description: "Accessible name for the table. Required when there is no `<caption>`; the binding warns when both are missing.",
 			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: emit the decorated table but never load the runtime to hydrate it. The part classes the element writes onto the authored `<table>` at upgrade are applied at build time, so a static table is fully styled; sorting, the scroll affordance, and row `selection` are what hydration adds. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
 		},
 	],
 	variants: [
@@ -291,6 +308,18 @@ export const tableManifest: ComponentManifest = {
 			selector: ".xtyle-table-wrap:focus-visible",
 			tokens: ["--border-thick", "--ring"],
 		},
+		{
+			name: "selected",
+			description: "A selected body row (with `selection`): an accent fill, plus a redundant check in the first cell under `--selection-cue: marker`.",
+			selector: '.xtyle-table__body .xtyle-table__row[aria-selected="true"]',
+			tokens: ["--accent-bg", "--fg-0", "--selection-cue"],
+		},
+		{
+			name: "row-focus",
+			description: "The roving keyboard cursor on a selectable row, kept distinct from selection: an inset accent ring.",
+			selector: ".xtyle-table__body .xtyle-table__row[tabindex]:focus-visible",
+			tokens: ["--accent", "--border-normal"],
+		},
 	],
 	slots: [
 		{
@@ -322,7 +351,10 @@ export const tableManifest: ComponentManifest = {
 		"--border-thick",
 		"--line",
 		"--line-2",
+		"--accent",
+		"--accent-bg",
 		"--accent-text",
+		"--selection-cue",
 		"--ring",
 		"--state-hover",
 		"--duration-fast",
@@ -338,6 +370,7 @@ export const tableManifest: ComponentManifest = {
 		"Every header cell SHOULD carry `scope` (`col` or `row`) so assistive tech associates data cells correctly.",
 		"A table with no `<caption>` needs an `aria-label`; the binding warns at runtime when both are missing.",
 		"Sortable headers expose state via `aria-sort` (`ascending`/`descending`/`none`), not via the glyph, which is `aria-hidden`.",
+		"With `selection` set, the table becomes a `role=grid`: body rows carry `aria-selected` and a roving `tabindex`, Up/Down/Home/End move the row cursor, and selection is never color-only (a redundant check appears under `--selection-cue: marker`). Selection stays off the column axis, which keeps its native sort/scope semantics.",
 		"The sortable header is keyboard-focusable; focus shows a token ring plus a transparent outline the forced-colors base rule promotes to a real system outline.",
 		"A table wide or tall enough to scroll becomes a keyboard-scrollable region (a `tabindex` stop only while it overflows), and focus on it shows an outline, so a keyboard user can see they've landed there before arrowing through it (WCAG 2.4.7).",
 	],

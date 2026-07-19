@@ -1,26 +1,48 @@
 import { XtyleDecoratorElement, define } from "./base.js";
 import { tableParts } from "../markup/table.js";
+import { SelectionModel, resolveRoving, linearNav, type SelectionMode } from "./collection/index.js";
 import "./icon.js";
+import { TABLE_VARIANTS, TABLE_SIZES, resolveVocab, SELECTION_MODES } from "../vocab.js";
 
-type TableVariant = "default" | "striped" | "bordered";
-type TableSize = "normal" | "compact";
+type TableVariant = (typeof TABLE_VARIANTS)[number];
+type TableSize = (typeof TABLE_SIZES)[number];
 
 const SORT_ICON = "chevron-down";
 
 export class XtyleTable extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
-		return ["variant", "size", "hover", "sticky", "max-height"];
+		return ["variant", "size", "hover", "sticky", "max-height", "selection"];
+	}
+
+	/** Row selection — the table's consumption of the shared collection core (host-side, no fragment).
+	 * `none` leaves the native table untouched; any other mode makes the body rows a selectable,
+	 * arrow-navigable grid keyed by each row's `data-value` (or its index). */
+	get selection(): SelectionMode {
+		return resolveVocab(this.getAttribute("selection"), SELECTION_MODES, "none", "table selection");
+	}
+	set selection(value: SelectionMode) {
+		this.setAttribute("selection", value);
+	}
+
+	private selectionModel = new SelectionModel("none");
+	private rovingKey: string | null = null;
+	private seeded = false;
+	private selectionWired = false;
+
+	/** The selected row values. */
+	get selected(): string[] {
+		return this.selectionModel.selectedKeys();
 	}
 
 	get variant(): TableVariant {
-		return (this.getAttribute("variant") as TableVariant) ?? "default";
+		return resolveVocab(this.getAttribute("variant"), TABLE_VARIANTS, "default", "table variant");
 	}
 	set variant(value: TableVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get size(): TableSize {
-		return (this.getAttribute("size") as TableSize) ?? "normal";
+		return resolveVocab(this.getAttribute("size"), TABLE_SIZES, "normal", "table size");
 	}
 	set size(value: TableSize) {
 		this.setAttribute("size", value);
@@ -45,6 +67,7 @@ export class XtyleTable extends XtyleDecoratorElement {
 
 	connectedCallback(): void {
 		super.connectedCallback();
+		this.wireSelection();
 		this.decorate();
 		this.observeOverflow();
 		this.observeContent();
@@ -161,6 +184,146 @@ export class XtyleTable extends XtyleDecoratorElement {
 		for (const footCell of Array.from(table.querySelectorAll("tfoot td, tfoot th"))) {
 			footCell.classList.remove(tableParts.cell, tableParts.headerCell);
 			footCell.classList.add(tableParts.footerCell);
+		}
+
+		this.applySelection(table);
+	}
+
+	// --- Row selection (the collection-core seam) -------------------------------------------------
+
+	private bodyRows(): HTMLElement[] {
+		const table = this.querySelector("table");
+		return table ? Array.from(table.querySelectorAll<HTMLElement>("tbody tr")) : [];
+	}
+
+	private rowKey(row: HTMLElement, index: number): string {
+		return row.dataset.value ?? String(index);
+	}
+
+	/** ARIA + selection state for the body rows, recomputed on every decorate so a live-data row swap
+	 * keeps its marks. `aria-selected`/`tabindex` are attribute writes, which the content observer
+	 * (childList only) does not watch, so no disconnect guard is needed here. */
+	private applySelection(table: HTMLTableElement): void {
+		const mode = this.selection;
+		const rows = this.bodyRows();
+		if (mode === "none") {
+			if (table.getAttribute("role") === "grid") table.removeAttribute("role");
+			table.removeAttribute("aria-multiselectable");
+			for (const row of rows) {
+				row.removeAttribute("aria-selected");
+				row.removeAttribute("tabindex");
+				delete row.dataset.key;
+			}
+			return;
+		}
+		table.setAttribute("role", "grid");
+		if (mode === "multi" || mode === "range") table.setAttribute("aria-multiselectable", "true");
+		else table.removeAttribute("aria-multiselectable");
+
+		const keys = rows.map((row, i) => this.rowKey(row, i));
+		this.selectionModel.setMode(mode);
+		if (!this.seeded) {
+			const flagged = rows.flatMap((row, i) => (row.hasAttribute("data-selected") ? [this.rowKey(row, i)] : []));
+			this.selectionModel.reset(mode === "single" ? flagged.slice(0, 1) : flagged);
+			this.seeded = true;
+		} else {
+			this.selectionModel.retain(new Set(keys));
+		}
+		this.rovingKey = resolveRoving(
+			keys.map((key) => ({ key })),
+			[this.rovingKey, this.selectionModel.selectedKeys()[0] ?? null],
+		);
+		this.markRows(rows);
+	}
+
+	private markRows(rows: HTMLElement[]): void {
+		rows.forEach((row, i) => {
+			const key = this.rowKey(row, i);
+			row.dataset.key = key;
+			const isSelected = this.selectionModel.isSelected(key);
+			row.setAttribute("aria-selected", String(isSelected));
+			row.setAttribute("tabindex", key === this.rovingKey ? "0" : "-1");
+			const box = row.querySelector<HTMLInputElement>('input[type="checkbox"][data-row-select]');
+			if (box) box.checked = isSelected;
+		});
+	}
+
+	private commitSelection(key: string, mode: "replace" | "toggle" | "range"): void {
+		const rows = this.bodyRows();
+		const order = rows.map((row, i) => this.rowKey(row, i));
+		if (mode === "toggle") this.selectionModel.toggle(key);
+		else if (mode === "range") this.selectionModel.extendTo(key, order);
+		else this.selectionModel.replaceWith(key);
+		this.rovingKey = key;
+		this.markRows(rows);
+		this.dispatchEvent(
+			new CustomEvent("change", {
+				bubbles: true,
+				composed: true,
+				detail: { value: key, selected: this.selectionModel.selectedKeys() },
+			}),
+		);
+	}
+
+	private focusRow(key: string): void {
+		this.querySelector<HTMLElement>(`tbody tr[data-key="${CSS.escape(key)}"]`)?.focus();
+	}
+
+	private wireSelection(): void {
+		if (this.selectionWired) return;
+		this.selectionWired = true;
+		this.addEventListener("click", (event) => this.onRowClick(event));
+		this.addEventListener("keydown", (event) => this.onRowKeydown(event));
+	}
+
+	private onRowClick(event: MouseEvent): void {
+		if (this.selection === "none") return;
+		const target = event.target as HTMLElement;
+		const row = target.closest<HTMLElement>("tbody tr");
+		if (!row) return;
+		const key = row.dataset.key ?? "";
+		// A dedicated selection checkbox toggles its row; other interactive controls act on their own.
+		if (target.closest('input[type="checkbox"][data-row-select]')) {
+			this.commitSelection(key, "toggle");
+			return;
+		}
+		if (target.closest("a, button, input, select, textarea, label, [role='button']")) return;
+		const mode = event.shiftKey ? "range" : event.ctrlKey || event.metaKey ? "toggle" : "replace";
+		this.commitSelection(key, mode);
+	}
+
+	private onRowKeydown(event: KeyboardEvent): void {
+		if (this.selection === "none") return;
+		const row = (event.target as HTMLElement).closest<HTMLElement>("tbody tr");
+		if (!row) return;
+		const current = row.dataset.key ?? "";
+		const key = event.key;
+		if (key === " " || key === "Spacebar") {
+			event.preventDefault();
+			this.commitSelection(current, this.selection === "single" ? "replace" : "toggle");
+			return;
+		}
+		if (key === "Enter") {
+			event.preventDefault();
+			this.commitSelection(current, "replace");
+			return;
+		}
+		const rows = this.bodyRows();
+		const move = linearNav(
+			rows.map((r, i) => ({ key: this.rowKey(r, i) })),
+			current,
+			key,
+			{ orientation: "vertical", homeEnd: true },
+		);
+		if (move.focus !== undefined) {
+			event.preventDefault();
+			// Shift+Arrow in range mode extends the selection as the cursor moves.
+			if (event.shiftKey && this.selection === "range") this.commitSelection(move.focus, "range");
+			else {
+				this.rovingKey = move.focus;
+				this.markRows(rows);
+			}
+			this.focusRow(move.focus);
 		}
 	}
 

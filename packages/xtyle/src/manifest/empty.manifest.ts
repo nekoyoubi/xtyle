@@ -74,7 +74,16 @@ export const emptyManifest: ComponentManifest = {
 			tokens: ["--space-2"],
 		},
 	],
-	props: [],
+	props: [
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: emit the placeholder's markup but never load the runtime to hydrate it. The element only classes itself and the CSS does the rest, so a static empty state is byte-for-byte the hydrated one minus the script. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
+		},
+	],
 	variants: [],
 	sizes: [],
 	states: [],

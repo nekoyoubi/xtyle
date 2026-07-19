@@ -2,8 +2,9 @@
 	import "@xtyle/core/elements/dock.js";
 	import type { Snippet } from "svelte";
 	import type { Size, FullTone as Tone } from "@xtyle/core";
+	import { DOCK_SIDES } from "@xtyle/core";
 
-	type DockSide = "left" | "right";
+	type DockSide = (typeof DOCK_SIDES)[number];
 
 	interface Props {
 		side?: DockSide;

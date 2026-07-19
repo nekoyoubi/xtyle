@@ -73,7 +73,7 @@ export const parallaxManifest: ComponentManifest = {
 	],
 	props: [
 		{
-			name: "min-height",
+			name: "minHeight",
 			type: "string",
 			default: "22rem",
 			description: "The band's minimum height (any CSS length).",
@@ -93,6 +93,14 @@ export const parallaxManifest: ComponentManifest = {
 			default: "scroll",
 			description: "What drives the drift: `scroll` links it to the banner passing through the viewport; `cursor` makes the layers follow the pointer.",
 			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: emit the layered banner but never load the runtime to hydrate it. The layers stack and paint from CSS either way; only the scroll- or cursor-linked drift is lost, exactly as it is under `prefers-reduced-motion`. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
 		},
 	],
 	variants: [],

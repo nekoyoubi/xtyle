@@ -68,6 +68,7 @@ import { colorPickerManifest } from "./color-picker.manifest.js";
 import { numberInputManifest } from "./number-input.manifest.js";
 import { datePickerManifest } from "./date-picker.manifest.js";
 import { segmentedManifest } from "./segmented.manifest.js";
+import { listManifest } from "./list.manifest.js";
 import { accordionManifest } from "./accordion.manifest.js";
 import { treeManifest } from "./tree.manifest.js";
 import { statManifest } from "./stat.manifest.js";
@@ -93,6 +94,7 @@ import { comboboxManifest } from "./combobox.manifest.js";
 import { commandPaletteManifest } from "./command-palette.manifest.js";
 import { splitterManifest } from "./splitter.manifest.js";
 import { codeManifest } from "./code.manifest.js";
+import { markdownManifest } from "./markdown.manifest.js";
 import { paginationManifest } from "./pagination.manifest.js";
 import { calendarManifest } from "./calendar.manifest.js";
 import { qrManifest } from "./qr.manifest.js";
@@ -152,6 +154,7 @@ export const components: ComponentRegistry = {
 	"number-input": numberInputManifest,
 	"date-picker": datePickerManifest,
 	segmented: segmentedManifest,
+	list: listManifest,
 	accordion: accordionManifest,
 	tree: treeManifest,
 	stat: statManifest,
@@ -177,6 +180,7 @@ export const components: ComponentRegistry = {
 	"command-palette": commandPaletteManifest,
 	splitter: splitterManifest,
 	code: codeManifest,
+	markdown: markdownManifest,
 	pagination: paginationManifest,
 	calendar: calendarManifest,
 	qr: qrManifest,

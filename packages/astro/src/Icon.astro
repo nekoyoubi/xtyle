@@ -1,7 +1,8 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { bakeIconMark } from "./internal/palette.ts";
-import { ICON_NAMES, iconClass } from "@xtyle/core";
+import { ICON_NAMES, iconClass , resolveOptionalTone} from "@xtyle/core";
 import type { FullTone, IconName, IconSize, Palette } from "@xtyle/core";
 
 interface Props {
@@ -22,7 +23,7 @@ interface Props {
 const {
 	name,
 	size = "md",
-	tone,
+	tone: toneInput,
 	colors = "accents",
 	label,
 	spin = false,
@@ -30,6 +31,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("icon", Astro.props);
+const tone = resolveOptionalTone(toneInput);
 
 // A functional glyph is looked up; any other name is offered to the mark generators and baked when one claims it.
 const isGlyph = typeof name !== "string" || (ICON_NAMES as readonly string[]).includes(name);

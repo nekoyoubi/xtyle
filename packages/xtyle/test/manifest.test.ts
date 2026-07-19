@@ -359,17 +359,37 @@ describe("coverComponent / coverComponents", () => {
 	});
 });
 
-describe("tooltip closed-state layout", () => {
-	it("hides the closed content with display:none so it never inflates a scroll ancestor", async () => {
+/**
+ * The tip escapes its container by living in the top layer, which is the only thing that actually
+ * works: an ancestor with `overflow: auto` — an app rail, a dock, a panel — crops an in-flow tip no
+ * matter what it is styled with, and the rail can't give up its scrolling to fix that. No z-index
+ * reaches out of a clipping ancestor either, so the promotion is the fix and not a stronger number.
+ *
+ * It also subsumes the older guard here. A closed tip used to need `display: none` so it wouldn't
+ * inflate its scroll ancestor's width; a popover is out of flow entirely and isn't rendered at all
+ * until it's shown, so there is no box to inflate anything with.
+ */
+describe("tooltip escapes its container", () => {
+	it("is placed in the top layer, not stacked inside its ancestor", async () => {
 		const css = await loadCssModule("tooltip");
-		const closed = css.match(/\.xtyle-tooltip__content\s*\{[^}]*\}/)?.[0] ?? "";
-		expect(closed).toContain("display: none");
-		expect(closed).not.toContain("visibility: hidden");
+		const content = css.match(/\.xtyle-tooltip__content\s*\{[^}]*\}/)?.[0] ?? "";
+		expect(content).toContain("position: fixed");
+		// a z-index here would be a claim it can win from inside a clipping ancestor, which it can't
+		expect(content).not.toContain("z-index");
+		expect(content).not.toContain("visibility: hidden");
 	});
 
-	it("shows the open content as a displayed box", async () => {
+	it("leans on no ancestor for placement, since its containing block is the viewport", async () => {
 		const css = await loadCssModule("tooltip");
-		const open = css.match(/\.xtyle-tooltip__content\[data-open="true"\]\s*\{[^}]*\}/)?.[0] ?? "";
+		// the old model anchored the tip off the root with `bottom: 100%` / `left: 50%` per placement
+		expect(css).not.toMatch(/\.xtyle-tooltip--(top|bottom|left|right)\s+\.xtyle-tooltip__content\s*\{/);
+		// the arrow still hangs off the tip, which is its own containing block
+		expect(css).toMatch(/\.xtyle-tooltip--top\s+\.xtyle-tooltip__arrow\s*\{/);
+	});
+
+	it("shows the open content as a displayed box, off the platform's own state", async () => {
+		const css = await loadCssModule("tooltip");
+		const open = css.match(/\.xtyle-tooltip__content:popover-open\s*\{[^}]*\}/)?.[0] ?? "";
 		expect(open).toContain("display: block");
 		expect(open).toContain("opacity: 1");
 	});

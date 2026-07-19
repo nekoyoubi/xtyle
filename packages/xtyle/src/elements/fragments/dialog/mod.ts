@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -49,18 +51,18 @@ function inner(b: DialogBindings): string {
 	const showCloseButton = !b.noCloseButton;
 
 	const labelAttr = labelledby
-		? ` aria-labelledby="${labelledby}"`
+		? ` aria-labelledby="${escapeAttr(labelledby)}"`
 		: heading
 			? ` aria-labelledby="${titleId(b)}"`
 			: label
-				? ` aria-label="${label}"`
+				? ` aria-label="${escapeAttr(label)}"`
 				: "";
 
 	const closeButton = showCloseButton
-		? `<button type="button" class="xtyle-dialog__close" part="close" aria-label="${closeLabel}">${CLOSE_ICON}</button>`
+		? `<button type="button" class="xtyle-dialog__close" part="close" aria-label="${escapeAttr(closeLabel)}">${CLOSE_ICON}</button>`
 		: "";
 
-	const titleMarkup = heading ? `<h2 class="xtyle-dialog__title" id="${titleId(b)}">${heading}</h2>` : "";
+	const titleMarkup = heading ? `<h2 class="xtyle-dialog__title" id="${titleId(b)}">${escapeHtml(heading)}</h2>` : "";
 
 	const header = `<header class="xtyle-dialog__header" part="header"><slot name="header">${titleMarkup}</slot>${closeButton}</header>`;
 

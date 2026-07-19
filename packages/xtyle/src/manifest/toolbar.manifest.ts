@@ -113,6 +113,7 @@ export const toolbarManifest: ComponentManifest = {
 			type: "string",
 			description: "The bar's title. Rendered as a link when `href` is also set.",
 			bindings: ["html", "svelte", "astro"],
+			aliases: ["title"],
 		},
 		{
 			name: "href",
@@ -158,9 +159,9 @@ export const toolbarManifest: ComponentManifest = {
 		},
 		{
 			name: "sticky",
-			description: "Pinned to the top of its scroll area at an elevated stacking layer.",
+			description: "Pinned to the top of its scroll area, stacked above the content it scrolls over.",
 			className: "xtyle-toolbar--sticky",
-			tokens: ["--elevation-3"],
+			tokens: ["--layer-sticky"],
 		},
 	],
 	sizes: [
@@ -205,6 +206,7 @@ export const toolbarManifest: ComponentManifest = {
 		},
 	],
 	consumedTokens: [
+		"--layer-sticky",
 		"--font-sans",
 		"--font-display",
 		"--text-lg",
@@ -220,7 +222,6 @@ export const toolbarManifest: ComponentManifest = {
 		"--radius-sm",
 		"--ring",
 		"--link-hover",
-		"--elevation-3",
 		"--space-1",
 		"--space-2",
 		"--space-3",

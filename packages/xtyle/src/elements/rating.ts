@@ -1,7 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { composeIcon, composeIconThemed, resolveIconMark, resolvePrimitiveName, type IconComposition } from "../icon-builder.js";
+import { composeIcon, composeIconThemed, iconComposition, type IconComposition } from "../icon-builder.js";
 import { readLiveRegister } from "./live-register.js";
-import { PALETTE_TOKENS, type Palette } from "../series.js";
+import { PALETTE_TOKENS, resolvePaletteName, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/rating/source.generated.js";
 
@@ -9,17 +9,6 @@ import { manifest, fragmentSources } from "./fragments/rating/source.generated.j
  * register token the icon marks read, so a browser-only consumer can reconstruct the minimal register the
  * silhouette + palette colors need. */
 const RATING_TOKENS: readonly string[] = ["--neutral-bg", ...PALETTE_TOKENS];
-
-/** Resolve an icon name to a composition: a `--` spec composes through the mark grammar (so a colorful
- * taco works), a bare name is a single-layer primitive (`star` → `symbol-star`, any functional glyph by
- * its own name). An unknown name falls through to the primitive library's placeholder. */
-function ratingComposition(name: string): IconComposition {
-	if (name.includes("--")) {
-		const parsed = resolveIconMark(name);
-		if (parsed) return parsed.composition;
-	}
-	return { layers: [{ primitive: resolvePrimitiveName(name) }] };
-}
 
 function clamp(min: number, max: number, v: number): number {
 	return v < min ? min : v > max ? max : v;
@@ -62,6 +51,7 @@ export class XtyleRating extends XtyleElement {
 	}
 
 	private captured = false;
+	private painted = false;
 	private fallbackLabel = "";
 	private filledRow: HTMLElement | null = null;
 	private hiddenInput: HTMLInputElement | null = null;
@@ -94,7 +84,7 @@ export class XtyleRating extends XtyleElement {
 		return this.getAttribute("icon") || "star";
 	}
 	private get palette(): Palette {
-		return (this.getAttribute("colors") as Palette) ?? "accents";
+		return resolvePaletteName(this.getAttribute("colors"), "accents", "rating colors");
 	}
 	private get step(): number {
 		return this.allowHalf ? 0.5 : 1;
@@ -136,7 +126,7 @@ export class XtyleRating extends XtyleElement {
 	 * a monochrome glyph keeps `currentColor` and takes that same track color from the row's CSS. */
 	private glyphs(): { empty: string; filled: string } {
 		const register = this.register();
-		const comp = ratingComposition(this.icon);
+		const comp = iconComposition(this.icon);
 		const emptyComp: IconComposition = { ...comp, palette: { "*": "--neutral-bg" } };
 		return {
 			empty: composeIcon(emptyComp, { register, scheme: this.palette }),
@@ -162,9 +152,17 @@ export class XtyleRating extends XtyleElement {
 		const tone = this.getAttribute("tone");
 		this.style.setProperty("--rating-fill", tone ? `var(--${tone})` : "");
 
+		// The server bakes the glyphs against the default register, since no cascade exists at build
+		// time; the track's `--neutral-bg` silhouette in particular is a different color under a dark
+		// theme. The row is structural (the update hook only moves the clip), so adopting an SSR
+		// scaffold has to rebuild once against the live register or the wrong track color sticks.
+		const adoptedSsr = !this.painted && this.querySelector("[data-root]") !== null;
+		this.painted = true;
+
 		const { empty, filled } = this.glyphs();
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold("");
+		if (adoptedSsr) this.fragment.remount();
 		// The glyph count and the glyphs themselves (a new icon, a new palette, a theme swap) are a
 		// structural change the fill's patch ops can't express, so they rebuild the row; a value change
 		// only moves the clip, so it stays a patch.

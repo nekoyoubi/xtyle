@@ -1,25 +1,100 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/selector-escape.ts
-  var BACKSLASH = /\\/g;
-  var DQUOTE = /"/g;
-  var NEWLINE = /\n/g;
-  var CR = /\r/g;
-  function escapeSelectorValue(value) {
-    return value.replace(BACKSLASH, "\\\\").replace(DQUOTE, '\\"').replace(NEWLINE, "\\A ").replace(CR, "\\D ");
-  }
-
-  // packages/xtyle/src/elements/fragments/tree/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
   var AMP = /&/g;
   var LT = /</g;
   var GT = />/g;
-  var QUOT = /"/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
   function escapeHtml(value) {
     return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
   function escapeAttr(value) {
-    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
+
+  // packages/xtyle/src/elements/fragments/selector-escape.ts
+  var BACKSLASH = /\\/g;
+  var DQUOTE2 = /"/g;
+  var NEWLINE = /\n/g;
+  var CR = /\r/g;
+  function escapeSelectorValue(value) {
+    return value.replace(BACKSLASH, "\\\\").replace(DQUOTE2, '\\"').replace(NEWLINE, "\\A ").replace(CR, "\\D ");
+  }
+
+  // packages/xtyle/src/elements/collection/roving.ts
+  function focusableAt(items, index) {
+    const item = items[index];
+    return item && !item.skip ? item.key : null;
+  }
+  function firstKey(items) {
+    for (let i = 0; i < items.length; i++) {
+      const key = focusableAt(items, i);
+      if (key !== null) return key;
+    }
+    return null;
+  }
+  function lastKey(items) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const key = focusableAt(items, i);
+      if (key !== null) return key;
+    }
+    return null;
+  }
+  function stepKey(items, fromKey, dir, wrap = false) {
+    const n = items.length;
+    if (n === 0) return null;
+    const found = fromKey === null ? -1 : items.findIndex((it) => it.key === fromKey);
+    const here = found === -1 ? dir > 0 ? -1 : n : found;
+    for (let s = 1; s <= n; s++) {
+      let idx = here + dir * s;
+      if (wrap) idx = (idx % n + n) % n;
+      else if (idx < 0 || idx >= n) return null;
+      const key = focusableAt(items, idx);
+      if (key !== null) return key;
+      if (wrap && idx === here) break;
+    }
+    return null;
+  }
+
+  // packages/xtyle/src/elements/collection/nav-reducer.ts
+  function axisKeys(orientation) {
+    switch (orientation) {
+      case "horizontal":
+        return { next: ["ArrowRight"], prev: ["ArrowLeft"] };
+      case "both":
+        return { next: ["ArrowDown", "ArrowRight"], prev: ["ArrowUp", "ArrowLeft"] };
+      default:
+        return { next: ["ArrowDown"], prev: ["ArrowUp"] };
+    }
+  }
+  function linearNav(items, currentKey, key, opts = {}) {
+    const orientation = opts.orientation ?? "vertical";
+    const wrap = opts.wrap ?? false;
+    const { next, prev } = axisKeys(orientation);
+    if (next.includes(key)) {
+      const target = stepKey(items, currentKey, 1, wrap);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (prev.includes(key)) {
+      const target = stepKey(items, currentKey, -1, wrap);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (opts.homeEnd && key === "Home") {
+      const target = firstKey(items);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (opts.homeEnd && key === "End") {
+      const target = lastKey(items);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (key === "Enter" || key === " " || key === "Spacebar") {
+      return { activate: true, handled: true };
+    }
+    return {};
+  }
+
+  // packages/xtyle/src/elements/fragments/tree/mod.ts
   function treeClass(bindings) {
     const size = bindings.size ?? "md";
     return size === "md" ? "xtyle-tree" : `xtyle-tree xtyle-tree--${size}`;
@@ -83,7 +158,8 @@
       const isStatic = locked && !isLink;
       const staticData = isStatic ? ` data-static="true"` : "";
       const rowClass = isStatic ? "xtyle-tree__row xtyle-tree__row--static" : "xtyle-tree__row";
-      const rowOpen = isLink ? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">` : `<div class="${rowClass}" part="row" data-value="${escapeAttr(value)}"${disabledData}${staticData} style="--tree-level: ${level}">`;
+      const titleAttr = node.title ? ` title="${escapeAttr(node.title)}"` : "";
+      const rowOpen = isLink ? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData}${titleAttr} style="--tree-level: ${level}">` : `<div class="${rowClass}" part="row" data-value="${escapeAttr(value)}"${disabledData}${staticData}${titleAttr} style="--tree-level: ${level}">`;
       const rowClose = isLink ? "</a>" : "</div>";
       const trailing = treeTrailing(node, value, isLink);
       const group = hasChildren ? `<ul class="xtyle-tree__group" role="group"${open ? "" : " hidden"}>${buildNodes(node.children, level + 1, selectedValue, expanded, roving)}</ul>` : "";
@@ -92,7 +168,7 @@
       const lockedAttr = locked ? ` data-locked="true"` : "";
       const itemClass = locked ? "xtyle-tree__item xtyle-tree__item--locked" : "xtyle-tree__item";
       const tabindex = !isStatic && value === roving ? "0" : "-1";
-      return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
+      return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${escapeAttr(String(selected))}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
     }).join("");
   }
   function tree(bindings) {
@@ -165,21 +241,8 @@
     const row = here >= 0 ? rows[here] : void 0;
     if (!row) return {};
     const isStatic = (r) => r.locked && !r.isLink;
-    const step = (from, dir) => {
-      for (let i = from + dir; i >= 0 && i < rows.length; i += dir) {
-        if (!isStatic(rows[i])) return rows[i];
-      }
-      return void 0;
-    };
+    const navItems = rows.map((r) => ({ key: r.key, skip: isStatic(r) }));
     switch (k) {
-      case "ArrowDown": {
-        const next = step(here, 1);
-        return next ? { focus: next.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
-      }
-      case "ArrowUp": {
-        const prev = step(here, -1);
-        return prev ? { focus: prev.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
-      }
       case "ArrowRight": {
         if (row.expandable && !row.expanded)
           return { expandKey: row.key, expand: true, focus: row.key, preventDefault: true, stopPropagation: true };
@@ -195,19 +258,10 @@
         if (row.parent !== null) {
           const parent = rows.find((r) => r.key === row.parent);
           if (parent && !isStatic(parent)) return { focus: row.parent, preventDefault: true, stopPropagation: true };
-          const parentIdx = rows.findIndex((r) => r.key === row.parent);
-          const above = parentIdx >= 0 ? step(parentIdx, -1) : void 0;
-          if (above) return { focus: above.key, preventDefault: true, stopPropagation: true };
+          const above = stepKey(navItems, row.parent, -1);
+          if (above !== null) return { focus: above, preventDefault: true, stopPropagation: true };
         }
         return { preventDefault: true, stopPropagation: true };
-      }
-      case "Home": {
-        const first = rows.find((r) => !isStatic(r));
-        return first ? { focus: first.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
-      }
-      case "End": {
-        const last = step(rows.length, -1);
-        return last ? { focus: last.key, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
       }
       case "Enter":
       case " ":
@@ -217,8 +271,11 @@
         if (row.expandable) return { select: row.key, expandKey: row.key, preventDefault: true, stopPropagation: true };
         return { select: row.key, preventDefault: true, stopPropagation: true };
       }
-      default:
-        return { stopPropagation: true };
     }
+    const move = linearNav(navItems, current, k, { orientation: "vertical", homeEnd: true });
+    if (move.handled) {
+      return move.focus !== void 0 ? { focus: move.focus, preventDefault: true, stopPropagation: true } : { preventDefault: true, stopPropagation: true };
+    }
+    return { stopPropagation: true };
   });
 })();

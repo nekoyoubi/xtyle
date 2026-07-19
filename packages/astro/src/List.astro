@@ -1,0 +1,94 @@
+---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { normalizeItems, seededSelection } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SIZES, resolveVocab, LIST_INTERACTIONS, LIST_SELECTIONS, ORIENTATIONS } from "@xtyle/core";
+
+type Size = (typeof SIZES)[number];
+type Interaction = (typeof LIST_INTERACTIONS)[number];
+type Selection = (typeof LIST_SELECTIONS)[number];
+type Orientation = (typeof ORIENTATIONS)[number];
+type Action = { id: string; label: string; icon?: string; disabled?: boolean };
+type Item = {
+	value: string;
+	label: string;
+	disabled?: boolean;
+	lead?: string;
+	trail?: string;
+	selected?: boolean;
+	actions?: Action[];
+};
+
+interface Props {
+	items?: string | ReadonlyArray<string | Item>;
+	interaction?: Interaction;
+	selection?: Selection;
+	orientation?: Orientation;
+	size?: Size;
+	label?: string;
+	labelledby?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	items: itemsInput,
+	interaction: interactionInput,
+	selection: selectionInput,
+	orientation: orientationInput,
+	size: sizeInput,
+	label,
+	labelledby,
+	"aria-label": ariaLabel,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+await checkAuthoring("list", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "list size");
+const interaction = resolveVocab(interactionInput, LIST_INTERACTIONS, "navigational", "list interaction");
+const selection = resolveVocab(selectionInput, LIST_SELECTIONS, "none", "list selection");
+const orientation = resolveVocab(orientationInput, ORIENTATIONS, "vertical", "list orientation");
+
+const elementId = `xtyle-list-${Math.random().toString(36).slice(2, 8)}`;
+const items = normalizeItems(itemsInput);
+const itemsAttr = typeof itemsInput === "string" || itemsInput == null ? undefined : JSON.stringify(itemsInput);
+const optionsAttr = typeof itemsInput === "string" ? itemsInput : undefined;
+const selectedKeys = seededSelection(items, selection);
+const roving = interaction === "static" ? null : (selectedKeys[0] ?? items.find((item) => !item.disabled)?.value ?? null);
+
+const bindings = {
+	items,
+	interaction,
+	selection,
+	orientation,
+	size,
+	selectedKeys,
+	rovingValue: roving,
+	label: label ?? null,
+	labelledby: labelledby ?? null,
+	ariaLabel: ariaLabel ?? null,
+	elementId,
+};
+const light = await renderFragmentLight("list", bindings);
+---
+
+<xtyle-list
+	items={itemsAttr}
+	options={optionsAttr}
+	interaction={interaction}
+	selection={selection}
+	orientation={orientation}
+	size={size}
+	label={label}
+	labelledby={labelledby}
+	aria-label={ariaLabel}
+	class={extra}
+	{...rest}
+	set:html={light}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

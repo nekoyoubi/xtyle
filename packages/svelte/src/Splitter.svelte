@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/splitter.js";
+	import { ORIENTATIONS, SPLITTER_SIZES } from "@xtyle/core";
 
-	type SplitterOrientation = "vertical" | "horizontal";
-	type SplitterSize = "sm" | "md" | "lg";
+	type SplitterOrientation = (typeof ORIENTATIONS)[number];
+	type SplitterSize = (typeof SPLITTER_SIZES)[number];
 
 	interface SplitterResizeDetail {
 		value: number;

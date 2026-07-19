@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -36,12 +38,12 @@ function linkHtml(b: LinkBindings): string {
 		return `<span part="link" class="${linkClass(b)}"><span class="xtyle-slot"><slot></slot></span>${newTabHint}${icon}</span>`;
 	}
 
-	const targetAttr = target ? ` target="${target}"` : "";
+	const targetAttr = target ? ` target="${escapeAttr(target)}"` : "";
 	const explicitRel = b.rel ?? null;
 	const rel = explicitRel ?? (external ? "noopener noreferrer" : null);
-	const relAttr = rel ? ` rel="${rel}"` : "";
+	const relAttr = rel ? ` rel="${escapeAttr(rel)}"` : "";
 
-	return `<a part="link" class="${linkClass(b)}" href="${href}"${targetAttr}${relAttr}><span class="xtyle-slot"><slot></slot></span>${newTabHint}${icon}</a>`;
+	return `<a part="link" class="${linkClass(b)}" href="${escapeAttr(href)}"${targetAttr}${relAttr}><span class="xtyle-slot"><slot></slot></span>${newTabHint}${icon}</a>`;
 }
 
 hooks.fragment.mount("link", (bindings, ops) => {
@@ -49,7 +51,7 @@ hooks.fragment.mount("link", (bindings, ops) => {
 });
 
 hooks.fragment.update("link", (bindings, ops) => {
-	ops.setAttr('[part="link"]', "class", linkClass(bindings));
+	ops.setAttr(".xtyle-link", "class", linkClass(bindings));
 	if (bindings.href != null) {
 		ops.setAttr('[part="link"]', "href", bindings.href);
 		if (bindings.target != null) ops.setAttr('[part="link"]', "target", bindings.target);

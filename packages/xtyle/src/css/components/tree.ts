@@ -47,7 +47,7 @@ export const treeCss = `
 }
 .xtyle-tree__item[aria-selected="true"] > .xtyle-tree__row {
 	background: var(--accent-bg);
-	color: var(--accent-text);
+	color: var(--fg-0);
 	font-weight: var(--weight-medium);
 }
 .xtyle-tree__item[aria-disabled="true"] > .xtyle-tree__row {
@@ -125,6 +125,8 @@ ${FULL_TONES.map((t) => `.xtyle-tree__badge--${t} { color: var(--${t}-text); }`)
 	box-shadow: inset 0 0 0 var(--border-normal) var(--ring);
 	opacity: 1;
 }
+.xtyle-tree--sm { font-size: var(--text-xs); }
+.xtyle-tree--sm .xtyle-tree__row { padding-block: var(--space-0); }
 .xtyle-tree--lg { font-size: var(--text-body); }
 .xtyle-tree--lg .xtyle-tree__row { padding-block: var(--space-2); }
 @container style(--selection-cue: marker) {

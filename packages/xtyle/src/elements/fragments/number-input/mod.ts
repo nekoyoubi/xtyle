@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -54,24 +56,24 @@ function inner(b: NumberInputBindings): string {
 	const labelId = `${uid}-label`;
 	const placeholder = b.placeholder ?? null;
 	const nameAttr = labelledby
-		? ` aria-labelledby="${labelledby}"`
+		? ` aria-labelledby="${escapeAttr(labelledby)}"`
 		: labelText
 			? ` aria-labelledby="${labelId}"`
 			: "";
 	const disabledAttr = b.disabled ? " disabled" : "";
 	const minAttr = b.min !== undefined ? ` aria-valuemin="${b.min}"` : "";
 	const maxAttr = b.max !== undefined ? ` aria-valuemax="${b.max}"` : "";
-	const placeholderAttr = placeholder ? ` placeholder="${placeholder}"` : "";
+	const placeholderAttr = placeholder ? ` placeholder="${escapeAttr(placeholder)}"` : "";
 	const decDisabled = b.disabled || b.canDec === false ? " disabled" : "";
 	const incDisabled = b.disabled || b.canInc === false ? " disabled" : "";
 	const label = labelText
-		? `<span class="xtyle-number__label" part="label" id="${labelId}">${labelText}</span>`
+		? `<span class="xtyle-number__label" part="label" id="${labelId}">${escapeHtml(labelText)}</span>`
 		: "";
 
 	return (
 		`${label}<div class="xtyle-number__control" part="control">` +
 		`<button class="xtyle-number__step xtyle-number__step--dec" part="step-down" type="button" tabindex="-1" aria-label="Decrease"${decDisabled}>&#8722;</button>` +
-		`<input class="xtyle-number__input" part="input" type="text" inputmode="decimal" role="spinbutton" autocomplete="off" spellcheck="false" value="${value}"${placeholderAttr}${nameAttr}${minAttr}${maxAttr} aria-valuenow="${value}"${disabledAttr} />` +
+		`<input class="xtyle-number__input" part="input" type="text" inputmode="decimal" role="spinbutton" autocomplete="off" spellcheck="false" value="${escapeAttr(value)}"${placeholderAttr}${nameAttr}${minAttr}${maxAttr} aria-valuenow="${escapeAttr(value)}"${disabledAttr} />` +
 		`<button class="xtyle-number__step xtyle-number__step--inc" part="step-up" type="button" tabindex="-1" aria-label="Increase"${incDisabled}>&#43;</button></div>`
 	);
 }

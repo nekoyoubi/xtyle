@@ -1,13 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/pie/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
   var AMP = /&/g;
   var LT = /</g;
   var GT = />/g;
-  var QUOT = /"/g;
-  function esc(value) {
-    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/elements/fragments/pie/mod.ts
   var SZ = 200;
   var PAD = 4;
   var CX = SZ / 2;
@@ -37,22 +43,22 @@
   }
   function legendHtml(data, colors) {
     const items = data.map(
-      (d, i) => `<span class="xtyle-pie__legend-item" part="legend-item"><span class="xtyle-pie__legend-dot" style="background:${esc(colors[i] ?? "currentColor")}"></span>${esc(d.label)}</span>`
+      (d, i) => `<span class="xtyle-pie__legend-item" part="legend-item"><span class="xtyle-pie__legend-dot" style="background:${escapeAttr(colors[i] ?? "currentColor")}"></span>${escapeAttr(d.label)}</span>`
     ).join("");
     return `<div class="xtyle-pie__legend" part="legend">${items}</div>`;
   }
   function tooltipHtml(data, total) {
     const rows = data.map((d, i) => {
       const percent = Math.round(d.value / total * 100);
-      return `<span class="xtyle-pie__tooltip-row" part="tooltip-row" data-tip-row="${i}" hidden><span class="xtyle-pie__tooltip-name">${esc(d.label)}</span> <span class="xtyle-pie__tooltip-value">${esc(String(d.value))} \xB7 ${percent}%</span></span>`;
+      return `<span class="xtyle-pie__tooltip-row" part="tooltip-row" data-tip-row="${i}" hidden><span class="xtyle-pie__tooltip-name">${escapeAttr(d.label)}</span> <span class="xtyle-pie__tooltip-value">${escapeAttr(String(d.value))} \xB7 ${percent}%</span></span>`;
     }).join("");
     return `<div class="xtyle-pie__tooltip" part="tooltip" role="status" aria-hidden="true" hidden>${rows}</div>`;
   }
   function tableHtml(data, total, caption) {
     const rows = data.map(
-      (d) => `<tr><th scope="row">${esc(d.label)}</th><td>${esc(String(d.value))}</td><td>${esc(`${Math.round(d.value / total * 100)}%`)}</td></tr>`
+      (d) => `<tr><th scope="row">${escapeAttr(d.label)}</th><td>${escapeAttr(String(d.value))}</td><td>${escapeAttr(`${Math.round(d.value / total * 100)}%`)}</td></tr>`
     ).join("");
-    const cap = caption ? `<caption>${esc(caption)}</caption>` : "";
+    const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
     return `<table class="xtyle-pie__a11y">${cap}<thead><tr><th scope="col">Slice</th><th scope="col">Value</th><th scope="col">Share</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
   function pieHtml(b) {
@@ -75,9 +81,9 @@
         const percent = Math.round(d.value / total * 100);
         const fill = colors[i] ?? "currentColor";
         if (sweep >= 359.999) {
-          slices += donut ? `<circle class="xtyle-pie__slice" part="slice" cx="${CX}" cy="${CY}" r="${((R_OUT + rIn) / 2).toFixed(2)}" fill="none" stroke="${esc(fill)}" stroke-width="${(R_OUT - rIn).toFixed(2)}" data-i="${i}" tabindex="0" role="img" aria-label="${esc(`${d.label}: ${d.value} (${percent}%)`)}"></circle>` : `<circle class="xtyle-pie__slice" part="slice" cx="${CX}" cy="${CY}" r="${R_OUT}" fill="${esc(fill)}" data-i="${i}" tabindex="0" role="img" aria-label="${esc(`${d.label}: ${d.value} (${percent}%)`)}"></circle>`;
+          slices += donut ? `<circle class="xtyle-pie__slice" part="slice" cx="${CX}" cy="${CY}" r="${((R_OUT + rIn) / 2).toFixed(2)}" fill="none" stroke="${escapeAttr(fill)}" stroke-width="${(R_OUT - rIn).toFixed(2)}" data-i="${i}" tabindex="0" role="img" aria-label="${escapeAttr(`${d.label}: ${d.value} (${percent}%)`)}"></circle>` : `<circle class="xtyle-pie__slice" part="slice" cx="${CX}" cy="${CY}" r="${R_OUT}" fill="${escapeAttr(fill)}" data-i="${i}" tabindex="0" role="img" aria-label="${escapeAttr(`${d.label}: ${d.value} (${percent}%)`)}"></circle>`;
         } else {
-          slices += `<path class="xtyle-pie__slice" part="slice" d="${slicePath(R_OUT, rIn, start, end)}" fill="${esc(fill)}" data-i="${i}" tabindex="0" role="img" aria-label="${esc(`${d.label}: ${d.value} (${percent}%)`)}"></path>`;
+          slices += `<path class="xtyle-pie__slice" part="slice" d="${slicePath(R_OUT, rIn, start, end)}" fill="${escapeAttr(fill)}" data-i="${i}" tabindex="0" role="img" aria-label="${escapeAttr(`${d.label}: ${d.value} (${percent}%)`)}"></path>`;
         }
         if (b.showValues && percent >= 5) {
           const mid = polar((R_OUT + rIn) / 2 || R_OUT * 0.6, (start + end) / 2);
@@ -85,8 +91,8 @@
         }
       }
     }
-    const center = donut && total > 0 ? `<text class="xtyle-pie__center" x="${CX}" y="${CY}" text-anchor="middle" dy="0.32em">${esc(formatTotal(total))}</text>` : "";
-    const a11y = label ? ` aria-label="${esc(label)}"` : ` aria-label="${total > 0 ? `Pie chart of ${data.length} slices` : "No data"}"`;
+    const center = donut && total > 0 ? `<text class="xtyle-pie__center" x="${CX}" y="${CY}" text-anchor="middle" dy="0.32em">${escapeAttr(formatTotal(total))}</text>` : "";
+    const a11y = label ? ` aria-label="${escapeAttr(label)}"` : ` aria-label="${total > 0 ? `Pie chart of ${data.length} slices` : "No data"}"`;
     const empty = total > 0 ? "" : `<text class="xtyle-pie__empty" x="${CX}" y="${CY}" text-anchor="middle" dy="0.32em">No data</text>`;
     const svg = `<svg class="xtyle-pie__svg" viewBox="0 0 ${SZ} ${SZ}" role="img"${a11y}><g class="xtyle-pie__slices">${slices}</g><g class="xtyle-pie__labels">${labels}</g>${empty}${center}</svg>`;
     const legend = b.legend !== false ? legendHtml(data, colors) : "";

@@ -1,4 +1,6 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone } from "@xtyle/core";
 import { calendarBindings, parseCalendarValue, resolveWeekInfo, toIso, todayIn } from "@xtyle/core/markup";
 import type { CalendarDecorations, CalendarMode } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
@@ -52,7 +54,7 @@ const {
 	hideNav = false,
 	disabledDates = [],
 	decorations = {},
-	tone = "accent",
+	tone: toneInput,
 	size = "md",
 	readonly = false,
 	disabled = false,
@@ -62,6 +64,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("calendar", Astro.props);
+const tone = resolveTone(toneInput, "accent");
 
 const selected = parseCalendarValue(value ?? null, mode);
 const today = toIso(todayIn(timezone));

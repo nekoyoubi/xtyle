@@ -18,8 +18,17 @@ const colorizeToneRules = TONES.map(
 }`,
 ).join("\n");
 
+const trackToneRules = TONES.map(
+	(t) => `.xtyle-progress--linear.xtyle-progress--track-${t} .xtyle-progress__track {
+	background: var(--${t}-bg);
+}
+.xtyle-progress--circular.xtyle-progress--track-${t} .xtyle-progress__track-ring {
+	stroke: var(--${t}-bg);
+}`,
+).join("\n");
+
 export const progressCss = `
-[data-progress] { display: contents; }
+[data-root][data-progress] { display: contents; }
 .xtyle-progress {
 	display: inline-flex;
 	align-items: center;
@@ -70,16 +79,16 @@ ${linearToneRules}
 .xtyle-progress--circular {
 	display: inline-grid;
 	place-items: center;
-	width: var(--space-8);
-	height: var(--space-8);
+	width: var(--xtyle-progress-size, var(--space-8));
+	height: var(--xtyle-progress-size, var(--space-8));
 }
 .xtyle-progress--circular.xtyle-progress--sm {
-	width: var(--space-6);
-	height: var(--space-6);
+	width: var(--xtyle-progress-size, var(--space-6));
+	height: var(--xtyle-progress-size, var(--space-6));
 }
 .xtyle-progress--circular.xtyle-progress--lg {
-	width: calc(var(--space-8) + var(--space-3));
-	height: calc(var(--space-8) + var(--space-3));
+	width: var(--xtyle-progress-size, calc(var(--space-8) + var(--space-3)));
+	height: var(--xtyle-progress-size, calc(var(--space-8) + var(--space-3)));
 }
 .xtyle-progress__svg {
 	grid-area: 1 / 1;
@@ -97,6 +106,29 @@ ${linearToneRules}
 	stroke-linecap: round;
 	transition: stroke-dashoffset var(--duration-base) var(--ease-emphasized);
 }
+.xtyle-progress--circular .xtyle-progress__track-ring,
+.xtyle-progress--circular .xtyle-progress__indicator {
+	stroke-width: var(--xtyle-progress-stroke, 4);
+}
+.xtyle-progress--circular.xtyle-progress--sm .xtyle-progress__track-ring,
+.xtyle-progress--circular.xtyle-progress--sm .xtyle-progress__indicator {
+	stroke-width: var(--xtyle-progress-stroke, 3);
+}
+.xtyle-progress--circular.xtyle-progress--lg .xtyle-progress__track-ring,
+.xtyle-progress--circular.xtyle-progress--lg .xtyle-progress__indicator {
+	stroke-width: var(--xtyle-progress-stroke, 5);
+}
+.xtyle-progress--fixed-stroke .xtyle-progress__track-ring,
+.xtyle-progress--fixed-stroke .xtyle-progress__indicator {
+	vector-effect: non-scaling-stroke;
+}
+.xtyle-progress--no-track .xtyle-progress__track {
+	background: transparent;
+}
+.xtyle-progress--no-track .xtyle-progress__track-ring {
+	stroke: transparent;
+}
+${trackToneRules}
 ${circularToneRules}
 .xtyle-progress--circular .xtyle-progress__value {
 	grid-area: 1 / 1;

@@ -1,6 +1,6 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { barHostCss, type BarSeries, type BarScheme } from "../markup/index.js";
-import { seriesPalette, seriesColorsFor, resolvePalette, PALETTE_TOKENS, type Palette } from "../series.js";
+import { seriesPalette, seriesColorsFor, resolvePaletteName, PALETTE_TOKENS, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/bar/source.generated.js";
@@ -111,7 +111,7 @@ export class XtyleBar extends XtyleElement {
 	private colors(items: readonly { tone?: string }[]): string[] {
 		const scheme = this.scheme;
 		if (Array.isArray(scheme)) return seriesPalette(scheme, items.length, {}, { reverse: this.reverse });
-		const resolved = resolvePalette(scheme) ?? "accents";
+		const resolved = resolvePaletteName(scheme, "accents", "bar scheme");
 		return seriesColorsFor(resolved, items, this.paletteRegister(), { reverse: this.reverse });
 	}
 

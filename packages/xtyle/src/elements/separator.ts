@@ -2,10 +2,10 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { separatorHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/separator/source.generated.js";
+import { resolveVocab, ORIENTATIONS, SEPARATOR_VARIANTS, SEPARATOR_SIZES } from "../vocab.js";
 
-export type Orientation = "horizontal" | "vertical";
-export type SeparatorVariant = "default" | "with-label";
-export type SeparatorSize = "thin" | "normal";
+import type { Orientation, SeparatorVariant, SeparatorSize } from "../markup/separator.js";
+export type { Orientation, SeparatorVariant, SeparatorSize };
 
 export class XtyleSeparator extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "separator", {
@@ -21,21 +21,21 @@ export class XtyleSeparator extends XtyleElement {
 	}
 
 	get orientation(): Orientation {
-		return (this.getAttribute("orientation") as Orientation) ?? "horizontal";
+		return resolveVocab(this.getAttribute("orientation"), ORIENTATIONS, "horizontal", "separator orientation");
 	}
 	set orientation(value: Orientation) {
 		this.setAttribute("orientation", value);
 	}
 
 	get variant(): SeparatorVariant {
-		return (this.getAttribute("variant") as SeparatorVariant) ?? "default";
+		return resolveVocab(this.getAttribute("variant"), SEPARATOR_VARIANTS, "default", "separator variant");
 	}
 	set variant(value: SeparatorVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get size(): SeparatorSize {
-		return (this.getAttribute("size") as SeparatorSize) ?? "normal";
+		return resolveVocab(this.getAttribute("size"), SEPARATOR_SIZES, "normal", "separator size");
 	}
 	set size(value: SeparatorSize) {
 		this.setAttribute("size", value);

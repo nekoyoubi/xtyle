@@ -1,8 +1,9 @@
+import { POPOVER_PLACEMENTS, POPOVER_ALIGNS, POPOVER_FOCUS, POPOVER_PANEL_ROLES } from "../vocab.js";
 /** The side of the anchor the panel prefers; it flips to the opposite side when there is no room. */
-export type PopoverPlacement = "top" | "bottom" | "left" | "right";
+export type PopoverPlacement = (typeof POPOVER_PLACEMENTS)[number];
 
 /** Cross-axis alignment against the anchor. `start` ↔ `end` flip near a viewport edge; `center` clamps. */
-export type PopoverAlign = "start" | "center" | "end";
+export type PopoverAlign = (typeof POPOVER_ALIGNS)[number];
 
 /**
  * Where focus goes when `show()` / `openAt()` / `openFrom()` open the panel.
@@ -10,14 +11,14 @@ export type PopoverAlign = "start" | "center" | "end";
  * (for a body of static content), `none` leaves focus exactly where it was — what a
  * type-ahead surface needs, since its input must keep the caret while the list floats.
  */
-export type PopoverFocus = "first" | "panel" | "none";
+export type PopoverFocus = (typeof POPOVER_FOCUS)[number];
 
 /**
  * The ARIA role the panel carries. `dialog` is the generic anchored-surface default and wants an
  * accessible name; a surface whose content brings its own semantics (a listbox, a menu) names the
  * role it actually is, or `none` to make the panel a transparent box around the author's own widget.
  */
-export type PopoverPanelRole = "dialog" | "listbox" | "menu" | "grid" | "tree" | "none";
+export type PopoverPanelRole = (typeof POPOVER_PANEL_ROLES)[number];
 
 /** How the panel closes — carried on the `close` event's detail. */
 export type PopoverCloseReason = "escape" | "dismiss" | "select" | "api";

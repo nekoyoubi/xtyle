@@ -8,6 +8,7 @@ import {
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/checkbox/source.generated.js";
+import { resolveTone, resolveVocab, CHECKBOX_SIZES } from "../vocab.js";
 
 export class XtyleCheckbox extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -54,14 +55,14 @@ export class XtyleCheckbox extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), CHECKBOX_SIZES, "md", "checkbox size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
@@ -192,14 +193,14 @@ export class XtyleCheckboxGroup extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), CHECKBOX_SIZES, "md", "checkbox size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

@@ -1,17 +1,30 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { renderFragmentLight, listItems, fillRegion } from "@xtyle/core/elements/ssr";
+
 interface Props {
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
-const { class: extra, ...rest } = Astro.props;
+const { static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("timeline", Astro.props);
+
+// The dot and the rail are the fill's, and the browser path draws them only once the runtime lands.
+// Reading the authored `<li>`s here lets the server render the same feed, so the events arrive with
+// their furniture already on them; the element then finds a composed `[data-root]` and adopts it
+// rather than rebuilding, which is what keeps the SSR markup from being torn out on upgrade.
+const authored = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const events = listItems(authored);
+const light = await renderFragmentLight("timeline", {
+	events: events.map((event, index) => ({ index, last: index === events.length - 1, attrs: event.attrs })),
+});
+const composed = events.reduce((html, event, index) => fillRegion(html, `event-${index}`, event.html), light);
 ---
 
-<xtyle-timeline class:list={["xtyle-timeline", extra]} {...rest}>
-	<slot />
-</xtyle-timeline>
+<xtyle-timeline class:list={["xtyle-timeline", extra]} set:html={composed} {...rest} />
 
-<script>
-	import "@xtyle/core/elements";
-</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

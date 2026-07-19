@@ -61,7 +61,7 @@ export const appShellCss = `
 	top: 0;
 	bottom: 0;
 	width: 11px;
-	z-index: 5;
+	z-index: var(--layer-chrome);
 	padding: 0;
 	background: none;
 	border: none;
@@ -110,7 +110,7 @@ export const appShellCss = `
 	position: absolute;
 	top: var(--space-2);
 	left: var(--space-2);
-	z-index: 100;
+	z-index: var(--layer-skip);
 	font-family: var(--font-sans);
 	font-size: var(--text-sm);
 	font-weight: var(--weight-medium);

@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -37,10 +39,6 @@ const RESIZE_CLASS: Record<string, string> = {
 	both: "xtyle-textarea--resize-both",
 };
 
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 function rootClass(b: TextareaBindings): string {
 	const size = b.size ?? "md";
 	const resize = b.resize ?? "vertical";
@@ -64,12 +62,12 @@ function inner(b: TextareaBindings): string {
 	const labelHidden = labelText.length === 0 ? " hidden" : "";
 	const errorHidden = errorText.length === 0 ? " hidden" : "";
 	const ariaInvalid = b.invalid ? "true" : "false";
-	const describedBy = errorText.length > 0 ? ` aria-describedby="${errorId}"` : "";
+	const describedBy = errorText.length > 0 ? ` aria-describedby="${escapeAttr(errorId)}"` : "";
 
 	return (
-		`<label class="xtyle-textarea__label" part="label" for="${fieldId}" data-label${labelHidden}>${escapeHtml(labelText)}</label>` +
-		`<textarea class="xtyle-control xtyle-textarea__control" part="textarea control" id="${fieldId}" data-field aria-invalid="${ariaInvalid}"${describedBy}></textarea>` +
-		`<span class="xtyle-textarea__error" part="error" id="${errorId}" data-error${errorHidden}>${escapeHtml(errorText)}</span>`
+		`<label class="xtyle-textarea__label" part="label" for="${escapeAttr(fieldId)}" data-label${labelHidden}>${escapeHtml(labelText)}</label>` +
+		`<textarea class="xtyle-control xtyle-textarea__control" part="textarea control" id="${escapeAttr(fieldId)}" data-field aria-invalid="${ariaInvalid}"${describedBy}></textarea>` +
+		`<span class="xtyle-textarea__error" part="error" id="${escapeAttr(errorId)}" data-error${errorHidden}>${escapeHtml(errorText)}</span>`
 	);
 }
 

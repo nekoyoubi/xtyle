@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { CAROUSEL_TRANSITIONS, resolveOptionalVocab, CAROUSEL_DIRECTIONS } from "@xtyle/core";
 
-type CarouselTransition = "slide" | "fade" | "scale" | "flip";
-type CarouselDirection = "right" | "left" | "up" | "down";
+type CarouselTransition = (typeof CAROUSEL_TRANSITIONS)[number];
+type CarouselDirection = (typeof CAROUSEL_DIRECTIONS)[number];
 
 interface Props {
 	label?: string;
@@ -16,6 +18,10 @@ interface Props {
 	pauseOnHover?: boolean;
 	transition?: CarouselTransition;
 	direction?: CarouselDirection;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it.
+	 * The slides render in the fill's track as a plain scrollable strip; the arrows, dots, and autoplay
+	 * are runtime enhancements and stay absent. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
@@ -29,11 +35,15 @@ const {
 	controls = true,
 	dots = true,
 	pauseOnHover = true,
-	transition,
-	direction,
+	transition: transitionInput,
+	direction: directionInput,
+	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("carousel", Astro.props);
+const transition = resolveOptionalVocab(transitionInput, CAROUSEL_TRANSITIONS, "carousel transition");
+const direction = resolveOptionalVocab(directionInput, CAROUSEL_DIRECTIONS, "carousel direction");
 
 // The slides ship inside the fill's track from the first byte. Server-rendering only the frame (no
 // dots, no arrows: the slide count is not knowable from a rendered slot string, and the controls are
@@ -69,4 +79,4 @@ const composed = light.replace("<slot></slot>", () => slides);
 	{...rest}
 />
 
-<script>import "@xtyle/core/elements";</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

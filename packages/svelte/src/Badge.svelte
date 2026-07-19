@@ -2,8 +2,9 @@
 	import "@xtyle/core/elements/badge.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as BadgeTone, Size } from "@xtyle/core";
+	import { BADGE_VARIANTS } from "@xtyle/core";
 
-	type BadgeVariant = "solid" | "soft" | "outline";
+	type BadgeVariant = (typeof BADGE_VARIANTS)[number];
 
 	interface Props {
 		variant?: BadgeVariant;

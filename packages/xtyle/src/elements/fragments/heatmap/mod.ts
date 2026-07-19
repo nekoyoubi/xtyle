@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 }
@@ -31,15 +33,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: HeatmapBindings, ops: OpsBuilder) => void) => void };
 };
 
-const AMP = /&/g;
-const LT = /</g;
-const GT = />/g;
-const QUOT = /"/g;
-
-function esc(value: string): string {
-	return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
-}
-
 const CELL = 34;
 const GAP = 2;
 
@@ -69,17 +62,17 @@ function tooltipHtml(
 			const title = titles[r]?.[c];
 			let body: string;
 			if (title) {
-				body = esc(title);
+				body = escapeAttr(title);
 			} else {
-				const name = esc([rows[r], cols[c]].filter(Boolean).join(" · "));
+				const name = escapeAttr([rows[r], cols[c]].filter(Boolean).join(" · "));
 				const gv = glowValues[r]?.[c];
 				const glowPart =
 					glowLabel && Number.isFinite(gv)
-						? ` <span class="xtyle-heatmap__tooltip-name">· ${esc(glowLabel)} ${gv}</span>`
+						? ` <span class="xtyle-heatmap__tooltip-name">· ${escapeAttr(glowLabel)} ${gv}</span>`
 						: "";
 				body =
 					`<span class="xtyle-heatmap__tooltip-name">${name}</span> ` +
-					`<span class="xtyle-heatmap__tooltip-value">${esc(String(values[r]?.[c] ?? 0))}</span>${glowPart}`;
+					`<span class="xtyle-heatmap__tooltip-value">${escapeAttr(String(values[r]?.[c] ?? 0))}</span>${glowPart}`;
 			}
 			out.push(
 				`<span class="xtyle-heatmap__tooltip-row" part="tooltip-row" data-tip-row="${r}-${c}" hidden>${body}</span>`,
@@ -90,16 +83,16 @@ function tooltipHtml(
 }
 
 function tableHtml(values: number[][], rows: string[], cols: string[], caption: string): string {
-	const head = `<tr><th scope="col"></th>${cols.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr>`;
+	const head = `<tr><th scope="col"></th>${cols.map((c) => `<th scope="col">${escapeAttr(c)}</th>`).join("")}</tr>`;
 	const body = values
 		.map(
 			(row, r) =>
-				`<tr><th scope="row">${esc(rows[r] ?? String(r))}</th>${row
-					.map((v) => `<td>${esc(formatValue(v))}</td>`)
+				`<tr><th scope="row">${escapeAttr(rows[r] ?? String(r))}</th>${row
+					.map((v) => `<td>${escapeAttr(formatValue(v))}</td>`)
 					.join("")}</tr>`,
 		)
 		.join("");
-	const cap = caption ? `<caption>${esc(caption)}</caption>` : "";
+	const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
 	return `<table class="xtyle-heatmap__a11y">${cap}<thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
 
@@ -121,7 +114,7 @@ function heatmapHtml(b: HeatmapBindings): string {
 
 	if (nRows === 0 || nCols === 0) {
 		const label = b.title ?? b.ariaLabel ?? "";
-		return `<figure part="chart" class="xtyle-heatmap"><div class="xtyle-heatmap__empty" part="empty" role="img" aria-label="${label ? esc(label) : "No data"}">No data</div></figure>`;
+		return `<figure part="chart" class="xtyle-heatmap"><div class="xtyle-heatmap__empty" part="empty" role="img" aria-label="${label ? escapeAttr(label) : "No data"}">No data</div></figure>`;
 	}
 
 	const hasRowLabels = rows.some(Boolean);
@@ -146,7 +139,7 @@ function heatmapHtml(b: HeatmapBindings): string {
 			const y = topPad + r * CELL;
 			const fill = colors[r]?.[c] ?? "currentColor";
 			const glow = glows[r]?.[c] ?? null;
-			const style = glow ? ` style="filter:${esc(glow)}"` : "";
+			const style = glow ? ` style="filter:${escapeAttr(glow)}"` : "";
 			const gv = glowValues[r]?.[c];
 			const glowText = glowLabel && Number.isFinite(gv) ? `, ${glowLabel} ${gv}` : "";
 			const title = titles[r]?.[c];
@@ -157,11 +150,11 @@ function heatmapHtml(b: HeatmapBindings): string {
 				(isCurrent ? " xtyle-heatmap__cell--current" : "") +
 				(isCurrent && currentPulse ? " xtyle-heatmap__cell--pulse" : "");
 			cells.push(
-				`<rect class="${cellCls}" part="cell" x="${(x + GAP / 2).toFixed(1)}" y="${(y + GAP / 2).toFixed(1)}" width="${(CELL - GAP).toFixed(1)}" height="${(CELL - GAP).toFixed(1)}" rx="2" fill="${esc(fill)}"${style} data-r="${r}" data-c="${c}" tabindex="0" role="${role}" aria-label="${esc(label)}"></rect>`,
+				`<rect class="${cellCls}" part="cell" x="${(x + GAP / 2).toFixed(1)}" y="${(y + GAP / 2).toFixed(1)}" width="${(CELL - GAP).toFixed(1)}" height="${(CELL - GAP).toFixed(1)}" rx="2" fill="${escapeAttr(fill)}"${style} data-r="${r}" data-c="${c}" tabindex="0" role="${role}" aria-label="${escapeAttr(label)}"></rect>`,
 			);
 			if (b.showValues) {
 				valueLabels.push(
-					`<text class="xtyle-heatmap__value" x="${(x + CELL / 2).toFixed(1)}" y="${(y + CELL / 2).toFixed(1)}" dy="0.32em" text-anchor="middle">${esc(formatValue(v))}</text>`,
+					`<text class="xtyle-heatmap__value" x="${(x + CELL / 2).toFixed(1)}" y="${(y + CELL / 2).toFixed(1)}" dy="0.32em" text-anchor="middle">${escapeAttr(formatValue(v))}</text>`,
 				);
 			}
 		}
@@ -172,7 +165,7 @@ function heatmapHtml(b: HeatmapBindings): string {
 				.slice(0, nRows)
 				.map(
 					(labelText, r) =>
-						`<text class="xtyle-heatmap__rowlabel" x="${(leftPad - 8).toFixed(1)}" y="${(topPad + r * CELL + CELL / 2).toFixed(1)}" dy="0.32em" text-anchor="end">${esc(labelText ?? "")}</text>`,
+						`<text class="xtyle-heatmap__rowlabel" x="${(leftPad - 8).toFixed(1)}" y="${(topPad + r * CELL + CELL / 2).toFixed(1)}" dy="0.32em" text-anchor="end">${escapeAttr(labelText ?? "")}</text>`,
 				)
 				.join("")
 		: "";
@@ -181,7 +174,7 @@ function heatmapHtml(b: HeatmapBindings): string {
 				.slice(0, nCols)
 				.map(
 					(labelText, c) =>
-						`<text class="xtyle-heatmap__collabel" x="${(leftPad + c * CELL + CELL / 2).toFixed(1)}" y="${(topPad + gridH + 15).toFixed(1)}" text-anchor="middle">${esc(labelText ?? "")}</text>`,
+						`<text class="xtyle-heatmap__collabel" x="${(leftPad + c * CELL + CELL / 2).toFixed(1)}" y="${(topPad + gridH + 15).toFixed(1)}" text-anchor="middle">${escapeAttr(labelText ?? "")}</text>`,
 				)
 				.join("")
 		: "";
@@ -208,8 +201,8 @@ function heatmapHtml(b: HeatmapBindings): string {
 				.map(
 					(item) =>
 						`<span class="xtyle-heatmap__legend-item">` +
-						`<span class="xtyle-heatmap__legend-swatch" style="background:${esc(item.color)}"></span>` +
-						(item.label ? `<span class="xtyle-heatmap__legend-label">${esc(item.label)}</span>` : "") +
+						`<span class="xtyle-heatmap__legend-swatch" style="background:${escapeAttr(item.color)}"></span>` +
+						(item.label ? `<span class="xtyle-heatmap__legend-label">${escapeAttr(item.label)}</span>` : "") +
 						`</span>`,
 				)
 				.join("") +
@@ -217,11 +210,11 @@ function heatmapHtml(b: HeatmapBindings): string {
 	} else if (b.scale && scaleColors.length) {
 		scaleHtml =
 			`<div class="xtyle-heatmap__scale" part="scale" aria-hidden="true">` +
-			`<span class="xtyle-heatmap__scale-end">${esc(formatValue(b.scaleLow ?? 0))}</span>` +
+			`<span class="xtyle-heatmap__scale-end">${escapeAttr(formatValue(b.scaleLow ?? 0))}</span>` +
 			`<span class="xtyle-heatmap__scale-ramp">${scaleColors
-				.map((color) => `<span class="xtyle-heatmap__scale-swatch" style="background:${esc(color)}"></span>`)
+				.map((color) => `<span class="xtyle-heatmap__scale-swatch" style="background:${escapeAttr(color)}"></span>`)
 				.join("")}</span>` +
-			`<span class="xtyle-heatmap__scale-end">${esc(formatValue(b.scaleHigh ?? 0))}</span>` +
+			`<span class="xtyle-heatmap__scale-end">${escapeAttr(formatValue(b.scaleHigh ?? 0))}</span>` +
 			`</div>`;
 	}
 

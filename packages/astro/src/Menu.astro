@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { type MenuItem } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
@@ -16,6 +17,7 @@ interface Props {
 }
 
 const { items = [], label, open = false, context = false, static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("menu", Astro.props);
 
 const popupId = `xtyle-menu-${Math.random().toString(36).slice(2, 9)}-popup`;
 

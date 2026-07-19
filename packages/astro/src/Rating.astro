@@ -1,4 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { Palette } from "@xtyle/core";
+import { bakeRatingGlyphs } from "./internal/palette.ts";
+
 interface Props {
 	value?: number;
 	max?: number;
@@ -15,18 +20,55 @@ interface Props {
 	tone?: string;
 	/** Form field name; when set, the value posts through a hidden input. */
 	name?: string;
-	/** Accessible label (also the no-JS fallback text). */
+	/** Accessible label. */
 	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it.
+	 * The glyph row and its clipped fill are baked, so a static rating reads correctly; only the
+	 * pointer and keyboard input are lost, which is what `readonly` already opts out of. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
-const { value = 0, max = 5, size, icon, readonly, allowHalf, colors, tone, name, label, class: extra, ...rest } = Astro.props;
+const {
+	value = 0,
+	max = 5,
+	size,
+	icon = "star",
+	readonly = false,
+	allowHalf = false,
+	colors,
+	tone,
+	name,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+await checkAuthoring("rating", Astro.props);
+
+const clamped = Math.min(Math.max(value, 0), max);
+const { empty, filled } = await bakeRatingGlyphs(icon, (colors as Palette) ?? "accents");
+const light = await renderFragmentLight("rating", {
+	max,
+	value: clamped,
+	icon,
+	emptyIcon: empty,
+	filledIcon: filled,
+	readonly,
+	allowHalf,
+	size: size ?? "md",
+});
+
+// The hidden input is plumbing the element appends on upgrade; a zero-JS form still has to post the
+// value, so the server writes the same one rather than leaving a `name`d rating that submits nothing.
+const mirror = name && !readonly ? `<input type="hidden" name="${name}" value="${clamped}">` : "";
+const accessibleName = label ?? `${clamped} out of ${max} stars`;
 ---
 
 <xtyle-rating
-	value={value}
+	value={clamped}
 	max={max}
 	size={size}
 	icon={icon}
@@ -36,9 +78,17 @@ const { value = 0, max = 5, size, icon, readonly, allowHalf, colors, tone, name,
 	readonly={readonly ? "" : undefined}
 	allowhalf={allowHalf ? "" : undefined}
 	label={label}
-	class:list={["xtyle-rating", extra]}
-	{...rest}>{label ?? `${value} out of ${max} stars`}</xtyle-rating>
+	role={readonly ? "img" : "slider"}
+	tabindex={readonly ? undefined : 0}
+	aria-label={accessibleName}
+	aria-valuemin={readonly ? undefined : 0}
+	aria-valuemax={readonly ? undefined : max}
+	aria-valuenow={readonly ? undefined : clamped}
+	aria-valuetext={readonly ? undefined : `${clamped} out of ${max}`}
+	style={tone ? `--rating-fill: var(--${tone})` : undefined}
+	class:list={["xtyle-rating", size === "sm" && "xtyle-rating--sm", size === "lg" && "xtyle-rating--lg", !readonly && "xtyle-rating--interactive", extra]}
+	set:html={light + mirror}
+	{...rest}
+/>
 
-<script>
-	import "@xtyle/core/elements";
-</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

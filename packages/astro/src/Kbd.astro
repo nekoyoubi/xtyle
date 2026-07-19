@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
+import { resolveOptionalTone, KBD_SIZES, resolveVocab } from "@xtyle/core";
 import type { FullTone as KbdTone } from "@xtyle/core";
-type KbdSize = "sm" | "md" | "lg";
+type KbdSize = (typeof KBD_SIZES)[number];
 
 interface Props {
 	size?: KbdSize;
@@ -14,7 +16,10 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { size = "md", tone, static: isStatic = false, class: extra, ...rest } = Astro.props;
+const { size: sizeInput, tone: toneInput, static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("kbd", Astro.props);
+const size = resolveVocab(sizeInput, KBD_SIZES, "md", "kbd size");
+const tone = resolveOptionalTone(toneInput);
 
 const bindings = { size, tone };
 const chrome = await renderFragmentLight("kbd", bindings);

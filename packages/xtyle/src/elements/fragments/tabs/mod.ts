@@ -1,3 +1,7 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
+import { linearNav } from "../../collection/nav-reducer.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -79,11 +83,11 @@ function tabButtons(bindings: TabsBindings, selected: string | null): string {
 			const tabindex = isSelected && !tab.disabled ? "0" : "-1";
 			const disabledAttr = tab.disabled ? " disabled aria-disabled=\"true\"" : "";
 			// In tablist mode the element owns no panels, so there is nothing to reference.
-			const controls = bindings.tablist ? "" : ` aria-controls="${uid}-panel-${i}"`;
+			const controls = bindings.tablist ? "" : ` aria-controls="${escapeAttr(uid)}-panel-${i}"`;
 			return (
-				`<button class="xtyle-tabs__tab" part="tab" type="button" role="tab" id="${uid}-tab-${i}" ` +
-				`data-key="${key}" aria-selected="${String(isSelected)}"${controls} ` +
-				`tabindex="${tabindex}"${disabledAttr}>${tab.label}</button>`
+				`<button class="xtyle-tabs__tab" part="tab" type="button" role="tab" id="${escapeAttr(uid)}-tab-${i}" ` +
+				`data-key="${escapeAttr(key)}" aria-selected="${String(isSelected)}"${controls} ` +
+				`tabindex="${tabindex}"${disabledAttr}>${escapeHtml(tab.label)}</button>`
 			);
 		})
 		.join("");
@@ -97,10 +101,10 @@ function panels(bindings: TabsBindings, selected: string | null): string {
 			const key = tab.key ?? String(i);
 			const isSelected = key === selected;
 			const hidden = isSelected ? "" : " hidden";
-			const body = tab.panelSlot ? `<slot name="${tab.panelSlot}"></slot>` : (tab.panel ?? "");
+			const body = tab.panelSlot ? `<slot name="${escapeAttr(tab.panelSlot)}"></slot>` : (tab.panel ?? "");
 			return (
-				`<div class="xtyle-tabs__panel" part="panel" role="tabpanel" id="${uid}-panel-${i}" ` +
-				`data-key="${key}" aria-labelledby="${uid}-tab-${i}" tabindex="0"${hidden}>${body}</div>`
+				`<div class="xtyle-tabs__panel" part="panel" role="tabpanel" id="${escapeAttr(uid)}-panel-${i}" ` +
+				`data-key="${escapeAttr(key)}" aria-labelledby="${escapeAttr(uid)}-tab-${i}" tabindex="0"${hidden}>${body}</div>`
 			);
 		})
 		.join("");
@@ -125,9 +129,9 @@ hooks.fragment.update("tabs", (bindings, ops) => {
 	tabs.forEach((tab, i) => {
 		const key = tab.key ?? String(i);
 		const isSelected = key === selected;
-		ops.setAttr(`[role="tab"][data-key="${key}"]`, "aria-selected", String(isSelected));
-		ops.setAttr(`[role="tab"][data-key="${key}"]`, "tabindex", isSelected && !tab.disabled ? "0" : "-1");
-		ops.toggle(`[role="tabpanel"][data-key="${key}"]`, isSelected);
+		ops.setAttr(`[role="tab"][data-key="${escapeAttr(key)}"]`, "aria-selected", String(isSelected));
+		ops.setAttr(`[role="tab"][data-key="${escapeAttr(key)}"]`, "tabindex", isSelected && !tab.disabled ? "0" : "-1");
+		ops.toggle(`[role="tabpanel"][data-key="${escapeAttr(key)}"]`, isSelected);
 	});
 });
 
@@ -141,20 +145,17 @@ xript.exports.register("selectTab", (payload: unknown): SelectIntent => {
 xript.exports.register("navKeydown", (payload: unknown, context: unknown): SelectIntent => {
 	const e = payload as EventPayload;
 	const ctx = context as NavContext;
-	const key = e.key ?? "";
 	const current = e.dataset?.key ?? "";
-	const enabled = ctx.enabledKeys;
-	const here = enabled.indexOf(current);
-	let target: string | undefined;
-	if (key === "ArrowRight" || key === "ArrowDown") target = enabled[(here + 1) % enabled.length];
-	else if (key === "ArrowLeft" || key === "ArrowUp") target = enabled[(here - 1 + enabled.length) % enabled.length];
-	else if (key === "Home") target = enabled[0];
-	else if (key === "End") target = enabled[enabled.length - 1];
-	else if (key === "Enter" || key === " " || key === "Spacebar") {
-		if (ctx.activation === "manual" && current) return { select: current, focus: current, preventDefault: true };
-		return {};
-	} else return {};
-	if (target === undefined) return {};
-	if (ctx.activation === "automatic") return { select: target, focus: target, preventDefault: true };
-	return { focus: target, preventDefault: true };
+	const navItems = (ctx.enabledKeys ?? []).map((key) => ({ key }));
+	const move = linearNav(navItems, current, e.key ?? "", { orientation: "both", wrap: true, homeEnd: true });
+	if (move.focus !== undefined) {
+		return ctx.activation === "automatic"
+			? { select: move.focus, focus: move.focus, preventDefault: true }
+			: { focus: move.focus, preventDefault: true };
+	}
+	// Enter/Space commits the focused tab in manual activation; automatic already selected on move.
+	if (move.activate && ctx.activation === "manual" && current) {
+		return { select: current, focus: current, preventDefault: true };
+	}
+	return {};
 });

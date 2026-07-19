@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -21,7 +23,7 @@ function spinnerClass(b: SpinnerBindings): string {
 
 function spinnerHtml(b: SpinnerBindings): string {
 	const label = b.label ?? "Loading";
-	return `<span part="spinner" class="${spinnerClass(b)}" role="status" aria-label="${label}"></span>`;
+	return `<span part="spinner" class="${spinnerClass(b)}" role="status" aria-label="${escapeAttr(label)}"></span>`;
 }
 
 hooks.fragment.mount("spinner", (bindings, ops) => {
@@ -29,6 +31,6 @@ hooks.fragment.mount("spinner", (bindings, ops) => {
 });
 
 hooks.fragment.update("spinner", (bindings, ops) => {
-	ops.setAttr('[part="spinner"]', "class", spinnerClass(bindings));
+	ops.setAttr(".xtyle-spinner", "class", spinnerClass(bindings));
 	ops.setAttr('[part="spinner"]', "aria-label", bindings.label ?? "Loading");
 });

@@ -1,5 +1,5 @@
 export const separatorCss = `
-[data-separator] { display: contents; }
+[data-root][data-separator] { display: contents; }
 .xtyle-separator {
 	display: flex;
 	align-items: center;

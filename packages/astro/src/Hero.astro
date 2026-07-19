@@ -1,19 +1,25 @@
 ---
-type HeroAlign = "center" | "start";
+import { checkAuthoring } from "./internal/diagnose.js";
+import { HERO_ALIGNS, resolveVocab } from "@xtyle/core";
+type HeroAlign = (typeof HERO_ALIGNS)[number];
 
 interface Props {
 	align?: HeroAlign;
 	split?: boolean;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
-const { align = "center", split = false, class: extra, ...rest } = Astro.props;
+const { align: alignInput, split = false, static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("hero", Astro.props);
+const align = resolveVocab(alignInput, HERO_ALIGNS, "center", "hero align");
 ---
 
 <xtyle-hero align={align !== "center" ? align : undefined} split={split ? "" : undefined} class={extra} {...rest}>
 	<slot />
 </xtyle-hero>
 
-<script>import "@xtyle/core/elements";</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

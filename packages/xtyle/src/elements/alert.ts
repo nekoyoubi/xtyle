@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { alertHostCss, type AlertSeverity, type AlertTone, type AlertVariant } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/alert/source.generated.js";
+import { resolveOptionalTone, resolveOptionalVocab, ALERT_SEVERITIES, resolveVocab, ALERT_VARIANTS } from "../vocab.js";
 
 export class XtyleAlert extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -17,21 +18,21 @@ export class XtyleAlert extends XtyleElement {
 	}
 
 	get tone(): AlertTone | null {
-		return this.getAttribute("tone") as AlertTone | null;
+		return resolveOptionalTone<AlertTone>(this.getAttribute("tone"));
 	}
 	set tone(value: AlertTone | null | undefined) {
 		this.reflectString("tone", value);
 	}
 
 	get severity(): AlertSeverity | null {
-		return this.getAttribute("severity") as AlertSeverity | null;
+		return resolveOptionalVocab(this.getAttribute("severity"), ALERT_SEVERITIES, "alert severity");
 	}
 	set severity(value: AlertSeverity | null | undefined) {
 		this.reflectString("severity", value);
 	}
 
 	get variant(): AlertVariant {
-		return (this.getAttribute("variant") as AlertVariant) ?? "soft";
+		return resolveVocab(this.getAttribute("variant"), ALERT_VARIANTS, "soft", "alert variant");
 	}
 	set variant(value: AlertVariant) {
 		this.setAttribute("variant", value);
@@ -55,6 +56,8 @@ export class XtyleAlert extends XtyleElement {
 			variant: this.variant,
 			dismissible: this.dismissible,
 			dismissLabel: this.getAttribute("dismiss-label") ?? "Dismiss",
+			hasTitle: this.fragment.hasSlotted("title"),
+			hasActions: this.fragment.hasSlotted("actions"),
 		};
 	}
 

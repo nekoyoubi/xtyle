@@ -1,5 +1,37 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/vocab.ts
+  var TONES = ["accent", "neutral", "danger", "success", "warn", "info"];
+  var ACCENT_VARIANTS = ["accent-2", "accent-3", "accent-4"];
+  var HUES = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "brown",
+    "pink",
+    "cyan",
+    "gray",
+    "white",
+    "black"
+  ];
+  var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
+
   // packages/xtyle/src/icons.ts
   var stroke = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   var dot = (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="1.8" fill="currentColor"/>`;
@@ -57,7 +89,7 @@
   function hasIcon(name) {
     return Object.prototype.hasOwnProperty.call(ICONS, name);
   }
-  function escapeAttr(value) {
+  function escapeAttr2(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function iconClass(opts) {
@@ -73,9 +105,9 @@
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
     const body2 = hasIcon(name) ? ICONS[name] : MISSING;
-    const part = opts.part ? ` part="${escapeAttr(opts.part)}"` : "";
-    const a11y = opts.label ? `role="img" aria-label="${escapeAttr(opts.label)}"` : `aria-hidden="true"`;
-    const title = opts.label ? `<title>${escapeAttr(opts.label)}</title>` : "";
+    const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
+    const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
+    const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
     return `<svg${part} class="${iconClass(opts)}" viewBox="0 0 24 24" width="1em" height="1em" focusable="false" ${a11y}>${title}${body2}</svg>`;
   }
 
@@ -97,17 +129,17 @@
     return ["xtyle-panel", variant !== "default" && `xtyle-panel--${variant}`, b.scrollable && "xtyle-panel--scroll"].filter(Boolean).join(" ");
   }
   function body(b) {
-    const bodyAttrs = b.scrollable ? ` tabindex="0" role="region" aria-label="${b.title || b.label || "Scrollable content"}"` : "";
+    const bodyAttrs = b.scrollable ? ` tabindex="0" role="region" aria-label="${escapeAttr(b.title || b.label || "Scrollable content")}"` : "";
     return `<div class="xtyle-panel__body" part="body"${bodyAttrs}><slot></slot></div><div class="xtyle-panel__footer" part="footer"><slot name="footer"></slot></div>`;
   }
   function inner(b) {
     const uid = b.titleId ?? "xtyle-panel";
     if (isCollapsible(b)) {
       const expanded = b.open ? "true" : "false";
-      return `<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header"><button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" aria-controls="${uid}-region">${MARKER}<span class="xtyle-panel__title" part="title" id="${uid}">${b.title ?? ""}</span></button>${ACTIONS_SLOT}</div><div class="xtyle-panel__collapse" part="collapse" id="${uid}-region" role="region" aria-labelledby="${uid}"${b.open ? "" : " hidden"}>${body(b)}</div>`;
+      return `<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header"><button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" aria-controls="${escapeAttr(uid)}-region">${MARKER}<span class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title ?? "")}</span></button>${ACTIONS_SLOT}</div><div class="xtyle-panel__collapse" part="collapse" id="${escapeAttr(uid)}-region" role="region" aria-labelledby="${escapeAttr(uid)}"${b.open ? "" : " hidden"}>${body(b)}</div>`;
     }
     const tag = `h${level(b)}`;
-    const heading = b.title ? `<${tag} class="xtyle-panel__title" part="title" id="${uid}">${b.title}</${tag}>` : "";
+    const heading = b.title ? `<${tag} class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title)}</${tag}>` : "";
     const header = hasHeader(b) ? `<header class="xtyle-panel__header" part="header">${heading}<span class="xtyle-panel__spacer" part="spacer"></span>${ACTIONS_SLOT}</header>` : "";
     return `${header}${body(b)}`;
   }

@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -15,6 +17,7 @@ interface SheetBindings {
 	noGrabber?: boolean;
 	nonModal?: boolean;
 	elementId?: string;
+	hasFooter?: boolean;
 }
 
 interface EventPayload {
@@ -59,11 +62,11 @@ function inner(b: SheetBindings): string {
 	const closeLabel = b.closeLabel ?? "Close";
 
 	const labelAttr = labelledby
-		? ` aria-labelledby="${labelledby}"`
+		? ` aria-labelledby="${escapeAttr(labelledby)}"`
 		: heading
 			? ` aria-labelledby="${titleId(b)}"`
 			: label
-				? ` aria-label="${label}"`
+				? ` aria-label="${escapeAttr(label)}"`
 				: "";
 
 	const handle = b.noGrabber
@@ -73,9 +76,9 @@ function inner(b: SheetBindings): string {
 
 	const closeButton = b.noCloseButton
 		? ""
-		: `<button type="button" class="xtyle-sheet__close" part="close" aria-label="${closeLabel}">${CLOSE_ICON}</button>`;
+		: `<button type="button" class="xtyle-sheet__close" part="close" aria-label="${escapeAttr(closeLabel)}">${CLOSE_ICON}</button>`;
 
-	const titleMarkup = heading ? `<h2 class="xtyle-sheet__title" id="${titleId(b)}">${heading}</h2>` : "";
+	const titleMarkup = heading ? `<h2 class="xtyle-sheet__title" id="${titleId(b)}">${escapeHtml(heading)}</h2>` : "";
 
 	const header =
 		`<header class="xtyle-sheet__header" part="header" data-handle-region>` +
@@ -84,8 +87,11 @@ function inner(b: SheetBindings): string {
 	const panel =
 		'<div class="xtyle-sheet__panel" part="panel">' +
 		header +
-		'<div class="xtyle-sheet__body" part="body"><slot></slot></div>' +
-		'<footer class="xtyle-sheet__footer" part="footer"><slot name="footer"></slot></footer>' +
+		'<div class="xtyle-sheet__body" part="body" data-slot><slot></slot></div>' +
+		// The footer keeps its `<slot>` whether filled or not, so `:empty` can never match it: a slot
+		// is a child node, and the nodes assigned to it are not. Only the host knows, so it says, and
+		// `data-slot` is how it sees the region at all under the auto-light (Astro SSR) render.
+		`<footer class="xtyle-sheet__footer" part="footer" data-slot="footer"${b.hasFooter ? "" : " hidden"}><slot name="footer"></slot></footer>` +
 		"</div>";
 
 	return `<dialog class="${sheetClass(b)}" part="sheet"${labelAttr}>` + handle + panel + "</dialog>";

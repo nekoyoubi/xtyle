@@ -1,0 +1,88 @@
+---
+import List from "@xtyle/astro/List.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const plans = [
+	{ value: "starter", label: "Starter", lead: "circle", trail: "$0" },
+	{ value: "pro", label: "Pro", lead: "check", trail: "$12", selected: true },
+	{ value: "team", label: "Team", lead: "folder", trail: "$40" },
+];
+
+const files = [
+	{ value: "readme", label: "README.md", lead: "folder", actions: [{ id: "delete", label: "Delete", icon: "close" }] },
+	{ value: "index", label: "index.ts", lead: "folder", actions: [{ id: "delete", label: "Delete", icon: "close" }] },
+	{ value: "styles", label: "styles.css", lead: "folder", actions: [{ id: "delete", label: "Delete", icon: "close" }] },
+];
+
+const nav = [
+	{ value: "overview", label: "Overview", lead: "eye" },
+	{ value: "install", label: "Install", lead: "gear" },
+	{ value: "search", label: "Search the docs", lead: "search", trail: "⌘K" },
+];
+---
+
+<Stack gap={6} class="demo">
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Single-select</Heading>
+		<Text size="sm" tone="muted">
+			A <code>listbox</code>: arrow to move the cursor, Enter or click to choose. Lead icons and trailing
+			text ride the item anatomy.
+		</Text>
+		<List label="Plan" interaction="selectable" selection="single" items={plans} />
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Multi-select and range</Heading>
+		<Text size="sm" tone="muted">
+			Plain click replaces; <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>-click toggles; with <code>selection="range"</code>,
+			<kbd>Shift</kbd>-click extends a span. Under a high-contrast theme the selected rows gain a check.
+		</Text>
+		<div class="demo__row">
+			<List label="Toppings" interaction="selectable" selection="multi" items="Cheese,Basil,Chili,Olives,Onion" />
+			<List label="Days" interaction="selectable" selection="range" items="Mon,Tue,Wed,Thu,Fri" />
+		</div>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Navigational</Heading>
+		<Text size="sm" tone="muted">A roving list of destinations: no persistent selection, each item activates.</Text>
+		<List label="Jump to" interaction="navigational" items={nav} />
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Actionable</Heading>
+		<Text size="sm" tone="muted">Per-item actions appear on hover or focus; each emits a <code>list-action</code> event.</Text>
+		<List label="Files" interaction="actionable" items={files} />
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Sizes</Heading>
+		<div class="demo__row">
+			<List label="Small" size="sm" interaction="selectable" selection="single" items="One,Two,Three" />
+			<List label="Large" size="lg" interaction="selectable" selection="single" items="One,Two,Three" />
+		</div>
+	</section>
+</Stack>
+
+<style>
+	.demo__group {
+		display: grid;
+		gap: var(--space-2);
+	}
+	.demo__row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-6);
+		align-items: start;
+	}
+	.demo :global(xtyle-list) {
+		min-width: 12rem;
+		max-width: 20rem;
+		padding: var(--space-2);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+		background: var(--bg-1);
+	}
+</style>

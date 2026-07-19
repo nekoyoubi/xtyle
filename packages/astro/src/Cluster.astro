@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { CLUSTER_ALIGNS, resolveOptionalVocab, CLUSTER_JUSTIFIES } from "@xtyle/core";
 
-type ClusterAlign = "start" | "center" | "end" | "stretch" | "baseline";
-type ClusterJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
+type ClusterAlign = (typeof CLUSTER_ALIGNS)[number];
+type ClusterJustify = (typeof CLUSTER_JUSTIFIES)[number];
 
 interface Props {
 	gap?: number;
@@ -17,8 +19,11 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { gap = 2, align, justify, nowrap = false, inline = false, static: isStatic = false, class: extra, ...rest } =
+const { gap = 2, align: alignInput, justify: justifyInput, nowrap = false, inline = false, static: isStatic = false, class: extra, ...rest } =
 	Astro.props;
+await checkAuthoring("cluster", Astro.props);
+const align = resolveOptionalVocab(alignInput, CLUSTER_ALIGNS, "cluster align");
+const justify = resolveOptionalVocab(justifyInput, CLUSTER_JUSTIFIES, "cluster justify");
 
 const bindings = {
 	gap,

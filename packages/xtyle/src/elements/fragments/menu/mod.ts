@@ -1,3 +1,6 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+import { linearNav } from "../../collection/nav-reducer.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -49,14 +52,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: MenuBindings, ops: OpsBuilder) => void) => void };
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
-
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
-}
 
 function triggerLabel(bindings: MenuBindings): string {
 	return bindings.label ?? "Menu";
@@ -155,19 +150,9 @@ xript.exports.register("itemKeydown", (payload: unknown, context: unknown): Inte
 	const ctx = context as NavContext;
 	const enabled = ctx?.enabledValues ?? [];
 	const current = e.dataset?.value ?? "";
-	const here = enabled.indexOf(current);
 	const k = e.key ?? "";
+	// Menu's own keys: activate the item, and the overlay's close / return-focus behavior.
 	switch (k) {
-		case "ArrowDown":
-			return enabled.length ? { focusValue: enabled[(here + 1) % enabled.length], preventDefault: true } : {};
-		case "ArrowUp":
-			return enabled.length
-				? { focusValue: enabled[(here - 1 + enabled.length) % enabled.length], preventDefault: true }
-				: {};
-		case "Home":
-			return enabled.length ? { focusValue: enabled[0], preventDefault: true } : {};
-		case "End":
-			return enabled.length ? { focusValue: enabled[enabled.length - 1], preventDefault: true } : {};
 		case "Enter":
 		case " ":
 		case "Spacebar": {
@@ -185,7 +170,11 @@ xript.exports.register("itemKeydown", (payload: unknown, context: unknown): Inte
 			return { closeMenu: true, returnFocus: true, preventDefault: true, stopPropagation: true };
 		case "Tab":
 			return { closeMenu: true, returnFocus: false };
-		default:
-			return {};
 	}
+	// The roving axis (Up/Down/Home/End, wrapping) via the shared core, mapped to the menu's
+	// `focusValue` intent (focus is a host effect the element applies).
+	const navItems = enabled.map((value) => ({ key: value }));
+	const move = linearNav(navItems, current, k, { orientation: "vertical", wrap: true, homeEnd: true });
+	if (move.focus !== undefined) return { focusValue: move.focus, preventDefault: true };
+	return {};
 });

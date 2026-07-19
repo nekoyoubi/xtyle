@@ -86,7 +86,7 @@ export class XtyleTour extends XtyleElement {
 
 	/** The steps, read live from the `<xtyle-tour-step>` children. */
 	get steps(): HTMLElement[] {
-		return [...this.querySelectorAll<HTMLElement>(":scope > xtyle-tour-step")];
+		return (Array.from(this.children) as HTMLElement[]).filter((el) => el.tagName === "XTYLE-TOUR-STEP");
 	}
 
 	/** The step showing now, zero-based. */

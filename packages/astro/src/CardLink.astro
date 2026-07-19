@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
@@ -26,6 +27,7 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("card-link", Astro.props);
 
 const bindings = {
 	href,
@@ -34,6 +36,10 @@ const bindings = {
 	interactive,
 	overlay,
 	compact,
+	// The fill hides an unfilled header/footer, and it can only know from a binding: the composed
+	// markup keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+	hasHeader: Astro.slots.has("header"),
+	hasFooter: Astro.slots.has("footer"),
 };
 const chrome = await renderFragmentLight("card-link", bindings);
 const headerHtml = Astro.slots.has("header") ? await Astro.slots.render("header") : "";

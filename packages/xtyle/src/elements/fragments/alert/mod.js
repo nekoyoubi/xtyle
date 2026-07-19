@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/alert/mod.ts
   var TONE_ICONS = {
     success: '<path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.1 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.6-5.6 1.4 1.4-7 7Z"/>',
@@ -26,7 +39,7 @@
   function dismissButton(b) {
     if (!b.dismissible) return "";
     const label = b.dismissLabel ?? "Dismiss";
-    return `<button class="xtyle-alert__dismiss" part="dismiss" type="button" aria-label="${label}"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg></button>`;
+    return `<button class="xtyle-alert__dismiss" part="dismiss" type="button" aria-label="${escapeAttr(label)}"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg></button>`;
   }
   function role(b) {
     return ASSERTIVE[severityOf(b)] ? "alert" : "status";
@@ -34,18 +47,24 @@
   function live(b) {
     return ASSERTIVE[severityOf(b)] ? "assertive" : "polite";
   }
+  function toggleRegions(b, ops) {
+    ops.toggle('[part="title"]', b.hasTitle === true);
+    ops.toggle('[part="actions"]', b.hasActions === true);
+  }
   hooks.fragment.mount("alert", (bindings, ops) => {
     ops.setAttr(".xtyle-alert", "class", alertClass(bindings));
     ops.setAttr("[data-root]", "role", role(bindings));
     ops.setAttr("[data-root]", "aria-live", live(bindings));
     ops.replaceChildren("[data-glyph]", iconSvg(bindings));
     ops.replaceChildren("[data-dismiss]", dismissButton(bindings));
+    toggleRegions(bindings, ops);
   });
   hooks.fragment.update("alert", (bindings, ops) => {
     ops.setAttr(".xtyle-alert", "class", alertClass(bindings));
     ops.setAttr("[data-root]", "role", role(bindings));
     ops.setAttr("[data-root]", "aria-live", live(bindings));
     ops.replaceChildren("[data-glyph]", iconSvg(bindings));
+    toggleRegions(bindings, ops);
   });
   xript.exports.register("dismiss", () => {
     return { dismiss: true };

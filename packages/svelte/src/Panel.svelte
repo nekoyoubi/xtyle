@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/panel.js";
 	import type { Snippet } from "svelte";
+	import { PANEL_VARIANTS } from "@xtyle/core";
 
-	type PanelVariant = "default" | "collapsible";
+	type PanelVariant = (typeof PANEL_VARIANTS)[number];
 
 	interface Props {
 		title?: string;

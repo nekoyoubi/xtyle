@@ -1,5 +1,5 @@
 export const qrCss = `
-[data-qr] { display: inline-block; }
+[data-root][data-qr] { display: inline-block; }
 .xtyle-qr {
 	--qr-size: 200px;
 	--qr-module: var(--fg-0);

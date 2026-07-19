@@ -1,12 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/radio/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
   function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
   function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, "&quot;");
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
+
+  // packages/xtyle/src/elements/fragments/radio/mod.ts
   function radioClass(b) {
     const tone = b.tone ?? "accent";
     const size = b.size ?? "md";
@@ -25,13 +32,13 @@
     const labelledby = b.labelledby ?? null;
     const description = b.description ?? "";
     const descriptionId = b.descriptionId ?? "xtyle-radio-desc";
-    const nameAttr = name !== null ? ` name="${name}"` : "";
-    const valueAttr = ` value="${value}"`;
+    const nameAttr = name !== null ? ` name="${escapeAttr(name)}"` : "";
+    const valueAttr = ` value="${escapeAttr(value)}"`;
     const checkedAttr = b.checked ? " checked" : "";
     const disabledAttr = b.disabled ? " disabled" : "";
     const ariaInvalid = b.invalid ? ` aria-invalid="true"` : "";
-    const ariaLabel = label && !labelledby ? ` aria-label="${label}"` : "";
-    const ariaLabelledby = labelledby ? ` aria-labelledby="${labelledby}"` : "";
+    const ariaLabel = label && !labelledby ? ` aria-label="${escapeAttr(label)}"` : "";
+    const ariaLabelledby = labelledby ? ` aria-labelledby="${escapeAttr(labelledby)}"` : "";
     const describedby = description.length > 0 ? ` aria-describedby="${escapeAttr(descriptionId)}"` : "";
     const descriptionHidden = description.length === 0 ? " hidden" : "";
     const labelText = label !== null ? label : "";

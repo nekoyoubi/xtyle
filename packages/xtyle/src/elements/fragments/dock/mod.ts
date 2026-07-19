@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -37,7 +39,7 @@ function dockClass(b: DockBindings): string {
 function dockInner(b: DockBindings): string {
 	const header =
 		b.label && !b.hideHeader
-			? `<div class="xtyle-dock__header" part="header"><slot name="header">${b.label}</slot></div>`
+			? `<div class="xtyle-dock__header" part="header"><slot name="header">${escapeHtml(b.label)}</slot></div>`
 			: `<slot name="header"></slot>`;
 	return `${header}<div class="xtyle-dock__body" part="body"><slot></slot></div><slot name="footer"></slot>`;
 }
@@ -45,7 +47,7 @@ function dockInner(b: DockBindings): string {
 function dockHtml(b: DockBindings): string {
 	const tag = b.nav ? "nav" : "aside";
 	const label = b.label ?? null;
-	const labelAttr = label && !b.hasAriaLabel ? ` aria-label="${label}"` : "";
+	const labelAttr = label && !b.hasAriaLabel ? ` aria-label="${escapeAttr(label)}"` : "";
 	return `<${tag} part="dock" class="${dockClass(b)}"${labelAttr}>${dockInner(b)}</${tag}>`;
 }
 
@@ -54,7 +56,7 @@ hooks.fragment.mount("dock", (bindings, ops) => {
 });
 
 hooks.fragment.update("dock", (bindings, ops) => {
-	ops.setAttr('[part="dock"]', "class", dockClass(bindings));
+	ops.setAttr(".xtyle-dock", "class", dockClass(bindings));
 	const label = bindings.label ?? null;
 	if (label && !bindings.hideHeader) {
 		ops.setText('slot[name="header"]', label);

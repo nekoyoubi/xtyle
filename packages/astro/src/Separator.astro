@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { ORIENTATIONS, resolveVocab, SEPARATOR_VARIANTS, SEPARATOR_SIZES } from "@xtyle/core";
 
-type Orientation = "horizontal" | "vertical";
-type SeparatorVariant = "default" | "with-label";
-type SeparatorSize = "thin" | "normal";
+type Orientation = (typeof ORIENTATIONS)[number];
+type SeparatorVariant = (typeof SEPARATOR_VARIANTS)[number];
+type SeparatorSize = (typeof SEPARATOR_SIZES)[number];
 
 interface Props {
 	orientation?: Orientation;
@@ -17,13 +19,17 @@ interface Props {
 }
 
 const {
-	orientation = "horizontal",
-	variant = "default",
-	size = "normal",
+	orientation: orientationInput,
+	variant: variantInput,
+	size: sizeInput,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("separator", Astro.props);
+const orientation = resolveVocab(orientationInput, ORIENTATIONS, "horizontal", "separator orientation");
+const variant = resolveVocab(variantInput, SEPARATOR_VARIANTS, "default", "separator variant");
+const size = resolveVocab(sizeInput, SEPARATOR_SIZES, "normal", "separator size");
 
 const bindings = { orientation, variant, size };
 const chrome = await renderFragmentLight("separator", bindings);

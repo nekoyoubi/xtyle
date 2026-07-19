@@ -2,9 +2,10 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { splitterHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/splitter/source.generated.js";
+import { ORIENTATIONS, SPLITTER_SIZES, resolveVocab } from "../vocab.js";
 
-export type SplitterOrientation = "vertical" | "horizontal";
-export type SplitterSize = "sm" | "md" | "lg";
+export type SplitterOrientation = (typeof ORIENTATIONS)[number];
+export type SplitterSize = (typeof SPLITTER_SIZES)[number];
 
 export class XtyleSplitter extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -32,7 +33,7 @@ export class XtyleSplitter extends XtyleElement {
 	}
 
 	get size(): SplitterSize {
-		return (this.getAttribute("size") as SplitterSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SPLITTER_SIZES, "md", "splitter size");
 	}
 	set size(value: SplitterSize) {
 		this.setAttribute("size", value);

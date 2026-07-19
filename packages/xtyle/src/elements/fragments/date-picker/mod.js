@@ -1,12 +1,28 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/date-picker/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
   function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
   function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, "&quot;");
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
+
+  // packages/xtyle/src/elements/fragments/selector-escape.ts
+  var BACKSLASH = /\\/g;
+  var DQUOTE2 = /"/g;
+  var NEWLINE = /\n/g;
+  var CR = /\r/g;
+  function escapeSelectorValue(value) {
+    return value.replace(BACKSLASH, "\\\\").replace(DQUOTE2, '\\"').replace(NEWLINE, "\\A ").replace(CR, "\\D ");
+  }
+
+  // packages/xtyle/src/elements/fragments/date-picker/mod.ts
   function rootClass(b) {
     const size = b.size ?? "md";
     const mode = b.mode ?? "date";
@@ -153,7 +169,7 @@
     ops.setAttr('.xtyle-datepicker__time-option[aria-selected="true"]', "aria-selected", "false");
     const selected = (bindings.timeOptions ?? []).filter((option) => option.selected === true)[0];
     if (selected) {
-      const target = `.xtyle-datepicker__time-option[data-iso="${selected.iso}"]`;
+      const target = `.xtyle-datepicker__time-option[data-iso="${escapeSelectorValue(selected.iso)}"]`;
       ops.setAttr(target, "aria-selected", "true");
       ops.setAttr(target, "data-selected", "selected");
     }

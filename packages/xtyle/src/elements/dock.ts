@@ -3,6 +3,7 @@ import type { Size } from "../index.js";
 import { dockHostCss, type DockSide } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/dock/source.generated.js";
+import { resolveOptionalTone, resolveVocab, DOCK_SIDES, SIZES, resolveOptionalVocab, DOCK_EDGE_WIDTHS } from "../vocab.js";
 
 export class XtyleDock extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -18,21 +19,21 @@ export class XtyleDock extends XtyleElement {
 	}
 
 	get tone(): string | null {
-		return this.getAttribute("tone");
+		return resolveOptionalTone(this.getAttribute("tone"));
 	}
 	set tone(value: string | null | undefined) {
 		this.reflectString("tone", value);
 	}
 
 	get side(): DockSide {
-		return (this.getAttribute("side") as DockSide) ?? "left";
+		return resolveVocab(this.getAttribute("side"), DOCK_SIDES, "left", "dock side");
 	}
 	set side(value: DockSide) {
 		this.setAttribute("side", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "dock size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
@@ -47,7 +48,7 @@ export class XtyleDock extends XtyleElement {
 	}
 
 	get edgeWidth(): "thin" | "thick" | "bold" | null {
-		return this.getAttribute("edge-width") as "thin" | "thick" | "bold" | null;
+		return resolveOptionalVocab(this.getAttribute("edge-width"), DOCK_EDGE_WIDTHS, "dock edge-width");
 	}
 	set edgeWidth(value: "thin" | "thick" | "bold" | null | undefined) {
 		this.reflectString("edge-width", value);

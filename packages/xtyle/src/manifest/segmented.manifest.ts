@@ -202,7 +202,7 @@ export const segmentedManifest: ComponentManifest = {
 		{
 			name: "segment",
 			description:
-				"Rich-content segments: one `[slot=\"segment\"]` child (a `<Segment>`) per option, each carrying `value`, an accessible `label`, and markup like an `<Icon>`. The element derives selection, roving tabindex, and the form value from them exactly as it would from `options`, and projects each child's live content into its radio. Children win over `options` when both are given.",
+				"Rich-content segments: one `[slot=\"segment\"]` child per option, each carrying `value`, an accessible `label`, and markup like an `<Icon>`. The element derives selection, roving tabindex, and the form value from them exactly as it would from `options`, and projects each child's live content into its radio. Children win over `options` when both are given. In Astro and Svelte, use the `<Segment>` component rather than writing `slot=\"segment\"` yourself: `<Segment>` carries the marker on its own root element, whereas a bare `slot=\"segment\"` child of `<Segmented>` is a routing directive Astro consumes, and the content is discarded.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],

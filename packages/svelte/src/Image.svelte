@@ -2,12 +2,13 @@
 	import "@xtyle/core/elements/image.js";
 
 	import type { Snippet } from "svelte";
+	import { IMAGE_FITS, IMAGE_RADII, IMAGE_LOADING, IMAGE_TRIGGERS, IMAGE_HOVER_AUDIO } from "@xtyle/core";
 
-	type ImageFit = "cover" | "contain";
-	type ImageRadius = "none" | "sm" | "md" | "lg";
-	type ImageLoading = "lazy" | "eager";
-	type ImageTrigger = "frame" | "button";
-	type ImageHoverAudio = "on" | "off";
+	type ImageFit = (typeof IMAGE_FITS)[number];
+	type ImageRadius = (typeof IMAGE_RADII)[number];
+	type ImageLoading = (typeof IMAGE_LOADING)[number];
+	type ImageTrigger = (typeof IMAGE_TRIGGERS)[number];
+	type ImageHoverAudio = (typeof IMAGE_HOVER_AUDIO)[number];
 
 	interface Props {
 		src?: string;

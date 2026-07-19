@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { encodeQr, qrPath, qrLogoModules, qrLinkHref, QR_ICON_SCALES, type QrEcLevel, type QrModuleShape, type QrMode, type QrIconSize } from "@xtyle/core";
 import { resolveQrColors } from "./internal/palette.ts";
@@ -48,6 +49,7 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("qr", Astro.props);
 
 const hasLogo = !!(icon || logo);
 const effectiveEc: QrEcLevel = hasLogo ? "H" : ecLevel;

@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+import { resolveOptionalTone, ALERT_SEVERITIES, resolveOptionalVocab, ALERT_VARIANTS, resolveVocab } from "@xtyle/core";
 import type { FullTone } from "@xtyle/core";
 
-type AlertSeverity = "success" | "warn" | "danger" | "info";
-type AlertVariant = "soft" | "solid";
+type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
+type AlertVariant = (typeof ALERT_VARIANTS)[number];
 
 interface Props {
 	/** Color — any semantic role, accent variant, or named hue. Defaults to the severity color. */
@@ -21,17 +23,31 @@ interface Props {
 }
 
 const {
-	tone,
-	severity,
-	variant = "soft",
+	tone: toneInput,
+	severity: severityInput,
+	variant: variantInput,
 	dismissible = false,
 	dismissLabel = "Dismiss",
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("alert", Astro.props);
+const severity = resolveOptionalVocab(severityInput, ALERT_SEVERITIES, "alert severity");
+const variant = resolveVocab(variantInput, ALERT_VARIANTS, "soft", "alert variant");
+const tone = resolveOptionalTone(toneInput);
 
-const bindings = { tone, severity, variant, dismissible, dismissLabel };
+// The fill hides an unfilled title/actions, and it can only know from a binding: the composed markup
+// keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+const bindings = {
+	tone,
+	severity,
+	variant,
+	dismissible,
+	dismissLabel,
+	hasTitle: Astro.slots.has("title"),
+	hasActions: Astro.slots.has("actions"),
+};
 const light = await renderFragmentLight("alert", bindings);
 const iconHtml = Astro.slots.has("icon") ? await Astro.slots.render("icon") : null;
 const titleHtml = Astro.slots.has("title") ? await Astro.slots.render("title") : "";

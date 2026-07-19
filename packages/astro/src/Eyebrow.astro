@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, EYEBROW_EMPHASIS, EYEBROW_TAGS, resolveVocab, EYEBROW_TRACKINGS } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { EyebrowTone } from "@xtyle/core";
 
-type EyebrowTag = "p" | "span" | "div";
-type EyebrowTone = "accent" | "muted" | "subtle";
-type EyebrowTracking = "normal" | "wide";
+type EyebrowTag = (typeof EYEBROW_TAGS)[number];
+type EyebrowTracking = (typeof EYEBROW_TRACKINGS)[number];
 
 interface Props {
 	as?: EyebrowTag;
@@ -16,8 +18,12 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { as = "p", tone = "accent", tracking = "normal", static: isStatic = false, class: extra, ...rest } =
+const { as: asInput, tone: toneInput, tracking: trackingInput, static: isStatic = false, class: extra, ...rest } =
 	Astro.props;
+await checkAuthoring("eyebrow", Astro.props);
+const as = resolveVocab(asInput, EYEBROW_TAGS, "p", "eyebrow as");
+const tracking = resolveVocab(trackingInput, EYEBROW_TRACKINGS, "normal", "eyebrow tracking");
+const tone = resolveTone(toneInput, "accent", EYEBROW_EMPHASIS);
 
 const bindings = { as, tone, tracking };
 const chrome = await renderFragmentLight("eyebrow", bindings);

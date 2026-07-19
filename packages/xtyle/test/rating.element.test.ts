@@ -244,3 +244,37 @@ describe("<xtyle-rating> hidden input", () => {
 		expect(new FormData(form).get("score")).toBe("4");
 	});
 });
+
+describe("rating — adopting a server-rendered row", () => {
+	/** The Astro binding ships the row already painted, against the default register. */
+	function ssrRating(attrs: Record<string, string>, trackFill: string): RatingEl {
+		const el = document.createElement("xtyle-rating") as RatingEl;
+		for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value);
+		el.innerHTML =
+			`<span class="xtyle-rating__rows" part="rows" data-root data-rating>` +
+			`<span class="xtyle-rating__row xtyle-rating__row--empty" part="track" aria-hidden="true">` +
+			`<svg><g fill="${trackFill}"></g></svg></span>` +
+			`<span class="xtyle-rating__row xtyle-rating__row--filled" part="fill" aria-hidden="true" style="width: 0%"></span>` +
+			`</span>`;
+		document.body.appendChild(el);
+		return el;
+	}
+
+	it("keeps the server's markup rather than emptying it", () => {
+		const el = ssrRating({ value: "3", max: "5", readonly: "" }, "#282a2c");
+		expect(el.querySelector("[data-rating]")).not.toBeNull();
+		expect(el.querySelectorAll("svg").length).toBeGreaterThan(0);
+	});
+
+	// The row is structural: the update hook only moves the clip, so a scaffold baked against the
+	// build-time register has to be rebuilt once or a stale track color would stick under a live theme.
+	it("rebuilds the row against the live register instead of trusting the baked colors", () => {
+		const el = ssrRating({ value: "3", max: "5", readonly: "" }, "#ff00ff");
+		expect(el.innerHTML).not.toContain("#ff00ff");
+	});
+
+	it("clips the overlay to the adopted value", () => {
+		const el = ssrRating({ value: "3", max: "5", readonly: "" }, "#282a2c");
+		expect(el.querySelector('[part="fill"]')?.getAttribute("style")).toContain("60%");
+	});
+});

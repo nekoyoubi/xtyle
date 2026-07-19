@@ -1,6 +1,9 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
+	toggle(selector: string, condition: boolean): void;
 }
 
 interface AlertBindings {
@@ -9,6 +12,8 @@ interface AlertBindings {
 	variant?: string;
 	dismissible?: boolean;
 	dismissLabel?: string;
+	hasTitle?: boolean;
+	hasActions?: boolean;
 }
 
 interface EventPayload {
@@ -59,7 +64,7 @@ function dismissButton(b: AlertBindings): string {
 	if (!b.dismissible) return "";
 	const label = b.dismissLabel ?? "Dismiss";
 	return (
-		`<button class="xtyle-alert__dismiss" part="dismiss" type="button" aria-label="${label}">` +
+		`<button class="xtyle-alert__dismiss" part="dismiss" type="button" aria-label="${escapeAttr(label)}">` +
 		'<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true">' +
 		'<path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg></button>'
 	);
@@ -73,12 +78,20 @@ function live(b: AlertBindings): string {
 	return ASSERTIVE[severityOf(b)] ? "assertive" : "polite";
 }
 
+// Title and actions wrap a `<slot>`, so `:empty` can never match them: the slot is a child node, and
+// the nodes assigned to it are not. Only the host can tell a filled slot from an unfilled one.
+function toggleRegions(b: AlertBindings, ops: OpsBuilder): void {
+	ops.toggle('[part="title"]', b.hasTitle === true);
+	ops.toggle('[part="actions"]', b.hasActions === true);
+}
+
 hooks.fragment.mount("alert", (bindings, ops) => {
 	ops.setAttr(".xtyle-alert", "class", alertClass(bindings));
 	ops.setAttr("[data-root]", "role", role(bindings));
 	ops.setAttr("[data-root]", "aria-live", live(bindings));
 	ops.replaceChildren("[data-glyph]", iconSvg(bindings));
 	ops.replaceChildren("[data-dismiss]", dismissButton(bindings));
+	toggleRegions(bindings, ops);
 });
 
 hooks.fragment.update("alert", (bindings, ops) => {
@@ -86,6 +99,7 @@ hooks.fragment.update("alert", (bindings, ops) => {
 	ops.setAttr("[data-root]", "role", role(bindings));
 	ops.setAttr("[data-root]", "aria-live", live(bindings));
 	ops.replaceChildren("[data-glyph]", iconSvg(bindings));
+	toggleRegions(bindings, ops);
 });
 
 xript.exports.register("dismiss", (): Intent => {

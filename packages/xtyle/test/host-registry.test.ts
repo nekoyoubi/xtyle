@@ -9,6 +9,7 @@ import {
 	defaultAlgorithm,
 	discoverAlgorithmMods,
 	resolveAlgorithm,
+	resolveInstalledAlgorithm,
 	snapshotAlgorithm,
 } from "../src/host/registry.js";
 import { bundledAlgorithms } from "../src/host/bundle.js";
@@ -107,14 +108,51 @@ describe("the registry discovers algorithms rather than listing them", () => {
 		for (const dir of modDirsOnDisk()) {
 			const id = manifestNameOf(dir);
 			expect(availableAlgorithms()).toContain(id);
-			expect((await resolveAlgorithm(id)).id).toBe(id);
+			expect((await resolveInstalledAlgorithm(id)).id).toBe(id);
 		}
 	}, 60_000);
 
 	it("names the algorithms it does have when asked for one it does not", async () => {
-		await expect(resolveAlgorithm("not-a-mod")).rejects.toThrow(
-			new RegExp(`no hosted mod for algorithm "not-a-mod".*${defaultAlgorithm()}`),
+		await expect(resolveInstalledAlgorithm("not-a-mod")).rejects.toThrow(
+			new RegExp(`no algorithm "not-a-mod" in .*installed:.*${defaultAlgorithm()}`),
 		);
+	});
+
+	// `@xtyle/core/algorithms` exports a `resolveAlgorithm` too, and it needs no filesystem. Importing
+	// this one where that one was meant is silent in a checkout — the walk-up finds the repo's own
+	// `algorithms/` either way — and fatal in a published install, so the failure has to hand the
+	// caller the other path by name rather than naming a directory they cannot create.
+	it("points at the filesystem-free twin when there is no algorithms/ directory at all", async () => {
+		// Kept inline rather than hoisted to a helper: the published-install shape is only reachable by
+		// mocking the walk-up's `existsSync` before a *fresh* copy of the registry memoizes its root, and
+		// a setup this coupled to one assertion is a hazard sitting a hundred lines from its only caller.
+		vi.resetModules();
+		const fs = await vi.importActual<typeof import("node:fs")>("node:fs");
+		vi.doMock("node:fs", () => ({
+			...fs,
+			existsSync: (path: Parameters<typeof fs.existsSync>[0]) =>
+				String(path).includes("mod-manifest.json") ? false : fs.existsSync(path),
+		}));
+		const { resolveInstalledAlgorithm: fresh } = await import("../src/host/registry.js");
+		vi.doUnmock("node:fs");
+		vi.resetModules();
+
+		await expect(fresh(defaultAlgorithm())).rejects.toThrow(/@xtyle\/core\/algorithms/);
+		await expect(fresh(defaultAlgorithm())).rejects.not.toThrow(/could not locate/);
+	});
+
+	// `resolveAlgorithm` was this module's export name for its whole published life, so the alias is a
+	// compatibility promise rather than a convenience. Pinned to the same function object: a
+	// reimplementation that drifted from the real one would be worse than no alias at all.
+	it("keeps the old name working as an alias of the same function", () => {
+		expect(resolveAlgorithm).toBe(resolveInstalledAlgorithm);
+	});
+
+	// The bundle is the only thing a published consumer can resolve against, so an algorithm added to
+	// `algorithms/` without a rebuild of the generated bundle would resolve in this repo forever while
+	// being invisible to everyone who installed the package.
+	it("embeds every algorithm that exists on disk, so none is resolvable in-repo only", () => {
+		expect([...bundledAlgorithms()].sort()).toEqual(modDirsOnDisk().map(manifestNameOf).sort());
 	});
 });
 
@@ -135,7 +173,7 @@ describe("an algorithm's manifest is readable without running it", () => {
 	it("declares the same thing the running algorithm reports", async () => {
 		const id = defaultAlgorithm();
 		const declared = algorithmManifest(id);
-		const running = await resolveAlgorithm(id);
+		const running = await resolveInstalledAlgorithm(id);
 		expect(declared?.knobs).toEqual(running.knobs);
 		expect(declared?.produces).toEqual(running.produces);
 		expect(declared?.invariantCount).toBe(running.invariants.length);
@@ -149,14 +187,14 @@ describe("an algorithm's manifest is readable without running it", () => {
 
 describe("host registry snapshot", () => {
 	it("snapshots a resolved mod synchronously, null until then", async () => {
-		const algorithm = await resolveAlgorithm("xtyle-default");
+		const algorithm = await resolveInstalledAlgorithm("xtyle-default");
 		expect(snapshotAlgorithm("xtyle-default")).toBe(algorithm);
 		expect(snapshotAlgorithm("nonexistent")).toBeNull();
 	});
 
-	it("returns the same cached instance as resolveAlgorithm", async () => {
-		const first = await resolveAlgorithm("xtyle-quiet");
-		const second = await resolveAlgorithm("xtyle-quiet");
+	it("returns the same cached instance as resolveInstalledAlgorithm", async () => {
+		const first = await resolveInstalledAlgorithm("xtyle-quiet");
+		const second = await resolveInstalledAlgorithm("xtyle-quiet");
 		expect(second).toBe(first);
 		expect(snapshotAlgorithm("xtyle-quiet")).toBe(first);
 	});

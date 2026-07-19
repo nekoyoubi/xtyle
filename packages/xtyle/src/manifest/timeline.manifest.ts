@@ -101,7 +101,16 @@ export const timelineManifest: ComponentManifest = {
 			tokens: ["--text-sm", "--fg-1", "--leading-normal", "--space-1"],
 		},
 	],
-	props: [],
+	props: [
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: emit the server-rendered feed but never load the runtime to hydrate it. The dots, rails, and per-event content regions are rendered from the authored `<li>`s at build time, so a static timeline is complete; hydration only adds re-reading the list when it changes. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
+		},
+	],
 	variants: [],
 	sizes: [],
 	states: [],

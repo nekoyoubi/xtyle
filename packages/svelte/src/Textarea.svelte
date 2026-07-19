@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/textarea.js";
 	import type { Size } from "@xtyle/core";
+	import { TEXTAREA_RESIZES } from "@xtyle/core";
 
-	type TextareaResize = "none" | "vertical" | "horizontal" | "both";
+	type TextareaResize = (typeof TEXTAREA_RESIZES)[number];
 
 	interface Props {
 		label?: string;

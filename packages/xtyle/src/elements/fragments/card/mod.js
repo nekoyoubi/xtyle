@@ -14,12 +14,14 @@
     ].filter(Boolean).join(" ");
   }
   function cardHtml(b) {
-    return `<div part="card" class="${cardClass(b)}"><div class="xtyle-card__header" part="header"><slot name="header"></slot></div><div class="xtyle-card__body" part="body"><slot></slot></div><div class="xtyle-card__footer" part="footer"><slot name="footer"></slot></div></div>`;
+    const headerHidden = b.hasHeader ? "" : " hidden";
+    const footerHidden = b.hasFooter ? "" : " hidden";
+    return `<div part="card" class="${cardClass(b)}"><div class="xtyle-card__header" part="header" data-slot="header"${headerHidden}><slot name="header"></slot></div><div class="xtyle-card__body" part="body" data-slot><slot></slot></div><div class="xtyle-card__footer" part="footer" data-slot="footer"${footerHidden}><slot name="footer"></slot></div></div>`;
   }
   hooks.fragment.mount("card", (bindings, ops) => {
     ops.replaceChildren("[data-card]", cardHtml(bindings));
   });
   hooks.fragment.update("card", (bindings, ops) => {
-    ops.setAttr('[part="card"]', "class", cardClass(bindings));
+    ops.setAttr(".xtyle-card", "class", cardClass(bindings));
   });
 })();

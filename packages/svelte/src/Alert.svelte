@@ -2,9 +2,10 @@
 	import "@xtyle/core/elements/alert.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone } from "@xtyle/core";
-	type AlertSeverity = "success" | "warn" | "danger" | "info";
+	import { ALERT_SEVERITIES, ALERT_VARIANTS } from "@xtyle/core";
+	type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
 
-	type AlertVariant = "soft" | "solid";
+	type AlertVariant = (typeof ALERT_VARIANTS)[number];
 
 	interface Props {
 		/** Color — any semantic role, accent variant, or named hue. Defaults to the severity color. */

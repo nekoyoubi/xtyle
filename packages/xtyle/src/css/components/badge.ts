@@ -25,7 +25,7 @@ const toneOutline = TONES.map(
 ).join("\n");
 
 export const badgeCss = `
-[data-badge] { display: contents; }
+[data-root][data-badge] { display: contents; }
 .xtyle-badge {
 	display: inline-flex;
 	align-items: center;

@@ -1,12 +1,22 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/dropzone/mod.ts
   var UPLOAD_ICON = '<svg viewBox="0 0 24 24" width="1.4em" height="1.4em" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M12 15V4m0 0L8 8m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>';
   var FILE_ICON = '<svg viewBox="0 0 24 24" width="1em" height="1em" focusable="false" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7l-4-4Zm0 0v4h4"/></svg>';
   var REMOVE_ICON = '<svg viewBox="0 0 24 24" width="1em" height="1em" focusable="false" aria-hidden="true"><path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg>';
-  function esc(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
   function surfaceClass(b) {
     let cls = "xtyle-dropzone__surface";
     if (b.disabled) cls += " xtyle-dropzone__surface--disabled";
@@ -23,8 +33,8 @@
   }
   function rowHtml(file, b) {
     const removeLabel = `${b.removeLabel ?? "Remove"} ${file.name}`;
-    const error = file.error ? `<span class="xtyle-dropzone__file-error" part="file-error" data-error="${esc(file.id)}">${esc(file.error)}</span>` : "";
-    return `<li class="${rowClass(file)}" part="file" data-file="${esc(file.id)}"><span class="xtyle-dropzone__file-icon" part="file-icon">${FILE_ICON}</span><span class="xtyle-dropzone__file-name" part="file-name">${esc(file.name)}</span><span class="xtyle-dropzone__file-meta" part="file-meta">${esc(file.sizeLabel)} \xB7 <span data-status="${esc(file.id)}">${esc(file.statusLabel)}</span></span><button type="button" class="xtyle-dropzone__remove" part="remove" data-remove="${esc(file.id)}" aria-label="${esc(removeLabel)}">${REMOVE_ICON}</button><span class="xtyle-dropzone__track" part="track" data-track="${esc(file.id)}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${file.progress}" aria-label="${esc(file.name)}"><span class="xtyle-dropzone__fill" part="bar" data-bar="${esc(file.id)}" style="${barWidth(file)}"></span></span>` + error + `</li>`;
+    const error = file.error ? `<span class="xtyle-dropzone__file-error" part="file-error" data-error="${escapeAttr(file.id)}">${escapeAttr(file.error)}</span>` : "";
+    return `<li class="${rowClass(file)}" part="file" data-file="${escapeAttr(file.id)}"><span class="xtyle-dropzone__file-icon" part="file-icon">${FILE_ICON}</span><span class="xtyle-dropzone__file-name" part="file-name">${escapeAttr(file.name)}</span><span class="xtyle-dropzone__file-meta" part="file-meta">${escapeAttr(file.sizeLabel)} \xB7 <span data-status="${escapeAttr(file.id)}">${escapeAttr(file.statusLabel)}</span></span><button type="button" class="xtyle-dropzone__remove" part="remove" data-remove="${escapeAttr(file.id)}" aria-label="${escapeAttr(removeLabel)}">${REMOVE_ICON}</button><span class="xtyle-dropzone__track" part="track" data-track="${escapeAttr(file.id)}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${file.progress}" aria-label="${escapeAttr(file.name)}"><span class="xtyle-dropzone__fill" part="bar" data-bar="${escapeAttr(file.id)}" style="${barWidth(file)}"></span></span>` + error + `</li>`;
   }
   function listHtml(b) {
     let out = "";
@@ -34,12 +44,12 @@
   function errorsHtml(b) {
     let out = "";
     for (const rejection of b.rejections ?? []) {
-      out += `<li part="error" data-reason="${esc(rejection.reason)}">${esc(rejection.message)}</li>`;
+      out += `<li part="error" data-reason="${escapeAttr(rejection.reason)}">${escapeAttr(rejection.message)}</li>`;
     }
     return out;
   }
   function footHtml(b) {
-    return `<span part="count" data-count>${esc(b.countLabel ?? "")}</span><button type="button" class="xtyle-dropzone__clear" part="clear" data-clear>${esc(b.clearLabel ?? "Clear all")}</button>`;
+    return `<span part="count" data-count>${escapeAttr(b.countLabel ?? "")}</span><button type="button" class="xtyle-dropzone__clear" part="clear" data-clear>${escapeAttr(b.clearLabel ?? "Clear all")}</button>`;
   }
   function paintChrome(b, ops) {
     const files = b.files ?? [];

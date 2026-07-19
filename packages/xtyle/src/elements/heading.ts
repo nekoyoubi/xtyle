@@ -4,6 +4,7 @@ import type { HeadingLevel, HeadingSize, HeadingTone } from "../index.js";
 import { headingHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/heading/source.generated.js";
+import { resolveTone, resolveVocab, EMPHASIS_TONES, HEADING_SIZES } from "../vocab.js";
 
 export class XtyleHeading extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "heading", {
@@ -27,14 +28,14 @@ export class XtyleHeading extends XtyleElement {
 	}
 
 	get size(): HeadingSize {
-		return (this.getAttribute("size") as HeadingSize | null) ?? headingSizeForLevel(this.level);
+		return resolveVocab(this.getAttribute("size"), HEADING_SIZES, headingSizeForLevel(this.level), "heading size");
 	}
 	set size(value: HeadingSize) {
 		this.setAttribute("size", value);
 	}
 
 	get tone(): HeadingTone {
-		return (this.getAttribute("tone") as HeadingTone) ?? "default";
+		return resolveTone(this.getAttribute("tone"), "default", EMPHASIS_TONES);
 	}
 	set tone(value: HeadingTone) {
 		this.setAttribute("tone", value);

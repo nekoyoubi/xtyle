@@ -5,7 +5,7 @@ import { auditRegister } from "../audit.js";
 import { emit, emitters } from "../emit/index.js";
 import { coverage, coverComponent, coverComponents } from "../coverage.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "../gauntlet.js";
-import { availableAlgorithms, defaultAlgorithm, resolveAlgorithm, HARNESS_TIMEOUT_MS } from "../host/registry.js";
+import { availableAlgorithms, defaultAlgorithm, resolveInstalledAlgorithm, HARNESS_TIMEOUT_MS } from "../host/registry.js";
 import { listComponents, getComponent } from "../manifest/registry.js";
 import { buildThemeFile, migratedTarget, serializeThemeFile } from "../theme-file.js";
 import type { Algorithm, Knobs, TokenRegister } from "../types.js";
@@ -64,7 +64,7 @@ async function resolveTarget(
 	knobs: Record<string, unknown> | undefined,
 ): Promise<{ id: string; algorithm: Algorithm; knobs: Knobs }> {
 	const migrated = migratedTarget(algorithm ?? defaultAlgorithm(), knobs ?? {});
-	const resolved = await resolveAlgorithm(migrated.algorithm);
+	const resolved = await resolveInstalledAlgorithm(migrated.algorithm);
 	return { id: migrated.algorithm, algorithm: resolved, knobs: validateKnobs(resolved, migrated.knobs) };
 }
 
@@ -228,7 +228,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 				for (const algId of ids) {
 					const resolved =
 						resolvedMode === "hosted"
-							? await resolveAlgorithm(algId, { timeoutMs: HARNESS_TIMEOUT_MS })
+							? await resolveInstalledAlgorithm(algId, { timeoutMs: HARNESS_TIMEOUT_MS })
 							: await bakedAlgorithm(algId);
 					reports.push({ ...gauntlet(resolved, { runs: runCount }), algorithm: algId });
 				}

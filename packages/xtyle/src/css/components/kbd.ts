@@ -9,7 +9,7 @@ const kbdTones = TONES.map(
 ).join("\n");
 
 export const kbdCss = `
-[data-kbd] { display: contents; }
+[data-root][data-kbd] { display: contents; }
 .xtyle-kbd {
 	display: inline-flex;
 	align-items: center;

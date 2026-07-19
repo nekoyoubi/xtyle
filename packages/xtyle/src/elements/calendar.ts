@@ -26,6 +26,7 @@ import {
 import { FragmentHost } from "./fragment-host.js";
 import { escapeSelectorValue } from "./fragments/selector-escape.js";
 import { manifest, fragmentSources } from "./fragments/calendar/source.generated.js";
+import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 
 let calendarSeq = 0;
 
@@ -179,14 +180,14 @@ export class XtyleCalendar extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "calendar size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);

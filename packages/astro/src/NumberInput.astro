@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SIZES, resolveVocab } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	value?: number | string;
@@ -34,7 +36,7 @@ const {
 	altDefault = false,
 	modifier,
 	disabled = false,
-	size = "md",
+	size: sizeInput,
 	label,
 	labelledby,
 	name,
@@ -43,6 +45,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("number-input", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "number-input size");
 
 const valueStr = value === undefined || value === "" ? undefined : String(value);
 const elementId = `xtyle-number-${Math.random().toString(36).slice(2, 8)}`;
