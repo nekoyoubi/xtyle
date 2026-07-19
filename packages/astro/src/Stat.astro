@@ -1,10 +1,12 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { STAT_TRENDS, resolveVocab, STAT_SENTIMENTS, resolveOptionalVocab, STAT_ALIGNS, SIZES } from "@xtyle/core";
 
-type StatTrend = "up" | "down" | "flat";
-type StatSentiment = "positive" | "negative" | "neutral";
-type StatAlign = "start" | "center";
-type Size = "sm" | "md" | "lg";
+type StatTrend = (typeof STAT_TRENDS)[number];
+type StatSentiment = (typeof STAT_SENTIMENTS)[number];
+type StatAlign = (typeof STAT_ALIGNS)[number];
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	label?: string;
@@ -27,16 +29,21 @@ interface Props {
 const {
 	label,
 	delta,
-	trend = "flat",
-	sentiment,
+	trend: trendInput,
+	sentiment: sentimentInput,
 	caption,
-	size = "md",
-	align = "start",
+	size: sizeInput,
+	align: alignInput,
 	inline = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("stat", Astro.props);
+const trend = resolveVocab(trendInput, STAT_TRENDS, "flat", "stat trend");
+const sentiment = resolveOptionalVocab(sentimentInput, STAT_SENTIMENTS, "stat sentiment");
+const align = resolveVocab(alignInput, STAT_ALIGNS, "start", "stat align");
+const size = resolveVocab(sizeInput, SIZES, "md", "stat size");
 
 const bindings = {
 	label: label ?? null,

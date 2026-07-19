@@ -1,3 +1,6 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+import { escapeSelectorValue } from "../selector-escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -78,14 +81,6 @@ declare const hooks: {
 	};
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
-
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
-}
 
 function rootClass(b: DatePickerBindings): string {
 	const size = b.size ?? "md";
@@ -302,7 +297,7 @@ hooks.fragment.update("date-picker", (bindings, ops) => {
 	ops.setAttr('.xtyle-datepicker__time-option[aria-selected="true"]', "aria-selected", "false");
 	const selected = (bindings.timeOptions ?? []).filter((option) => option.selected === true)[0];
 	if (selected) {
-		const target = `.xtyle-datepicker__time-option[data-iso="${selected.iso}"]`;
+		const target = `.xtyle-datepicker__time-option[data-iso="${escapeSelectorValue(selected.iso)}"]`;
 		ops.setAttr(target, "aria-selected", "true");
 		ops.setAttr(target, "data-selected", "selected");
 	}

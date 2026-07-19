@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/tooltip.js";
 	import type { Snippet } from "svelte";
+	import { TOOLTIP_PLACEMENTS } from "@xtyle/core";
 
-	type Placement = "top" | "bottom" | "left" | "right";
+	type Placement = (typeof TOOLTIP_PLACEMENTS)[number];
 
 	interface Props {
 		text?: string;

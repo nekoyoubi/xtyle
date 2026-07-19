@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { ORIENTATIONS, resolveVocab, SPLITTER_SIZES } from "@xtyle/core";
 
-type SplitterOrientation = "vertical" | "horizontal";
-type SplitterSize = "sm" | "md" | "lg";
+type SplitterOrientation = (typeof ORIENTATIONS)[number];
+type SplitterSize = (typeof SPLITTER_SIZES)[number];
 
 interface Props {
 	orientation?: SplitterOrientation;
@@ -29,8 +31,8 @@ interface Props {
 }
 
 const {
-	orientation = "vertical",
-	size = "md",
+	orientation: orientationInput,
+	size: sizeInput,
 	line = false,
 	min = 0,
 	max,
@@ -47,6 +49,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("splitter", Astro.props);
+const orientation = resolveVocab(orientationInput, ORIENTATIONS, "vertical", "splitter orientation");
+const size = resolveVocab(sizeInput, SPLITTER_SIZES, "md", "splitter size");
 
 const ariaMax = max ?? value;
 

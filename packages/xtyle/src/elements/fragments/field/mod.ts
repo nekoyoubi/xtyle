@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -26,6 +28,8 @@ interface FieldBindings {
 	inputId?: string;
 	descriptionId?: string;
 	errorId?: string;
+	hasPrefix?: boolean;
+	hasSuffix?: boolean;
 }
 
 interface EventPayload {
@@ -46,14 +50,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: FieldBindings, ops: OpsBuilder) => void) => void };
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
-
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
-}
 
 function fieldClass(b: FieldBindings): string {
 	const size = b.size ?? "md";
@@ -143,13 +139,17 @@ function inner(b: FieldBindings): string {
 	const revealLabel = typeIsText ? "Hide value" : "Show value";
 
 	const clearHidden = clearShown ? "" : " hidden";
+	// The adornment keeps its `<slot>` whether or not it's filled, so `:empty` can never match it:
+	// a slot is a child node, and the nodes assigned to it are not. Only the host knows, so it says.
+	const prefixHidden = b.hasPrefix ? "" : " hidden";
+	const suffixHidden = b.hasSuffix ? "" : " hidden";
 	const descriptionHidden = description.length === 0 ? " hidden" : "";
 	const errorHidden = !invalid || error.length === 0 ? " hidden" : "";
 
 	return (
 		`<label class="xtyle-field__label" part="label" for="${escapeAttr(inputId)}"${labelHidden}>${escapeHtml(label)}${star}</label>` +
 		`<div class="xtyle-field__control" part="control">` +
-		`<span class="xtyle-field__adornment" part="adornment"><slot name="prefix"></slot></span>` +
+		`<span class="xtyle-field__adornment" part="adornment" data-slot="prefix"${prefixHidden}><slot name="prefix"></slot></span>` +
 		`<input ${inputAttrs} />` +
 		`<button type="button" class="xtyle-field__action" part="action-reveal" data-action="reveal"${revealHidden} aria-pressed="${revealPressed}" aria-label="${escapeAttr(revealLabel)}">` +
 		`<slot name="reveal-icon"><span aria-hidden="true">&#128065;</span></slot>` +
@@ -157,7 +157,7 @@ function inner(b: FieldBindings): string {
 		`<button type="button" class="xtyle-field__action" part="action-clear" data-action="clear"${clearHidden} aria-label="Clear">` +
 		`<slot name="clear-icon"><span aria-hidden="true">&times;</span></slot>` +
 		`</button>` +
-		`<span class="xtyle-field__adornment" part="adornment"><slot name="suffix"></slot></span>` +
+		`<span class="xtyle-field__adornment" part="adornment" data-slot="suffix"${suffixHidden}><slot name="suffix"></slot></span>` +
 		`</div>` +
 		`<span class="xtyle-field__description" part="description" id="${escapeAttr(descriptionId)}"${descriptionHidden}>${escapeHtml(description)}</span>` +
 		`<span class="xtyle-field__error" part="error" id="${escapeAttr(errorId)}"${errorHidden}>${escapeHtml(error)}</span>`

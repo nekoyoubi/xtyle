@@ -18,6 +18,19 @@ import { THEME_APPLY_EVENT } from "../dom.js";
  * so the shared component sheet (already global) styles them and no per-instance CSS ships. */
 export type StyleMode = "inherit" | "isolated" | "scoped" | "auto";
 
+/**
+ * Whether an element is upgrading over pre-rendered light-DOM structure composed by the Astro SSR
+ * binding, which is what `auto` mode keys on: found means stay light and adopt it, absent means
+ * attach a shadow root and project the consumer's framework-owned children through native `<slot>`.
+ *
+ * Direct children only. The composed scaffold's `[data-root]` is always a direct child, while a
+ * nested auto component (e.g. a `<xtyle-text>` inside a slotted panel) carries its own deeper
+ * `[data-root]` — a descendant search would mistake that for this element's own scaffold.
+ */
+export function hasComposedScaffold(el: Element): boolean {
+	return Array.from(el.children).some((child) => child.hasAttribute("data-root"));
+}
+
 export abstract class XtyleElement extends HTMLElement {
 	/** The render root. Under `isolated` it's a real shadow root; under `inherit` / `scoped`
 	 * it's the element itself (light DOM), typed as `ShadowRoot` so the shadow elements keep
@@ -48,11 +61,8 @@ export abstract class XtyleElement extends HTMLElement {
 		// (`[data-root]`, composed by the Astro SSR binding) stays light and adopts it; one created
 		// bare (a framework client-render, raw markup) attaches a shadow root and projects the
 		// consumer's framework-owned children via native `<slot>`. A forced mode keeps its behavior.
-		// `:scope >` matters: the composed scaffold's `[data-root]` is always a direct child, while a
-		// nested auto component (e.g. a `<xtyle-text>` inside a slotted panel) carries its own deeper
-		// `[data-root]` — a bare `querySelector` would mistake that for this element's own scaffold.
 		const mode = this.styleMode;
-		const light = mode === "auto" ? this.querySelector(":scope > [data-root]") !== null : mode !== "isolated";
+		const light = mode === "auto" ? hasComposedScaffold(this) : mode !== "isolated";
 		this.root = light
 			? (this as unknown as ShadowRoot)
 			: (this.shadowRoot ?? this.attachShadow({ mode: "open" }));

@@ -5,7 +5,7 @@ const toneRules = FULL_TONES.filter((t) => t !== "accent")
 	.join("\n");
 
 export const eyebrowCss = `
-[data-eyebrow] { display: contents; }
+[data-root][data-eyebrow] { display: contents; }
 .xtyle-eyebrow {
 	margin: 0;
 	font-family: var(--font-sans);

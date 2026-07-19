@@ -174,7 +174,7 @@ export const commandPaletteManifest: ComponentManifest = {
 			tokens: [
 				"--fg-1",
 				"--accent-bg",
-				"--accent-text",
+				"--fg-0",
 				"--fg-disabled",
 				"--radius-sm",
 				"--space-2",
@@ -348,7 +348,7 @@ export const commandPaletteManifest: ComponentManifest = {
 			description:
 				"The command under virtual focus — what Enter runs. Marked `data-active` and `aria-selected`; it is never DOM-focused, because the caret must stay in the input.",
 			selector: '.xtyle-command-palette__option[data-active="true"]',
-			tokens: ["--accent-bg", "--accent-text"],
+			tokens: ["--accent-bg", "--fg-0"],
 		},
 		{
 			name: "disabled",
@@ -367,7 +367,6 @@ export const commandPaletteManifest: ComponentManifest = {
 	consumedTokens: [
 		"--accent",
 		"--accent-bg",
-		"--accent-text",
 		"--border-thin",
 		"--duration-fast",
 		"--ease-standard",

@@ -18,6 +18,6 @@
     ops.replaceChildren("[data-stack]", stackHtml(bindings));
   });
   hooks.fragment.update("stack", (bindings, ops) => {
-    ops.setAttr('[part="stack"]', "class", stackClass(bindings));
+    ops.setAttr(".xtyle-stack", "class", stackClass(bindings));
   });
 })();

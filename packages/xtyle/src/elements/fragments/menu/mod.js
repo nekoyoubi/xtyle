@@ -1,12 +1,91 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/menu/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
   function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
   function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, "&quot;");
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
+
+  // packages/xtyle/src/elements/collection/roving.ts
+  function focusableAt(items2, index) {
+    const item = items2[index];
+    return item && !item.skip ? item.key : null;
+  }
+  function firstKey(items2) {
+    for (let i = 0; i < items2.length; i++) {
+      const key = focusableAt(items2, i);
+      if (key !== null) return key;
+    }
+    return null;
+  }
+  function lastKey(items2) {
+    for (let i = items2.length - 1; i >= 0; i--) {
+      const key = focusableAt(items2, i);
+      if (key !== null) return key;
+    }
+    return null;
+  }
+  function stepKey(items2, fromKey, dir, wrap = false) {
+    const n = items2.length;
+    if (n === 0) return null;
+    const found = fromKey === null ? -1 : items2.findIndex((it) => it.key === fromKey);
+    const here = found === -1 ? dir > 0 ? -1 : n : found;
+    for (let s = 1; s <= n; s++) {
+      let idx = here + dir * s;
+      if (wrap) idx = (idx % n + n) % n;
+      else if (idx < 0 || idx >= n) return null;
+      const key = focusableAt(items2, idx);
+      if (key !== null) return key;
+      if (wrap && idx === here) break;
+    }
+    return null;
+  }
+
+  // packages/xtyle/src/elements/collection/nav-reducer.ts
+  function axisKeys(orientation) {
+    switch (orientation) {
+      case "horizontal":
+        return { next: ["ArrowRight"], prev: ["ArrowLeft"] };
+      case "both":
+        return { next: ["ArrowDown", "ArrowRight"], prev: ["ArrowUp", "ArrowLeft"] };
+      default:
+        return { next: ["ArrowDown"], prev: ["ArrowUp"] };
+    }
+  }
+  function linearNav(items2, currentKey, key, opts = {}) {
+    const orientation = opts.orientation ?? "vertical";
+    const wrap = opts.wrap ?? false;
+    const { next, prev } = axisKeys(orientation);
+    if (next.includes(key)) {
+      const target = stepKey(items2, currentKey, 1, wrap);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (prev.includes(key)) {
+      const target = stepKey(items2, currentKey, -1, wrap);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (opts.homeEnd && key === "Home") {
+      const target = firstKey(items2);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (opts.homeEnd && key === "End") {
+      const target = lastKey(items2);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (key === "Enter" || key === " " || key === "Spacebar") {
+      return { activate: true, handled: true };
+    }
+    return {};
+  }
+
+  // packages/xtyle/src/elements/fragments/menu/mod.ts
   function triggerLabel(bindings) {
     return bindings.label ?? "Menu";
   }
@@ -89,17 +168,8 @@
     const ctx = context;
     const enabled = ctx?.enabledValues ?? [];
     const current = e.dataset?.value ?? "";
-    const here = enabled.indexOf(current);
     const k = e.key ?? "";
     switch (k) {
-      case "ArrowDown":
-        return enabled.length ? { focusValue: enabled[(here + 1) % enabled.length], preventDefault: true } : {};
-      case "ArrowUp":
-        return enabled.length ? { focusValue: enabled[(here - 1 + enabled.length) % enabled.length], preventDefault: true } : {};
-      case "Home":
-        return enabled.length ? { focusValue: enabled[0], preventDefault: true } : {};
-      case "End":
-        return enabled.length ? { focusValue: enabled[enabled.length - 1], preventDefault: true } : {};
       case "Enter":
       case " ":
       case "Spacebar": {
@@ -117,8 +187,10 @@
         return { closeMenu: true, returnFocus: true, preventDefault: true, stopPropagation: true };
       case "Tab":
         return { closeMenu: true, returnFocus: false };
-      default:
-        return {};
     }
+    const navItems = enabled.map((value) => ({ key: value }));
+    const move = linearNav(navItems, current, k, { orientation: "vertical", wrap: true, homeEnd: true });
+    if (move.focus !== void 0) return { focusValue: move.focus, preventDefault: true };
+    return {};
   });
 })();

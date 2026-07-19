@@ -140,6 +140,8 @@ export {
 	components,
 	getComponent,
 	listComponents,
+	diagnoseAuthoring,
+	warnAuthoring,
 	tokensInCss,
 	declaredPropsInCss,
 	styleQueriedTokensInCss,

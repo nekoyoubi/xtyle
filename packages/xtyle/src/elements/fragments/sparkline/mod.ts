@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 }
@@ -20,15 +22,6 @@ interface SparkBindings {
 declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: SparkBindings, ops: OpsBuilder) => void) => void };
 };
-
-const AMP = /&/g;
-const LT = /</g;
-const GT = />/g;
-const QUOT = /"/g;
-
-function esc(value: string): string {
-	return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
-}
 
 const VW = 100;
 const VH = 32;
@@ -78,11 +71,11 @@ function sparkHtml(b: SparkBindings): string {
 	const label = b.label ?? "";
 
 	if (values.length === 0) {
-		return `<span class="${sparkClass(b)}" role="img" aria-label="${label ? esc(label) : "No data"}"><span class="xtyle-sparkline__empty">No data</span></span>`;
+		return `<span class="${sparkClass(b)}" role="img" aria-label="${label ? escapeAttr(label) : "No data"}"><span class="xtyle-sparkline__empty">No data</span></span>`;
 	}
 
 	const a11y = label
-		? ` role="img" aria-label="${esc(label)}"`
+		? ` role="img" aria-label="${escapeAttr(label)}"`
 		: ` role="img" aria-label="Sparkline of ${values.length} values"`;
 
 	const lo = b.min ?? Math.min(...values);

@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/number-input/mod.ts
   function numberClass(b) {
     const size = b.size ?? "md";
@@ -12,15 +25,15 @@
     const uid = b.elementId ?? "xtyle-number";
     const labelId = `${uid}-label`;
     const placeholder = b.placeholder ?? null;
-    const nameAttr = labelledby ? ` aria-labelledby="${labelledby}"` : labelText ? ` aria-labelledby="${labelId}"` : "";
+    const nameAttr = labelledby ? ` aria-labelledby="${escapeAttr(labelledby)}"` : labelText ? ` aria-labelledby="${labelId}"` : "";
     const disabledAttr = b.disabled ? " disabled" : "";
     const minAttr = b.min !== void 0 ? ` aria-valuemin="${b.min}"` : "";
     const maxAttr = b.max !== void 0 ? ` aria-valuemax="${b.max}"` : "";
-    const placeholderAttr = placeholder ? ` placeholder="${placeholder}"` : "";
+    const placeholderAttr = placeholder ? ` placeholder="${escapeAttr(placeholder)}"` : "";
     const decDisabled = b.disabled || b.canDec === false ? " disabled" : "";
     const incDisabled = b.disabled || b.canInc === false ? " disabled" : "";
-    const label = labelText ? `<span class="xtyle-number__label" part="label" id="${labelId}">${labelText}</span>` : "";
-    return `${label}<div class="xtyle-number__control" part="control"><button class="xtyle-number__step xtyle-number__step--dec" part="step-down" type="button" tabindex="-1" aria-label="Decrease"${decDisabled}>&#8722;</button><input class="xtyle-number__input" part="input" type="text" inputmode="decimal" role="spinbutton" autocomplete="off" spellcheck="false" value="${value}"${placeholderAttr}${nameAttr}${minAttr}${maxAttr} aria-valuenow="${value}"${disabledAttr} /><button class="xtyle-number__step xtyle-number__step--inc" part="step-up" type="button" tabindex="-1" aria-label="Increase"${incDisabled}>&#43;</button></div>`;
+    const label = labelText ? `<span class="xtyle-number__label" part="label" id="${labelId}">${escapeHtml(labelText)}</span>` : "";
+    return `${label}<div class="xtyle-number__control" part="control"><button class="xtyle-number__step xtyle-number__step--dec" part="step-down" type="button" tabindex="-1" aria-label="Decrease"${decDisabled}>&#8722;</button><input class="xtyle-number__input" part="input" type="text" inputmode="decimal" role="spinbutton" autocomplete="off" spellcheck="false" value="${escapeAttr(value)}"${placeholderAttr}${nameAttr}${minAttr}${maxAttr} aria-valuenow="${escapeAttr(value)}"${disabledAttr} /><button class="xtyle-number__step xtyle-number__step--inc" part="step-up" type="button" tabindex="-1" aria-label="Increase"${incDisabled}>&#43;</button></div>`;
   }
   hooks.fragment.mount("number-input", (bindings, ops) => {
     ops.setAttr(".xtyle-number", "class", numberClass(bindings));

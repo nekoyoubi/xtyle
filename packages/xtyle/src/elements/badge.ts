@@ -3,8 +3,9 @@ import type { FullTone, Size } from "../index.js";
 import { badgeHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/badge/source.generated.js";
+import { resolveTone, BADGE_VARIANTS, resolveVocab, SIZES } from "../vocab.js";
 
-type BadgeVariant = "solid" | "soft" | "outline";
+type BadgeVariant = (typeof BADGE_VARIANTS)[number];
 type BadgePulse = "slow" | "fast" | null;
 
 const STATUS_WORD: Record<string, string> = {
@@ -28,21 +29,21 @@ export class XtyleBadge extends XtyleElement {
 	}
 
 	get variant(): BadgeVariant {
-		return (this.getAttribute("variant") as BadgeVariant) ?? "soft";
+		return resolveVocab(this.getAttribute("variant"), BADGE_VARIANTS, "soft", "badge variant");
 	}
 	set variant(value: BadgeVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "neutral";
+		return resolveTone(this.getAttribute("tone"), "neutral");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "badge size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

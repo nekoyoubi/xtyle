@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -81,7 +83,7 @@ function tabindex(b: ColorPickerBindings): string {
 
 function labelSpan(b: ColorPickerBindings): string {
 	const labelId = `${b.elementId ?? "xtyle-color-picker"}-label`;
-	return b.label ? `<span class="xtyle-color-picker__label" part="label" id="${labelId}">${b.label}</span>` : "";
+	return b.label ? `<span class="xtyle-color-picker__label" part="label" id="${escapeAttr(labelId)}">${escapeHtml(b.label)}</span>` : "";
 }
 
 function rootLabelledby(b: ColorPickerBindings): string | null {
@@ -97,7 +99,7 @@ function presets(b: ColorPickerBindings): string {
 	const chips = swatches
 		.map(
 			(s) =>
-				`<button class="xtyle-color-picker__preset" part="preset" type="button" data-color="${s.entry}" data-hex="${s.hex}" style="--cp-chip: ${s.hex}" aria-label="${s.entry}" aria-pressed="${String(s.pressed)}"${disabledAttr}></button>`,
+				`<button class="xtyle-color-picker__preset" part="preset" type="button" data-color="${escapeAttr(s.entry)}" data-hex="${escapeAttr(s.hex)}" style="--cp-chip: ${escapeAttr(s.hex)}" aria-label="${escapeAttr(s.entry)}" aria-pressed="${String(s.pressed)}"${disabledAttr}></button>`,
 		)
 		.join("");
 	return `<div class="xtyle-color-picker__presets" part="presets" role="group" aria-label="Preset colors">${chips}</div>`;
@@ -131,10 +133,10 @@ function harmonyRow(b: ColorPickerBindings): string {
 	const chips = (b.harmonyChips ?? [])
 		.map(
 			(c) =>
-				`<button class="xtyle-color-picker__preset xtyle-color-picker__harmony-chip" part="harmony-chip" type="button" data-color="${c.hex}" data-hex="${c.hex}" style="--cp-chip: ${c.hex}" aria-label="${c.hex}" aria-pressed="false"${disabledAttr}></button>`,
+				`<button class="xtyle-color-picker__preset xtyle-color-picker__harmony-chip" part="harmony-chip" type="button" data-color="${escapeAttr(c.hex)}" data-hex="${escapeAttr(c.hex)}" style="--cp-chip: ${escapeAttr(c.hex)}" aria-label="${escapeAttr(c.hex)}" aria-pressed="false"${disabledAttr}></button>`,
 		)
 		.join("");
-	return `<div class="xtyle-color-picker__presets xtyle-color-picker__harmony" part="harmony" role="group" aria-label="${b.harmonyScheme} harmony">${chips}</div>`;
+	return `<div class="xtyle-color-picker__presets xtyle-color-picker__harmony" part="harmony" role="group" aria-label="${escapeAttr(b.harmonyScheme)} harmony">${chips}</div>`;
 }
 
 function channelRows(b: ColorPickerBindings): string {
@@ -145,12 +147,12 @@ function channelRows(b: ColorPickerBindings): string {
 		.map(
 			(c) =>
 				`<label class="xtyle-color-picker__channel" part="channel">` +
-				`<span class="xtyle-color-picker__channel-label" aria-hidden="true">${c.label}</span>` +
-				`<input class="xtyle-color-picker__channel-input" part="channel-input" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.value}" aria-label="${c.name}" aria-valuetext="${c.formatted}"${disabledAttr} />` +
-				`<span class="xtyle-color-picker__channel-value" part="channel-value" aria-hidden="true">${c.formatted}</span></label>`,
+				`<span class="xtyle-color-picker__channel-label" aria-hidden="true">${escapeHtml(c.label)}</span>` +
+				`<input class="xtyle-color-picker__channel-input" part="channel-input" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.value}" aria-label="${escapeAttr(c.name)}" aria-valuetext="${escapeAttr(c.formatted)}"${disabledAttr} />` +
+				`<span class="xtyle-color-picker__channel-value" part="channel-value" aria-hidden="true">${escapeHtml(c.formatted)}</span></label>`,
 		)
 		.join("");
-	return `<div class="xtyle-color-picker__channels" part="channels" role="group" aria-label="${model} channels">${sliders}</div>`;
+	return `<div class="xtyle-color-picker__channels" part="channels" role="group" aria-label="${escapeAttr(model)} channels">${sliders}</div>`;
 }
 
 function planeBlock(b: ColorPickerBindings): string {
@@ -190,7 +192,7 @@ function field(b: ColorPickerBindings): string {
 		: "";
 	return (
 		`<div class="xtyle-color-picker__field" part="field">` +
-		`<button class="xtyle-color-picker__format" part="format" type="button" aria-label="Cycle color format"${disabledAttr}>${formatLabel}</button>` +
+		`<button class="xtyle-color-picker__format" part="format" type="button" aria-label="Cycle color format"${disabledAttr}>${escapeHtml(formatLabel)}</button>` +
 		`<input class="xtyle-color-picker__value" part="value" type="text" inputmode="text" spellcheck="false" autocomplete="off" aria-label="Color value"${disabledAttr} />` +
 		`${eyedropper}</div>`
 	);
@@ -222,8 +224,8 @@ function shell(b: ColorPickerBindings): string {
 	const disabledAttr = b.disabled ? " disabled" : "";
 	const popoverId = `${b.elementId ?? "xtyle-color-picker"}-popover`;
 	return (
-		`<button class="xtyle-color-picker__trigger" part="trigger" type="button" popovertarget="${popoverId}" aria-haspopup="dialog" aria-expanded="false" aria-label="Open color picker"${disabledAttr}>${TRIGGER_CARET}</button>` +
-		`<div class="xtyle-color-picker__popover" part="popover" id="${popoverId}" popover>${body(b)}</div>`
+		`<button class="xtyle-color-picker__trigger" part="trigger" type="button" popovertarget="${escapeAttr(popoverId)}" aria-haspopup="dialog" aria-expanded="false" aria-label="Open color picker"${disabledAttr}>${TRIGGER_CARET}</button>` +
+		`<div class="xtyle-color-picker__popover" part="popover" id="${escapeAttr(popoverId)}" popover>${body(b)}</div>`
 	);
 }
 

@@ -2,7 +2,8 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
 import { selectHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
-import { manifest, fragmentSources } from "./fragments/select/source.generated.js";
+import { manifest, fragmentSources } from "./fragments/select/source.generated.js";import { resolveVocab, SIZES } from "../vocab.js";
+
 
 let selectCounter = 0;
 
@@ -31,7 +32,7 @@ export class XtyleSelect extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "select size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

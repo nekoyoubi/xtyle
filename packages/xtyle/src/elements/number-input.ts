@@ -3,6 +3,7 @@ import type { Size } from "../index.js";
 import { numberInputHostCss, clampNumber } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/number-input/source.generated.js";
+import { resolveVocab, SIZES } from "../vocab.js";
 
 export class XtyleNumberInput extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -66,7 +67,7 @@ export class XtyleNumberInput extends XtyleElement {
 		this.reflectBoolean("disabled", value);
 	}
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "number-input size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

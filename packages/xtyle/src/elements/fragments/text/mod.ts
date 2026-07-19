@@ -43,5 +43,5 @@ hooks.fragment.mount("text", (bindings, ops) => {
 });
 
 hooks.fragment.update("text", (bindings, ops) => {
-	ops.setAttr('[part="text"]', "class", textClass(bindings));
+	ops.setAttr(".xtyle-text", "class", textClass(bindings));
 });

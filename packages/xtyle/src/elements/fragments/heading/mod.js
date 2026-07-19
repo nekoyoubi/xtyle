@@ -20,6 +20,6 @@
     ops.replaceChildren("[data-heading]", headingHtml(bindings));
   });
   hooks.fragment.update("heading", (bindings, ops) => {
-    ops.setAttr('[part="heading"]', "class", headingClass(bindings));
+    ops.setAttr(".xtyle-heading", "class", headingClass(bindings));
   });
 })();

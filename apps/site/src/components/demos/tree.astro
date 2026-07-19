@@ -12,13 +12,14 @@ const docs: TreeNode[] = [
 		label: "Guides",
 		locked: true,
 		children: [
-			{ label: "Getting started", href: "#getting-started", selected: true },
-			{ label: "Deriving a theme", href: "#deriving" },
+			{ label: "Getting started", href: "#getting-started", selected: true, title: "Install, derive a theme, render your first component" },
+			{ label: "Deriving a theme", href: "#deriving", title: "Pin a background and an accent; the algorithm does the rest" },
 			{
 				label: "Algorithms",
 				expanded: true,
+				title: "The durable, reusable engine behind every theme",
 				children: [
-					{ label: "Writing one", href: "#writing" },
+					{ label: "Writing one", href: "#writing", title: "Manifest, knobs, and the derivation graph" },
 					{ label: "Knobs & overrides", href: "#knobs" },
 				],
 			},
@@ -27,7 +28,7 @@ const docs: TreeNode[] = [
 	{
 		label: "Reference",
 		children: [
-			{ label: "Engine API", href: "#engine" },
+			{ label: "Engine API", href: "#engine", title: "derive, emit, apply, and the token register" },
 			{ label: "CLI", href: "#cli" },
 			{ label: "Deprecated", href: "#deprecated", disabled: true },
 		],

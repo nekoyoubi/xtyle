@@ -1,4 +1,5 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
+import { stepKey } from "./collection/index.js";
 import {
 	commandPaletteHostCss,
 	highlightRuns,
@@ -428,14 +429,19 @@ export class XtyleCommandPalette extends XtyleElement {
 		return out;
 	}
 
-	/** Single steps wrap (the last command's ↓ lands on the first); a page jump clamps at the ends. */
+	/** Single steps wrap (the last command's ↓ lands on the first) via the shared collection stepper;
+	 * a page jump clamps at the ends. */
 	private moveActive(delta: number, wrap: boolean): void {
 		const ids = this.navigable.map((item) => item.id);
 		if (ids.length === 0) return;
-		const here = Math.max(ids.indexOf(this.activeValue), 0);
-		const raw = here + delta;
-		const next = wrap ? ((raw % ids.length) + ids.length) % ids.length : Math.min(Math.max(raw, 0), ids.length - 1);
-		this.activeValue = ids[next] ?? "";
+		if (wrap) {
+			const next = stepKey(ids.map((id) => ({ key: id })), this.activeValue, delta > 0 ? 1 : -1, true);
+			this.activeValue = next ?? this.activeValue;
+		} else {
+			const here = Math.max(ids.indexOf(this.activeValue), 0);
+			const clamped = Math.min(Math.max(here + delta, 0), ids.length - 1);
+			this.activeValue = ids[clamped] ?? "";
+		}
 		this.paint();
 	}
 

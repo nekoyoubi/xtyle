@@ -12,6 +12,10 @@ export interface SerializedEvent {
 	key?: string;
 	disabled?: boolean;
 	ariaDisabled?: string;
+	/** Modifier keys on a mouse/keyboard event, for a collection's toggle (ctrl/meta) and range (shift). */
+	ctrlKey?: boolean;
+	shiftKey?: boolean;
+	metaKey?: boolean;
 }
 
 /** What a handler export returns; the trusted host applies it. */
@@ -61,6 +65,10 @@ export interface FragmentIntent {
 	removeLast?: boolean;
 	/** Tour: which way a nav button moves the sequence. */
 	tourNav?: "back" | "next" | "skip";
+	/** Markdown: flip between the rendered body and the source editor. */
+	toggleEditing?: boolean;
+	/** Collection: how a selection gesture transitions the selection model. */
+	selectMode?: "replace" | "toggle" | "range";
 }
 
 /** One delegated handler a fill declares: the element inside its markup, the DOM event, and the sandbox
@@ -266,6 +274,7 @@ export function markFillFailure(host: Element, error: unknown): void {
 
 function serializeEvent(el: HTMLElement, event: Event): SerializedEvent {
 	const input = el as HTMLInputElement;
+	const mod = event as Partial<MouseEvent & KeyboardEvent>;
 	return {
 		tagName: el.tagName,
 		dataset: { ...el.dataset },
@@ -275,6 +284,9 @@ function serializeEvent(el: HTMLElement, event: Event): SerializedEvent {
 		key: event instanceof KeyboardEvent ? event.key : undefined,
 		disabled: input.disabled === true || undefined,
 		ariaDisabled: el.getAttribute("aria-disabled") ?? undefined,
+		ctrlKey: typeof mod.ctrlKey === "boolean" ? mod.ctrlKey : undefined,
+		shiftKey: typeof mod.shiftKey === "boolean" ? mod.shiftKey : undefined,
+		metaKey: typeof mod.metaKey === "boolean" ? mod.metaKey : undefined,
 	};
 }
 

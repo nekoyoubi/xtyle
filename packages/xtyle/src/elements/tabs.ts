@@ -3,6 +3,7 @@ import type { Size } from "../index.js";
 import { tabsHostCss, type TabItemData, type TabsVariant, type TabsActivation } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/tabs/source.generated.js";
+import { resolveVocab, TABS_VARIANTS, TABS_SIZES } from "../vocab.js";
 
 let tabsSeq = 0;
 
@@ -34,14 +35,14 @@ export class XtyleTabs extends XtyleElement {
 	}
 
 	get variant(): TabsVariant {
-		return (this.getAttribute("variant") as TabsVariant) ?? "underline";
+		return resolveVocab(this.getAttribute("variant"), TABS_VARIANTS, "underline", "tabs variant");
 	}
 	set variant(value: TabsVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), TABS_SIZES, "md", "tabs size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
@@ -123,11 +124,17 @@ export class XtyleTabs extends XtyleElement {
 		if (this.root.firstChild) this.render();
 	}
 
+	/**
+	 * `data-xtyle-tab` / `data-xtyle-panel` are the markers that survive every host. Astro consumes a
+	 * child's `slot` attribute to route it through its own `<slot name>`, so `slot="tab"` never reaches
+	 * the element there; it stays supported for plain HTML and Svelte, which pass it through untouched.
+	 */
 	private get pairs(): TabPair[] {
-		let tabs = Array.from(this.querySelectorAll<HTMLElement>(':scope > [slot="tab"]'));
-		let panels = Array.from(this.querySelectorAll<HTMLElement>(':scope > [slot="panel"], :scope > [slot^="panel-"]'));
+		const direct = Array.from(this.children) as HTMLElement[];
+		const isPanelSlot = (slot: string | null) => slot === "panel" || (slot?.startsWith("panel-") ?? false);
+		let tabs = direct.filter((el) => el.hasAttribute("data-xtyle-tab") || el.getAttribute("slot") === "tab");
+		let panels = direct.filter((el) => el.hasAttribute("data-xtyle-panel") || isPanelSlot(el.getAttribute("slot")));
 		if (tabs.length === 0) {
-			const direct = Array.from(this.children) as HTMLElement[];
 			tabs = direct.filter((el) => el.tagName === "BUTTON");
 			panels = direct.filter((el) => el.tagName !== "BUTTON");
 		}
@@ -155,7 +162,9 @@ export class XtyleTabs extends XtyleElement {
 			label: pair.tab.innerHTML,
 			panel: "",
 			panelSlot: `panel-${i}`,
-			value: readAttrOrProp(pair.tab, "value") ?? String(i),
+			// `value` is not a valid attribute on the `<span>` a slotted tab usually is, so a typed host
+			// rejects it; `data-value` is the same identity in a form the markup can legally carry.
+			value: readAttrOrProp(pair.tab, "data-value") ?? readAttrOrProp(pair.tab, "value") ?? String(i),
 			disabled: pair.disabled,
 		}));
 	}
@@ -210,6 +219,23 @@ export class XtyleTabs extends XtyleElement {
 		}
 	}
 
+	private warnedUnmapped = false;
+
+	/**
+	 * Slotted mode maps children by marker, so a framework that claims `slot` before the element
+	 * sees it (Astro's `<slot name>` consumes the attribute) leaves nothing to match and the strip
+	 * renders empty with no other symptom. Name the cause rather than let it fail silently.
+	 */
+	private warnIfUnmapped(): void {
+		if (this.warnedUnmapped || this.items.length > 0 || this.pairs.length > 0) return;
+		const authored = Array.from(this.children).filter((el) => !el.hasAttribute("data-root"));
+		if (authored.length === 0) return;
+		this.warnedUnmapped = true;
+		console.warn(
+			"xtyle-tabs: has children but matched no tabs. Mark each tab with `slot=\"tab\"` or `data-xtyle-tab`, and each panel with `slot=\"panel\"` or `data-xtyle-panel`. Under Astro use the `data-` markers: its own named-slot handling consumes `slot`.",
+		);
+	}
+
 	protected template(): string {
 		return "";
 	}
@@ -220,6 +246,7 @@ export class XtyleTabs extends XtyleElement {
 		this.fragment.ensureScaffold(tabsHostCss);
 		this.fragment.update(this.bindings);
 		this.warnIfUnnamed();
+		this.warnIfUnmapped();
 	}
 }
 

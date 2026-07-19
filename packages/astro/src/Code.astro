@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { plainCodeHtml } from "@xtyle/core/markup";
 import { highlight } from "@xtyle/core/elements/code-highlight";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
@@ -26,6 +27,7 @@ interface Props {
 }
 
 const { lang, code = "", preload = false, static: isStatic = false, copy = true, wrap = false, lineNumbers = false, highlight: highlightSpec, caption, class: extra, ...rest } = Astro.props;
+await checkAuthoring("code", Astro.props);
 
 const result = await highlight(code, lang ?? null);
 // The fill owns the line rows, the number gutter, and the highlight tint — hand it the tokenized

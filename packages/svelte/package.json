@@ -1,12 +1,14 @@
 {
 	"name": "@xtyle/svelte",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"description": "Thin Svelte wrappers over the @xtyle/core/elements custom elements.",
 	"type": "module",
 	"license": "MIT",
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"sideEffects": ["./dist/register.js"],
+	"sideEffects": [
+		"./dist/register.js"
+	],
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -24,10 +26,11 @@
 		"README.md"
 	],
 	"scripts": {
-		"build": "svelte-package -i src -o dist"
+		"build": "svelte-package -i src -o dist",
+		"test": "vitest run"
 	},
 	"dependencies": {
-		"@xtyle/core": "^0.8.0"
+		"@xtyle/core": "^0.9.0"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
@@ -35,9 +38,11 @@
 	"devDependencies": {
 		"@sveltejs/package": "^2.3.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"happy-dom": "^15.11.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
-		"typescript": "^5.5.0"
+		"typescript": "^5.5.0",
+		"vitest": "^2.0.0"
 	},
 	"repository": {
 		"type": "git",

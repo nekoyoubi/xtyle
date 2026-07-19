@@ -1,10 +1,12 @@
 ---
 import { type TabItemData } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { checkAuthoring } from "./internal/diagnose.js";
+import { TABS_SIZES, resolveVocab, TABS_VARIANTS, TABS_ACTIVATIONS } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg";
-type TabsVariant = "underline" | "pill" | "enclosed";
-type TabsActivation = "automatic" | "manual";
+type Size = (typeof TABS_SIZES)[number];
+type TabsVariant = (typeof TABS_VARIANTS)[number];
+type TabsActivation = (typeof TABS_ACTIVATIONS)[number];
 
 interface Props {
 	items?: TabItemData[];
@@ -28,9 +30,9 @@ interface Props {
 
 const {
 	items,
-	variant = "underline",
-	size = "md",
-	activation = "automatic",
+	variant: variantInput,
+	size: sizeInput,
+	activation: activationInput,
 	value,
 	label,
 	labelledby,
@@ -40,6 +42,11 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+
+await checkAuthoring("tabs", Astro.props);
+const size = resolveVocab(sizeInput, TABS_SIZES, "md", "tabs size");
+const variant = resolveVocab(variantInput, TABS_VARIANTS, "underline", "tabs variant");
+const activation = resolveVocab(activationInput, TABS_ACTIVATIONS, "automatic", "tabs activation");
 
 const tabItems = items ?? [];
 const uid = `xtyle-tabs-${Math.random().toString(36).slice(2, 9)}`;
@@ -61,9 +68,16 @@ const bindings = {
 	uid,
 };
 // Two authoring modes. items-mode (the common case) renders the whole chrome light from `bindings`
-// and ships no children. The advanced slotted mode pairs the consumer's `slot="tab"`/`slot="panel"`
-// children by order, so they must survive *individually* (with their slot attributes) — Astro's
-// `<slot name>` passthrough keeps them intact, and the element maps them on connect.
+// and ships no children. The advanced slotted mode pairs the consumer's children by order, and
+// those must reach the element still carrying their marker — hence `data-xtyle-tab` /
+// `data-xtyle-panel`, which no framework claims.
+//
+// `slot` cannot be that marker. On a child of an Astro *component* it is a routing directive Astro
+// always consumes: with a matching `<slot name>` below the child renders there minus the attribute,
+// and with no match the child is dropped entirely. (A `slot` a component writes on its own root
+// element, as `Segment.astro` does, is ordinary HTML and survives — that is a different case, not a
+// bug to fix.) The named receivers below stay so a legacy `slot=`-marked child is passed through
+// rather than discarded.
 const useItems = tabItems.length > 0;
 const light = useItems ? await renderFragmentLight("tabs", bindings) : "";
 ---

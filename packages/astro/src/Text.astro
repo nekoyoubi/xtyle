@@ -1,11 +1,13 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, EMPHASIS_TONES, TEXT_TAGS, resolveVocab, TEXT_SIZES, TEXT_WEIGHTS, TEXT_LEADINGS } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import type { TextTone } from "@xtyle/core";
 
-type TextAs = "p" | "span";
-type TextSize = "xs" | "sm" | "body" | "lg";
-type TextWeight = "normal" | "medium" | "semibold" | "bold";
-type TextLeading = "tight" | "snug" | "loose";
-type TextTone = "default" | "muted" | "subtle" | "accent";
+type TextAs = (typeof TEXT_TAGS)[number];
+type TextSize = (typeof TEXT_SIZES)[number];
+type TextWeight = (typeof TEXT_WEIGHTS)[number];
+type TextLeading = (typeof TEXT_LEADINGS)[number];
 
 interface Props {
 	as?: TextAs;
@@ -22,16 +24,22 @@ interface Props {
 }
 
 const {
-	as = "p",
-	size = "body",
-	weight = "normal",
-	leading = "snug",
-	tone = "default",
+	as: asInput,
+	size: sizeInput,
+	weight: weightInput,
+	leading: leadingInput,
+	tone: toneInput,
 	mono = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("text", Astro.props);
+const as = resolveVocab(asInput, TEXT_TAGS, "p", "text as");
+const size = resolveVocab(sizeInput, TEXT_SIZES, "body", "text size");
+const weight = resolveVocab(weightInput, TEXT_WEIGHTS, "normal", "text weight");
+const leading = resolveVocab(leadingInput, TEXT_LEADINGS, "snug", "text leading");
+const tone = resolveTone(toneInput, "default", EMPHASIS_TONES);
 
 const bindings = { as, size, weight, leading, tone, mono };
 const chrome = await renderFragmentLight("text", bindings);

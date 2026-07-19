@@ -1,14 +1,93 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/elements/collection/roving.ts
+  function focusableAt(items, index) {
+    const item = items[index];
+    return item && !item.skip ? item.key : null;
+  }
+  function firstKey(items) {
+    for (let i = 0; i < items.length; i++) {
+      const key = focusableAt(items, i);
+      if (key !== null) return key;
+    }
+    return null;
+  }
+  function lastKey(items) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const key = focusableAt(items, i);
+      if (key !== null) return key;
+    }
+    return null;
+  }
+  function stepKey(items, fromKey, dir, wrap = false) {
+    const n = items.length;
+    if (n === 0) return null;
+    const found = fromKey === null ? -1 : items.findIndex((it) => it.key === fromKey);
+    const here = found === -1 ? dir > 0 ? -1 : n : found;
+    for (let s = 1; s <= n; s++) {
+      let idx = here + dir * s;
+      if (wrap) idx = (idx % n + n) % n;
+      else if (idx < 0 || idx >= n) return null;
+      const key = focusableAt(items, idx);
+      if (key !== null) return key;
+      if (wrap && idx === here) break;
+    }
+    return null;
+  }
+
+  // packages/xtyle/src/elements/collection/nav-reducer.ts
+  function axisKeys(orientation) {
+    switch (orientation) {
+      case "horizontal":
+        return { next: ["ArrowRight"], prev: ["ArrowLeft"] };
+      case "both":
+        return { next: ["ArrowDown", "ArrowRight"], prev: ["ArrowUp", "ArrowLeft"] };
+      default:
+        return { next: ["ArrowDown"], prev: ["ArrowUp"] };
+    }
+  }
+  function linearNav(items, currentKey, key, opts = {}) {
+    const orientation = opts.orientation ?? "vertical";
+    const wrap = opts.wrap ?? false;
+    const { next, prev } = axisKeys(orientation);
+    if (next.includes(key)) {
+      const target = stepKey(items, currentKey, 1, wrap);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (prev.includes(key)) {
+      const target = stepKey(items, currentKey, -1, wrap);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (opts.homeEnd && key === "Home") {
+      const target = firstKey(items);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (opts.homeEnd && key === "End") {
+      const target = lastKey(items);
+      return target !== null ? { focus: target, handled: true } : { handled: true };
+    }
+    if (key === "Enter" || key === " " || key === "Spacebar") {
+      return { activate: true, handled: true };
+    }
+    return {};
+  }
+
   // packages/xtyle/src/elements/fragments/combobox/mod.ts
   var CHECK_GLYPH = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.5 3.5L13 4.5" /></svg>`;
   var REMOVE_GLYPH = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>`;
-  function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, "&quot;");
-  }
   function rootClass(b) {
     const size = b.size ?? "md";
     return [
@@ -109,22 +188,21 @@
     const open = ctx.open === true;
     const values = ctx.values ?? [];
     const active = ctx.activeValue ?? "";
-    const here = values.indexOf(active);
     const query = ctx.query ?? "";
-    const step = (delta) => {
-      if (values.length === 0) return { preventDefault: true };
-      const next = here < 0 ? delta > 0 ? 0 : values.length - 1 : (here + delta + values.length) % values.length;
-      return { focusValue: values[next], preventDefault: true };
+    const move = (key) => {
+      const navItems = values.map((value) => ({ key: value }));
+      const target = linearNav(navItems, active, key, { orientation: "vertical", wrap: true, homeEnd: true }).focus;
+      return target !== void 0 ? { focusValue: target, preventDefault: true } : { preventDefault: true };
     };
     switch (e.key) {
       case "ArrowDown":
-        return open ? step(1) : { openMenu: "first", preventDefault: true };
+        return open ? move("ArrowDown") : { openMenu: "first", preventDefault: true };
       case "ArrowUp":
-        return open ? step(-1) : { openMenu: "last", preventDefault: true };
+        return open ? move("ArrowUp") : { openMenu: "last", preventDefault: true };
       case "Home":
-        return open && values.length > 0 ? { focusValue: values[0], preventDefault: true } : {};
+        return open && values.length > 0 ? move("Home") : {};
       case "End":
-        return open && values.length > 0 ? { focusValue: values[values.length - 1], preventDefault: true } : {};
+        return open && values.length > 0 ? move("End") : {};
       case "Enter":
         if (!open && !(ctx.allowCustom === true && query.trim().length > 0)) return {};
         return { commitValue: true, preventDefault: true };

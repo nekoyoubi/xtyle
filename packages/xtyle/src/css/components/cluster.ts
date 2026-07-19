@@ -25,7 +25,7 @@ const justifyRules = JUSTIFY.map(
 ).join("\n");
 
 export const clusterCss = `
-[data-cluster] { display: contents; }
+[data-root][data-cluster] { display: contents; }
 .xtyle-cluster {
 	display: flex;
 	flex-direction: row;

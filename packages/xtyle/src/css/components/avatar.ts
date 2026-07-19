@@ -13,7 +13,7 @@ const statusTones = STATUS_TONES.map(
 ).join("\n");
 
 export const avatarCss = `
-[data-avatar] { display: contents; }
+[data-root][data-avatar] { display: contents; }
 .xtyle-avatar {
 	display: inline-flex;
 	align-items: center;

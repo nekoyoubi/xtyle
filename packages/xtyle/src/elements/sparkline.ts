@@ -11,6 +11,7 @@ import {
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/sparkline/source.generated.js";
 import { windowedPlot, type TimeSample } from "../timeseries.js";
+import { resolveTone, resolveVocab, SPARKLINE_VARIANTS } from "../vocab.js";
 
 export type { SparklineVariant, SparklineTone, SparklineBounds };
 
@@ -72,14 +73,14 @@ export class XtyleSparkline extends XtyleElement {
 	}
 
 	get variant(): SparklineVariant {
-		return (this.getAttribute("variant") as SparklineVariant) ?? "line";
+		return resolveVocab(this.getAttribute("variant"), SPARKLINE_VARIANTS, "line", "sparkline variant");
 	}
 	set variant(value: SparklineVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get tone(): SparklineTone {
-		return (this.getAttribute("tone") as SparklineTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: SparklineTone) {
 		this.setAttribute("tone", value);

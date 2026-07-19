@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/hero.js";
 	import type { Snippet } from "svelte";
+	import { HERO_ALIGNS } from "@xtyle/core";
 
-	type HeroAlign = "center" | "start";
+	type HeroAlign = (typeof HERO_ALIGNS)[number];
 
 	interface Props {
 		align?: HeroAlign;

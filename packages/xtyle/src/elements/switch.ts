@@ -3,6 +3,7 @@ import type { Size, FullTone } from "../index.js";
 import { switchHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/switch/source.generated.js";
+import { resolveTone, resolveVocab, SWITCH_SIZES } from "../vocab.js";
 
 export class XtyleSwitch extends XtyleElement {
 	static formAssociated = true;
@@ -43,14 +44,14 @@ export class XtyleSwitch extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SWITCH_SIZES, "md", "switch size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);

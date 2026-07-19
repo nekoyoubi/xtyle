@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -10,6 +12,8 @@ interface CardLinkBindings {
 	interactive?: boolean;
 	overlay?: boolean;
 	compact?: boolean;
+	hasHeader?: boolean;
+	hasFooter?: boolean;
 }
 
 declare const hooks: {
@@ -32,10 +36,16 @@ function cardLinkHtml(b: CardLinkBindings): string {
 	const href = b.href ?? "#";
 	const target = b.target ?? null;
 	const rel = b.rel ?? null;
-	const attrs = [`href="${href}"`, target ? `target="${target}"` : "", rel ? `rel="${rel}"` : ""]
+	const attrs = [`href="${escapeAttr(href)}"`, target ? `target="${escapeAttr(target)}"` : "", rel ? `rel="${escapeAttr(rel)}"` : ""]
 		.filter(Boolean)
 		.join(" ");
-	return `<a part="card" class="${cardLinkClass(b)}" ${attrs}><div class="xtyle-card__header" part="header"><slot name="header"></slot></div><div class="xtyle-card__body" part="body"><slot></slot></div><div class="xtyle-card__footer" part="footer"><slot name="footer"></slot></div></a>`;
+	// Header/footer keep their `<slot>` whether filled or not, so `:empty` can never match them: a
+	// slot is a child node, and the nodes assigned to it are not. Only the host knows, so it says.
+	// `data-slot` rides alongside each native slot so the auto-light (Astro SSR) render, which has no
+	// shadow root to read host children from, can still capture the region.
+	const headerHidden = b.hasHeader ? "" : " hidden";
+	const footerHidden = b.hasFooter ? "" : " hidden";
+	return `<a part="card" class="${cardLinkClass(b)}" ${attrs}><div class="xtyle-card__header" part="header" data-slot="header"${headerHidden}><slot name="header"></slot></div><div class="xtyle-card__body" part="body" data-slot><slot></slot></div><div class="xtyle-card__footer" part="footer" data-slot="footer"${footerHidden}><slot name="footer"></slot></div></a>`;
 }
 
 hooks.fragment.mount("card-link", (bindings, ops) => {
@@ -43,6 +53,6 @@ hooks.fragment.mount("card-link", (bindings, ops) => {
 });
 
 hooks.fragment.update("card-link", (bindings, ops) => {
-	ops.setAttr('[part="card"]', "class", cardLinkClass(bindings));
+	ops.setAttr(".xtyle-card", "class", cardLinkClass(bindings));
 	ops.setAttr('[part="card"]', "href", bindings.href ?? "#");
 });

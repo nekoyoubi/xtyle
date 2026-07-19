@@ -8,6 +8,7 @@ import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attr
 // the listbox floats in a real <xtyle-popover> the fill declares, so the tag has to be defined
 import "./popover.js";
 import type { PopoverOpenOptions } from "./popover.js";
+import { resolveVocab, COMBOBOX_FILTERS, SIZES } from "../vocab.js";
 
 export type { ComboboxFilter } from "../markup/combobox.js";
 export type { FieldOption } from "./field-options.js";
@@ -187,7 +188,7 @@ export class XtyleCombobox extends XtyleElement {
 	/** How the typed query narrows the list. `none` leaves the list alone — the async path, where the consumer
 	 * swaps `options` on every `input` and a second filter here would fight it. */
 	get filter(): ComboboxFilter {
-		return (this.getAttribute("filter") as ComboboxFilter) ?? "contains";
+		return resolveVocab(this.getAttribute("filter"), COMBOBOX_FILTERS, "contains", "combobox filter");
 	}
 	set filter(value: ComboboxFilter) {
 		this.reflectString("filter", value);
@@ -210,7 +211,7 @@ export class XtyleCombobox extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "combobox size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

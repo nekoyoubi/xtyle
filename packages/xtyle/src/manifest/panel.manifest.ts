@@ -114,6 +114,12 @@ export const panelManifest: ComponentManifest = {
 	],
 	props: [
 		{
+			name: "label",
+			type: "string",
+			description: "Accessible name for a panel with no visible `title` — names the region without rendering a heading.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "title",
 			type: "string",
 			description: "The panel heading text. When set (or an actions slot is filled) the header renders.",

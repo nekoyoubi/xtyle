@@ -1004,3 +1004,14 @@ export function resolveIconMark(name: string): ParsedIconName | null {
 	}
 	return null;
 }
+
+/** Resolve an icon name to a composition: a `--` spec composes through the mark grammar (so a colorful
+ * taco works), a bare name is a single-layer primitive (`star` → `symbol-star`, any functional glyph by
+ * its own name). An unknown name falls through to the primitive library's placeholder. */
+export function iconComposition(name: string): IconComposition {
+	if (name.includes("--")) {
+		const parsed = resolveIconMark(name);
+		if (parsed) return parsed.composition;
+	}
+	return { layers: [{ primitive: resolvePrimitiveName(name) }] };
+}

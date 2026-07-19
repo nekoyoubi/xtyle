@@ -2,8 +2,9 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { statusbarHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/statusbar/source.generated.js";
+import { STATUSBAR_OVERFLOWS, resolveVocab } from "../vocab.js";
 
-type Overflow = "clip" | "wrap" | "scroll" | "collapse";
+type Overflow = (typeof STATUSBAR_OVERFLOWS)[number];
 
 interface Cell {
 	el: HTMLElement;
@@ -43,7 +44,7 @@ export class XtyleStatusbar extends XtyleElement {
 	}
 
 	get overflow(): Overflow {
-		return (this.getAttribute("overflow") as Overflow) ?? "clip";
+		return resolveVocab(this.getAttribute("overflow"), STATUSBAR_OVERFLOWS, "clip", "statusbar overflow");
 	}
 	set overflow(value: Overflow) {
 		this.setAttribute("overflow", value);

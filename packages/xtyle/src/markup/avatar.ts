@@ -1,9 +1,10 @@
 import type { BadgeTone, Tone } from "../index.js";
 import { dotClass } from "./dot.js";
 import { escapeAttr, escapeHtml } from "./escape.js";
+import { AVATAR_SIZES, AVATAR_SHAPES } from "../vocab.js";
 
-export type AvatarSize = "sm" | "md" | "lg" | "xl";
-export type AvatarShape = "circle" | "square";
+export type AvatarSize = (typeof AVATAR_SIZES)[number];
+export type AvatarShape = (typeof AVATAR_SHAPES)[number];
 
 export interface AvatarMarkupProps {
 	src?: string | null;

@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { FULL_TONES } from "../vocab.js";
+import { FULL_TONES, PROGRESS_SIZES } from "../vocab.js";
 import { PALETTES } from "../series.js";
 
 const htmlExample = `<xtyle-progress value="42" aria-label="Upload progress"></xtyle-progress>
@@ -72,6 +72,58 @@ const rampAstroExample = `<Progress ramp="thermal" value={30} aria-label="Load, 
 
 <Progress ramp="thermal" rampMode="gradient" value={80} aria-label="Capacity sweep" />`;
 
+const frameHtmlExample = `<style>
+	.portrait { position: relative; width: 96px; height: 96px; }
+	.portrait xtyle-progress { display: block; position: absolute; inset: 0; --xtyle-progress-size: 100%; }
+</style>
+
+<div class="portrait">
+	<xtyle-avatar src="/portrait.jpg" alt="Ada" size="lg"></xtyle-avatar>
+	<xtyle-progress variant="circular" value="72" track="none" thickness="4px" tone="success" aria-label="Profile complete"></xtyle-progress>
+</div>
+
+<xtyle-progress variant="circular" value="40" track="info" thickness="1.5" aria-label="A toned groove, thin band"></xtyle-progress>`;
+
+const frameSvelteExample = `<script lang="ts">
+	import { Avatar, Progress } from "@xtyle/svelte";
+</script>
+
+<div class="portrait">
+	<Avatar src="/portrait.jpg" alt="Ada" size="lg" />
+	<Progress variant="circular" value={72} track={false} thickness="4px" tone="success" ariaLabel="Profile complete" />
+</div>
+
+<Progress variant="circular" value={40} track="info" thickness={1.5} ariaLabel="A toned groove, thin band" />
+
+<Progress variant="circular" value={72} showValue ariaLabel="Sync">
+	{#snippet readout()}<strong>72 of 100</strong>{/snippet}
+</Progress>
+
+<style>
+	.portrait { position: relative; width: 96px; height: 96px; }
+	.portrait :global(xtyle-progress) { display: block; position: absolute; inset: 0; --xtyle-progress-size: 100%; }
+</style>`;
+
+const frameAstroExample = `---
+import { Avatar, Progress } from "@xtyle/astro";
+---
+
+<div class="portrait">
+	<Avatar src="/portrait.jpg" alt="Ada" size="lg" />
+	<Progress variant="circular" value={72} track={false} thickness="4px" tone="success" aria-label="Profile complete" />
+</div>
+
+<Progress variant="circular" value={40} track="info" thickness={1.5} aria-label="A toned groove, thin band" />
+
+<Progress variant="circular" value={72} showValue aria-label="Sync">
+	<strong slot="value">72 of 100</strong>
+</Progress>
+
+<style>
+	.portrait { position: relative; width: 96px; height: 96px; }
+	.portrait xtyle-progress { display: block; position: absolute; inset: 0; --xtyle-progress-size: 100%; }
+</style>`;
+
 export const progressManifest: ComponentManifest = {
 	id: "progress",
 	name: "Progress",
@@ -92,8 +144,8 @@ export const progressManifest: ComponentManifest = {
 		},
 		{
 			name: "track",
-			description: "The unfilled groove (a bar rail or an SVG ring) the indicator runs along.",
-			selector: ".xtyle-progress__track",
+			description: "The unfilled groove the indicator runs along: a bar rail (`.xtyle-progress__track`) or an SVG ring (`.xtyle-progress__track-ring`). Both variants expose it as `::part(track)`, and `track` can tone it or drop it entirely.",
+			selector: ".xtyle-progress__track, .xtyle-progress__track-ring",
 			tokens: ["--neutral-bg", "--radius-full", "--space-1", "--space-2"],
 		},
 		{
@@ -130,9 +182,9 @@ export const progressManifest: ComponentManifest = {
 			name: "size",
 			type: "ProgressSize",
 			default: "md",
-			description: "Meter size; `sm` thins the bar or shrinks the ring.",
+			description: "Meter size; `sm` thins the bar or shrinks the ring, `lg` fattens it.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["sm", "md"],
+			options: [...PROGRESS_SIZES],
 		},
 		{
 			name: "value",
@@ -234,6 +286,20 @@ export const progressManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "track",
+			type: "boolean | FullTone",
+			default: "true",
+			description: "The unfilled groove behind the indicator: `true` keeps the default `--neutral-bg` rail, `false` (`track=\"none\"` in HTML) drops it entirely, and a tone paints it that tone's `-bg`. A ring reporting a window that may not exist reads better trackless, where an always-on groove reads as a border rather than an empty meter.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["none", ...FULL_TONES],
+		},
+		{
+			name: "thickness",
+			type: "string | number",
+			description: "How heavy a `circular` ring reads, independent of its diameter. A unitless number is in ring units (the ring is a 40-unit viewBox at `r=16`), so the weight scales with the ring; a CSS length (`6px`, `0.25rem`) is absolute and holds the same apparent weight at any size. Sets `--xtyle-progress-stroke`, which CSS can set directly instead. Circular only; a `linear` rail's height still follows `size`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "ariaLabel",
 			type: "string",
 			description: "Accessible name for the meter. Required. A progressbar with no name is not announced.",
@@ -249,7 +315,7 @@ export const progressManifest: ComponentManifest = {
 		},
 		{
 			name: "circular",
-			description: "An SVG ring whose stroked arc sweeps clockwise from the top.",
+			description: "An SVG ring whose stroked arc sweeps clockwise from the top. Its diameter follows `size` unless `--xtyle-progress-size` overrides it, and its stroke weight follows `thickness` / `--xtyle-progress-stroke`, so a ring can be large and thin or small and heavy.",
 			className: "xtyle-progress--circular",
 			tokens: ["--space-8", "--space-6", "--neutral-bg", "--accent"],
 		},
@@ -281,7 +347,7 @@ export const progressManifest: ComponentManifest = {
 	slots: [
 		{
 			name: "value",
-			description: "Optional custom content for the readout, in place of the built-in `show-value` text (e.g. a formatted label).",
+			description: "Optional custom content for the readout, in place of the built-in `show-value` text (e.g. a formatted label). The Svelte binding fills it with the `readout` snippet, since `value` there is already the numeric prop.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -314,11 +380,14 @@ export const progressManifest: ComponentManifest = {
 		"--border-thick",
 		"--ring",
 		...FULL_TONES.map((t) => `--${t}`),
+		...FULL_TONES.map((t) => `--${t}-bg`),
 	],
 	composition: [
 		"Pair with a status Badge or text label to spell out the percentage in words when `show-value` alone is not enough.",
 		"Drive `value` from an upload/download stream; flip to `indeterminate` for the indefinite handshake phase.",
 		"Use the `success` tone on completion and `danger` on a stalled or failed transfer to reinforce state with color.",
+		"Wrap a circular ring around an Avatar or Image to make it a frame: `track=\"none\"` drops the groove, `--xtyle-progress-size: 100%` sizes it to the container, and `thickness` sets the band weight independent of the diameter.",
+		"Both variants expose `::part(progress)`, `::part(track)`, `::part(indicator)`, and `::part(value)`, which is the reach an app has into a shadow-rendered element alongside the inherited `--xtyle-progress-*` properties.",
 	],
 	a11y: [
 		"Exposes `role=\"progressbar\"` (or `role=\"meter\"` with the `meter` attribute) carrying `aria-valuemin`, `aria-valuemax`, and `aria-valuenow` so assistive tech announces the current amount; pick `meter` for a capacity reading and `progressbar` for a task in motion.",
@@ -347,6 +416,12 @@ export const progressManifest: ComponentManifest = {
 			title: "A fill that colors by its value",
 			description: "Set `ramp` to color the fill along a scale by its own value instead of a flat tone: `solid` (the default) samples one color at the current value, so a busier bar reads hotter; `ramp-mode=\"gradient\"` sweeps the whole scale as pure CSS. Both track the theme's own hues, so the ramp restyles with the algorithm.",
 			source: { html: rampHtmlExample, svelte: rampSvelteExample, astro: rampAstroExample },
+		},
+		{
+			id: "ring-as-frame",
+			title: "A ring as a frame",
+			description: "A circular meter sized to its container reads as a frame rather than a widget. `track=\"none\"` drops the groove (an always-on rail around a portrait reads as a border, not an empty meter), `--xtyle-progress-size` takes the diameter off the `size` scale, and `thickness` sets the band weight independent of that diameter, so a large ring can stay thin. Both variants expose `::part(track)`, so a mod or an app can reach the groove either way.",
+			source: { html: frameHtmlExample, svelte: frameSvelteExample, astro: frameAstroExample },
 		},
 	],
 };

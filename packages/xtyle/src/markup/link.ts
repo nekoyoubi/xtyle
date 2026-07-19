@@ -1,4 +1,5 @@
-export type LinkVariant = "default" | "muted" | "quiet";
+import { LINK_VARIANTS } from "../vocab.js";
+export type LinkVariant = (typeof LINK_VARIANTS)[number];
 
 export interface LinkMarkupProps {
 	variant?: LinkVariant;

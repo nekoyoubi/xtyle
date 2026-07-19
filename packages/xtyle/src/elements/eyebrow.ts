@@ -1,10 +1,11 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { FullTone } from "../vocab.js";
 import { eyebrowHostCss } from "../markup/index.js";
+import type { EyebrowTag } from "../markup/eyebrow.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/eyebrow/source.generated.js";
+import { resolveTone, EYEBROW_EMPHASIS, resolveVocab, EYEBROW_TAGS, EYEBROW_TRACKINGS } from "../vocab.js";
 
-type EyebrowTag = "p" | "span" | "div";
 type EyebrowTone = "muted" | "subtle" | FullTone;
 type EyebrowTracking = "normal" | "wide";
 
@@ -22,21 +23,21 @@ export class XtyleEyebrow extends XtyleElement {
 	}
 
 	get as(): EyebrowTag {
-		return (this.getAttribute("as") as EyebrowTag) ?? "p";
+		return resolveVocab(this.getAttribute("as"), EYEBROW_TAGS, "p", "eyebrow tag");
 	}
 	set as(value: EyebrowTag) {
 		this.setAttribute("as", value);
 	}
 
 	get tone(): EyebrowTone {
-		return (this.getAttribute("tone") as EyebrowTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent", EYEBROW_EMPHASIS);
 	}
 	set tone(value: EyebrowTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get tracking(): EyebrowTracking {
-		return (this.getAttribute("tracking") as EyebrowTracking) ?? "normal";
+		return resolveVocab(this.getAttribute("tracking"), EYEBROW_TRACKINGS, "normal", "eyebrow tracking");
 	}
 	set tracking(value: EyebrowTracking) {
 		this.setAttribute("tracking", value);

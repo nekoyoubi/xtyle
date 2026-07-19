@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -34,13 +36,6 @@ declare const hooks: {
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
-}
-
 function radioClass(b: RadioBindings): string {
 	const tone = b.tone ?? "accent";
 	const size = b.size ?? "md";
@@ -62,13 +57,13 @@ function inner(b: RadioBindings): string {
 	const labelledby = b.labelledby ?? null;
 	const description = b.description ?? "";
 	const descriptionId = b.descriptionId ?? "xtyle-radio-desc";
-	const nameAttr = name !== null ? ` name="${name}"` : "";
-	const valueAttr = ` value="${value}"`;
+	const nameAttr = name !== null ? ` name="${escapeAttr(name)}"` : "";
+	const valueAttr = ` value="${escapeAttr(value)}"`;
 	const checkedAttr = b.checked ? " checked" : "";
 	const disabledAttr = b.disabled ? " disabled" : "";
 	const ariaInvalid = b.invalid ? ` aria-invalid="true"` : "";
-	const ariaLabel = label && !labelledby ? ` aria-label="${label}"` : "";
-	const ariaLabelledby = labelledby ? ` aria-labelledby="${labelledby}"` : "";
+	const ariaLabel = label && !labelledby ? ` aria-label="${escapeAttr(label)}"` : "";
+	const ariaLabelledby = labelledby ? ` aria-labelledby="${escapeAttr(labelledby)}"` : "";
 	const describedby = description.length > 0 ? ` aria-describedby="${escapeAttr(descriptionId)}"` : "";
 	const descriptionHidden = description.length === 0 ? " hidden" : "";
 	const labelText = label !== null ? label : "";

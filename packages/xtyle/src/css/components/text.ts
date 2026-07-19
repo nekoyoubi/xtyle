@@ -14,7 +14,7 @@ const toneRules = FULL_TONES.map(
 ).join("\n");
 
 export const textCss = `
-[data-text] { display: contents; }
+[data-root][data-text] { display: contents; }
 .xtyle-text {
 	margin: 0;
 	font-family: var(--font-sans);

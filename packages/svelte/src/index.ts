@@ -54,6 +54,7 @@ export { default as NumberInput } from "./NumberInput.svelte";
 export { default as DatePicker } from "./DatePicker.svelte";
 export { default as Segmented } from "./Segmented.svelte";
 export { default as Segment } from "./Segment.svelte";
+export { default as List } from "./List.svelte";
 export { default as Accordion } from "./Accordion.svelte";
 export { default as Tree } from "./Tree.svelte";
 export { default as Stat } from "./Stat.svelte";
@@ -80,6 +81,7 @@ export { default as CommandPalette } from "./CommandPalette.svelte";
 export type { CommandItem, CommandMatch, CommandScorer, CommandCloseReason } from "@xtyle/core/elements";
 export { default as Splitter } from "./Splitter.svelte";
 export { default as Code } from "./Code.svelte";
+export { default as Markdown } from "./Markdown.svelte";
 export { default as Pagination } from "./Pagination.svelte";
 export { default as Calendar } from "./Calendar.svelte";
 export { default as QrCode } from "./Qr.svelte";
@@ -143,6 +145,7 @@ export {
 	XtyleNumberInput,
 	XtyleDatePicker,
 	XtyleSegmented,
+	XtyleList,
 	XtyleAccordion,
 	XtyleTree,
 	XtyleStat,
@@ -171,6 +174,7 @@ export {
 	XtyleCommandPalette,
 	XtyleSplitter,
 	XtyleCode,
+	XtyleMarkdown,
 	XtylePagination,
 	XtyleCalendar,
 	XtyleQrCode,

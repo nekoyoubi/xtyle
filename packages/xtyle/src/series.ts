@@ -121,6 +121,31 @@ export function isPalette(name: string): boolean {
 	return resolvePalette(name) !== null;
 }
 
+const warnedPalettes = new Set<string>();
+
+/**
+ * The typo-catching wrapper, for the accessors where an unrecognized name means the author misspelled
+ * a palette rather than legitimately meaning "none". A bad key here never reaches a class name and
+ * never throws — it renders the fallback's colors — so the failure is quieter than the class-name
+ * one and just as undiscoverable: `colors="therml"` draws `accents` and nobody finds out.
+ *
+ * {@link resolvePalette} itself stays silent on purpose. A `null` from it is a normal outcome for an
+ * unset Progress ramp and for the icon flag parser probing whether a token happens to name a palette,
+ * so warning there would fire on correct code.
+ */
+export function resolvePaletteName(value: string | null | undefined, fallback: Palette, label: string): Palette {
+	if (value === null || value === undefined || value === "") return fallback;
+	const resolved = resolvePalette(value);
+	if (resolved) return resolved;
+	if (!warnedPalettes.has(value)) {
+		warnedPalettes.add(value);
+		globalThis.console?.warn?.(
+			`xtyle: "${value}" is not a valid ${label}. Valid palettes are ${PALETTES.join(", ")}. Falling back to "${fallback}".`,
+		);
+	}
+	return fallback;
+}
+
 /** The stop list for a palette or an explicit color array, as authored (token names unresolved). */
 export function paletteStops(palette: Palette | string | string[], fallback: Palette = DEFAULT_PALETTE): string[] {
 	if (Array.isArray(palette)) return [...palette];

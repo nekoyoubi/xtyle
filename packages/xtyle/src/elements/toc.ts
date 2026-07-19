@@ -1,5 +1,5 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { tocHostCss, type TocItem } from "../markup/index.js";
+import { tocHostCss, tocTargetFallbackCss, TOC_SPY_ATTR, type TocItem } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/toc/source.generated.js";
 
@@ -96,12 +96,14 @@ export class XtyleToc extends XtyleElement {
 		this.observer = null;
 		this.visible.clear();
 		this.activeId = null;
+		this.removeAttribute(TOC_SPY_ATTR);
 
 		if (typeof IntersectionObserver === "undefined") return;
 		const targets = this.items
 			.map((item) => document.getElementById(item.id))
 			.filter((el): el is HTMLElement => el !== null);
 		if (targets.length === 0) return;
+		this.setAttribute(TOC_SPY_ATTR, "");
 
 		this.observer = new IntersectionObserver(
 			(entries) => {
@@ -122,11 +124,28 @@ export class XtyleToc extends XtyleElement {
 		return "";
 	}
 
+	/**
+	 * The zero-JS current-section rules. Renders nothing and has no surface a mod would reshape, so
+	 * it is plumbing and lives on the element rather than in the fill. It matters here as well as in
+	 * SSR because an element that never upgrades — script blocked, hydration failed — still has it.
+	 */
+	private paintTargetFallback(): void {
+		const css = tocTargetFallbackCss(this.items);
+		let style = this.root.querySelector<HTMLStyleElement>("style[data-toc-fallback]");
+		if (!style) {
+			style = document.createElement("style");
+			style.setAttribute("data-toc-fallback", "");
+			this.root.appendChild(style);
+		}
+		if (style.textContent !== css) style.textContent = css;
+	}
+
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(tocHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
+		this.paintTargetFallback();
 		this.initSpy();
 	}
 }

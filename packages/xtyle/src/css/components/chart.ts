@@ -1,5 +1,5 @@
 export const chartCss = `
-[data-chart] { display: block; }
+[data-root][data-chart] { display: block; }
 .xtyle-chart {
 	--chart-height: 320px;
 	display: block;

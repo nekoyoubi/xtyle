@@ -87,6 +87,14 @@ export const stepsManifest: ComponentManifest = {
 				"The zero-based index of the current step. Steps before it render as done (checked), the step at it as current (`aria-current=\"step\"`), and steps after it as upcoming.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: emit the server-rendered indicator but never load the runtime to hydrate it. The markers, connectors, and the done / current / upcoming split against `current` are resolved at build time, so a static stepper is complete; hydration only adds reacting to a changed `current` or a changed list. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
+		},
 	],
 	variants: [],
 	sizes: [],

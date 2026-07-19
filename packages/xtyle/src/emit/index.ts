@@ -1,4 +1,4 @@
-import type { Emitter, EmitFormat, TokenRegister } from "../types.js";
+import type { Emitter, EmitFormat, EmitOptions, TokenRegister } from "../types.js";
 import { emitCss } from "./css.js";
 import { emitJson } from "./json.js";
 import { emitMonaco } from "./monaco.js";
@@ -21,14 +21,18 @@ export function emitters(): string[] {
 	return [...registry.keys()];
 }
 
-export function emit(register: TokenRegister, format: EmitFormat | string): string {
+export function emit(
+	register: TokenRegister,
+	format: EmitFormat | string,
+	opts?: EmitOptions,
+): string {
 	const emitter = registry.get(format);
 	if (!emitter) {
 		throw new Error(
 			`xtyle: no emitter for format "${format}" (known: ${emitters().join(", ")})`,
 		);
 	}
-	return emitter(register);
+	return emitter(register, opts);
 }
 
 export { emitCss, emitJson, emitMonaco, emitPrism, emitTerminal };

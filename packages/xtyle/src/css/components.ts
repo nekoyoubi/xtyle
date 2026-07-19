@@ -64,6 +64,7 @@ import { colorPickerCss } from "./components/color-picker.js";
 import { numberInputCss } from "./components/number-input.js";
 import { datePickerCss } from "./components/date-picker.js";
 import { segmentedCss } from "./components/segmented.js";
+import { listCss } from "./components/list.js";
 import { accordionCss } from "./components/accordion.js";
 import { treeCss } from "./components/tree.js";
 import { splitterCss } from "./components/splitter.js";
@@ -85,6 +86,7 @@ import { heatmapCss } from "./components/heatmap.js";
 import { pieCss } from "./components/pie.js";
 import { qrCss } from "./components/qr.js";
 import { swatchCss } from "./components/swatch.js";
+import { markdownCss } from "./components/markdown.js";
 import { menuCss } from "./components/menu.js";
 import { popoverCss } from "./components/popover.js";
 import { commandPaletteCss } from "./components/command-palette.js";
@@ -165,7 +167,7 @@ const hostDisplayCss = [
 	// a fill's own fallback glyph wrapper: transparent by declaration, so the icon inside lays out in the
 	// component's box. It used to borrow Icon's `[data-icon]` rule for this, which coupled Alert's layout to
 	// Icon's stylesheet by accident.
-	"[data-glyph] { display: contents; }",
+	"[data-root][data-glyph] { display: contents; }",
 	'xtyle-dock { display: block; min-height: 0; height: 100%; width: 18rem; } xtyle-dock[size="sm"] { width: 14rem; } xtyle-dock[size="lg"] { width: 22rem; }',
 	"xtyle-field { display: block; }",
 	"xtyle-splitter { display: block; flex: none; } xtyle-splitter[line] { position: relative; z-index: 1; }",
@@ -173,7 +175,7 @@ const hostDisplayCss = [
 	"xtyle-dropzone { display: block; }",
 	"xtyle-tabs { display: block; }",
 	"xtyle-accordion { display: block; }",
-	'xtyle-toolbar { display: block; } xtyle-toolbar[sticky] { position: sticky; top: 0; z-index: var(--elevation-3); }',
+	'xtyle-toolbar { display: block; } xtyle-toolbar[sticky] { position: sticky; top: 0; z-index: var(--layer-sticky); }',
 	"xtyle-app-shell { display: contents; }",
 	// Layout-transparent region wrapper for a slot that sits inline among chrome (e.g. panel
 	// actions), so light DOM has a clean `[data-slot]` to relocate into without it becoming a
@@ -237,6 +239,7 @@ export const componentsCss: string = [
 	numberInputCss,
 	datePickerCss,
 	segmentedCss,
+	listCss,
 	accordionCss,
 	treeCss,
 	splitterCss,
@@ -258,6 +261,7 @@ export const componentsCss: string = [
 	pieCss,
 	qrCss,
 	swatchCss,
+	markdownCss,
 	menuCss,
 	popoverCss,
 	commandPaletteCss,

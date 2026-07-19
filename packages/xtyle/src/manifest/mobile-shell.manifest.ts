@@ -110,7 +110,7 @@ export const mobileShellManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "main-id",
+			name: "mainId",
 			type: "string",
 			default: "main",
 			description: "The `id` of the `<main>` column, so a skip link can target it. Override when more than one shell renders on a page.",

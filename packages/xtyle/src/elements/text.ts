@@ -3,6 +3,7 @@ import type { FullTone } from "../vocab.js";
 import { textHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/text/source.generated.js";
+import { resolveTone, EMPHASIS_TONES, resolveVocab, TEXT_TAGS, TEXT_SIZES, TEXT_WEIGHTS, TEXT_LEADINGS } from "../vocab.js";
 
 export type TextAs = "p" | "span";
 export type TextSize = "xs" | "sm" | "body" | "lg";
@@ -24,35 +25,35 @@ export class XtyleText extends XtyleElement {
 	}
 
 	get as(): TextAs {
-		return (this.getAttribute("as") as TextAs) ?? "p";
+		return resolveVocab(this.getAttribute("as"), TEXT_TAGS, "p", "text tag");
 	}
 	set as(value: TextAs) {
 		this.setAttribute("as", value);
 	}
 
 	get size(): TextSize {
-		return (this.getAttribute("size") as TextSize) ?? "body";
+		return resolveVocab(this.getAttribute("size"), TEXT_SIZES, "body", "text size");
 	}
 	set size(value: TextSize) {
 		this.setAttribute("size", value);
 	}
 
 	get weight(): TextWeight {
-		return (this.getAttribute("weight") as TextWeight) ?? "normal";
+		return resolveVocab(this.getAttribute("weight"), TEXT_WEIGHTS, "normal", "text weight");
 	}
 	set weight(value: TextWeight) {
 		this.setAttribute("weight", value);
 	}
 
 	get leading(): TextLeading {
-		return (this.getAttribute("leading") as TextLeading) ?? "snug";
+		return resolveVocab(this.getAttribute("leading"), TEXT_LEADINGS, "snug", "text leading");
 	}
 	set leading(value: TextLeading) {
 		this.setAttribute("leading", value);
 	}
 
 	get tone(): TextTone {
-		return (this.getAttribute("tone") as TextTone) ?? "default";
+		return resolveTone(this.getAttribute("tone"), "default", EMPHASIS_TONES);
 	}
 	set tone(value: TextTone) {
 		this.setAttribute("tone", value);

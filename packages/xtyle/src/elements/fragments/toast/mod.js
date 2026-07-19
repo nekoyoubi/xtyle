@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/toast/mod.ts
   var TONE_ICONS = {
     success: '<path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.1 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.6-5.6 1.4 1.4-7 7Z"/>',
@@ -8,9 +21,6 @@
     info: '<path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v2h-2V7Zm0 4h2v6h-2v-6Z"/>'
   };
   var ASSERTIVE = { danger: true, warn: true };
-  function esc(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
   function severityOf(b) {
     if (b.severity) return b.severity;
     if (b.tone) return TONE_ICONS[b.tone] ? b.tone : "";
@@ -35,12 +45,12 @@
   function actionButton(b) {
     const label = b.actionLabel ?? null;
     if (!label) return "";
-    return `<button class="xtyle-toast__action" part="action" type="button">${esc(label)}</button>`;
+    return `<button class="xtyle-toast__action" part="action" type="button">${escapeHtml(label)}</button>`;
   }
   function closeButton(b) {
     if (!(b.closable ?? true)) return "";
-    const label = esc(b.closeLabel ?? "Dismiss");
-    return `<button class="xtyle-toast__close" part="close" type="button" aria-label="${label}"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg></button>`;
+    const label = b.closeLabel ?? "Dismiss";
+    return `<button class="xtyle-toast__close" part="close" type="button" aria-label="${escapeAttr(label)}"><svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg></button>`;
   }
   hooks.fragment.mount("toast", (bindings, ops) => {
     ops.setAttr(".xtyle-toast", "class", toastClass(bindings));

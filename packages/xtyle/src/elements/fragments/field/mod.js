@@ -1,12 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/field/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
   function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
   function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, "&quot;");
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
+
+  // packages/xtyle/src/elements/fragments/field/mod.ts
   function fieldClass(b) {
     const size = b.size ?? "md";
     return [
@@ -77,9 +84,11 @@
     const revealPressed = String(typeIsText);
     const revealLabel = typeIsText ? "Hide value" : "Show value";
     const clearHidden = clearShown ? "" : " hidden";
+    const prefixHidden = b.hasPrefix ? "" : " hidden";
+    const suffixHidden = b.hasSuffix ? "" : " hidden";
     const descriptionHidden = description.length === 0 ? " hidden" : "";
     const errorHidden = !invalid || error.length === 0 ? " hidden" : "";
-    return `<label class="xtyle-field__label" part="label" for="${escapeAttr(inputId)}"${labelHidden}>${escapeHtml(label)}${star}</label><div class="xtyle-field__control" part="control"><span class="xtyle-field__adornment" part="adornment"><slot name="prefix"></slot></span><input ${inputAttrs} /><button type="button" class="xtyle-field__action" part="action-reveal" data-action="reveal"${revealHidden} aria-pressed="${revealPressed}" aria-label="${escapeAttr(revealLabel)}"><slot name="reveal-icon"><span aria-hidden="true">&#128065;</span></slot></button><button type="button" class="xtyle-field__action" part="action-clear" data-action="clear"${clearHidden} aria-label="Clear"><slot name="clear-icon"><span aria-hidden="true">&times;</span></slot></button><span class="xtyle-field__adornment" part="adornment"><slot name="suffix"></slot></span></div><span class="xtyle-field__description" part="description" id="${escapeAttr(descriptionId)}"${descriptionHidden}>${escapeHtml(description)}</span><span class="xtyle-field__error" part="error" id="${escapeAttr(errorId)}"${errorHidden}>${escapeHtml(error)}</span>`;
+    return `<label class="xtyle-field__label" part="label" for="${escapeAttr(inputId)}"${labelHidden}>${escapeHtml(label)}${star}</label><div class="xtyle-field__control" part="control"><span class="xtyle-field__adornment" part="adornment" data-slot="prefix"${prefixHidden}><slot name="prefix"></slot></span><input ${inputAttrs} /><button type="button" class="xtyle-field__action" part="action-reveal" data-action="reveal"${revealHidden} aria-pressed="${revealPressed}" aria-label="${escapeAttr(revealLabel)}"><slot name="reveal-icon"><span aria-hidden="true">&#128065;</span></slot></button><button type="button" class="xtyle-field__action" part="action-clear" data-action="clear"${clearHidden} aria-label="Clear"><slot name="clear-icon"><span aria-hidden="true">&times;</span></slot></button><span class="xtyle-field__adornment" part="adornment" data-slot="suffix"${suffixHidden}><slot name="suffix"></slot></span></div><span class="xtyle-field__description" part="description" id="${escapeAttr(descriptionId)}"${descriptionHidden}>${escapeHtml(description)}</span><span class="xtyle-field__error" part="error" id="${escapeAttr(errorId)}"${errorHidden}>${escapeHtml(error)}</span>`;
   }
   hooks.fragment.mount("field", (bindings, ops) => {
     ops.setAttr(".xtyle-field", "class", fieldClass(bindings));

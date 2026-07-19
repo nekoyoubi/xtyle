@@ -19,7 +19,7 @@ const toneRules = FULL_TONES.map(
 ).join("\n");
 
 export const headingCss = `
-[data-heading] { display: contents; }
+[data-root][data-heading] { display: contents; }
 .xtyle-heading {
 	margin: 0;
 	font-family: var(--font-display);

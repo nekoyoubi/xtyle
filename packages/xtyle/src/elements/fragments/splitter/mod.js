@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/splitter/mod.ts
   function splitterClass(b) {
     const orientation = b.orientation === "horizontal" ? "horizontal" : "vertical";
@@ -14,10 +27,10 @@
   }
   function inner(b) {
     const orientation = b.orientation === "horizontal" ? "horizontal" : "vertical";
-    const name = b.labelledby ? ` aria-labelledby="${b.labelledby}"` : b.label ? ` aria-label="${b.label}"` : "";
+    const name = b.labelledby ? ` aria-labelledby="${escapeAttr(b.labelledby)}"` : b.label ? ` aria-label="${escapeAttr(b.label)}"` : "";
     const disabled = b.disabled ? ` aria-disabled="true"` : "";
     const tabindex = b.disabled ? "" : ` tabindex="0"`;
-    return `<div part="splitter" class="${splitterClass(b)}" role="separator" aria-orientation="${orientation}" aria-valuenow="${b.value ?? 0}" aria-valuemin="${b.min ?? 0}" aria-valuemax="${b.max ?? 0}"${name}${disabled}${tabindex}><span class="xtyle-splitter__grip" part="grip" aria-hidden="true"></span></div>`;
+    return `<div part="splitter" class="${splitterClass(b)}" role="separator" aria-orientation="${escapeAttr(orientation)}" aria-valuenow="${b.value ?? 0}" aria-valuemin="${b.min ?? 0}" aria-valuemax="${b.max ?? 0}"${name}${disabled}${tabindex}><span class="xtyle-splitter__grip" part="grip" aria-hidden="true"></span></div>`;
   }
   hooks.fragment.mount("splitter", (bindings, ops) => {
     ops.replaceChildren("[data-splitter]", inner(bindings));

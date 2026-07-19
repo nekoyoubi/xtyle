@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -41,14 +43,6 @@ declare const hooks: {
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
-function esc(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
-
 function swatchClass(b: SwatchBindings): string {
 	const size = b.size ?? "md";
 	return [
@@ -66,24 +60,26 @@ function detailsMarkup(b: SwatchBindings): string {
 	const rows = (b.detailRows ?? [])
 		.map(
 			(row) =>
-				`<span class="xtyle-swatch__detail-model" part="detail-model">${esc(row.model)}</span>` +
-				`<span class="xtyle-swatch__detail-value" part="detail-value">${esc(row.value)}</span>`,
+				`<span class="xtyle-swatch__detail-model" part="detail-model">${escapeAttr(row.model)}</span>` +
+				`<span class="xtyle-swatch__detail-value" part="detail-value">${escapeAttr(row.value)}</span>`,
 		)
 		.join("");
 	const id = b.detailsId ?? "xtyle-swatch-details";
-	return `<span class="xtyle-swatch__details" part="details" id="${id}" role="tooltip">${rows}</span>`;
+	// `manual`, like the tooltip's: a hover readout must not light-dismiss, and must not close a menu
+	// it might be sitting inside.
+	return `<span class="xtyle-swatch__details" part="details" id="${escapeAttr(id)}" role="tooltip" popover="manual">${rows}</span>`;
 }
 
 function bodyMarkup(b: SwatchBindings): string {
-	const color = esc(b.color ?? "transparent");
+	const color = escapeAttr(b.color ?? "transparent");
 	const dot = `<span class="xtyle-swatch__dot" part="dot" style="background:${color}" aria-hidden="true"></span>`;
-	const label = b.label ? `<span class="xtyle-swatch__label" part="label">${esc(b.label)}</span>` : "";
-	const value = b.value ? `<span class="xtyle-swatch__value" part="value">${esc(b.value)}</span>` : "";
+	const label = b.label ? `<span class="xtyle-swatch__label" part="label">${escapeAttr(b.label)}</span>` : "";
+	const value = b.value ? `<span class="xtyle-swatch__value" part="value">${escapeAttr(b.value)}</span>` : "";
 	return `${dot}${label}${value}${detailsMarkup(b)}`;
 }
 
 function describedBy(b: SwatchBindings): string {
-	return b.showsDetails ? ` aria-describedby="${b.detailsId ?? "xtyle-swatch-details"}"` : "";
+	return b.showsDetails ? ` aria-describedby="${escapeAttr(b.detailsId ?? "xtyle-swatch-details")}"` : "";
 }
 
 function accessibleName(b: SwatchBindings): string | null | undefined {
@@ -98,7 +94,7 @@ function inner(b: SwatchBindings): string {
 	}
 	const ariaPressed = ` aria-pressed="${String(!!b.selected)}"`;
 	const name = accessibleName(b);
-	const ariaLabel = !b.label && name ? ` aria-label="${esc(name)}"` : "";
+	const ariaLabel = !b.label && name ? ` aria-label="${escapeAttr(name)}"` : "";
 	return `<button part="swatch" type="button" class="${swatchClass(b)}"${ariaPressed}${ariaLabel}${describedBy(b)}>${body}</button>`;
 }
 
@@ -107,7 +103,7 @@ hooks.fragment.mount("swatch", (bindings, ops) => {
 });
 
 hooks.fragment.update("swatch", (bindings, ops) => {
-	ops.setAttr('[part="swatch"]', "class", swatchClass(bindings));
+	ops.setAttr(".xtyle-swatch", "class", swatchClass(bindings));
 	if (bindings.interactive) ops.setAttr('[part="swatch"]', "aria-pressed", String(!!bindings.selected));
 	ops.setAttr('[part="dot"]', "style", `background:${bindings.color ?? "transparent"}`);
 	if (bindings.label) ops.setText('[part="label"]', bindings.label);

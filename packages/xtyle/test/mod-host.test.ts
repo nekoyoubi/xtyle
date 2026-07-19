@@ -3,8 +3,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getAlgorithm } from "../src/batteries.js";
-import { loadAlgorithm } from "../src/host/index.js";
-import { resolveBundledAlgorithm, bundledAlgorithms } from "../src/host/bundle.js";
+import { HARNESS_TIMEOUT_MS, loadAlgorithm } from "../src/host/index.js";
+import { resolveBundledAlgorithm, bundledAlgorithms, snapshotBundledAlgorithm } from "../src/host/bundle.js";
 import type { Algorithm } from "../src/types.js";
 import { buildMatrix } from "./matrix.js";
 
@@ -97,7 +97,7 @@ describe("browser bundle resolver", () => {
 
 	for (const id of ALGORITHM_IDS) {
 		it(`derives byte-identical to baked from the bundle for ${id}`, async () => {
-			const bundled = await resolveBundledAlgorithm(id);
+			const bundled = await resolveBundledAlgorithm(id, { timeoutMs: HOST_TIMEOUT_MS });
 			expect(JSON.stringify(bundled.derive(smoke))).toBe(JSON.stringify(getAlgorithm(id).derive(smoke)));
 		}, HOST_TIMEOUT_MS);
 	}
@@ -105,4 +105,24 @@ describe("browser bundle resolver", () => {
 	it("rejects an unknown bundled id", async () => {
 		await expect(resolveBundledAlgorithm("not-a-mod")).rejects.toThrow(/no bundled mod/);
 	});
+
+	// This resolver used to take no options at all, so it always ran on the 5s production rail no
+	// matter what the caller asked for — and a byte-identity test racing that rail fails as
+	// `InvokeError: interrupted`, which reads as a derivation divergence rather than a busy machine.
+	it("honors a raised rail, clamps it, and caches per rail", async () => {
+		const [a, b] = await Promise.all([
+			resolveBundledAlgorithm("xtyle-default", { timeoutMs: HOST_TIMEOUT_MS }),
+			resolveBundledAlgorithm("xtyle-default", { timeoutMs: HOST_TIMEOUT_MS }),
+		]);
+		expect(a).toBe(b);
+
+		// Above the ceiling is clamped rather than honored, so the cache key space stays {default, harness}
+		const clamped = await resolveBundledAlgorithm("xtyle-default", { timeoutMs: HARNESS_TIMEOUT_MS * 10 });
+		expect(clamped).toBe(a);
+
+		// ...and the default rail keeps its own slot, so a harness load never displaces production's
+		const production = await resolveBundledAlgorithm("xtyle-default");
+		expect(production).not.toBe(a);
+		expect(snapshotBundledAlgorithm("xtyle-default")).toBe(production);
+	}, HOST_TIMEOUT_MS);
 });

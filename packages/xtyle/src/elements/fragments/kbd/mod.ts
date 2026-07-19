@@ -29,5 +29,5 @@ hooks.fragment.mount("kbd", (bindings, ops) => {
 });
 
 hooks.fragment.update("kbd", (bindings, ops) => {
-	ops.setAttr('[part="kbd"]', "class", kbdClass(bindings));
+	ops.setAttr(".xtyle-kbd", "class", kbdClass(bindings));
 });

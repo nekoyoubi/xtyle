@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -33,19 +35,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: BreadcrumbBindings, ops: OpsBuilder) => void) => void };
 };
 
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#39;");
-}
-
-function escapeAttr(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 function breadcrumbClass(bindings: BreadcrumbBindings): string {
 	const tone = bindings.tone ?? "accent";
 	const size = bindings.size ?? "md";
@@ -55,7 +44,7 @@ function breadcrumbClass(bindings: BreadcrumbBindings): string {
 }
 
 function separatorMarkup(separator: string): string {
-	return `<li class="xtyle-breadcrumb__separator" part="separator" aria-hidden="true">${escapeHtml(separator)}</li>`;
+	return `<li class="xtyle-breadcrumb__separator" part="separator" aria-hidden="true">${escapeAttr(separator)}</li>`;
 }
 
 function crumbCell(item: BreadcrumbItem, isCurrent: boolean, label: string): string {
@@ -75,7 +64,7 @@ function list(bindings: BreadcrumbBindings): string {
 	return items
 		.map((item, index) => {
 			const isCurrent = item.current === true || (item.current === undefined && index === lastIndex);
-			const label = escapeHtml(item.label ?? "");
+			const label = escapeAttr(item.label ?? "");
 			const cell = crumbCell(item, isCurrent, label);
 			const row = `<li class="xtyle-breadcrumb__item" part="item-wrap">${cell}</li>`;
 			return index < lastIndex ? `${row}${separatorMarkup(separator)}` : row;

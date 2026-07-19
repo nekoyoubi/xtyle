@@ -1,0 +1,15 @@
+# The fragment and algorithm bundlers embed source bytes verbatim into committed generated
+# artifacts, and the freshness guard hashes those artifacts, so a CRLF checkout would rebuild
+# to a different hash and fail the gate on an untouched tree. LF everywhere keeps a build
+# reproducible regardless of a contributor's core.autocrlf.
+* text=auto eol=lf
+
+*.mp4 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.wasm binary

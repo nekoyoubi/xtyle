@@ -1,4 +1,6 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import type { FullTone, Size } from "@xtyle/core";
 
@@ -24,13 +26,15 @@ const {
 	siblings = 1,
 	boundaries = 1,
 	href,
-	tone = "accent",
+	tone: toneInput,
 	size = "md",
 	label = "Pagination",
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("pagination", Astro.props);
+const tone = resolveTone(toneInput, "accent");
 
 const bindings = { page, total, siblings, boundaries, href, tone, size, label };
 const light = await renderFragmentLight("pagination", bindings);

@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, SWITCH_SIZES, resolveVocab } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xtyle/core";
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SWITCH_SIZES)[number];
 
 interface Props {
 	checked?: boolean;
@@ -29,8 +31,8 @@ interface Props {
 const {
 	checked = false,
 	disabled = false,
-	size = "md",
-	tone = "accent",
+	size: sizeInput,
+	tone: toneInput,
 	shape = "pill",
 	orientation = "horizontal",
 	reverse = false,
@@ -45,6 +47,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("switch", Astro.props);
+const size = resolveVocab(sizeInput, SWITCH_SIZES, "md", "switch size");
+const tone = resolveTone(toneInput, "accent");
 
 const elementId = `xtyle-switch-${Math.random().toString(36).slice(2, 8)}`;
 

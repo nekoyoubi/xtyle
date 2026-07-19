@@ -1,5 +1,68 @@
 # Changelog
 
+## v0.9.0: Nameless
+
+People built on v0.8.0 and told us what broke. Nearly every report described the same shape: a mistake that rendered as something plausible instead of as an error. A wrong prop name became a tooltip. An invalid tone became an unstyled box. A documented prop evaporated between the wrapper and the element. Tabs came out empty. Every one of those shipped under a green suite. The tests could not see the failures, because the layers that would have caught them did not exist. This release fixes the reports, fixes the class behind each one, and builds the two test layers that were missing. It also collapses eight components that were secretly the same machine.
+
+The version is called Nameless, and the ones after it won't be called anything.
+
+### Collections
+
+Eight components in the set were the same machine wearing different skins. Menu, tree, table, combobox, command palette, tabs, segmented, and pagination each rope off a set of items, move a keyboard cursor across them, mark some chosen, and paint a region per item. Each implemented that machine again by hand, which is eight independent chances to get arrow-key wrapping, `Home`/`End`, typeahead, and the never-color-only selection contract subtly wrong, and to fix a bug in one and not the other seven.
+
+- **There is one machine now**, and seven components moved onto it: a keyboard reducer, a roving tab stop, and a selection model with an explicit cardinality. The migration ran in phases, because a substrate that half-lands is worse than none
+- **`<xtyle-list>` ships on that core**, which is what proves the seam is a real component surface rather than an internal convenience
+- **Pagination stayed out, deliberately.** Its model is a page cursor, not a selection, and forcing it in would have bent the core to fit one caller. Recorded in `docs/collection-substrate.md` as a decision rather than an oversight
+
+### Markdown
+
+- **`<xtyle-markdown>` renders markdown against the derived theme**, in a full block view or as an inline label, taking the set to 84 components. It follows `Code`: the rendered body arrives as an `html` binding, and the chrome around it is real nodes in the fill
+  - the inline mode exists because generated labels arrive as markdown; a heading in a tab title renders as text rather than erupting into an `<h1>` in a tab strip
+- **There is no sanitizer, on purpose.** Raw HTML is escaped rather than emitted, and link and image protocols are checked against an allowlist, so only the renderer's own closed set of tags ever reaches the DOM. A general HTML sanitizer is a don't-roll-your-own problem; the design deletes the requirement instead of meeting it
+  - proved by mutation rather than by a passing suite: the corpus passed 69 of 69 on its first run and was partly worthless, because a bare obfuscated URL never parses as a link and those tests were asserting against a code path they never entered; the angle-bracket form does parse, and the hole behind those 69 passes was real
+
+### Overlays
+
+- **The last two overlays escape their container.** `Tooltip` and `Swatch` were in-flow children with a `z-index`, so any scrolling ancestor cropped them, and no consumer CSS could fix it without breaking their own layout. Both are in the top layer now, through the same door the rest of the family already used
+- **A promoted overlay stays on its trigger.** Top-layer placement is computed from viewport coordinates, and those expire the moment anything scrolls; for a pinned tip, "open time" is hydration, so it was placed against a trigger that had not been scrolled into view yet and stranded there. `AnchorTracker` re-anchors on scroll, resize, and reflow
+  - the listener has to capture, because scroll events do not bubble and the trigger can sit in any scrolling ancestor; a `window` listener would have looked correct and changed nothing
+- **The register has a real layer scale.** `z-index: var(--elevation-N)` is invalid CSS: those tokens are box shadows, so the browser dropped the declaration and the toast and the sticky toolbar had been surviving on DOM order
+
+### The reported defects
+
+- **An out-of-vocabulary value renders visibly wrong instead of invisibly nothing.** A tone is interpolated into a class name, so `tone="warning"` matched no rule and produced an unstyled box that read as a deliberate plain callout. That axis was one of about fifteen: `size`, `variant`, `shape`, `orientation`, `placement`, and the rest were all raw casts. 94 accessors validate now, each vocabulary declared once with its TypeScript union derived from it
+  - it found seven real bugs in our own code on its first run, including sixteen buttons on the docs site rendering with no variant treatment at all
+- **A wrong prop name says so, in dev.** A manifest-driven check catches unknown props with a did-you-mean, a slot passed as a prop, and a near-miss enum value. It is dev-only behind a dynamic import, so it never enters a production module graph
+  - it immediately caught two accessibility props missing from their manifests entirely, which means the reference site had been hiding them
+- **Slotted `Tabs` and `Accordion` work under Astro.** Astro's named-slot handling consumes the `slot` attribute, and a non-matching one discards the child outright, so tabs rendered empty and accordion silently mis-paired. Both read `data-` markers now, and an unmarked accordion warns instead of guessing
+  - both components' source comments had asserted the opposite the whole time
+- **Generated icon marks build from a published install.** SSR color baking reached for an `algorithms/` directory that no tarball can contain, so it worked in the monorepo and threw everywhere else. The whole bug was one import reaching for the wrong twin of an identically-named function; the Node twin is `resolveInstalledAlgorithm` now, because docs cannot fix a collision nobody reads
+  - no in-repo test can catch this, so the check packs, installs outside the repo, and proves the failure is gone from there
+- **`Progress` forwards the props its own manifest promised**, and grew the four things a ring needs to be a frame: a track opt-out, `part="track"` on the circular groove, an author-settable size, and a stroke weight decoupled from the diameter
+- **`Toc` nests.** An outline with subsections was a flat list, so the hierarchy lived in the consumer's stylesheet and assistive tech was told the entries were siblings. An optional `level` nests the markup instead
+  - a static page now gets a current-section cue too; CSS can match an element id but not an attribute value, so the rules are generated per item; they stand down the moment the scrollspy is live
+
+### Proof
+
+- **A visual regression suite**, 497 baselines across all five algorithms plus cross-binding parity, so a change that only shows up as pixels stops being invisible
+- **A Svelte render harness**, because nothing in the suite could mount a wrapper and assert on the DOM. That is why a typed, defaulted, documented prop could evaporate and ship. It immediately found a second one: `Switch`'s on-label was swallowed by Svelte's attribute handling, which keys off the first two characters and read it as an event
+- **`:scope >` matches nothing in the unit environment**, which had made every element that maps light-DOM children structurally untestable, and is why the Astro slot bug walked past a suite full of passing tests. Every one of those assertions is converted, with a guard that fails if anyone reintroduces the pattern
+
+### Fixes
+
+- **The stylesheet stays inside its own house.** 34 bare `[data-*]` rules matched any element anywhere, so a consumer's own `<div data-card>` lost its box: silent, and miserable to diagnose. It had already drawn blood twice between our own components
+- **A built-in fill no longer reaches through `part=`.** A class is a fill's private name for a node; `data-*` and `part` are shared. Keying an op to a shared hook leaves the built-in fighting for the same node a mount-only reskin claimed, and the reskin got clobbered on the next repaint. 27 fills rekeyed
+  - the guard missed it because its test mod re-asserted its own class, so it only ever proved that a mod can win a fight it chooses to pick, and a static reskin never picks one
+- **A slot region can tell whether it is empty.** A region holding a `<slot>` is never `:empty`, and no selector can see slot assignment, so every text field carried dead padding no markup could remove. The old check only worked under SSR, which resolves the slot away, and silently failed for every client-created element
+- **A tree node that gains its first child stays visible**, and a row can carry hover text
+- **Builds reproduce.** The fragment bundler embedded source bytes verbatim, so committed artifacts were a function of the builder's line-ending config and the freshness gate failed on a clean checkout of an untouched tree
+
+| package | tests |
+|---|---|
+| `@xtyle/core` | 2419 |
+| `@xtyle/svelte` | 26 |
+| visual regression | 497 |
+
 ## v0.8.0: Overlays & Fragments
 
 The promise is that any component's markup is yours to replace. It wasn't true. A component could invent a marker, a checkmark, a connector, a whole panel chrome tree, and hand you no way to reach any of it; the rule we used to catch that only looked for one of the two ways it happens. This release fixes the rule, then fixes everything the corrected rule catches, and builds the overlay surfaces the set never had.

@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, BUTTON_SIZES, SPLIT_BUTTON_VARIANTS, resolveVocab } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import type { MenuItem } from "@xtyle/core";
 
-type Variant = "solid" | "outline" | "subtle" | "ghost";
-type Size = "xs" | "sm" | "md" | "lg";
+type Variant = (typeof SPLIT_BUTTON_VARIANTS)[number];
+type Size = (typeof BUTTON_SIZES)[number];
 
 interface Props {
 	/** The dropdown's rows: the same `MenuItem` contract Menu speaks — actions, separators, headings. */
@@ -29,9 +31,9 @@ interface Props {
 
 const {
 	items = [],
-	variant = "solid",
-	tone = "accent",
-	size = "md",
+	variant: variantInput,
+	tone: toneInput,
+	size: sizeInput,
 	open = false,
 	disabled = false,
 	loading = false,
@@ -42,6 +44,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("split-button", Astro.props);
+const variant = resolveVocab(variantInput, SPLIT_BUTTON_VARIANTS, "solid", "split-button variant");
+const size = resolveVocab(sizeInput, BUTTON_SIZES, "md", "split-button size");
+const tone = resolveTone(toneInput, "accent");
 
 const bindings = {
 	variant,

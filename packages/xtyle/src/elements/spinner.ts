@@ -3,6 +3,7 @@ import type { Size, FullTone } from "../index.js";
 import { spinnerHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/spinner/source.generated.js";
+import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 
 export class XtyleSpinner extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "spinner", {
@@ -18,14 +19,14 @@ export class XtyleSpinner extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "spinner size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

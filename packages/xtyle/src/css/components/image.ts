@@ -25,7 +25,7 @@ const cornerButton = `
 
 const imageFrameCss = `
 xtyle-image { display: block; }
-[data-image] { display: contents; }
+[data-root][data-image] { display: contents; }
 .xtyle-image__media { display: contents; }
 .xtyle-image {
 	display: block;

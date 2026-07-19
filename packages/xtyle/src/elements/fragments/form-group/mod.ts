@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -25,10 +27,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: FormGroupBindings, ops: OpsBuilder) => void) => void };
 };
 
-function escape(text: string): string {
-	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 function groupClass(b: FormGroupBindings): string {
 	const size = b.size ?? "md";
 	return ["xtyle-form-group", b.invalid && "xtyle-form-group--invalid", size !== "md" && `xtyle-form-group--${size}`]
@@ -42,19 +40,19 @@ function inner(b: FormGroupBindings): string {
 	const error = b.error ?? "";
 	const invalid = b.invalid === true;
 	const required = b.required === true;
-	const labelFor = b.hasFor ? ` for="${b.controlTarget ?? ""}"` : "";
+	const labelFor = b.hasFor ? ` for="${escapeAttr(b.controlTarget ?? "")}"` : "";
 	const labelHidden = label.length === 0 ? " hidden" : "";
 	const requiredHidden = required ? "" : " hidden";
 	const descriptionHidden = description.length === 0 ? " hidden" : "";
 	const errorHidden = !invalid || error.length === 0 ? " hidden" : "";
 	return (
-		`<label class="xtyle-form-group__label" part="label" data-label id="${b.labelId ?? ""}"${labelFor}${labelHidden}>` +
-		`<span data-label-text>${escape(label)}</span>` +
+		`<label class="xtyle-form-group__label" part="label" data-label id="${escapeAttr(b.labelId ?? "")}"${labelFor}${labelHidden}>` +
+		`<span data-label-text>${escapeHtml(label)}</span>` +
 		`<span class="xtyle-form-group__required" part="required-indicator" data-required aria-hidden="true"${requiredHidden}>*</span>` +
 		`</label>` +
-		`<span class="xtyle-form-group__description" part="description" data-description id="${b.descriptionId ?? ""}"${descriptionHidden}>${escape(description)}</span>` +
+		`<span class="xtyle-form-group__description" part="description" data-description id="${escapeAttr(b.descriptionId ?? "")}"${descriptionHidden}>${escapeHtml(description)}</span>` +
 		`<div class="xtyle-form-group__control" part="control"><slot></slot></div>` +
-		`<span class="xtyle-form-group__error" part="error" data-error id="${b.errorId ?? ""}" role="alert"${errorHidden}>${escape(error)}</span>`
+		`<span class="xtyle-form-group__error" part="error" data-error id="${escapeAttr(b.errorId ?? "")}" role="alert"${errorHidden}>${escapeHtml(error)}</span>`
 	);
 }
 

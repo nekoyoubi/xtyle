@@ -1,10 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
-import { rampGradientStops, type FullTone as Tone, type Palette } from "@xtyle/core";
-type ProgressVariant = "linear" | "circular";
-type ProgressSize = "sm" | "md" | "lg";
-type ProgressRampMode = "solid" | "gradient";
+import { rampGradientStops, type FullTone as Tone, type Palette, resolveTone, PROGRESS_VARIANTS, resolveVocab, PROGRESS_SIZES, PROGRESS_RAMP_MODES } from "@xtyle/core";
+type ProgressVariant = (typeof PROGRESS_VARIANTS)[number];
+type ProgressSize = (typeof PROGRESS_SIZES)[number];
+type ProgressRampMode = (typeof PROGRESS_RAMP_MODES)[number];
 
 interface Props {
 	variant?: ProgressVariant;
@@ -33,6 +34,12 @@ interface Props {
 	rampMode?: ProgressRampMode;
 	/** Flip the ramp end for end (hot-to-cold). */
 	reverse?: boolean;
+	/** The unfilled groove: `true` for the default rail, `false` to drop it (a ring reporting a window
+	 * that may not exist reads better with no groove), or a tone to paint it that tone's `-bg`. */
+	track?: boolean | Tone;
+	/** How heavy a `circular` ring reads, independent of its diameter: a unitless number in ring units
+	 * (scales with the ring) or a CSS length (`6px`) that holds its weight at any size. */
+	thickness?: string | number;
 	"aria-label"?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -42,9 +49,9 @@ interface Props {
 }
 
 const {
-	variant = "linear",
-	tone = "accent",
-	size = "md",
+	variant: variantInput,
+	tone: toneInput,
+	size: sizeInput,
 	value = 0,
 	min = 0,
 	max = 100,
@@ -56,13 +63,22 @@ const {
 	valuePosition = "end",
 	meter = false,
 	ramp,
-	rampMode = "solid",
+	rampMode: rampModeInput,
 	reverse = false,
+	track = true,
+	thickness,
 	"aria-label": ariaLabel,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("progress", Astro.props);
+const variant = resolveVocab(variantInput, PROGRESS_VARIANTS, "linear", "progress variant");
+const size = resolveVocab(sizeInput, PROGRESS_SIZES, "md", "progress size");
+const rampMode = resolveVocab(rampModeInput, PROGRESS_RAMP_MODES, "solid", "progress rampMode");
+const tone = resolveTone(toneInput, "accent");
+const trackAttr = track === true ? undefined : track === false ? "none" : track;
+const thicknessAttr = thickness != null ? String(thickness) : undefined;
 
 // Gradient ramps are pure CSS (var()-referenced stops), so they render server-side with zero JS;
 // a solid ramp's color is sampled off the live cascade, so SSR leaves the tone and the runtime paints it.
@@ -87,6 +103,8 @@ const bindings = {
 	colorizeValue,
 	valuePosition,
 	pulse: null,
+	track: trackAttr ?? null,
+	thickness: thicknessAttr ?? null,
 	role: meter ? "meter" : "progressbar",
 	ariaLabel: ariaLabel ?? null,
 	ariaLabelledby: null,
@@ -117,6 +135,8 @@ const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
 	ramp={ramp ? (Array.isArray(ramp) ? JSON.stringify(ramp) : ramp) : undefined}
 	ramp-mode={ramp && rampMode !== "solid" ? rampMode : undefined}
 	reverse={reverse || undefined}
+	track={trackAttr}
+	thickness={thicknessAttr}
 	aria-label={ariaLabel}
 	class={extra}
 	set:html={composed}

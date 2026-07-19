@@ -53,7 +53,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 ---
 
 <Base
-	title="Components: xtyle"
+	title="Components"
 	description={metaDescription}
 >
 	<header class="cx-head">
@@ -103,7 +103,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 				<span class="cx-new__spark" aria-hidden="true">✦</span>
 				<Heading level={2} size="lg" id="cx-new-title">New in v{site.version}</Heading>
 				<Text size="sm" tone="muted" class="cx-new__blurb">
-					{newThisCycle.length} components landed this cycle. Each renders live below, from the same theme.
+					{`${newThisCycle.length} ${newThisCycle.length === 1 ? "component" : "components"}`} landed this cycle. Each renders live below, from the same theme.
 				</Text>
 			</div>
 			<Grid minColWidth="15rem" gap={4} align="stretch" class="cx-new__grid">

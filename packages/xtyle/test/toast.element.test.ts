@@ -106,10 +106,19 @@ describe("toast-region.toast() — the imperative push", () => {
 
 	it("renders no glyph for a color-only push and announces politely", () => {
 		const host = region();
-		const item = host.toast({ message: "Note.", tone: "violet" });
+		const item = host.toast({ message: "Note.", tone: "purple" });
 		expect(card(item)?.className).toContain("xtyle-toast--noicon");
-		expect(card(item)?.className).toContain("xtyle-toast--violet");
+		expect(card(item)?.className).toContain("xtyle-toast--purple");
 		expect(card(item)?.getAttribute("role")).toBe("status");
+	});
+
+	it("drops a tone outside the roster rather than painting a class no rule matches", () => {
+		const host = region();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const item = host.toast({ message: "Note.", tone: "violet" as never });
+		expect(card(item)?.className).not.toContain("xtyle-toast--violet");
+		expect(warn).toHaveBeenCalled();
+		warn.mockRestore();
 	});
 
 	it("escapes a hostile message, action label, and close label instead of injecting them", () => {

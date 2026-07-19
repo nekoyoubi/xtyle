@@ -193,14 +193,14 @@ export const sliderManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "alt-step",
+			name: "altStep",
 			type: "number",
 			default: "step * 10",
 			description: "The step taken while the modifier is held during an arrow press or a drag (and by Page keys): set it larger than `step` for a broad jump or smaller for fine-tuning. Mirrors the number field's alt step.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "alt-default",
+			name: "altDefault",
 			type: "boolean",
 			default: "false",
 			description: "Inverts the modifier: `alt-step` becomes the unmodified default and the base `step` needs the modifier held.",
@@ -263,14 +263,14 @@ export const sliderManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "show-value",
+			name: "showValue",
 			type: "boolean",
 			default: "false",
 			description: "Renders the current value inline beside the label. Clicking it opens an inline numeric editor that types an exact value and steps on the arrow/Page keys (honoring `modifier` and `alt-step`). The readout is `aria-hidden` since the thumb's `aria-valuenow` already announces it. Format it with the `format` property.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "hide-label",
+			name: "hideLabel",
 			type: "boolean",
 			default: "false",
 			description: "Visually hides the `label` text while still using it to name the control for assistive tech. Use it when the host already renders its own visible label but the slider still needs an accessible name.",

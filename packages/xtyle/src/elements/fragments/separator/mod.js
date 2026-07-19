@@ -20,6 +20,6 @@
     ops.replaceChildren("[data-separator]", separatorHtml(bindings));
   });
   hooks.fragment.update("separator", (bindings, ops) => {
-    ops.setAttr('[part="separator"]', "class", separatorClass(bindings));
+    ops.setAttr(".xtyle-separator", "class", separatorClass(bindings));
   });
 })();

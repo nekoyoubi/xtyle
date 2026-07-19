@@ -1,10 +1,12 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, RIBBON_CORNERS, resolveVocab, RIBBON_SIZES, RIBBON_VARIANTS } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xtyle/core";
-type RibbonCorner = "top-right" | "top-left" | "bottom-right" | "bottom-left";
-type RibbonSize = "sm" | "md" | "lg";
-type RibbonVariant = "solid" | "soft";
+type RibbonCorner = (typeof RIBBON_CORNERS)[number];
+type RibbonSize = (typeof RIBBON_SIZES)[number];
+type RibbonVariant = (typeof RIBBON_VARIANTS)[number];
 
 interface Props {
 	tone?: Tone;
@@ -22,10 +24,10 @@ interface Props {
 }
 
 const {
-	tone = "accent",
-	corner = "top-right",
-	size = "md",
-	variant = "solid",
+	tone: toneInput,
+	corner: cornerInput,
+	size: sizeInput,
+	variant: variantInput,
 	color,
 	textColor,
 	label,
@@ -33,6 +35,11 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("ribbon", Astro.props);
+const corner = resolveVocab(cornerInput, RIBBON_CORNERS, "top-right", "ribbon corner");
+const size = resolveVocab(sizeInput, RIBBON_SIZES, "md", "ribbon size");
+const variant = resolveVocab(variantInput, RIBBON_VARIANTS, "solid", "ribbon variant");
+const tone = resolveTone(toneInput, "accent");
 
 const bindings = {
 	tone,

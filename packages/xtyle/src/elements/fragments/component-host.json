@@ -377,6 +377,16 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.markdown",
+			"description": "The built-in fill for the xtyle Markdown component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.markdown",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.menu",
 			"description": "The built-in fill for the xtyle Menu component: the mod-zero markup and behavior every app inherits and may override.",
 			"accepts": [
@@ -503,6 +513,16 @@
 				"text/html+jsml"
 			],
 			"capability": "xtyle.component.section",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.list",
+			"description": "The built-in fill for the xtyle List component: the reference skin over the collection substrate, the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"text/html+jsml"
+			],
+			"capability": "xtyle.component.list",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -936,6 +956,10 @@
 			"description": "Permits a mod to provide the markup of the xtyle Link component.",
 			"risk": "low"
 		},
+		"xtyle.component.markdown": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Markdown component.",
+			"risk": "low"
+		},
 		"xtyle.component.menu": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Menu component.",
 			"risk": "low"
@@ -986,6 +1010,10 @@
 		},
 		"xtyle.component.section": {
 			"description": "Permits a mod to provide the markup of the xtyle Section component.",
+			"risk": "low"
+		},
+		"xtyle.component.list": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle List component.",
 			"risk": "low"
 		},
 		"xtyle.component.segmented": {

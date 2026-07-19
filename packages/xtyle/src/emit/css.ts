@@ -1,7 +1,8 @@
 import { schemeOf } from "../color.js";
-import type { TokenRegister } from "../types.js";
+import type { EmitOptions, TokenRegister } from "../types.js";
 
-export function emitCss(register: TokenRegister): string {
+export function emitCss(register: TokenRegister, opts: EmitOptions = {}): string {
+	const selector = opts.selector ?? ":root";
 	const lines = Object.keys(register)
 		.sort()
 		.map((name) => `\t${normalizeName(name)}: ${register[name]};`);
@@ -9,10 +10,11 @@ export function emitCss(register: TokenRegister): string {
 	const scheme = bg ? `\tcolor-scheme: ${schemeOf(bg)};\n` : "";
 	const hasScrollbar =
 		register["--scrollbar-thumb"] !== undefined && register["--scrollbar-track"] !== undefined;
-	const scrollbar = hasScrollbar
-		? "\tscrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);\n"
-		: "";
-	return `:root {\n${scheme}${scrollbar}${lines.join("\n")}\n}\n`;
+	const scrollbar =
+		opts.scrollbars !== false && hasScrollbar
+			? "\tscrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);\n"
+			: "";
+	return `${selector} {\n${scheme}${scrollbar}${lines.join("\n")}\n}\n`;
 }
 
 function normalizeName(name: string): string {

@@ -2,11 +2,12 @@
 	import "@xtyle/core/elements/text.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone } from "@xtyle/core";
+	import { TEXT_TAGS, TEXT_SIZES, TEXT_WEIGHTS, TEXT_LEADINGS } from "@xtyle/core";
 
-	type TextAs = "p" | "span";
-	type TextSize = "xs" | "sm" | "body" | "lg";
-	type TextWeight = "normal" | "medium" | "semibold" | "bold";
-	type TextLeading = "tight" | "snug" | "loose";
+	type TextAs = (typeof TEXT_TAGS)[number];
+	type TextSize = (typeof TEXT_SIZES)[number];
+	type TextWeight = (typeof TEXT_WEIGHTS)[number];
+	type TextLeading = (typeof TEXT_LEADINGS)[number];
 	type TextTone = "default" | "muted" | "subtle" | FullTone;
 
 	interface Props {

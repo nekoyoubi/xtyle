@@ -1,4 +1,7 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
 import { escapeSelectorValue } from "../selector-escape.js";
+import { linearNav } from "../../collection/nav-reducer.js";
+import { stepKey } from "../../collection/roving.js";
 
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
@@ -27,6 +30,7 @@ interface TreeNode {
 	selected?: boolean;
 	disabled?: boolean;
 	badge?: string | TreeBadge | Array<string | TreeBadge>;
+	title?: string;
 	actions?: TreeAction[];
 	children?: TreeNode[];
 }
@@ -79,19 +83,6 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: TreeBindings, ops: OpsBuilder) => void) => void };
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
-
-const AMP = /&/g;
-const LT = /</g;
-const GT = />/g;
-const QUOT = /"/g;
-
-function escapeHtml(value: string): string {
-	return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
-}
 
 function treeClass(bindings: TreeBindings): string {
 	const size = bindings.size ?? "md";
@@ -185,9 +176,11 @@ function buildNodes(
 			const isStatic = locked && !isLink;
 			const staticData = isStatic ? ` data-static="true"` : "";
 			const rowClass = isStatic ? "xtyle-tree__row xtyle-tree__row--static" : "xtyle-tree__row";
+			// Supplementary only — `label` remains the accessible name, so this never announces.
+			const titleAttr = node.title ? ` title="${escapeAttr(node.title)}"` : "";
 			const rowOpen = isLink
-				? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData} style="--tree-level: ${level}">`
-				: `<div class="${rowClass}" part="row" data-value="${escapeAttr(value)}"${disabledData}${staticData} style="--tree-level: ${level}">`;
+				? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData}${titleAttr} style="--tree-level: ${level}">`
+				: `<div class="${rowClass}" part="row" data-value="${escapeAttr(value)}"${disabledData}${staticData}${titleAttr} style="--tree-level: ${level}">`;
 			const rowClose = isLink ? "</a>" : "</div>";
 			const trailing = treeTrailing(node, value, isLink);
 			const group = hasChildren
@@ -198,7 +191,7 @@ function buildNodes(
 			const lockedAttr = locked ? ` data-locked="true"` : "";
 			const itemClass = locked ? "xtyle-tree__item xtyle-tree__item--locked" : "xtyle-tree__item";
 			const tabindex = !isStatic && value === roving ? "0" : "-1";
-			return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${String(selected)}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
+			return `<li class="${itemClass}" role="treeitem"${expandedAttr} aria-selected="${escapeAttr(String(selected))}"${disabledAttr}${lockedAttr} aria-level="${level}" data-value="${escapeAttr(value)}" tabindex="${tabindex}">${rowOpen}${twisty}${label}${trailing}${rowClose}${group}</li>`;
 		})
 		.join("");
 }
@@ -281,25 +274,12 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 	if (!row) return {};
 	// A locked branch with no route is a section header, skipped by roving focus.
 	const isStatic = (r: NavRow): boolean => r.locked && !r.isLink;
-	const step = (from: number, dir: number): NavRow | undefined => {
-		for (let i = from + dir; i >= 0 && i < rows.length; i += dir) {
-			if (!isStatic(rows[i])) return rows[i];
-		}
-		return undefined;
-	};
+	const navItems = rows.map((r) => ({ key: r.key, skip: isStatic(r) }));
+
+	// Tree's own hierarchical axis and activation semantics — composed on top of the shared linear
+	// core, which owns only Up/Down/Home/End (see docs/collection-substrate.md, the "wrap the core"
+	// pattern). Left/Right expand-collapse and Enter/Space are tree's; everything else delegates.
 	switch (k) {
-		case "ArrowDown": {
-			const next = step(here, 1);
-			return next
-				? { focus: next.key, preventDefault: true, stopPropagation: true }
-				: { preventDefault: true, stopPropagation: true };
-		}
-		case "ArrowUp": {
-			const prev = step(here, -1);
-			return prev
-				? { focus: prev.key, preventDefault: true, stopPropagation: true }
-				: { preventDefault: true, stopPropagation: true };
-		}
 		case "ArrowRight": {
 			if (row.expandable && !row.expanded)
 				return { expandKey: row.key, expand: true, focus: row.key, preventDefault: true, stopPropagation: true };
@@ -318,23 +298,10 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 				const parent = rows.find((r) => r.key === row.parent);
 				// Skip a static-header parent — hop to the nearest focusable row above it instead.
 				if (parent && !isStatic(parent)) return { focus: row.parent, preventDefault: true, stopPropagation: true };
-				const parentIdx = rows.findIndex((r) => r.key === row.parent);
-				const above = parentIdx >= 0 ? step(parentIdx, -1) : undefined;
-				if (above) return { focus: above.key, preventDefault: true, stopPropagation: true };
+				const above = stepKey(navItems, row.parent, -1);
+				if (above !== null) return { focus: above, preventDefault: true, stopPropagation: true };
 			}
 			return { preventDefault: true, stopPropagation: true };
-		}
-		case "Home": {
-			const first = rows.find((r) => !isStatic(r));
-			return first
-				? { focus: first.key, preventDefault: true, stopPropagation: true }
-				: { preventDefault: true, stopPropagation: true };
-		}
-		case "End": {
-			const last = step(rows.length, -1);
-			return last
-				? { focus: last.key, preventDefault: true, stopPropagation: true }
-				: { preventDefault: true, stopPropagation: true };
 		}
 		case "Enter":
 		case " ":
@@ -344,7 +311,13 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 			if (row.expandable) return { select: row.key, expandKey: row.key, preventDefault: true, stopPropagation: true };
 			return { select: row.key, preventDefault: true, stopPropagation: true };
 		}
-		default:
-			return { stopPropagation: true };
 	}
+
+	const move = linearNav(navItems, current, k, { orientation: "vertical", homeEnd: true });
+	if (move.handled) {
+		return move.focus !== undefined
+			? { focus: move.focus, preventDefault: true, stopPropagation: true }
+			: { preventDefault: true, stopPropagation: true };
+	}
+	return { stopPropagation: true };
 });

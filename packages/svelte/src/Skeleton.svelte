@@ -1,8 +1,9 @@
 <script lang="ts">
 	import "@xtyle/core/elements/skeleton.js";
 	import type { Size } from "@xtyle/core";
+	import { SKELETON_SHAPES } from "@xtyle/core";
 
-	type SkeletonShape = "text" | "line" | "block" | "circle";
+	type SkeletonShape = (typeof SKELETON_SHAPES)[number];
 
 	interface Props {
 		shape?: SkeletonShape;

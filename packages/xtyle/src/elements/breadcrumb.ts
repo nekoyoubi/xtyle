@@ -3,6 +3,7 @@ import { breadcrumbHostCss, type BreadcrumbItem } from "../markup/index.js";
 import type { Size, FullTone } from "../index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/breadcrumb/source.generated.js";
+import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 
 export class XtyleBreadcrumb extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -30,14 +31,14 @@ export class XtyleBreadcrumb extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "breadcrumb size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

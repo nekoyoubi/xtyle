@@ -35,7 +35,7 @@ xtyle-toast { display: block; }
 	inset: auto var(--space-5) var(--space-5) auto;
 	width: min(24rem, calc(100vw - var(--space-6)));
 	max-width: 100%;
-	z-index: var(--elevation-5);
+	z-index: var(--layer-toast);
 	pointer-events: none;
 }
 .xtyle-toast-region--top { inset: var(--space-5) var(--space-5) auto auto; }

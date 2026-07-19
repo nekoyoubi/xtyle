@@ -1,9 +1,10 @@
 <script lang="ts">
 	import "@xtyle/core/elements/dot.js";
 	import type { FullTone as Tone } from "@xtyle/core";
+	import { DOT_SIZES, DOT_PULSES } from "@xtyle/core";
 
-	type DotSize = "sm" | "md" | "lg";
-	type DotPulse = "slow" | "fast";
+	type DotSize = (typeof DOT_SIZES)[number];
+	type DotPulse = (typeof DOT_PULSES)[number];
 
 	interface Props {
 		tone?: Tone;

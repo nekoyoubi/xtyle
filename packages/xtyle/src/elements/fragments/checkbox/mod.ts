@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -52,8 +54,8 @@ function inner(b: CheckboxBindings): string {
 	const labelledby = b.labelledby ?? null;
 	const checkedAttr = b.checked ? " checked" : "";
 	const disabledAttr = b.disabled ? " disabled" : "";
-	const ariaLabel = label && !labelledby ? ` aria-label="${label}"` : "";
-	const ariaLabelledby = labelledby ? ` aria-labelledby="${labelledby}"` : "";
+	const ariaLabel = label && !labelledby ? ` aria-label="${escapeAttr(label)}"` : "";
+	const ariaLabelledby = labelledby ? ` aria-labelledby="${escapeAttr(labelledby)}"` : "";
 	const box =
 		`<span class="xtyle-checkbox__box" part="box">` +
 		`<input part="control" class="xtyle-checkbox__control" type="checkbox"${checkedAttr}${disabledAttr}${ariaLabel}${ariaLabelledby} />` +

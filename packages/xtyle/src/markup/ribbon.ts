@@ -1,8 +1,9 @@
 import type { FullTone } from "../index.js";
+import { RIBBON_CORNERS, RIBBON_SIZES, RIBBON_VARIANTS } from "../vocab.js";
 
-export type RibbonCorner = "top-right" | "top-left" | "bottom-right" | "bottom-left";
-export type RibbonSize = "sm" | "md" | "lg";
-export type RibbonVariant = "solid" | "soft";
+export type RibbonCorner = (typeof RIBBON_CORNERS)[number];
+export type RibbonSize = (typeof RIBBON_SIZES)[number];
+export type RibbonVariant = (typeof RIBBON_VARIANTS)[number];
 
 export interface RibbonMarkupProps {
 	tone?: FullTone;

@@ -1,10 +1,12 @@
 import { schemeOf } from "./color.js";
 import { emitCss } from "./emit/index.js";
-import type { TokenRegister } from "./types.js";
+import type { EmitOptions, TokenRegister } from "./types.js";
 
 export interface ApplyOptions {
 	target?: HTMLElement;
 	persistKey?: string;
+	/** Theme the target's scrollbars. On by default, matching `emitCss`; see `EmitOptions`. */
+	scrollbars?: boolean;
 }
 
 /**
@@ -26,6 +28,9 @@ export function apply(register: TokenRegister, opts: ApplyOptions = {}): void {
 	}
 	const bg = register["--bg-0"] ?? register["bg-0"];
 	if (bg) target.style.colorScheme = schemeOf(bg);
+	if (opts.scrollbars !== false && register["--scrollbar-thumb"] && register["--scrollbar-track"]) {
+		target.style.scrollbarColor = `${register["--scrollbar-thumb"]} ${register["--scrollbar-track"]}`;
+	}
 	if (opts.persistKey) persist(opts.persistKey, register);
 	if (typeof document !== "undefined") {
 		document.dispatchEvent(new CustomEvent(THEME_APPLY_EVENT, { detail: { target } }));
@@ -37,10 +42,11 @@ export function clear(register: TokenRegister, target: HTMLElement = document.do
 		target.style.removeProperty(normalize(name));
 	}
 	target.style.colorScheme = "";
+	target.style.scrollbarColor = "";
 }
 
-export function toStyleSheet(register: TokenRegister): string {
-	return emitCss(register);
+export function toStyleSheet(register: TokenRegister, opts?: EmitOptions): string {
+	return emitCss(register, opts);
 }
 
 export function persist(key: string, register: TokenRegister): void {

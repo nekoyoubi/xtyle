@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { REDACT_MODES, resolveVocab, REDACT_REVEALS } from "@xtyle/core";
 
-type Mode = "blur" | "block" | "mask";
-type Reveal = "hover" | "click" | "hold" | "never";
+type Mode = (typeof REDACT_MODES)[number];
+type Reveal = (typeof REDACT_REVEALS)[number];
 
 interface Props {
 	mode?: Mode;
@@ -22,8 +24,8 @@ interface Props {
 }
 
 const {
-	mode = "blur",
-	reveal = "hover",
+	mode: modeInput,
+	reveal: revealInput,
 	amount,
 	label,
 	cue,
@@ -32,6 +34,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("redact", Astro.props);
+const mode = resolveVocab(modeInput, REDACT_MODES, "blur", "redact mode");
+const reveal = resolveVocab(revealInput, REDACT_REVEALS, "hover", "redact reveal");
 
 const interactive = reveal !== "never";
 const coverLabel = revealed ? (label ? `Hide ${label}` : "Hide") : label ? `Reveal ${label}` : "Reveal";

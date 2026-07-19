@@ -1,6 +1,7 @@
-export type ImageFit = "cover" | "contain";
-export type ImageRadius = "none" | "sm" | "md" | "lg";
-export type ImageLoading = "lazy" | "eager";
+import { IMAGE_FITS, IMAGE_RADII, IMAGE_LOADING } from "../vocab.js";
+export type ImageFit = (typeof IMAGE_FITS)[number];
+export type ImageRadius = (typeof IMAGE_RADII)[number];
+export type ImageLoading = (typeof IMAGE_LOADING)[number];
 export type ImageTrigger = "frame" | "button";
 /** Whether a hover preview may play sound, and its initial state. Absent = silent (no toggle). */
 export type ImageHoverAudio = "on" | "off";

@@ -17,10 +17,10 @@ import Badge from "@xtyle/astro/Badge.astro";
 			</Text>
 		</Stack>
 		<Tabs variant="underline" value="derive" label="Engine concepts">
-			<button slot="tab" value="derive">Derive</button>
-			<button slot="tab" value="cover">Cover</button>
-			<button slot="tab" value="emit">Emit</button>
-			<div slot="panel">
+			<span data-xtyle-tab="" data-value="derive">Derive</span>
+			<span data-xtyle-tab="" data-value="cover">Cover</span>
+			<span data-xtyle-tab="" data-value="emit">Emit</span>
+			<div data-xtyle-panel="">
 				<Stack gap={2}>
 					<Text weight="semibold">Derivation</Text>
 					<Text size="sm" tone="muted">
@@ -29,7 +29,7 @@ import Badge from "@xtyle/astro/Badge.astro";
 					</Text>
 				</Stack>
 			</div>
-			<div slot="panel">
+			<div data-xtyle-panel="">
 				<Stack gap={2}>
 					<Text weight="semibold">Coverage</Text>
 					<Text size="sm" tone="muted">
@@ -38,7 +38,7 @@ import Badge from "@xtyle/astro/Badge.astro";
 					</Text>
 				</Stack>
 			</div>
-			<div slot="panel">
+			<div data-xtyle-panel="">
 				<Stack gap={2}>
 					<Text weight="semibold">Emit</Text>
 					<Text size="sm" tone="muted">
@@ -61,36 +61,36 @@ import Badge from "@xtyle/astro/Badge.astro";
 			<Stack gap={2}>
 				<Text as="span" size="xs" tone="subtle" mono>variant="underline"</Text>
 				<Tabs variant="underline" label="Underline tabs">
-					<button slot="tab" value="a">Overview</button>
-					<button slot="tab" value="b">Pricing</button>
-					<button slot="tab" value="c">Reviews</button>
-					<div slot="panel"><Text size="sm" tone="muted">The default — a quiet underline marks the selected tab.</Text></div>
-					<div slot="panel"><Text size="sm" tone="muted">Pricing panel content.</Text></div>
-					<div slot="panel"><Text size="sm" tone="muted">Reviews panel content.</Text></div>
+					<span data-xtyle-tab="" data-value="a">Overview</span>
+					<span data-xtyle-tab="" data-value="b">Pricing</span>
+					<span data-xtyle-tab="" data-value="c">Reviews</span>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">The default — a quiet underline marks the selected tab.</Text></div>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">Pricing panel content.</Text></div>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">Reviews panel content.</Text></div>
 				</Tabs>
 			</Stack>
 
 			<Stack gap={2}>
 				<Text as="span" size="xs" tone="subtle" mono>variant="pill"</Text>
 				<Tabs variant="pill" label="Pill tabs">
-					<button slot="tab" value="a">Overview</button>
-					<button slot="tab" value="b">Pricing</button>
-					<button slot="tab" value="c">Reviews</button>
-					<div slot="panel"><Text size="sm" tone="muted">A filled pill carries the selection.</Text></div>
-					<div slot="panel"><Text size="sm" tone="muted">Pricing panel content.</Text></div>
-					<div slot="panel"><Text size="sm" tone="muted">Reviews panel content.</Text></div>
+					<span data-xtyle-tab="" data-value="a">Overview</span>
+					<span data-xtyle-tab="" data-value="b">Pricing</span>
+					<span data-xtyle-tab="" data-value="c">Reviews</span>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">A filled pill carries the selection.</Text></div>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">Pricing panel content.</Text></div>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">Reviews panel content.</Text></div>
 				</Tabs>
 			</Stack>
 
 			<Stack gap={2}>
 				<Text as="span" size="xs" tone="subtle" mono>variant="enclosed"</Text>
 				<Tabs variant="enclosed" label="Enclosed tabs">
-					<button slot="tab" value="a">Overview</button>
-					<button slot="tab" value="b">Pricing</button>
-					<button slot="tab" value="c">Reviews</button>
-					<div slot="panel"><Text size="sm" tone="muted">Folder-style tabs that connect to the panel.</Text></div>
-					<div slot="panel"><Text size="sm" tone="muted">Pricing panel content.</Text></div>
-					<div slot="panel"><Text size="sm" tone="muted">Reviews panel content.</Text></div>
+					<span data-xtyle-tab="" data-value="a">Overview</span>
+					<span data-xtyle-tab="" data-value="b">Pricing</span>
+					<span data-xtyle-tab="" data-value="c">Reviews</span>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">Folder-style tabs that connect to the panel.</Text></div>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">Pricing panel content.</Text></div>
+					<div data-xtyle-panel=""><Text size="sm" tone="muted">Reviews panel content.</Text></div>
 				</Tabs>
 			</Stack>
 		</Stack>
@@ -106,9 +106,9 @@ import Badge from "@xtyle/astro/Badge.astro";
 		</Stack>
 		<div class="headless-demo">
 			<Tabs tablist variant="pill" value="editor" label="Workspace view" id="headless-tabs">
-				<button slot="tab" value="editor">Editor</button>
-				<button slot="tab" value="preview">Preview</button>
-				<button slot="tab" value="diff">Diff</button>
+				<span data-xtyle-tab="" data-value="editor">Editor</span>
+				<span data-xtyle-tab="" data-value="preview">Preview</span>
+				<span data-xtyle-tab="" data-value="diff">Diff</span>
 			</Tabs>
 			<div class="headless-demo__body">
 				<main class="headless-demo__main">
@@ -145,12 +145,12 @@ import Badge from "@xtyle/astro/Badge.astro";
 			</Text>
 		</Stack>
 		<Tabs variant="pill" size="sm" value="active" label="Account settings">
-			<button slot="tab" value="active">Profile</button>
-			<button slot="tab" value="security">Security</button>
-			<button slot="tab" value="billing" disabled>Billing</button>
-			<div slot="panel"><Text size="sm" tone="muted">Edit your display name and avatar.</Text></div>
-			<div slot="panel"><Text size="sm" tone="muted">Manage passwords and two-factor auth.</Text></div>
-			<div slot="panel"><Text size="sm" tone="muted">Billing is disabled on this plan.</Text></div>
+			<span data-xtyle-tab="" data-value="active">Profile</span>
+			<span data-xtyle-tab="" data-value="security">Security</span>
+			<span data-xtyle-tab="" data-value="billing" aria-disabled="true">Billing</span>
+			<div data-xtyle-panel=""><Text size="sm" tone="muted">Edit your display name and avatar.</Text></div>
+			<div data-xtyle-panel=""><Text size="sm" tone="muted">Manage passwords and two-factor auth.</Text></div>
+			<div data-xtyle-panel=""><Text size="sm" tone="muted">Billing is disabled on this plan.</Text></div>
 		</Tabs>
 	</Card>
 </Stack>

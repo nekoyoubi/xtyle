@@ -39,6 +39,10 @@ export interface TreeNode {
 	 * `TreeBadge`, or a list of them (a count plus a distinct status pill). Decorative (`aria-hidden`);
 	 * put anything the row must announce in `label`. */
 	badge?: string | TreeBadge | Array<string | TreeBadge>;
+	/** Supplementary hover text for the row, rendered as a native `title` — a synopsis behind a label
+	 * the rail has ellipsed. `label` stays the accessible name; this only elaborates on it, so put
+	 * nothing here the row must announce. */
+	title?: string;
 	/** Trailing action buttons revealed on hover/focus, each firing a `tree-action` (`detail: { value, action }`). Rendered on non-link rows only. */
 	actions?: TreeAction[];
 	children?: TreeNode[];
@@ -107,9 +111,11 @@ function buildNodes(nodes: TreeNode[], level: number, selectedValue: string | nu
 			const isStatic = locked && !isLink;
 			const staticData = isStatic ? ` data-static="true"` : "";
 			const rowClass = isStatic ? "xtyle-tree__row xtyle-tree__row--static" : "xtyle-tree__row";
+			// Supplementary only — `label` remains the accessible name, so this never announces.
+			const titleAttr = node.title ? ` title="${escapeAttr(node.title)}"` : "";
 			const rowOpen = isLink
-				? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1" style="--tree-level: ${level}">`
-				: `<div class="${rowClass}" part="row"${staticData} style="--tree-level: ${level}">`;
+				? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1"${titleAttr} style="--tree-level: ${level}">`
+				: `<div class="${rowClass}" part="row"${staticData}${titleAttr} style="--tree-level: ${level}">`;
 			const rowClose = isLink ? "</a>" : "</div>";
 			const trailing = treeTrailing(node, value, isLink);
 			const group = hasChildren

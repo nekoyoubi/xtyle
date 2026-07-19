@@ -1,13 +1,19 @@
 "use strict";
 (() => {
-  // packages/xtyle/src/elements/fragments/sparkline/mod.ts
+  // packages/xtyle/src/elements/fragments/escape.ts
   var AMP = /&/g;
   var LT = /</g;
   var GT = />/g;
-  var QUOT = /"/g;
-  function esc(value) {
-    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;").replace(QUOT, "&quot;");
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
   }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/elements/fragments/sparkline/mod.ts
   var VW = 100;
   var VH = 32;
   var PAD = 3;
@@ -47,9 +53,9 @@
     const variant = b.variant ?? "line";
     const label = b.label ?? "";
     if (values.length === 0) {
-      return `<span class="${sparkClass(b)}" role="img" aria-label="${label ? esc(label) : "No data"}"><span class="xtyle-sparkline__empty">No data</span></span>`;
+      return `<span class="${sparkClass(b)}" role="img" aria-label="${label ? escapeAttr(label) : "No data"}"><span class="xtyle-sparkline__empty">No data</span></span>`;
     }
-    const a11y = label ? ` role="img" aria-label="${esc(label)}"` : ` role="img" aria-label="Sparkline of ${values.length} values"`;
+    const a11y = label ? ` role="img" aria-label="${escapeAttr(label)}"` : ` role="img" aria-label="Sparkline of ${values.length} values"`;
     const lo = b.min ?? Math.min(...values);
     const hi = b.max ?? Math.max(...values);
     const pts = points(values, lo, hi, xs);

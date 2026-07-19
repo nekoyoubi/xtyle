@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -20,14 +22,6 @@ declare const hooks: {
 const NAME_PATTERN = /^[a-zA-Z_:][-a-zA-Z0-9_:.]*$/;
 const OWNED = ["class", "part", "slot", "data-event", "data-dot", "data-rail"];
 
-function esc(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
-
 function eventClass(event: TimelineEvent): string {
 	const authored = event.attrs?.class ?? "";
 	return authored ? `xtyle-timeline__item ${authored}` : "xtyle-timeline__item";
@@ -40,7 +34,7 @@ function authoredAttrs(event: TimelineEvent): string {
 	let out = "";
 	for (const name of Object.keys(attrs)) {
 		if (OWNED.includes(name) || !NAME_PATTERN.test(name)) continue;
-		out += ` ${name}="${esc(String(attrs[name]))}"`;
+		out += ` ${name}="${escapeAttr(String(attrs[name]))}"`;
 	}
 	return out;
 }

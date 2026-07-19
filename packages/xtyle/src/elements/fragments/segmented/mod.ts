@@ -1,4 +1,6 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
 import { escapeSelectorValue } from "../selector-escape.js";
+import { linearNav } from "../../collection/nav-reducer.js";
 
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
@@ -69,14 +71,6 @@ function rootClass(bindings: SegmentedBindings): string {
 		.join(" ");
 }
 
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
-}
-
 function options(bindings: SegmentedBindings, selected: string): string {
 	const segments = bindings.segments ?? [];
 	const groupDisabled = bindings.disabled ?? false;
@@ -113,14 +107,14 @@ function fieldInner(bindings: SegmentedBindings, selected: string): string {
 	// An external id wins, then a visible label, then a bare `aria-label` that names the group with no
 	// visible text (an icon bar in a toolbar where the label would just be noise).
 	const groupName = labelledby
-		? ` aria-labelledby="${labelledby}"`
+		? ` aria-labelledby="${escapeAttr(labelledby)}"`
 		: labelText
-			? ` aria-labelledby="${labelId}"`
+			? ` aria-labelledby="${escapeAttr(labelId)}"`
 			: ariaLabel
 				? ` aria-label="${escapeAttr(ariaLabel)}"`
 				: "";
 	const label = labelText
-		? `<span class="xtyle-segmented__label" part="label" id="${labelId}">${labelText}</span>`
+		? `<span class="xtyle-segmented__label" part="label" id="${escapeAttr(labelId)}">${escapeHtml(labelText)}</span>`
 		: "";
 	return `${label}<div class="${rootClass(bindings)}" part="segmented" role="radiogroup"${groupName}>${options(bindings, selected)}</div>`;
 }
@@ -156,16 +150,8 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Selec
 	const e = payload as EventPayload;
 	if (e.disabled || e.ariaDisabled === "true") return {};
 	const ctx = context as NavContext;
-	const key = e.key ?? "";
-	const current = e.dataset?.value ?? "";
-	const enabled = ctx.enabledKeys;
-	const here = enabled.indexOf(current);
-	let target: string | undefined;
-	if (key === "ArrowRight" || key === "ArrowDown") target = enabled[(here + 1) % enabled.length];
-	else if (key === "ArrowLeft" || key === "ArrowUp") target = enabled[(here - 1 + enabled.length) % enabled.length];
-	else if (key === "Home") target = enabled[0];
-	else if (key === "End") target = enabled[enabled.length - 1];
-	else return {};
-	if (target === undefined) return {};
-	return { select: target, focus: target, preventDefault: true };
+	const navItems = (ctx.enabledKeys ?? []).map((key) => ({ key }));
+	// A radiogroup activates on move, so a focus step is always also a selection.
+	const move = linearNav(navItems, e.dataset?.value ?? "", e.key ?? "", { orientation: "both", wrap: true, homeEnd: true });
+	return move.focus !== undefined ? { select: move.focus, focus: move.focus, preventDefault: true } : {};
 });

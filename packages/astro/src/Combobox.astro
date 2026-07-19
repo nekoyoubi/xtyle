@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import type { ComboboxFilter } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SIZES, resolveVocab } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 type FieldOption = { value: string; label?: string };
 
 interface Props {
@@ -30,6 +32,10 @@ interface Props {
 	description?: string;
 	error?: string;
 	emptyText?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it.
+	 * The closed control renders with its resolved label and chips; the listbox is a runtime surface
+	 * and never opens, so reach for `Select` when a zero-JS page still has to take a choice. */
+	static?: boolean;
 	"aria-label"?: string;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -47,7 +53,7 @@ const {
 	filter = "contains",
 	allowCustom = false,
 	clearable = false,
-	size = "md",
+	size: sizeInput,
 	disabled = false,
 	readonly = false,
 	invalid = false,
@@ -55,10 +61,13 @@ const {
 	description,
 	error,
 	emptyText,
+	static: isStatic = false,
 	"aria-label": ariaLabel,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("combobox", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "combobox size");
 
 const uid = `xtyle-combobox-${Math.random().toString(36).slice(2, 8)}`;
 const selected = multiple ? (values ?? []) : value ? [value] : [];
@@ -126,4 +135,4 @@ const light = await renderFragmentLight("combobox", bindings);
 	{...rest}
 />
 
-<script>import "@xtyle/core/elements/combobox.js";</script>
+{!isStatic && <script>import "@xtyle/core/elements/combobox.js";</script>}

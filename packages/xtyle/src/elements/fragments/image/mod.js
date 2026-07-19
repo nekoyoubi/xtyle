@@ -1,5 +1,37 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/vocab.ts
+  var TONES = ["accent", "neutral", "danger", "success", "warn", "info"];
+  var ACCENT_VARIANTS = ["accent-2", "accent-3", "accent-4"];
+  var HUES = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "brown",
+    "pink",
+    "cyan",
+    "gray",
+    "white",
+    "black"
+  ];
+  var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
+
   // packages/xtyle/src/icons.ts
   var stroke = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   var dot = (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="1.8" fill="currentColor"/>`;
@@ -57,7 +89,7 @@
   function hasIcon(name) {
     return Object.prototype.hasOwnProperty.call(ICONS, name);
   }
-  function escapeAttr(value) {
+  function escapeAttr2(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function iconClass(opts) {
@@ -73,16 +105,13 @@
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
     const body = hasIcon(name) ? ICONS[name] : MISSING;
-    const part = opts.part ? ` part="${escapeAttr(opts.part)}"` : "";
-    const a11y = opts.label ? `role="img" aria-label="${escapeAttr(opts.label)}"` : `aria-hidden="true"`;
-    const title = opts.label ? `<title>${escapeAttr(opts.label)}</title>` : "";
+    const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
+    const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
+    const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
     return `<svg${part} class="${iconClass(opts)}" viewBox="0 0 24 24" width="1em" height="1em" focusable="false" ${a11y}>${title}${body}</svg>`;
   }
 
   // packages/xtyle/src/elements/fragments/image/mod.ts
-  function esc(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
   function imageClass(b) {
     const radius = b.radius ?? "md";
     return [
@@ -92,29 +121,29 @@
     ].filter(Boolean).join(" ");
   }
   function mediaHtml(b) {
-    const src = esc(b.src ?? "");
+    const src = escapeAttr(b.src ?? "");
     if (!src) return "";
-    const alt = esc(b.alt ?? "");
+    const alt = escapeAttr(b.alt ?? "");
     const loading = b.loading === "eager" ? "eager" : "lazy";
-    return `<img class="xtyle-image__img" part="image" src="${src}" alt="${alt}" loading="${loading}" decoding="async" />`;
+    return `<img class="xtyle-image__img" part="image" src="${src}" alt="${alt}" loading="${escapeAttr(loading)}" decoding="async" />`;
   }
   function captionHtml(b) {
-    return b.caption ? `<figcaption class="xtyle-image__caption" part="caption">${esc(b.caption)}</figcaption>` : "";
+    return b.caption ? `<figcaption class="xtyle-image__caption" part="caption">${escapeAttr(b.caption)}</figcaption>` : "";
   }
   function zoomHtml(b) {
     if (!b.zoom) return "";
-    return `<button class="xtyle-image__zoom" part="zoom" type="button" aria-label="${esc(b.zoomLabel ?? "View image")}">${renderIcon("maximize")}</button>`;
+    return `<button class="xtyle-image__zoom" part="zoom" type="button" aria-label="${escapeAttr(b.zoomLabel ?? "View image")}">${renderIcon("maximize")}</button>`;
   }
   function audioHtml(b) {
     if (!b.audio) return "";
     const muted = b.audioMuted !== false;
-    return `<button class="xtyle-image__audio" part="audio" type="button" aria-pressed="${muted ? "false" : "true"}" aria-label="${esc(b.audioLabel ?? (muted ? "Unmute preview" : "Mute preview"))}"><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--muted">${renderIcon("volume-off")}</span><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--live">${renderIcon("volume")}</span></button>`;
+    return `<button class="xtyle-image__audio" part="audio" type="button" aria-pressed="${muted ? "false" : "true"}" aria-label="${escapeAttr(b.audioLabel ?? (muted ? "Unmute preview" : "Mute preview"))}"><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--muted">${renderIcon("volume-off")}</span><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--live">${renderIcon("volume")}</span></button>`;
   }
   function errorHtml() {
     return `<span class="xtyle-image__error" part="error" aria-hidden="true">${renderIcon("warning", { size: "lg" })}</span>`;
   }
   function imageHtml(b) {
-    const ratioStyle = b.ratio ? ` style="aspect-ratio: ${esc(b.ratio)}"` : "";
+    const ratioStyle = b.ratio ? ` style="aspect-ratio: ${escapeAttr(b.ratio)}"` : "";
     const placeholder = `<span class="xtyle-image__placeholder" part="placeholder" aria-hidden="true"></span>`;
     const media = `<span class="xtyle-image__media" data-image-media>${mediaHtml(b)}</span>`;
     const hover = `<span class="xtyle-image__hover" part="hover" aria-hidden="true" data-slot="hover"><slot name="hover"></slot></span>`;
@@ -126,8 +155,8 @@
     ops.replaceChildren("[data-image]", imageHtml(bindings));
   }
   function patch(bindings, ops) {
-    ops.setAttr('[part="figure"]', "class", imageClass(bindings));
-    ops.setAttr('[part="frame"]', "style", bindings.ratio ? `aspect-ratio: ${esc(bindings.ratio)}` : "");
+    ops.setAttr(".xtyle-image", "class", imageClass(bindings));
+    ops.setAttr('[part="frame"]', "style", bindings.ratio ? `aspect-ratio: ${escapeAttr(bindings.ratio)}` : "");
     ops.replaceChildren("[data-image-media]", mediaHtml(bindings));
     if (bindings.zoom) ops.setAttr(".xtyle-image__zoom", "aria-label", bindings.zoomLabel ?? "View image");
   }

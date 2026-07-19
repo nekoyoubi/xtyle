@@ -244,6 +244,7 @@ export const spotlightManifest: ComponentManifest = {
 		},
 	],
 	consumedTokens: [
+		"--layer-veil",
 		"--accent",
 		"--accent-fg",
 		"--border-thick",

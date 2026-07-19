@@ -182,7 +182,7 @@ xtyle-dock-zone {
 	padding: var(--space-3);
 	color: var(--fg-1);
 }
-[data-dock-panel-host] { display: block; }
+xtyle-dock-zone [data-dock-panel-host] { display: block; }
 .xtyle-dock-zone__film {
 	position: absolute;
 	pointer-events: none;

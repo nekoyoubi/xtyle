@@ -24,7 +24,7 @@ const alignRules = ALIGN.map((a) => `.xtyle-grid--align-${a} { align-items: ${AL
 const justifyRules = JUSTIFY.map((j) => `.xtyle-grid--justify-${j} { justify-items: ${ALIGN_VALUE[j]}; }`).join("\n");
 
 export const gridCss = `
-[data-grid] { display: contents; }
+[data-root][data-grid] { display: contents; }
 .xtyle-grid {
 	display: grid;
 	grid-template-columns: repeat(12, minmax(0, 1fr));

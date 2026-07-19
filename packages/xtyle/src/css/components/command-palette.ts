@@ -94,7 +94,7 @@ export const commandPaletteCss = `
 }
 .xtyle-command-palette__option[data-active="true"] {
 	background: var(--accent-bg);
-	color: var(--accent-text);
+	color: var(--fg-0);
 }
 .xtyle-command-palette__option[aria-disabled="true"] {
 	color: var(--fg-disabled);

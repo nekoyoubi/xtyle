@@ -1,12 +1,13 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
-import { hoverMediaHtml } from "@xtyle/core";
+import { hoverMediaHtml, IMAGE_FITS, resolveVocab, IMAGE_RADII, IMAGE_LOADING, IMAGE_TRIGGERS, IMAGE_HOVER_AUDIO, resolveOptionalVocab } from "@xtyle/core";
 
-type ImageFit = "cover" | "contain";
-type ImageRadius = "none" | "sm" | "md" | "lg";
-type ImageLoading = "lazy" | "eager";
-type ImageTrigger = "frame" | "button";
-type ImageHoverAudio = "on" | "off";
+type ImageFit = (typeof IMAGE_FITS)[number];
+type ImageRadius = (typeof IMAGE_RADII)[number];
+type ImageLoading = (typeof IMAGE_LOADING)[number];
+type ImageTrigger = (typeof IMAGE_TRIGGERS)[number];
+type ImageHoverAudio = (typeof IMAGE_HOVER_AUDIO)[number];
 
 interface Props {
 	src?: string;
@@ -35,19 +36,25 @@ const {
 	src,
 	alt = "",
 	ratio,
-	fit = "cover",
-	radius = "md",
-	loading = "lazy",
+	fit: fitInput,
+	radius: radiusInput,
+	loading: loadingInput,
 	lightbox = false,
-	trigger = "frame",
+	trigger: triggerInput,
 	caption,
 	hoverSrc,
 	hoverPoster,
-	hoverAudio,
+	hoverAudio: hoverAudioInput,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("image", Astro.props);
+const fit = resolveVocab(fitInput, IMAGE_FITS, "cover", "image fit");
+const radius = resolveVocab(radiusInput, IMAGE_RADII, "md", "image radius");
+const loading = resolveVocab(loadingInput, IMAGE_LOADING, "lazy", "image loading");
+const trigger = resolveVocab(triggerInput, IMAGE_TRIGGERS, "frame", "image trigger");
+const hoverAudio = resolveOptionalVocab(hoverAudioInput, IMAGE_HOVER_AUDIO, "image hoverAudio");
 
 const bindings = { src, alt, ratio, fit, radius, loading, caption };
 const scaffold = await renderFragmentLight("image", bindings);

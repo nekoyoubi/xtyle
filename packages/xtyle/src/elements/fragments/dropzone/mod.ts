@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -79,14 +81,6 @@ const REMOVE_ICON =
 	'<svg viewBox="0 0 24 24" width="1em" height="1em" focusable="false" aria-hidden="true">' +
 	'<path fill="currentColor" d="m12 10.6 5-5 1.4 1.4-5 5 5 5L17 18.4l-5-5-5 5L5.6 17l5-5-5-5L7 5.6l5 5Z"/></svg>';
 
-function esc(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
-
 function surfaceClass(b: DropzoneBindings): string {
 	let cls = "xtyle-dropzone__surface";
 	if (b.disabled) cls += " xtyle-dropzone__surface--disabled";
@@ -107,19 +101,19 @@ function barWidth(file: DropzoneFile): string {
 function rowHtml(file: DropzoneFile, b: DropzoneBindings): string {
 	const removeLabel = `${b.removeLabel ?? "Remove"} ${file.name}`;
 	const error = file.error
-		? `<span class="xtyle-dropzone__file-error" part="file-error" data-error="${esc(file.id)}">${esc(file.error)}</span>`
+		? `<span class="xtyle-dropzone__file-error" part="file-error" data-error="${escapeAttr(file.id)}">${escapeAttr(file.error)}</span>`
 		: "";
 	return (
-		`<li class="${rowClass(file)}" part="file" data-file="${esc(file.id)}">` +
+		`<li class="${rowClass(file)}" part="file" data-file="${escapeAttr(file.id)}">` +
 		`<span class="xtyle-dropzone__file-icon" part="file-icon">${FILE_ICON}</span>` +
-		`<span class="xtyle-dropzone__file-name" part="file-name">${esc(file.name)}</span>` +
-		`<span class="xtyle-dropzone__file-meta" part="file-meta">${esc(file.sizeLabel)} · ` +
-		`<span data-status="${esc(file.id)}">${esc(file.statusLabel)}</span></span>` +
-		`<button type="button" class="xtyle-dropzone__remove" part="remove" data-remove="${esc(file.id)}" ` +
-		`aria-label="${esc(removeLabel)}">${REMOVE_ICON}</button>` +
-		`<span class="xtyle-dropzone__track" part="track" data-track="${esc(file.id)}" role="progressbar" ` +
-		`aria-valuemin="0" aria-valuemax="100" aria-valuenow="${file.progress}" aria-label="${esc(file.name)}">` +
-		`<span class="xtyle-dropzone__fill" part="bar" data-bar="${esc(file.id)}" style="${barWidth(file)}"></span>` +
+		`<span class="xtyle-dropzone__file-name" part="file-name">${escapeAttr(file.name)}</span>` +
+		`<span class="xtyle-dropzone__file-meta" part="file-meta">${escapeAttr(file.sizeLabel)} · ` +
+		`<span data-status="${escapeAttr(file.id)}">${escapeAttr(file.statusLabel)}</span></span>` +
+		`<button type="button" class="xtyle-dropzone__remove" part="remove" data-remove="${escapeAttr(file.id)}" ` +
+		`aria-label="${escapeAttr(removeLabel)}">${REMOVE_ICON}</button>` +
+		`<span class="xtyle-dropzone__track" part="track" data-track="${escapeAttr(file.id)}" role="progressbar" ` +
+		`aria-valuemin="0" aria-valuemax="100" aria-valuenow="${file.progress}" aria-label="${escapeAttr(file.name)}">` +
+		`<span class="xtyle-dropzone__fill" part="bar" data-bar="${escapeAttr(file.id)}" style="${barWidth(file)}"></span>` +
 		`</span>` +
 		error +
 		`</li>`
@@ -135,15 +129,15 @@ function listHtml(b: DropzoneBindings): string {
 function errorsHtml(b: DropzoneBindings): string {
 	let out = "";
 	for (const rejection of b.rejections ?? []) {
-		out += `<li part="error" data-reason="${esc(rejection.reason)}">${esc(rejection.message)}</li>`;
+		out += `<li part="error" data-reason="${escapeAttr(rejection.reason)}">${escapeAttr(rejection.message)}</li>`;
 	}
 	return out;
 }
 
 function footHtml(b: DropzoneBindings): string {
 	return (
-		`<span part="count" data-count>${esc(b.countLabel ?? "")}</span>` +
-		`<button type="button" class="xtyle-dropzone__clear" part="clear" data-clear>${esc(b.clearLabel ?? "Clear all")}</button>`
+		`<span part="count" data-count>${escapeAttr(b.countLabel ?? "")}</span>` +
+		`<button type="button" class="xtyle-dropzone__clear" part="clear" data-clear>${escapeAttr(b.clearLabel ?? "Clear all")}</button>`
 	);
 }
 

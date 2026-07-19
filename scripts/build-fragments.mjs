@@ -6,6 +6,11 @@ import { dirname, join } from "node:path";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const fragmentsDir = join(root, "packages", "xtyle", "src", "elements", "fragments");
 
+// Read text destined for an embedded artifact. The bytes land verbatim inside a JSON string, so
+// an un-normalized CRLF would make the generated file a function of the builder's checkout
+// rather than of its source.
+const readText = (path) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
+
 if (!existsSync(fragmentsDir)) process.exit(0);
 
 const fills = readdirSync(fragmentsDir, { withFileTypes: true })
@@ -43,7 +48,7 @@ for (const id of fills) {
 		}
 	}
 
-	const sources = { [entryScript]: readFileSync(join(here, entryScript), "utf8") };
+	const sources = { [entryScript]: readText(join(here, entryScript)) };
 	sources[entryScript] = sources[entryScript].replace(
 		/xript\.exports\.register\(\s*"([^"]+)"/g,
 		(_match, name) => `xript.exports.register("${prefix}${name}"`,
@@ -51,7 +56,7 @@ for (const id of fills) {
 	for (const fillList of Object.values(manifest.fills ?? {})) {
 		for (const fill of fillList) {
 			if (fill.source && !(fill.source in sources)) {
-				sources[fill.source] = readFileSync(join(here, fill.source), "utf8");
+				sources[fill.source] = readText(join(here, fill.source));
 			}
 		}
 	}

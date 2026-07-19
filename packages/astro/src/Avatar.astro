@@ -1,10 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
-import { avatarInitials } from "@xtyle/core";
+import { avatarInitials, resolveTone, AVATAR_SIZES, resolveVocab, AVATAR_SHAPES } from "@xtyle/core";
 
 import type { Tone, FullTone as BadgeTone } from "@xtyle/core";
-type AvatarSize = "sm" | "md" | "lg" | "xl";
-type AvatarShape = "circle" | "square";
+type AvatarSize = (typeof AVATAR_SIZES)[number];
+type AvatarShape = (typeof AVATAR_SHAPES)[number];
 
 interface Props {
 	src?: string;
@@ -30,9 +31,9 @@ const {
 	src,
 	alt = "",
 	userName,
-	tone = "neutral",
-	size = "md",
-	shape = "circle",
+	tone: toneInput,
+	size: sizeInput,
+	shape: shapeInput,
 	status,
 	statusLabel,
 	pulse,
@@ -40,6 +41,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("avatar", Astro.props);
+const size = resolveVocab(sizeInput, AVATAR_SIZES, "md", "avatar size");
+const shape = resolveVocab(shapeInput, AVATAR_SHAPES, "circle", "avatar shape");
+const tone = resolveTone(toneInput, "neutral");
 
 const iconHtml = Astro.slots.has("icon") ? await Astro.slots.render("icon") : "";
 const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";

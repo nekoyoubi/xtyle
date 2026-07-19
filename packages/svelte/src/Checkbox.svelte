@@ -1,13 +1,14 @@
 <script lang="ts">
 	import "@xtyle/core/elements/checkbox.js";
 	import type { Snippet } from "svelte";
-	import type { Size, FullTone as Tone } from "@xtyle/core";
+	import type { FullTone as Tone } from "@xtyle/core";
+	import { CHECKBOX_SIZES } from "@xtyle/core";
 
 	interface Props {
 		checked?: boolean;
 		indeterminate?: boolean;
 		disabled?: boolean;
-		size?: Size;
+		size?: (typeof CHECKBOX_SIZES)[number];
 		tone?: Tone;
 		name?: string;
 		value?: string;

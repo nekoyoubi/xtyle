@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { LINK_VARIANTS, resolveVocab } from "@xtyle/core";
 
-type LinkVariant = "default" | "muted" | "quiet";
+type LinkVariant = (typeof LINK_VARIANTS)[number];
 
 interface Props {
 	variant?: LinkVariant;
@@ -17,7 +19,7 @@ interface Props {
 }
 
 const {
-	variant = "default",
+	variant: variantInput,
 	href,
 	target,
 	rel,
@@ -26,6 +28,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("link", Astro.props);
+const variant = resolveVocab(variantInput, LINK_VARIANTS, "default", "link variant");
 
 const isExternal = target === "_blank";
 const showExternalIcon = externalIcon ?? isExternal;

@@ -187,7 +187,7 @@ export const codeManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "line-numbers",
+			name: "lineNumbers",
 			type: "boolean",
 			default: "false",
 			description:

@@ -3,6 +3,7 @@ import type { Size } from "../index.js";
 import { toolbarHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/toolbar/source.generated.js";
+import { resolveVocab, SIZES } from "../vocab.js";
 
 export class XtyleToolbar extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -29,7 +30,7 @@ export class XtyleToolbar extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "toolbar size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -43,11 +45,11 @@ function statHtml(b: StatBindings): string {
 	// Trend drives the arrow; sentiment drives the color and defaults to the trend's own reading, so a
 	// bare `trend="up"` still reads green while `trend="up" sentiment="negative"` paints an up-is-bad metric red.
 	const sentiment = b.sentiment ?? SENTIMENT_FOR_TREND[trend] ?? "neutral";
-	const label = b.label ? `<span part="label" class="xtyle-stat__label">${b.label}</span>` : "";
+	const label = b.label ? `<span part="label" class="xtyle-stat__label">${escapeHtml(b.label)}</span>` : "";
 	const delta = b.delta
-		? `<span part="delta" class="xtyle-stat__delta xtyle-stat__delta--${sentiment}">${TREND_ICON[trend] ?? TREND_ICON.flat}<span>${b.delta}</span></span>`
+		? `<span part="delta" class="xtyle-stat__delta xtyle-stat__delta--${escapeAttr(sentiment)}">${TREND_ICON[trend] ?? TREND_ICON.flat}<span>${escapeHtml(b.delta)}</span></span>`
 		: "";
-	const caption = b.caption ? `<span part="caption" class="xtyle-stat__caption">${b.caption}</span>` : "";
+	const caption = b.caption ? `<span part="caption" class="xtyle-stat__caption">${escapeHtml(b.caption)}</span>` : "";
 	return `<div part="stat" class="${statClass(b)}"><span part="value" class="xtyle-stat__value"><slot></slot></span>${label}${delta}${caption}</div>`;
 }
 
@@ -56,5 +58,5 @@ hooks.fragment.mount("stat", (bindings, ops) => {
 });
 
 hooks.fragment.update("stat", (bindings, ops) => {
-	ops.setAttr('[part="stat"]', "class", statClass(bindings));
+	ops.setAttr(".xtyle-stat", "class", statClass(bindings));
 });

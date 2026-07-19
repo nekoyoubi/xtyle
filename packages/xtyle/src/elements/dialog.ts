@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { dialogHostCss, type DialogSize } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/dialog/source.generated.js";
+import { resolveVocab, DIALOG_SIZES } from "../vocab.js";
 
 export class XtyleDialog extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -32,7 +33,7 @@ export class XtyleDialog extends XtyleElement {
 	}
 
 	get size(): DialogSize {
-		return (this.getAttribute("size") as DialogSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), DIALOG_SIZES, "md", "dialog size");
 	}
 	set size(value: DialogSize) {
 		this.setAttribute("size", value);

@@ -39,6 +39,7 @@ import { manifest as heatmapManifest, fragmentSources as heatmapSources } from "
 import { manifest as pieManifest, fragmentSources as pieSources } from "./fragments/pie/source.generated.js";
 import { manifest as qrManifest, fragmentSources as qrSources } from "./fragments/qr/source.generated.js";
 import { manifest as linkManifest, fragmentSources as linkSources } from "./fragments/link/source.generated.js";
+import { manifest as markdownManifest, fragmentSources as markdownSources } from "./fragments/markdown/source.generated.js";
 import { manifest as menuManifest, fragmentSources as menuSources } from "./fragments/menu/source.generated.js";
 import { manifest as popoverManifest, fragmentSources as popoverSources } from "./fragments/popover/source.generated.js";
 import {
@@ -52,6 +53,7 @@ import { manifest as progressManifest, fragmentSources as progressSources } from
 import { manifest as radioManifest, fragmentSources as radioSources } from "./fragments/radio/source.generated.js";
 import { manifest as sectionManifest, fragmentSources as sectionSources } from "./fragments/section/source.generated.js";
 import { manifest as segmentedManifest, fragmentSources as segmentedSources } from "./fragments/segmented/source.generated.js";
+import { manifest as listManifest, fragmentSources as listSources } from "./fragments/list/source.generated.js";
 import { manifest as selectManifest, fragmentSources as selectSources } from "./fragments/select/source.generated.js";
 import { manifest as separatorManifest, fragmentSources as separatorSources } from "./fragments/separator/source.generated.js";
 import { manifest as skeletonManifest, fragmentSources as skeletonSources } from "./fragments/skeleton/source.generated.js";
@@ -138,6 +140,7 @@ const fragments: Record<string, FragmentEntry> = {
 	pie: { manifest: pieManifest, fragmentSources: pieSources },
 	qr: { manifest: qrManifest, fragmentSources: qrSources },
 	link: { manifest: linkManifest, fragmentSources: linkSources },
+	markdown: { manifest: markdownManifest, fragmentSources: markdownSources },
 	menu: { manifest: menuManifest, fragmentSources: menuSources },
 	popover: { manifest: popoverManifest, fragmentSources: popoverSources },
 	"command-palette": { manifest: commandPaletteManifest, fragmentSources: commandPaletteSources },
@@ -148,6 +151,7 @@ const fragments: Record<string, FragmentEntry> = {
 	radio: { manifest: radioManifest, fragmentSources: radioSources },
 	section: { manifest: sectionManifest, fragmentSources: sectionSources },
 	segmented: { manifest: segmentedManifest, fragmentSources: segmentedSources },
+	list: { manifest: listManifest, fragmentSources: listSources },
 	select: { manifest: selectManifest, fragmentSources: selectSources },
 	separator: { manifest: separatorManifest, fragmentSources: separatorSources },
 	skeleton: { manifest: skeletonManifest, fragmentSources: skeletonSources },
@@ -319,3 +323,5 @@ export async function renderFragmentLight(
 	const ops = runtime.fireFragmentHook(component, "mount", bindings);
 	return applyOpsToHtml(scaffold, ops);
 }
+
+export { parseAttrs, listItems, fillRegion, decorateTable, type TableParts } from "./ssr-markup.js";

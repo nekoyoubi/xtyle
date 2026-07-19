@@ -23,7 +23,7 @@ const alignRules = ALIGN.map((a) => `.xtyle-stack--align-${a} { align-items: ${A
 const justifyRules = JUSTIFY.map((j) => `.xtyle-stack--justify-${j} { justify-content: ${JUSTIFY_VALUE[j]}; }`).join("\n");
 
 export const stackCss = `
-[data-stack] { display: contents; }
+[data-root][data-stack] { display: contents; }
 .xtyle-stack {
 	display: flex;
 	flex-direction: column;

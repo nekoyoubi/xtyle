@@ -1,11 +1,12 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import type { ButtonVariant, FullTone } from "../index.js";
-import { splitButtonHostCss, type SplitButtonSize, type MenuItem } from "../markup/index.js";
+import type { FullTone } from "../index.js";
+import { splitButtonHostCss, type SplitButtonSize, type SplitButtonVariant, type MenuItem } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/split-button/source.generated.js";
 // the dropdown is a real <xtyle-menu> the fill declares, so the tag has to be defined
 import "./menu.js";
 import type { XtyleMenu } from "./menu.js";
+import { resolveTone, resolveVocab, SPLIT_BUTTON_VARIANTS, BUTTON_SIZES } from "../vocab.js";
 
 /**
  * A primary action with its variations parked behind a caret: the button you press, and the menu of the
@@ -37,22 +38,22 @@ export class XtyleSplitButton extends XtyleElement {
 		return ["variant", "tone", "size", "type", "disabled", "loading", "block", "open", "menu-label", "items"];
 	}
 
-	get variant(): ButtonVariant {
-		return (this.getAttribute("variant") as ButtonVariant) ?? "solid";
+	get variant(): SplitButtonVariant {
+		return resolveVocab(this.getAttribute("variant"), SPLIT_BUTTON_VARIANTS, "solid", "split-button variant");
 	}
-	set variant(value: ButtonVariant) {
+	set variant(value: SplitButtonVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): SplitButtonSize {
-		return (this.getAttribute("size") as SplitButtonSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), BUTTON_SIZES, "md", "split-button size");
 	}
 	set size(value: SplitButtonSize) {
 		this.setAttribute("size", value);

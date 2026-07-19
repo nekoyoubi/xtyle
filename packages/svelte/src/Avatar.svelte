@@ -2,9 +2,10 @@
 	import "@xtyle/core/elements/avatar.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as BadgeTone, Tone } from "@xtyle/core";
+	import { AVATAR_SIZES, AVATAR_SHAPES } from "@xtyle/core";
 
-	type AvatarSize = "sm" | "md" | "lg" | "xl";
-	type AvatarShape = "circle" | "square";
+	type AvatarSize = (typeof AVATAR_SIZES)[number];
+	type AvatarShape = (typeof AVATAR_SHAPES)[number];
 
 	interface Props {
 		src?: string;

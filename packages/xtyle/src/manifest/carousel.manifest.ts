@@ -184,6 +184,14 @@ export const carouselManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 			options: ["right", "left", "up", "down"],
 		},
+		{
+			name: "static",
+			type: "boolean",
+			default: "false",
+			description:
+				"Astro only: keep the server-rendered frame and the slides but never load the runtime to hydrate them — the slides render in the fill's track as a plain strip. The arrows, dots, autoplay, seam-clone looping, and keyboard are what hydration adds. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
+			bindings: ["astro"],
+		},
 	],
 	variants: [],
 	sizes: [],

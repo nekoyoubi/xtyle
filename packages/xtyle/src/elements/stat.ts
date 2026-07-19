@@ -3,9 +3,10 @@ import type { Size } from "../index.js";
 import { statHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/stat/source.generated.js";
+import { resolveVocab, STAT_SENTIMENTS, STAT_TRENDS, SIZES, STAT_ALIGNS } from "../vocab.js";
 
-type StatTrend = "up" | "down" | "flat";
-type StatSentiment = "positive" | "negative" | "neutral";
+type StatTrend = (typeof STAT_TRENDS)[number];
+type StatSentiment = (typeof STAT_SENTIMENTS)[number];
 type StatAlign = "start" | "center";
 
 export class XtyleStat extends XtyleElement {
@@ -36,7 +37,7 @@ export class XtyleStat extends XtyleElement {
 	}
 
 	get trend(): StatTrend {
-		return (this.getAttribute("trend") as StatTrend) ?? "flat";
+		return resolveVocab(this.getAttribute("trend"), STAT_TRENDS, "flat", "trend");
 	}
 	set trend(value: StatTrend) {
 		this.setAttribute("trend", value);
@@ -44,7 +45,9 @@ export class XtyleStat extends XtyleElement {
 
 	/** The color reading of the delta. Omit to derive it from `trend` (up→positive, down→negative, flat→neutral). */
 	get sentiment(): StatSentiment | null {
-		return this.getAttribute("sentiment") as StatSentiment | null;
+		const raw = this.getAttribute("sentiment");
+		if (raw === null || raw === "") return null;
+		return resolveVocab(raw, STAT_SENTIMENTS, "neutral", "sentiment");
 	}
 	set sentiment(value: StatSentiment | null | undefined) {
 		this.reflectString("sentiment", value);
@@ -58,14 +61,14 @@ export class XtyleStat extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "stat size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
 	}
 
 	get align(): StatAlign {
-		return (this.getAttribute("align") as StatAlign) ?? "start";
+		return resolveVocab(this.getAttribute("align"), STAT_ALIGNS, "start", "stat align");
 	}
 	set align(value: StatAlign) {
 		this.setAttribute("align", value);

@@ -1,6 +1,6 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { pieHostCss, type PieDatum, type PieScheme, type PieVariant } from "../markup/index.js";
-import { seriesPalette, seriesColorsFor, resolvePalette, PALETTE_TOKENS, type Palette } from "../series.js";
+import { seriesPalette, seriesColorsFor, resolvePaletteName, PALETTE_TOKENS, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/pie/source.generated.js";
@@ -85,7 +85,7 @@ export class XtylePie extends XtyleElement {
 	private colors(items: readonly PieDatum[]): string[] {
 		const scheme = this.scheme;
 		if (Array.isArray(scheme)) return seriesPalette(scheme, items.length, {}, { reverse: this.reverse });
-		const resolved = resolvePalette(scheme) ?? "skittles";
+		const resolved = resolvePaletteName(scheme, "skittles", "pie scheme");
 		return seriesColorsFor(resolved, items, this.paletteRegister(), { reverse: this.reverse });
 	}
 

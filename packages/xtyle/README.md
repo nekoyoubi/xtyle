@@ -6,29 +6,26 @@
 
 A **themable-derivation engine and component contract**. Hand it an *algorithm* and a few
 pinned colors and it derives a full, internally-consistent design-token set; on top of those
-tokens ships a library of **82 components** that theme themselves. Pick three colors, get a
-coherent theme *and* a styled component set that already looks right.
+tokens ships a library of **82 components** that read their styling straight from it.
 
 ```sh
 npm install @xtyle/core
 ```
 
-## Why it's different
+## The model
 
 - **The algorithm is the asset; the theme is the print.** An *algorithm* is a named,
-  reusable engine that owns the rules, the color math, and the taste. A *theme* is a single
-  invocation of one, quick or hard-won, both first-class. You reuse algorithms; you materialize
-  themes.
-- **Derivation, not a fixed palette.** Pin a background and an accent and the engine derives
-  surfaces, content, lines, an accent family, status hues, a literal 12-hue palette, type,
-  geometry, motion, elevation, and space, holding WCAG contrast floors in OKLCH along the way.
-- **Every component's chrome is a swappable fragment.** Components are raw custom elements that
-  paint their own furniture (a control bar, a track, a marker) through sandboxed
-  [xript](https://xript.dev) fragments. A mod re-skins any of it through the exact surface the
-  built-ins use, no forking required.
-- **The runtime is optional.** Once derived, a theme is just CSS custom properties and the
-  browser cascade. Nothing has to be running to consume a finished theme; the engine only runs
-  live when you need novel-at-runtime inputs (user-authored themes, live preview, day/night).
+  reusable engine: the rules, the color math, the taste. A *theme* is one invocation of it,
+  quick or hard-won, both first-class. Algorithms get reused; themes get materialized.
+- **Derivation, not a fixed palette.** Pin a background and an accent; the engine derives
+  surfaces, content, lines, an accent family, status hues, a 12-hue palette, type, geometry,
+  motion, elevation, and space, holding WCAG contrast floors in OKLCH as it goes.
+- **Chrome is a swappable fragment.** Components are raw custom elements that paint their own
+  furniture (a control bar, a track, a marker) through sandboxed [xript](https://xript.dev)
+  fragments. A mod re-skins that furniture through the same surface the built-ins render from.
+- **The runtime is optional.** A derived theme is CSS custom properties and the browser
+  cascade; nothing has to be running to consume one. The engine runs live only for
+  novel-at-runtime inputs: user-authored themes, live preview, day/night.
 
 ## Components
 

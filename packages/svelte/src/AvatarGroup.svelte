@@ -1,9 +1,10 @@
 <script lang="ts">
 	import "@xtyle/core/elements/avatar-group.js";
 	import type { Snippet } from "svelte";
+	import { AVATAR_GROUP_SIZES, AVATAR_GROUP_SPACINGS } from "@xtyle/core";
 
-	type AvatarGroupSize = "sm" | "md" | "lg" | "xl";
-	type AvatarGroupSpacing = "snug" | "normal" | "loose";
+	type AvatarGroupSize = (typeof AVATAR_GROUP_SIZES)[number];
+	type AvatarGroupSpacing = (typeof AVATAR_GROUP_SPACINGS)[number];
 
 	interface Props {
 		size?: AvatarGroupSize;

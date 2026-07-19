@@ -1,5 +1,5 @@
 export const heatmapCss = `
-[data-heatmap] { display: block; }
+[data-root][data-heatmap] { display: block; }
 .xtyle-heatmap {
 	display: block;
 	margin: 0;

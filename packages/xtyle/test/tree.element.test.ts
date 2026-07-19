@@ -125,6 +125,56 @@ describe("<xtyle-tree> live-data reconciliation", () => {
 		expect(expandedOf(el, "apx")).toBe("false");
 	});
 
+	/** A leaf that gains its first child is an old *key* but a new *branch*, and nobody has decided
+	 * its expansion yet — so the author's `expanded` has to win, exactly as it does for a branch that
+	 * appears from nothing. Keying "new" on the node instead of the branch collapsed the branch the
+	 * user had just created and hid the child they had just moved into it: the "nest under previous"
+	 * gesture made the document vanish. Invisible in a static tree, where every branch is new on the
+	 * first render and the flag works perfectly. */
+	it("seeds a leaf that becomes a branch from its expanded flag, so the new child is visible", () => {
+		const el = make([
+			{ label: "Chapter 1", value: "ch1", expanded: true },
+			{ label: "Chapter 2", value: "ch2", expanded: true },
+		]);
+		expect(expandedOf(el, "ch1")).toBe(null);
+
+		// "nest under previous": ch2 moves inside ch1, which was a leaf a moment ago
+		el.items = [
+			{
+				label: "Chapter 1",
+				value: "ch1",
+				expanded: true,
+				children: [{ label: "Chapter 2", value: "ch2", expanded: true }],
+			},
+		];
+
+		expect(expandedOf(el, "ch1")).toBe("true");
+		expect(item(el, "ch2")).not.toBeNull();
+	});
+
+	it("still lets the user's collapse win over the flag once the branch exists", () => {
+		const el = make([
+			{ label: "Chapter 1", value: "ch1", expanded: true, children: [{ label: "Opening", value: "ch1-1" }] },
+		]);
+		collapse(el, "ch1");
+		expect(expandedOf(el, "ch1")).toBe("false");
+
+		// a known branch gaining another child is not a new branch — the collapse holds
+		el.items = [
+			{
+				label: "Chapter 1",
+				value: "ch1",
+				expanded: true,
+				children: [
+					{ label: "Opening", value: "ch1-1" },
+					{ label: "Rising action", value: "ch1-2" },
+				],
+			},
+		];
+
+		expect(expandedOf(el, "ch1")).toBe("false");
+	});
+
 	it("seeds a new locked branch open, as a section header", () => {
 		const el = make(binder());
 		el.items = [

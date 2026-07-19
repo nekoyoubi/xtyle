@@ -37,5 +37,5 @@ hooks.fragment.mount("separator", (bindings, ops) => {
 });
 
 hooks.fragment.update("separator", (bindings, ops) => {
-	ops.setAttr('[part="separator"]', "class", separatorClass(bindings));
+	ops.setAttr(".xtyle-separator", "class", separatorClass(bindings));
 });

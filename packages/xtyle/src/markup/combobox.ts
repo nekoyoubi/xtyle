@@ -1,4 +1,5 @@
 import type { FieldOption } from "../elements/field-options.js";
+import { COMBOBOX_FILTERS } from "../vocab.js";
 
 /**
  * How the typed query narrows the option list.
@@ -6,7 +7,7 @@ import type { FieldOption } from "../elements/field-options.js";
  * and `none` shows the list untouched — the async / server-filtered path, where the consumer replaces
  * `options` on every `input` and the component must not filter a second time.
  */
-export type ComboboxFilter = "contains" | "starts" | "none";
+export type ComboboxFilter = (typeof COMBOBOX_FILTERS)[number];
 
 /** The text an option presents: its label, or its value when it carries none. */
 export function optionLabel(option: FieldOption): string {

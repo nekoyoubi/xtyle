@@ -3,7 +3,7 @@ import { FULL_TONES as TONES } from "../../vocab.js";
 const iconTones = TONES.map((t) => `.xtyle-icon--${t} { color: var(--${t}); }`).join("\n");
 
 export const iconCss = `
-[data-icon] { display: contents; }
+[data-root][data-icon] { display: contents; }
 .xtyle-icon {
 	display: inline-block;
 	width: 1em;

@@ -3,6 +3,7 @@ import type { Size } from "../index.js";
 import { skeletonHostCss, type SkeletonShape } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/skeleton/source.generated.js";
+import { resolveVocab, SKELETON_SHAPES, SIZES } from "../vocab.js";
 
 export type { SkeletonShape };
 
@@ -20,14 +21,14 @@ export class XtyleSkeleton extends XtyleElement {
 	}
 
 	get shape(): SkeletonShape {
-		return (this.getAttribute("shape") as SkeletonShape) ?? "text";
+		return resolveVocab(this.getAttribute("shape"), SKELETON_SHAPES, "text", "skeleton shape");
 	}
 	set shape(value: SkeletonShape) {
 		this.setAttribute("shape", value);
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "skeleton size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);

@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { dropzoneBindings, escapeAttr } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
@@ -49,6 +50,7 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("dropzone", Astro.props);
 
 const uid = `xtyle-dropzone-${Math.random().toString(36).slice(2, 8)}`;
 const promptHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : null;

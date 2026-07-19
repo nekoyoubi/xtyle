@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, SIZES, resolveVocab } from "@xtyle/core";
 import { normalizeSegments } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xtyle/core";
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	value?: string;
@@ -25,8 +27,8 @@ const {
 	value,
 	options,
 	disabled = false,
-	size = "md",
-	tone = "accent",
+	size: sizeInput,
+	tone: toneInput,
 	label,
 	labelledby,
 	"aria-label": ariaLabel,
@@ -35,6 +37,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("segmented", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "segmented size");
+const tone = resolveTone(toneInput, "accent");
 
 const elementId = `xtyle-segmented-${Math.random().toString(36).slice(2, 8)}`;
 const segments = normalizeSegments(options);

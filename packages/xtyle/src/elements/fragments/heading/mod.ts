@@ -37,5 +37,5 @@ hooks.fragment.mount("heading", (bindings, ops) => {
 });
 
 hooks.fragment.update("heading", (bindings, ops) => {
-	ops.setAttr('[part="heading"]', "class", headingClass(bindings));
+	ops.setAttr(".xtyle-heading", "class", headingClass(bindings));
 });

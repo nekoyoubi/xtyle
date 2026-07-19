@@ -1,7 +1,8 @@
 import type { FullTone } from "../index.js";
+import { DOT_SIZES, DOT_PULSES } from "../vocab.js";
 
-export type DotSize = "sm" | "md" | "lg";
-export type DotPulse = "slow" | "fast";
+export type DotSize = (typeof DOT_SIZES)[number];
+export type DotPulse = (typeof DOT_PULSES)[number];
 
 export interface DotMarkupProps {
 	tone?: FullTone;

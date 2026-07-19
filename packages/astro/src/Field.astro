@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+import { SIZES, resolveVocab } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	label?: string;
@@ -36,7 +38,7 @@ const {
 	type = "text",
 	placeholder,
 	value,
-	size = "md",
+	size: sizeInput,
 	disabled = false,
 	readonly = false,
 	invalid = false,
@@ -51,6 +53,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("field", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "field size");
 
 const uid = Math.random().toString(36).slice(2, 8);
 const inputId = `xtyle-field-${uid}`;
@@ -81,6 +85,10 @@ const bindings = {
 	inputId,
 	descriptionId,
 	errorId,
+	// The fill hides an unfilled adornment, and it can only know from a binding: the composed markup
+	// keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+	hasPrefix,
+	hasSuffix,
 };
 const light = await renderFragmentLight("field", bindings);
 const prefixHtml = hasPrefix ? await Astro.slots.render("prefix") : "";

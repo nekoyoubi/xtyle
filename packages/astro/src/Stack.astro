@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { STACK_ALIGNS, resolveOptionalVocab, STACK_JUSTIFIES } from "@xtyle/core";
 
-type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";
-type StackJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
+type StackAlign = (typeof STACK_ALIGNS)[number];
+type StackJustify = (typeof STACK_JUSTIFIES)[number];
 
 interface Props {
 	gap?: number;
@@ -16,7 +18,10 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { gap = 4, align, justify, inline = false, static: isStatic = false, class: extra, ...rest } = Astro.props;
+const { gap = 4, align: alignInput, justify: justifyInput, inline = false, static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("stack", Astro.props);
+const align = resolveOptionalVocab(alignInput, STACK_ALIGNS, "stack align");
+const justify = resolveOptionalVocab(justifyInput, STACK_JUSTIFIES, "stack justify");
 
 const bindings = {
 	gap,

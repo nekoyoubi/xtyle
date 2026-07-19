@@ -9,7 +9,7 @@ const toneBorders = FULL_TONES.map(
 ).join("\n");
 
 export const sectionCss = `
-[data-section] { display: contents; }
+[data-root][data-section] { display: contents; }
 .xtyle-section {
 	padding: var(--space-8) var(--space-5);
 }

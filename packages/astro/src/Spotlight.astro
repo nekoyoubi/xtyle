@@ -1,9 +1,11 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SPOTLIGHT_SHAPES, resolveVocab, SPOTLIGHT_ARROWS, POPOVER_PLACEMENTS } from "@xtyle/core";
 
-type Shape = "auto" | "rect" | "circle";
-type Arrow = "none" | "static" | "bounce";
-type Placement = "top" | "right" | "bottom" | "left";
+type Shape = (typeof SPOTLIGHT_SHAPES)[number];
+type Arrow = (typeof SPOTLIGHT_ARROWS)[number];
+type Placement = (typeof POPOVER_PLACEMENTS)[number];
 
 interface Props {
 	/** A CSS selector for the element to isolate. */
@@ -35,14 +37,14 @@ interface Props {
 const {
 	target,
 	open = false,
-	shape = "auto",
+	shape: shapeInput,
 	padding = 8,
 	radius,
 	dim,
 	blur,
-	placement = "bottom",
+	placement: placementInput,
 	heading,
-	arrow = "bounce",
+	arrow: arrowInput,
 	pulse = "none",
 	scrollIntoView = false,
 	noDismiss = false,
@@ -52,6 +54,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("spotlight", Astro.props);
+const shape = resolveVocab(shapeInput, SPOTLIGHT_SHAPES, "auto", "spotlight shape");
+const arrow = resolveVocab(arrowInput, SPOTLIGHT_ARROWS, "bounce", "spotlight arrow");
+const placement = resolveVocab(placementInput, POPOVER_PLACEMENTS, "bottom", "spotlight placement");
 
 const bindings = {
 	open,

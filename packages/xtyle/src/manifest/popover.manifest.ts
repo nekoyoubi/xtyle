@@ -108,11 +108,11 @@ const svelteModalExample = `<script lang="ts">
 
 <Popover bind:this={popover} label="Confirm delete" modal arrow>
 	{#snippet trigger()}
-		<Button variant="danger">Delete…</Button>
+		<Button tone="danger">Delete…</Button>
 	{/snippet}
 	<Text size="sm">This cannot be undone. The page behind this panel is out of play until you answer.</Text>
-	<Button variant="danger" size="sm" onclick={() => popover.hide()}>Delete</Button>
-	<Button variant="neutral" size="sm" onclick={() => popover.hide()}>Cancel</Button>
+	<Button tone="danger" size="sm" onclick={() => popover.hide()}>Delete</Button>
+	<Button tone="neutral" size="sm" onclick={() => popover.hide()}>Cancel</Button>
 </Popover>`;
 
 const astroModalExample = `---
@@ -121,7 +121,7 @@ import Button from "@xtyle/astro/Button.astro";
 ---
 
 <Popover label="Confirm delete" modal arrow>
-	<Button slot="trigger" variant="danger">Delete…</Button>
+	<Button slot="trigger" tone="danger">Delete…</Button>
 	<p>This cannot be undone. The page behind this panel is out of play until you answer.</p>
 </Popover>`;
 

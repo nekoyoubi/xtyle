@@ -1,5 +1,5 @@
 export const toolbarCss = `
-[data-toolbar] { display: contents; }
+[data-root][data-toolbar] { display: contents; }
 .xtyle-toolbar {
 	display: flex;
 	align-items: center;
@@ -28,7 +28,7 @@ export const toolbarCss = `
 .xtyle-toolbar--sticky {
 	position: sticky;
 	top: 0;
-	z-index: var(--elevation-3);
+	z-index: var(--layer-sticky);
 }
 .xtyle-toolbar__title {
 	font-family: var(--font-display);

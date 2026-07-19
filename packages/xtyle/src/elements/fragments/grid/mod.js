@@ -40,7 +40,7 @@
     ops.replaceChildren("[data-grid]", gridHtml(bindings));
   });
   hooks.fragment.update("grid", (bindings, ops) => {
-    ops.setAttr('[part="grid"]', "class", gridClass(bindings));
+    ops.setAttr(".xtyle-grid", "class", gridClass(bindings));
     ops.setAttr('[part="grid"]', "style", gridStyle(bindings));
   });
 })();

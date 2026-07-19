@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, SIZES, resolveVocab } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xtyle/core";
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	value?: number;
@@ -46,8 +48,8 @@ const {
 	modifier = "shift",
 	overflow = false,
 	disabled = false,
-	size = "md",
-	tone = "accent",
+	size: sizeInput,
+	tone: toneInput,
 	label,
 	labelledby,
 	name,
@@ -59,6 +61,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("slider", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "slider size");
+const tone = resolveTone(toneInput, "accent");
 
 const elementId = `xtyle-slider-${Math.random().toString(36).slice(2, 8)}`;
 const editableValue = showValue && !staticValue;

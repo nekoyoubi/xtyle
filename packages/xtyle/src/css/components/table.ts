@@ -142,4 +142,26 @@ export const tableCss = `
 .xtyle-table--compact .xtyle-table__footer-cell {
 	padding: var(--space-1) var(--space-3);
 }
+
+/* Row selection (selection != none): the chosen row carries an accent fill, the roving cursor a
+   focus ring kept distinct from selection, and under --selection-cue: marker a redundant check in
+   the first cell — the same non-color channel the rest of the family honors. */
+.xtyle-table__body .xtyle-table__row[aria-selected="true"] > .xtyle-table__cell {
+	background: var(--accent-bg);
+	color: var(--fg-0);
+}
+.xtyle-table__body .xtyle-table__row[tabindex]:focus-visible {
+	outline: var(--border-normal) solid var(--accent);
+	outline-offset: calc(var(--border-normal) * -1);
+}
+@container style(--selection-cue: marker) {
+	.xtyle-table__body .xtyle-table__row[aria-selected="true"] > .xtyle-table__cell:first-child {
+		position: relative;
+	}
+	.xtyle-table__body .xtyle-table__row[aria-selected="true"] > .xtyle-table__cell:first-child::before {
+		content: "✓";
+		margin-inline-end: var(--space-2);
+		font-size: 0.85em;
+	}
+}
 `.trim();

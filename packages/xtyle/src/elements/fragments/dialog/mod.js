@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/dialog/mod.ts
   var CLOSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>';
   function dialogClass(b) {
@@ -15,9 +28,9 @@
     const labelledby = b.labelledby ?? null;
     const closeLabel = b.closeLabel ?? "Close";
     const showCloseButton = !b.noCloseButton;
-    const labelAttr = labelledby ? ` aria-labelledby="${labelledby}"` : heading ? ` aria-labelledby="${titleId(b)}"` : label ? ` aria-label="${label}"` : "";
-    const closeButton = showCloseButton ? `<button type="button" class="xtyle-dialog__close" part="close" aria-label="${closeLabel}">${CLOSE_ICON}</button>` : "";
-    const titleMarkup = heading ? `<h2 class="xtyle-dialog__title" id="${titleId(b)}">${heading}</h2>` : "";
+    const labelAttr = labelledby ? ` aria-labelledby="${escapeAttr(labelledby)}"` : heading ? ` aria-labelledby="${titleId(b)}"` : label ? ` aria-label="${escapeAttr(label)}"` : "";
+    const closeButton = showCloseButton ? `<button type="button" class="xtyle-dialog__close" part="close" aria-label="${escapeAttr(closeLabel)}">${CLOSE_ICON}</button>` : "";
+    const titleMarkup = heading ? `<h2 class="xtyle-dialog__title" id="${titleId(b)}">${escapeHtml(heading)}</h2>` : "";
     const header = `<header class="xtyle-dialog__header" part="header"><slot name="header">${titleMarkup}</slot>${closeButton}</header>`;
     return `<dialog class="${dialogClass(b)}" part="dialog"${labelAttr}>` + header + `<div class="xtyle-dialog__body" part="body"><slot></slot></div><footer class="xtyle-dialog__footer" part="footer"><slot name="footer"></slot></footer></dialog>`;
   }

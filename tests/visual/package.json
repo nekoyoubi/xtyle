@@ -1,0 +1,17 @@
+{
+	"name": "@xtyle/visual-tests",
+	"version": "0.9.0",
+	"private": true,
+	"type": "module",
+	"description": "Cross-lib visual + behavioral regression suite: screenshots the site demos across every algorithm and proves the raw/Svelte/Astro bindings render in lockstep.",
+	"scripts": {
+		"test": "playwright test",
+		"test:update": "playwright test --update-snapshots",
+		"report": "playwright show-report"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.49.0",
+		"pixelmatch": "^6.0.0",
+		"pngjs": "^7.0.0"
+	}
+}

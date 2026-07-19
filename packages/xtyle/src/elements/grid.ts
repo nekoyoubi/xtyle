@@ -1,9 +1,10 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
+import { GRID_ALIGNS } from "../vocab.js";
 import { gridHostCss, type GridAlign } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/grid/source.generated.js";
 
-const ALIGNS: readonly GridAlign[] = ["start", "center", "end", "stretch"];
+const ALIGNS: readonly GridAlign[] = GRID_ALIGNS;
 
 function clampGap(raw: string | null): number | null {
 	if (raw === null) return null;

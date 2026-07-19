@@ -1,8 +1,9 @@
 ---
-type Placement = "top" | "right" | "bottom" | "left";
-type Shape = "auto" | "rect" | "circle";
-type Pulse = "none" | "slow" | "fast";
-type Arrow = "none" | "static" | "bounce";
+import { POPOVER_PLACEMENTS, resolveOptionalVocab, SPOTLIGHT_SHAPES, SPOTLIGHT_PULSES, SPOTLIGHT_ARROWS } from "@xtyle/core";
+type Placement = (typeof POPOVER_PLACEMENTS)[number];
+type Shape = (typeof SPOTLIGHT_SHAPES)[number];
+type Pulse = (typeof SPOTLIGHT_PULSES)[number];
+type Arrow = (typeof SPOTLIGHT_ARROWS)[number];
 
 interface Props {
 	/** A CSS selector for the element this step isolates. */
@@ -26,12 +27,12 @@ interface Props {
 const {
 	target,
 	heading,
-	placement,
-	shape,
+	placement: placementInput,
+	shape: shapeInput,
 	padding,
 	radius,
-	pulse,
-	arrow,
+	pulse: pulseInput,
+	arrow: arrowInput,
 	dim,
 	blur,
 	scrollIntoView = false,
@@ -39,6 +40,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+const placement = resolveOptionalVocab(placementInput, POPOVER_PLACEMENTS, "tour-step placement");
+const shape = resolveOptionalVocab(shapeInput, SPOTLIGHT_SHAPES, "tour-step shape");
+const pulse = resolveOptionalVocab(pulseInput, SPOTLIGHT_PULSES, "tour-step pulse");
+const arrow = resolveOptionalVocab(arrowInput, SPOTLIGHT_ARROWS, "tour-step arrow");
 ---
 
 <xtyle-tour-step

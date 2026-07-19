@@ -120,6 +120,7 @@ export type {
 	CivilValue,
 } from "./date-picker.js";
 export { XtyleSegmented } from "./segmented.js";
+export { XtyleList } from "./list.js";
 export { XtyleAccordion } from "./accordion.js";
 export { XtyleTree } from "./tree.js";
 export { XtyleSplitter } from "./splitter.js";
@@ -166,6 +167,7 @@ export type { CommandItem, CommandMatch, CommandScorer, CommandCloseReason } fro
 export { XtyleCombobox, parseValueList } from "./combobox.js";
 export type { ComboboxFilter } from "./combobox.js";
 export { XtyleCode } from "./code.js";
+export { XtyleMarkdown } from "./markdown.js";
 export { XtylePagination } from "./pagination.js";
 export { XtyleCalendar } from "./calendar.js";
 export { XtyleQrCode } from "./qr.js";
@@ -233,6 +235,7 @@ import "./color-picker.js";
 import "./number-input.js";
 import "./date-picker.js";
 import "./segmented.js";
+import "./list.js";
 import "./accordion.js";
 import "./tree.js";
 import "./stat.js";
@@ -257,6 +260,7 @@ import "./popover.js";
 import "./command-palette.js";
 import "./combobox.js";
 import "./code.js";
+import "./markdown.js";
 import "./pagination.js";
 import "./calendar.js";
 import "./qr.js";

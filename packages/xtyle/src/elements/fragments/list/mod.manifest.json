@@ -1,0 +1,48 @@
+{
+	"$schema": "https://xript.dev/schema/mod/v0.7.json",
+	"xript": "0.7",
+	"name": "xtyle-list-default",
+	"version": "0.0.1",
+	"title": "Xtyle List (default)",
+	"description": "The built-in fill for the xtyle List component: the reference skin over the collection substrate, the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.list"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.list": [
+			{
+				"id": "list",
+				"format": "text/html+jsml",
+				"source": "list.html",
+				"handlers": [
+					{ "selector": ".xtyle-list__action", "on": "click", "handler": "itemAction" },
+					{ "selector": ".xtyle-list__item", "on": "click", "handler": "selectItem" },
+					{ "selector": ".xtyle-list__item", "on": "keydown", "handler": "navKeydown" }
+				],
+				"meta": {
+					"tokens": [
+						"--accent",
+						"--accent-bg",
+						"--accent-text",
+						"--border-normal",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--fg-disabled",
+						"--font-sans",
+						"--radius-sm",
+						"--selection-cue",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--state-hover",
+						"--text-body",
+						"--text-lg",
+						"--text-sm",
+						"--weight-medium",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

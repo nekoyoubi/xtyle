@@ -1,9 +1,10 @@
 import type { FullTone } from "../vocab.js";
+import { TEXT_TAGS, TEXT_SIZES, TEXT_WEIGHTS, TEXT_LEADINGS } from "../vocab.js";
 
-export type TextAs = "p" | "span";
-export type TextSize = "xs" | "sm" | "body" | "lg";
-export type TextWeight = "normal" | "medium" | "semibold" | "bold";
-export type TextLeading = "tight" | "snug" | "loose";
+export type TextAs = (typeof TEXT_TAGS)[number];
+export type TextSize = (typeof TEXT_SIZES)[number];
+export type TextWeight = (typeof TEXT_WEIGHTS)[number];
+export type TextLeading = (typeof TEXT_LEADINGS)[number];
 export type TextTone = "default" | "muted" | "subtle" | FullTone;
 
 export interface TextMarkupProps {

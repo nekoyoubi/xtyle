@@ -9,7 +9,7 @@ import { buildThemeFile, migratedTarget, serializeThemeFile } from "./theme-file
 import type { Algorithm, Knobs } from "./types.js";
 import { validateKnobs } from "./knobs.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "./gauntlet.js";
-import { availableAlgorithms, defaultAlgorithm, resolveAlgorithm, HARNESS_TIMEOUT_MS } from "./host/registry.js";
+import { availableAlgorithms, defaultAlgorithm, resolveInstalledAlgorithm, HARNESS_TIMEOUT_MS } from "./host/registry.js";
 import { algorithmDomains, bakedAlgorithm } from "./baked.js";
 import { constraintsFrom } from "./constraints.js";
 import type { EmitFormat } from "./types.js";
@@ -31,6 +31,7 @@ interface ParsedArgs {
 	algorithm: string;
 	overrides?: Record<string, string>;
 	knobs?: Record<string, string>;
+	scrollbars?: boolean;
 }
 
 
@@ -90,6 +91,9 @@ function parse(argv: string[]): ParsedArgs {
 				args.format = (next as CliFormat) ?? "css";
 				i++;
 				break;
+			case "--no-scrollbars":
+				args.scrollbars = false;
+				break;
 			case "--name":
 				args.name = next;
 				i++;
@@ -124,7 +128,7 @@ function parse(argv: string[]): ParsedArgs {
 /** A gauntlet run loads a hosted mod under {@link HARNESS_TIMEOUT_MS}, not the production rail. */
 function resolveForMode(id: string, mode: GauntletMode) {
 	const { algorithm } = migratedTarget(id);
-	return mode === "hosted" ? resolveAlgorithm(algorithm, { timeoutMs: HARNESS_TIMEOUT_MS }) : bakedAlgorithm(algorithm);
+	return mode === "hosted" ? resolveInstalledAlgorithm(algorithm, { timeoutMs: HARNESS_TIMEOUT_MS }) : bakedAlgorithm(algorithm);
 }
 
 /**
@@ -135,7 +139,7 @@ function resolveForMode(id: string, mode: GauntletMode) {
  */
 async function target(args: ParsedArgs): Promise<{ id: string; algorithm: Algorithm; knobs: Knobs }> {
 	const migrated = migratedTarget(args.algorithm, args.knobs ?? {});
-	const algorithm = await resolveAlgorithm(migrated.algorithm);
+	const algorithm = await resolveInstalledAlgorithm(migrated.algorithm);
 	return { id: migrated.algorithm, algorithm, knobs: validateKnobs(algorithm, migrated.knobs) };
 }
 
@@ -145,7 +149,7 @@ function usage(): void {
 			"xtyle: themable-derivation engine",
 			"",
 			"usage:",
-			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--format css|json|theme|prism|monaco|terminal] [--name <s>] [--out <file>]",
+			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--format css|json|theme|prism|monaco|terminal] [--no-scrollbars] [--name <s>] [--out <file>]",
 			"  xtyle gauntlet [-a <algorithm>|all] [--mode baked|hosted] [--depth quick|standard|full] [--runs <n>]",
 			"  xtyle coverage --consumed <a,b,c> [-a <algorithm>] [--bg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]...",
 			"  xtyle audit [-a <algorithm>] [--bg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--level AA|AAA] [--large-text]",
@@ -222,7 +226,7 @@ async function main(): Promise<void> {
 							register,
 						}),
 					)
-				: emit(register, args.format);
+				: emit(register, args.format, { scrollbars: args.scrollbars });
 		if (args.out) {
 			writeFileSync(args.out, output);
 			process.stdout.write(`wrote ${Object.keys(register).length} tokens to ${args.out}\n`);

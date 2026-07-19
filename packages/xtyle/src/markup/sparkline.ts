@@ -1,6 +1,7 @@
 import type { FullTone } from "../vocab.js";
+import { SPARKLINE_VARIANTS } from "../vocab.js";
 
-export type SparklineVariant = "line" | "area" | "bar" | "occupancy";
+export type SparklineVariant = (typeof SPARKLINE_VARIANTS)[number];
 export type SparklineTone = FullTone;
 
 /** Kind-aware auto y-bounds for a typed metric; see {@link resolveSparklineBounds} for the ranges. */

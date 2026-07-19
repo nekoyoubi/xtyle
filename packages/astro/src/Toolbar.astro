@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SIZES, resolveVocab } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	heading?: string;
@@ -20,7 +22,7 @@ interface Props {
 const {
 	heading,
 	href,
-	size = "md",
+	size: sizeInput,
 	landmark = false,
 	sticky = false,
 	bare = false,
@@ -28,6 +30,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("toolbar", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "toolbar size");
 
 const hasStart = Astro.slots.has("start");
 const hasCenter = Astro.slots.has("center");

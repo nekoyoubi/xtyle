@@ -275,7 +275,18 @@ export interface Algorithm {
 
 export type EmitFormat = "css" | "json" | "prism" | "monaco" | "terminal";
 
-export type Emitter = (register: TokenRegister) => string;
+export interface EmitOptions {
+	/** The selector the token block is written to. Defaults to `:root`. */
+	selector?: string;
+	/**
+	 * Theme the scrollbars. On by default: a derived theme owns the app's chrome, and scrollbars are
+	 * part of it. Set false to leave them to the browser; `apply()` takes the same option, so the two
+	 * paths always agree on the theme's footprint.
+	 */
+	scrollbars?: boolean;
+}
+
+export type Emitter = (register: TokenRegister, opts?: EmitOptions) => string;
 
 export interface CoverageResult {
 	covered: boolean;

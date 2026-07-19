@@ -2,9 +2,10 @@
 	import "@xtyle/core/elements/toast.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone } from "@xtyle/core";
-	type ToastSeverity = "success" | "warn" | "danger" | "info";
+	import { TOAST_SEVERITIES, TOAST_VARIANTS } from "@xtyle/core";
+	type ToastSeverity = (typeof TOAST_SEVERITIES)[number];
 
-	type ToastVariant = "soft" | "solid";
+	type ToastVariant = (typeof TOAST_VARIANTS)[number];
 
 	interface Props {
 		/** Color — any semantic role, accent variant, or named hue. Defaults to the severity color. */

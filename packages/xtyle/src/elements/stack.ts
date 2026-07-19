@@ -1,13 +1,14 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
+import { STACK_ALIGNS, STACK_JUSTIFIES } from "../vocab.js";
 import { stackHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/stack/source.generated.js";
 
-type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";
-type StackJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
+type StackAlign = (typeof STACK_ALIGNS)[number];
+type StackJustify = (typeof STACK_JUSTIFIES)[number];
 
-const ALIGNS: readonly StackAlign[] = ["start", "center", "end", "stretch", "baseline"];
-const JUSTIFIES: readonly StackJustify[] = ["start", "center", "end", "between", "around", "evenly"];
+const ALIGNS: readonly StackAlign[] = STACK_ALIGNS;
+const JUSTIFIES: readonly StackJustify[] = STACK_JUSTIFIES;
 
 function clampGap(raw: string | null): number | null {
 	if (raw === null) return null;

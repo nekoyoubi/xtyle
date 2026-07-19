@@ -1,5 +1,37 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/vocab.ts
+  var TONES = ["accent", "neutral", "danger", "success", "warn", "info"];
+  var ACCENT_VARIANTS = ["accent-2", "accent-3", "accent-4"];
+  var HUES = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "brown",
+    "pink",
+    "cyan",
+    "gray",
+    "white",
+    "black"
+  ];
+  var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
+
   // packages/xtyle/src/icons.ts
   var stroke = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   var dot = (cx, cy) => `<circle cx="${cx}" cy="${cy}" r="1.8" fill="currentColor"/>`;
@@ -57,7 +89,7 @@
   function hasIcon(name) {
     return Object.prototype.hasOwnProperty.call(ICONS, name);
   }
-  function escapeAttr(value) {
+  function escapeAttr2(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function iconClass(opts) {
@@ -73,9 +105,9 @@
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
     const body = hasIcon(name) ? ICONS[name] : MISSING;
-    const part = opts.part ? ` part="${escapeAttr(opts.part)}"` : "";
-    const a11y = opts.label ? `role="img" aria-label="${escapeAttr(opts.label)}"` : `aria-hidden="true"`;
-    const title = opts.label ? `<title>${escapeAttr(opts.label)}</title>` : "";
+    const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
+    const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
+    const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
     return `<svg${part} class="${iconClass(opts)}" viewBox="0 0 24 24" width="1em" height="1em" focusable="false" ${a11y}>${title}${body}</svg>`;
   }
 
@@ -100,8 +132,8 @@
       const triggerId = `${uid}-h-${i}`;
       const panelId = `${uid}-p-${i}`;
       const disabledAttr = section.disabled ? ' disabled aria-disabled="true"' : "";
-      const body = section.panelSlot ? `<slot name="${section.panelSlot}"></slot>` : section.panel ?? "";
-      return `<div class="xtyle-accordion__item${isOpen ? " is-open" : ""}" part="item" data-key="${key}"><h${level} class="xtyle-accordion__heading" part="heading"><button class="xtyle-accordion__trigger" part="trigger" type="button" id="${triggerId}" data-key="${key}" aria-expanded="${String(isOpen)}" aria-controls="${panelId}"${disabledAttr}><span class="xtyle-accordion__label">${section.header}</span>${CHEVRON}</button></h${level}><div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" aria-labelledby="${triggerId}"${isOpen ? "" : " hidden"}><div class="xtyle-accordion__content">${body}</div></div></div>`;
+      const body = section.panelSlot ? `<slot name="${escapeAttr(section.panelSlot)}"></slot>` : section.panel ?? "";
+      return `<div class="xtyle-accordion__item${isOpen ? " is-open" : ""}" part="item" data-key="${key}"><h${level} class="xtyle-accordion__heading" part="heading"><button class="xtyle-accordion__trigger" part="trigger" type="button" id="${triggerId}" data-key="${key}" aria-expanded="${String(isOpen)}" aria-controls="${panelId}"${disabledAttr}><span class="xtyle-accordion__label">${escapeHtml(section.header)}</span>${CHEVRON}</button></h${level}><div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" aria-labelledby="${triggerId}"${isOpen ? "" : " hidden"}><div class="xtyle-accordion__content">${body}</div></div></div>`;
     }).join("");
   }
   hooks.fragment.mount("accordion", (bindings, ops) => {

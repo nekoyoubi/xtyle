@@ -15,6 +15,6 @@
     ops.replaceChildren("[data-eyebrow]", eyebrowHtml(bindings));
   });
   hooks.fragment.update("eyebrow", (bindings, ops) => {
-    ops.setAttr('[part="eyebrow"]', "class", eyebrowClass(bindings));
+    ops.setAttr(".xtyle-eyebrow", "class", eyebrowClass(bindings));
   });
 })();

@@ -2,8 +2,9 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { panelHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/panel/source.generated.js";
+import { PANEL_VARIANTS, resolveVocab } from "../vocab.js";
 
-type PanelVariant = "default" | "collapsible";
+type PanelVariant = (typeof PANEL_VARIANTS)[number];
 
 let panelTitleSeq = 0;
 
@@ -37,7 +38,7 @@ export class XtylePanel extends XtyleElement {
 	}
 
 	get variant(): PanelVariant {
-		return (this.getAttribute("variant") as PanelVariant) ?? "default";
+		return resolveVocab(this.getAttribute("variant"), PANEL_VARIANTS, "default", "panel variant");
 	}
 	set variant(value: PanelVariant) {
 		this.setAttribute("variant", value);

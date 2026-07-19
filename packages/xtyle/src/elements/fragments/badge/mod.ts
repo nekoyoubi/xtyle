@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 import { dotClass } from "../../../markup/dot";
 
 interface OpsBuilder {
@@ -54,14 +56,14 @@ function badgeHtml(b: BadgeBindings): string {
 	// (`--dot-color: currentColor`), and a large badge steps its dot up one rung to match.
 	const dotPulse = b.pulse === "fast" || b.pulse === "slow" ? b.pulse : undefined;
 	const dot = b.dot
-		? `<span class="${dotClass({ size: (b.size ?? "md") === "lg" ? "md" : "sm", pulse: dotPulse })} xtyle-badge__dot" part="dot" aria-hidden="true"></span>`
+		? `<span class="${escapeAttr(dotClass({ size: (b.size ?? "md") === "lg" ? "md" : "sm", pulse: dotPulse }))} xtyle-badge__dot" part="dot" aria-hidden="true"></span>`
 		: "";
 	const countValue = b.count === null || b.count === undefined ? null : String(b.count);
 	const hasCount = countValue !== null && countValue !== "" && countValue !== "undefined";
-	const count = hasCount ? `<span class="xtyle-badge__count" part="count">${countValue}</span>` : "";
+	const count = hasCount ? `<span class="xtyle-badge__count" part="count">${escapeHtml(countValue)}</span>` : "";
 	const removeLabel = b.removeLabel ?? "Remove";
 	const remove = b.removable
-		? `<button type="button" class="xtyle-badge__remove" part="remove" aria-label="${removeLabel}">${REMOVE_ICON}</button>`
+		? `<button type="button" class="xtyle-badge__remove" part="remove" aria-label="${escapeAttr(removeLabel)}">${REMOVE_ICON}</button>`
 		: "";
 	// `data-slot` rides alongside the native `<slot>` so the host can read the label text
 	// (`slottedText()` → the composed remove-label) under the auto-light render, where there is no
@@ -74,7 +76,7 @@ hooks.fragment.mount("badge", (bindings, ops) => {
 });
 
 hooks.fragment.update("badge", (bindings, ops) => {
-	ops.setAttr('[part="badge"]', "class", badgeClass(bindings));
+	ops.setAttr(".xtyle-badge", "class", badgeClass(bindings));
 	// The remove label is composed by the element from its slotted text, which the SSR build
 	// can't know — so refresh it on every update. In light DOM, SSR hydration runs as an update
 	// (never a mount rebuild), so an element-computed binding that only `mount` set would stay

@@ -1,5 +1,5 @@
 export const pieCss = `
-[data-pie] { display: block; }
+[data-root][data-pie] { display: block; }
 .xtyle-pie {
 	--pie-size: 200px;
 	display: block;

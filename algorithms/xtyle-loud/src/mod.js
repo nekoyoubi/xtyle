@@ -3821,6 +3821,21 @@
   var EASE_STEPS = ["standard", "emphasized"];
   var SPACE_STEPS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
   var ELEVATION_STEPS = [0, 1, 2, 3, 4, 5];
+  var LAYER_STEPS = [
+    /** Sticky chrome that outranks the content it scrolls over. */
+    ["sticky", 10],
+    /** App furniture over its own regions: a rail resizer, a drag handle. */
+    ["chrome", 20],
+    /** A floating surface that is *not* in the native top layer. */
+    ["overlay", 30],
+    /** A full-viewport veil that isolates one thing under it. */
+    ["veil", 40],
+    /** Notifications. Above the veil: a message that can't be read hasn't been delivered, and a
+     * spotlight is the exact moment an app is most likely to be saying something. */
+    ["toast", 50],
+    /** The skip link. Nothing an app draws may cover the way out of it. */
+    ["skip", 60]
+  ];
   var WEIGHT_VALUES = {
     normal: 400,
     medium: 500,
@@ -3939,6 +3954,8 @@
       add(`--ease-${step}`, "easing");
     for (const step of ELEVATION_STEPS)
       add(`--elevation-${step}`, "shadow");
+    for (const [role] of LAYER_STEPS)
+      add(`--layer-${role}`, "number");
     for (const step of SPACE_STEPS)
       add(`--space-${step}`, "length");
     return { produces, categories };
@@ -4760,6 +4777,8 @@
       lit(`--elevation-${level}`, value);
     }
     lit("--shadow", elevationStrings[3], ["--elevation-3"]);
+    for (const [role, order] of LAYER_STEPS)
+      lit(`--layer-${role}`, String(order));
     for (const step of SPACE_STEPS) {
       const rem = SPACE_BASE_REM * step * density;
       lit(`--space-${step}`, `${rem.toFixed(4).replace(/\.?0+$/, "")}rem`);

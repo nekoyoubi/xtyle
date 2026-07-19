@@ -1,4 +1,5 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 interface Props {
@@ -26,6 +27,7 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("statusbar", Astro.props);
 
 const elementId = `xtyle-statusbar-${Math.random().toString(36).slice(2, 8)}`;
 

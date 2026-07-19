@@ -1,10 +1,11 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { ButtonVariant, ButtonAlign, Size, FullTone } from "../index.js";
 import { buttonHostCss } from "../markup/index.js";
+import type { ButtonSize } from "../markup/button.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/button/source.generated.js";
+import { resolveTone, resolveVocab, BUTTON_VARIANTS, BUTTON_SIZES, BUTTON_ALIGNS } from "../vocab.js";
 
-type ButtonSize = Size | "xs";
 
 export class XtyleButton extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "button", {
@@ -22,28 +23,28 @@ export class XtyleButton extends XtyleElement {
 	}
 
 	get variant(): ButtonVariant {
-		return (this.getAttribute("variant") as ButtonVariant) ?? "solid";
+		return resolveVocab(this.getAttribute("variant"), BUTTON_VARIANTS, "solid", "button variant");
 	}
 	set variant(value: ButtonVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): ButtonSize {
-		return (this.getAttribute("size") as ButtonSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), BUTTON_SIZES, "md", "button size");
 	}
 	set size(value: ButtonSize) {
 		this.setAttribute("size", value);
 	}
 
 	get align(): ButtonAlign {
-		return (this.getAttribute("align") as ButtonAlign) ?? "center";
+		return resolveVocab(this.getAttribute("align"), BUTTON_ALIGNS, "center", "button align");
 	}
 	set align(value: ButtonAlign) {
 		this.setAttribute("align", value);

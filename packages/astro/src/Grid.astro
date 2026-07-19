@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { GRID_ALIGNS, resolveOptionalVocab } from "@xtyle/core";
 
-type GridAlign = "start" | "center" | "end" | "stretch";
+type GridAlign = (typeof GRID_ALIGNS)[number];
 
 interface Props {
 	gap?: number;
@@ -21,13 +23,16 @@ const {
 	gap = 4,
 	columns,
 	minColWidth,
-	align,
-	justify,
+	align: alignInput,
+	justify: justifyInput,
 	inline = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("grid", Astro.props);
+const align = resolveOptionalVocab(alignInput, GRID_ALIGNS, "grid align");
+const justify = resolveOptionalVocab(justifyInput, GRID_ALIGNS, "grid justify");
 
 const bindings = {
 	gap,

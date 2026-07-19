@@ -1,5 +1,18 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/command-palette/mod.ts
   var SEARCH_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6" /><path d="M15.5 15.5 20 20" /></svg>';
   var LEGEND = [
@@ -7,12 +20,6 @@
     { keys: ["\u21B5"], text: "run" },
     { keys: ["Esc"], text: "dismiss" }
   ];
-  function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, "&quot;");
-  }
   function keycap(key) {
     return `<kbd class="xtyle-kbd xtyle-kbd--sm" part="key">${escapeHtml(key)}</kbd>`;
   }

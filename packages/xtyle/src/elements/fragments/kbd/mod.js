@@ -13,6 +13,6 @@
     ops.replaceChildren("[data-kbd]", kbdHtml(bindings));
   });
   hooks.fragment.update("kbd", (bindings, ops) => {
-    ops.setAttr('[part="kbd"]', "class", kbdClass(bindings));
+    ops.setAttr(".xtyle-kbd", "class", kbdClass(bindings));
   });
 })();

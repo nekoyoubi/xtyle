@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+import { SHEET_SIDES, resolveVocab, SHEET_SIZES } from "@xtyle/core";
 
-type Side = "top" | "right" | "bottom" | "left";
-type Size = "sm" | "md" | "lg" | "full";
+type Side = (typeof SHEET_SIDES)[number];
+type Size = (typeof SHEET_SIZES)[number];
 
 interface Props {
 	open?: boolean;
@@ -26,8 +28,8 @@ interface Props {
 
 const {
 	open = false,
-	side = "bottom",
-	size = "md",
+	side: sideInput,
+	size: sizeInput,
 	nonModal = false,
 	heading,
 	label,
@@ -40,6 +42,9 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("sheet", Astro.props);
+const side = resolveVocab(sideInput, SHEET_SIDES, "bottom", "sheet side");
+const size = resolveVocab(sizeInput, SHEET_SIZES, "md", "sheet size");
 
 const hasHeader = Astro.slots.has("header");
 const hasFooter = Astro.slots.has("footer");
@@ -56,6 +61,9 @@ const bindings = {
 	noGrabber,
 	nonModal,
 	elementId,
+	// The fill hides an unfilled footer, and it can only know from a binding: the composed markup
+	// keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+	hasFooter: Astro.slots.has("footer"),
 };
 const light = await renderFragmentLight("sheet", bindings);
 const headerHtml = hasHeader ? await Astro.slots.render("header") : null;

@@ -1,0 +1,47 @@
+---
+import Base from "../../layouts/Base.astro";
+import { astroRegistry } from "../../regression/astro-registry.ts";
+import { REGRESSION_IDS } from "../../regression/ids.ts";
+import { fixtureFor } from "../../regression/fixtures.ts";
+import ParityIsland from "../../regression/ParityIsland.svelte";
+
+export function getStaticPaths() {
+	if (process.env.XTYLE_REGRESSION !== "1") return [];
+	return REGRESSION_IDS.map((id) => ({ params: { id } }));
+}
+
+const { id } = Astro.params;
+const fx = fixtureFor(id!);
+const AstroComp = astroRegistry[id!] as any;
+const wrappedChildren = fx.childrenHtml
+	? `<span style="display:contents">${fx.childrenHtml}</span>`
+	: "";
+---
+
+<Base title={`parity: ${id}`}>
+	<div class="parity" data-parity data-id={id}>
+		<div class="parity__col" data-binding="astro">
+			<AstroComp {...fx.props} set:html={wrappedChildren} />
+		</div>
+		<ParityIsland
+			client:only="svelte"
+			id={id!}
+			props={fx.props}
+			childrenHtml={fx.childrenHtml}
+		/>
+	</div>
+</Base>
+
+<style is:global>
+	.parity {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 3rem;
+		align-items: flex-start;
+		padding: 3rem;
+	}
+	.parity__col {
+		width: 360px;
+		display: block;
+	}
+</style>

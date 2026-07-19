@@ -4,6 +4,7 @@ import Card from "@xtyle/astro/Card.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Badge from "@xtyle/astro/Badge.astro";
+import Text from "@xtyle/astro/Text.astro";
 ---
 
 <Stack gap={6}>
@@ -51,5 +52,25 @@ import Badge from "@xtyle/astro/Badge.astro";
 				<li><strong>Publish</strong> <Badge tone="accent" size="sm">now</Badge></li>
 			</ol>
 		</Steps>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Zero-JS</Heading>
+		<Stack gap={4}>
+			<Text size="sm" tone="muted">
+				The Astro binding splits the authored <code>&lt;li&gt;</code>s against <code>current</code> on the server, so the
+				markers, the connectors, and the done / current / upcoming states are all resolved at build time.
+				<code>static</code> keeps it that way: the stepper below never asks for the runtime and stays a complete, fully-styled
+				indicator with zero JavaScript. Reacting to a changed <code>current</code> is what hydration adds on top.
+			</Text>
+			<Steps static current={2}>
+				<ol>
+					<li>Authored</li>
+					<li>Rendered</li>
+					<li>Shipped</li>
+					<li>Hydrated</li>
+				</ol>
+			</Steps>
+		</Stack>
 	</Card>
 </Stack>

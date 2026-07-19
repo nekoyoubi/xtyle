@@ -1,13 +1,13 @@
 <script lang="ts">
 	import "@xtyle/core/elements/tabs.js";
 	import type { Snippet } from "svelte";
-	import type { Size } from "@xtyle/core";
+	import { TABS_SIZES } from "@xtyle/core";
 	import type { TabItemData, TabsVariant, TabsActivation } from "@xtyle/core/markup";
 
 	interface Props {
 		items?: TabItemData[];
 		variant?: TabsVariant;
-		size?: Size;
+		size?: (typeof TABS_SIZES)[number];
 		activation?: TabsActivation;
 		value?: string;
 		label?: string;

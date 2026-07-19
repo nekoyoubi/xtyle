@@ -1,9 +1,9 @@
 <div class="xtyle-alert" part="alert" role="status" aria-live="polite" tabindex="-1" data-root data-alert>
 	<span class="xtyle-alert__icon" part="icon" aria-hidden="true"><slot name="icon"><span data-glyph></span></slot></span>
 	<div class="xtyle-alert__body" part="body">
-		<div class="xtyle-alert__title" part="title"><slot name="title"></slot></div>
-		<div class="xtyle-alert__message" part="message"><slot></slot></div>
-		<div class="xtyle-alert__actions" part="actions"><slot name="actions"></slot></div>
+		<div class="xtyle-alert__title" part="title" data-slot="title" hidden><slot name="title"></slot></div>
+		<div class="xtyle-alert__message" part="message" data-slot><slot></slot></div>
+		<div class="xtyle-alert__actions" part="actions" data-slot="actions" hidden><slot name="actions"></slot></div>
 	</div>
 	<span class="xtyle-alert__dismiss-slot" data-dismiss></span>
 </div>

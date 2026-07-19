@@ -3,7 +3,8 @@ import { checkboxGroupMarkup, checkboxGroupHostCss } from "@xtyle/core/markup";
 import { checkboxCss } from "@xtyle/core/css";
 
 import type { FullTone as Tone } from "@xtyle/core";
-type Size = "sm" | "md" | "lg";
+import { CHECKBOX_SIZES, resolveVocab } from "@xtyle/core";
+type Size = (typeof CHECKBOX_SIZES)[number];
 
 interface Props {
 	label?: string;
@@ -24,13 +25,14 @@ const {
 	label,
 	labelledby,
 	tone = "accent",
-	size = "md",
+	size: sizeInput,
 	disabled = false,
 	manual = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+const size = resolveVocab(sizeInput, CHECKBOX_SIZES, "md", "checkbox-group size");
 
 const labelId = `xtyle-checkbox-group-${Math.random().toString(36).slice(2, 8)}-label`;
 

@@ -1,10 +1,11 @@
 import type { FullTone } from "../vocab.js";
+import { TOAST_SEVERITIES, TOAST_VARIANTS } from "../vocab.js";
 
 /** The toast's color — any semantic role, accent variant, or named hue. */
 export type ToastTone = FullTone;
 /** The toast's meaning — drives the status glyph + live-region politeness, independent of color. */
-export type ToastSeverity = "success" | "warn" | "danger" | "info";
-export type ToastVariant = "soft" | "solid";
+export type ToastSeverity = (typeof TOAST_SEVERITIES)[number];
+export type ToastVariant = (typeof TOAST_VARIANTS)[number];
 
 /** Severities that warrant an assertive live-region announcement. */
 export const ASSERTIVE_SEVERITIES = new Set<string>(["danger", "warn"]);

@@ -1,3 +1,5 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+
 import { renderIcon } from "../../../icons";
 
 interface OpsBuilder {
@@ -62,7 +64,7 @@ function panelClass(b: PanelBindings): string {
 
 function body(b: PanelBindings): string {
 	const bodyAttrs = b.scrollable
-		? ` tabindex="0" role="region" aria-label="${b.title || b.label || "Scrollable content"}"`
+		? ` tabindex="0" role="region" aria-label="${escapeAttr(b.title || b.label || "Scrollable content")}"`
 		: "";
 	return (
 		`<div class="xtyle-panel__body" part="body"${bodyAttrs}><slot></slot></div>` +
@@ -77,16 +79,16 @@ function inner(b: PanelBindings): string {
 		return (
 			`<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header">` +
 			`<button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" ` +
-			`aria-controls="${uid}-region">${MARKER}` +
-			`<span class="xtyle-panel__title" part="title" id="${uid}">${b.title ?? ""}</span></button>` +
+			`aria-controls="${escapeAttr(uid)}-region">${MARKER}` +
+			`<span class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title ?? "")}</span></button>` +
 			`${ACTIONS_SLOT}</div>` +
-			`<div class="xtyle-panel__collapse" part="collapse" id="${uid}-region" role="region" ` +
-			`aria-labelledby="${uid}"${b.open ? "" : " hidden"}>${body(b)}</div>`
+			`<div class="xtyle-panel__collapse" part="collapse" id="${escapeAttr(uid)}-region" role="region" ` +
+			`aria-labelledby="${escapeAttr(uid)}"${b.open ? "" : " hidden"}>${body(b)}</div>`
 		);
 	}
 	const tag = `h${level(b)}`;
 	const heading = b.title
-		? `<${tag} class="xtyle-panel__title" part="title" id="${uid}">${b.title}</${tag}>`
+		? `<${tag} class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title)}</${tag}>`
 		: "";
 	const header = hasHeader(b)
 		? `<header class="xtyle-panel__header" part="header">${heading}` +

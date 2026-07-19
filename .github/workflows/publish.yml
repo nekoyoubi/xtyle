@@ -21,14 +21,21 @@ jobs:
       - run: rm -f package-lock.json && npm install
       - run: npm run build
 
+      # Resolution from a packed tarball cannot be proven from inside the repo: `algorithms/` sits at
+      # the root, so the resolver's walk-up finds it whether or not the published package would.
+      - name: check packaged resolution
+        run: npm run check:packaging
+
+      # Published in dependency order, and a failure stops the ones downstream of it: svelte and astro
+      # both depend on core, so publishing them over a core that never landed ships packages nobody can
+      # install, and a public registry has no clean undo. `publish-workspace.mjs` still tolerates the
+      # case the old `continue-on-error: true` was there for — a re-run after a partial release, where a
+      # package is already on the registry at this version — without swallowing real failures too.
       - name: publish core
-        continue-on-error: true
-        run: npm publish --workspace=packages/xtyle --access public
+        run: node scripts/publish-workspace.mjs packages/xtyle
 
       - name: publish svelte
-        continue-on-error: true
-        run: npm publish --workspace=packages/svelte --access public
+        run: node scripts/publish-workspace.mjs packages/svelte
 
       - name: publish astro
-        continue-on-error: true
-        run: npm publish --workspace=packages/astro --access public
+        run: node scripts/publish-workspace.mjs packages/astro

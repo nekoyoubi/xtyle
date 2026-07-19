@@ -3,6 +3,7 @@ import type { FullTone } from "../index.js";
 import { dotHostCss, type DotSize, type DotPulse } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/dot/source.generated.js";
+import { resolveTone, resolveVocab, DOT_SIZES, resolveOptionalVocab, DOT_PULSES } from "../vocab.js";
 
 /**
  * A standalone status dot — a bare indicator for "presence without a full chip": a
@@ -25,21 +26,21 @@ export class XtyleDot extends XtyleElement {
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "neutral";
+		return resolveTone(this.getAttribute("tone"), "neutral");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): DotSize {
-		return (this.getAttribute("size") as DotSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), DOT_SIZES, "md", "dot size");
 	}
 	set size(value: DotSize) {
 		this.setAttribute("size", value);
 	}
 
 	get pulse(): DotPulse | null {
-		return this.getAttribute("pulse") as DotPulse | null;
+		return resolveOptionalVocab(this.getAttribute("pulse"), DOT_PULSES, "dot pulse");
 	}
 	set pulse(value: DotPulse | null | undefined) {
 		this.reflectString("pulse", value);

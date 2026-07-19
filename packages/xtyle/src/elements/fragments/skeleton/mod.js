@@ -13,6 +13,6 @@
     ops.replaceChildren("[data-skeleton]", skeletonHtml(bindings));
   });
   hooks.fragment.update("skeleton", (bindings, ops) => {
-    ops.setAttr('[part="skeleton"]', "class", skeletonClass(bindings));
+    ops.setAttr(".xtyle-skeleton", "class", skeletonClass(bindings));
   });
 })();

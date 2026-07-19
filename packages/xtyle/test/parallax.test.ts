@@ -23,7 +23,7 @@ describe("parallax", () => {
 		const manifest = getComponent("parallax");
 		expect(manifest.slots.some((s) => s.name === "default")).toBe(true);
 		const props = manifest.props.map((p) => p.name);
-		expect(props).toEqual(expect.arrayContaining(["min-height", "amplitude", "mode"]));
+		expect(props).toEqual(expect.arrayContaining(["minHeight", "amplitude", "mode"]));
 	});
 
 	it("offers a scroll and a cursor mode", () => {

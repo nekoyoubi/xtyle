@@ -1,5 +1,5 @@
 export const swatchCss = `
-[data-swatch] { display: contents; }
+[data-root][data-swatch] { display: contents; }
 .xtyle-swatch {
 	display: inline-flex;
 	align-items: center;
@@ -62,12 +62,14 @@ export const swatchCss = `
 		pointer-events: none;
 	}
 }
+/* The readout renders in the top layer, so a chip inside a scrolling palette can't crop the values
+   it exists to show. Same trade as the tip: a popover's containing block is the viewport, so it
+   can't lean on the chip in CSS and is placed from measured coordinates instead — and the reveal
+   moves from a CSS hover to the element, because only script can open a popover. */
 .xtyle-swatch__details {
-	position: absolute;
-	z-index: 1;
-	bottom: 100%;
-	left: 0;
-	margin-bottom: var(--space-2);
+	position: fixed;
+	inset: auto;
+	margin: 0;
 	display: grid;
 	grid-template-columns: auto auto;
 	gap: var(--space-1) var(--space-2);
@@ -79,21 +81,18 @@ export const swatchCss = `
 	border-radius: var(--radius-md);
 	box-shadow: var(--elevation-2);
 	opacity: 0;
-	visibility: hidden;
 	transition:
 		opacity var(--duration-fast) var(--ease-standard),
-		visibility var(--duration-fast) var(--ease-standard);
+		overlay var(--duration-fast) var(--ease-standard) allow-discrete,
+		display var(--duration-fast) var(--ease-standard) allow-discrete;
 }
-.xtyle-swatch[data-details-below] .xtyle-swatch__details {
-	top: 100%;
-	bottom: auto;
-	margin-top: var(--space-2);
-	margin-bottom: 0;
-}
-.xtyle-swatch:hover .xtyle-swatch__details,
-.xtyle-swatch:focus-within .xtyle-swatch__details {
+.xtyle-swatch__details:popover-open {
 	opacity: 1;
-	visibility: visible;
+}
+@starting-style {
+	.xtyle-swatch__details:popover-open {
+		opacity: 0;
+	}
 }
 .xtyle-swatch__detail-model,
 .xtyle-swatch__detail-value {

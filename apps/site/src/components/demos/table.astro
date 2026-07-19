@@ -71,6 +71,40 @@ const statusTone: Record<Row["status"], "success" | "warn" | "neutral"> = {
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Selectable rows</Heading>
+		<Text slot="header" size="xs" tone="muted">
+			<Text as="span" mono size="xs">selection="multi"</Text> turns the body rows into a grid: click or
+			Space toggles, arrow keys move the cursor, <Text as="span" mono size="xs">Ctrl/Cmd</Text>-click and
+			<Text as="span" mono size="xs">Shift</Text>-click extend. Selection is consumed from the shared
+			collection core, keyed by each row's <Text as="span" mono size="xs">data-value</Text>.
+		</Text>
+		<Table selection="multi" hover ariaLabel="Selectable algorithms">
+			<table>
+				<thead>
+					<tr>
+						<th aria-label="Select"></th>
+						<th>Algorithm</th>
+						<th>Tokens</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						rows.map((row) => (
+							<tr data-value={row.algorithm} data-selected={row.algorithm === "xtyle-default" ? "" : undefined}>
+								<td><input type="checkbox" data-row-select aria-label={`Select ${row.algorithm}`} /></td>
+								<td><Text as="span" weight="medium" mono>{row.algorithm}</Text></td>
+								<td>{row.tokens}</td>
+								<td><Badge variant="soft" tone={statusTone[row.status]}>{row.status}</Badge></td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</Table>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Striped, compact</Heading>
 		<Table variant="striped" size="compact" ariaLabel="Token consumption by component">
 			<table>
@@ -110,6 +144,35 @@ const statusTone: Record<Row["status"], "success" | "warn" | "neutral"> = {
 				</tbody>
 			</table>
 		</Table>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Zero-JS</Heading>
+		<Stack gap={4}>
+			<Text size="sm" tone="muted">
+				The element styles a plain <code>&lt;table&gt;</code> by writing part classes onto its rows, cells, header, and footer
+				at upgrade — so without a runtime the table would render bare. The Astro binding applies those same classes on the
+				server, and <code>static</code> keeps the result: the table below is fully styled with zero JavaScript. Sorting, the
+				scroll affordance, and row selection are what hydration adds on top.
+			</Text>
+			<Table static variant="striped" ariaLabel="Rendering modes">
+				<table>
+					<thead>
+						<tr>
+							<th>Mode</th>
+							<th>Runtime</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>Static</td><td>never loaded</td></tr>
+						<tr><td>Hydrated</td><td>upgrades in place</td></tr>
+					</tbody>
+					<tfoot>
+						<tr><td>Both</td><td>same markup</td></tr>
+					</tfoot>
+				</table>
+			</Table>
+		</Stack>
 	</Card>
 </Stack>
 

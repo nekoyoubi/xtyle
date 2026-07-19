@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -22,14 +24,6 @@ const CHECK = "✓";
 const NAME_PATTERN = /^[a-zA-Z_:][-a-zA-Z0-9_:.]*$/;
 const OWNED = ["class", "part", "slot", "aria-current", "data-step", "data-marker", "data-connector"];
 
-function esc(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
-
 function stepClass(step: Step): string {
 	const base = `xtyle-steps__step xtyle-steps__step--${step.state}`;
 	const authored = step.attrs?.class ?? "";
@@ -49,7 +43,7 @@ function authoredAttrs(step: Step): string {
 	let out = "";
 	for (const name of Object.keys(attrs)) {
 		if (OWNED.includes(name) || !NAME_PATTERN.test(name)) continue;
-		out += ` ${name}="${esc(String(attrs[name]))}"`;
+		out += ` ${name}="${escapeAttr(String(attrs[name]))}"`;
 	}
 	return out;
 }
@@ -63,7 +57,7 @@ function stepHtml(step: Step): string {
 	return (
 		`<li class="${stepClass(step)}" part="step" data-step="${step.index}"${current}${authoredAttrs(step)}>` +
 		connector +
-		`<span class="xtyle-steps__marker" part="marker" data-marker="${step.index}" aria-hidden="true">${esc(markerText(step))}</span>` +
+		`<span class="xtyle-steps__marker" part="marker" data-marker="${step.index}" aria-hidden="true">${escapeAttr(markerText(step))}</span>` +
 		`<span class="xtyle-steps__label" part="label" data-slot="step-${step.index}"></span>` +
 		`</li>`
 	);

@@ -1,3 +1,4 @@
+import { escapeHtml } from "../escape.js";
 import { splitCodeLines, codeGutterWidth, parseLineSpec } from "../../../markup/code";
 
 interface OpsBuilder {
@@ -11,10 +12,6 @@ interface CodeBindings {
 	caption?: string | null;
 	lineNumbers?: boolean;
 	highlight?: string | null;
-}
-
-function escapeCaption(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 declare const hooks: {
@@ -64,7 +61,7 @@ function paint(bindings: CodeBindings, ops: OpsBuilder): void {
 	ops.setAttr("[data-root]", "style", out.gutter);
 	ops.setAttr(".xtyle-code__code", "class", codeClass(bindings));
 	ops.replaceChildren("[data-code]", out.html);
-	ops.replaceChildren("[data-caption]", bindings.caption ? escapeCaption(bindings.caption) : "");
+	ops.replaceChildren("[data-caption]", bindings.caption ? escapeHtml(bindings.caption) : "");
 }
 
 hooks.fragment.mount("code", (bindings, ops) => {

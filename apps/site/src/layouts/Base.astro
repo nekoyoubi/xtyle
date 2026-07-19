@@ -28,6 +28,9 @@ import "@fontsource/sigmar/latin-400.css";
 import "../styles/global.css";
 
 interface Props {
+	/** The page's own name. The document title is composed from it, so pass `Components`, not
+	 * `Components: xtyle` — the product name is the layout's to add, and it was drifting into
+	 * four different shapes while each page spelled them out for itself. */
 	title: string;
 	description?: string;
 }
@@ -41,6 +44,7 @@ const canonicalUrl = new URL(
 ).href;
 
 const site = await getStats();
+const documentTitle = `xtyle · ${title}`;
 const themeCss = emit(site.register, "css");
 const baseCss = `${utilitiesCss(site.algorithm.produces, site.algorithm.categories)}\n${componentsCss}`;
 const numberStats = [...displayStats(site), ...benchStats(site)].map((s) => ({
@@ -65,16 +69,16 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<title>{title}</title>
+		<title>{documentTitle}</title>
 		<meta name="description" content={ogDescription} />
 		<link rel="canonical" href={canonicalUrl} />
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="xtyle" />
 		<meta property="og:url" content={canonicalUrl} />
-		<meta property="og:title" content={title} />
+		<meta property="og:title" content={documentTitle} />
 		<meta property="og:description" content={ogDescription} />
 		<meta name="twitter:card" content="summary" />
-		<meta name="twitter:title" content={title} />
+		<meta name="twitter:title" content={documentTitle} />
 		<meta name="twitter:description" content={ogDescription} />
 		<script is:inline>
 			(function () {

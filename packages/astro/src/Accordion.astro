@@ -1,8 +1,10 @@
 ---
 import { type AccordionSection } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { checkAuthoring } from "./internal/diagnose.js";
+import { SIZES, resolveVocab } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg";
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	items?: AccordionSection[];
@@ -19,12 +21,15 @@ interface Props {
 const {
 	items,
 	multiple = false,
-	size = "md",
+	size: sizeInput,
 	headingLevel,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+
+await checkAuthoring("accordion", Astro.props);
+const size = resolveVocab(sizeInput, SIZES, "md", "accordion size");
 
 const sections = items ?? [];
 const uid = `xtyle-accordion-${Math.random().toString(36).slice(2, 9)}`;
@@ -51,9 +56,16 @@ const bindings = {
 	uid,
 };
 // Two authoring modes. items-mode renders the whole structure light from `bindings` and ships no
-// children. The advanced slotted mode pairs the consumer's `slot="header"`/`slot="panel"` children
-// by order, so they must survive *individually* (with their slot attributes) — Astro's `<slot
-// name>` passthrough keeps them intact, and the element builds the structure from them on connect.
+// children. The advanced slotted mode pairs the consumer's children by order, and those must reach
+// the element still carrying their marker — hence `data-xtyle-header` / `data-xtyle-panel`, which
+// no framework claims.
+//
+// `slot` cannot be that marker. On a child of an Astro *component* it is a routing directive Astro
+// always consumes: with a matching `<slot name>` below the child renders there minus the attribute,
+// and with no match the child is dropped entirely. (A `slot` a component writes on its own root
+// element, as `Segment.astro` does, is ordinary HTML and survives — that is a different case, not a
+// bug to fix.) The named receivers below stay so a legacy `slot=`-marked child is passed through
+// rather than discarded.
 const useItems = sections.length > 0;
 const light = useItems ? await renderFragmentLight("accordion", bindings) : "";
 ---

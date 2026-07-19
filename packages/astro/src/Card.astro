@@ -1,4 +1,6 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveOptionalTone } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone as Tone } from "@xtyle/core";
@@ -18,10 +20,23 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { overlay = false, interactive = false, action = false, compact = false, tone, depthStrength, static: isStatic = false, class: extra, ...rest } =
+const { overlay = false, interactive = false, action = false, compact = false, tone: toneInput, depthStrength, static: isStatic = false, class: extra, ...rest } =
 	Astro.props;
+await checkAuthoring("card", Astro.props);
+const tone = resolveOptionalTone(toneInput);
 
-const bindings = { overlay, interactive, action, compact, tone: tone ?? null, depthStrength: depthStrength ?? null };
+// The fill hides an unfilled header/footer, and it can only know from a binding: the composed markup
+// keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+const bindings = {
+	overlay,
+	interactive,
+	action,
+	compact,
+	tone: tone ?? null,
+	depthStrength: depthStrength ?? null,
+	hasHeader: Astro.slots.has("header"),
+	hasFooter: Astro.slots.has("footer"),
+};
 const chrome = await renderFragmentLight("card", bindings);
 const headerHtml = Astro.slots.has("header") ? await Astro.slots.render("header") : "";
 const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";

@@ -75,8 +75,10 @@ const trailingExample = `<xtyle-tree label="Binder"></xtyle-tree>
 			label: "Chapter 1", value: "ch1", expanded: true,
 			// a word count plus a toned drift pill: two trailing badges, each its own color
 			badge: ["1,204", { text: "3", tone: "warn" }],
+			// hover text for a label the rail will ellipse; label stays the accessible name
+			title: "The lighthouse keeper finds the letter",
 			children: [
-				{ label: "Opening", value: "ch1-1", badge: "512", actions: [
+				{ label: "Opening", value: "ch1-1", badge: "512", title: "Dawn over the harbour", actions: [
 					{ id: "up", label: "Move up", icon: "↑", disabled: true },
 					{ id: "rename", label: "Rename", icon: "✎" },
 					{ id: "delete", label: "Delete", icon: "✕" },
@@ -84,9 +86,10 @@ const trailingExample = `<xtyle-tree label="Binder"></xtyle-tree>
 				{ label: "Rising action", value: "ch1-2", actions: [{ id: "rename", label: "Rename", icon: "✎" }] },
 			],
 		},
-		{ label: "Chapter 2", value: "ch2", badge: "812" },
+		{ label: "Chapter 2", value: "ch2", badge: "812", title: "She reads it twice, then burns it" },
 	];
 	// Badges show always; actions reveal on hover and fire tree-action (a disabled action stays greyed).
+	// title is supplementary hover text — a synopsis behind a truncated label.
 	tree.addEventListener("tree-action", (e) => console.log(e.detail.action, "on", e.detail.value));
 </script>`;
 
@@ -153,7 +156,6 @@ export const treeManifest: ComponentManifest = {
 				"--fg-2",
 				"--state-hover",
 				"--accent-bg",
-				"--accent-text",
 				"--weight-medium",
 				"--border-normal",
 				"--border-thick",
@@ -197,9 +199,9 @@ export const treeManifest: ComponentManifest = {
 	states: [
 		{
 			name: "selected",
-			description: "The chosen node: its row takes the accent background and text. When the theme's `--selection-cue` resolves to `marker` (a high-contrast or redundant-cues algorithm), a non-color check glyph is added so selection never rests on color alone.",
+			description: "The chosen node: its row takes the accent tint under the primary ink. When the theme's `--selection-cue` resolves to `marker` (a high-contrast or redundant-cues algorithm), a non-color check glyph is added so selection never rests on color alone.",
 			selector: ".xtyle-tree__item[aria-selected=\"true\"] > .xtyle-tree__row",
-			tokens: ["--accent-bg", "--accent-text", "--selection-cue", "--weight-medium"],
+			tokens: ["--accent-bg", "--fg-0", "--selection-cue", "--weight-medium"],
 		},
 		{
 			name: "row-hover",

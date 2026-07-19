@@ -20,8 +20,8 @@ export async function bakedAlgorithm(id: string): Promise<Algorithm> {
 	try {
 		return await bakedOracle(id);
 	} catch {
-		const { resolveAlgorithm } = await import("./host/registry.js");
-		return resolveAlgorithm(id);
+		const { resolveInstalledAlgorithm } = await import("./host/registry.js");
+		return resolveInstalledAlgorithm(id);
 	}
 }
 

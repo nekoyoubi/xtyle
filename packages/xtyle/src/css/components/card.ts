@@ -3,7 +3,7 @@ import { FULL_TONES } from "../../vocab.js";
 const cardToneVars = FULL_TONES.map((t) => `.xtyle-card--${t} { --card-bar: var(--${t}); }`).join("\n");
 
 export const cardCss = `
-[data-card] { display: contents; }
+[data-root][data-card] { display: contents; }
 .xtyle-card {
 	display: flex;
 	flex-direction: column;
@@ -45,8 +45,8 @@ export const cardCss = `
 	border-top: var(--border-thin) solid var(--line);
 	color: var(--fg-2);
 }
-.xtyle-card__header:empty,
-.xtyle-card__footer:empty {
+.xtyle-card__header[hidden],
+.xtyle-card__footer[hidden] {
 	display: none;
 }
 .xtyle-card--interactive {

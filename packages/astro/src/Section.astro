@@ -1,11 +1,13 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, SECTION_SURFACES, SECTION_TAGS, resolveVocab, SECTION_VARIANTS, SECTION_PADDINGS } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import type { FullTone } from "@xtyle/core";
 
-type SectionTag = "section" | "div" | "header" | "footer";
-type SectionVariant = "band" | "stage";
+type SectionTag = (typeof SECTION_TAGS)[number];
+type SectionVariant = (typeof SECTION_VARIANTS)[number];
 type SectionTone = "plain" | "quiet" | FullTone;
-type SectionPadding = "none" | "sm" | "md" | "lg";
+type SectionPadding = (typeof SECTION_PADDINGS)[number];
 
 interface Props {
 	as?: SectionTag;
@@ -22,16 +24,21 @@ interface Props {
 }
 
 const {
-	as = "section",
-	variant = "band",
-	tone = "plain",
+	as: asInput,
+	variant: variantInput,
+	tone: toneInput,
 	bordered = false,
-	padding = "lg",
+	padding: paddingInput,
 	label,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("section", Astro.props);
+const as = resolveVocab(asInput, SECTION_TAGS, "section", "section as");
+const variant = resolveVocab(variantInput, SECTION_VARIANTS, "band", "section variant");
+const padding = resolveVocab(paddingInput, SECTION_PADDINGS, "lg", "section padding");
+const tone = resolveTone(toneInput, "plain", SECTION_SURFACES);
 
 const bindings = {
 	as,

@@ -5,6 +5,7 @@ import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/field/source.generated.js";
 import { normalizeFieldOptions, type FieldOption } from "./field-options.js";
 import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attrs.js";
+import { resolveVocab, SIZES } from "../vocab.js";
 
 let fieldCounter = 0;
 
@@ -93,7 +94,7 @@ export class XtyleField extends XtyleElement {
 	}
 
 	get size(): Size {
-		return (this.getAttribute("size") as Size) ?? "md";
+		return resolveVocab(this.getAttribute("size"), SIZES, "md", "field size");
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
@@ -162,6 +163,8 @@ export class XtyleField extends XtyleElement {
 			inputId: this.inputId,
 			descriptionId: this.descriptionId,
 			errorId: this.errorId,
+			hasPrefix: this.fragment.hasSlotted("prefix"),
+			hasSuffix: this.fragment.hasSlotted("suffix"),
 		};
 	}
 

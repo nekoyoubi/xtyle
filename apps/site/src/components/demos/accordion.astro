@@ -9,18 +9,18 @@ import Text from "@xtyle/astro/Text.astro";
 	<section class="demo__group">
 		<Heading level={3} size="sm" tone="muted">Single-open</Heading>
 		<Accordion>
-			<span slot="header">What's your shipping time?</span>
-			<div slot="panel">
+			<span data-xtyle-header>What's your shipping time?</span>
+			<div data-xtyle-panel>
 				Orders placed before 2pm ship the same business day; everything else
 				ships the next morning.
 			</div>
-			<span slot="header" aria-expanded="true">How do returns work?</span>
-			<div slot="panel">
+			<span data-xtyle-header aria-expanded="true">How do returns work?</span>
+			<div data-xtyle-panel>
 				Unworn items are accepted within 30 days for a full refund — no
 				restocking fee, no questions asked.
 			</div>
-			<span slot="header">Is there a warranty?</span>
-			<div slot="panel">
+			<span data-xtyle-header>Is there a warranty?</span>
+			<div data-xtyle-panel>
 				Every piece is covered against manufacturing defects for one year from
 				the delivery date.
 			</div>
@@ -30,12 +30,12 @@ import Text from "@xtyle/astro/Text.astro";
 	<section class="demo__group">
 		<Heading level={3} size="sm" tone="muted">Multiple open · compact</Heading>
 		<Accordion multiple size="sm">
-			<span slot="header" aria-expanded="true">Availability</span>
-			<div slot="panel">In stock, on sale, free shipping.</div>
-			<span slot="header" aria-expanded="true">Sort</span>
-			<div slot="panel">Price, rating, newest first.</div>
-			<span slot="header" aria-disabled="true">Saved searches</span>
-			<div slot="panel">Sign in to save a search.</div>
+			<span data-xtyle-header aria-expanded="true">Availability</span>
+			<div data-xtyle-panel>In stock, on sale, free shipping.</div>
+			<span data-xtyle-header aria-expanded="true">Sort</span>
+			<div data-xtyle-panel>Price, rating, newest first.</div>
+			<span data-xtyle-header aria-disabled="true">Saved searches</span>
+			<div data-xtyle-panel>Sign in to save a search.</div>
 		</Accordion>
 	</section>
 </Stack>

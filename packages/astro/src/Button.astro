@@ -1,10 +1,12 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { resolveTone, BUTTON_VARIANTS, resolveVocab, BUTTON_SIZES } from "@xtyle/core";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 
 import type { FullTone, ButtonAlign } from "@xtyle/core";
 
-type ButtonVariant = "solid" | "outline" | "ghost" | "subtle" | "link";
-type Size = "xs" | "sm" | "md" | "lg";
+type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
+type Size = (typeof BUTTON_SIZES)[number];
 
 interface Props {
 	variant?: ButtonVariant;
@@ -27,9 +29,9 @@ interface Props {
 }
 
 const {
-	variant = "solid",
-	tone = "accent",
-	size = "md",
+	variant: variantInput,
+	tone: toneInput,
+	size: sizeInput,
 	align = "center",
 	type = "button",
 	href,
@@ -43,6 +45,10 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("button", Astro.props);
+const variant = resolveVocab(variantInput, BUTTON_VARIANTS, "solid", "button variant");
+const size = resolveVocab(sizeInput, BUTTON_SIZES, "md", "button size");
+const tone = resolveTone(toneInput, "accent");
 
 const bindings = {
 	variant,

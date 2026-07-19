@@ -1,8 +1,10 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { SKELETON_SHAPES, resolveVocab, SIZES } from "@xtyle/core";
 
-type SkeletonShape = "text" | "line" | "block" | "circle";
-type Size = "sm" | "md" | "lg";
+type SkeletonShape = (typeof SKELETON_SHAPES)[number];
+type Size = (typeof SIZES)[number];
 
 interface Props {
 	shape?: SkeletonShape;
@@ -14,7 +16,10 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { shape = "text", size = "md", static: isStatic = false, class: extra, ...rest } = Astro.props;
+const { shape: shapeInput, size: sizeInput, static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("skeleton", Astro.props);
+const shape = resolveVocab(shapeInput, SKELETON_SHAPES, "text", "skeleton shape");
+const size = resolveVocab(sizeInput, SIZES, "md", "skeleton size");
 
 const bindings = { shape, size };
 const composed = await renderFragmentLight("skeleton", bindings);

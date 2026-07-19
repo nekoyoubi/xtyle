@@ -1,4 +1,8 @@
-export type TabsVariant = "underline" | "pill" | "enclosed";
+import { TABS_VARIANTS, TABS_SIZES } from "../vocab.js";
+export type TabsVariant = (typeof TABS_VARIANTS)[number];
+
+/** Tabs steps only two rungs; there is no `lg`. */
+export type TabsSize = (typeof TABS_SIZES)[number];
 export type TabsActivation = "automatic" | "manual";
 
 export interface TabItemData {

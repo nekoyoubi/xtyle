@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { kbdHostCss, type KbdSize, type KbdTone } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/kbd/source.generated.js";
+import { resolveOptionalTone, resolveVocab, KBD_SIZES } from "../vocab.js";
 
 export class XtyleKbd extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "kbd", {
@@ -17,14 +18,14 @@ export class XtyleKbd extends XtyleElement {
 	}
 
 	get size(): KbdSize {
-		return (this.getAttribute("size") as KbdSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), KBD_SIZES, "md", "kbd size");
 	}
 	set size(value: KbdSize) {
 		this.setAttribute("size", value);
 	}
 
 	get tone(): KbdTone | null {
-		return this.getAttribute("tone") as KbdTone | null;
+		return resolveOptionalTone<KbdTone>(this.getAttribute("tone"));
 	}
 	set tone(value: KbdTone | null) {
 		if (value) this.setAttribute("tone", value);

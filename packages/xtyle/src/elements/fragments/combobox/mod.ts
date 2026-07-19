@@ -1,3 +1,6 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
+import { linearNav } from "../../collection/nav-reducer.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -91,14 +94,6 @@ const CHECK_GLYPH =
 const REMOVE_GLYPH =
 	`<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" ` +
 	`stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>`;
-
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
-}
 
 function rootClass(b: ComboboxBindings): string {
 	const size = b.size ?? "md";
@@ -240,22 +235,23 @@ xript.exports.register("inputKeydown", (payload: unknown, context: unknown): Int
 	const open = ctx.open === true;
 	const values = ctx.values ?? [];
 	const active = ctx.activeValue ?? "";
-	const here = values.indexOf(active);
 	const query = ctx.query ?? "";
-	const step = (delta: number): Intent => {
-		if (values.length === 0) return { preventDefault: true };
-		const next = here < 0 ? (delta > 0 ? 0 : values.length - 1) : (here + delta + values.length) % values.length;
-		return { focusValue: values[next], preventDefault: true };
+	// The linear axis over the open option list, via the shared core, reported as the combobox's
+	// `focusValue` intent (the element moves aria-activedescendant, not real focus).
+	const move = (key: string): Intent => {
+		const navItems = values.map((value) => ({ key: value }));
+		const target = linearNav(navItems, active, key, { orientation: "vertical", wrap: true, homeEnd: true }).focus;
+		return target !== undefined ? { focusValue: target, preventDefault: true } : { preventDefault: true };
 	};
 	switch (e.key) {
 		case "ArrowDown":
-			return open ? step(1) : { openMenu: "first", preventDefault: true };
+			return open ? move("ArrowDown") : { openMenu: "first", preventDefault: true };
 		case "ArrowUp":
-			return open ? step(-1) : { openMenu: "last", preventDefault: true };
+			return open ? move("ArrowUp") : { openMenu: "last", preventDefault: true };
 		case "Home":
-			return open && values.length > 0 ? { focusValue: values[0], preventDefault: true } : {};
+			return open && values.length > 0 ? move("Home") : {};
 		case "End":
-			return open && values.length > 0 ? { focusValue: values[values.length - 1], preventDefault: true } : {};
+			return open && values.length > 0 ? move("End") : {};
 		case "Enter":
 			// a closed list with nothing to commit leaves Enter alone, so it still submits the form
 			if (!open && !(ctx.allowCustom === true && query.trim().length > 0)) return {};

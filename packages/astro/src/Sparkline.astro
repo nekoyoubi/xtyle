@@ -1,6 +1,7 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
-import { windowedPlot } from "@xtyle/core";
+import { windowedPlot , resolveTone} from "@xtyle/core";
 import type { SparklineVariant, SparklineTone, SparklineBounds, SparklineFormat, TimeSample } from "@xtyle/core";
 
 interface Props {
@@ -38,7 +39,7 @@ const {
 	domain,
 	step = false,
 	variant = "line",
-	tone = "accent",
+	tone: toneInput,
 	showEnd = true,
 	min,
 	max,
@@ -49,6 +50,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("sparkline", Astro.props);
+const tone = resolveTone(toneInput, "accent");
 
 const plot =
 	points && points.length > 0 ? windowedPlot(points, { window: windowMs, domain, now: Date.now() }) : null;

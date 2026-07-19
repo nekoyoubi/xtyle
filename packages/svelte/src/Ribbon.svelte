@@ -1,10 +1,11 @@
 <script lang="ts">
 	import "@xtyle/core/elements/ribbon.js";
 	import type { FullTone as Tone } from "@xtyle/core";
+	import { RIBBON_CORNERS, RIBBON_SIZES, RIBBON_VARIANTS } from "@xtyle/core";
 
-	type RibbonCorner = "top-right" | "top-left" | "bottom-right" | "bottom-left";
-	type RibbonSize = "sm" | "md" | "lg";
-	type RibbonVariant = "solid" | "soft";
+	type RibbonCorner = (typeof RIBBON_CORNERS)[number];
+	type RibbonSize = (typeof RIBBON_SIZES)[number];
+	type RibbonVariant = (typeof RIBBON_VARIANTS)[number];
 
 	interface Props {
 		tone?: Tone;

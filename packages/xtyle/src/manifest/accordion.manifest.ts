@@ -33,11 +33,13 @@ const astroExample = `---
 import { Accordion } from "@xtyle/astro";
 ---
 
+<!-- Astro consumes a child's \`slot\` attribute to route it, so mark headers and
+     panels with \`data-xtyle-header\` / \`data-xtyle-panel\` here. -->
 <Accordion multiple>
-	<span slot="header">Shipping</span>
-	<div slot="panel">Orders ship within two business days.</div>
-	<span slot="header" open>Returns</span>
-	<div slot="panel">Unworn items are accepted within 30 days.</div>
+	<span data-xtyle-header>Shipping</span>
+	<div data-xtyle-panel>Orders ship within two business days.</div>
+	<span data-xtyle-header open>Returns</span>
+	<div data-xtyle-panel>Unworn items are accepted within 30 days.</div>
 </Accordion>`;
 
 export const accordionManifest: ComponentManifest = {
@@ -133,12 +135,14 @@ export const accordionManifest: ComponentManifest = {
 	slots: [
 		{
 			name: "header",
-			description: "Each section's header label, marked `slot=\"header\"`; add `open` to expand it initially or `disabled` to lock it.",
+			description:
+				"Each section's header label, marked `slot=\"header\"` or `data-xtyle-header`; add `open` to expand it initially or `disabled` to lock it. Astro consumes `slot` to route children, so use `data-xtyle-header` there.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
 			name: "panel",
-			description: "Each section's collapsible content, marked `slot=\"panel\"`, paired to the header before it by order.",
+			description:
+				"Each section's collapsible content, marked `slot=\"panel\"` or `data-xtyle-panel` (use `data-xtyle-panel` under Astro), paired to the header before it by order.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],

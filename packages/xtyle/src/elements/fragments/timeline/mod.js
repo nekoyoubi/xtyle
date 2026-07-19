@@ -1,11 +1,21 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
   // packages/xtyle/src/elements/fragments/timeline/mod.ts
   var NAME_PATTERN = /^[a-zA-Z_:][-a-zA-Z0-9_:.]*$/;
   var OWNED = ["class", "part", "slot", "data-event", "data-dot", "data-rail"];
-  function esc(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
   function eventClass(event) {
     const authored = event.attrs?.class ?? "";
     return authored ? `xtyle-timeline__item ${authored}` : "xtyle-timeline__item";
@@ -15,7 +25,7 @@
     let out = "";
     for (const name of Object.keys(attrs)) {
       if (OWNED.includes(name) || !NAME_PATTERN.test(name)) continue;
-      out += ` ${name}="${esc(String(attrs[name]))}"`;
+      out += ` ${name}="${escapeAttr(String(attrs[name]))}"`;
     }
     return out;
   }

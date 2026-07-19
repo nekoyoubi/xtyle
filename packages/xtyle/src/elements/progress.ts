@@ -5,9 +5,10 @@ import { rampColor, rampGradientStops, resolvePalette, PALETTE_TOKENS, type Pale
 import { readLiveRegister } from "./live-register.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/progress/source.generated.js";
+import { resolveTone, resolveOptionalTone, PROGRESS_VARIANTS, PROGRESS_SIZES, resolveVocab } from "../vocab.js";
 
-export type ProgressVariant = "linear" | "circular";
-export type ProgressSize = "sm" | "md" | "lg";
+export type ProgressVariant = (typeof PROGRESS_VARIANTS)[number];
+export type ProgressSize = (typeof PROGRESS_SIZES)[number];
 export type ProgressValueFormat = "percent" | "value" | "value-max";
 export type ProgressPulse = "fast" | "slow" | null;
 export type ProgressRampMode = "solid" | "gradient";
@@ -26,25 +27,25 @@ export class XtyleProgress extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "ramp", "ramp-mode", "reverse", "aria-label"];
+		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "ramp", "ramp-mode", "reverse", "track", "thickness", "aria-label"];
 	}
 
 	get variant(): ProgressVariant {
-		return (this.getAttribute("variant") as ProgressVariant) ?? "linear";
+		return resolveVocab(this.getAttribute("variant"), PROGRESS_VARIANTS, "linear", "progress variant");
 	}
 	set variant(value: ProgressVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get tone(): FullTone {
-		return (this.getAttribute("tone") as FullTone) ?? "accent";
+		return resolveTone(this.getAttribute("tone"), "accent");
 	}
 	set tone(value: FullTone) {
 		this.setAttribute("tone", value);
 	}
 
 	get size(): ProgressSize {
-		return (this.getAttribute("size") as ProgressSize) ?? "md";
+		return resolveVocab(this.getAttribute("size"), PROGRESS_SIZES, "md", "progress size");
 	}
 	set size(value: ProgressSize) {
 		this.setAttribute("size", value);
@@ -165,6 +166,31 @@ export class XtyleProgress extends XtyleElement {
 		this.reflectBoolean("reverse", value);
 	}
 
+	/** The unfilled groove behind the indicator: absent leaves the default `--neutral-bg` rail, `none`
+	 * drops it entirely (a ring reporting a window that may not exist reads better with no groove), and
+	 * a tone paints it that tone's `-bg`. */
+	get track(): "none" | FullTone | null {
+		const raw = this.getAttribute("track");
+		if (raw === null) return null;
+		if (raw === "none") return "none";
+		return resolveTone(raw, "neutral");
+	}
+	set track(value: "none" | FullTone | null) {
+		if (value === null) this.removeAttribute("track");
+		else this.setAttribute("track", value);
+	}
+
+	/** How heavy the meter reads, independent of its box. A unitless number is in ring units (the ring
+	 * is a 40-unit viewBox at `r=16`), so the weight scales with the diameter; a CSS length (`6px`,
+	 * `0.25rem`) is absolute, holding the same apparent weight at any size. Circular only. */
+	get thickness(): string | null {
+		return this.getAttribute("thickness");
+	}
+	set thickness(value: string | number | null) {
+		if (value === null) this.removeAttribute("thickness");
+		else this.setAttribute("thickness", String(value));
+	}
+
 	private get ariaRole(): string {
 		return this.meter ? "meter" : "progressbar";
 	}
@@ -198,11 +224,11 @@ export class XtyleProgress extends XtyleElement {
 	}
 
 	/** The `<threshold>` config elements — direct children of the host, never displayed. Read live off
-	 * the host (`:scope > threshold`): they sit there as hidden direct children under SSR-light and as
+	 * the host's own children: they sit there as hidden direct children under SSR-light and as
 	 * unprojected light children under a shadow render alike. The captured-group read is a fallback for
 	 * a forced-light host whose scaffold paint relocated them out of the element. */
 	private thresholdEls(): Element[] {
-		const live = Array.from(this.querySelectorAll(":scope > threshold"));
+		const live = Array.from(this.children).filter((el) => el.tagName === "THRESHOLD");
 		if (live.length) return live;
 		return this.fragment.slottedNodes("").filter((n): n is Element => n instanceof Element && n.tagName === "THRESHOLD");
 	}
@@ -217,7 +243,7 @@ export class XtyleProgress extends XtyleElement {
 				const pulseRaw = el.getAttribute("pulse");
 				return {
 					below: Number.isNaN(below) ? Number.POSITIVE_INFINITY : below,
-					tone: (el.getAttribute("tone") as FullTone | null) ?? null,
+					tone: resolveOptionalTone<FullTone>(el.getAttribute("tone")),
 					pulse: (pulseRaw === "fast" || pulseRaw === "slow" ? pulseRaw : null) as ProgressPulse,
 				};
 			})
@@ -260,6 +286,8 @@ export class XtyleProgress extends XtyleElement {
 			colorizeValue: this.colorizeValue,
 			valuePosition: this.valuePosition,
 			pulse: this.effectivePulse(),
+			track: this.track,
+			thickness: this.thickness,
 			role: this.ariaRole,
 			ariaLabel: this.getAttribute("aria-label"),
 			ariaLabelledby: this.getAttribute("aria-labelledby"),

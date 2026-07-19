@@ -1,5 +1,37 @@
 "use strict";
 (() => {
+  // packages/xtyle/src/elements/fragments/escape.ts
+  var AMP = /&/g;
+  var LT = /</g;
+  var GT = />/g;
+  var DQUOTE = /"/g;
+  var SQUOTE = /'/g;
+  function escapeHtml(value) {
+    return value.replace(AMP, "&amp;").replace(LT, "&lt;").replace(GT, "&gt;");
+  }
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
+  }
+
+  // packages/xtyle/src/vocab.ts
+  var TONES = ["accent", "neutral", "danger", "success", "warn", "info"];
+  var ACCENT_VARIANTS = ["accent-2", "accent-3", "accent-4"];
+  var HUES = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple",
+    "brown",
+    "pink",
+    "cyan",
+    "gray",
+    "white",
+    "black"
+  ];
+  var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
+
   // packages/xtyle/src/markup/dot.ts
   function dotClass(props) {
     const size = props.size ?? "md";
@@ -14,12 +46,6 @@
   }
 
   // packages/xtyle/src/elements/fragments/avatar/mod.ts
-  function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, "&quot;");
-  }
   function avatarInitials(userName) {
     const words = (userName ?? "").trim().split(/\s+/).filter(Boolean);
     if (!words.length) return "";
@@ -74,7 +100,7 @@
     ops.replaceChildren("[data-avatar]", avatarHtml(bindings));
   });
   hooks.fragment.update("avatar", (bindings, ops) => {
-    ops.setAttr('[part="avatar"]', "class", avatarClass(bindings));
+    ops.setAttr(".xtyle-avatar", "class", avatarClass(bindings));
     ops.setAttr('[part="avatar"]', "aria-label", avatarLabel(bindings));
     if (bindings.src != null) {
       ops.setAttr(".xtyle-avatar__image", "src", bindings.src);

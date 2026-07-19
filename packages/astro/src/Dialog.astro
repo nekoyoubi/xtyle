@@ -1,7 +1,9 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
+import { DIALOG_SIZES, resolveVocab } from "@xtyle/core";
 
-type Size = "sm" | "md" | "lg" | "xl" | "full";
+type Size = (typeof DIALOG_SIZES)[number];
 
 interface Props {
 	open?: boolean;
@@ -20,7 +22,7 @@ interface Props {
 
 const {
 	open = false,
-	size = "md",
+	size: sizeInput,
 	heading,
 	label,
 	labelledby,
@@ -30,6 +32,8 @@ const {
 	class: extra,
 	...rest
 } = Astro.props;
+await checkAuthoring("dialog", Astro.props);
+const size = resolveVocab(sizeInput, DIALOG_SIZES, "md", "dialog size");
 
 const hasHeader = Astro.slots.has("header");
 const hasFooter = Astro.slots.has("footer");

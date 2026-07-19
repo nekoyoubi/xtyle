@@ -1,5 +1,5 @@
 export const statusbarCss = `
-[data-statusbar] { display: contents; }
+[data-root][data-statusbar] { display: contents; }
 .xtyle-statusbar {
 	display: flex;
 	align-items: center;

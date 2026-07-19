@@ -3,6 +3,7 @@ import { sectionHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/section/source.generated.js";
 import type { FullTone } from "../vocab.js";
+import { resolveTone, SECTION_SURFACES, resolveVocab, SECTION_TAGS, SECTION_VARIANTS, SECTION_PADDINGS } from "../vocab.js";
 
 type SectionTag = "section" | "div" | "header" | "footer";
 type SectionVariant = "band" | "stage";
@@ -23,21 +24,21 @@ export class XtyleSection extends XtyleElement {
 	}
 
 	get as(): SectionTag {
-		return (this.getAttribute("as") as SectionTag) ?? "section";
+		return resolveVocab(this.getAttribute("as"), SECTION_TAGS, "section", "section tag");
 	}
 	set as(value: SectionTag) {
 		this.setAttribute("as", value);
 	}
 
 	get variant(): SectionVariant {
-		return (this.getAttribute("variant") as SectionVariant) ?? "band";
+		return resolveVocab(this.getAttribute("variant"), SECTION_VARIANTS, "band", "section variant");
 	}
 	set variant(value: SectionVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get tone(): SectionTone {
-		return (this.getAttribute("tone") as SectionTone) ?? "plain";
+		return resolveTone(this.getAttribute("tone"), "plain", SECTION_SURFACES);
 	}
 	set tone(value: SectionTone) {
 		this.setAttribute("tone", value);
@@ -51,7 +52,7 @@ export class XtyleSection extends XtyleElement {
 	}
 
 	get padding(): SectionPadding {
-		return (this.getAttribute("padding") as SectionPadding) ?? "lg";
+		return resolveVocab(this.getAttribute("padding"), SECTION_PADDINGS, "lg", "section padding");
 	}
 	set padding(value: SectionPadding) {
 		this.setAttribute("padding", value);

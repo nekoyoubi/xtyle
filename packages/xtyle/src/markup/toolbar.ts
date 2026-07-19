@@ -10,7 +10,7 @@ export interface ToolbarMarkupProps {
 }
 
 /** The host-layout rules for a toolbar — the `:host` rules shared by the element's `styles()` and the SSR declarative shadow root. */
-export const toolbarHostCss = `:host { display: block; } :host([sticky]) { position: sticky; top: 0; z-index: var(--elevation-3); }`;
+export const toolbarHostCss = `:host { display: block; } :host([sticky]) { position: sticky; top: 0; z-index: var(--layer-sticky); }`;
 
 export function toolbarClass(props: ToolbarMarkupProps): string {
 	const size = props.size ?? "md";

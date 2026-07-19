@@ -6,6 +6,7 @@ import Cluster from "@xtyle/astro/Cluster.astro";
 import Grid from "@xtyle/astro/Grid.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
+import Avatar from "@xtyle/astro/Avatar.astro";
 import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
 
 const tones = ["accent", "neutral", "info", "success", "warn", "danger"] as const;
@@ -192,6 +193,87 @@ const TONE_GROUPS = [
 	</Card>
 
 	<Card compact>
+		<Heading slot="header" level={3} size="sm">Groove, weight &amp; size (<code>track</code>, <code>thickness</code>)</Heading>
+		<Stack gap={5}>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">A trackless ring as a portrait frame</Text>
+				<Cluster gap={6} align="center">
+					{
+						[
+							{ v: 34, tone: "danger" as const, who: "Ada Lovelace" },
+							{ v: 72, tone: "warn" as const, who: "Grace Hopper" },
+							{ v: 100, tone: "success" as const, who: "Alan Turing" },
+						].map((p) => (
+							<Stack gap={2} align="center">
+								<div class="demo-portrait">
+									<Avatar userName={p.who} size="lg" />
+									<Progress variant="circular" value={p.v} track={false} thickness="5px" tone={p.tone} aria-label={`${p.who} profile ${p.v} percent complete`} />
+								</div>
+								<Text as="span" size="xs" tone="muted">{p.v}%</Text>
+							</Stack>
+						))
+					}
+				</Cluster>
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">Grooves: default, dropped (<code>track={false}</code>), toned</Text>
+				<Cluster gap={6} align="center">
+					{
+						[
+							{ label: "default", track: true as const },
+							{ label: "none", track: false as const },
+							{ label: "info", track: "info" as const },
+							{ label: "warn", track: "warn" as const },
+						].map((g) => (
+							<Stack gap={2} align="center">
+								<Progress variant="circular" value={62} track={g.track} showValue aria-label={`Groove ${g.label}`} />
+								<Text as="span" size="xs" tone="muted">{g.label}</Text>
+							</Stack>
+						))
+					}
+				</Cluster>
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">One diameter, four weights (<code>thickness</code> in ring units)</Text>
+				<Cluster gap={6} align="center">
+					{
+						[1, 2.5, 5, 9].map((t) => (
+							<Stack gap={2} align="center">
+								<Progress variant="circular" value={68} thickness={t} tone="accent" aria-label={`Ring weight ${t}`} />
+								<Text as="span" size="xs" tone="muted">{t}</Text>
+							</Stack>
+						))
+					}
+				</Cluster>
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">One weight, three diameters (<code>--xtyle-progress-size</code> with an absolute <code>thickness</code>)</Text>
+				<Cluster gap={6} align="center" class="demo-ring-scale">
+					{
+						[40, 72, 112].map((px) => (
+							<Stack gap={2} align="center">
+								<Progress variant="circular" value={68} thickness="6px" track="neutral" tone="accent" aria-label={`Ring at ${px} pixels`} style={`--xtyle-progress-size: ${px}px`} />
+								<Text as="span" size="xs" tone="muted">{px}px</Text>
+							</Stack>
+						))
+					}
+				</Cluster>
+			</Stack>
+			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">Custom readout (the <code>value</code> slot)</Text>
+				<Cluster gap={6} align="center">
+					<Progress variant="circular" value={72} showValue aria-label="Sync, custom readout" style="--xtyle-progress-size: 88px" thickness="5px">
+						<Text slot="value" as="span" size="xs" weight="semibold">72<br />done</Text>
+					</Progress>
+					<Progress size="lg" value={410} max={500} showValue aria-label="Storage, custom readout" class="demo-progress-bar">
+						<Text slot="value" as="span" size="xs" tone="muted">410 GB of 500 GB</Text>
+					</Progress>
+				</Cluster>
+			</Stack>
+		</Stack>
+	</Card>
+
+	<Card compact>
 		<Heading slot="header" level={3} size="sm">Sizes &amp; indeterminate</Heading>
 		<Grid gap={5} minColWidth="240px">
 			<Stack gap={3}>
@@ -219,5 +301,16 @@ const TONE_GROUPS = [
 	}
 	.demo-progress-bar {
 		flex: 1;
+	}
+	.demo-portrait {
+		position: relative;
+		display: inline-flex;
+		padding: 0.375rem;
+	}
+	.demo-portrait :global(xtyle-progress) {
+		display: block;
+		position: absolute;
+		inset: 0;
+		--xtyle-progress-size: 100%;
 	}
 </style>

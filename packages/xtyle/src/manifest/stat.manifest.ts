@@ -155,6 +155,7 @@ export const statManifest: ComponentManifest = {
 			name: "default",
 			description: "The metric value.",
 			bindings: ["html", "svelte", "astro"],
+			aliases: ["value"],
 		},
 	],
 	consumedTokens: [

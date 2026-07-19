@@ -28,7 +28,7 @@ export const sheetCss = `
 /* A non-modal sheet is not in the top layer, so it needs a stacking position of its own; the modal
    one is promoted by the platform and needs none. */
 .xtyle-sheet--non-modal {
-	z-index: 1;
+	z-index: var(--layer-overlay);
 }
 /* Held mid-drag the panel tracks the finger, so any easing would fight it. */
 .xtyle-sheet[data-dragging] {
@@ -193,7 +193,7 @@ export const sheetCss = `
 	padding: var(--space-4) var(--space-5);
 	border-top: var(--border-thin) solid var(--line);
 }
-.xtyle-sheet__footer:empty { display: none; }
+.xtyle-sheet__footer[hidden] { display: none; }
 .xtyle-sheet__close {
 	display: inline-flex;
 	align-items: center;

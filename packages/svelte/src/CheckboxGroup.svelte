@@ -7,7 +7,7 @@
 		label?: string;
 		labelledby?: string;
 		tone?: Tone;
-		size?: Size;
+		size?: (typeof CHECKBOX_SIZES)[number];
 		disabled?: boolean;
 		/** Keep the heading checkbox but stop the automatic all/some/none roll-up — you drive its state. */
 		manual?: boolean;

@@ -1,3 +1,4 @@
+import { escapeAttr } from "../escape.js";
 import { renderIcon } from "../../../icons";
 
 interface OpsBuilder {
@@ -34,14 +35,6 @@ declare const hooks: {
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
 const OPPOSITE: Record<string, string> = { right: "left", left: "right", up: "down", down: "up" };
-
-function esc(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
-}
 
 /**
  * The host stamps this instance's id onto the scaffold's track and control bar, and every control the
@@ -113,14 +106,14 @@ function navButton(b: CarouselBindings, kind: "prev" | "next", label: string, ed
 	const disabled = atEdge(b, edge) ? " disabled" : "";
 	return (
 		`<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--${kind}" part="nav" ` +
-		`data-${kind}="${uid(b)}" aria-label="${esc(label)}"${disabled}>${renderIcon(chevron(b, kind))}</button>`
+		`data-${kind}="${uid(b)}" aria-label="${escapeAttr(label)}"${disabled}>${renderIcon(chevron(b, kind))}</button>`
 	);
 }
 
 function playButton(b: CarouselBindings): string {
 	return (
 		'<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--play" part="play" ' +
-		`data-play="${uid(b)}" aria-label="${esc(playLabel(b))}">${playIcon(b)}</button>`
+		`data-play="${uid(b)}" aria-label="${escapeAttr(playLabel(b))}">${playIcon(b)}</button>`
 	);
 }
 

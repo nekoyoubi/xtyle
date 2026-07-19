@@ -5,6 +5,7 @@ import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger, ImageHoverAudio
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { openLightbox } from "./lightbox.js";
 import { manifest, fragmentSources } from "./fragments/image/source.generated.js";
+import { resolveVocab, IMAGE_FITS, IMAGE_RADII } from "../vocab.js";
 
 /** A click or key that lands on a control inside the frame belongs to the control, not the frame. */
 function onFrameControl(target: EventTarget | null): boolean {
@@ -71,14 +72,14 @@ export class XtyleImage extends XtyleElement {
 	}
 
 	get fit(): ImageFit {
-		return (this.getAttribute("fit") as ImageFit) ?? "cover";
+		return resolveVocab(this.getAttribute("fit"), IMAGE_FITS, "cover", "image fit");
 	}
 	set fit(value: ImageFit) {
 		this.setAttribute("fit", value);
 	}
 
 	get radius(): ImageRadius {
-		return (this.getAttribute("radius") as ImageRadius) ?? "md";
+		return resolveVocab(this.getAttribute("radius"), IMAGE_RADII, "md", "image radius");
 	}
 	set radius(value: ImageRadius) {
 		this.setAttribute("radius", value);
@@ -298,7 +299,7 @@ export class XtyleImage extends XtyleElement {
 	}
 
 	private hoverContentPresent(overlay: HTMLElement): boolean {
-		if (overlay.querySelector(":scope > *:not(slot)")) return true;
+		if (Array.from(overlay.children).some((el) => el.tagName !== "SLOT")) return true;
 		const slot = overlay.querySelector<HTMLSlotElement>("slot[name='hover']");
 		if (slot && typeof slot.assignedElements === "function" && slot.assignedElements().length) return true;
 		return this.querySelector('[slot="hover"]') !== null;

@@ -135,6 +135,49 @@ export interface LoadAlgorithmOptions {
 	timeoutMs?: number;
 }
 
+/**
+ * The rail a *correctness harness* loads a mod under, as opposed to the production rail the host
+ * manifest declares.
+ *
+ * `limits.timeout_ms` (5s) is an anti-runaway rail: it exists so a mod with an infinite loop cannot
+ * hang the browser generator, and it must stay tight for that. But it is not a performance budget,
+ * and a single interpreted derivation against a hostile seed already runs ~3s — so a battery that
+ * sweeps hundreds of adversarial seeds through the sandbox trips the rail on the slowest of them and
+ * reports an interrupt that says nothing about the algorithm. The harness raises the rail for itself
+ * rather than every consumer paying for it: a gauntlet run is developer-supervised and bounded by the
+ * suite, so the runaway case it guards against is already covered by the person watching it.
+ *
+ * This lives beside `loadAlgorithm` rather than with either resolver because *both* resolvers need
+ * it — the Node one that reads `algorithms/` off disk and the filesystem-free one that resolves from
+ * the embedded bundle. A rail only the Node twin could raise is how the bundle path ended up racing
+ * the 5s production rail in a byte-identity test, which fails as an `interrupted` interrupt and reads
+ * like a derivation divergence rather than a busy machine.
+ */
+export const HARNESS_TIMEOUT_MS = 60_000;
+
+export interface ResolveAlgorithmOptions {
+	/**
+	 * Raise the sandbox's wall-clock rail, up to {@link HARNESS_TIMEOUT_MS}. Only a correctness harness
+	 * should reach for this; a request above the ceiling is clamped to it rather than honored.
+	 *
+	 * This is a patience dial, not a confinement boundary: it governs how long the host waits before
+	 * killing a mod that is spinning, and touches nothing else. The memory and stack limits hold, and
+	 * the capability set a mod runs under (`color-math`, and a no-op `log`) is fixed and never
+	 * parameterized — so a longer rail grants a mod no authority it did not already have.
+	 */
+	timeoutMs?: number;
+}
+
+/**
+ * The rail a load actually runs under. Clamped to {@link HARNESS_TIMEOUT_MS} so the ceiling is a real
+ * bound rather than a suggestion a doc comment makes: the anti-runaway guarantee survives whatever a
+ * caller asks for, and the mod cache cannot be grown without limit by varying the rail (it is part of
+ * the cache key, so an unbounded rail means an unbounded number of QuickJS runtimes).
+ */
+export function railFor(timeoutMs: number | undefined): number | undefined {
+	return timeoutMs === undefined ? undefined : Math.min(timeoutMs, HARNESS_TIMEOUT_MS);
+}
+
 export interface LoadAuthoredOptions extends LoadAlgorithmOptions {
 	/** The facade id for the authored algorithm. Defaults to `"authored"`. */
 	name?: string;

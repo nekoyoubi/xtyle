@@ -1,3 +1,4 @@
+import { escapeAttr, escapeHtml } from "../escape.js";
 import { dotClass } from "../../../markup/dot";
 
 interface OpsBuilder {
@@ -19,14 +20,6 @@ interface AvatarBindings {
 	status?: string | null;
 	statusLabel?: string | null;
 	pulse?: boolean | string | null;
-}
-
-function escapeHtml(value: string): string {
-	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttr(value: string): string {
-	return escapeHtml(value).replace(/"/g, "&quot;");
 }
 
 /** Up to two initials for a person's name — first + last, or one letter for a single word. Split on
@@ -109,7 +102,7 @@ hooks.fragment.mount("avatar", (bindings, ops) => {
 });
 
 hooks.fragment.update("avatar", (bindings, ops) => {
-	ops.setAttr('[part="avatar"]', "class", avatarClass(bindings));
+	ops.setAttr(".xtyle-avatar", "class", avatarClass(bindings));
 	ops.setAttr('[part="avatar"]', "aria-label", avatarLabel(bindings));
 	if (bindings.src != null) {
 		ops.setAttr(".xtyle-avatar__image", "src", bindings.src);

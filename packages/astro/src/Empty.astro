@@ -1,17 +1,19 @@
 ---
+import { checkAuthoring } from "./internal/diagnose.js";
 interface Props {
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
 	class?: string;
 	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
-const { class: extra, ...rest } = Astro.props;
+const { static: isStatic = false, class: extra, ...rest } = Astro.props;
+await checkAuthoring("empty", Astro.props);
 ---
 
 <xtyle-empty class:list={["xtyle-empty", extra]} {...rest}>
 	<slot />
 </xtyle-empty>
 
-<script>
-	import "@xtyle/core/elements";
-</script>
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

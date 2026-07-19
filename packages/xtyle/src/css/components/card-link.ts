@@ -1,5 +1,5 @@
 export const cardLinkCss = `
-[data-card-link] { display: contents; }
+[data-root][data-card-link] { display: contents; }
 .xtyle-card-link {
 	text-decoration: none;
 }
