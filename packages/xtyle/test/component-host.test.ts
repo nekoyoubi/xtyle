@@ -3,16 +3,19 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-// The component host manifest is the surface a mod author reads to override a component's fill.
-// xript's own linter flags an undescribed slot (`undescribed`) and a slot missing its capability;
-// this guards both in the test suite so a newly-registered component can't ship a slot that's
-// unreachable to the toolchain's checks. (Mirrors what `xript_lint` reports on the host.)
 const here = dirname(fileURLToPath(import.meta.url));
 const fragmentsDir = resolve(here, "../src/elements/fragments");
 const host = JSON.parse(readFileSync(resolve(fragmentsDir, "component-host.json"), "utf8")) as {
-	slots: { id: string; description?: string; capability?: string }[];
+	slots: { id: string; description?: string; capability?: string; accepts?: string[] }[];
 	capabilities: Record<string, { description?: string; risk?: string }>;
+	vocabularies: Record<string, { nodes: Record<string, { props?: Record<string, { sink?: string }> }> }>;
 };
+
+const isDataSlot =(slot: { accepts?: string[] }) => (slot.accepts ?? []).includes("application/json");
+const markupSlots = host.slots.filter((s) => !isDataSlot(s));
+const dataSlots = host.slots.filter(isDataSlot);
+const componentSlots = host.slots.filter((s) => s.id.startsWith("component."));
+const componentNodes = host.vocabularies["xtyle.components"].nodes;
 
 interface ModManifest {
 	capabilities?: string[];
@@ -39,11 +42,8 @@ describe("component host manifest slots", () => {
 		expect(uncapable).toEqual([]);
 	});
 
-	// A slot is a promise: grant its capability, ship a fill, and the component renders yours. A slot
-	// with no built-in fill keeps none of that — the mod loads, the capability is granted, and nothing
-	// happens. The manifest is the API, so a declared slot must be backed by a real `fragments/<id>/`.
-	it("every slot is filled by a built-in fragment", () => {
-		const dead = host.slots.filter((s) => {
+	it("every markup slot is filled by a built-in fragment", () => {
+		const dead = markupSlots.filter((s) => {
 			const mod = builtinFill(s.id);
 			return !mod?.fills?.[s.id]?.length;
 		});
@@ -51,15 +51,37 @@ describe("component host manifest slots", () => {
 	});
 
 	it("every built-in fill holds the capability its slot gates on", () => {
-		const ungranted = host.slots.filter((s) => {
+		const ungranted = markupSlots.filter((s) => {
 			const mod = builtinFill(s.id);
 			return mod !== null && !mod.capabilities?.includes(s.capability as string);
 		});
 		expect(ungranted.map((s) => s.id)).toEqual([]);
 	});
 
+	it("every data slot says what shape it accepts", () => {
+		const vague = dataSlots.filter((s) => !/\bkeyed by\b/.test(s.description ?? ""));
+		expect(vague.map((s) => s.id)).toEqual([]);
+	});
+
 	it("declares exactly the capabilities its slots gate on", () => {
 		const gated = [...new Set(host.slots.map((s) => s.capability as string))].sort();
 		expect(Object.keys(host.capabilities).sort()).toEqual(gated);
+	});
+
+	it("lets a fill emit every component that has a slot", () => {
+		const unemittable = componentSlots
+			.map((s) => `xtyle-${s.id.slice("component.".length)}`)
+			.filter((tag) => !(tag in componentNodes));
+		expect(unemittable).toEqual([]);
+	});
+
+	it("gives every src prop a URL sink so the paint keeps it", () => {
+		const unsunk = Object.entries(componentNodes)
+			.flatMap(([tag, node]) =>
+				Object.entries(node.props ?? {})
+					.filter(([prop, spec]) => /^(src|href|poster)$|-(src|poster)$/.test(prop) && !spec.sink)
+					.map(([prop]) => `${tag}.${prop}`),
+			);
+		expect(unsunk).toEqual([]);
 	});
 });

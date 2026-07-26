@@ -1,0 +1,451 @@
+---
+import Base from "../layouts/Base.astro";
+import Panel from "@xtyle/astro/Panel.astro";
+import Dock from "@xtyle/astro/Dock.astro";
+import Toc from "@xtyle/astro/Toc.astro";
+import Alert from "@xtyle/astro/Alert.astro";
+import Table from "@xtyle/astro/Table.astro";
+import Code from "@xtyle/astro/Code.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Switch from "@xtyle/astro/Switch.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Eyebrow from "@xtyle/astro/Eyebrow.astro";
+import { listEffects, listConditions, fxStyleAttr, EFFECT_TOKENS } from "@xtyle/core";
+
+const sections = [
+	{ id: "shape", label: "The shape" },
+	{ id: "library", label: "The library" },
+	{ id: "params", label: "Parameters" },
+	{ id: "conditions", label: "Conditions" },
+	{ id: "tokens", label: "Tokens" },
+	{ id: "extending", label: "Adding your own" },
+	{ id: "motion", label: "Reduced motion" },
+];
+
+const effects = listEffects();
+const conditions = listConditions();
+
+const BLURB: Record<string, string> = {
+	glow: "a halo, the accent bloom",
+	throb: "a slow pulse that drifts between the two accent hues",
+	glare: "an animated sheen that sweeps across the box",
+	lift: "a small rise with a shadow under it",
+	tint: "a color wash over the surface",
+	frost: "a backdrop blur and saturation bump",
+	reveal: "fades and slides in once armed",
+	shake: "a short nudge, for an error",
+	saturate: "hover boosts to 200; the switch overrides to grayscale, hover and all",
+};
+
+interface Demo {
+	spec: string;
+	stage: "plain" | "stripes" | "dark";
+	body: "mark" | "panel" | "swatches" | "glass";
+	clip?: boolean;
+	arm?: boolean;
+	toggle?: boolean;
+}
+
+const DEMOS: Record<string, Demo> = {
+	glow: { spec: "glow@hover?spread:18", stage: "dark", body: "mark" },
+	throb: { spec: "throb?rate:5s,colors:[accent,accent-2],spread:20", stage: "dark", body: "mark" },
+	glare: { spec: "glare@hover?angle:105,rate:900ms", stage: "plain", body: "panel", clip: true },
+	lift: { spec: "lift@hover?distance:7", stage: "plain", body: "panel" },
+	tint: { spec: "tint@hover?amount:55,color:accent", stage: "plain", body: "panel" },
+	frost: { spec: "frost@hover?blur:7,saturation:90", stage: "stripes", body: "glass" },
+	reveal: { spec: "reveal?distance:14,rate:400ms", stage: "plain", body: "panel", arm: true },
+	shake: { spec: "shake@hover?distance:6", stage: "plain", body: "panel" },
+	saturate: { spec: "saturate@hover?amount:200  ·  switch → saturate@armed?amount:0", stage: "plain", body: "swatches", toggle: true },
+};
+
+const SWATCHES = ["--red", "--orange", "--yellow", "--green", "--blue", "--purple"];
+
+const PARAM_DEMOS = [
+	"glow@hover?spread:20,color:pink",
+	"throb?rate:1.2s,colors:[green,blue]",
+	"glare@hover?angle:315,rate:700ms,color:#ffffff",
+	"lift@hover?distance:10,color:purple",
+	"tint@hover?amount:60,color:red",
+];
+
+const tokenNotes: Record<string, string> = {
+	"--fx-intensity": "the algorithm's taste; 0 disables the whole layer",
+	"--fx-color": "--accent",
+	"--fx-color-alt": "--accent-2 — the hue a throb travels toward",
+	"--fx-duration": "--duration-base",
+	"--fx-ease": "--ease-standard",
+};
+
+const specSnippet = `<span   data-fx="throb">                      <!-- no condition: ambient -->
+<a      data-fx="glow@hover">
+<button data-fx="glare@hover lift@active">
+<div    data-fx="tint@checked frost@disabled">
+
+<!-- re-point one effect's color inline, like the toolbar above does -->
+<a data-fx="glow@hover" style="--fx-color: var(--pink)">
+
+<!-- named parameters, any subset, any order -->
+<span data-fx="throb?rate:3s,colors:[accent,accent-2]">
+<div  data-fx="glow@hover?spread:18">`;
+
+const addonSnippet = `import { registerEffect, registerCondition } from "@xtyle/core";
+
+// last-wins on the name: this replaces the shipped glow
+registerEffect({ name: "glow", active: "filter:blur(1px)" });
+
+// ...and this adds one the library never had
+registerEffect({ name: "sparkle", active: "outline:1px dashed var(--fx-color)" });
+registerCondition({ name: "dragging", selector: "[data-dragging]" });
+
+// \`sparkle@dragging\` now works — and so does \`glow@dragging\`, because the
+// cross product is regenerated, not hand-listed.`;
+---
+
+<Base title="Effects" description="A named visual behavior applied to any element under a condition.">
+	<Stack gap={6}>
+		<Stack gap={2}>
+			<Eyebrow>Docs</Eyebrow>
+			<Heading level={1}>Effects</Heading>
+			<Text tone="muted">
+				A token is a value. A component is a thing. An effect is a <em>verb</em> — a behavior applied to
+				an element under a condition — and neither of the other two can hold one.
+			</Text>
+		</Stack>
+
+		<section id="shape">
+			<Stack gap={3}>
+				<Heading level={2} size="md">The shape</Heading>
+				<Text tone="muted">
+					A token cannot say "on hover"; a component cannot decorate an element that already exists
+					without wrapping it. So an effect is addressed the way an icon name and a theme recipe already
+					are: a name that is its own spec.
+				</Text>
+				<Code lang="html" code={specSnippet} />
+				<Alert tone="info">
+					It emits plain attribute-selector CSS, so nothing here needs a runtime — the whole cross
+					product of the shipped set is about 3&nbsp;KB gzipped.
+				</Alert>
+			</Stack>
+		</section>
+
+		<section id="library">
+			<Stack gap={3}>
+				<Heading level={2} size="md">The library</Heading>
+				<Text tone="muted">
+					Each effect gets the stage that actually shows it, because one shared stage cannot show them
+					all. A halo is light spilling onto its surroundings, so <code>glow</code> and <code>throb</code>
+					need a dark surface and no clipping. A <code>filter</code> acts on the element's own content, so
+					<code>saturate</code> needs color <em>inside</em> the target; a <code>backdrop-filter</code> acts
+					on what is behind, so <code>frost</code> needs the opposite. The spec under each tile is the one
+					it is running, parameters and all.
+				</Text>
+				<div class="x-fx-grid">
+					{
+						effects.map((effect) => {
+							const demo = DEMOS[effect.name];
+							if (!demo) return null;
+							return (
+								<figure class="x-fx-tile" data-arm={demo.arm ? `x-arm-${effect.name}` : undefined}>
+									<div class={`x-fx-stage x-fx-stage--${demo.stage}${demo.clip ? " x-fx-stage--clip" : ""}`}>
+										{demo.body === "swatches" ? (
+											<div class="x-fx-target x-fx-target--swatches" data-fx="saturate@hover?amount:200" style={fxStyleAttr("saturate@hover?amount:200")}>
+												<div class="x-fx-chips" data-fx="saturate@armed?amount:0" style={fxStyleAttr("saturate@armed?amount:0")}>
+													{SWATCHES.map((token) => <span class="x-fx-chip" style={`background:var(${token})`} />)}
+												</div>
+												<Switch orientation="vertical" shape="square" size="sm" aria-label="Override to grayscale" data-fx-sat />
+											</div>
+										) : (
+											<div class={`x-fx-target x-fx-target--${demo.body}`} data-fx={demo.spec} style={fxStyleAttr(demo.spec)}>
+												<span class="x-fx-target__label">{effect.name}</span>
+											</div>
+										)}
+									</div>
+									<figcaption>
+										<Text mono size="xs">{demo.spec}</Text>
+										<Text tone="muted" size="xs">{BLURB[effect.name] ?? ""}</Text>
+										{demo.arm && <Button id={`x-arm-${effect.name}`} size="sm" variant="subtle">Arm it</Button>}
+									</figcaption>
+								</figure>
+							);
+						})
+					}
+				</div>
+				<Alert tone="info">
+					<strong>reveal</strong> is the one that cannot be shown by hovering — it waits to be
+					<em>armed</em>, which is precisely what an observer does. Its tile has the button.
+				</Alert>
+				<Text tone="muted" size="sm">
+					Intensity is the <em>algorithm's</em> policy, not a per-component guess. Switch the theme in the
+					toolbar and the whole layer follows; on <code>xtyle-hc</code> it flattens to nothing, because a
+					halo, a lift, and a wash all spend the edge contrast a high-contrast taste exists to protect.
+				</Text>
+			</Stack>
+		</section>
+
+		<section id="params">
+			<Stack gap={3}>
+				<Heading level={2} size="md">Parameters</Heading>
+				<Text tone="muted">
+					An effect's tunables are named, after a <code>?</code>:
+					<code>throb?rate:3s,colors:[accent,accent-2]</code>, <code>glare@hover?angle:315,rate:100ms</code>. A bare number takes
+					the parameter's own unit (so <code>315</code> is degrees and <code>3</code> is seconds), a hex is a
+					fixed color, and a bare name resolves to that theme token — which keeps it theme-reactive rather
+					than freezing whatever color it happened to be when you typed it.
+				</Text>
+				<Cluster gap={5} align="center">
+					{
+						PARAM_DEMOS.map((spec) => (
+							<figure class="x-fx-tile x-fx-tile--sm">
+								<div class="x-fx-stage x-fx-stage--plain">
+									<div class="x-fx-target x-fx-target--panel" data-fx={spec} style={fxStyleAttr(spec)}>
+										<span class="x-fx-target__label">hover</span>
+									</div>
+								</div>
+								<figcaption><Text mono size="xs">{spec}</Text></figcaption>
+							</figure>
+						))
+					}
+				</Cluster>
+				<Alert tone="warn">
+					A CSS attribute selector can <em>match</em> a token but never <em>parse</em> it, so the values
+					arrive as custom properties rather than in the selector. <code>fxStyle(spec)</code> resolves them
+					and a binding calls it at build or SSR, so a parameterised effect still costs no JavaScript.
+					Setting the property yourself always works too, and it cascades:
+					<code>style="--fx-glow-color: var(--pink)"</code> on a parent covers everything inside it.
+				</Alert>
+				<Table hover ariaLabel="Effect parameters">
+					<table>
+						<thead>
+							<tr><th>Effect</th><th>Parameters</th></tr>
+						</thead>
+						<tbody>
+							{
+								effects.filter((e) => e.params?.length).map((e) => (
+									<tr>
+										<td><code>{e.name}</code></td>
+										<td><code>{(e.params ?? []).map((param) => `${param.name}${param.unit ? ` (${param.unit})` : ""}`).join(", ")}</code></td>
+									</tr>
+								))
+							}
+						</tbody>
+					</table>
+				</Table>
+			</Stack>
+		</section>
+
+		<section id="conditions">
+			<Stack gap={3}>
+				<Heading level={2} size="md">Conditions</Heading>
+				<Table hover ariaLabel="Effect conditions">
+					<table>
+						<thead>
+							<tr><th>Condition</th><th>Selector</th></tr>
+						</thead>
+						<tbody>
+							<tr><td><em>none</em></td><td>always — ambient</td></tr>
+							{conditions.map((c) => (
+								<tr><td><code>{c.name}</code></td><td><code>{c.selector}</code></td></tr>
+							))}
+						</tbody>
+					</table>
+				</Table>
+				<Cluster gap={4} align="center">
+					<Button data-fx="lift@hover">lift@hover</Button>
+					<Button variant="subtle" data-fx="glare@hover">glare@hover</Button>
+					<Button variant="ghost" data-fx="glow@focus">glow@focus</Button>
+					<Button variant="subtle" data-fx="shake@active">shake@active</Button>
+					<Button disabled data-fx="tint@disabled">tint@disabled</Button>
+				</Cluster>
+			</Stack>
+		</section>
+
+		<section id="tokens">
+			<Stack gap={3}>
+				<Heading level={2} size="md">Tokens</Heading>
+				<Table hover ariaLabel="Effect tokens">
+					<table>
+						<thead>
+							<tr><th>Token</th><th>Derived from</th></tr>
+						</thead>
+						<tbody>
+							{EFFECT_TOKENS.map((token) => (
+								<tr><td><code>{token}</code></td><td>{tokenNotes[token] ?? ""}</td></tr>
+							))}
+						</tbody>
+					</table>
+				</Table>
+				<Text tone="muted" size="sm">
+					These are ordinary tokens on the open register, so a theme dials them with an override and
+					needs no knob. Four shared tokens rather than a family per effect is deliberate: a per-effect
+					family would grow with the library and lock a third-party effect out of deriving at all,
+					whereas a shared dial means an addon's effect answers to the theme the day it lands.
+				</Text>
+			</Stack>
+		</section>
+
+		<section id="extending">
+			<Stack gap={3}>
+				<Heading level={2} size="md">Adding your own</Heading>
+				<Text tone="muted">
+					The registries are <strong>last-wins on the name</strong>, and the built-ins register first —
+					so an addon replaces one entry or adds a new one without restating the rest. Same contract
+					fills use.
+				</Text>
+				<Code lang="ts" code={addonSnippet} />
+			</Stack>
+		</section>
+
+		<section id="motion">
+			<Stack gap={3}>
+				<Heading level={2} size="md">Reduced motion</Heading>
+				<Text tone="muted">
+					Every effect that moves is wrapped in a <code>prefers-reduced-motion: reduce</code> guard that
+					returns it to stillness. This is a large part of why the layer is worth having: the policy is
+					decided once, correctly, instead of by every adopter who happens to remember.
+				</Text>
+				<Alert tone="warn">
+					<strong>reveal</strong> is the one effect that needs a runtime, and it is built so the absence
+					of one can never hide content. The bare name does nothing; the hidden state is reachable only
+					through <code>data-fx-armed</code>, which nothing but the observer sets.
+				</Alert>
+			</Stack>
+		</section>
+	</Stack>
+
+	<Dock slot="right" title="On this page">
+		<Panel>
+			<Toc items={sections} />
+		</Panel>
+	</Dock>
+</Base>
+
+<style>
+	.x-fx-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+		gap: var(--space-5);
+	}
+	.x-fx-tile {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+	.x-fx-stage {
+		position: relative;
+		height: 6rem;
+		border-radius: var(--radius-md);
+		display: grid;
+		place-items: center;
+	}
+	.x-fx-stage--clip {
+		overflow: hidden;
+	}
+	.x-fx-stage--plain {
+		background: var(--bg-2);
+		border: var(--border-thin) solid var(--line);
+	}
+	.x-fx-stage--dark {
+		background: #14161c;
+		border: var(--border-thin) solid var(--line);
+	}
+	.x-fx-stage--dark .x-fx-target--mark {
+		background: #f2f4f8;
+		color: #14161c;
+	}
+	.x-fx-stage--stripes {
+		overflow: hidden;
+		background: repeating-linear-gradient(
+			135deg,
+			var(--accent) 0 12px,
+			var(--accent-2) 12px 24px,
+			var(--accent-3, var(--accent)) 24px 36px
+		);
+	}
+	.x-fx-target {
+		position: relative;
+		display: grid;
+		place-items: center;
+		border-radius: var(--radius-sm);
+		color: var(--fg-0);
+	}
+	.x-fx-target--mark {
+		width: 2.75rem;
+		height: 2.75rem;
+		background: var(--fg-0);
+		color: var(--bg-0);
+	}
+	.x-fx-target--panel {
+		width: 74%;
+		height: 58%;
+		background: var(--bg-0);
+		border: var(--border-thin) solid var(--line);
+	}
+	.x-fx-target--glass {
+		width: 74%;
+		height: 58%;
+		background: color-mix(in oklab, var(--bg-0) 22%, transparent);
+		border: var(--border-thin) solid color-mix(in oklab, var(--fg-0) 25%, transparent);
+	}
+	.x-fx-target--swatches {
+		width: 78%;
+		height: 60%;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem;
+		background: var(--bg-0);
+		border: var(--border-thin) solid var(--line);
+	}
+	.x-fx-chips {
+		flex: 1;
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 1fr;
+		gap: 0.25rem;
+		height: 100%;
+	}
+	.x-fx-chip {
+		width: 100%;
+		height: 100%;
+		border-radius: var(--radius-xs, 3px);
+	}
+	.x-fx-target__label {
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		font-weight: var(--weight-bold);
+	}
+	.x-fx-tile--sm .x-fx-stage {
+		width: 9.5rem;
+		height: 5rem;
+	}
+	.x-fx-tile figcaption {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.2rem;
+	}
+</style>
+
+<script>
+	document.addEventListener("click", (event) => {
+		const arm = (event.target as HTMLElement | null)?.closest("[id^='x-arm-']");
+		if (!arm) return;
+		const panel = arm.closest(".x-fx-tile")?.querySelector("[data-fx]");
+		if (!panel) return;
+		panel.setAttribute("data-fx-armed", "");
+		requestAnimationFrame(() => setTimeout(() => panel.removeAttribute("data-fx-armed"), 420));
+	});
+
+	document.addEventListener("change", (event) => {
+		const sw = (event.target as HTMLElement | null)?.closest("[data-fx-sat]");
+		if (!sw) return;
+		const gray = (event.target as HTMLInputElement).checked;
+		const chips = sw.closest(".x-fx-target")?.querySelector("[data-fx]");
+		if (gray) chips?.setAttribute("data-fx-armed", "");
+		else chips?.removeAttribute("data-fx-armed");
+	});
+</script>

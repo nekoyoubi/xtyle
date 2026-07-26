@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-// side effect: defines the <xtyle-color-picker> custom element on the happy-dom registry
+// INFO: side-effect import: registers the <xtyle-color-picker> element on the registry
 import "../src/elements/color-picker.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/color-picker/source.generated.js";
@@ -92,19 +92,19 @@ describe("<xtyle-color-picker> harmony chips", () => {
 	});
 });
 
-// Last: the override registers hooks on the shared runtime for the rest of the file.
+// INFO: keep last: the override registers hooks on the shared runtime for the rest of the file
 describe("a component.color-picker override", () => {
 	it("survives a color change — the chips are the fill's, and the element only recolors them", async () => {
 		await loadFill(
 			{
-				xript: "0.7",
+				xript: "0.8",
 				name: "test-color-picker-override",
 				version: "0.0.1",
 				capabilities: ["xtyle.component.color-picker"],
 				entry: { script: "mod.js", format: "script" },
 				fills: {
 					"component.color-picker": [
-						{ id: "color-picker", format: "text/html+jsml", source: "color-picker.html" },
+						{ id: "color-picker", format: "application/x-xtyle+html", source: "color-picker.html" },
 					],
 				},
 			},
@@ -130,14 +130,12 @@ describe("a component.color-picker override", () => {
 
 		el.value = "#22aa55";
 
-		// the modded chip is still the modded chip, and it took the new color
 		const after = chips(el)[0]!;
 		expect(after).toBe(before);
 		expect(after.classList.contains("modded-chip")).toBe(true);
 		expect(after.querySelector(".modded-mark")).not.toBeNull();
 		expect(after.style.getPropertyValue("--cp-chip")).toBe(after.dataset.hex);
 
-		// and it still adopts its color on click
 		const adopted = after.dataset.hex!;
 		after.click();
 		expect(el.value.toLowerCase()).toBe(adopted.toLowerCase());

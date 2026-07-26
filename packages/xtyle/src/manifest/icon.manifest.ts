@@ -63,6 +63,58 @@ import Icon from "@xtyle/astro/Icon.astro";
 <Icon name="crest--shield-c1--star-s45-cf" size="xl" />
 <Icon name="chip--hex-c1--dot-s30-c2" colors="statuses" size="xl" />`;
 
+const libraryHtmlExample = `<!-- a database: the square-edged oval, capped with flat discs -->
+<xtyle-icon name="database--cylinder-c1--disc-y-25-c3--disc-y-2-c2-a70" size="xl"></xtyle-icon>
+
+<!-- water: a wavy fill level, clipped to a circle -->
+<xtyle-icon name="sea--circle-cb--water-c1--circle-i-ko" size="xl"></xtyle-icon>
+
+<!-- filled art stacks; there is no line work to line up -->
+<xtyle-icon name="weather--sun-c4-x-18-y-16-s70--cloud-cf-s90-y8" size="xl"></xtyle-icon>
+<xtyle-icon name="spark--seal-c2--star4-s45-cf" size="xl"></xtyle-icon>`;
+
+const librarySvelteExample = `<script lang="ts">
+	import { Icon } from "@xtyle/svelte";
+</script>
+
+<Icon name="database--cylinder-c1--disc-y-25-c3--disc-y-2-c2-a70" size="xl" />
+<Icon name="sea--circle-cb--water-c1--circle-i-ko" size="xl" />`;
+
+const libraryAstroExample = `---
+import Icon from "@xtyle/astro/Icon.astro";
+---
+
+<Icon name="database--cylinder-c1--disc-y-25-c3--disc-y-2-c2-a70" size="xl" />
+<Icon name="sea--circle-cb--water-c1--circle-i-ko" size="xl" />`;
+
+const transformHtmlExample = `<!-- sx / sy stretch one layer out of its authored proportion, on top of s -->
+<xtyle-icon name="wide--circle-c2-sx150-sy60" size="xl"></xtyle-icon>
+<xtyle-icon name="layered--circle-c2-s50-sx200" size="xl"></xtyle-icon>
+
+<!-- the finish resizes and moves the WHOLE composite, outline and shadow with it -->
+<xtyle-icon name="inset--square1-c1--star-s50-cf---s70" size="xl"></xtyle-icon>
+<xtyle-icon name="nudged--square1-c1--star-s50-cf---mx14--my-14" size="xl"></xtyle-icon>
+
+<!-- ---center re-centers on the ink left standing, so a carve moves where the mark sits -->
+<xtyle-icon name="centered--star-p1-s40-c1---center" size="xl"></xtyle-icon>
+<xtyle-icon name="seated--circle-c1--circle-x50-ko---center" size="xl"></xtyle-icon>`;
+
+const transformSvelteExample = `<script lang="ts">
+	import { Icon } from "@xtyle/svelte";
+</script>
+
+<Icon name="wide--circle-c2-sx150-sy60" size="xl" />
+<Icon name="inset--square1-c1--star-s50-cf---s70" size="xl" />
+<Icon name="centered--star-p1-s40-c1---center" size="xl" />`;
+
+const transformAstroExample = `---
+import Icon from "@xtyle/astro/Icon.astro";
+---
+
+<Icon name="wide--circle-c2-sx150-sy60" size="xl" />
+<Icon name="inset--square1-c1--star-s50-cf---s70" size="xl" />
+<Icon name="centered--star-p1-s40-c1---center" size="xl" />`;
+
 const paletteHtmlExample = `<!-- the control sets the palette: both marks read the same scheme -->
 <xtyle-icon name="chip--hex-c1--dot-s30-c2" colors="skittles" size="xl"></xtyle-icon>
 
@@ -157,7 +209,7 @@ export const iconManifest: ComponentManifest = {
 	seeAlso: ["swatch", "avatar", "rating"],
 	summary: "A functional glyph, or a mark generated from a name, drawn in the current text color.",
 	description:
-		"Icon renders one glyph from a small functional set (chevrons, arrows, close, check, the status marks, a spinner, the menu dots, and the media-transport family: play, pause, stop, skip-forward, skip-back) as inline SVG. It carries no color of its own: the glyph is drawn in `currentColor`, so it inherits the text color around it and matches the derived theme with nothing to wire. It sizes off the surrounding type by default, so an icon set beside a word lines up with it; `size` steps it in fixed `em` for a standalone glyph. An optional `tone` tints it to a semantic role or named hue, `spin` turns it into a loading affordance, and a `label` promotes it from decorative to a named image for assistive tech. Beyond the lookup, a `name` can carry a spec: a terse grammar (`shield--star-s45-c1`) the engine parses into a layered mark and composes on the fly, placing primitives on a grid, sizing, rotating, outlining, or knocking them out, and coloring them from one of the theme's own palettes via `colors` so a generated mark recolors with the theme (a `---ps-{palette}` finish pins the palette in the name instead, so a mark carries its own). A parametric `letter` primitive typesets a glyph as a mark (`--letter-A`) in an indexed theme font slot (`f0` sans, `f1` display, `f2` mono) that a `---f` finish can swap for another theme font or a named web font. Lookup for the common glyph, generation for everything else, one element for both.",
+		"Icon renders one glyph from a small functional set (chevrons, arrows, close, check, the status marks, a spinner, the menu dots, and the media-transport family: play, pause, stop, skip-forward, skip-back) as inline SVG. It carries no color of its own: the glyph is drawn in `currentColor`, so it inherits the text color around it and matches the derived theme with nothing to wire. It sizes off the surrounding type by default, so an icon set beside a word lines up with it; `size` steps it in fixed `em` for a standalone glyph. An optional `tone` tints it to a semantic role or named hue, `spin` turns it into a loading affordance, and a `label` promotes it from decorative to a named image for assistive tech. Beyond the lookup, a `name` can carry a spec: a terse grammar (`shield--star-s45-c1`) the engine parses into a layered mark and composes on the fly, placing primitives on a grid, sizing (uniformly with `s`, then stretched per axis by `sx`/`sy` layered on top of it), rotating, outlining, or knocking them out, and coloring them from one of the theme's own palettes via `colors` so a generated mark recolors with the theme (a `---ps-{palette}` finish pins the palette in the name instead, so a mark carries its own). The library it draws from is mostly filled art rather than line work — curves and volumes and polygons you stack, so a `cylinder` capped with a `disc` is a database and a `water` level under a `wave` is the sea — and the finish resizes (`---s`/`---sx`/`---sy`), moves (`---mx`/`---my`), and re-centers (`---center`) the whole composite. A parametric `letter` primitive typesets a glyph as a mark (`--letter-A`) in an indexed theme font slot (`f0` sans, `f1` display, `f2` mono) that a `---f` finish can swap for another theme font or a named web font. Lookup for the common glyph, generation for everything else, one element for both.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
@@ -270,6 +322,20 @@ export const iconManifest: ComponentManifest = {
 			description:
 				"A `name` carrying a spec is composed on the fly: primitives on a grid, sized / rotated / outlined / knocked out, colored from the theme's series via `colors`.",
 			source: { html: genHtmlExample, svelte: genSvelteExample, astro: genAstroExample },
+		},
+		{
+			id: "primitive-library",
+			title: "The primitive library",
+			description:
+				"The library is mostly filled art rather than line work: solids you stack into a mark. Curves and nature (`wave`, `water`, `swish`, `blob`, `lens`, `leaf`, `cloud`, `mountain`, `sun`, `flame`, `drop`), volume (`disc`, `cylinder`, `cone`, `half`, `quarter`, `wedge`, `oval`, `pill`, `egg`, `arch`), polygons (`pentagon`, `octagon`, `trapezoid`, `ramp`, `squircle`, `gem`), markers (`banner`, `tag`, `bubble`, `chevron`, `arrow`), and stars (`star4` / `star6` / `star8`, `burst`, `seal`). `cylinder` is the square-edged oval a database icon is made of: stack a `disc` cap on one and you have the drum.",
+			source: { html: libraryHtmlExample, svelte: librarySvelteExample, astro: libraryAstroExample },
+		},
+		{
+			id: "size-and-move",
+			title: "Sizing and moving: the layer and the whole mark",
+			description:
+				"A layer sizes with `s` and moves with `x`/`y`; `sx`/`sy` then stretch that result on one axis, layering on `s` rather than replacing it, so one `circle` covers every ellipse ratio. The finish carries the same dials for the whole composite — `---s`/`---sx`/`---sy` resize it and `---mx`/`---my` move it, both wrapping the outline and shadow so a finished mark travels as one piece. `---center` re-centers the mark on the ink it actually leaves standing: a knockout is the tool that carves ink rather than ink itself, so a carved mark seats on what survives the carve. The engine can do this anywhere because it measures the primitive geometry statically rather than asking a DOM.",
+			source: { html: transformHtmlExample, svelte: transformSvelteExample, astro: transformAstroExample },
 		},
 		{
 			id: "pinned-palette",

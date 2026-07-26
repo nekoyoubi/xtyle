@@ -23,7 +23,7 @@ algorithm is the press; the split is about reuse, not worth. xript is an extensi
 protocol: an algorithm is a manifest-declared, sandboxed plugin, and its validation and
 type tooling come free.
 
-Three layers over that spine:
+Four layers over that spine:
 
 1. **Derivation engine**: a xript host plus a resolution orchestrator over an *open* token
    graph, `(algorithm: knobs + constraints) → full register`. OKLCH, no DOM, exhaustively
@@ -38,6 +38,12 @@ Three layers over that spine:
    element *is* the component, no headless tier beneath it, styled *only* against tokens it
    declares it consumes. Thin framework wrappers (`@xtyle/svelte`, `@xtyle/astro`, and more)
    skin them. Optional sugar; the CSS artifact is the real minimum an app consumes.
+4. **Effects (a third kind)**: a token is a value, a component is a thing, an **effect** is a
+   verb: a behavior applied to any element under a condition, addressed by a spec string
+   (`data-fx="glow@hover"`). It emits plain attribute-selector CSS, so it needs no runtime; its
+   intensity derives from the algorithm; and its library is last-wins on the name, so an addon
+   replaces or adds an effect without restating the rest. Reduced motion is honored for free.
+   See [`docs/effects.md`](docs/effects.md).
 
 **The runtime is optional.** Once an algorithm has run, a theme is just CSS custom
 properties and the browser cascade does the rest; nothing has to be running to use it.
@@ -74,7 +80,7 @@ each its own xript module with its own declared invariants the gauntlet holds it
 - **`nxi-nite`**: time-aware day/night. Folds the time of day into the derivation through its
   own passes, beyond the posture scalars the others vary.
 
-All five share the same token register (~299 tokens across the seven-dimension contract) and
+All five share the same token register (~310 tokens across the seven-dimension contract) and
 the same core math. The first four differ only in posture; `nxi-nite` adds its own derivation
 passes on top.
 

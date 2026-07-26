@@ -19,9 +19,6 @@
 		{ name: "Trash", icon: "trash" },
 	] as const;
 
-	// Labels are the honest home for the accent family: a set of user-defined categories that want to
-	// be distinguishable from each other and from the primary accent. Whatever `accentStrategy` builds
-	// — flanks, a hue walk, one hue in depths, two brands — is what these chips wear.
 	const labels = [
 		{ name: "Engineering", tone: "accent-2" },
 		{ name: "Design", tone: "accent-3" },

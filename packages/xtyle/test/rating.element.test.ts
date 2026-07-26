@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-rating> custom element on the happy-dom registry
+// INFO: side-effect import; registers <xtyle-rating> on the happy-dom registry
 import "../src/elements/rating.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/rating/source.generated.js";
@@ -23,7 +23,7 @@ function make(attrs: Record<string, string> = {}): RatingEl {
 function withBox(el: HTMLElement, width = 100): void {
 	el.getBoundingClientRect = () =>
 		({ left: 0, top: 0, right: width, bottom: 20, width, height: 20, x: 0, y: 0, toJSON() {} }) as DOMRect;
-	// pointer capture is a layout API happy-dom doesn't implement; the handlers only need it to not throw
+	// INFO: happy-dom doesn't implement pointer capture; stub so the handlers don't throw
 	el.setPointerCapture = () => {};
 	el.releasePointerCapture = () => {};
 }
@@ -266,8 +266,7 @@ describe("rating — adopting a server-rendered row", () => {
 		expect(el.querySelectorAll("svg").length).toBeGreaterThan(0);
 	});
 
-	// The row is structural: the update hook only moves the clip, so a scaffold baked against the
-	// build-time register has to be rebuilt once or a stale track color would stick under a live theme.
+	// INFO: the update hook only moves the clip, so an SSR-baked scaffold must rebuild once or stale track colors persist under a live theme
 	it("rebuilds the row against the live register instead of trusting the baked colors", () => {
 		const el = ssrRating({ value: "3", max: "5", readonly: "" }, "#ff00ff");
 		expect(el.innerHTML).not.toContain("#ff00ff");

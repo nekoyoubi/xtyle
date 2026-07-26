@@ -14,8 +14,8 @@ import { manifest as sliderManifest } from "../src/elements/fragments/slider/sou
 function modFill(name: string, capability: string, fragmentId: string, scaffold: string, source: string) {
 	return {
 		manifest: {
-			$schema: "https://xript.dev/schema/mod/v0.7.json",
-			xript: "0.7",
+			$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+			xript: "0.8",
 			name,
 			version: "0.0.1",
 			title: name,
@@ -24,7 +24,7 @@ function modFill(name: string, capability: string, fragmentId: string, scaffold:
 			entry: { script: "mod.js", format: "script" },
 			fills: {
 				[`component.${fragmentId}`]: [
-					{ id: fragmentId, format: "text/html+jsml", source: `${fragmentId}.html` },
+					{ id: fragmentId, format: "application/x-xtyle+html", source: `${fragmentId}.html` },
 				],
 			},
 		},

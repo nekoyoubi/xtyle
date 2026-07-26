@@ -1,5 +1,4 @@
 import { XtyleDecoratorElement, define } from "./base.js";
-// Side-effect import: guarantees `<xtyle-dialog>` is defined so the lightbox can compose it.
 import "./dialog.js";
 
 export interface LightboxOptions {

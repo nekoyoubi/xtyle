@@ -161,7 +161,7 @@ function inputHtml(b: DatePickerBindings, part: "date" | "time"): string {
 
 function timeOptionHtml(option: TimeOption, index: number, selectedIndex: number): string {
 	const selected = option.selected === true;
-	// roving tabindex: the listbox has exactly one tab stop, on the selected option (or the first)
+	// INFO: roving tabindex — exactly one tab stop, on the selected option (or the first if none selected)
 	const tabbable = selectedIndex === -1 ? index === 0 : selected;
 	const attrs = [
 		'class="xtyle-datepicker__time-option"',
@@ -291,8 +291,8 @@ hooks.fragment.update("date-picker", (bindings, ops) => {
 	ops.setText(".xtyle-datepicker__label", labelText);
 	ops.toggle(".xtyle-datepicker__label", labelText.length > 0);
 
-	// The selected time moves by clearing the old flag and setting the new, rather than rebuilding the
-	// list — a rebuild would drop keyboard focus mid-arrow-walk through the options.
+	// INFO: patch the selected flag instead of rebuilding the list; a rebuild would drop keyboard focus
+	// mid-arrow-walk through the options.
 	ops.setAttr('.xtyle-datepicker__time-option[data-selected]', "data-selected", "");
 	ops.setAttr('.xtyle-datepicker__time-option[aria-selected="true"]', "aria-selected", "false");
 	const selected = (bindings.timeOptions ?? []).filter((option) => option.selected === true)[0];

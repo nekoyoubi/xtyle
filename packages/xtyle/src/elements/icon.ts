@@ -6,11 +6,9 @@ import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/icon/source.generated.js";
 import { resolveIconMark, composeIconThemed, iconClass } from "../icon-builder.js";
 import { readLiveRegister } from "./live-register.js";
-import { ICON_NAMES } from "../icons.js";
+import { hasRosterIcon, iconBody } from "../icon-registry.js";
 import { PALETTE_TOKENS, resolvePaletteName, type Palette } from "../series.js";
 import { resolveOptionalTone, resolveVocab, ICON_SIZES } from "../vocab.js";
-
-const FUNCTIONAL_GLYPHS = new Set<string>(ICON_NAMES);
 
 export class XtyleIcon extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "icon", {
@@ -81,7 +79,14 @@ export class XtyleIcon extends XtyleElement {
 	}
 
 	private get bindings(): Record<string, unknown> {
-		return { name: this.name, size: this.size, tone: this.tone, label: this.label, spin: this.spin };
+		return {
+			name: this.name,
+			body: iconBody(this.name) ?? null,
+			size: this.size,
+			tone: this.tone,
+			label: this.label,
+			spin: this.spin,
+		};
 	}
 
 	/** Reads the palette stop tokens off the live cascade, so a generated mark's colors track the theme.
@@ -96,19 +101,19 @@ export class XtyleIcon extends XtyleElement {
 	 * to the registered mark generators, so the composed SVG replaces the fragment's placeholder. */
 	private paintComposition(): void {
 		const name = this.name;
-		if (!name || FUNCTIONAL_GLYPHS.has(name)) return;
+		if (!name || hasRosterIcon(name)) return;
 		const parsed = resolveIconMark(name);
 		const region = this.root.querySelector("[data-icon]");
 		if (!parsed || !region) return;
-		region.innerHTML = composeIconThemed(parsed.composition, { register: this.seriesRegister(), scheme: this.colors });
+		region.innerHTML = composeIconThemed(parsed.composition, {
+			register: this.seriesRegister(),
+			scheme: this.colors,
+			label: this.label ?? undefined,
+		});
 		const svg = region.querySelector("svg");
 		if (!svg) return;
 		svg.setAttribute("class", iconClass({ size: this.size, tone: this.tone, spin: this.spin }));
 		svg.setAttribute("part", "icon");
-		if (this.label) {
-			svg.setAttribute("role", "img");
-			svg.setAttribute("aria-label", this.label);
-		}
 	}
 
 	protected template(): string {

@@ -130,9 +130,10 @@ export class XtyleTabs extends XtyleElement {
 	 * the element there; it stays supported for plain HTML and Svelte, which pass it through untouched.
 	 */
 	private get pairs(): TabPair[] {
-		const direct = Array.from(this.children) as HTMLElement[];
+		const direct = (Array.from(this.children) as HTMLElement[]).filter((el) => !el.hasAttribute("data-root"));
 		const isPanelSlot = (slot: string | null) => slot === "panel" || (slot?.startsWith("panel-") ?? false);
-		let tabs = direct.filter((el) => el.hasAttribute("data-xtyle-tab") || el.getAttribute("slot") === "tab");
+		const isTabSlot = (slot: string | null) => slot === "tab" || (slot?.startsWith("label-") ?? false);
+		let tabs = direct.filter((el) => el.hasAttribute("data-xtyle-tab") || isTabSlot(el.getAttribute("slot")));
 		let panels = direct.filter((el) => el.hasAttribute("data-xtyle-panel") || isPanelSlot(el.getAttribute("slot")));
 		if (tabs.length === 0) {
 			tabs = direct.filter((el) => el.tagName === "BUTTON");
@@ -151,19 +152,44 @@ export class XtyleTabs extends XtyleElement {
 	 * static HTML and strip handlers and effects.
 	 */
 	private assignPanelSlots(): void {
-		if (this.tablist || this.items.length > 0) return;
-		this.pairs.forEach((pair, i) => pair.panel?.setAttribute("slot", `panel-${i}`));
+		if (this.items.length > 0) return;
+		this.pairs.forEach((pair, i) => {
+			pair.tab.setAttribute("slot", `label-${i}`);
+			if (!this.tablist) pair.panel?.setAttribute("slot", `panel-${i}`);
+		});
+	}
+
+	/**
+	 * The tabs a composed (Astro SSR) scaffold already holds. Slotted authoring that went through the
+	 * server binding has no pairable children left — the authored label and panel sit inside the fill's
+	 * own regions — so identity and state are read back off the rendered tab strip instead. Safe
+	 * because the `update` hook only ever toggles attributes; it never rebuilds the structure, so the
+	 * authored content (nested components included) is never re-rendered or lost.
+	 */
+	private composedItems(): TabItemData[] | null {
+		const scaffold = Array.from(this.children).find((el) => el.hasAttribute("data-root"));
+		const tablist = scaffold?.querySelector("[data-tablist]");
+		if (!scaffold || !tablist) return null;
+		return Array.from(tablist.children).map((tab, i) => ({
+			label: "",
+			labelSlot: `label-${i}`,
+			panel: "",
+			panelSlot: `panel-${i}`,
+			value: tab.getAttribute("data-key") ?? String(i),
+			disabled: tab.hasAttribute("disabled") || tab.getAttribute("aria-disabled") === "true",
+		}));
 	}
 
 	private get markupItems(): TabItemData[] {
 		const fromAttr = this.items;
 		if (fromAttr.length > 0) return fromAttr;
+		const composed = this.composedItems();
+		if (composed) return composed;
 		return this.pairs.map((pair, i) => ({
-			label: pair.tab.innerHTML,
+			label: "",
+			labelSlot: `label-${i}`,
 			panel: "",
 			panelSlot: `panel-${i}`,
-			// `value` is not a valid attribute on the `<span>` a slotted tab usually is, so a typed host
-			// rejects it; `data-value` is the same identity in a form the markup can legally carry.
 			value: readAttrOrProp(pair.tab, "data-value") ?? readAttrOrProp(pair.tab, "value") ?? String(i),
 			disabled: pair.disabled,
 		}));
@@ -174,6 +200,7 @@ export class XtyleTabs extends XtyleElement {
 			tabs: this.markupItems.map((item, i) => ({
 				key: item.value ?? String(i),
 				label: item.label,
+				labelSlot: item.labelSlot,
 				panelSlot: item.panelSlot,
 				panel: item.panel ?? "",
 				disabled: item.disabled,

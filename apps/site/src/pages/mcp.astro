@@ -20,10 +20,12 @@ const sections = [
 ];
 
 const tools = [
-	{ name: "xtyle_derive", note: "Run an algorithm over seed colors or pinned tokens and emit the register (css, json, theme, prism, monaco)." },
+	{ name: "xtyle_derive", note: "Run an algorithm over seed colors or pinned tokens and emit the register (css, json, theme, prism, monaco, terminal)." },
 	{ name: "xtyle_coverage", note: "Check that a derived register covers a component's consumedTokens, an explicit token list, or every shipped component." },
 	{ name: "xtyle_audit", note: "Grade a derived theme against xtyle's canonical text/fill pairs at the WCAG floors: a per-pair AAA/AA/fail tier plus tallies." },
 	{ name: "xtyle_components", note: "List every component, or describe one's full manifest: props, variants, states, slots, consumedTokens, a11y, examples." },
+	{ name: "xtyle_effects", note: "List the effect layer, or describe one effect: the params, conditions, --fx-* tokens, and the data-fx spec grammar; or emit the effect stylesheet." },
+	{ name: "xtyle_icons", note: "Speak the icon-name grammar: the full roster and rules, one primitive in detail, or a spec composed to SVG so you can see the mark." },
 	{ name: "xtyle_gauntlet", note: "Prove an algorithm's invariants across randomized inputs (one algorithm or all)." },
 	{ name: "xtyle_list_algorithms", note: "List the algorithm ids and the emit formats." },
 	{ name: "xtyle_server_info", note: "Report the running server's name, version, and build timestamp." },
@@ -41,7 +43,7 @@ const configSnippet = `{
 
 <Base
 	title="MCP server"
-	description="xtyle mcp hands an agent the same engine the CLI hands a human, over one stdio connection: derive, coverage, audit, components, and gauntlet as tools, plus the concept docs and every component manifest as resources."
+	description="xtyle mcp hands an agent the same engine the CLI hands a human, over one stdio connection: derive, coverage, audit, components, effects, icons, and gauntlet as tools, plus the concept docs and every component manifest as resources."
 >
 	<Dock slot="right" side="right" size="sm" label="On this page" hideHeader class="docs-toc-rail">
 		<Toc items={sections} />
@@ -111,7 +113,7 @@ const configSnippet = `{
 							<tbody>
 								<tr>
 									<td><code>xtyle://concept/&#123;id&#125;</code></td>
-									<td>The concept narrative: <code>overview</code>, <code>open-register</code>, <code>algorithms</code>, <code>consuming</code>.</td>
+									<td>The concept narrative: <code>overview</code>, <code>open-register</code>, <code>algorithms</code>, <code>consuming</code>, <code>effects</code>, <code>icons</code>.</td>
 								</tr>
 								<tr>
 									<td><code>xtyle://component/&#123;id&#125;</code></td>

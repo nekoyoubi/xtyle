@@ -42,9 +42,8 @@ const variant = resolveVocab(variantInput, BADGE_VARIANTS, "soft", "badge varian
 const tone = resolveTone(toneInput, "neutral");
 
 const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
-// Compose the dismiss button's accessible name from the label text when the consumer didn't name
-// it — so a zero-JS (`static`) removable badge still announces "Remove <text>" instead of a bare
-// "Remove". The runtime composes this client-side from the slot, but `static` never loads it.
+// INFO: a zero-JS (`static`) removable badge never loads the runtime that composes this client-side,
+// so build the "Remove <text>" accessible name server-side from the slot text
 const slotText = slotHtml.replace(/<[^>]*>/g, "").trim();
 const resolvedRemoveLabel = removeLabel ?? (removable && slotText ? `Remove ${slotText}` : undefined);
 

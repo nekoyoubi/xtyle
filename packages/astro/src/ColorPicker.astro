@@ -66,8 +66,8 @@ await checkAuthoring("color-picker", Astro.props);
 
 const elementId = `xtyle-color-picker-${Math.random().toString(36).slice(2, 8)}`;
 
-// Resolve the markup props exactly as the custom element's getters do, so the SSR
-// declarative shadow is byte-identical to the post-hydration client re-render.
+// INFO: mirror the element's getters exactly so the SSR shadow is byte-identical to the
+// client re-render after hydration
 const resolvedModes: ColorFormat[] = modes
 	? (() => {
 			const picked = modes
@@ -139,9 +139,8 @@ const namedSnap = snapTargets.includes("named")
 	? namedSnapLabel(nearestNamedColor(hsvToRgb({ ...hsv, alpha: currentAlpha })).name)
 	: null;
 
-// The chips are the fill's, so they have to be in the server render too: hydration upgrades over the
-// composed scaffold as an `update`, which never re-runs the fill's `mount`. The element repaints
-// their colors as the base color moves; it never rebuilds them.
+// INFO: hydration upgrades the composed scaffold as an `update`, never re-running the fill's
+// `mount`, so the fill's chips must be in the server render
 const harmonyBase = parseColor(currentHex);
 const harmonyChips =
 	harmonyScheme && harmonyBase

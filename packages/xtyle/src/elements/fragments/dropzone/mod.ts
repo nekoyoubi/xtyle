@@ -157,9 +157,8 @@ function paintChrome(b: DropzoneBindings, ops: OpsBuilder): void {
 	ops.setAttr("[data-hint]", "id", b.hintId ?? "");
 	ops.toggle("[data-hint]", (b.hint ?? "").length > 0);
 	ops.setText("[data-browse]", b.browseLabel ?? "");
-	// The prompt text lands on the slot's *fallback* node, never on the slot region itself: an op that
-	// targets an empty element is the one shape the build-time (string) op-applier can place, so the
-	// same op paints the prompt in the server render and in the live DOM.
+	// INFO: the build-time string op-applier can only target an empty element, so the prompt op targets
+	// the slot's fallback node, letting one op paint both the server render and the live DOM
 	if (!b.slotted) ops.setText("[data-prompt-text]", b.prompt ?? "");
 
 	ops.replaceChildren("[data-errors]", errorsHtml(b));

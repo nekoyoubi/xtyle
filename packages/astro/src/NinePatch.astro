@@ -1,0 +1,44 @@
+---
+import type { NinePatchRegion } from "@xtyle/core/elements";
+
+type RegionMap = Partial<Record<NinePatchRegion, string>>;
+
+interface Props {
+	src?: string;
+	slice?: string;
+	width?: string;
+	repeat?: "stretch" | "repeat" | "round" | "space";
+	fill?: boolean;
+	tint?: string;
+	pieces?: RegionMap;
+	tints?: RegionMap;
+	inset?: string;
+	outset?: string;
+	class?: string;
+	/** Any other attribute (`id`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { src, slice, width, repeat, fill = false, tint, pieces, tints, inset, outset, class: extra, ...rest } = Astro.props;
+
+const json = (value: unknown): string | undefined => (value === undefined ? undefined : JSON.stringify(value));
+---
+
+<xtyle-nine-patch
+	class={extra}
+	src={src || undefined}
+	slice={slice || undefined}
+	width={width || undefined}
+	repeat={repeat || undefined}
+	fill={fill || undefined}
+	tint={tint || undefined}
+	pieces={json(pieces)}
+	tints={json(tints)}
+	inset={inset || undefined}
+	outset={outset || undefined}
+	{...rest}
+>
+	<slot />
+</xtyle-nine-patch>
+
+<script>import "@xtyle/core/elements";</script>

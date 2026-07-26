@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-// side effect: defines <xtyle-spotlight> (and, through it, <xtyle-popover>) on the happy-dom registry
 import "../src/elements/spotlight.js";
 import { cutoutPath } from "../src/markup/spotlight.js";
 import { spotlightCss } from "../src/css/components/spotlight.js";
@@ -77,19 +76,14 @@ function veil(el: SpotlightEl): HTMLElement {
 	return root(el).querySelector("[data-veil]") as HTMLElement;
 }
 
-// happy-dom does no layout, so it can't hit-test a real click; these guard the pointer-events invariant
-// that made the callout unclickable — the whole fixed layer is `none`, and the content box has to earn `auto`
-// back on an element this sheet can actually reach.
+// INFO: happy-dom does no layout, so it can't hit-test a real click; these assert on the CSS instead
 describe("the pointer-events invariant", () => {
 	it("re-enables the pointer on the spotlight's own panel, not the popover's shadow panel", () => {
-		// the panel rule has to grant auto: it is the box the buttons live in, and it inherits none otherwise
 		const panelRule = spotlightCss.match(/\.xtyle-spotlight__panel\s*\{[^}]*\}/)?.[0] ?? "";
 		expect(panelRule).toContain("pointer-events: auto");
 	});
 
 	it("never tries to reach the popover's inner panel across the shadow boundary", () => {
-		// `.xtyle-spotlight__callout .xtyle-popover__panel` matches nothing — the panel is in the popover's
-		// shadow root — so a rule keyed on it silently fails and every button computes to none
 		expect(spotlightCss).not.toContain(".xtyle-spotlight__callout .xtyle-popover__panel");
 	});
 });
@@ -109,7 +103,7 @@ describe("cutoutPath (the pure geometry)", () => {
 	it("rounds the hole's corners with arcs rather than faking them with points", () => {
 		const path = cutoutPath({ top: 100, left: 200, width: 120, height: 40 }, VIEWPORT, { padding: 0, radius: 8 });
 		expect(path).toContain("A8 8 0 0 1");
-		expect(path).not.toContain("H320V140"); // no square corner left behind
+		expect(path).not.toContain("H320V140");
 	});
 
 	it("cuts a real circle, as two arcs — a single 360° arc draws nothing", () => {
@@ -118,7 +112,6 @@ describe("cutoutPath (the pure geometry)", () => {
 		expect(path).toContain("a20 20 0 1 0 -40 0");
 	});
 
-	// a hole at the origin is the failure that reads as a bug; a solid veil reads as a design
 	it("leaves the veil solid when there is no target, rather than punching a hole at 0,0", () => {
 		expect(cutoutPath(null, VIEWPORT)).toBe("M0 0H1000V800H0Z");
 	});
@@ -144,7 +137,7 @@ describe("<xtyle-spotlight> the isolation", () => {
 		const el = make({ target: "#nothing-here", open: "" });
 		const style = veil(el).getAttribute("style") ?? "";
 		expect(style).toContain("M0 0H1000V800H0Z");
-		expect(style).not.toContain("Z M"); // no second subpath: no hole
+		expect(style).not.toContain("Z M");
 	});
 
 	it("takes an element directly, for a target no selector can name", () => {
@@ -179,8 +172,6 @@ describe("<xtyle-spotlight> the ring traces the hole", () => {
 		expect(style).toContain("height: 60px");
 	});
 
-	// the cut circle is sized from the target's *longest* side, so a ring that merely rounds the target's own
-	// box to 50% is an ellipse sitting inside a circle — the two visibly disagree on any non-square target
 	it("is a circle, not an ellipse, around a wide target", () => {
 		makeTarget({ top: 100, left: 200, width: 120, height: 40 });
 		const el = make({ target: "#save", padding: "0", shape: "circle", open: "" });
@@ -188,7 +179,6 @@ describe("<xtyle-spotlight> the ring traces the hole", () => {
 		expect(style).toContain("width: 120px");
 		expect(style).toContain("height: 120px");
 		expect(style).toContain("border-radius: 50%");
-		// centred on the target, so it sits over the same hole the veil cut
 		expect(style).toContain("top: 60px");
 		expect(style).toContain("left: 200px");
 	});
@@ -219,7 +209,6 @@ describe("<xtyle-spotlight> leaving", () => {
 		expect(el.open).toBe(false);
 	});
 
-	// a step the app insists on: the veil and Escape go inert, and the way out is the app's to provide
 	it("refuses every dismissal under no-dismiss", () => {
 		makeTarget();
 		const el = make({ target: "#save", open: "", "no-dismiss": "" });
@@ -229,8 +218,6 @@ describe("<xtyle-spotlight> leaving", () => {
 		expect(el.open).toBe(true);
 	});
 
-	// the callout is a Popover, and a Popover announces itself — so without a muffle its bubbling, composed
-	// `open`/`close` land on a consumer listening for the *spotlight's*, and every step announces twice
 	it("never lets the callout's own open/close impersonate the spotlight's", () => {
 		makeTarget();
 		const el = make({ target: "#save" });
@@ -273,9 +260,6 @@ describe("<xtyle-spotlight> the callout", () => {
 		expect((root(without).querySelector("[data-pointer]") as HTMLElement).hasAttribute("hidden")).toBe(true);
 	});
 
-	// the fill's paint reaches its markers via querySelector across the whole render root, which includes the
-	// slotted actions — so an author who put `data-close` on their own button used to have its label rewritten
-	// to "Got it" and the button hidden. The fill's markers are namespaced now; the author's are untouched.
 	it("never rewrites a slotted button that happens to carry a data-close of its own", () => {
 		makeTarget();
 		const el = make({ target: "#save", open: "" });

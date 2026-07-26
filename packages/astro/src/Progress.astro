@@ -80,8 +80,8 @@ const tone = resolveTone(toneInput, "accent");
 const trackAttr = track === true ? undefined : track === false ? "none" : track;
 const thicknessAttr = thickness != null ? String(thickness) : undefined;
 
-// Gradient ramps are pure CSS (var()-referenced stops), so they render server-side with zero JS;
-// a solid ramp's color is sampled off the live cascade, so SSR leaves the tone and the runtime paints it.
+// INFO: gradient ramps are pure-CSS var() stops (SSR, zero-JS); a solid ramp samples off the live
+// cascade, so SSR leaves the tone and the runtime paints it
 const gradientRamp = ramp && rampMode === "gradient" && variant !== "circular";
 const rampBindings = ramp
 	? gradientRamp
@@ -112,8 +112,8 @@ const bindings = {
 };
 const light = await renderFragmentLight("progress", bindings);
 const valueHtml = Astro.slots.has("value") ? await Astro.slots.render("value") : null;
-// the default slot carries `<threshold>` config elements — re-emit them as hidden direct children
-// so the hydrating element can read `:scope > threshold` (the global sheet hides them from view)
+// INFO: the default slot carries `<threshold>` config elements; re-emit them as hidden direct
+// children so the hydrating element can read `:scope > threshold`
 const thresholdHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
 ---

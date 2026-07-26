@@ -13,6 +13,9 @@ import {
 	resolvePrimitiveName,
 	primitiveSince,
 	primitiveTags,
+	compositionBox,
+	measureBody,
+	measurePath,
 	derive,
 	PALETTES,
 	type Palette,
@@ -43,37 +46,30 @@ describe("icon-builder", () => {
 		expect(hasPrimitive("shape-triangle")).toBe(true);
 		expect(parseIconName("x--divider")!.composition.layers[0].primitive).toBe("divider-rule");
 		expect(parseIconName("x--triangle-c3")!.composition.layers[0].primitive).toBe("shape-triangle");
-		// a divider rotates to vertical through the same rotation flag any object takes
 		expect(composeIcon(parseIconName("x--divider-r90")!.composition)).toContain("rotate(90 12 12)");
 	});
 
 	it("carries plain-language tags and a since version on every primitive, addressable by keyword", () => {
-		// every primitive is tagged and versioned
 		for (const name of ICON_PRIMITIVE_NAMES) {
 			expect(ICON_PRIMITIVES[name].since).toBeTruthy();
 			expect((ICON_PRIMITIVES[name].tags ?? []).length).toBeGreaterThan(0);
 		}
-		// a keyword resolves to its library name, then to that primitive's metadata
 		expect(resolvePrimitiveName("star")).toBe("symbol-star");
 		expect(resolvePrimitiveName("square1")).toBe("shape-square-1");
 		expect(primitiveSince("star")).toBe("0.4.0");
 		expect(primitiveTags("star")).toContain("favorite");
-		// glyph tags describe meaning, not the glyph name — media controls are findable as "media"
 		expect(primitiveTags("play")).toContain("media");
 		expect(primitiveTags("close")).toContain("cancel");
-		// an unknown name resolves to itself and yields no metadata
 		expect(primitiveSince("symbol-nonexistent")).toBeUndefined();
 		expect(primitiveTags("symbol-nonexistent")).toEqual([]);
 	});
 
 	it("ships the draw-with primitives: filled curves and open pen-strokes, reachable by keyword", () => {
-		// filled curves
 		for (const [kw, lib] of [["half", "shape-half"], ["quarter", "shape-quarter"], ["wedge", "shape-wedge"], ["oval", "shape-oval"], ["pill", "shape-pill"], ["drop", "shape-drop"], ["pentagon", "shape-pentagon"]] as const) {
 			expect(hasPrimitive(lib), lib).toBe(true);
 			expect(resolvePrimitiveName(kw), kw).toBe(lib);
 			expect(primitiveSince(kw), kw).toBe("0.6.0");
 		}
-		// open pen-strokes
 		for (const [kw, lib] of [["line", "stroke-line"], ["arc", "stroke-arc"], ["corner", "stroke-corner"], ["vee", "stroke-vee"]] as const) {
 			expect(hasPrimitive(lib), lib).toBe(true);
 			expect(resolvePrimitiveName(kw), kw).toBe(lib);
@@ -82,8 +78,6 @@ describe("icon-builder", () => {
 	});
 
 	it("colors a pen-stroke through the layer fill: the stroke resolves to the fill, the shape stays unfilled", () => {
-		// a stroke primitive draws `fill="none" stroke="currentColor"`; paintGroup seeds `color`, so a `c`
-		// color reaches the stroke while the path itself never fills — a genuine drawn line, not a filled bar.
 		const svg = composeIcon(parseIconName("x--line-c3-r45")!.composition, { register, scheme: "accents" });
 		expect(svg).toContain("rotate(45 12 12)");
 		expect(svg).toMatch(/color="#[0-9a-fA-F]{3,8}"/);
@@ -97,21 +91,15 @@ describe("icon-builder", () => {
 			const svg = composeIconThemed({ layers }, { register, scheme });
 			return [...svg.matchAll(/fill="(#[0-9a-fA-F]{6})"/g)].map((m) => m[1]);
 		};
-		// thermal (sequential) used to collapse to its endpoint; now it spreads across all five
 		expect(new Set(fillsFor("thermal")).size).toBe(5);
-		// skittles (sampled categorical) used to collapse to its last color; now five distinct
 		expect(new Set(fillsFor("skittles")).size).toBe(5);
-		// accents rounds out to five now that `--neutral` is its fifth color
 		expect(new Set(fillsFor("accents")).size).toBe(5);
 	});
 
 	it("knocks a glyph out as a solid silhouette, the same as a bare primitive", () => {
-		// a filled glyph (stop) draws with fill="currentColor"; the knockout mask seeds `color` so
-		// that resolves to the solid mask color — without it the glyph only half-masks (shades) the art.
 		const glyph = composeIcon({ layers: [{ primitive: "shape-shield" }, { primitive: "symbol-stop", knockout: true }] });
 		expect(glyph).toContain("<mask");
 		expect(glyph).toMatch(/<g [^>]*fill="#000" color="#000"[^>]*>/);
-		// a bare primitive knockout keeps working (it inherits the group fill, no currentColor to seed)
 		const bare = composeIcon({ layers: [{ primitive: "shape-shield" }, { primitive: "shape-square", knockout: true }] });
 		expect(bare).toMatch(/<g [^>]*fill="#000" color="#000"[^>]*>/);
 	});
@@ -122,7 +110,6 @@ describe("icon-builder", () => {
 		});
 		expect(svg.startsWith("<svg")).toBe(true);
 		expect(svg).toContain('viewBox="0 0 24 24"');
-		// field renders before charge (paints under it)
 		expect(svg.indexOf(ICON_PRIMITIVES["shape-shield"].body)).toBeLessThan(
 			svg.indexOf(ICON_PRIMITIVES["symbol-check"].body),
 		);
@@ -163,7 +150,6 @@ describe("icon-builder", () => {
 			{ layers: [{ primitive: "shape-circle", fill: "series:0" }, { primitive: "symbol-dot", fill: "series:2" }] },
 			{ register, scheme: "accents" },
 		);
-		// both slots resolve to concrete colors (not the raw spec, not currentColor)
 		expect(svg).not.toContain("series:");
 		expect(svg.match(/fill="#[0-9a-fA-F]{3,8}"/g)?.length).toBeGreaterThanOrEqual(2);
 	});
@@ -186,25 +172,19 @@ describe("icon-builder", () => {
 	});
 
 	it("outlines a knockout as a stroke that resolves inherit to the icon color, not a fill or a shade", () => {
-		// a bare primitive: the rim strokes (never fills) at the halved width, and does not force
-		// `color="none"` — the bug that made an inherited outline color vanish.
 		const bare = composeIcon({ layers: [{ primitive: "shape-shield" }, { primitive: "shape-square", knockout: true, outline: { size: 2, color: "currentColor" } }] });
 		expect(bare).toMatch(/<g [^>]*fill="none" stroke="currentColor" stroke-width="1.25"[^>]*>/);
 		expect(bare).not.toContain('color="none"');
-		// a filled glyph rim outlines rather than fills: its own fill="currentColor" is normalized to none
 		const glyph = composeIcon({ layers: [{ primitive: "shape-shield" }, { primitive: "symbol-stop", knockout: true, outline: { size: 1, color: "currentColor" } }] });
 		expect(glyph).toContain('width="12" height="12" rx="2" fill="none"');
 	});
 
 	it("keeps an outline's semantic thickness constant regardless of the shape's scale", () => {
-		// The stroke rides the same group as the layer's scale, so a naive width would track the shape.
-		// Dividing by the scale cancels that: an `s50` shape and an `s200` shape both draw a size-2 rim
-		// at the same on-screen thickness (0.625 units in the shape's own space vs 2.5, both = 1.25 drawn).
+		// INFO: stroke-width divides by scale so a size-2 rim draws the same 1.25 on-screen (s50 -> 2.5, s200 -> 0.625; both * scale = 1.25)
 		const small = composeIcon({ layers: [{ primitive: "shape-square", scale: 0.5, outline: { size: 2, color: "--accent" } }] });
 		expect(small).toContain('stroke-width="2.5"');
 		const large = composeIcon({ layers: [{ primitive: "shape-square", scale: 2, outline: { size: 2, color: "--accent" } }] });
 		expect(large).toContain('stroke-width="0.625"');
-		// a knockout rim compensates the same way, and a flip's negative scale uses its magnitude
 		const knock = composeIcon({ layers: [{ primitive: "shape-shield" }, { primitive: "shape-square", knockout: true, scale: 0.5, flipH: true, outline: { size: 2, color: "currentColor" } }] });
 		expect(knock).toContain('stroke-width="2.5"');
 	});
@@ -224,7 +204,6 @@ describe("icon-builder", () => {
 		});
 		expect(svg).toContain("<mask");
 		expect(svg).toMatch(/mask="url\(#xk-[a-z0-9]+-0\)"/);
-		// the knockout wraps only the field beneath it; the star paints after the masked group
 		expect(svg.indexOf("</mask>")).toBeLessThan(svg.indexOf("#abcdef"));
 		expect(svg.indexOf('mask="url(#xk')).toBeLessThan(svg.indexOf("#abcdef"));
 	});
@@ -236,7 +215,6 @@ describe("icon-builder", () => {
 				{ primitive: "shape-circle", knockout: true, invert: true },
 			],
 		});
-		// an inverted knockout flips the mask (black field, white shape), so only the shape survives
 		expect(svg).toContain("<mask");
 		expect(svg).toMatch(/mask="url\(#xk-[a-z0-9]+-\d+\)"/);
 		expect(svg).toContain('<rect width="24" height="24" fill="#000"/>');
@@ -246,7 +224,6 @@ describe("icon-builder", () => {
 	it("paints the complement of a shape on a plain invert (`-i`)", () => {
 		const svg = composeIcon({ layers: [{ primitive: "shape-circle", fill: "#123456", invert: true }] });
 		expect(svg).toMatch(/mask="url\(#xi-[a-z0-9]+-\d+\)"/);
-		// a full-grid rect in the fill, masked so the shape is a hole in the field
 		expect(svg).toContain('<rect width="24" height="24" fill="#123456"');
 	});
 
@@ -273,10 +250,8 @@ describe("icon-builder", () => {
 		expect(colorSlot(15)).toBe("slot:15");
 		const bake = (slot: number) =>
 			composeIconThemed({ layers: [{ primitive: "shape-square", fill: colorSlot(slot) }] }, { register, scheme: "accents" });
-		// nibbles 1–9 are the nine series colors: they bake to concrete hex under the active scheme
 		expect(bake(1)).toMatch(/fill="#[0-9a-fA-F]{3,8}"/);
 		expect(bake(1)).not.toContain("slot:");
-		// `b` is --bg-0 and `f` is --fg-0: token fills stay live as custom properties
 		expect(bake(11)).toContain('fill="var(--bg-0)"');
 		expect(bake(15)).toContain('fill="var(--fg-0)"');
 	});
@@ -356,9 +331,7 @@ describe("parseIconName", () => {
 		expect(parsed?.label).toBe("dice-3");
 		expect(parsed?.composition.label).toBe("dice 3");
 		expect(parsed?.composition.layers).toHaveLength(4);
-		// the face color is the `c3` nibble as a deferred slot spec; keyword resolves to the library name
 		expect(parsed?.composition.layers[0]).toMatchObject({ primitive: "shape-square", fill: "slot:3" });
-		// a pip sized to 10% and centered by default (p5)
 		expect(parsed?.composition.layers[2]).toMatchObject({ primitive: "shape-circle", scale: 0.1 });
 		expect(parsed?.composition.layers[2].x ?? 0).toBe(0);
 	});
@@ -370,9 +343,7 @@ describe("parseIconName", () => {
 		expect(shadow?.dx).toBeCloseTo(0);
 		expect(shadow?.dy).toBeCloseTo(3.3);
 		expect(shadow?.blur).toBeCloseTo(2);
-		// lock flags in the finish are authoring metadata: the renderer never derives a shadow from them
 		expect(parseIconName("crest--shield-c3---l1*")?.composition.dropShadow).toBeUndefined();
-		// a shadow and locks coexist in one finish (flags `--`-separated); each reader skips the other's
 		expect(parseIconName("crest--shield-c3---d2p8s3t80--l1*")?.composition.dropShadow).toBeDefined();
 	});
 
@@ -381,7 +352,6 @@ describe("parseIconName", () => {
 		expect(svg).toContain("<filter");
 		expect(svg).toContain("feDropShadow");
 		expect(svg).toContain("overflow:visible");
-		// no finish → no filter, no overflow
 		const plain = composeIcon(parseIconName("crest--shield-c3")!.composition);
 		expect(plain).not.toContain("feDropShadow");
 		expect(plain).not.toContain("overflow:visible");
@@ -390,7 +360,6 @@ describe("parseIconName", () => {
 	it("bakes a series shadow color in composeIconThemed", () => {
 		const composition = parseIconName("crest--shield-c3---d3p8s3t80")!.composition;
 		const svg = composeIconThemed(composition, { register, scheme: "accents" });
-		// d3 is series slot 0 → the shadow flood-color bakes to a concrete color, not the `series:0` spec
 		expect(svg).toContain("feDropShadow");
 		expect(svg).not.toContain("series:0");
 	});
@@ -398,10 +367,9 @@ describe("parseIconName", () => {
 	it("expands the canvas with `---e{n}` while keeping the box at 1em", () => {
 		expect(parseIconName("mark--square-c1---e12")!.composition.expand).toBe(12);
 		const svg = composeIcon(parseIconName("mark--square-c1---e12")!.composition);
-		// pad = 12% of 24 = 2.88 → viewBox -2.88 -2.88 29.76 29.76, box unchanged at 1em
+		// INFO: pad = 12% of 24 = 2.88, so viewBox becomes -2.88 -2.88 29.76 29.76 (24 + 2*2.88)
 		expect(svg).toContain('viewBox="-2.88 -2.88 29.76 29.76"');
 		expect(svg).toContain('width="1em" height="1em"');
-		// no expand → the plain viewBox and box
 		expect(composeIcon(parseIconName("mark--square-c1")!.composition)).toContain('viewBox="0 0 24 24"');
 	});
 
@@ -415,14 +383,12 @@ describe("parseIconName", () => {
 		const svg = composeIcon(composition);
 		expect(svg).toContain("feMorphology");
 		expect(svg).toContain('operator="dilate"');
-		// the composite outline is distinct from a per-layer outline: no layer here declares one
 		expect(composition.layers.every((l) => l.outline == null)).toBe(true);
 	});
 
 	it("carries `outline` and `expand` through composeIconThemed, baking a series outline color", () => {
 		const composition = parseIconName("mark--square-c1---o3c3--e10")!.composition;
 		const svg = composeIconThemed(composition, { register, scheme: "accents" });
-		// o3 renders, e10 expands, and c3 (series slot 0) bakes to a concrete flood-color, not `series:0`
 		expect(svg).toContain("feMorphology");
 		expect(svg).toContain('viewBox="-2.4 -2.4 28.8 28.8"');
 		expect(svg).not.toContain("series:0");
@@ -453,9 +419,7 @@ describe("parseIconName", () => {
 		expect(parseObjectLayer("check").primitive).toBe("symbol-check");
 		expect(parseObjectLayer("search").primitive).toBe("symbol-search");
 		expect(parseObjectLayer("warning-s50").primitive).toBe("symbol-warning");
-		// `dot` stays a field (a sizeable pip), not the tiny glyph
 		expect(parseObjectLayer("dot").primitive).toBe("shape-circle");
-		// a real check badge composes onto a known primitive, not the missing-box placeholder
 		const svg = composeIcon(parseIconName("badge--circle-c4--check-s55-c1")!.composition);
 		expect(svg).not.toContain("stroke-dasharray");
 	});
@@ -508,7 +472,6 @@ describe("parseIconName", () => {
 			expect(svg.startsWith("<svg"), spec).toBe(true);
 			expect(/NaN|undefined|Infinity/.test(svg), spec).toBe(false);
 			expect(/fill=""|stroke=""|="var\(undefined\)"/.test(svg), spec).toBe(false);
-			// balanced groups (knockout nests masked groups; a leak would corrupt the tree)
 			expect((svg.match(/<g[\s>]/g) ?? []).length, spec).toBe((svg.match(/<\/g>/g) ?? []).length);
 		}
 	});
@@ -573,7 +536,6 @@ describe("parseIconName", () => {
 		expect(reqs[0]!.family).toBe("Sigmar");
 		expect(reqs[0]!.googleImport).toContain("family=Sigmar");
 		expect(reqs[0]!.googleLink).toContain("<link");
-		// a theme-token font, and the default sans slot, need nothing loaded
 		expect(iconFontImports(resolveIconMark("--letter-Q-f1---f1-display")!.composition)).toEqual([]);
 		expect(iconFontImports({ layers: [parseObjectLayer("letter-x")] })).toEqual([]);
 	});
@@ -604,7 +566,6 @@ describe("---ps series palette", () => {
 	it("still honors the retired names, resolving them to the renamed palettes", () => {
 		expect(parseIconName("x--square-c1---ps-status")?.composition.scheme).toBe("severity");
 		expect(parseIconName("x--square-c1---ps-accent")?.composition.scheme).toBe("intensity");
-		// never onto the look-alike palettes: `status` is not `statuses`, `accent` is not `accents`
 		expect(parseIconName("x--square-c1---ps-status")?.composition.scheme).not.toBe("statuses");
 		expect(parseIconName("x--square-c1---ps-accent")?.composition.scheme).not.toBe("accents");
 	});
@@ -612,9 +573,7 @@ describe("---ps series palette", () => {
 	it("lets the name's scheme beat the host's", () => {
 		const host = seriesFill("x--square-c1", "skittles");
 		expect(host).not.toBe(seriesFill("x--square-c1", "accents"));
-		// the same spec, pinning its own palette, colors as skittles even though the host says accents
 		expect(seriesFill("x--square-c1---ps-skittles", "accents")).toBe(host);
-		// and through the unbaked path too, so an export/SSR compose honors the pin
 		const svg = composeIcon(parseIconName("x--square-c1---ps-skittles")!.composition, { register, scheme: "accents" });
 		expect(svg).toContain(host);
 	});
@@ -627,7 +586,6 @@ describe("---ps series palette", () => {
 	it("drops an unknown scheme instead of throwing or painting garbage", () => {
 		const parsed = parseIconName("x--square-c1---ps-crayons");
 		expect(parsed?.composition.scheme).toBeUndefined();
-		// the host's scheme still applies, and the mark renders clean
 		expect(seriesFill("x--square-c1---ps-crayons", "skittles")).toBe(seriesFill("x--square-c1", "skittles"));
 		const svg = composeIcon(parsed!.composition, { register, scheme: "accents" });
 		expect(svg.startsWith("<svg")).toBe(true);
@@ -640,8 +598,110 @@ describe("---ps series palette", () => {
 		expect(c?.dropShadow).toBeDefined();
 		expect(c?.palette).toEqual({ "9": "--accent" });
 		expect(c?.fonts).toEqual({ 1: "var(--font-display)" });
-		// a `ps` reading as the first flag after `---` is the same flag, just in a different position
 		expect(parseIconName("x--square-c1---ps-thermal--d2p8s3t80")?.composition.scheme).toBe("thermal");
+	});
+
+	it("seeds the filled draw-with primitives: curves, volumes, polygons, and bursts", () => {
+		const added = [
+			"wave", "water", "swish", "blob", "lens", "leaf", "cloud", "mountain", "sun", "flame",
+			"disc", "cylinder", "drum", "cone", "octagon", "trapezoid", "ramp", "arch", "squircle",
+			"egg", "gem", "banner", "tag", "chevron", "arrow", "bubble", "star4", "star6", "star8",
+			"sparkle", "burst", "seal",
+		];
+		for (const keyword of added) {
+			const primitive = ICON_PRIMITIVES[resolvePrimitiveName(keyword)];
+			expect(primitive, keyword).toBeDefined();
+			expect(primitive.tags?.length, keyword).toBeGreaterThan(0);
+			expect(parseObjectLayer(`${keyword}-c3`).primitive, keyword).toBe(resolvePrimitiveName(keyword));
+		}
+		expect(resolvePrimitiveName("drum")).toBe(resolvePrimitiveName("cylinder"));
+		expect(resolvePrimitiveName("sparkle")).toBe(resolvePrimitiveName("star4"));
+	});
+
+	it("fills every new primitive rather than stroking it, so the batch is art and not line work", () => {
+		for (const [name, primitive] of Object.entries(ICON_PRIMITIVES)) {
+			if (primitive.since !== "0.10.0") continue;
+			expect(primitive.body, name).not.toContain("stroke=");
+			expect(primitive.body, name).not.toContain('fill="none"');
+		}
+	});
+
+	it("layers `sx` / `sy` on top of the uniform `s` rather than competing with it", () => {
+		expect(parseObjectLayer("circle-sx160-sy60")).toMatchObject({ scaleX: 1.6, scaleY: 0.6 });
+		expect(parseObjectLayer("circle-s50-sx200")).toMatchObject({ scale: 0.5, scaleX: 2 });
+		expect(composeIcon(parseIconName("x--circle-sx160-sy60")!.composition)).toContain("scale(1.6 0.6)");
+		expect(composeIcon(parseIconName("x--circle-s50-sx200")!.composition)).toContain("scale(1 0.5)");
+		expect(composeIcon(parseIconName("x--circle-s50-sx200-sy200")!.composition)).not.toContain("scale(");
+		expect(composeIcon(parseIconName("x--circle-s50")!.composition)).toContain("scale(0.5)");
+	});
+
+	it("keeps a layer outline's drawn thickness between the axes of a stretched shape", () => {
+		const uniform = /stroke-width="([\d.]+)"/.exec(composeIcon(parseIconName("x--circle-s50-o2")!.composition))![1];
+		const stretched = /stroke-width="([\d.]+)"/.exec(composeIcon(parseIconName("x--circle-sx50-sy50-o2")!.composition))![1];
+		expect(stretched).toBe(uniform);
+		const skewed = Number(/stroke-width="([\d.]+)"/.exec(composeIcon(parseIconName("x--circle-sx200-sy50-o2")!.composition))![1]);
+		expect(skewed).toBeCloseTo(1.25, 3);
+		expect(/stroke-width="([\d.]+)"/.exec(composeIcon(parseIconName("x--circle-s50-sx200-sy200-o2")!.composition))![1]).toBe("1.25");
+	});
+
+	it("moves and scales the whole mark from the finish, wrapping the art as one piece", () => {
+		const moved = parseIconName("x--square-c1---mx25--my-50")!.composition;
+		expect(moved.transform).toEqual({ scaleX: 1, scaleY: 1, dx: 6, dy: -12 });
+		expect(composeIcon(moved)).toContain("translate(6 -12)");
+		const sized = parseIconName("x--square-c1---s70")!.composition;
+		expect(sized.transform).toMatchObject({ scaleX: 0.7, scaleY: 0.7 });
+		expect(composeIcon(sized)).toContain("translate(12 12) scale(0.7) translate(-12 -12)");
+		const axis = parseIconName("x--square-c1---sx120--sy80")!.composition;
+		expect(axis.transform).toMatchObject({ scaleX: 1.2, scaleY: 0.8 });
+		const layered = parseIconName("x--square-c1---s50--sx200")!.composition;
+		expect(layered.transform).toMatchObject({ scaleX: 1, scaleY: 0.5 });
+		expect(parseIconName("x--square-c1")!.composition.transform).toBeUndefined();
+	});
+
+	it("re-centers a composite on its own measured box with `---center`", () => {
+		const off = parseIconName("x--star-p1-s40")!.composition;
+		const box = compositionBox(off)!;
+		expect((box.minX + box.maxX) / 2).toBeLessThan(8);
+		const centered = parseIconName("x--star-p1-s40---center")!.composition;
+		expect(centered.center).toBe(true);
+		const shift = markShift(composeIcon(centered));
+		expect(shift[0]).toBeCloseTo(12 - (box.minX + box.maxX) / 2, 3);
+		expect(shift[1]).toBeCloseTo(12 - (box.minY + box.maxY) / 2, 3);
+		expect(composeIcon(parseIconName("x--circle---center")!.composition)).not.toContain("translate(");
+	});
+
+	it("measures the ink a composite actually leaves standing, not a union of its layer boxes", () => {
+		const near = (spec: string, box: Record<string, number>) => {
+			const measured = compositionBox(parseIconName(spec)!.composition)!;
+			for (const [key, value] of Object.entries(box)) expect(measured[key as keyof typeof measured], `${spec} ${key}`).toBeCloseTo(value, 0);
+		};
+		near("x--circle", { minX: 1, minY: 1, maxX: 23, maxY: 23 });
+		near("x--disc", { minX: 1, minY: 8, maxX: 23, maxY: 16 });
+		near("x--circle--circle-x50-ko", { minX: 1, maxX: 18 });
+		near("x--square--square-y50-ko", { minX: 1.5, minY: 1.5, maxX: 22.5, maxY: 13.5 });
+		near("x--square--circle-s40-ko", { minX: 1.5, minY: 1.5, maxX: 22.5, maxY: 22.5 });
+		near("x--square--circle-s50-i-ko", { minX: 6.5, minY: 6.5, maxX: 17.5, maxY: 17.5 });
+		near("x--disc--circle-i", { minX: 0, minY: 0, maxX: 24, maxY: 24 });
+		expect(compositionBox({ layers: [] })).toBeNull();
+		expect(compositionBox(parseIconName("x--circle--square-s200-ko")!.composition)).toBeNull();
+	});
+
+	it("centers on the carved art, so a knockout moves where the mark sits", () => {
+		const carved = "x--circle-c1--circle-x50-ko";
+		const box = compositionBox(parseIconName(carved)!.composition)!;
+		expect(box.maxX).toBeLessThan(23);
+		expect(markShift(composeIcon(parseIconName(`${carved}---center`)!.composition))[0]).toBeCloseTo(12 - (box.minX + box.maxX) / 2, 3);
+	});
+
+	it("solves curve and arc extremes rather than bounding them by control points", () => {
+		expect(measurePath("M0 12 C0 0 24 0 24 12")).toEqual({ minX: 0, minY: 3, maxX: 24, maxY: 12 });
+		expect(measurePath("M2 12 A10 10 0 0 1 22 12")).toEqual({ minX: 2, minY: 2, maxX: 22, maxY: 12 });
+		expect(measureBody(`<rect x="4" y="6" width="10" height="2"/><circle cx="20" cy="20" r="3"/>`)).toEqual({
+			minX: 4,
+			minY: 6,
+			maxX: 23,
+			maxY: 23,
+		});
 	});
 
 	it("colors a whole mark's slots off the pinned scheme, not just the first", () => {
@@ -652,6 +712,13 @@ describe("---ps series palette", () => {
 		);
 	});
 });
+
+/** The whole-mark translate a `---center` / `---m` finish emitted, read past the `<defs>` a knockout mask puts first. */
+function markShift(svg: string): [number, number] {
+	const body = svg.slice(Math.max(0, svg.indexOf("</defs>")));
+	const m = /translate\((-?[\d.]+) (-?[\d.]+)\)/.exec(body)!;
+	return [Number(m[1]), Number(m[2])];
+}
 
 function parseObjectLayer(objectSpec: string) {
 	const parsed = parseIconName(`x--${objectSpec}`);

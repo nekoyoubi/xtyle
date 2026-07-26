@@ -48,7 +48,6 @@ describe("tree trailing content", () => {
 		expect(html).toContain(">1,204<");
 		expect(html).toContain('class="xtyle-tree__badge xtyle-tree__badge--warn"');
 		expect(html).toContain(">3<");
-		// exactly two pills
 		expect(html.match(/part="badge"/g)?.length).toBe(2);
 	});
 
@@ -71,15 +70,12 @@ describe("tree trailing content", () => {
 describe("tree locked section headers", () => {
 	it("marks a locked, hrefless branch as a static (non-interactive) header", () => {
 		const html = treeMarkup({ items: NAV, label: "Nav" });
-		// Bench: locked, no href → inert div header
 		expect(html).toMatch(/<div class="xtyle-tree__row xtyle-tree__row--static"[^>]*data-static="true"/);
-		// its child is still a normal link
 		expect(html).toContain('href="/bench/themes"');
 	});
 
 	it("keeps a locked branch that carries an href a navigable link, not a static header", () => {
 		const html = treeMarkup({ items: NAV, label: "Nav" });
-		// Components: locked + href → an <a>, never static
 		expect(html).toMatch(/<a class="xtyle-tree__row"[^>]*href="\/components"/);
 		const componentsRow = html.slice(html.indexOf('href="/components"') - 60, html.indexOf('href="/components"') + 20);
 		expect(componentsRow).not.toContain("data-static");
@@ -95,9 +91,7 @@ describe("tree locked section headers", () => {
 		});
 		expect(html).toMatch(/data-value="bench"[^>]*data-static="true"|data-static="true"[^>]*data-value="bench"/);
 		expect(html).toContain("xtyle-tree__row--static");
-		// a locked header never takes the roving tab stop
 		expect(html).toMatch(/<li class="xtyle-tree__item xtyle-tree__item--locked"[^>]*data-value="bench"[^>]*tabindex="-1"/);
-		// Components (locked + href) stays a link with no static marker
 		expect(html).toMatch(/<a class="xtyle-tree__row"[^>]*data-value="components"/);
 	});
 });

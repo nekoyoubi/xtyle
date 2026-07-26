@@ -54,14 +54,12 @@ describe("dock-model", () => {
 	});
 
 	it("moves a panel: the source leaf and any single-child split it empties collapse away", () => {
-		// Two zones side by side; move the only panel out of the right zone.
 		const split: DockNode = {
 			kind: "split",
 			direction: "row",
 			children: [singleZone("L", ["a"]), singleZone("R", ["b"])],
 		};
 		const moved = dockPanel(split, { panel: "b", target: "L", region: "center" });
-		// R emptied -> pruned; the split had one child left -> collapsed to that leaf.
 		expect(moved.kind).toBe("leaf");
 		if (moved.kind === "leaf") {
 			expect(moved.id).toBe("L");
@@ -105,7 +103,7 @@ describe("dock-model", () => {
 		const root = singleZone("root", ["a", "b", "c"]);
 		const activated = activatePanel(root, "c");
 		expect(activated.kind === "leaf" && activated.active).toBe(2);
-		expect(root.active).toBe(0); // original untouched
+		expect(root.active).toBe(0);
 	});
 
 	it("round-trips through parseLayout and rejects a malformed shape", () => {
@@ -128,17 +126,15 @@ describe("dock-model stack mode", () => {
 		const collapsed = toggleCollapsed(root, "a") as DockLeaf;
 		expect(collapsed.collapsed).toEqual(["a"]);
 		const expanded = toggleCollapsed(collapsed, "a") as DockLeaf;
-		expect(expanded.collapsed).toBeUndefined(); // empty collapsed set is dropped, not stored as []
+		expect(expanded.collapsed).toBeUndefined();
 		expect(toggleCollapsed(root, "z")).toBe(root);
 	});
 
 	it("preserves mode and prunes collapsed through a dock and a remove", () => {
 		let root: DockNode = { kind: "leaf", id: "root", panels: ["a", "b"], active: 0, mode: "stack", collapsed: ["a", "b"] };
-		// Add c at center: mode stays, collapsed carries the still-present panels, c is expanded.
 		root = dockPanel(root, { panel: "c", target: "root", region: "center" });
 		expect(root.kind === "leaf" && root.mode).toBe("stack");
 		expect(root.kind === "leaf" && root.collapsed).toEqual(["a", "b"]);
-		// Remove b: mode stays, b drops out of collapsed.
 		const removed = removePanel(root, "b") as DockLeaf;
 		expect(removed.mode).toBe("stack");
 		expect(removed.collapsed).toEqual(["a"]);
@@ -189,25 +185,22 @@ describe("layoutRects", () => {
 	it("honors weighted sizes and insets children by the gap", () => {
 		const split: DockNode = { kind: "split", direction: "row", sizes: [3, 1], children: [singleZone("L", ["a"]), singleZone("R", ["b"])] };
 		const rects = layoutRects(split, container, 8);
-		// available = 1000 - 8 = 992; L = 992 * 3/4 = 744, R = 992 * 1/4 = 248
+		// INFO: available = 1000 - 8 = 992; L = 992 * 3/4 = 744, R = 992 * 1/4 = 248
 		expect(rects[0]?.rect.width).toBe(744);
 		expect(rects[1]?.rect.left).toBe(744 + 8);
 		expect(rects[1]?.rect.width).toBe(248);
 	});
 
 	it("round-trips the whole engine: tree to rects to drop to tree", () => {
-		// A row split; lay it out, drop a new panel onto the left edge of zone R, apply, re-lay-out.
 		let layout: DockNode = { kind: "split", direction: "row", children: [singleZone("L", ["a"]), singleZone("R", ["b"])] };
 		const rects = layoutRects(layout, container);
 		const rTarget = rects.find((r) => r.id === "R")!;
-		// pointer near R's left edge -> resolveDrop says R/left
 		const res = resolveDrop({
 			pointer: { x: rTarget.rect.left + rTarget.rect.width * 0.05, y: rTarget.rect.top + rTarget.rect.height / 2 },
 			targets: rects.map((r) => ({ id: r.id, rect: r.rect })),
 		});
 		expect(res).toMatchObject({ targetId: "R", region: "left" });
 		layout = dockPanel(layout, { panel: "c", target: res!.targetId, region: res!.region, newLeafId: "new" });
-		// R split into [new(c), R(b)]; the whole tree now lays out to three leaves that tile the container.
 		const after = layoutRects(layout, container);
 		expect(after.map((r) => r.id)).toEqual(["L", "new", "R"]);
 		const totalWidth = after.reduce((sum, r) => sum + r.rect.width, 0);

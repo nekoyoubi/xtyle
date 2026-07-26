@@ -40,8 +40,7 @@ export function lastKey(items: NavItem[]): string | null {
 export function stepKey(items: NavItem[], fromKey: string | null, dir: 1 | -1, wrap = false): string | null {
 	const n = items.length;
 	if (n === 0) return null;
-	// A null or unknown cursor sits just outside the range on the side the step comes from, so a
-	// forward step lands on the first item and a backward step on the last.
+	// INFO: a null/unknown cursor sits just outside the range on the step's origin side, so forward lands on the first item and back on the last
 	const found = fromKey === null ? -1 : items.findIndex((it) => it.key === fromKey);
 	const here = found === -1 ? (dir > 0 ? -1 : n) : found;
 	for (let s = 1; s <= n; s++) {

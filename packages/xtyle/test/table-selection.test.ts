@@ -99,7 +99,7 @@ describe("<xtyle-table> keyboard", () => {
 		expect(selectedValues(el)).toEqual(["b"]);
 		press(el, "b", "End");
 		expect(rovingRow(el)).toBe("d");
-		press(el, "d", "Enter"); // Enter replaces, collapsing the selection to just this row
+		press(el, "d", "Enter");
 		expect(selectedValues(el)).toEqual(["d"]);
 	});
 });

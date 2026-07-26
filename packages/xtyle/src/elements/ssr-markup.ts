@@ -122,6 +122,136 @@ export function listItems(html: string): { attrs: Record<string, string>; html: 
 	return elements(list.inner, ["li"]).map((item) => ({ attrs: parseAttrs(item.attrs), html: item.inner }));
 }
 
+export interface MarkedChild {
+	/** Which marker attribute the child carried, without the `data-xtyle-` prefix. */
+	marker: string;
+	/** The child's lowercased tag name. */
+	name: string;
+	attrs: Record<string, string>;
+	/** The child's inner HTML — already-rendered content, nested components included. */
+	html: string;
+}
+
+/** Elements with no end tag. Written without the self-closing slash they are indistinguishable from
+ * an opening tag, so a child scan has to know them by name or it waits forever for a close that never
+ * comes and swallows every sibling after it. */
+const VOID = new Set([
+	"area",
+	"base",
+	"br",
+	"col",
+	"embed",
+	"hr",
+	"img",
+	"input",
+	"link",
+	"meta",
+	"source",
+	"track",
+	"wbr",
+]);
+
+/** Every top-level child of a slot string carrying one of the given `data-xtyle-*` markers, in
+ * document order. This is the server-side counterpart of the pairing the collection elements do over
+ * live child nodes: the marked children are the author's own, so their content is spliced into the
+ * fill's named slots rather than re-rendered. Unmarked children are dropped, matching the element's
+ * behavior of only adopting what it can pair. */
+export function markedChildren(html: string, markers: readonly string[]): MarkedChild[] {
+	const attrNames = markers.map((m) => `data-xtyle-${m}`);
+	const out: MarkedChild[] = [];
+	let open: Tag | null = null;
+	let marker = "";
+	let depth = 0;
+	for (const tag of scanTags(html)) {
+		if (open) {
+			if (tag.name !== open.name) continue;
+			if (tag.close) {
+				depth--;
+				if (depth === 0) {
+					out.push({ marker, name: open.name, attrs: parseAttrs(open.attrs), html: html.slice(open.end, tag.start) });
+					open = null;
+				}
+			} else if (!tag.selfClosing) depth++;
+			continue;
+		}
+		if (tag.close || tag.selfClosing) continue;
+		const attrs = parseAttrs(tag.attrs);
+		const hit = attrNames.findIndex((name) => name in attrs);
+		if (hit === -1) continue;
+		if (VOID.has(tag.name)) {
+			out.push({ marker: markers[hit] as string, name: tag.name, attrs, html: "" });
+			continue;
+		}
+		open = tag;
+		marker = markers[hit] as string;
+		depth = 1;
+	}
+	return out;
+}
+
+/** Elements that carry no rendered surface, so they are never one of a slot's authored children. A
+ * framework hoisting a nested component's `<script>` leaves it inline in the slot string it hands
+ * back, and callers pair these children positionally. */
+const NON_RENDERING = new Set(["script", "style", "link", "meta", "base"]);
+
+/** Every top-level authored element of a slot string, with its inner HTML. Used for the legacy
+ * named-slot authoring shape, where the framework has already grouped the children into one slot per
+ * role and the marker attributes were consumed on the way.
+ *
+ * Non-rendering elements are skipped: a nested component's hoisted `<script>` is emitted inline here
+ * by a dev server (a production build bundles it out of the markup), and counting it as a child would
+ * shift every positional pairing by one and drop the last authored child. A void element yields a
+ * childless entry, so an authored `<img>` counts as one child rather than consuming its siblings. */
+export function topLevelElements(html: string): MarkedChild[] {
+	const out: MarkedChild[] = [];
+	let open: Tag | null = null;
+	let depth = 0;
+	for (const tag of scanTags(html)) {
+		if (open) {
+			if (tag.name !== open.name) continue;
+			if (tag.close) {
+				depth--;
+				if (depth === 0) {
+					if (!NON_RENDERING.has(open.name)) {
+						out.push({ marker: "", name: open.name, attrs: parseAttrs(open.attrs), html: html.slice(open.end, tag.start) });
+					}
+					open = null;
+				}
+			} else if (!tag.selfClosing) depth++;
+		} else if (!tag.close && !tag.selfClosing) {
+			if (VOID.has(tag.name)) {
+				if (!NON_RENDERING.has(tag.name)) {
+					out.push({ marker: "", name: tag.name, attrs: parseAttrs(tag.attrs), html: "" });
+				}
+				continue;
+			}
+			open = tag;
+			depth = 1;
+		}
+	}
+	return out;
+}
+
+/** Pair marked children into `{ lead, body }` records — a header with its panel, a tab with its
+ * panel. A lead with no body following it still yields a pair, so a malformed authoring run
+ * degrades to an empty panel rather than silently dropping the section. */
+export function markedPairs(
+	html: string,
+	leadMarker: string,
+	bodyMarker: string,
+): { lead: MarkedChild; body: MarkedChild | null }[] {
+	const children = markedChildren(html, [leadMarker, bodyMarker]);
+	const pairs: { lead: MarkedChild; body: MarkedChild | null }[] = [];
+	for (const child of children) {
+		if (child.marker === leadMarker) pairs.push({ lead: child, body: null });
+		else {
+			const last = pairs[pairs.length - 1];
+			if (last && last.body === null) last.body = child;
+		}
+	}
+	return pairs;
+}
+
 function withClass(attrs: string, className: string): string {
 	const existing = /(\sclass\s*=\s*)("([^"]*)"|'([^']*)')/i.exec(attrs);
 	if (!existing) return `${attrs} class="${className}"`;
@@ -174,8 +304,8 @@ export function decorateTable(html: string, parts: TableParts, tableClasses: rea
 	const table = elements(html, ["table"])[0];
 	if (!table) return html;
 
-	// The footer's cells take `footerCell` *instead of* `cell` / `headerCell`, so it is lifted out
-	// behind a placeholder, decorated on its own terms, and put back once the body has been classed.
+	// INFO: footer cells take footerCell instead of cell/headerCell, so tfoot is lifted out behind a
+	// placeholder, decorated separately, and restored after the body is classed
 	const foot = elements(table.inner, ["tfoot"])[0];
 	let working = table.inner;
 	let footHtml = "";

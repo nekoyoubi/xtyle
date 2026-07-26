@@ -88,9 +88,7 @@ function inner(b: SheetBindings): string {
 		'<div class="xtyle-sheet__panel" part="panel">' +
 		header +
 		'<div class="xtyle-sheet__body" part="body" data-slot><slot></slot></div>' +
-		// The footer keeps its `<slot>` whether filled or not, so `:empty` can never match it: a slot
-		// is a child node, and the nodes assigned to it are not. Only the host knows, so it says, and
-		// `data-slot` is how it sees the region at all under the auto-light (Astro SSR) render.
+		// INFO: a footer always holding a `<slot>` can never match `:empty` (the slot is a child node, assigned nodes are not), so the host toggles `hidden` via `hasFooter`.
 		`<footer class="xtyle-sheet__footer" part="footer" data-slot="footer"${b.hasFooter ? "" : " hidden"}><slot name="footer"></slot></footer>` +
 		"</div>";
 

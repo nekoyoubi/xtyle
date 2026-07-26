@@ -196,9 +196,8 @@ export class XtyleQrCode extends XtyleElement {
 		const quiet = this.quietZone();
 		const overlay = this.iconOverlay;
 		const scale = this.iconScale;
-		// The logo patch is a whole number of modules; knockout clears exactly that patch and the mark
-		// fills it, so the glyph reads at its full size instead of floating inside a larger hole. Overlay
-		// cuts nothing and sizes the mark by the exact scale over the live modules.
+		// INFO: the logo patch spans a whole number of modules; knockout clears exactly that patch so the
+		// glyph reads full-size, while overlay cuts nothing and sizes the mark by scale over the live modules.
 		const patchModules = this.hasLogo ? qrLogoModules(matrix.size, scale) : 0;
 		const clearModules = this.hasLogo && !overlay ? patchModules : 0;
 		const path = qrPath(matrix, {

@@ -1,5 +1,7 @@
 export { utilitiesCss } from "./utilities.js";
 export type { UtilityOptions } from "./utilities.js";
+export { effectsCss } from "../effects.js";
+export type { EffectsCssOptions } from "../effects.js";
 export { componentsCss } from "./components.js";
 export { listCss } from "./components/list.js";
 export { cardCss } from "./components/card.js";
@@ -46,6 +48,12 @@ export { fieldCss } from "./components/field.js";
 export { formGroupCss } from "./components/form-group.js";
 export { selectCss } from "./components/select.js";
 export { switchCss } from "./components/switch.js";
+export { schemeToggleCss } from "./components/scheme-toggle.js";
+export { themeScopeCss } from "./components/theme-scope.js";
+export { themeCardCss } from "./components/theme-card.js";
+export { themeSwatchCss } from "./components/theme-swatch.js";
+export { themePickerCss } from "./components/theme-picker.js";
+export { ninePatchCss } from "./components/nine-patch.js";
 export { textareaCss } from "./components/textarea.js";
 export { toolbarCss } from "./components/toolbar.js";
 export { tooltipCss } from "./components/tooltip.js";
@@ -78,19 +86,25 @@ export { calendarCss } from "./components/calendar.js";
 
 import { componentsCss } from "./components.js";
 import { utilitiesCss, type UtilityOptions } from "./utilities.js";
+import { effectsCss } from "../effects.js";
 import type { TokenCategories } from "../types.js";
 
 /**
  * The full base stylesheet: utilities generated from the given token register
- * keys, followed by the component class layer. Hand this to any consumer that
- * wants the whole vocabulary as one sheet.
+ * keys, then the component class layer, then the effect layer. Hand this to any
+ * consumer that wants the whole vocabulary as one sheet.
+ *
+ * Effects come last so a `data-fx` rule outranks a component's own declaration
+ * at equal specificity. An effect decorates what is already there, and losing to
+ * the thing it decorates would make it useless on exactly the components an
+ * adopter most wants to decorate.
  */
 export function baseCss(
 	tokens: string[],
 	categories: TokenCategories,
 	options?: UtilityOptions,
 ): string {
-	return `${utilitiesCss(tokens, categories, options)}\n${componentsCss}`;
+	return `${utilitiesCss(tokens, categories, options)}\n${componentsCss}\n${effectsCss()}`;
 }
 
 let sheet: CSSStyleSheet | null = null;

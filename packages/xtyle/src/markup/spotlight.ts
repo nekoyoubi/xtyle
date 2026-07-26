@@ -52,7 +52,7 @@ export function cutoutPath(target: SpotlightRect | null, viewport: SpotlightRect
 		const cx = round(left + width / 2);
 		const cy = round(top + height / 2);
 		const r = round(Math.max(width, height) / 2);
-		// two arcs, because a single 360° arc is a no-op in SVG path terms
+		// INFO: two arcs, because a single 360° arc is a no-op in SVG path terms
 		return `${outer}M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0Z`;
 	}
 

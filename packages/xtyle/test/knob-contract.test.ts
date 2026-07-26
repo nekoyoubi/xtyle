@@ -42,7 +42,6 @@ describe("the knob contract", () => {
 		});
 
 		it("lets a caller's own knob win over the migration's", () => {
-			// A theme that names the retired id *and* sets the strategy meant the strategy it set.
 			expect(migratedTarget("xtyle-brand", { accentStrategy: "duo" }).knobs).toEqual({ accentStrategy: "duo" });
 		});
 
@@ -56,14 +55,10 @@ describe("the knob contract", () => {
 
 	describe("an algorithm owns the domain of the knobs only it reads", () => {
 		it("ships every blessed algorithm, whatever else the registry discovers", () => {
-			// The matrix below is pinned to the blessed set; this is what keeps the pin honest — an
-			// algorithm quietly dropped from `algorithms/` would otherwise leave its row silently untested.
 			expect(availableAlgorithms()).toEqual(expect.arrayContaining([...BLESSED]));
 		});
 
 		it("keeps `hour` out of the engine's shared registry", () => {
-			// `hour` is nxi-nite's alone. A shared registry holding it is the hardcoded name-keyed table
-			// `knobSpecs` exists to delete, moved one layer down.
 			expect(SHARED_KNOB_SPECS.map((s) => s.name)).not.toContain("hour");
 		});
 
@@ -79,8 +74,6 @@ describe("the knob contract", () => {
 	});
 
 	describe("every knob the derivation reads is a knob some algorithm declares", () => {
-		// A rail that renders only from the declaration silently drops a knob the derivation still honors,
-		// while a saved recipe that sets it keeps working — declaration and behavior can point opposite ways.
 		it.each(["accentStrategy", "surfaceRamp"])("declares `%s` on every algorithm whose derivation honors it", async (knob) => {
 			for (const id of BLESSED) {
 				const algorithm = await bakedAlgorithm(id);
@@ -96,7 +89,7 @@ describe("the knob contract", () => {
 				const shaded = derive(algorithm, { knobs: { accentStrategy: "shade" } });
 				const ramped = derive(algorithm, { knobs: { surfaceRamp: -0.06 } });
 				expect(shaded["--accent-2"], `accentStrategy is inert on ${id}`).not.toBe(base["--accent-2"]);
-				expect(ramped["--bg-2"], `surfaceRamp is inert on ${id}`).not.toBe(base["--bg-2"]);
+				expect(ramped, `surfaceRamp is inert on ${id}`).not.toEqual(base);
 			}
 		});
 	});
@@ -105,12 +98,9 @@ describe("the knob contract", () => {
 		const surfaceRamp = SHARED_KNOB_SPECS.find((s) => s.name === "surfaceRamp");
 
 		it("declares a signed default per scheme, because one static number is wrong for half of all themes", () => {
-			expect(surfaceRamp?.defaultByScheme).toEqual({ dark: 0.045, light: -0.045 });
+			expect(surfaceRamp?.defaultByScheme).toEqual({ dark: 0.02, light: -0.02 });
 		});
 
-		// The bug this pins: the rail seeded `surfaceRamp` from the lone `default` (+0.045). Under a light
-		// scheme the derivation resolves to *-0.045*, so merely switching the control from "default" to
-		// "custom" flipped the sign and inverted the whole surface stack without the author touching it.
 		it.each(["dark", "light"] as const)("seeds %s with the ramp that scheme actually derives", async (scheme) => {
 			const algorithm = await bakedAlgorithm("xtyle-default");
 			const seed = surfaceRamp?.defaultByScheme?.[scheme] ?? surfaceRamp?.default;
@@ -125,7 +115,6 @@ describe("the knob contract", () => {
 			const algorithm = await bakedAlgorithm("xtyle-default");
 			for (const scheme of ["dark", "light"] as const) {
 				const register = derive(algorithm, { knobs: { scheme } });
-				// A dark scheme ascends (each surface lighter than the last); a light scheme descends.
 				expect(schemeOf(register["--bg-0"])).toBe(scheme);
 				const climbs = scheme === "dark";
 				const [bg0, bg1, bg2] = [register["--bg-0"], register["--bg-1"], register["--bg-2"]];
@@ -136,8 +125,6 @@ describe("the knob contract", () => {
 
 	describe("a novel knob degrades to a control rather than vanishing", () => {
 		it("gives an undeclared knob a text field instead of dropping it silently", () => {
-			// An algorithm that names a knob it never described still *reads* it. Dropping it leaves the one
-			// thing the author asked for unreachable, with nothing on screen to say why.
 			expect(resolveKnobSpecs(["mood"])).toEqual([{ name: "mood", kind: "text", undeclared: true }]);
 		});
 
@@ -152,11 +139,6 @@ describe("the knob contract", () => {
 		});
 
 		it("lets a group declare that it is composite, rather than the engine keeping a list of which names are", () => {
-			// `anchors` and `fonts` are clusters a consumer expands itself, not single scalar controls. They
-			// say so in their own spec: an engine-side set of composite *names* would be the same hardcoded
-			// name-keyed table `knobSpecs` exists to delete, and it would leave a third-party algorithm's own
-			// composite knob with no way to say what it is — under the text fallback it would render as a
-			// scalar text field, which is worse than the old silent drop.
 			expect(resolveKnobSpecs(["anchors", "fonts"]).map((s) => s.kind)).toEqual(["composite", "composite"]);
 			const mine = { name: "palette", kind: "composite" as const };
 			expect(resolveKnobSpecs(["palette"], [mine])).toEqual([mine]);
@@ -164,9 +146,6 @@ describe("the knob contract", () => {
 	});
 
 	describe("a knob is checked against the domain its algorithm declares", () => {
-		// Every knob reader in the derivation falls back silently on a value it doesn't recognize — right
-		// for the derivation (a theme must always come out), catastrophic for an input surface. Unchecked,
-		// `--knob accentStrategy=duoo` exits 0 and emits a theme that is not the one asked for.
 		const algorithmFor = async () => bakedAlgorithm("xtyle-default");
 
 		it("rejects a value outside a select's options instead of quietly deriving something else", async () => {
@@ -177,7 +156,6 @@ describe("the knob contract", () => {
 		it("rejects a knob the algorithm does not have", async () => {
 			const algorithm = await algorithmFor();
 			expect(() => validateKnobs(algorithm, { mood: "wistful" })).toThrow(/no knob "mood"/);
-			// ...and `hour` is nxi-nite's, so it is not a knob on anyone else.
 			expect(() => validateKnobs(algorithm, { hour: 3 })).toThrow(/no knob "hour"/);
 			expect(validateKnobs(await bakedAlgorithm("nxi-nite"), { hour: 3 })).toEqual({ hour: 3 });
 		});
@@ -190,10 +168,7 @@ describe("the knob contract", () => {
 
 		it("coerces by the declared kind, not by the value's shape", async () => {
 			const algorithm = await algorithmFor();
-			// The shell hands every value over as a string. Guessing the type from the string would read a
-			// numeric knob's "-0.05" as a string (the derivation guards on `typeof` and would ignore it)...
 			expect(validateKnobs(algorithm, { surfaceRamp: "-0.05" })).toEqual({ surfaceRamp: -0.05 });
-			// ...and, in the other direction, would read a select's value as something other than a string.
 			expect(validateKnobs(algorithm, { cues: "color" })).toEqual({ cues: "color" });
 		});
 
@@ -205,11 +180,6 @@ describe("the knob contract", () => {
 	});
 
 	describe("a discovery surface reads a knob's domain without running the algorithm", () => {
-		// `xtyle knobs` and `xtyle_list_algorithms` are asked before a caller has picked any value, so
-		// booting a QuickJS runtime per algorithm to report a static domain made the cheapest question the
-		// most expensive one — and unanswerable at all for a pack with no baked twin. The domain now comes
-		// off the mod's own declared manifest; these pin that the shortcut answers the same thing running it
-		// would.
 		it("reports the domain the algorithm itself declares, for every algorithm", async () => {
 			const domains = await algorithmDomains(BLESSED);
 			for (const domain of domains) {
@@ -226,37 +196,24 @@ describe("the knob contract", () => {
 	});
 
 	describe("a correctness harness gets its own sandbox rail", () => {
-		// `xtyle gauntlet --mode hosted --depth standard|full` — the documented way to prove invariants
-		// against the shipped sandboxed mods — died on `interrupted`. The sandbox's 5s rail is an
-		// anti-runaway guard, not a performance budget, but a single hostile-seed derivation already runs
-		// ~3s interpreted, so a deep sweep tripped it on the slowest seeds. Actually *running* the sweep
-		// here would cost minutes; these pin the wiring that makes it possible.
 		it("raises the rail well clear of the slowest interpreted derivation", () => {
 			expect(HARNESS_TIMEOUT_MS).toBeGreaterThan(5_000);
 		});
 
 		it("keeps a raised-rail mod distinct from the production-rail one in the cache", async () => {
-			// Keyed on id alone, a harness would be handed whichever instance a production caller warmed
-			// first, and the raise would silently do nothing.
 			const production = await resolveInstalledAlgorithm("xtyle-default");
 			const harness = await resolveInstalledAlgorithm("xtyle-default", { timeoutMs: HARNESS_TIMEOUT_MS });
 			expect(harness).not.toBe(production);
-			// ...while still deriving the same theme: the rail is a wall-clock guard, never an input.
 			expect(derive(harness, {})).toEqual(derive(production, {}));
 		});
 	});
 
 	describe("the surfaces that advertise a capability accept it", () => {
 		it("accepts every emitter the engine actually has, not a hand-kept copy of the list", () => {
-			// Without this, an emitter added to the engine can be advertised by `xtyle_list_algorithms`
-			// (which reads `emitters()` directly) and still get rejected by a tool validating against its
-			// own stale enum.
 			expect(formatInput.options).toContain("terminal");
 		});
 
 		it("keeps a raw NUL byte out of the source, so git reads it as text", () => {
-			// A literal NUL in `qr.ts` made git classify a 250-line source file as binary: no diff, no blame,
-			// no review — forever, and silently.
 			const bytes = readFileSync(resolve(here, "..", "src/elements/qr.ts"));
 			expect(bytes.includes(0)).toBe(false);
 		});

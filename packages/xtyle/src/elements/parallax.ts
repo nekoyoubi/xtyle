@@ -56,8 +56,6 @@ export class XtyleParallax extends XtyleDecoratorElement {
 		const attr = this.getAttribute("amplitude");
 		if (attr === null || attr.trim() === "") return DEFAULT_AMPLITUDE;
 		const raw = Number(attr);
-		// A negative amplitude flips every layer at once (per-layer `data-speed` sign still composes on top),
-		// so an author can reverse the whole banner without touching each layer.
 		return Number.isFinite(raw) ? raw : DEFAULT_AMPLITUDE;
 	}
 
@@ -108,8 +106,8 @@ export class XtyleParallax extends XtyleDecoratorElement {
 			window.addEventListener("pointermove", this.onPointerMove, opts);
 			document.addEventListener("pointerleave", this.resetPointer, opts);
 		} else {
-			// Capture phase so scrolls from any ancestor scroll container reach us: `scroll` does not bubble,
-			// so a plain window listener misses an inner scroller (e.g. an app-shell main region).
+			// INFO: `scroll` does not bubble, so capture phase is needed to catch scrolls from ancestor
+			// scroll containers (e.g. an app-shell main region).
 			window.addEventListener("scroll", this.scheduleRepaint, { ...opts, capture: true });
 			window.addEventListener("resize", this.scheduleRepaint, opts);
 		}
@@ -143,8 +141,6 @@ export class XtyleParallax extends XtyleDecoratorElement {
 		if (rect.bottom < 0 || rect.top > window.innerHeight) return;
 		const amp = this.amplitude;
 		if (this.mode === "cursor") {
-			// Layers push away from the pointer (negative), so the scene tilts to reveal depth as the cursor
-			// moves toward an edge, rather than sliding after it.
 			const { x: px, y: py } = this.pointer;
 			for (const { el, speed, dir } of this.layers) {
 				const [ox, oy] = dir
@@ -154,8 +150,8 @@ export class XtyleParallax extends XtyleDecoratorElement {
 			}
 			return;
 		}
-		// Clamp progress to [-0.5, 0.5]: past half-off-screen the extra drift is barely visible but would
-		// carry a layer beyond its scale headroom and reveal the band behind it, so the travel is bounded.
+		// INFO: progress is clamped to [-0.5, 0.5]; past half-off-screen extra drift would exceed a layer's
+		// scale headroom and reveal the band behind it.
 		const f = clamp((rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight, -0.5, 0.5);
 		for (const { el, speed, dir } of this.layers) {
 			const d = dir ?? { x: 0, y: 1 };

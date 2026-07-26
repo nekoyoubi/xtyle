@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-// side effect: defines the <xtyle-menu> custom element on the happy-dom registry
 import "../src/elements/menu.js";
 import type { MenuItem, MenuOpenAtOptions } from "../src/elements/menu.js";
 import { loadFill } from "../src/elements/fragment-host.js";
@@ -125,7 +124,7 @@ describe("<xtyle-menu>.openAt", () => {
 		el.openAt(300, 220);
 		expect(el.open).toBe(true);
 		expect(isShown(el)).toBe(true);
-		// zero-size cursor anchor: bottom of the point + the default 4px gap, leading edge at the point
+		// INFO: zero-size cursor anchor: point bottom + default 4px gap, leading edge at the point
 		expect(popup(el).style.left).toBe("300px");
 		expect(popup(el).style.top).toBe("224px");
 	});
@@ -133,7 +132,7 @@ describe("<xtyle-menu>.openAt", () => {
 	it("right-aligns at the cursor near the right edge instead of sliding left", () => {
 		const el = make({ context: "" });
 		el.openAt(window.innerWidth - 24, 100);
-		// content falls back to the 192px min-width in a layout-less DOM
+		// INFO: content falls back to the 192px min-width in a layout-less DOM
 		expect(popup(el).style.left).toBe(`${window.innerWidth - 24 - 192}px`);
 	});
 

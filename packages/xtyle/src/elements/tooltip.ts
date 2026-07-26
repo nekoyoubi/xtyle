@@ -91,8 +91,8 @@ export class XtyleTooltip extends XtyleElement {
 	}
 
 	attributeChangedCallback(name: string): void {
-		// Ahead of the render guard: an authored `open` arrives at upgrade, before there is a scaffold
-		// to sync, and it is the only signal that the author — not a hover — asked for the tip.
+		// INFO: an authored `open` can arrive at upgrade before the scaffold exists, so capture
+		// forcedOpen ahead of the render guard's early return
 		if (name === "open" && !this.selfDriven) this.forcedOpen = this.open;
 		if (!this.root.firstChild) return;
 		if (name === "open") {
@@ -139,9 +139,8 @@ export class XtyleTooltip extends XtyleElement {
 		}
 		const root = this.root.querySelector("[data-root]");
 		if (!root) return [];
-		// The content panel is the trigger's sibling; non-rendering nodes (a binding's hydration
-		// `<script>`, a `<style>`, etc.) can ride along in the composed slot and have no box — anchoring
-		// to one collapses placement to a zero rect, so keep only real, layout-bearing trigger elements.
+		// INFO: non-rendering nodes (hydration `<script>`, `<style>`) can ride the composed slot with no
+		// box; anchoring to a zero rect collapses placement, so keep only layout-bearing elements
 		const nonVisual = new Set(["SCRIPT", "STYLE", "TEMPLATE", "LINK"]);
 		return [...root.children].filter(
 			(el): el is HTMLElement =>
@@ -200,8 +199,6 @@ export class XtyleTooltip extends XtyleElement {
 			anchor,
 			content: size,
 		});
-		// `shift.content` is the clamp the placement already applied; position carries it now, so only
-		// the arrow's counter-shift is left to hand to CSS.
 		content.style.left = `${placed.left}px`;
 		content.style.top = `${placed.top}px`;
 		content.style.setProperty("--xtyle-tt-arrow", `${shift.arrow}px`);
@@ -270,9 +267,8 @@ export class XtyleTooltip extends XtyleElement {
 		try {
 			if (this.open && !shown) {
 				content.showPopover();
-				// Placement is JS-only now, so every path that opens the tip has to place it — not just
-				// the hover. A tip opened declaratively (`open` on the element, the always-on case) never
-				// passes through `show()`, and an unplaced fixed popover renders at the viewport corner.
+				// INFO: an unplaced fixed popover renders at the viewport corner, and a
+				// declaratively-opened tip never passes through show(), so place it here too
 				this.reposition();
 				this.bindWhileOpen();
 			} else if (!this.open && shown) {

@@ -40,8 +40,6 @@ await checkAuthoring("table", Astro.props);
 const variant = resolveVocab(variantInput, TABLE_VARIANTS, "default", "table variant");
 const size = resolveVocab(sizeInput, TABLE_SIZES, "normal", "table size");
 
-// Every rule in the table stylesheet keys off the part classes the element writes onto the authored
-// `<table>` at upgrade, so the server applies the same ones — otherwise a zero-JS table is bare HTML.
 const tableClasses = [
 	tableParts.table,
 	variant !== "default" && `xtyle-table--${variant}`,

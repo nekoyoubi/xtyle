@@ -2,10 +2,6 @@ import { afterEach, describe, expect, it } from "vitest";
 import Progress from "../src/Progress.svelte";
 import { render, type Rendered } from "./harness.js";
 
-// `ramp`, `rampMode` and `reverse` shipped declared, defaulted and documented on this wrapper while
-// reaching the element nowhere. Static analysis catches that exact shape (destructured, never
-// referenced), but not a prop forwarded under the wrong name, casing, or coercion. These render and
-// read the resulting attribute, which is the only check that covers both.
 describe("Progress prop forwarding", () => {
 	let rendered: Rendered | undefined;
 	afterEach(() => {
@@ -58,8 +54,6 @@ describe("Progress prop forwarding", () => {
 		expect(mount({ value: 10, ariaLabel: "Upload progress" }).getAttribute("aria-label")).toBe("Upload progress");
 	});
 
-	// `track` is a deliberate three-way transform, not a straight pass-through: the default `true`
-	// omits the attribute, `false` becomes `"none"`, and a tone rides through as itself.
 	it("collapses track through its documented transform", () => {
 		expect(mount({ track: true }).hasAttribute("track")).toBe(false);
 		rendered!.destroy();

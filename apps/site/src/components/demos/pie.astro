@@ -29,9 +29,6 @@ const outcomes = [
 	{ label: "Queued", value: 11, tone: "info" as const },
 ];
 
-// A clean run: nothing failed or flaked, so those categories are absent. Because each slice
-// carries a semantic `tone`, the survivors keep their own colors (Passed stays success-green,
-// Skipped stays neutral) instead of shifting down the scheme.
 const cleanRun = [
 	{ label: "Passed", value: 152, tone: "success" as const },
 	{ label: "Skipped", value: 18, tone: "skipped" as const },

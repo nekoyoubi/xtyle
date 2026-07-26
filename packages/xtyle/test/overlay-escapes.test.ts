@@ -41,7 +41,6 @@ const SURFACES = [
 		id: "swatch",
 		css: swatchCss,
 		selector: ".xtyle-swatch__details",
-		// swatch builds its readout in the mod rather than the scaffold
 		fill: read(join(FRAGMENTS, "swatch", "mod.ts")),
 		element: read(join(ELEMENTS, "swatch.ts")),
 	},
@@ -65,10 +64,8 @@ describe("the hover overlays escape a clipping ancestor", () => {
 				expect(element).toMatch(/addEventListener\(\s*"keydown"/);
 			});
 
-			// The assertion above is what a source-read can cheaply say, and on its own it is a false
-			// green: it held on both surfaces while a hover-raised overlay could not be dismissed at all.
-			// WCAG 1.4.13 asks for dismissal *without moving pointer or focus*, so on the hover path the
-			// key lands wherever focus already was — never on the host — and only the document sees it.
+			// INFO: WCAG 1.4.13 needs dismissal without moving pointer or focus; on the hover path the
+			// key isn't on the host, so Escape must be heard on document, not the element
 			it("hears Escape from wherever focus is, not just from inside itself", () => {
 				expect(element).toMatch(/document\.addEventListener\(\s*"keydown",\s*this\.onKeydown/);
 				expect(element).not.toMatch(/this\.addEventListener\(\s*"keydown"/);
@@ -85,7 +82,6 @@ describe("the hover overlays escape a clipping ancestor", () => {
 			it("keeps the overlay on its anchor for as long as it is open", () => {
 				expect(element).toContain("new AnchorTracker(");
 				expect(element).toMatch(/this\.tracker\.start\(/);
-				// and it has to come back off, or a closed overlay repositions forever and leaks its element
 				expect(element).toMatch(/this\.tracker\.stop\(\)/);
 				expect(element).toContain("disconnectedCallback");
 			});
@@ -94,7 +90,6 @@ describe("the hover overlays escape a clipping ancestor", () => {
 				const block = css.match(new RegExp(`\\${selector}\\s*\\{[^}]*\\}`))?.[0] ?? "";
 				expect(block, `${id}: expected a rule for ${selector}`).not.toBe("");
 				expect(block).toContain("position: fixed");
-				// a z-index here would claim it can win from inside a clipping ancestor, which it cannot
 				expect(block).not.toContain("z-index");
 			});
 
@@ -134,7 +129,6 @@ describe("the hover overlays escape a clipping ancestor", () => {
 	});
 
 	it("leaves --layer-overlay to the one surface still stacking for itself", () => {
-		// tooltip and swatch outrank every z-index now; the non-modal sheet is not promoted and still needs one
 		expect(tooltipCss).not.toContain("--layer-overlay");
 		expect(swatchCss).not.toContain("--layer-overlay");
 	});

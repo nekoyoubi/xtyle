@@ -1,7 +1,7 @@
 import { apply } from "@xtyle/core/dom";
 import { getAlgorithm } from "@xtyle/core/algorithms";
-import type { TokenRegister } from "@xtyle/core";
-import { deriveRegister } from "./theme-store/recipe.js";
+import { schemeOf, type TokenRegister } from "@xtyle/core";
+import { deriveRegister, type DeriveRegisterResult } from "./theme-store/recipe.js";
 import { migrateEnvelope } from "./theme-store/migrate.js";
 import type { StoreEnvelope, ThemeDoc } from "./theme-store/types.js";
 import { STORAGE_KEY } from "./theme-store/types.js";
@@ -141,6 +141,42 @@ function updateThemeLabels(
 	set(["x-status-tokens"], tokens === null ? null : String(tokens));
 }
 
+/**
+ * Publishes the scheme the page is *actually rendering* on `<html data-effective-scheme>`.
+ *
+ * `data-scheme` is a different thing: it records what the visitor asked the light/dark toggle for, and
+ * it drives the inverted stylesheet. A theme applied from the switcher can carry its own scheme
+ * regardless of that preference — applying a light theme leaves the preference on "dark" — so anything
+ * that needs to reflect what is on screen (the toggle's own sun/moon glyph, most obviously) has to read
+ * the derived answer rather than the request.
+ */
+function publishEffectiveScheme(scheme: string | null): void {
+	const root = document.documentElement;
+	const effective = scheme ?? (root.getAttribute("data-scheme") === "light" ? "light" : "dark");
+	root.setAttribute("data-effective-scheme", effective === "light" ? "light" : "dark");
+}
+
+/** The scheme a register landed on, by its own declaration or by reading the surface it produced. */
+function schemeOfRegister(register: TokenRegister): string | null {
+	return register["--scheme"] ?? (register["--bg-0"] ? schemeOf(register["--bg-0"]) : null);
+}
+
+/**
+ * Derive a theme into the scheme the visitor asked for.
+ *
+ * `invert` cannot be read straight off the preference, because that assumes every theme is natively
+ * dark: a natively-light one would come out light when dark was asked for and dark when light was,
+ * which leaves the toggle looking broken. So derive natively first and only flip when what came back
+ * is not what was wanted — the same delta an `<xtyle-theme-scope>` uses.
+ */
+function deriveForScheme(doc: ThemeDoc, wanted: "light" | "dark"): DeriveRegisterResult {
+	const native = deriveRegister(doc.recipe, null, {});
+	if (native.error) return native;
+	if (schemeOfRegister(native.register) === wanted) return native;
+	const flipped = deriveRegister(doc.recipe, null, { invert: true });
+	return flipped.error ? native : flipped;
+}
+
 export function reapplyActiveTheme(): void {
 	if (typeof document === "undefined") return;
 	const root = document.documentElement;
@@ -152,13 +188,18 @@ export function reapplyActiveTheme(): void {
 	if (!doc || !bakedAlgorithmExists(doc.recipe.algorithm)) {
 		clearActiveVarsCache();
 		updateThemeLabels(null, null, null);
+		publishEffectiveScheme(null);
 		return;
 	}
 
-	const { register, error } = deriveRegister(doc.recipe);
+	const { register, error } = deriveForScheme(
+		doc,
+		root.getAttribute("data-scheme") === "light" ? "light" : "dark",
+	);
 	if (error) {
 		clearActiveVarsCache();
 		updateThemeLabels(null, null, null);
+		publishEffectiveScheme(null);
 		return;
 	}
 
@@ -167,9 +208,7 @@ export function reapplyActiveTheme(): void {
 		key.startsWith("--") ? key : `--${key}`,
 	);
 	writeActiveVarsCache(register);
-	updateThemeLabels(
-		doc.recipe.algorithm,
-		register["--scheme"] ?? null,
-		Object.keys(register).length,
-	);
+	const scheme = schemeOfRegister(register);
+	updateThemeLabels(doc.recipe.algorithm, scheme, Object.keys(register).length);
+	publishEffectiveScheme(scheme);
 }

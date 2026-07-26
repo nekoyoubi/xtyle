@@ -1,6 +1,5 @@
-// happy-dom ships none of the observer APIs, and a handful of wrappers construct one in an effect
-// during mount. Without these the sweep reports a render failure that has nothing to do with the
-// prop under test, so they are stubbed to inert no-ops rather than left to throw.
+// INFO: happy-dom ships no ResizeObserver/IntersectionObserver/MutationObserver; stubbed as no-ops
+// so wrappers that construct one in a mount effect don't throw
 class NoopObserver {
 	observe() {}
 	unobserve() {}

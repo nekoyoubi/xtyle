@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-code> custom element on the happy-dom registry
+// INFO: side-effect import that registers the <xtyle-code> custom element
 import "../src/elements/code.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/code/source.generated.js";
@@ -120,8 +120,6 @@ describe("<xtyle-code> source rendering survives the gutter conversion", () => {
 		expect(pre(el).className).toContain("language-typescript");
 		const code = root(el).querySelector("[data-code]") as HTMLElement;
 		expect(code.className).toContain("language-typescript");
-		// the node carries a name of the fill's own alongside the highlighter's contract class, so the fill can
-		// key its paint to that name instead of to `[data-code]` — the hook a mod keeps to inherit the behavior
 		expect(code.className).toContain("xtyle-code__code");
 	});
 

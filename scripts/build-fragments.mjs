@@ -6,9 +6,8 @@ import { dirname, join } from "node:path";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const fragmentsDir = join(root, "packages", "xtyle", "src", "elements", "fragments");
 
-// Read text destined for an embedded artifact. The bytes land verbatim inside a JSON string, so
-// an un-normalized CRLF would make the generated file a function of the builder's checkout
-// rather than of its source.
+// INFO: bytes land verbatim in the generated JSON string; normalize CRLF so output is
+// byte-identical regardless of the checkout's line endings
 const readText = (path) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 
 if (!existsSync(fragmentsDir)) process.exit(0);
@@ -34,11 +33,8 @@ for (const id of fills) {
 	const manifest = JSON.parse(readFileSync(join(here, "mod.manifest.json"), "utf8"));
 	const entryScript = typeof manifest.entry === "string" ? manifest.entry : manifest.entry.script;
 
-	// Every fill loads into one shared sandbox context whose export table is keyed by bare
-	// name, so two components registering the same handler name (e.g. `toggle`) would clobber
-	// each other — last load wins, the rest silently no-op. Namespace every handler export by
-	// the fragment id at build time: the manifest ref and the `register` call both get the
-	// `<id>__` prefix, so collisions are impossible without authors having to remember.
+	// INFO: all fills share one sandbox export table keyed by bare handler name; the `<id>__`
+	// prefix keeps two fills' same-named handlers from clobbering (last-load-wins)
 	const prefix = `${id}__`;
 	for (const fillList of Object.values(manifest.fills ?? {})) {
 		for (const fill of fillList) {

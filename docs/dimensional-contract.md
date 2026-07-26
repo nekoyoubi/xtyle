@@ -91,9 +91,10 @@ while `--color-red` is still red. A red logo themes to `--color-red`, never to
 **Plain crayon-box names, not designer names.** Starting set (the basic eight-crayon box):
 
 `red orange yellow green blue purple brown black`, plus `gray` and `white` for
-UI reach; `pink` / `cyan` optional. The prior `--tint-{rose,amber,citron,…}` were
-the earlier exploration; they get replaced/renamed freely; nothing consumes this
-palette yet.
+UI reach; `pink` and `cyan` now ship too (12 named hues in `xtyle-default`). The
+prior `--tint-{rose,amber,citron,…}` were the earlier exploration; they get
+replaced/renamed freely. Components now consume this palette (e.g. `badge` reaches
+for the `--color-blue-*` ramp).
 
 Each hue exposes a **bare alias** + a **short ramp**:
 
@@ -130,22 +131,33 @@ Likely extend the ramp (`xs`, `2xl`, `3xl`) + add `--leading-*` / `--weight-*`
 
 ---
 
-## dimensions.elevation `[new]`
+## dimensions.fx `[have]`
 
-The one genuinely-absent dimension; only a single `--shadow` + `--scrim` exist
-today. Add a scheme-aware ladder:
+The shared tokens the **effect layer** consumes, so an effect's intensity, color,
+and timing are the algorithm's policy rather than each `data-fx` spec's own literal:
 
-`--elevation-0..5`, scheme-derived (shadows behave differently in dark vs light).
-The lone `--shadow` becomes a mid rung of the ladder.
+`--fx-color` `--fx-color-alt` `--fx-duration` `--fx-ease` `--fx-intensity`
+
+Scheme- and algorithm-driven (e.g. `xtyle-hc` flattens the layer by zeroing
+`--fx-intensity`, since a halo spends the edge contrast it protects). See
+[`effects.md`](effects.md) for the layer that reads them.
 
 ---
 
-## dimensions.space `[new]`
+## dimensions.elevation `[have]`
 
-Today density is rail-scoped (`--rail-*` under `[data-density]`), not an app-wide
-scale. Generalize to an app-wide ramp:
+A scheme-aware ladder now ships:
 
-`--space-*` (numeric step scale vs named `xs..xl`, TBD) from a `space_unit`
+`--elevation-0..5`, scheme-derived (shadows behave differently in dark vs light).
+The lone `--shadow` sits alongside it as a mid rung of the ladder.
+
+---
+
+## dimensions.space `[have]`
+
+An app-wide ramp now ships:
+
+`--space-0..8` (a numeric step scale, chosen over named `xs..xl`) from a `space_unit`
 anchor. Density modes become multipliers over the ramp rather than bespoke
 per-shell sizes.
 

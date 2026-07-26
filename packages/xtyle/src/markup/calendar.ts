@@ -212,7 +212,7 @@ export function weekdayNames(
 ): Array<{ short: string; long: string }> {
 	const shortFmt = new Intl.DateTimeFormat(locale, { weekday: format, timeZone: "UTC" });
 	const longFmt = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" });
-	// 2024-01-07 is a Sunday, so `+ index` walks Sunday..Saturday off a known anchor.
+	// INFO: 2024-01-07 is a Sunday — the known anchor that `+ index` walks Sunday..Saturday off
 	const sunday: CivilDate = { year: 2024, month: 1, day: 7 };
 	const names: Array<{ short: string; long: string }> = [];
 	for (let i = 0; i < 7; i++) {
@@ -327,6 +327,10 @@ export interface CalendarBindings {
 	hideNav: boolean;
 	prevLabel: string;
 	nextLabel: string;
+	prevIcon: string;
+	nextIcon: string;
+	prevBody?: string | null;
+	nextBody?: string | null;
 	prevDisabled: boolean;
 	nextDisabled: boolean;
 	disabled: boolean;
@@ -363,6 +367,10 @@ export interface CalendarBindingProps extends CalendarLimits {
 	hideNav?: boolean;
 	prevLabel?: string;
 	nextLabel?: string;
+	prevIcon?: string;
+	nextIcon?: string;
+	prevBody?: string | null;
+	nextBody?: string | null;
 	weekLabel?: string;
 	disabled?: boolean;
 	readonly?: boolean;
@@ -395,8 +403,8 @@ export function calendarBindings(props: CalendarBindingProps): CalendarBindings 
 	const rangeStart = mode === "range" ? (selected[0] ?? null) : null;
 	const rangeEnd = mode === "range" ? (selected[1] ?? null) : null;
 	const edge = mode === "range" && rangeStart && !rangeEnd ? (props.hoverDate ?? props.focusDate ?? null) : null;
-	// A zero-length band (the cursor still resting on the anchor) is not a preview of anything, so the
-	// pending range only paints once the other end has actually moved off the day that opened it.
+	// INFO: a zero-length band (cursor still on the anchor) is not a preview; the pending range
+	// only paints once the other end has moved off the opening day
 	const pendingEdge = edge && edge !== rangeStart ? edge : null;
 	const previewLo = pendingEdge && rangeStart ? (pendingEdge < rangeStart ? pendingEdge : rangeStart) : null;
 	const previewHi = pendingEdge && rangeStart ? (pendingEdge < rangeStart ? rangeStart : pendingEdge) : null;
@@ -434,9 +442,8 @@ export function calendarBindings(props: CalendarBindingProps): CalendarBindings 
 			if (outside) day.outside = true;
 			if (iso === today) day.today = true;
 			if (weekendDays.includes(weekdayOf(date))) day.weekend = true;
-			// The whole range is `aria-selected` — it is all picked — but only its two ends are *filled*;
-			// the days between carry the band instead, so the selection reads as one span rather than a
-			// row of identical pills.
+			// INFO: the whole range is aria-selected, but only its two ends are filled; the days
+			// between carry the band so the selection reads as one span, not a row of pills
 			if (isSelected) day.selected = true;
 			if (mode === "range" && rangeStart) {
 				if (iso === rangeStart) day.start = true;
@@ -483,6 +490,10 @@ export function calendarBindings(props: CalendarBindingProps): CalendarBindings 
 		hideNav: props.hideNav === true,
 		prevLabel: props.prevLabel ?? "Previous month",
 		nextLabel: props.nextLabel ?? "Next month",
+		prevIcon: props.prevIcon ?? "chevron-left",
+		nextIcon: props.nextIcon ?? "chevron-right",
+		prevBody: props.prevBody ?? null,
+		nextBody: props.nextBody ?? null,
 		prevDisabled: props.disabled === true || (!!min && compareDates(prevMonthEnd, min) < 0),
 		nextDisabled: props.disabled === true || (!!max && compareDates(nextMonthStart, max) > 0),
 		disabled: props.disabled === true,

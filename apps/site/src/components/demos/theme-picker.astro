@@ -1,0 +1,119 @@
+---
+import ThemePicker from "@xtyle/astro/ThemePicker.astro";
+import ThemeScope from "@xtyle/astro/ThemeScope.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import SchemeToggle from "@xtyle/astro/SchemeToggle.astro";
+
+const THEMES = [
+	{ name: "Default", algorithm: "xtyle-default" },
+	{ name: "Quiet", algorithm: "xtyle-quiet" },
+	{ name: "Loud", algorithm: "xtyle-loud" },
+	{ name: "High contrast", algorithm: "xtyle-hc" },
+	{ name: "Grape", constraints: { "--accent": "#7c5cff" } },
+	{ name: "Mint light", scheme: "light" as const, constraints: { "--accent": "#00b894" } },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Choosing a theme by looking at it</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				Every option is an <code>&lt;xtyle-theme-card&gt;</code>, so the preview and the button
+				semantics come from that component. The picker owns the grid and which card is current.
+			</Text>
+			<ThemePicker themes={THEMES} value="Default" label="Theme" minColWidth="12rem" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Wired to a scope</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>xtyle:theme-pick</code> carries the whole invocation, not just a name, so it can be
+				handed straight to a <code>&lt;xtyle-theme-scope&gt;</code> with nothing in between. Pick one
+				and only the panel below changes.
+			</Text>
+			<div data-picker-demo>
+				<Stack gap={4}>
+					<ThemePicker themes={THEMES} value="Default" label="Theme" swatches minColWidth="12rem" />
+					<ThemeScope algorithm="xtyle-default" data-picker-target>
+						<Card>
+							<Stack gap={3}>
+								<Cluster gap={2} align="center" justify="between">
+									<Badge tone="accent">live scope</Badge>
+									<Cluster gap={2} align="center">
+										<Text size="sm" tone="subtle" data-picker-name>Default</Text>
+										<SchemeToggle label="Flip this scope's scheme" />
+									</Cluster>
+								</Cluster>
+								<Text size="sm">
+									This panel is a theme scope. The picker hands it an invocation and it derives. The
+									toggle flips <em>this scope</em>, not the page.
+								</Text>
+								<Cluster gap={2} align="center">
+									<Button variant="solid" tone="accent" size="sm">Primary</Button>
+									<Button variant="outline" size="sm">Secondary</Button>
+									<Text size="xs" tone="subtle">sample controls, showing the theme</Text>
+								</Cluster>
+							</Stack>
+						</Card>
+					</ThemeScope>
+				</Stack>
+			</div>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">As a toolbar dropdown</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>layout="menu"</code> puts the same gallery behind a trigger naming the current choice,
+				for a toolbar with no room to show it outright. The panel is an
+				<code>&lt;xtyle-popover&gt;</code>, so dismissal, placement, and focus return come from the
+				overlay component rather than a hand-rolled dropdown. Everything the gallery takes still
+				applies inside it, <code>swatches</code> included.
+			</Text>
+			<ThemePicker themes={THEMES} value="Grape" label="Theme" layout="menu" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">With nothing on offer</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				An empty list says so rather than rendering an empty grid.
+			</Text>
+			<ThemePicker themes={[]} label="Theme" empty="No saved themes yet — build one in the bench." />
+		</Stack>
+	</Card>
+</Stack>
+
+<script>
+	function wire(root: HTMLElement): void {
+		const scope = root.querySelector<HTMLElement>("[data-picker-target]");
+		const name = root.querySelector<HTMLElement>("[data-picker-name]");
+		root.addEventListener("xtyle:theme-pick", (event) => {
+			const theme = (event as CustomEvent<{ theme: Record<string, unknown> | null }>).detail.theme;
+			if (!scope || !theme) return;
+			scope.setAttribute("algorithm", String(theme.algorithm ?? "xtyle-default"));
+			if (theme.scheme) scope.setAttribute("scheme", String(theme.scheme));
+			else scope.removeAttribute("scheme");
+			scope.setAttribute("constraints", JSON.stringify(theme.constraints ?? {}));
+			if (name) name.textContent = String(theme.name ?? "");
+		});
+	}
+
+	function init(): void {
+		for (const root of document.querySelectorAll<HTMLElement>("[data-picker-demo]")) wire(root);
+	}
+
+	document.addEventListener("astro:page-load", init);
+	init();
+</script>

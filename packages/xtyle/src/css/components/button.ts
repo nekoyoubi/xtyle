@@ -101,18 +101,23 @@ ${linkRules}
 .xtyle-button--link:hover {
 	text-decoration: underline;
 }
-.xtyle-button--link:hover::after,
-.xtyle-button--link:active::after {
-	background: transparent;
-}
 .xtyle-button:hover::after { background: var(--state-hover); }
 .xtyle-button:active::after { background: var(--state-press); }
 .xtyle-button[aria-pressed="true"]::after,
 .xtyle-button[aria-pressed="true"]:hover::after { background: var(--state-press); }
-.xtyle-button--link[aria-pressed="true"]::after { background: transparent; }
 .xtyle-button[aria-selected="true"]::after,
 .xtyle-button[aria-selected="true"]:hover::after { background: var(--state-selected); }
-.xtyle-button--link[aria-selected="true"]::after { background: transparent; }
+/* The link variant carries no state wash in any state, so its overrides come after the generic
+   ones. They used to sit before, where an equal-specificity :hover rule and a higher-specificity
+   pressed/selected one both beat them, and a link button lit up with a surface it has no surface
+   for. The underline is its state signal instead. */
+.xtyle-button--link::after,
+.xtyle-button--link:hover::after,
+.xtyle-button--link:active::after,
+.xtyle-button--link[aria-pressed="true"]::after,
+.xtyle-button--link[aria-pressed="true"]:hover::after,
+.xtyle-button--link[aria-selected="true"]::after,
+.xtyle-button--link[aria-selected="true"]:hover::after { background: transparent; }
 .xtyle-button:focus-visible {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
@@ -133,6 +138,9 @@ ${linkRules}
 .xtyle-button--icon.xtyle-button--xs { padding: var(--space-0); }
 .xtyle-button--icon.xtyle-button--sm { padding: var(--space-1); }
 .xtyle-button--icon.xtyle-button--lg { padding: var(--space-3); }
+/* The link variant is the no-chrome one, and that has to hold for a lone icon too: the base
+   icon padding lands after the variant rule and would otherwise put the box back. */
+.xtyle-button--icon.xtyle-button--link { padding: 0; }
 .xtyle-button__icon {
 	display: inline-flex;
 	align-items: center;

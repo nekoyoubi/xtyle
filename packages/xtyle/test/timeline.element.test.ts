@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-timeline> custom element on the happy-dom registry
+// INFO: side-effect import — defines the <xtyle-timeline> custom element.
 import "../src/elements/timeline.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/timeline/source.generated.js";
@@ -50,7 +50,6 @@ function settle(): Promise<void> {
 describe("timeline: the fill owns the furniture", () => {
 	it("renders the dot and the rail as real nodes, not painted lines", () => {
 		const el = make();
-		// the whole point of the conversion: a mod can reach these because they exist in the DOM
 		expect(el.querySelectorAll(".xtyle-timeline__dot")).toHaveLength(3);
 		expect(el.querySelector(".xtyle-timeline__list")?.tagName).toBe("OL");
 		expect(items(el)).toHaveLength(3);
@@ -100,10 +99,8 @@ describe("timeline: the author's content survives", () => {
 		document.body.appendChild(el);
 
 		const region = el.querySelector('[data-slot="event-0"]');
-		// node identity, not innerHTML equality — a framework's live node stays mounted and reactive
 		expect(region?.firstChild).toBe(title);
 		expect(region?.lastChild).toBe(when);
-		// the title/meta/body styling hooks still anchor on a direct child of the content region
 		expect(el.querySelector(".xtyle-timeline__content > strong")).toBe(title);
 		expect(el.querySelector(".xtyle-timeline__content > time")).toBe(when);
 	});
@@ -150,7 +147,6 @@ describe("timeline: the observer still re-reads the list", () => {
 
 		expect(items(el)).toHaveLength(4);
 		expect(contentText(el, 3)).toBe("Reverted");
-		// the rail now runs to the new last event, which itself has none
 		expect(el.querySelectorAll(".xtyle-timeline__rail")).toHaveLength(3);
 		expect(items(el)[3].querySelector(".xtyle-timeline__rail")).toBeNull();
 		expect(items(el)[2].querySelector(".xtyle-timeline__rail")).not.toBeNull();

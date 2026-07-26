@@ -16,7 +16,7 @@ describe("element base contract", () => {
 		const files = readdirSync(elementsDir).filter((f) => f.endsWith(".ts") && !f.endsWith(".d.ts"));
 		const offenders: string[] = [];
 		for (const file of files) {
-			// XtyleElement itself is the one legitimate `extends HTMLElement` — it *is* the base.
+			// INFO: XtyleElement itself is the one legitimate `extends HTMLElement`; it is the base
 			if (file === "base.ts") continue;
 			const src = readFileSync(join(elementsDir, file), "utf8");
 			const match = src.match(/class\s+\w+\s+extends\s+HTMLElement\b/);

@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-// side effect: defines <xtyle-split-button> (and, through it, <xtyle-menu>) on the happy-dom registry
 import "../src/elements/split-button.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
@@ -25,8 +24,6 @@ const ACTIONS: MenuItem[] = [
 	{ label: "Discard changes", value: "discard", intent: "danger" },
 ];
 
-// both fills are pulled in before the first element paints — the built-in fill loads lazily on first
-// render, and the group's own chrome and the composed menu's each come from one
 beforeAll(async () => {
 	await loadFill(manifest, fragmentSources);
 	await loadFill(menuManifest, menuSources);
@@ -141,9 +138,6 @@ describe("<xtyle-split-button> the two paths never blur together", () => {
 		expect(el.open).toBe(true);
 	});
 
-	// the bug this pins: a row's click bubbles, and the dropdown is a child of the group — so picking
-	// "Discard changes" from the menu reached a `click` listener as though the primary had been pressed, and
-	// an app wired the documented way would have run Save on the way to discarding
 	it("never lets a menu row's click impersonate a press of the primary", () => {
 		const el = make();
 		const seen: string[] = [];

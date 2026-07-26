@@ -9,6 +9,31 @@ const htmlExample = `<xtyle-accordion>
 	<div slot="panel">Covered against defects for one year.</div>
 </xtyle-accordion>`;
 
+const markerHtmlExample = `<xtyle-accordion chevron-icon="plus">
+	<span slot="header">What is a marker glyph?</span>
+	<div slot="panel">Any name the icon roster can draw.</div>
+	<span slot="header">Can a mod add one?</span>
+	<div slot="panel">Yes, by filling the <code>xtyle.icons</code> slot.</div>
+</xtyle-accordion>`;
+
+const markerSvelteExample = `<script lang="ts">
+	import { Accordion } from "@xtyle/svelte";
+</script>
+
+<Accordion chevronIcon="plus">
+	<span data-xtyle-header>What is a marker glyph?</span>
+	<div data-xtyle-panel>Any name the icon roster can draw.</div>
+</Accordion>`;
+
+const markerAstroExample = `---
+import Accordion from "@xtyle/astro/Accordion.astro";
+---
+
+<Accordion chevronIcon="plus">
+	<span data-xtyle-header>What is a marker glyph?</span>
+	<div data-xtyle-panel>Any name the icon roster can draw.</div>
+</Accordion>`;
+
 const multipleExample = `<xtyle-accordion multiple size="sm">
 	<span slot="header" open>Filters</span>
 	<div slot="panel">In stock, on sale, free shipping.</div>
@@ -62,7 +87,7 @@ export const accordionManifest: ComponentManifest = {
 		},
 		{
 			name: "trigger",
-			description: "The full-width header button that toggles its section; carries `aria-expanded` and the hover/press overlay.",
+			description: "The full-width `<summary>` that toggles its section; carries the hover/press overlay. The native disclosure marker is suppressed in favor of the chevron.",
 			selector: ".xtyle-accordion__trigger",
 			tokens: [
 				"--text-body",
@@ -90,7 +115,7 @@ export const accordionManifest: ComponentManifest = {
 		},
 		{
 			name: "panel",
-			description: "The collapsible `role=\"region\"` holding the section content; `hidden` when collapsed.",
+			description: "The collapsible `role=\"region\"` holding the section content; the enclosing `<details>` collapses it, so it carries no `hidden` of its own.",
 			selector: ".xtyle-accordion__panel",
 			tokens: ["--fg-1", "--space-1", "--space-4", "--text-body", "--leading-normal"],
 		},
@@ -99,6 +124,7 @@ export const accordionManifest: ComponentManifest = {
 		{ name: "multiple", type: "boolean", default: "false", description: "Allows several sections to stay open at once; when off, opening one closes the others.", bindings: ["html", "svelte", "astro"] },
 		{ name: "size", type: "Size", default: "md", description: "Trigger density: `sm`, `md`, or `lg`.", bindings: ["html", "svelte", "astro"], options: ["sm", "md", "lg"] },
 		{ name: "headingLevel", type: "2 | 3 | 4 | 5 | 6", default: "3", description: "The heading level wrapping each trigger, so the accordion sits correctly in the document outline.", bindings: ["html", "svelte", "astro"] },
+		{ name: "chevronIcon", type: "string", default: "\"chevron-down\"", description: "The roster glyph drawn as the disclosure marker. Any name the icon roster can draw, including one a mod contributed through the `xtyle.icons` slot.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [
@@ -136,13 +162,13 @@ export const accordionManifest: ComponentManifest = {
 		{
 			name: "header",
 			description:
-				"Each section's header label, marked `slot=\"header\"` or `data-xtyle-header`; add `open` to expand it initially or `disabled` to lock it. Astro consumes `slot` to route children, so use `data-xtyle-header` there.",
+				"Each section's header label, marked `slot=\"header\"` or `data-xtyle-header`; add `open` to expand it initially or `disabled` to lock it. Astro consumes `slot` to route children, so use `data-xtyle-header` there. Carries markup, not just text: an icon, a badge, and nested components all survive into the render, including the static one.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
 			name: "panel",
 			description:
-				"Each section's collapsible content, marked `slot=\"panel\"` or `data-xtyle-panel` (use `data-xtyle-panel` under Astro), paired to the header before it by order.",
+				"Each section's collapsible content, marked `slot=\"panel\"` or `data-xtyle-panel` (use `data-xtyle-panel` under Astro), paired to the header before it by order. A full render slot: nested components keep working, and under Astro the pairing resolves at build time so the sections are complete before any script runs.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -181,10 +207,12 @@ export const accordionManifest: ComponentManifest = {
 		"For a small fixed set of mutually exclusive views with their own content area, reach for Tabs instead.",
 	],
 	a11y: [
-		"Each header is a real `<button>` wrapped in a heading (`h3` by default, set with `headingLevel`) so the sections land in the document outline and screen-reader rotor.",
-		"The trigger carries `aria-expanded` and `aria-controls`; its panel is a `role=\"region\"` wired back with `aria-labelledby`, and `hidden` collapses it from the accessibility tree.",
+		"Each section is a native `<details>`/`<summary>` disclosure, so it opens and closes with the runtime never loading and the browser announces the expanded state itself rather than a hand-maintained `aria-expanded`.",
+		"The summary holds a heading (`h3` by default, set with `headingLevel`) so the sections still land in the document outline and screen-reader rotor.",
+		"Single-open mode gives every section a shared `name`, which is what makes opening one collapse the rest; the browser enforces it, with no script involved. Under `multiple` the grouping is dropped.",
+		"The panel is a `role=\"region\"` wired back with `aria-labelledby`; it never carries `hidden`, because the disclosure already owns its own visibility.",
 		"Pointer, Enter, and Space toggle a section; Up/Down arrows move focus between headers and Home/End jump to the first and last.",
-		"A header marked `disabled` is skipped by the arrow keys and cannot toggle.",
+		"A header marked `disabled` is skipped by the arrow keys and cannot toggle. `<summary>` has no native disabled state, so it is `aria-disabled` and the toggle is cancelled; it stays focusable, which is the ARIA-preferred treatment.",
 		"Focus on a header shows an inset token ring plus a transparent outline the forced-colors base rule promotes to a real system outline.",
 	],
 	examples: [
@@ -199,6 +227,12 @@ export const accordionManifest: ComponentManifest = {
 			title: "Multiple open, with a disabled section",
 			description: "A compact accordion that lets several panels stay open, with one locked header.",
 			source: { html: multipleExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "marker-glyph",
+			title: "A different marker glyph",
+			description: "The disclosure marker drawn from any name the icon roster can draw, including one a mod contributed.",
+			source: { html: markerHtmlExample, svelte: markerSvelteExample, astro: markerAstroExample },
 		},
 	],
 };

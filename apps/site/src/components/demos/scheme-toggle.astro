@@ -1,0 +1,62 @@
+---
+import SchemeToggle from "@xtyle/astro/SchemeToggle.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const FANCY_SUN = "light-theme--sun-c3--circle-s65-ko--circle-s55-c3---ps-skittles";
+const FANCY_MOON = "dark-theme--circle-c3--circle-x20-y-10-s80-ko---ps-skittles";
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">The control</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				It's an icon-only <code>&lt;xtyle-button&gt;</code>. Click it: standalone, it flips
+				<code>:root[data-scheme]</code> for the whole page and persists the choice. The glyph shows
+				the mode you'd switch <em>to</em> — a sun while dark, a moon while light.
+			</Text>
+			<Cluster gap={4} align="center">
+				<SchemeToggle />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Custom glyphs</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>light-icon</code> and <code>dark-icon</code> take any named xtyle icon — a plain glyph,
+				or a full grammar-built one.
+			</Text>
+			<Cluster gap={4} align="center">
+				<SchemeToggle lightIcon="palette" darkIcon="bookmark" />
+				<SchemeToggle lightIcon={FANCY_SUN} darkIcon={FANCY_MOON} label="Fancy skittles theme toggle" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Reversed, and every button variant</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>reverse</code> shows the mode you're <em>in</em> instead of the one you'd switch to. And
+				because it composes the button, <code>variant</code> and <code>size</code> pass straight through.
+				<code>variant="link"</code> drops the chrome entirely so the glyph owns the box, which is what a
+				toolbar icon wants; <code>iconSize</code> then sizes the glyph on its own.
+			</Text>
+			<Cluster gap={3} align="center">
+				<SchemeToggle variant="link" iconSize="lg" label="Chrome-free toolbar toggle" />
+				<SchemeToggle reverse label="Reversed toggle" />
+				<SchemeToggle variant="subtle" />
+				<SchemeToggle variant="outline" />
+				<SchemeToggle variant="solid" />
+				<SchemeToggle size="sm" />
+				<SchemeToggle size="lg" />
+			</Cluster>
+		</Stack>
+	</Card>
+</Stack>

@@ -36,8 +36,8 @@ const bindings = {
 	interactive,
 	overlay,
 	compact,
-	// The fill hides an unfilled header/footer, and it can only know from a binding: the composed
-	// markup keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+	// INFO: composed markup keeps its `<slot>`, so no selector can tell a filled region from an
+	// empty one; the fill hides an unfilled header/footer off these bindings
 	hasHeader: Astro.slots.has("header"),
 	hasFooter: Astro.slots.has("footer"),
 };

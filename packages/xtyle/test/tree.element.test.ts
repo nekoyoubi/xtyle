@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-tree> custom element on the happy-dom registry
+// INFO: side-effect import — defines the <xtyle-tree> custom element.
 import "../src/elements/tree.js";
 import type { TreeNode } from "../src/markup/index.js";
 import { loadFill } from "../src/elements/fragment-host.js";
@@ -138,7 +138,6 @@ describe("<xtyle-tree> live-data reconciliation", () => {
 		]);
 		expect(expandedOf(el, "ch1")).toBe(null);
 
-		// "nest under previous": ch2 moves inside ch1, which was a leaf a moment ago
 		el.items = [
 			{
 				label: "Chapter 1",
@@ -159,7 +158,6 @@ describe("<xtyle-tree> live-data reconciliation", () => {
 		collapse(el, "ch1");
 		expect(expandedOf(el, "ch1")).toBe("false");
 
-		// a known branch gaining another child is not a new branch — the collapse holds
 		el.items = [
 			{
 				label: "Chapter 1",
@@ -187,7 +185,6 @@ describe("<xtyle-tree> live-data reconciliation", () => {
 
 	it("drops a removed key rather than letting it linger in the expanded set", () => {
 		const el = make(binder());
-		// re-expanding a branch that no longer exists must not resurrect its state
 		el.items = [binder()[0]];
 		expect(item(el, "ch2")).toBeNull();
 

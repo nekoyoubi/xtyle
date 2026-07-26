@@ -1,6 +1,6 @@
 {
-	"$schema": "https://xript.dev/schema/manifest/v0.7.json",
-	"xript": "0.7",
+	"$schema": "https://xript.dev/schema/manifest/v0.8.json",
+	"xript": "0.8",
 	"name": "xtyle",
 	"version": "0.0.1",
 	"title": "Xtyle",
@@ -8,34 +8,362 @@
 	"bindings": {
 		"log": {
 			"description": "Writes a diagnostic message to the host console.",
-			"params": [{ "name": "message", "type": "string" }]
+			"params": [
+				{
+					"name": "message",
+					"type": "string"
+				}
+			]
 		},
 		"cuti": {
 			"description": "Color primitives shared by the engine and every algorithm — one OKLCH implementation, so a token a mod derives is identical to one the engine derives. Colors cross as `#rrggbb`, `#rrggbbaa`, or `oklch(L C H[/A])`; coordinates cross as `{ l, c, h, alpha }`.",
 			"members": {
-				"lighten": { "description": "Add `amount` (0–1) to OKLCH lightness, clamped.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"darken": { "description": "Subtract `amount` (0–1) from OKLCH lightness, clamped.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"saturate": { "description": "Push chroma outward by `amount`; out-of-gamut clamps to sRGB.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"desaturate": { "description": "Pull chroma inward by `amount`, floored at 0.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"shiftHue": { "description": "Rotate the OKLCH hue by `degrees` (wraps at 360°).", "params": [{ "name": "color", "type": "string" }, { "name": "degrees", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"complement": { "description": "180° rotation around the OKLCH hue wheel.", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" },
-				"mix": { "description": "Interpolate two colors in OKLCH; `t=0` is `a`, `t=1` is `b`, hue takes the shorter path.", "params": [{ "name": "a", "type": "string" }, { "name": "b", "type": "string" }, { "name": "t", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"alpha": { "description": "Replace the alpha channel with `a` (0–1).", "params": [{ "name": "color", "type": "string" }, { "name": "a", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"fade": { "description": "Subtract `amount` from alpha (0–1).", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"fadeIn": { "description": "Add `amount` to alpha (0–1).", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"fadeOut": { "description": "Alias for `fade` — subtract `amount` from alpha.", "params": [{ "name": "color", "type": "string" }, { "name": "amount", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"scaleLuminance": { "description": "Scale OKLCH lightness by `factor`.", "params": [{ "name": "color", "type": "string" }, { "name": "factor", "type": "number" }], "returns": "string", "capability": "color-math" },
-				"contrast": { "description": "WCAG contrast ratio between two colors (1–21; alpha ignored).", "params": [{ "name": "a", "type": "string" }, { "name": "b", "type": "string" }], "returns": "number", "capability": "color-math" },
-				"isDark": { "description": "Whether the color is closer to black by WCAG luminance.", "params": [{ "name": "color", "type": "string" }], "returns": "boolean", "capability": "color-math" },
-				"isLight": { "description": "Whether the color is closer to white by WCAG luminance.", "params": [{ "name": "color", "type": "string" }], "returns": "boolean", "capability": "color-math" },
-				"scheme": { "description": "Returns `\"dark\"` or `\"light\"` for the color's luminance.", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" },
-				"hueDelta": { "description": "Signed shortest-path hue difference `to - from`, normalized to (-180, 180].", "params": [{ "name": "from", "type": "number" }, { "name": "to", "type": "number" }], "returns": "number", "capability": "color-math" },
-				"pickReadable": { "description": "Pick the first option clearing `floor` (default 4.5) contrast against `fill`, else the highest-contrast option.", "params": [{ "name": "fill", "type": "string" }, { "name": "options", "type": { "array": "string" } }, { "name": "floor", "type": "number", "required": false }], "returns": "string", "capability": "color-math" },
-				"toOklch": { "description": "Project a color to OKLCH coordinates.", "params": [{ "name": "color", "type": "string" }], "returns": "OklchColor", "capability": "color-math" },
-				"fromOklch": { "description": "Project OKLCH coordinates to a canonical color string.", "params": [{ "name": "l", "type": "number" }, { "name": "c", "type": "number" }, { "name": "h", "type": "number" }, { "name": "alpha", "type": "number", "required": false }], "returns": "string", "capability": "color-math" },
-				"clampGamut": { "description": "Clamp OKLCH coordinates into the sRGB gamut.", "params": [{ "name": "l", "type": "number" }, { "name": "c", "type": "number" }, { "name": "h", "type": "number" }, { "name": "alpha", "type": "number", "required": false }], "returns": "OklchColor", "capability": "color-math" },
-				"toHex": { "description": "Canonical `#rrggbb` form (alpha stripped).", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" },
-				"toArgb": { "description": "Canonical `#rrggbbaa` form (alpha kept).", "params": [{ "name": "color", "type": "string" }], "returns": "string", "capability": "color-math" }
+				"lighten": {
+					"description": "Add `amount` (0–1) to OKLCH lightness, clamped.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "amount",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"darken": {
+					"description": "Subtract `amount` (0–1) from OKLCH lightness, clamped.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "amount",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"saturate": {
+					"description": "Push chroma outward by `amount`; out-of-gamut clamps to sRGB.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "amount",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"desaturate": {
+					"description": "Pull chroma inward by `amount`, floored at 0.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "amount",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"shiftHue": {
+					"description": "Rotate the OKLCH hue by `degrees` (wraps at 360°).",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "degrees",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"complement": {
+					"description": "180° rotation around the OKLCH hue wheel.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"mix": {
+					"description": "Interpolate two colors in OKLCH; `t=0` is `a`, `t=1` is `b`, hue takes the shorter path.",
+					"params": [
+						{
+							"name": "a",
+							"type": "string"
+						},
+						{
+							"name": "b",
+							"type": "string"
+						},
+						{
+							"name": "t",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"alpha": {
+					"description": "Replace the alpha channel with `a` (0–1).",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "a",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"fade": {
+					"description": "Subtract `amount` from alpha (0–1).",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "amount",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"fadeIn": {
+					"description": "Add `amount` to alpha (0–1).",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "amount",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"fadeOut": {
+					"description": "Alias for `fade` — subtract `amount` from alpha.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "amount",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"scaleLuminance": {
+					"description": "Scale OKLCH lightness by `factor`.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						},
+						{
+							"name": "factor",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"contrast": {
+					"description": "WCAG contrast ratio between two colors (1–21; alpha ignored).",
+					"params": [
+						{
+							"name": "a",
+							"type": "string"
+						},
+						{
+							"name": "b",
+							"type": "string"
+						}
+					],
+					"returns": "number",
+					"capability": "color-math"
+				},
+				"isDark": {
+					"description": "Whether the color is closer to black by WCAG luminance.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						}
+					],
+					"returns": "boolean",
+					"capability": "color-math"
+				},
+				"isLight": {
+					"description": "Whether the color is closer to white by WCAG luminance.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						}
+					],
+					"returns": "boolean",
+					"capability": "color-math"
+				},
+				"scheme": {
+					"description": "Returns `\"dark\"` or `\"light\"` for the color's luminance.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"hueDelta": {
+					"description": "Signed shortest-path hue difference `to - from`, normalized to (-180, 180].",
+					"params": [
+						{
+							"name": "from",
+							"type": "number"
+						},
+						{
+							"name": "to",
+							"type": "number"
+						}
+					],
+					"returns": "number",
+					"capability": "color-math"
+				},
+				"pickReadable": {
+					"description": "Pick the first option clearing `floor` (default 4.5) contrast against `fill`, else the highest-contrast option.",
+					"params": [
+						{
+							"name": "fill",
+							"type": "string"
+						},
+						{
+							"name": "options",
+							"type": {
+								"array": "string"
+							}
+						},
+						{
+							"name": "floor",
+							"type": "number",
+							"required": false
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"toOklch": {
+					"description": "Project a color to OKLCH coordinates.",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						}
+					],
+					"returns": "OklchColor",
+					"capability": "color-math"
+				},
+				"fromOklch": {
+					"description": "Project OKLCH coordinates to a canonical color string.",
+					"params": [
+						{
+							"name": "l",
+							"type": "number"
+						},
+						{
+							"name": "c",
+							"type": "number"
+						},
+						{
+							"name": "h",
+							"type": "number"
+						},
+						{
+							"name": "alpha",
+							"type": "number",
+							"required": false
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"clampGamut": {
+					"description": "Clamp OKLCH coordinates into the sRGB gamut.",
+					"params": [
+						{
+							"name": "l",
+							"type": "number"
+						},
+						{
+							"name": "c",
+							"type": "number"
+						},
+						{
+							"name": "h",
+							"type": "number"
+						},
+						{
+							"name": "alpha",
+							"type": "number",
+							"required": false
+						}
+					],
+					"returns": "OklchColor",
+					"capability": "color-math"
+				},
+				"toHex": {
+					"description": "Canonical `#rrggbb` form (alpha stripped).",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"toArgb": {
+					"description": "Canonical `#rrggbbaa` form (alpha kept).",
+					"params": [
+						{
+							"name": "color",
+							"type": "string"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				}
 			}
 		}
 	},
@@ -49,69 +377,306 @@
 		"DeriveInput": {
 			"description": "The anchors, knobs, and pinned constraints a derivation consumes.",
 			"fields": {
-				"anchors": { "type": "map", "description": "Overridable color anchors keyed by role." },
-				"knobs": { "type": "map", "description": "Algorithm knobs keyed by name." },
-				"constraints": { "type": "map", "description": "Author-pinned token values honored verbatim.", "optional": true }
+				"anchors": {
+					"type": "map",
+					"description": "Overridable color anchors keyed by role."
+				},
+				"knobs": {
+					"type": "map",
+					"description": "Algorithm knobs keyed by name."
+				},
+				"constraints": {
+					"type": "map",
+					"description": "Author-pinned token values honored verbatim.",
+					"optional": true
+				}
 			}
 		},
 		"TokenNode": {
 			"description": "A value-bearing lineage node naming what it derives from.",
 			"fields": {
-				"name": { "type": "string", "description": "The token name, e.g. --bg-0." },
-				"value": { "type": "string", "description": "The resolved token value.", "optional": true },
-				"refs": { "type": { "array": "string" }, "description": "Names of the tokens this node derives from.", "optional": true }
+				"name": {
+					"type": "string",
+					"description": "The token name, e.g. --bg-0."
+				},
+				"value": {
+					"type": "string",
+					"description": "The resolved token value.",
+					"optional": true
+				},
+				"refs": {
+					"type": {
+						"array": "string"
+					},
+					"description": "Names of the tokens this node derives from.",
+					"optional": true
+				}
 			}
 		},
 		"AlgorithmManifest": {
 			"description": "What an algorithm produces, the category of each token, its knobs and their domains, and the shape of its derivation. The full value the host reads off the `manifest` export.",
 			"fields": {
-				"produces": { "type": { "array": "string" }, "description": "Every token name the algorithm emits." },
-				"categories": { "type": "map", "description": "Token name to category." },
-				"knobs": { "type": { "array": "string" }, "description": "Declared knob names." },
+				"produces": {
+					"type": {
+						"array": "string"
+					},
+					"description": "Every token name the algorithm emits."
+				},
+				"categories": {
+					"type": "map",
+					"description": "Token name to category."
+				},
+				"knobs": {
+					"type": {
+						"array": "string"
+					},
+					"description": "Declared knob names."
+				},
 				"knobSpecs": {
-					"type": { "array": "KnobSpec" },
+					"type": {
+						"array": "KnobSpec"
+					},
 					"description": "The domain of each knob — what it accepts and how it is shaped — so a consumer renders a control from the algorithm's own declaration rather than a hardcoded table. Every knob carries one, including a composite group a consumer expands into a cluster of its own (`anchors`, `fonts`): only the scalar *control* is absent there, never the declaration. Omit and the host resolves domains for the shared knobs; a knob only this algorithm reads must declare its own here or it has no stated domain.",
 					"optional": true
 				},
-				"invariantCount": { "type": "number", "description": "How many per-algorithm invariants the `invariants` export evaluates. Required: the host sizes the invariant list from it, so a mod that omits it reports *no* invariants and passes the gauntlet vacuously." },
-				"passNames": { "type": { "array": "string" }, "description": "The ordered names of the derivation's passes, used to label trace snapshots.", "optional": true }
+				"invariantCount": {
+					"type": "number",
+					"description": "How many per-algorithm invariants the `invariants` export evaluates. Required: the host sizes the invariant list from it, so a mod that omits it reports *no* invariants and passes the gauntlet vacuously."
+				},
+				"passNames": {
+					"type": {
+						"array": "string"
+					},
+					"description": "The ordered names of the derivation's passes, used to label trace snapshots.",
+					"optional": true
+				}
 			}
 		},
 		"KnobSpec": {
 			"description": "The valid-input domain an algorithm declares for one knob: the kind of control it is, and the values it accepts. The algorithm's contract, distinct from a consumer's cosmetics (a localized label, digit precision), which stay with the consumer.",
 			"fields": {
-				"name": { "type": "string", "description": "The knob name, matched against `knobs`." },
-				"kind": { "type": "string", "description": "How the control is rendered: `select`, `range`, `text`, or `composite` (a group the consumer expands into a cluster of its own, e.g. an anchor picker or a font stack — it has a declaration but no single scalar control)." },
-				"label": { "type": "string", "description": "A short human label hint; a consumer may override it.", "optional": true },
-				"undeclared": { "type": "boolean", "description": "Set by the host when an algorithm declared this knob but never described it. The control degrades to `text` so the knob stays reachable; this marks the crude control as a gap in the declaration rather than a deliberate free-text domain.", "optional": true },
-				"group": { "type": "string", "description": "Logical grouping for a consumer that sections its controls.", "optional": true },
-				"default": { "type": "string", "description": "The value the knob takes when first switched on from its default. A number crosses as a number.", "optional": true },
-				"defaultByScheme": { "type": "map", "description": "A default that depends on the resolved scheme (`dark` / `light`), winning over `default` for the matching one. For a signed knob like `surfaceRamp`, whose sign follows the scheme, one static default would seed the wrong sign on half of all themes.", "optional": true },
-				"min": { "type": "number", "description": "`range` domain: lowest accepted value.", "optional": true },
-				"max": { "type": "number", "description": "`range` domain: highest accepted value.", "optional": true },
-				"step": { "type": "number", "description": "`range` domain: the increment between accepted values.", "optional": true },
-				"options": { "type": { "array": "map" }, "description": "`select` domain: the accepted values, each `{ value, label? }`.", "optional": true },
-				"unit": { "type": "string", "description": "A unit suffix intrinsic to the value, e.g. `°` for a hue step.", "optional": true }
+				"name": {
+					"type": "string",
+					"description": "The knob name, matched against `knobs`."
+				},
+				"kind": {
+					"type": "string",
+					"description": "How the control is rendered: `select`, `range`, `text`, or `composite` (a group the consumer expands into a cluster of its own, e.g. an anchor picker or a font stack — it has a declaration but no single scalar control)."
+				},
+				"label": {
+					"type": "string",
+					"description": "A short human label hint; a consumer may override it.",
+					"optional": true
+				},
+				"undeclared": {
+					"type": "boolean",
+					"description": "Set by the host when an algorithm declared this knob but never described it. The control degrades to `text` so the knob stays reachable; this marks the crude control as a gap in the declaration rather than a deliberate free-text domain.",
+					"optional": true
+				},
+				"group": {
+					"type": "string",
+					"description": "Logical grouping for a consumer that sections its controls.",
+					"optional": true
+				},
+				"default": {
+					"type": "string",
+					"description": "The value the knob takes when first switched on from its default. A number crosses as a number.",
+					"optional": true
+				},
+				"defaultByScheme": {
+					"type": "map",
+					"description": "A default that depends on the resolved scheme (`dark` / `light`), winning over `default` for the matching one. For a signed knob like `surfaceRamp`, whose sign follows the scheme, one static default would seed the wrong sign on half of all themes.",
+					"optional": true
+				},
+				"min": {
+					"type": "number",
+					"description": "`range` domain: lowest accepted value.",
+					"optional": true
+				},
+				"max": {
+					"type": "number",
+					"description": "`range` domain: highest accepted value.",
+					"optional": true
+				},
+				"step": {
+					"type": "number",
+					"description": "`range` domain: the increment between accepted values.",
+					"optional": true
+				},
+				"options": {
+					"type": {
+						"array": "map"
+					},
+					"description": "`select` domain: the accepted values, each `{ value, label? }`.",
+					"optional": true
+				},
+				"unit": {
+					"type": "string",
+					"description": "A unit suffix intrinsic to the value, e.g. `°` for a hue step.",
+					"optional": true
+				}
 			}
 		},
 		"InvariantResult": {
 			"description": "The outcome of a single per-algorithm invariant.",
 			"fields": {
-				"name": { "type": "string", "description": "The invariant's name." },
-				"ok": { "type": "boolean", "description": "Whether the invariant held." },
-				"detail": { "type": "string", "description": "A human-readable failure detail.", "optional": true }
+				"name": {
+					"type": "string",
+					"description": "The invariant's name."
+				},
+				"ok": {
+					"type": "boolean",
+					"description": "Whether the invariant held."
+				},
+				"detail": {
+					"type": "string",
+					"description": "A human-readable failure detail.",
+					"optional": true
+				}
 			}
 		},
 		"OklchColor": {
 			"description": "OKLCH coordinates: perceptual lightness, chroma, hue, and alpha.",
 			"fields": {
-				"l": { "type": "number", "description": "Perceptual lightness, 0–1." },
-				"c": { "type": "number", "description": "Chroma, 0+." },
-				"h": { "type": "number", "description": "Hue angle in degrees, 0–360." },
-				"alpha": { "type": "number", "description": "Opacity, 0–1." }
+				"l": {
+					"type": "number",
+					"description": "Perceptual lightness, 0–1."
+				},
+				"c": {
+					"type": "number",
+					"description": "Chroma, 0+."
+				},
+				"h": {
+					"type": "number",
+					"description": "Hue angle in degrees, 0–360."
+				},
+				"alpha": {
+					"type": "number",
+					"description": "Opacity, 0–1."
+				}
 			}
 		}
 	},
+	"slots": [
+		{
+			"id": "xtyle.pack-meta",
+			"accepts": [
+				"application/x-xtyle-pack+json"
+			],
+			"description": "What an algorithm pack says about itself without being run: the tokens it produces, the knobs it reads and their domains, how many invariants it evaluates, and its pass names. A data fill, not a fragment — nothing here renders. A discovery surface listing a hundred packs reads this instead of booting a sandbox each time, and the loader cross-checks it against the mod's own `manifest` export so a stale claim fails loudly rather than teaching a consumer to render controls the algorithm no longer honors.",
+			"multiple": false,
+			"payload": {
+				"type": "object",
+				"required": [
+					"produces",
+					"categories",
+					"knobs",
+					"invariantCount"
+				],
+				"properties": {
+					"produces": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Every token name the algorithm emits."
+					},
+					"categories": {
+						"type": "object",
+						"description": "The value kind each token carries — `color`, `length`, `duration`, and so on — keyed by token name, so a surface can render a swatch for one and a number for the next without parsing values.",
+						"additionalProperties": {
+							"type": "string"
+						}
+					},
+					"knobs": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "The knob names the algorithm reads."
+					},
+					"knobSpecs": {
+						"type": "array",
+						"description": "The same knobs, described well enough to render a control for each without running the mod.",
+						"items": {
+							"type": "object",
+							"required": [
+								"name",
+								"kind"
+							],
+							"properties": {
+								"name": {
+									"type": "string"
+								},
+								"kind": {
+									"type": "string"
+								},
+								"label": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								},
+								"default": {},
+								"min": {
+									"type": "number"
+								},
+								"max": {
+									"type": "number"
+								},
+								"step": {
+									"type": "number"
+								},
+								"options": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"required": [
+											"value"
+										],
+										"properties": {
+											"value": {},
+											"label": {
+												"type": "string"
+											}
+										}
+									}
+								},
+								"since": {
+									"type": "string",
+									"description": "The xtyle version this knob became available in. Absent reads as the floor."
+								}
+							}
+						}
+					},
+					"invariantCount": {
+						"type": "integer",
+						"minimum": 0,
+						"description": "How many invariants the algorithm evaluates. The invariant list is sized from this, so an absent or wrong count publishes a pack that proves nothing."
+					},
+					"passNames": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "The algorithm's pass names, for labeling a trace."
+					},
+					"since": {
+						"type": "string",
+						"description": "The xtyle version this pack first shipped in. Absent reads as the floor: present for as long as the record goes back."
+					},
+					"producedSince": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "When a token arrived, keyed by token name — and deliberately sparse. Only tokens introduced after the floor appear; an absent key means the token has been produced for as long as the record goes back, so a consumer on any supported version can rely on it. Listing every token at the floor would bury the handful of facts this map exists to carry."
+					}
+				},
+				"additionalProperties": false
+			}
+		}
+	],
 	"limits": {
 		"timeout_ms": 5000,
 		"memory_mb": 16,

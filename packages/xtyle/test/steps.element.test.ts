@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-steps> custom element on the happy-dom registry
+// INFO: side-effect import; registers the <xtyle-steps> custom element
 import "../src/elements/steps.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/steps/source.generated.js";
@@ -61,7 +61,6 @@ function settle(): Promise<void> {
 describe("steps: the fill owns the furniture", () => {
 	it("renders the marker and the connector as real nodes, not painted glyphs", () => {
 		const el = make(1);
-		// the whole point of the conversion: a mod can reach these because they exist in the DOM
 		expect(el.querySelectorAll(".xtyle-steps__marker")).toHaveLength(4);
 		expect(el.querySelector(".xtyle-steps__list")?.tagName).toBe("OL");
 		expect(steps(el)).toHaveLength(4);
@@ -139,7 +138,6 @@ describe("steps: the author's content survives", () => {
 		el.appendChild(list);
 		document.body.appendChild(el);
 
-		// node identity, not innerHTML equality — a framework's live node stays mounted and reactive
 		expect(el.querySelector('[data-slot="step-0"]')?.firstChild).toBe(authored);
 	});
 
@@ -167,7 +165,6 @@ describe("steps: the author's content survives", () => {
 		expect(step?.id).toBe("step-cart");
 		expect(step?.getAttribute("data-testid")).toBe("cart");
 		expect(step?.classList.contains("mine")).toBe(true);
-		// the fill's own state class still lands alongside the author's
 		expect(step?.classList.contains("xtyle-steps__step--current")).toBe(true);
 	});
 
@@ -189,7 +186,6 @@ describe("steps: the observer still re-reads the list", () => {
 		expect(steps(el)).toHaveLength(5);
 		expect(markers(el)).toEqual(["✓", "2", "3", "4", "5"]);
 		expect(labelText(el, 4)).toBe("Receipt");
-		// the new last step gets a connector; the first still has none
 		expect(el.querySelectorAll(".xtyle-steps__connector")).toHaveLength(4);
 	});
 

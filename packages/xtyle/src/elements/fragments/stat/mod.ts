@@ -42,8 +42,8 @@ function statClass(b: StatBindings): string {
 
 function statHtml(b: StatBindings): string {
 	const trend = b.trend ?? "flat";
-	// Trend drives the arrow; sentiment drives the color and defaults to the trend's own reading, so a
-	// bare `trend="up"` still reads green while `trend="up" sentiment="negative"` paints an up-is-bad metric red.
+	// INFO: trend drives the arrow, sentiment the color; sentiment defaults from trend so `trend="up"`
+	// reads green, but `trend="up" sentiment="negative"` paints an up-is-bad metric red
 	const sentiment = b.sentiment ?? SENTIMENT_FOR_TREND[trend] ?? "neutral";
 	const label = b.label ? `<span part="label" class="xtyle-stat__label">${escapeHtml(b.label)}</span>` : "";
 	const delta = b.delta

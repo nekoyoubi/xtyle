@@ -14,10 +14,8 @@
 	let rawHost: HTMLDivElement | undefined = $state();
 	let started = false;
 
-	// The runtime elements fill their fragments asynchronously (the first fill on
-	// the page also inits the xript runtime), and FragmentHost paints an inert
-	// scaffold before the real fill lands — so "has content" is true too early.
-	// Wait until every host's render signature holds steady for a settle window.
+	// INFO: fragments fill asynchronously and FragmentHost paints an inert scaffold first, so a
+	// naive "has content" check returns too early; wait for the render signature to settle
 	async function waitForFills(
 		els: Array<Element | undefined>,
 		{ settleMs = 400, sampleMs = 80, floorMs = 3500, timeoutMs = 10000 } = {},
@@ -36,9 +34,8 @@
 			await new Promise((r) => setTimeout(r, sampleMs));
 			const now = targets.map(sig);
 			if (now.every((s, i) => s === last[i])) {
-				// The floor covers the async fragment fill + one-time xript init,
-				// which leave the host briefly stable at its inert scaffold before
-				// the real content lands — stability alone would return too early.
+				// INFO: floor guards against the host being briefly stable at its inert scaffold
+				// before real content lands, when stability alone would return too early
 				if (
 					performance.now() - stableSince >= settleMs &&
 					performance.now() - start >= floorMs
@@ -51,9 +48,8 @@
 		}
 	}
 
-	// Scalars ride as kebab attributes (how a hand-authored raw element is used);
-	// objects/arrays are set as properties, since they can't survive stringifying
-	// to an attribute (a chart's `series`, for one).
+	// INFO: objects/arrays set as properties since they can't survive stringifying to an
+	// attribute; scalars ride as kebab attributes
 	function applyToRaw(el: HTMLElement, p: Record<string, unknown>) {
 		for (const [key, value] of Object.entries(p)) {
 			if (value === false || value === null || value === undefined) continue;

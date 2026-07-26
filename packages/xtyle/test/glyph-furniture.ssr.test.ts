@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
 
-// The chevrons, the disclosure marker, and the line gutter are all fragment-drawn now, so a mod
-// can reshape them. Two of those glyphs render through `<xtyle-icon>`, which paints nothing until
-// the custom element upgrades — and the `static` (zero-JS) binding never loads the runtime. Each
-// icon therefore ships the icon set's own glyph as light-DOM fallback content, which the upgrade
-// then supersedes (the icon's shadow root has no `<slot>`, so the fallback stops rendering). These
-// guard the no-JS render, which is the one that would silently lose its caret.
-
 const sections = [
 	{ header: "Shipping", panel: "Ships same day.", value: "a" },
 	{ header: "Returns", panel: "Thirty days.", value: "b" },
@@ -21,12 +14,13 @@ describe("accordion zero-JS render", () => {
 		expect(html).toContain("M6 9l6 6 6-6");
 	});
 
-	it("keeps the disclosure wiring: aria-expanded, aria-controls, and a hidden collapsed panel", async () => {
+	it("keeps the disclosure wiring: a summary per section and the collapsed one closed", async () => {
 		const html = await renderFragmentLight("accordion", { sections, openKeys: ["b"], uid: "acc" });
-		expect(html).toContain('aria-expanded="false"');
-		expect(html).toContain('aria-expanded="true"');
+		expect(html.match(/<summary class="xtyle-accordion__trigger"/g)).toHaveLength(2);
 		expect(html).toContain('aria-controls="acc-p-0"');
-		expect(html).toMatch(/id="acc-p-0"[^>]*hidden/);
+		expect(html).toMatch(/<details[^>]*data-key="a"(?![^>]*\sopen)/);
+		expect(html).toMatch(/<details[^>]*data-key="b"[^>]*\sopen/);
+		expect(html).not.toContain("aria-expanded");
 	});
 });
 

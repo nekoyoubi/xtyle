@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-// side effect: defines the <xtyle-popover> custom element on the happy-dom registry
 import "../src/elements/popover.js";
 import type { PopoverOpenOptions } from "../src/elements/popover.js";
 import { loadFill } from "../src/elements/fragment-host.js";
@@ -139,7 +138,7 @@ describe("<xtyle-popover> trigger anchoring", () => {
 		click(trigger(el));
 		expect(el.open).toBe(true);
 		expect(isShown(el)).toBe(true);
-		// bottom of the trigger + the default 8px gap; centered on it, with the 224px fallback width
+		// INFO: trigger bottom + default 8px gap; centered on it, with the 224px fallback width
 		expect(panel(el).style.top).toBe("240px");
 		expect(panel(el).style.left).toBe("53px");
 		expect(panel(el).getAttribute("data-placement")).toBe("bottom");
@@ -158,7 +157,7 @@ describe("<xtyle-popover> trigger anchoring", () => {
 		const el = make();
 		stubRect(triggerRegion(el), { top: 200, left: 120, width: 90, height: 32 });
 		click(trigger(el));
-		// the browser's light-dismiss fires first: the panel is already gone by the time the click lands
+		// INFO: the browser's light-dismiss fires before the click lands, so the panel is already gone
 		panel(el).hidePopover();
 		expect(el.open).toBe(false);
 		click(trigger(el));
@@ -274,7 +273,7 @@ describe("<xtyle-popover> the arrow", () => {
 		stubRect(triggerRegion(el), { top: 200, left: 120, width: 90, height: 32 });
 		el.show();
 		expect(panel(el).style.left).toBe("120px");
-		// the trigger's center (165) sits 45px into a panel whose left edge is on the trigger's
+		// INFO: the trigger's center (165) sits 45px into a panel whose left edge is on the trigger's
 		expect(panel(el).style.getPropertyValue("--xtyle-pop-arrow")).toBe("45px");
 	});
 
@@ -395,8 +394,8 @@ describe("<xtyle-popover> the modal posture", () => {
 	});
 
 	it("strikes the `aria-modal` claim when the panel is not a dialog the platform can make inert", () => {
-		// a third-party fill whose panel is a plain box: the top layer alone never makes the page inert,
-		// so the modal posture degrades to the popover door rather than asserting an inertness it lacks
+		// INFO: without showModal the top layer alone never makes the page inert, so the modal posture
+		// degrades to the popover door rather than asserting an inertness it lacks
 		const proto = window.HTMLDialogElement.prototype as unknown as Record<string, unknown>;
 		const showModal = proto.showModal;
 		proto.showModal = undefined;
@@ -486,7 +485,6 @@ describe("<xtyle-popover> close discipline", () => {
 		const reasons = closeReasons(el);
 		el.show();
 		panel(el).dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, composed: true }));
-		// the native popover then hides itself
 		panel(el).hidePopover();
 		expect(reasons).toEqual(["escape"]);
 	});

@@ -36,7 +36,7 @@ const initial = entries[0]?.binding;
 				<button slot="tab" value={e.binding}>{e.label}</button>
 			))}
 			{entries.map((e) => (
-				<div slot="panel" data-binding={e.binding} data-source={e.source}>
+				<div slot="panel">
 					<Code lang={langFor[e.binding]} code={e.source} />
 				</div>
 			))}
@@ -51,11 +51,11 @@ const initial = entries[0]?.binding;
 <script>
 	function activeSource(root: HTMLElement): string {
 		const tabs = root.querySelector<HTMLElement & { value?: string | null }>("xtyle-tabs");
-		const binding = tabs?.value ?? root.querySelector<HTMLElement>("[data-source]")?.dataset.binding;
-		const panel = binding
-			? root.querySelector<HTMLElement>(`[data-binding="${binding}"]`)
-			: root.querySelector<HTMLElement>("[data-source]");
-		return panel?.dataset.source ?? "";
+		const key = tabs?.value ?? null;
+		const panel = key
+			? root.querySelector<HTMLElement>(`[role="tabpanel"][data-key="${CSS.escape(key)}"]`)
+			: root.querySelector<HTMLElement>('[role="tabpanel"]');
+		return panel?.querySelector("xtyle-code")?.getAttribute("code") ?? "";
 	}
 
 	function initCopy(root: HTMLElement): void {

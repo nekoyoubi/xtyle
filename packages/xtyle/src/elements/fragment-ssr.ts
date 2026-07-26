@@ -40,6 +40,7 @@ import { manifest as pieManifest, fragmentSources as pieSources } from "./fragme
 import { manifest as qrManifest, fragmentSources as qrSources } from "./fragments/qr/source.generated.js";
 import { manifest as linkManifest, fragmentSources as linkSources } from "./fragments/link/source.generated.js";
 import { manifest as markdownManifest, fragmentSources as markdownSources } from "./fragments/markdown/source.generated.js";
+import { manifest as bbcodeManifest, fragmentSources as bbcodeSources } from "./fragments/bbcode/source.generated.js";
 import { manifest as menuManifest, fragmentSources as menuSources } from "./fragments/menu/source.generated.js";
 import { manifest as popoverManifest, fragmentSources as popoverSources } from "./fragments/popover/source.generated.js";
 import {
@@ -64,6 +65,10 @@ import { manifest as stackManifest, fragmentSources as stackSources } from "./fr
 import { manifest as statManifest, fragmentSources as statSources } from "./fragments/stat/source.generated.js";
 import { manifest as statusbarManifest, fragmentSources as statusbarSources } from "./fragments/statusbar/source.generated.js";
 import { manifest as swatchManifest, fragmentSources as swatchSources } from "./fragments/swatch/source.generated.js";
+import { manifest as themeCardManifest, fragmentSources as themeCardSources } from "./fragments/theme-card/source.generated.js";
+import { manifest as themeSwatchManifest, fragmentSources as themeSwatchSources } from "./fragments/theme-swatch/source.generated.js";
+import { manifest as themePickerManifest, fragmentSources as themePickerSources } from "./fragments/theme-picker/source.generated.js";
+import { manifest as ninePatchManifest, fragmentSources as ninePatchSources } from "./fragments/nine-patch/source.generated.js";
 import { manifest as textManifest, fragmentSources as textSources } from "./fragments/text/source.generated.js";
 import { manifest as textareaManifest, fragmentSources as textareaSources } from "./fragments/textarea/source.generated.js";
 import { manifest as toastManifest, fragmentSources as toastSources } from "./fragments/toast/source.generated.js";
@@ -141,6 +146,7 @@ const fragments: Record<string, FragmentEntry> = {
 	qr: { manifest: qrManifest, fragmentSources: qrSources },
 	link: { manifest: linkManifest, fragmentSources: linkSources },
 	markdown: { manifest: markdownManifest, fragmentSources: markdownSources },
+	bbcode: { manifest: bbcodeManifest, fragmentSources: bbcodeSources },
 	menu: { manifest: menuManifest, fragmentSources: menuSources },
 	popover: { manifest: popoverManifest, fragmentSources: popoverSources },
 	"command-palette": { manifest: commandPaletteManifest, fragmentSources: commandPaletteSources },
@@ -162,6 +168,10 @@ const fragments: Record<string, FragmentEntry> = {
 	stat: { manifest: statManifest, fragmentSources: statSources },
 	statusbar: { manifest: statusbarManifest, fragmentSources: statusbarSources },
 	swatch: { manifest: swatchManifest, fragmentSources: swatchSources },
+	"theme-card": { manifest: themeCardManifest, fragmentSources: themeCardSources },
+	"theme-swatch": { manifest: themeSwatchManifest, fragmentSources: themeSwatchSources },
+	"theme-picker": { manifest: themePickerManifest, fragmentSources: themePickerSources },
+	"nine-patch": { manifest: ninePatchManifest, fragmentSources: ninePatchSources },
 	text: { manifest: textManifest, fragmentSources: textSources },
 	textarea: { manifest: textareaManifest, fragmentSources: textareaSources },
 	toast: { manifest: toastManifest, fragmentSources: toastSources },
@@ -208,9 +218,11 @@ function escapeAttr(value: string): string {
  */
 function nodeMatcher(selector: string): RegExp | null {
 	const attr = selector.match(/^\[([a-z-]+)\]$/i)?.[1];
-	if (attr) return new RegExp(`<(\\w+)([^>]*\\b${attr}\\b[^>]*)>`);
+	if (attr) return new RegExp(`<(\\w+)([^>]*\\s${attr}(?=[\\s=>/])[^>]*)>`);
+	// INFO: `\b` cannot bound these names: a hyphen is a non-word character, so `\bxtyle-code\b`
+	// matches `class="xtyle-code-caption"`. Bound on the quotes and spaces instead.
 	const className = selector.match(/^\.([\w-]+)$/)?.[1];
-	if (className) return new RegExp(`<(\\w+)([^>]*\\sclass="[^"]*\\b${className}\\b[^"]*"[^>]*)>`);
+	if (className) return new RegExp(`<(\\w+)([^>]*\\sclass="(?:[^"]*\\s)?${className}(?:\\s[^"]*)?"[^>]*)>`);
 	return null;
 }
 
@@ -244,12 +256,15 @@ export function applyOpsToHtml(html: string, ops: FragmentOp[]): string {
 		if (!openTag || !tag) continue;
 		const empty = new RegExp(`(${escapeRegExp(openTag)})(</${tag}>)`);
 		switch (op.op) {
-			case "setAttr":
-				if (op.attr) {
-					const next = setAttrInTag(openTag, op.attr, String(op.value ?? ""));
+			case "setProp":
+			case "setAttr": {
+				const prop = op.prop ?? op.attr;
+				if (prop) {
+					const next = setAttrInTag(openTag, prop, String(op.value ?? ""));
 					out = out.replace(openTag, () => next);
 				}
 				break;
+			}
 			case "replaceChildren": {
 				const value = String(op.value ?? "");
 				out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
@@ -324,4 +339,14 @@ export async function renderFragmentLight(
 	return applyOpsToHtml(scaffold, ops);
 }
 
-export { parseAttrs, listItems, fillRegion, decorateTable, type TableParts } from "./ssr-markup.js";
+export {
+	parseAttrs,
+	listItems,
+	fillRegion,
+	decorateTable,
+	markedChildren,
+	markedPairs,
+	topLevelElements,
+	type TableParts,
+	type MarkedChild,
+} from "./ssr-markup.js";

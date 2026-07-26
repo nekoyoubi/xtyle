@@ -4,8 +4,6 @@ import { GAUNTLET_DEPTH_RUNS, resolveDepth } from "../src/gauntlet.js";
 import { bakedAlgorithms, nxiNite, xtyleDefault, xtyleHc, xtyleLoud, xtyleQuiet } from "../src/batteries.js";
 
 const SET = [xtyleDefault, xtyleHc, xtyleQuiet, xtyleLoud, nxiNite];
-// Routine `npm test` (no env) is the fast feedback gate — a quick spread of the property battery.
-// `XTYLE_GAUNTLET_DEPTH=standard` or `=full` opt into the heavier counts before a push.
 const RUNS = GAUNTLET_DEPTH_RUNS[resolveDepth(process.env.XTYLE_GAUNTLET_DEPTH ?? "quick")];
 
 describe.each(SET.map((a) => [a.id, a] as const))("gauntlet(%s)", (_id, algorithm) => {
@@ -25,9 +23,6 @@ describe.each(SET.map((a) => [a.id, a] as const))("gauntlet(%s)", (_id, algorith
 	});
 
 	it("is deterministic for a fixed seed", () => {
-		// Determinism is a property of the seed→output mapping, not of run volume — a small fixed
-		// sample catches a Math.random leak just as well as re-running the whole battery, and keeps
-		// routine runs from paying the gauntlet cost twice.
 		const probe = Math.min(RUNS, 16);
 		const a = gauntlet(algorithm, { runs: probe, seed: 12345 });
 		const b = gauntlet(algorithm, { runs: probe, seed: 12345 });
@@ -91,8 +86,7 @@ describe("algorithm set", () => {
 	});
 
 	it("xtyle-quiet and xtyle-loud differ in accent chroma", () => {
-		// Seed only the background so the accent is *derived* (a pinned accent is honored
-		// verbatim and identical across algorithms); the vibrancy posture shows in the derived hue.
+		// INFO: seed only the background so the accent is derived; a pinned accent is honored verbatim and identical across algorithms
 		const anchors = { bg: "#0f1115" };
 		const quiet = toOklchColor(derive(xtyleQuiet, { anchors })["--accent"]!);
 		const loud = toOklchColor(derive(xtyleLoud, { anchors })["--accent"]!);

@@ -2,6 +2,14 @@ import { initXript, type XriptRuntime, type ModInstance, type FragmentOp } from 
 import componentHost from "./fragments/component-host.json" with { type: "json" };
 import { builtInFillFor } from "./built-in-fills.js";
 
+/**
+ * Event types that never bubble, so a root-delegated listener has to catch them on the way *down*.
+ * `toggle` is the one the accordion depends on — `<details>` fires it at the element and it stops
+ * there. Add to this list rather than reaching for a direct per-node listener, which would have to be
+ * re-bound on every re-render.
+ */
+const NON_BUBBLING = new Set(["toggle", "focus", "blur", "mouseenter", "mouseleave", "load", "error"]);
+
 /** A DOM event flattened to the JSON the sandbox handler receives. */
 export interface SerializedEvent {
 	tagName: string;
@@ -16,6 +24,8 @@ export interface SerializedEvent {
 	ctrlKey?: boolean;
 	shiftKey?: boolean;
 	metaKey?: boolean;
+	/** A `<details>`' open state, read after the browser's own toggle (accordion's `toggle` handler). */
+	open?: boolean;
 }
 
 /** What a handler export returns; the trusted host applies it. */
@@ -122,12 +132,20 @@ const grantedCapabilities = Object.keys(
 );
 
 let runtimePromise: Promise<XriptRuntime> | undefined;
+
+/** Whether the runtime has read the host manifest yet. `allowUriSchemes` refuses to run past this
+ * point rather than widening the renderer while the fragment format keeps the set it already read. */
+export function componentRuntimeStarted(): boolean {
+	return runtimePromise !== undefined;
+}
+
 function componentRuntime(): Promise<XriptRuntime> {
 	if (!runtimePromise) {
 		runtimePromise = initXript().then((factory) =>
 			factory.createRuntime(componentHost, {
 				hostBindings: {},
 				capabilities: grantedCapabilities,
+				strictBindings: true,
 			}),
 		);
 	}
@@ -287,40 +305,45 @@ function serializeEvent(el: HTMLElement, event: Event): SerializedEvent {
 		ctrlKey: typeof mod.ctrlKey === "boolean" ? mod.ctrlKey : undefined,
 		shiftKey: typeof mod.shiftKey === "boolean" ? mod.shiftKey : undefined,
 		metaKey: typeof mod.metaKey === "boolean" ? mod.metaKey : undefined,
+		open: el instanceof HTMLDetailsElement ? el.open : undefined,
 	};
 }
 
 function applyOps(root: ShadowRoot | HTMLElement, ops: FragmentOp[]): void {
 	for (const op of ops) {
-		const el = root.querySelector(op.selector);
-		if (!el) continue;
-		switch (op.op) {
-			case "replaceChildren":
-				el.innerHTML = String(op.value ?? "");
-				break;
-			case "setAttr":
-				// An empty value removes the attribute, so a naming/state op can clear itself
-				// without a separate removeAttr verb. Set boolean attrs with a non-empty value
-				// (`setAttr(sel, "hidden", "hidden")`), never `""`.
-				if (op.attr) {
-					const value = String(op.value ?? "");
-					if (value === "") el.removeAttribute(op.attr);
-					else el.setAttribute(op.attr, value);
-				}
-				break;
-			case "toggle":
-				(el as HTMLElement).hidden = !op.value;
-				break;
-			case "addClass":
-				el.classList.add(String(op.value));
-				break;
-			case "removeClass":
-				el.classList.remove(String(op.value));
-				break;
-			case "setText":
-				el.textContent = String(op.value ?? "");
-				break;
+		for (const el of root.querySelectorAll(op.selector)) {
+			applyOp(el, op);
 		}
+	}
+}
+
+function applyOp(el: Element, op: FragmentOp): void {
+	switch (op.op) {
+		case "replaceChildren":
+			el.innerHTML = String(op.value ?? "");
+			break;
+		case "setProp":
+		case "setAttr": {
+			const prop = op.prop ?? op.attr;
+			if (prop) {
+				const value = String(op.value ?? "");
+				if (value === "") el.removeAttribute(prop);
+				else el.setAttribute(prop, value);
+			}
+			break;
+		}
+		case "toggle":
+			(el as HTMLElement).hidden = !op.value;
+			break;
+		case "addClass":
+			el.classList.add(String(op.value));
+			break;
+		case "removeClass":
+			el.classList.remove(String(op.value));
+			break;
+		case "setText":
+			el.textContent = String(op.value ?? "");
+			break;
 	}
 }
 
@@ -429,9 +452,6 @@ export class FragmentHost {
 		const existing = this.root.querySelector("[data-root]");
 		if (this.lightDom) {
 			if (existing) {
-				// SSR-composed: each region already holds its slot's content. Capture the consumer's
-				// nodes per region (excluding any rendered fallback) so a later remount can re-place
-				// them and `hasSlotted` stays honest, and skip the structure-destroying mount.
 				this.slotted = new Map();
 				for (const region of this.ownRegions()) {
 					this.slotted.set(region.getAttribute("data-slot") ?? "", consumerNodes(region));
@@ -539,12 +559,6 @@ export class FragmentHost {
 		}
 		const lifecycle = this.mounted ? "update" : "mount";
 		applyOps(this.root, loaded.runtime.fireFragmentHook(this.fragmentId, lifecycle, bindings));
-		// A `mount` rebuilds the scaffold's inner structure, so in light DOM each region must be
-		// refilled. When the consumer filled the slot, its held nodes *replace* the region's
-		// contents — clearing any fallback the fill rendered (and the `[data-slot-fallback]` node
-		// the refill ops target, so they then no-op against the consumer's content). When unfilled,
-		// the fallback stays and only the `<!--xtyle:slot-->` composition marker is stripped (so an
-		// unfilled, fallback-free region is truly `:empty`, matching the SSR path).
 		if (lifecycle === "mount" && this.lightDom) {
 			for (const region of this.ownRegions()) {
 				const nodes = this.slotted?.get(region.getAttribute("data-slot") ?? "");
@@ -593,10 +607,6 @@ export class FragmentHost {
 					const match = this.matchInPath(path, decl.selector);
 					if (!match) continue;
 					const payload = serializeEvent(match, event);
-					// Handlers are namespaced by fragment id (`tabs__navKeydown`) so the shared
-					// sandbox export table can't collide across components. The element's own
-					// `context` callback still keys on the bare handler name, so strip the prefix
-					// before asking it for per-handler context.
 					const bareHandler = decl.handler.startsWith(`${this.fragmentId}__`)
 						? decl.handler.slice(this.fragmentId.length + 2)
 						: decl.handler;
@@ -605,7 +615,7 @@ export class FragmentHost {
 					if (intent) this.binding.applyIntent(intent, event);
 					if (event.cancelBubble) break;
 				}
-			});
+			}, NON_BUBBLING.has(type));
 		}
 	}
 }

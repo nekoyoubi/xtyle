@@ -1,8 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// the public entry point — this module is what `@xtyle/core/elements` resolves to. Everything a mod
-// needs (the loader, the type to author the manifest against, and the elements themselves) is imported
-// exactly the way a consumer imports it: no deep path into `elements/fragment-host.js`.
 import { loadFill, loadedFillNames, XtyleBadge, type FillManifest } from "../src/elements/index.js";
 
 /**
@@ -13,8 +10,8 @@ import { loadFill, loadedFillNames, XtyleBadge, type FillManifest } from "../src
  */
 const squareBadge: { manifest: FillManifest; fragmentSources: Record<string, string> } = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "public-api-badge-square",
 		version: "0.0.1",
 		title: "public-api-badge-square",
@@ -22,7 +19,7 @@ const squareBadge: { manifest: FillManifest; fragmentSources: Record<string, str
 		capabilities: ["xtyle.component.badge"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.badge": [{ id: "badge", format: "text/html+jsml", source: "badge.html" }],
+			"component.badge": [{ id: "badge", format: "application/x-xtyle+html", source: "badge.html" }],
 		},
 	},
 	fragmentSources: {

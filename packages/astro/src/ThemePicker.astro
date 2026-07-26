@@ -1,0 +1,33 @@
+---
+import type { PickerTheme } from "@xtyle/core/elements";
+
+interface Props {
+	themes?: PickerTheme[];
+	value?: string;
+	label?: string;
+	open?: boolean;
+	swatches?: boolean;
+	minColWidth?: string;
+	empty?: string;
+	class?: string;
+	/** Any other attribute (`id`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { themes, value, label, swatches = false,
+	open = false, minColWidth, empty, class: extra, ...rest } = Astro.props;
+---
+
+<xtyle-theme-picker
+	class={extra}
+	themes={themes ? JSON.stringify(themes) : undefined}
+	value={value || undefined}
+	label={label || undefined}
+	swatches={swatches || undefined}
+	open={open || undefined}
+	min-col-width={minColWidth || undefined}
+	empty={empty || undefined}
+	{...rest}
+></xtyle-theme-picker>
+
+<script>import "@xtyle/core/elements";</script>

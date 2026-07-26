@@ -7,8 +7,8 @@ Settled 2026-06-17. Monorepo. This is the deliberately-slim shape; read
 
 ## Shape
 
-- **Monorepo.** npm workspaces, `@xtyle` npm scope, a `version:bump` + `release`
-  script pair (no changesets). One shared version across the whole spread: every
+- **Monorepo.** npm workspaces, `@xtyle` npm scope, a `version:bump` /
+  `stats:snapshot` / `release` script trio (no changesets). One shared version across the whole spread: every
   `@xtyle/*` package bumps together, cut at the start of a development cycle via
   `/start`, never package-by-package.
 - **TS/JS-dominant, no Rust of consequence.** The heavy runtime is xript's
@@ -20,8 +20,8 @@ Settled 2026-06-17. Monorepo. This is the deliberately-slim shape; read
 
 ## Directory layout
 
-Top-level is settled; file-level internals are illustrative first-cut (no engine
-code yet).
+Top-level is settled; the engine internals below are a simplified view of
+`packages/xtyle/src`.
 
 ```
 xtyle/
@@ -38,7 +38,7 @@ xtyle/
 ├── apps/
 │   └── site/                 # xtyle.dev: Astro (docs, examples, marketplace, generator)
 ├── docs/                     # internal design record (these files)
-├── scripts/                  # version:bump · release  (xript-style release mechanics)
+├── scripts/                  # version:bump · stats:snapshot · release  (xript-style release mechanics)
 ├── .github/workflows/        # deploy.yml (site → Pages on main) · publish.yml (npm on release)
 ├── .gitignore · LICENSE · CONTRIBUTING.md · CLAUDE.md · README.md
 ├── package.json              # private workspace root: npm workspaces + scripts

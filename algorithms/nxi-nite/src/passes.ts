@@ -69,8 +69,8 @@ const DIM_EXTRA: TokenName[] = ["--surface-overlay", "--field-bg"];
  */
 const SURFACE_TOKENS: TokenName[] = [...DIM_LADDER, ...DIM_EXTRA];
 
-// Warmth tints surfaces only. The fg ink ramp is left at its base hue — text legibility is
-// the contrast-restore pass's charge, and re-hueing razor-thin inks is where it dies.
+// INFO: warmth tints surfaces only; the fg ink ramp stays at its base hue so contrast-restore
+// owns text legibility (re-hueing razor-thin inks breaks it)
 const WARMTH_TOKENS = SURFACE_TOKENS;
 
 function isColor(name: TokenName): boolean {
@@ -157,11 +157,8 @@ function warmthRun(register: TokenRegister, ctx: PassContext): TokenRegister {
 		if (!isColor(name) || hasAlpha(value)) continue;
 		const color = asColor(value);
 		if (!color) continue;
-		// A surface at the gamut's luminance pole (pure white or black) has no luminance headroom
-		// to tint into: any chroma added there drops the luminance off the pole, and `matchLuminance`
-		// cannot recover it. Warming such a surface would nudge it off the pole and can invert the
-		// surface ladder against a pinned pole-valued neighbour. Warmth is only contrast-neutral
-		// where there is luminance to hold, so leave a pole-valued surface verbatim.
+		// INFO: a pole-valued surface (#fff/#000) has no luminance headroom to tint into — matchLuminance
+		// can't recover it, and warming it off the pole can invert the surface ladder — so leave it verbatim
 		if (value === "#ffffff" || value === "#000000") continue;
 		const targetLum = relLuminance(value);
 		const sourceHue = color.c < 0.01 ? target : color.h;
@@ -209,8 +206,8 @@ function dimRun(register: TokenRegister, ctx: PassContext): TokenRegister {
 	const textSurfaces = targets.filter(
 		(s) => s === "--bg-0" || s === "--bg-1" || s === "--bg-2",
 	);
-	// The solid fills the dim must not crowd by darkening `--bg-0` into them; only relevant while
-	// `--bg-0` itself dims (an unpinned ladder).
+	// INFO: the solid fills must not be crowded by darkening `--bg-0` into them; only relevant while
+	// `--bg-0` itself dims (an unpinned ladder)
 	const bg0Value = register["--bg-0"];
 	const bg0Dims = !ladderPinned && bg0Value !== undefined && !hasAlpha(bg0Value);
 	const fills = bg0Dims
@@ -275,10 +272,8 @@ const RESTORE_PAIRS: Array<{ fg: TokenName; bg: TokenName; floor: number }> = [
 	{ fg: "--neutral-text", bg: "--bg-0", floor: FLOOR },
 	{ fg: "--link", bg: "--bg-0", floor: FLOOR },
 	{ fg: "--link-hover", bg: "--bg-0", floor: FLOOR },
-	// The vivid on-surface tone inks clear AA by a tight margin (that's the point), so the
-	// night shift can tip them under where the muted `-text` inks survive on headroom. Restore
-	// them against `--bg-2`, the most-elevated same-side panel and therefore the hardest case —
-	// clearing it clears the nearer panels too.
+	// INFO: vivid on-surface inks clear AA by a tight margin, so restore them against `--bg-2`, the
+	// most-elevated same-side panel and hardest case; clearing it clears the nearer panels too
 	{ fg: "--success-vivid", bg: "--bg-2", floor: FLOOR },
 	{ fg: "--warn-vivid", bg: "--bg-2", floor: FLOOR },
 	{ fg: "--danger-vivid", bg: "--bg-2", floor: FLOOR },

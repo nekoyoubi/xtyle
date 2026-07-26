@@ -19,6 +19,12 @@ import { badgeCss } from "./components/badge.js";
 import { dotCss } from "./components/dot.js";
 import { ribbonCss } from "./components/ribbon.js";
 import { switchCss } from "./components/switch.js";
+import { schemeToggleCss } from "./components/scheme-toggle.js";
+import { themeScopeCss } from "./components/theme-scope.js";
+import { themeCardCss } from "./components/theme-card.js";
+import { themeSwatchCss } from "./components/theme-swatch.js";
+import { themePickerCss } from "./components/theme-picker.js";
+import { ninePatchCss } from "./components/nine-patch.js";
 import { alertCss } from "./components/alert.js";
 import { linkCss } from "./components/link.js";
 import { appShellCss } from "./components/app-shell.js";
@@ -87,6 +93,7 @@ import { pieCss } from "./components/pie.js";
 import { qrCss } from "./components/qr.js";
 import { swatchCss } from "./components/swatch.js";
 import { markdownCss } from "./components/markdown.js";
+import { bbcodeCss } from "./components/bbcode.js";
 import { menuCss } from "./components/menu.js";
 import { popoverCss } from "./components/popover.js";
 import { commandPaletteCss } from "./components/command-palette.js";
@@ -155,8 +162,6 @@ const hostDisplayCss = [
 	"xtyle-combobox { display: block; }",
 	"xtyle-tree { display: block; }",
 	"xtyle-tooltip { display: inline-flex; }",
-	// `> option`/`> optgroup` are the consumer's config children, kept in light DOM (hidden) for the
-	// element to read on a rebuild; the visible options live inside the chrome's `<select>`.
 	"xtyle-select { display: block; } xtyle-select > option, xtyle-select > optgroup { display: none; }",
 	"xtyle-dialog { display: contents; }",
 	"xtyle-sheet { display: contents; }",
@@ -164,9 +169,6 @@ const hostDisplayCss = [
 	"xtyle-spotlight { display: contents; }",
 	"xtyle-redact { display: inline-block; }",
 	"xtyle-tour { display: contents; }",
-	// a fill's own fallback glyph wrapper: transparent by declaration, so the icon inside lays out in the
-	// component's box. It used to borrow Icon's `[data-icon]` rule for this, which coupled Alert's layout to
-	// Icon's stylesheet by accident.
 	"[data-root][data-glyph] { display: contents; }",
 	'xtyle-dock { display: block; min-height: 0; height: 100%; width: 18rem; } xtyle-dock[size="sm"] { width: 14rem; } xtyle-dock[size="lg"] { width: 22rem; }',
 	"xtyle-field { display: block; }",
@@ -177,9 +179,6 @@ const hostDisplayCss = [
 	"xtyle-accordion { display: block; }",
 	'xtyle-toolbar { display: block; } xtyle-toolbar[sticky] { position: sticky; top: 0; z-index: var(--layer-sticky); }',
 	"xtyle-app-shell { display: contents; }",
-	// Layout-transparent region wrapper for a slot that sits inline among chrome (e.g. panel
-	// actions), so light DOM has a clean `[data-slot]` to relocate into without it becoming a
-	// box of its own.
 	".xtyle-slot { display: contents; }",
 ].join("\n");
 
@@ -194,6 +193,12 @@ export const componentsCss: string = [
 	dotCss,
 	ribbonCss,
 	switchCss,
+	schemeToggleCss,
+	themeScopeCss,
+	themeCardCss,
+	themeSwatchCss,
+	themePickerCss,
+	ninePatchCss,
 	alertCss,
 	linkCss,
 	appShellCss,
@@ -262,6 +267,7 @@ export const componentsCss: string = [
 	qrCss,
 	swatchCss,
 	markdownCss,
+	bbcodeCss,
 	menuCss,
 	popoverCss,
 	commandPaletteCss,

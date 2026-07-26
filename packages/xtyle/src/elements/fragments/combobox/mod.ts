@@ -215,8 +215,7 @@ function paint(b: ComboboxBindings, ops: OpsBuilder): void {
 	ops.setAttr("[data-list]", "aria-label", label.length > 0 ? label : (b.ariaLabel ?? "Options"));
 	ops.replaceChildren("[data-list]", optionsHtml(b));
 
-	// only ever shown against an open panel: a closed combobox renders no options at all, so the
-	// pre-hydration (zero-JS) paint would otherwise read "No matches" under an untouched input
+	// INFO: hidden while closed so the pre-hydration paint doesn't read "No matches" under an untouched input
 	ops.setText("[data-empty]", b.emptyText ?? "No matches");
 	ops.setAttr("[data-empty]", "hidden", open && options.length === 0 ? "" : "hidden");
 }
@@ -236,8 +235,7 @@ xript.exports.register("inputKeydown", (payload: unknown, context: unknown): Int
 	const values = ctx.values ?? [];
 	const active = ctx.activeValue ?? "";
 	const query = ctx.query ?? "";
-	// The linear axis over the open option list, via the shared core, reported as the combobox's
-	// `focusValue` intent (the element moves aria-activedescendant, not real focus).
+	// INFO: reported as a `focusValue` intent; the element moves aria-activedescendant, not real focus
 	const move = (key: string): Intent => {
 		const navItems = values.map((value) => ({ key: value }));
 		const target = linearNav(navItems, active, key, { orientation: "vertical", wrap: true, homeEnd: true }).focus;
@@ -253,15 +251,14 @@ xript.exports.register("inputKeydown", (payload: unknown, context: unknown): Int
 		case "End":
 			return open && values.length > 0 ? move("End") : {};
 		case "Enter":
-			// a closed list with nothing to commit leaves Enter alone, so it still submits the form
+			// INFO: leave Enter alone with nothing to commit so it still submits the form
 			if (!open && !(ctx.allowCustom === true && query.trim().length > 0)) return {};
 			return { commitValue: true, preventDefault: true };
 		case "Escape":
 			if (open) return { closeMenu: true, preventDefault: true, stopPropagation: true };
 			return query.length > 0 ? { reset: true, preventDefault: true, stopPropagation: true } : {};
 		case "Tab": {
-			// Tab is "take this and move on": it commits what the list is pointing at, the way Enter would, and
-			// never preventDefaults, so focus still leaves for the next control
+			// INFO: never preventDefault on Tab, so focus still leaves for the next control
 			if (!open) return {};
 			const hasCommit = active.length > 0 || (ctx.allowCustom === true && query.trim().length > 0);
 			return hasCommit ? { commitValue: true, closeMenu: true } : { closeMenu: true };

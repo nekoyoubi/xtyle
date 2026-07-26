@@ -9,6 +9,13 @@
 import Badge from "@xtyle/astro/Badge.astro";
 import Button from "@xtyle/astro/Button.astro";
 import Switch from "@xtyle/astro/Switch.astro";
+import SchemeToggle from "@xtyle/astro/SchemeToggle.astro";
+import ThemeScope from "@xtyle/astro/ThemeScope.astro";
+import ThemeCard from "@xtyle/astro/ThemeCard.astro";
+import ThemeSwatch from "@xtyle/astro/ThemeSwatch.astro";
+import ThemePicker from "@xtyle/astro/ThemePicker.astro";
+import NinePatch from "@xtyle/astro/NinePatch.astro";
+import { TORN_PANEL } from "../../data/nine-patch-art.ts";
 import Checkbox from "@xtyle/astro/Checkbox.astro";
 import Radio from "@xtyle/astro/Radio.astro";
 import Rating from "@xtyle/astro/Rating.astro";
@@ -47,6 +54,7 @@ import Combobox from "@xtyle/astro/Combobox.astro";
 import DatePicker from "@xtyle/astro/DatePicker.astro";
 import SplitButton from "@xtyle/astro/SplitButton.astro";
 import Markdown from "@xtyle/astro/Markdown.astro";
+import Bbcode from "@xtyle/astro/Bbcode.astro";
 import List from "@xtyle/astro/List.astro";
 
 interface Props {
@@ -73,6 +81,13 @@ const previewMarkdown = [
 	"- pin the anchors",
 	"- turn the `knobs`",
 ].join("\n");
+const previewBbcode = [
+	"[b]Derivation[/b]",
+	"",
+	"An [i]algorithm[/i] maps anchors into a [color=accent]full[/color] token set.",
+	"",
+	"[quote=the docs]A theme is a print.[/quote]",
+].join("\n");
 ---
 
 <div class="cxp" data-preview={id}>
@@ -91,6 +106,48 @@ const previewMarkdown = [
 		<Cluster gap={3} align="center">
 			<Switch checked label="Wi-Fi" />
 			<Switch label="Bluetooth" />
+		</Cluster>
+	)}
+	{id === "scheme-toggle" && (
+		<Cluster gap={3} align="center">
+			<SchemeToggle scheme="dark" />
+			<SchemeToggle scheme="light" />
+		</Cluster>
+	)}
+	{id === "nine-patch" && (
+		<NinePatch
+			src={TORN_PANEL}
+			slice="32"
+			repeat="repeat"
+			fill
+			tint="var(--accent-bg)"
+			inset="2.25rem"
+			style="width: 100%;"
+		>
+			<Text size="sm" tone="subtle">One drawing, torn to fit</Text>
+		</NinePatch>
+	)}
+	{id === "theme-picker" && (
+		<ThemePicker
+			label="Theme"
+			value="Grape"
+			minColWidth="4.5rem"
+			themes={[
+				{ name: "Grape", constraints: { "--accent": "#7c5cff" } },
+				{ name: "Mint", scheme: "light", constraints: { "--accent": "#00b894" } },
+			]}
+		/>
+	)}
+	{id === "theme-swatch" && <ThemeSwatch size="sm" tokens={["--accent", "--accent-2", "--success", "--warn", "--danger"]} labels={false} />}
+	{id === "theme-card" && <ThemeCard name="Grape" constraints={{ "--accent": "#7c5cff" }} scheme="light" />}
+	{id === "theme-scope" && (
+		<Cluster gap={3} align="center">
+			<ThemeScope constraints={{ "--accent": "#7c5cff" }}>
+				<Button variant="solid" tone="accent" size="sm">Scoped</Button>
+			</ThemeScope>
+			<ThemeScope constraints={{ "--accent": "#00b894" }} scheme="light">
+				<Button variant="solid" tone="accent" size="sm">Scoped</Button>
+			</ThemeScope>
 		</Cluster>
 	)}
 	{id === "checkbox" && (
@@ -217,6 +274,7 @@ const previewMarkdown = [
 	)}
 	{id === "text" && <Text size="sm">The quick brown fox jumps over the lazy dog.</Text>}
 	{id === "markdown" && <div class="cxp-md"><Markdown source={previewMarkdown} /></div>}
+	{id === "bbcode" && <div class="cxp-md cxp-bb"><Bbcode source={previewBbcode} /></div>}
 	{id === "separator" && (
 		<div style="width: 12rem; display: grid; gap: 0.4rem;">
 			<Text as="span" size="xs" tone="muted">Above</Text>
@@ -394,6 +452,9 @@ const previewMarkdown = [
 	.cxp-md :global(.xtyle-markdown) { font-size: var(--text-sm); }
 	.cxp-md :global(.xtyle-markdown__body h3) { font-size: var(--text-body); margin-block: 0 var(--space-2); }
 	.cxp-md :global(.xtyle-markdown__body ul) { margin-block: 0; }
+
+	.cxp-bb :global(.xtyle-bbcode) { font-size: var(--text-sm); }
+	.cxp-bb :global(.xtyle-bbcode__quote) { margin-block: var(--space-2) 0; }
 
 	.cxp-ribbon {
 		position: relative;

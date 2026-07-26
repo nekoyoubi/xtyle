@@ -1,6 +1,5 @@
-// The overlap works in both render modes without double-applying: in shadow DOM the avatars are
-// reachable only through `::slotted()` and the `+N` chip only as a `> ` child, while in light DOM
-// every item is a `> ` child (and `::slotted` is inert), so each rule set touches a disjoint layer.
+// INFO: the `::slotted` and `> *` rule sets touch disjoint layers — shadow DOM reaches items via
+// `::slotted`, light DOM via `> *` (where `::slotted` is inert), so the two never double-apply
 export const avatarGroupCss = `
 [data-root][data-avatar-group] { display: contents; }
 .xtyle-avatar-group {

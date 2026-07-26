@@ -14,8 +14,8 @@ import { manifest } from "../src/elements/fragments/calendar/source.generated.js
  */
 const chipMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-calendar-chips",
 		version: "0.0.1",
 		title: "test-calendar-chips",
@@ -23,7 +23,7 @@ const chipMod = {
 		capabilities: ["xtyle.component.calendar"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.calendar": [{ id: "calendar", format: "text/html+jsml", source: "calendar.html" }],
+			"component.calendar": [{ id: "calendar", format: "application/x-xtyle+html", source: "calendar.html" }],
 		},
 	},
 	fragmentSources: {

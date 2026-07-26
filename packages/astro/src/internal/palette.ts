@@ -20,10 +20,11 @@ export async function bakeIconMark(
 	name: string,
 	scheme: Palette | string[],
 	className?: string,
+	label?: string,
 ): Promise<string | null> {
 	const parsed = resolveIconMark(name);
 	if (!parsed) return null;
-	return composeIconThemed(parsed.composition, { register: await defaultRegister(), scheme, className, part: "icon" });
+	return composeIconThemed(parsed.composition, { register: await defaultRegister(), scheme, className, part: "icon", label });
 }
 
 /** The two glyphs the rating fill repeats across its row, baked for SSR. Mirrors the element's own

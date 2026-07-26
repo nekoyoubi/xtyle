@@ -279,9 +279,7 @@ export function parseDateText(
 	const monthDaySlots = order.filter((part) => part !== "year");
 
 	if (groups.length === 3) {
-		// A four-digit group is unambiguously the year wherever it sits, so it is claimed positionally
-		// and the other two groups fill the locale's month/day order around it — which is what lets a
-		// US-locale field still accept `2026/3/8` typed the ISO way round.
+		// INFO: a four-digit group is the year wherever it sits; it's claimed positionally, the other two fill the locale's month/day order.
 		const yearIndex = groups.findIndex((group) => group.length === 4);
 		if (yearIndex === -1) {
 			order.forEach((part, index) => {
@@ -295,7 +293,7 @@ export function parseDateText(
 			});
 		}
 	} else {
-		// Two groups: no year typed, so it is this year and both groups are month/day in locale order.
+		// INFO: two groups means no year typed, so it's this year and both are month/day in locale order.
 		if (groups.some((group) => group.length > 2)) return null;
 		fields.year = options.today.year;
 		monthDaySlots.forEach((part, index) => {

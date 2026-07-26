@@ -4,10 +4,6 @@ import { listComponents } from "../../xtyle/src/manifest/index.js";
 import type { ComponentManifest, PropDef } from "../../xtyle/src/manifest/types.js";
 import { kebab, render } from "./harness.js";
 
-// The manifests are the source of truth for what each binding promises, so the sweep is driven off
-// them rather than off a hand-kept list: a prop documented for the `svelte` binding is rendered with
-// a value and the resulting element is read back. Static analysis proves a prop is *referenced*;
-// this proves it lands on the element under the right name with the right value.
 const key = (name: string): string => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 const wrappers = import.meta.glob<{ default: Component<any> }>("../src/*.svelte", { eager: true });
@@ -45,14 +41,8 @@ const shapeOf = (prop: PropDef): Shape | null => {
 const valueFor = (prop: PropDef, shape: Shape): unknown => {
 	switch (shape) {
 		case "enum": {
-			// A non-default option is essential: most wrappers deliberately omit an attribute that still
-			// carries its default value, so testing the default would report a passing wrapper as broken.
 			const options = prop.options!;
 			const picked = options.find((o) => o !== prop.default) ?? options[0];
-			// `options` is written in HTML-attribute terms, so a `boolean | "overlay"` prop lists the
-			// strings `"true"` / `"false"`. Sending the string to a Svelte binding passes a truthy
-			// `"false"`, which is the opposite of what the author means; the boolean is what the prop
-			// actually takes, and the wrapper serializes it back to the attribute.
 			if (prop.type.includes("boolean") && (picked === "true" || picked === "false")) return picked === "true";
 			return picked;
 		}
@@ -135,11 +125,7 @@ const attempt = async (c: Case, sentAs: string): Promise<Finding | null> => {
 		const el = rendered.element;
 		if (!el) return { ...c, sentAs, group: "not-rendered", detail: "wrapper produced no <xtyle-*> element" };
 
-		// An attribute is only one of the two ways a prop legitimately reaches the element. A value that
-		// does not survive attribute serialization (an array of series, a scorer function, a boolean the
-		// element reads off a property) is assigned to the host instead, and several wrappers defer that
-		// assignment to a microtask so an `open`-by-default element does not fire its popover on mount.
-		// Both count as reaching the element, so both are waited for and checked.
+		// INFO: some wrappers assign the host property on a microtask, so wait a tick before reading it back
 		await Promise.resolve();
 		await new Promise((r) => setTimeout(r, 0));
 		const asProperty = (el as unknown as Record<string, unknown>)[sentAs];
@@ -165,9 +151,6 @@ const attempt = async (c: Case, sentAs: string): Promise<Finding | null> => {
 const runCase = async (c: Case): Promise<Finding | null> => {
 	const first = await attempt(c, c.prop);
 	if (!first) return null;
-	// A manifest that documents an already-kebab prop name gets a second pass under the camelCase
-	// spelling the wrapper is likely to actually declare; if that one lands, the defect is the
-	// manifest's documented name, not the wrapper's forwarding.
 	const alt = camel(c.prop);
 	if (alt === c.prop) return first;
 	const second = await attempt(c, alt);
@@ -187,8 +170,6 @@ describe("manifest-driven prop forwarding", () => {
 		expect(cases.length).toBeGreaterThan(200);
 	});
 
-	// An exclusion naming a prop that no longer exists is an exclusion nobody is reading: the prop it
-	// was reasoned about may have been renamed or dropped, and the entry now only hides its successor.
 	it("every declared exclusion still names a real svelte-bound prop", () => {
 		const real = new Set(
 			components.flatMap((c) => c.props.filter((p) => p.bindings.includes("svelte")).map((p) => `${c.id}.${p.name}`)),

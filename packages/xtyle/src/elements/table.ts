@@ -189,8 +189,6 @@ export class XtyleTable extends XtyleDecoratorElement {
 		this.applySelection(table);
 	}
 
-	// --- Row selection (the collection-core seam) -------------------------------------------------
-
 	private bodyRows(): HTMLElement[] {
 		const table = this.querySelector("table");
 		return table ? Array.from(table.querySelectorAll<HTMLElement>("tbody tr")) : [];
@@ -282,7 +280,6 @@ export class XtyleTable extends XtyleDecoratorElement {
 		const row = target.closest<HTMLElement>("tbody tr");
 		if (!row) return;
 		const key = row.dataset.key ?? "";
-		// A dedicated selection checkbox toggles its row; other interactive controls act on their own.
 		if (target.closest('input[type="checkbox"][data-row-select]')) {
 			this.commitSelection(key, "toggle");
 			return;
@@ -317,7 +314,6 @@ export class XtyleTable extends XtyleDecoratorElement {
 		);
 		if (move.focus !== undefined) {
 			event.preventDefault();
-			// Shift+Arrow in range mode extends the selection as the cursor moves.
 			if (event.shiftKey && this.selection === "range") this.commitSelection(move.focus, "range");
 			else {
 				this.rovingKey = move.focus;

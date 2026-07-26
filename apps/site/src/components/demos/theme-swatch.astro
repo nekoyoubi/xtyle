@@ -1,0 +1,80 @@
+---
+import ThemeSwatch from "@xtyle/astro/ThemeSwatch.astro";
+import ThemeCard from "@xtyle/astro/ThemeCard.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const ALGORITHMS = ["xtyle-default", "xtyle-quiet", "xtyle-loud", "xtyle-hc", "nxi-nite"];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">The default palette read</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				Each row derives its algorithm and reads the palette straight off the result. Every chip is
+				an <code>&lt;xtyle-swatch&gt;</code>, so the dot, label, and value readout come from that
+				component rather than a hand-rolled one.
+			</Text>
+			<Stack gap={4}>
+				{ALGORITHMS.map((algorithm) => (
+					<Stack gap={2}>
+						<Text size="sm" tone="subtle">{algorithm}</Text>
+						<ThemeSwatch algorithm={algorithm} size="sm" />
+					</Stack>
+				))}
+			</Stack>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Choosing the tokens</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>tokens</code> takes any token names, so a row can narrow to one family. A token the
+				algorithm never produced is skipped rather than drawn as a hole.
+			</Text>
+			<Stack gap={4}>
+				<Stack gap={2}>
+					<Text size="sm" tone="subtle">the accents</Text>
+					<ThemeSwatch tokens={["--accent", "--accent-2", "--accent-3", "--accent-4"]} />
+				</Stack>
+				<Stack gap={2}>
+					<Text size="sm" tone="subtle">status hues</Text>
+					<ThemeSwatch tokens={["--success", "--warn", "--danger", "--info"]} />
+				</Stack>
+				<Stack gap={2}>
+					<Text size="sm" tone="subtle">surfaces and text, large, with the colour-model readout on hover</Text>
+					<ThemeSwatch tokens={["--bg-0", "--bg-1", "--bg-2", "--fg-0", "--fg-2", "--line"]} size="lg" details />
+				</Stack>
+				<Stack gap={2}>
+					<Text size="sm" tone="subtle">chips alone, no labels</Text>
+					<ThemeSwatch labels={false} />
+				</Stack>
+			</Stack>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">The picture and the parts list</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				A card shows a theme as a fake of an interface; a swatch row shows its literal values. Paired,
+				they answer both "what does this feel like" and "what exactly did it produce".
+			</Text>
+			<Grid minColWidth="15rem" gap={4}>
+				<Stack gap={3}>
+					<ThemeCard name="Grape" constraints={{ "--accent": "#7c5cff" }} />
+					<ThemeSwatch size="sm" constraints={{ "--accent": "#7c5cff" }} />
+				</Stack>
+				<Stack gap={3}>
+					<ThemeCard name="Mint light" scheme="light" constraints={{ "--accent": "#00b894" }} />
+					<ThemeSwatch size="sm" scheme="light" constraints={{ "--accent": "#00b894" }} />
+				</Stack>
+			</Grid>
+		</Stack>
+	</Card>
+</Stack>

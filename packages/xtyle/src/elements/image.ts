@@ -6,6 +6,7 @@ import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { openLightbox } from "./lightbox.js";
 import { manifest, fragmentSources } from "./fragments/image/source.generated.js";
 import { resolveVocab, IMAGE_FITS, IMAGE_RADII } from "../vocab.js";
+import { iconBody } from "../icon-registry.js";
 
 /** A click or key that lands on a control inside the frame belongs to the control, not the frame. */
 function onFrameControl(target: EventTarget | null): boolean {
@@ -45,6 +46,7 @@ export class XtyleImage extends XtyleElement {
 			"hover-src",
 			"hover-poster",
 			"hover-audio",
+			"zoom-icon",
 		];
 	}
 
@@ -181,10 +183,24 @@ export class XtyleImage extends XtyleElement {
 			caption: this.caption,
 			zoom: this.zoomEnabled,
 			zoomLabel: this.zoomLabel,
+			zoomIcon: this.zoomIcon,
+			zoomBody: iconBody(this.zoomIcon) ?? null,
 			audio: this.audioEnabled,
 			audioMuted: muted,
 			audioLabel: muted ? "Unmute preview" : "Mute preview",
+			volumeOffBody: iconBody("volume-off") ?? null,
+			volumeBody: iconBody("volume") ?? null,
+			warningBody: iconBody("warning") ?? null,
 		};
+	}
+
+	/** The roster glyph on the zoom button. Any name the icon roster can draw, including one a mod
+	 * contributed through the `xtyle.icons` slot. */
+	get zoomIcon(): string {
+		return this.getAttribute("zoom-icon") || "maximize";
+	}
+	set zoomIcon(value: string) {
+		this.setAttribute("zoom-icon", value);
 	}
 
 	protected template(): string {
@@ -194,8 +210,6 @@ export class XtyleImage extends XtyleElement {
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(imageHostCss);
-		// The `figcaption` is only present when there's a caption, and the patch hook doesn't rebuild
-		// it; a change in caption presence remounts (which re-places any slotted hover preview intact).
 		this.fragment.reshapeIfChanged(this.caption ? "captioned" : "uncaptioned");
 		if (this.chromeStale()) this.fragment.remount();
 		this.fragment.update(this.bindings);
@@ -249,8 +263,8 @@ export class XtyleImage extends XtyleElement {
 		const overlay = frame.querySelector<HTMLElement>(".xtyle-image__hover");
 		if (!overlay) return;
 
-		// In shadow mode the `hover-src` media must be a projected `[slot=hover]` child of the host;
-		// the light/SSR path already inlined it into the overlay, so only inject when there's nothing.
+		// INFO: in shadow mode the hover media must be a projected `[slot=hover]` child of the host; the
+		// light/SSR path already inlined it, so only inject when the overlay is empty
 		if (this.hoverSrc && !this.hoverInjected && !this.querySelector('[slot="hover"]')) {
 			const inLightDom = (this.root as unknown) === this;
 			if (!inLightDom && !overlay.querySelector(".xtyle-image__hover-media")) {
@@ -288,8 +302,6 @@ export class XtyleImage extends XtyleElement {
 			{ signal },
 		);
 
-		// Keyboard reach: a hover-only frame becomes focusable so the preview is not mouse-only. When
-		// it is already a lightbox trigger it is focusable, so leave that role/tabindex alone.
 		if (!this.lightbox) {
 			frame.tabIndex = 0;
 			if (!frame.hasAttribute("aria-label")) {

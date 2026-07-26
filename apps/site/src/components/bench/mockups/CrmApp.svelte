@@ -34,9 +34,8 @@
 		{ name: "Settings", icon: "gear", active: false, count: 0 },
 	] as const;
 
-	// Stage is a categorical axis, not a semantic one: a deal in Qualified is not "warning" and one in
-	// Won is not "success", it is only further along. The stages therefore wear the accent family, and
-	// their order is carried by column position and the "Stage N" ordinal, never by hue.
+	// INFO: stage is a categorical axis, not semantic — Qualified isn't "warning", Won isn't "success";
+	// stages wear the accent family, their order carried by position and the "Stage N" ordinal, not hue
 	const stages = [
 		{ name: "Lead", tone: "accent", blurb: "Unworked inbound" },
 		{ name: "Qualified", tone: "accent-2", blurb: "Budget confirmed" },
@@ -44,8 +43,8 @@
 		{ name: "Won", tone: "accent-4", blurb: "Signed this quarter" },
 	] as const;
 
-	// Owners stay neutral: the accent family is spent on stages, and initials plus a presence dot
-	// separate people without borrowing a second color axis.
+	// INFO: owners stay neutral — the accent family is spent on stages, so initials plus a presence dot
+	// separate people without a second color axis
 	const owners = {
 		ada: { name: "Ada Lovelace", status: "success", presence: "Online" },
 		grace: { name: "Grace Hopper", status: "warn", presence: "Away" },

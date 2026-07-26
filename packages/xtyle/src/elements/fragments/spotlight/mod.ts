@@ -62,8 +62,6 @@ function paint(b: SpotlightBindings, ops: OpsBuilder): void {
 	ops.setAttr(".xtyle-spotlight", "class", rootClass(b));
 	ops.setAttr("[data-root]", "hidden", open ? "" : "hidden");
 
-	// the veil's whole style is one string: the measured clip path plus the dim/blur knobs, composed together
-	// so setting it never wipes the other. The knobs override the CSS default inline on the veil.
 	const veilStyle = [
 		b.cutout ? `clip-path: path(evenodd, "${b.cutout}")` : "",
 		b.dim != null ? `--spotlight-dim: ${b.dim}` : "",
@@ -99,8 +97,6 @@ xript.exports.register("dismiss", (payload: unknown): Intent => {
 	return { requestClose: true, preventDefault: true, stopPropagation: true };
 });
 
-// a click on the veil is a click on "everything else" — the gesture that says *I'm done here*. A click in
-// the hole is a click on the app, and passes straight through to it.
 xript.exports.register("veilClick", (): Intent => {
 	return { requestClose: true };
 });

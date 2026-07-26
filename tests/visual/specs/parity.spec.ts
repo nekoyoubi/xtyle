@@ -6,29 +6,24 @@ import type { Tolerance } from "./lib/parity-diff.ts";
 import { hideChrome } from "./lib/prepare.ts";
 import { REGRESSION_IDS } from "../../../apps/site/src/regression/ids.ts";
 
-// Not meaningfully comparable as a single 360px instance: these are full-page
-// layout shells and composed chrome that render regions/slotted structure, not
-// one self-contained widget. Their cross-binding correctness is covered by the
-// Leg 1 demo screenshots instead.
+// INFO: full-page layout shells, not self-contained widgets; not comparable as a
+// single 360px instance (cross-binding coverage lives in the Leg 1 demo screenshots)
 const PARITY_EXEMPT = new Set([
 	"app-shell",
 	"mobile-shell",
 	"parallax",
 	"statusbar",
 	"toolbar",
-	// Its items are sub-components (an accordion item is its own element); the
-	// raw-HTML-child harness can't feed the Svelte binding the way a real Svelte
-	// author would (with the item wrapper), so the comparison isn't apples-to-apples.
+	// INFO: items are sub-components; the raw-HTML-child harness can't feed the Svelte
+	// binding an item wrapper, so the comparison isn't apples-to-apples
 	"accordion",
-	// Intended progressive enhancement, not a divergence to fix: the Astro (SSR)
-	// binding renders the option list inline (~140px, a functional no-JS select)
-	// and the runtime element collapses it to a trigger (~65px) once hydrated.
+	// INFO: progressive enhancement, not a divergence: SSR renders the option list
+	// inline, the hydrated runtime element collapses it to a trigger
 	"select",
 ]);
 
-// The runtime elements fill their fragments asynchronously (the first fill on
-// each page also pays a one-time xript-runtime init), so a single capture can
-// catch a half-filled element. Poll until the column stops changing.
+// INFO: runtime elements fill fragments async (first fill also pays one-time xript
+// init); poll until the column stops changing to avoid capturing a half-filled element
 async function stableShot(
 	page: Page,
 	loc: Locator,
@@ -58,8 +53,6 @@ async function assertParity(
 	b: { name: string; shot: Buffer | null },
 	tol: Tolerance,
 ) {
-	// Both columns rendered nothing inline (e.g. a closed overlay): vacuously
-	// in parity — there is no rendered furniture to diverge.
 	if (a.shot === null && b.shot === null) return;
 
 	if (a.shot === null || b.shot === null) {

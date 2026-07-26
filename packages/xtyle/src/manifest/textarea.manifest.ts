@@ -154,6 +154,46 @@ export const textareaManifest: ComponentManifest = {
 			description: "Validation message rendered beneath the control and wired up via `aria-describedby` while invalid.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "spellcheck",
+			type: '"true" | "false"',
+			description:
+				"Forwarded to the inner control: turn the browser's own spell-checker off for prose it would only underline in red — a markup source, a code snippet, an identifier. Enumerated rather than boolean, so it needs an explicit `spellcheck=\"false\"` — a bare `spellcheck` is the HTML spelling of *on*.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "inputmode",
+			type: '"text" | "numeric" | "decimal" | "tel" | "email" | "url" | "search" | "none"',
+			description:
+				"Forwarded to the inner control: which on-screen keyboard a touch device should raise. Purely a hint — it does not validate or restrict what can be typed.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "autocomplete",
+			type: "string",
+			description:
+				"Forwarded to the inner control: the autofill token the browser should match against, such as `email`, `street-address`, or `off`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "autocapitalize",
+			type: '"off" | "none" | "on" | "sentences" | "words" | "characters"',
+			description: "Forwarded to the inner control: whether a touch keyboard capitalizes as you type.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "autocorrect",
+			type: '"on" | "off"',
+			description:
+				"Forwarded to the inner control: the browser's own autocorrect. Non-standard but widely honored, and worth turning off wherever `spellcheck` is.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "enterkeyhint",
+			type: '"enter" | "done" | "go" | "next" | "previous" | "search" | "send"',
+			description: "Forwarded to the inner control: what a touch keyboard's action key should read.",
+			bindings: ["html", "svelte", "astro"],
+		},
 	],
 	variants: [
 		{

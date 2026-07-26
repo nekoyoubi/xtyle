@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-chart> custom element on the happy-dom registry
 import "../src/elements/chart.js";
 import { loadFill, loadedFillNames } from "../src/elements/fragment-host.js";
 import { manifest } from "../src/elements/fragments/chart/source.generated.js";
@@ -26,8 +25,8 @@ const SERIES = [
  */
 const barsMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-chart-bars",
 		version: "0.0.1",
 		title: "test-chart-bars",
@@ -35,7 +34,7 @@ const barsMod = {
 		capabilities: ["xtyle.component.chart"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.chart": [{ id: "chart", format: "text/html+jsml", source: "chart.html" }],
+			"component.chart": [{ id: "chart", format: "application/x-xtyle+html", source: "chart.html" }],
 		},
 	},
 	fragmentSources: {

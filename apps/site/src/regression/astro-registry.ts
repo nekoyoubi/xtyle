@@ -6,6 +6,7 @@ import Avatar from "@xtyle/astro/Avatar.astro";
 import AvatarGroup from "@xtyle/astro/AvatarGroup.astro";
 import Badge from "@xtyle/astro/Badge.astro";
 import Bar from "@xtyle/astro/Bar.astro";
+import Bbcode from "@xtyle/astro/Bbcode.astro";
 import BottomNav from "@xtyle/astro/BottomNav.astro";
 import Breadcrumb from "@xtyle/astro/Breadcrumb.astro";
 import Button from "@xtyle/astro/Button.astro";
@@ -42,6 +43,7 @@ import List from "@xtyle/astro/List.astro";
 import Markdown from "@xtyle/astro/Markdown.astro";
 import Menu from "@xtyle/astro/Menu.astro";
 import MobileShell from "@xtyle/astro/MobileShell.astro";
+import NinePatch from "@xtyle/astro/NinePatch.astro";
 import NumberInput from "@xtyle/astro/NumberInput.astro";
 import Pagination from "@xtyle/astro/Pagination.astro";
 import Panel from "@xtyle/astro/Panel.astro";
@@ -54,6 +56,7 @@ import Radio from "@xtyle/astro/Radio.astro";
 import Rating from "@xtyle/astro/Rating.astro";
 import Redact from "@xtyle/astro/Redact.astro";
 import Ribbon from "@xtyle/astro/Ribbon.astro";
+import SchemeToggle from "@xtyle/astro/SchemeToggle.astro";
 import Section from "@xtyle/astro/Section.astro";
 import Segmented from "@xtyle/astro/Segmented.astro";
 import Select from "@xtyle/astro/Select.astro";
@@ -76,6 +79,10 @@ import Table from "@xtyle/astro/Table.astro";
 import Tabs from "@xtyle/astro/Tabs.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Textarea from "@xtyle/astro/Textarea.astro";
+import ThemeCard from "@xtyle/astro/ThemeCard.astro";
+import ThemePicker from "@xtyle/astro/ThemePicker.astro";
+import ThemeScope from "@xtyle/astro/ThemeScope.astro";
+import ThemeSwatch from "@xtyle/astro/ThemeSwatch.astro";
 import Timeline from "@xtyle/astro/Timeline.astro";
 import Toast from "@xtyle/astro/Toast.astro";
 import Toc from "@xtyle/astro/Toc.astro";
@@ -92,6 +99,7 @@ export const astroRegistry: Record<string, unknown> = {
 	"avatar-group": AvatarGroup,
 	"badge": Badge,
 	"bar": Bar,
+	"bbcode": Bbcode,
 	"bottom-nav": BottomNav,
 	"breadcrumb": Breadcrumb,
 	"button": Button,
@@ -128,6 +136,7 @@ export const astroRegistry: Record<string, unknown> = {
 	"markdown": Markdown,
 	"menu": Menu,
 	"mobile-shell": MobileShell,
+	"nine-patch": NinePatch,
 	"number-input": NumberInput,
 	"pagination": Pagination,
 	"panel": Panel,
@@ -140,6 +149,7 @@ export const astroRegistry: Record<string, unknown> = {
 	"rating": Rating,
 	"redact": Redact,
 	"ribbon": Ribbon,
+	"scheme-toggle": SchemeToggle,
 	"section": Section,
 	"segmented": Segmented,
 	"select": Select,
@@ -162,6 +172,10 @@ export const astroRegistry: Record<string, unknown> = {
 	"tabs": Tabs,
 	"text": Text,
 	"textarea": Textarea,
+	"theme-card": ThemeCard,
+	"theme-picker": ThemePicker,
+	"theme-scope": ThemeScope,
+	"theme-swatch": ThemeSwatch,
 	"timeline": Timeline,
 	"toast": Toast,
 	"toc": Toc,

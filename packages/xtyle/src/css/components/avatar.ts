@@ -7,7 +7,7 @@ const toneFallback = FULL_TONES.map(
 }`,
 ).join("\n");
 
-// The presence dot is a status signal, not a free color choice — it stays on the semantic roles.
+// INFO: the presence dot is a status signal, so it stays on the semantic tone roles, not the full palette
 const statusTones = STATUS_TONES.map(
 	(t) => `.xtyle-avatar--status-${t} .xtyle-avatar__status-dot { --dot-color: var(--${t}); }`,
 ).join("\n");

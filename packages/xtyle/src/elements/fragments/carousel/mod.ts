@@ -7,6 +7,9 @@ interface OpsBuilder {
 }
 
 interface CarouselBindings {
+	/** Bodies for the glyphs this carousel draws (the directional arrows, play, pause), resolved
+	 * against the live roster by the trusted host so a mod reskin reaches the sandbox. */
+	iconBodies?: Record<string, string | null>;
 	uid?: string;
 	slideCount?: number;
 	index?: number;
@@ -95,7 +98,13 @@ function playLabel(b: CarouselBindings): string {
 }
 
 function playIcon(b: CarouselBindings): string {
-	return renderIcon(playing(b) ? "pause" : "play");
+	const name = playing(b) ? "pause" : "play";
+	return renderIcon(name, { body: b.iconBodies?.[name] });
+}
+
+function chevronIcon(b: CarouselBindings, kind: "prev" | "next"): string {
+	const name = chevron(b, kind);
+	return renderIcon(name, { body: b.iconBodies?.[name] });
 }
 
 function atEdge(b: CarouselBindings, edge: number): boolean {
@@ -106,7 +115,7 @@ function navButton(b: CarouselBindings, kind: "prev" | "next", label: string, ed
 	const disabled = atEdge(b, edge) ? " disabled" : "";
 	return (
 		`<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--${kind}" part="nav" ` +
-		`data-${kind}="${uid(b)}" aria-label="${escapeAttr(label)}"${disabled}>${renderIcon(chevron(b, kind))}</button>`
+		`data-${kind}="${uid(b)}" aria-label="${escapeAttr(label)}"${disabled}>${chevronIcon(b, kind)}</button>`
 	);
 }
 

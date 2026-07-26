@@ -76,12 +76,8 @@
 		bench.knobs.scheme != null && bgScheme !== null && bench.knobs.scheme !== bgScheme,
 	);
 
-	// A knob field is a `BenchKnobs` key for the blessed set; a novel algorithm's knob writes under its
-	// own name through the same `Record<string, unknown>` channel, so the field is typed as a string.
 	type KnobField = string;
 
-	// `BenchKnobs` has no index signature, so reads and writes through a runtime field name need one
-	// assertion — kept here rather than repeated at every call site.
 	function knobsOf(s: BenchState): Record<string, unknown> {
 		return s.knobs as Record<string, unknown>;
 	}
@@ -150,16 +146,12 @@
 		if (!query) return groups;
 		return groups
 			.map((g) =>
-				// A query that matches the group's title keeps the whole group; otherwise each token is
-				// matched against its full search text (name + category + synonyms).
 				g.title.toLowerCase().includes(query)
 					? g
 					: { title: g.title, tokens: g.tokens.filter((t) => tokenSearchTerms(t, g.title).includes(query)) },
 			)
 			.filter((g) => g.tokens.length);
 	});
-	// Token groups are collapsed by default; the user expands what they want, and a live search
-	// force-expands everything so matches are never hidden behind a closed section.
 	let expandedGroups = $state<Set<string>>(new Set());
 	const searching = $derived(tokenFilter.trim().length > 0);
 	function toggleGroup(title: string): void {
@@ -169,8 +161,6 @@
 		expandedGroups = next;
 	}
 
-	// Non-color tokens hide their value behind a swatch the same way colors do; clicking it expands a
-	// text editor as a second row, instead of cramming a textbox onto every line.
 	let editingTokens = $state<Set<string>>(new Set());
 	function toggleEditor(name: string): void {
 		const next = new Set(editingTokens);

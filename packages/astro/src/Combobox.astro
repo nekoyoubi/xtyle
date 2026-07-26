@@ -80,8 +80,6 @@ const labelOf = (v: string): string => {
 	return typeof found === "string" ? found : (found.label ?? found.value);
 };
 
-// the server paints the control, never the listbox: a closed combobox has no options in its markup, so the
-// zero-JS render is just the input, and the popover fills itself in once the element upgrades
 const bindings = {
 	inputId: `${uid}-input`,
 	listId: `${uid}-list`,

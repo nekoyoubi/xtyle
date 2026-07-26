@@ -64,9 +64,8 @@
 		  })
 		| undefined = $state();
 
-	// `format` is a function and `alt-step` / `modifier` don't survive Svelte's custom-element attribute
-	// pass (a hyphen is dropped, a getter-only name takes the property path), so set them on the element
-	// directly — the setters reflect to the attributes the element observes.
+	// INFO: Svelte's custom-element attribute pass drops hyphenated / getter-only names, so set `format`,
+	// `altStep`, and `modifier` as properties directly — the setters reflect to the observed attributes
 	$effect(() => {
 		if (!host) return;
 		host.format = format;

@@ -36,7 +36,6 @@ describe("segmented options", () => {
 		});
 		expect(html).toContain('title="Co-author provider"');
 		expect(html).toContain(">Claude</button>");
-		// the visible label is the accessible name; a text segment adds no redundant aria-label
 		expect(html).not.toContain("aria-label=");
 	});
 
@@ -58,9 +57,7 @@ describe("segmented options", () => {
 			{ value: "report", label: "Report" },
 			{ value: "text", label: "Text", disabled: true },
 		];
-		// An explicit-but-disabled request is refused.
 		expect(selectedValue(segs, "text")).toBe("report");
-		// A leading disabled segment isn't the default.
 		const leadingDisabled: Segment[] = [
 			{ value: "text", label: "Text", disabled: true },
 			{ value: "report", label: "Report" },
@@ -88,14 +85,11 @@ describe("segmented rich (slotted) segments", () => {
 			label: "Severity",
 			elementId: "seg-x",
 		});
-		// each option's body is the live slot, not baked text
 		expect(html).toContain('<slot name="segment-0"></slot>');
 		expect(html).toContain('<slot name="segment-1"></slot>');
 		expect(html).toContain('<slot name="segment-2"></slot>');
-		// the icon carries no text, so the radio owns the option's name and tooltip from `label`
 		expect(html).toContain('aria-label="Info" title="Info"');
 		expect(html).toContain('aria-label="Warnings" title="Warnings"');
-		// selection, roving tabindex, and the radiogroup machinery are unchanged
 		expect(html).toContain('data-value="warn"');
 		expect(html).toMatch(/data-value="warn"[^>]*aria-label="Warnings"/);
 		expect(html).toContain('role="radiogroup"');

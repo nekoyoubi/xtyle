@@ -22,8 +22,7 @@ const pascalNames = (dir, ext) =>
 
 const astro = new Map(pascalNames(astroDir, ".astro").map((p) => [kebab(p), p]));
 
-// The svelte barrel renames some files on export (e.g. Qr.svelte -> QR), so the
-// export name is the source of truth, not the filename. Parse it.
+// INFO: the svelte barrel renames some files on export (Qr.svelte -> QR), so the export name, not the filename, is the source of truth.
 const svelteBarrel = readFileSync(resolve(svelteDir, "index.ts"), "utf8");
 const svelte = new Map();
 for (const m of svelteBarrel.matchAll(
@@ -79,3 +78,24 @@ writeFileSync(
 );
 
 console.log(`gen-regression-registries: ${ids.length} components wired`);
+
+const manifestDir = resolve(repoRoot, "packages", "xtyle", "src", "manifest");
+const manifestIds = readdirSync(manifestDir)
+	.filter((f) => f.endsWith(".manifest.ts"))
+	.map((f) => f.slice(0, -".manifest.ts".length));
+const previewSource = readFileSync(
+	resolve(siteRoot, "src", "components", "reference", "CardPreview.astro"),
+	"utf8",
+);
+const previewed = new Set(
+	[...previewSource.matchAll(/id === "([a-z0-9-]+)"/g)].map((m) => m[1]),
+);
+const unpreviewed = manifestIds.filter((id) => !previewed.has(id)).sort();
+if (unpreviewed.length > 0) {
+	console.error(
+		`gen-regression-registries: ${unpreviewed.length} component(s) have no CardPreview branch: ${unpreviewed.join(", ")}\n` +
+			`Add an \`{id === "<id>" && …}\` branch to src/components/reference/CardPreview.astro.`,
+	);
+	process.exit(1);
+}
+console.log(`gen-regression-registries: ${manifestIds.length} card previews present`);

@@ -111,7 +111,6 @@ function buildNodes(nodes: TreeNode[], level: number, selectedValue: string | nu
 			const isStatic = locked && !isLink;
 			const staticData = isStatic ? ` data-static="true"` : "";
 			const rowClass = isStatic ? "xtyle-tree__row xtyle-tree__row--static" : "xtyle-tree__row";
-			// Supplementary only — `label` remains the accessible name, so this never announces.
 			const titleAttr = node.title ? ` title="${escapeAttr(node.title)}"` : "";
 			const rowOpen = isLink
 				? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1"${titleAttr} style="--tree-level: ${level}">`

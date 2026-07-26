@@ -252,6 +252,13 @@ export const imageManifest: ComponentManifest = {
 			options: ["frame", "button"],
 		},
 		{
+			name: "zoomIcon",
+			type: "string",
+			default: '"maximize"',
+			description: "The roster glyph on the `trigger=\"button\"` zoom control. Any name the icon roster can draw, including one a mod contributed through the `xtyle.icons` slot.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "caption",
 			type: "string",
 			description: "An optional caption, rendered as a `figcaption` below the frame.",

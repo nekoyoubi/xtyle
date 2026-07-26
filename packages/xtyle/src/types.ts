@@ -67,12 +67,19 @@ export interface Knobs {
 export type Constraints = TokenRegister;
 
 /**
- * The friendly seed shape: bg / fg / accent (plus arbitrary `overrides`) named as
- * anchors instead of raw token keys. The `derive` entry translates these into
- * `constraints` (`bg` → `--bg-0`, `fg` → `--fg-0`, `accent` → `--accent`) before
- * derivation, so `{ anchors: { accent } }` seeds the same channel a pinned
- * `{ constraints: { "--accent": … } }` does. An explicit `constraints` entry for the
- * same token wins over the anchor.
+ * @deprecated Pass `constraints` instead. This is a rename, not a second kind of input:
+ * `derive` rewrites `bg` → `--bg-0`, `fg` → `--fg-0`, `accent` → `--accent` and spreads
+ * `overrides` verbatim, so `{ anchors: { accent } }` and `{ constraints: { "--accent": … } }`
+ * derive identically. An explicit `constraints` entry for the same token wins.
+ *
+ * The name is the hazard: "anchor" reads as a soft seed the algorithm derives *around*,
+ * while a constraint reads as a hard pin. They are the same hard pin. Because both collapse
+ * into one channel, nothing downstream can tell an author's deliberate value from one that
+ * rode along from a default — a distinction consumers have had to recover by guessing from
+ * contrast. Prefer `constraints`, which says what it does.
+ *
+ * `PresetAnchors` is a different thing and keeps the word honestly: an *algorithm's* own
+ * starting colors, not a caller's input.
  */
 export interface AnchorSeed {
 	bg?: string;
@@ -84,7 +91,16 @@ export interface AnchorSeed {
 export interface DeriveOptions {
 	knobs?: Knobs;
 	constraints?: Constraints;
+	/** @deprecated An alias for three `constraints` keys; see {@link AnchorSeed}. Still accepted so
+	 * stored invocations keep deriving, but new callers should pass `constraints`. */
 	anchors?: AnchorSeed;
+	/**
+	 * Flip the theme between light and dark by swapping the paired `--bg-*`/`--fg-*` inputs before
+	 * deriving, so one anchor set yields both modes. It is an input transform, not a `scheme` override:
+	 * `scheme` re-lights a fixed anchor (a dark bg forced light lands on mid-gray), whereas `invert`
+	 * exchanges what is background and what is foreground, then derives normally on the swapped bg.
+	 */
+	invert?: boolean;
 }
 
 /**
@@ -239,7 +255,16 @@ export interface KnobSpec {
 
 export interface Algorithm {
 	id: string;
+	/** The xtyle version this algorithm first shipped in. Absent reads as the floor. */
+	since?: string;
 	produces: TokenName[];
+	/**
+	 * When a token arrived, keyed by token name, for the ones that did not arrive at the beginning.
+	 * Sparse: an absent token has been produced for as long as the record goes back. This is what
+	 * lets a consumer ask whether the version they are pinned to can express a given token, rather
+	 * than deriving a theme and discovering the gap in the output.
+	 */
+	producedSince?: Readonly<Record<string, string>>;
 	knobs: string[];
 	/**
 	 * The rendered domain of each knob this algorithm reads — kind, range, options — so a consumer's

@@ -21,8 +21,8 @@ const series = [
  */
 const moddedChart = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-chart-reskin",
 		version: "0.0.1",
 		title: "test-chart-reskin",
@@ -30,7 +30,7 @@ const moddedChart = {
 		capabilities: ["xtyle.component.chart"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.chart": [{ id: "chart", format: "text/html+jsml", source: "chart.html" }],
+			"component.chart": [{ id: "chart", format: "application/x-xtyle+html", source: "chart.html" }],
 		},
 	},
 	fragmentSources: {

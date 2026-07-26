@@ -27,6 +27,7 @@ import { FragmentHost } from "./fragment-host.js";
 import { escapeSelectorValue } from "./fragments/selector-escape.js";
 import { manifest, fragmentSources } from "./fragments/calendar/source.generated.js";
 import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
+import { iconBody } from "../icon-registry.js";
 
 let calendarSeq = 0;
 
@@ -97,6 +98,8 @@ export class XtyleCalendar extends XtyleElement {
 			"labelledby",
 			"prev-label",
 			"next-label",
+			"prev-icon",
+			"next-icon",
 			"week-label",
 			"disabled-dates",
 			"decorations",
@@ -297,8 +300,8 @@ export class XtyleCalendar extends XtyleElement {
 			(inMonth(toIso(this.today)) ? toIso(this.today) : null) ??
 			toIso(month);
 		const clamped = clampDate(parseIso(candidate) ?? month, this.minDate, this.maxDate);
-		// A clamp can push the cursor out of the displayed month (min lands in a later one); keep it
-		// on a visible square so the grid always has exactly one tab stop.
+		// INFO: a clamp can push the cursor out of the displayed month, so keep it on a visible square
+		// or the grid loses its single tab stop
 		return clamped.year === month.year && clamped.month === month.month ? toIso(clamped) : toIso(month);
 	}
 
@@ -324,6 +327,10 @@ export class XtyleCalendar extends XtyleElement {
 			hideNav: this.hideNav,
 			prevLabel: this.getAttribute("prev-label") ?? undefined,
 			nextLabel: this.getAttribute("next-label") ?? undefined,
+			prevIcon: this.getAttribute("prev-icon") ?? undefined,
+			nextIcon: this.getAttribute("next-icon") ?? undefined,
+			prevBody: iconBody(this.getAttribute("prev-icon") || "chevron-left") ?? null,
+			nextBody: iconBody(this.getAttribute("next-icon") || "chevron-right") ?? null,
 			weekLabel: this.getAttribute("week-label") ?? undefined,
 			readonly: this.readonly,
 			disabled: this.disabled,
@@ -430,7 +437,7 @@ export class XtyleCalendar extends XtyleElement {
 		this.focusState = iso;
 		this.hoverState = null;
 		this.value = value;
-		// An outside-month day is a real target: picking one steps the grid onto its month.
+		// INFO: an outside-month day is a real target; picking one steps the grid onto its month
 		if (iso.slice(0, 7) !== this.month) this.setMonth(iso.slice(0, 7));
 		else this.render();
 		if (value !== before) this.emitChange(next);

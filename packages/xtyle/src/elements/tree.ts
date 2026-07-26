@@ -294,8 +294,7 @@ export class XtyleTree extends XtyleElement {
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(treeHostCss);
-		// A rebuild replaces the focused `<li>`, so a keyboard user mid-navigation would lose focus
-		// to the body every time live data lands. Re-seat it on the replacement row.
+		// INFO: a rebuild replaces the focused <li>, dropping keyboard focus to body; re-seat it on the replacement row
 		const focusedKey = this.activeRow?.getAttribute("data-value") ?? null;
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);

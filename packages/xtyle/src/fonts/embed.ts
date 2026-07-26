@@ -76,8 +76,7 @@ function base64(bytes: Uint8Array): string {
 export function loadGoogleFont(family: string, opts: { text?: string } = {}): Promise<string> {
 	const canonical = googleFontFamily(family);
 	if (!canonical) return Promise.reject(new Error(`not a Google Fonts family: ${JSON.stringify(family)}`));
-	// A subsetted preview would render only the glyphs asked for, and the builder's glyph changes under the
-	// user's hands — so the preview always loads the whole face and lets the subset ride the export instead.
+	// INFO: preview loads the whole face (not a subset) because the builder's glyphs change live; the subset rides the export instead.
 	void opts;
 	const cached = linkCache.get(canonical);
 	if (cached) return cached;

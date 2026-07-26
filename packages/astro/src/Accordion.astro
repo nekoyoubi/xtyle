@@ -1,8 +1,9 @@
 ---
 import { type AccordionSection } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { authoredPairs } from "./internal/paired-slots.js";
 import { checkAuthoring } from "./internal/diagnose.js";
-import { SIZES, resolveVocab } from "@xtyle/core";
+import { SIZES, resolveVocab, iconBody } from "@xtyle/core";
 
 type Size = (typeof SIZES)[number];
 
@@ -11,6 +12,8 @@ interface Props {
 	multiple?: boolean;
 	size?: Size;
 	headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
+	/** The roster glyph drawn as the disclosure marker. */
+	chevronIcon?: string;
 	/** Render zero-JS: emit the declarative shadow but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -23,6 +26,7 @@ const {
 	multiple = false,
 	size: sizeInput,
 	headingLevel,
+	chevronIcon,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -31,8 +35,21 @@ const {
 await checkAuthoring("accordion", Astro.props);
 const size = resolveVocab(sizeInput, SIZES, "md", "accordion size");
 
-const sections = items ?? [];
 const uid = `xtyle-accordion-${Math.random().toString(36).slice(2, 9)}`;
+
+const authored = items ? [] : await authoredPairs(Astro.slots, "header", "panel");
+
+const sections: AccordionSection[] = items
+	? items.map((section, i) => ({ ...section, value: section.value ?? String(i) }))
+	: authored.map(({ lead }, i) => ({
+			header: "",
+			headerSlot: `header-${i}`,
+			panel: "",
+			panelSlot: `panel-${i}`,
+			open: lead.attrs.open !== undefined || lead.attrs["aria-expanded"] === "true",
+			disabled: lead.attrs.disabled !== undefined || lead.attrs["aria-disabled"] === "true",
+			value: lead.attrs["data-value"] ?? lead.attrs.value ?? String(i),
+		}));
 
 const openKeys: string[] = [];
 sections.forEach((section, i) => {
@@ -45,6 +62,7 @@ sections.forEach((section, i) => {
 const bindings = {
 	sections: sections.map((section, i) => ({
 		header: section.header,
+		headerSlot: section.headerSlot,
 		panel: section.panel,
 		panelSlot: section.panelSlot,
 		value: section.value ?? String(i),
@@ -54,38 +72,29 @@ const bindings = {
 	size,
 	headingLevel,
 	uid,
+	multiple,
+	chevronIcon: chevronIcon ?? "chevron-down",
+	chevronBody: iconBody(chevronIcon ?? "chevron-down") ?? null,
 };
-// Two authoring modes. items-mode renders the whole structure light from `bindings` and ships no
-// children. The advanced slotted mode pairs the consumer's children by order, and those must reach
-// the element still carrying their marker — hence `data-xtyle-header` / `data-xtyle-panel`, which
-// no framework claims.
-//
-// `slot` cannot be that marker. On a child of an Astro *component* it is a routing directive Astro
-// always consumes: with a matching `<slot name>` below the child renders there minus the attribute,
-// and with no match the child is dropped entirely. (A `slot` a component writes on its own root
-// element, as `Segment.astro` does, is ordinary HTML and survives — that is a different case, not a
-// bug to fix.) The named receivers below stay so a legacy `slot=`-marked child is passed through
-// rather than discarded.
-const useItems = sections.length > 0;
-const light = useItems ? await renderFragmentLight("accordion", bindings) : "";
+const light = sections.length > 0 ? await renderFragmentLight("accordion", bindings) : "";
+const composed = authored.reduce(
+	(html, pair, i) =>
+		html
+			.replace(`<slot name="header-${i}"></slot>`, () => pair.lead.html)
+			.replace(`<slot name="panel-${i}"></slot>`, () => pair.body?.html ?? ""),
+	light,
+);
 ---
 
-{useItems ? (
-	<xtyle-accordion
-		multiple={multiple || undefined}
-		size={size}
-		heading-level={headingLevel}
-		items={JSON.stringify(items)}
-		class={extra}
-		set:html={light}
-		{...rest}
-	/>
-) : (
-	<xtyle-accordion multiple={multiple || undefined} size={size} heading-level={headingLevel} class={extra} {...rest}>
-		<slot name="header" />
-		<slot name="panel" />
-		<slot />
-	</xtyle-accordion>
-)}
+<xtyle-accordion
+	multiple={multiple || undefined}
+	size={size}
+	heading-level={headingLevel}
+	chevron-icon={chevronIcon}
+	items={items ? JSON.stringify(items) : undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
 
 {!isStatic && <script>import "@xtyle/core/elements";</script>}

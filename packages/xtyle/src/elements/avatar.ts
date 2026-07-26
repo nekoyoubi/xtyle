@@ -11,7 +11,10 @@ export type { AvatarSize, AvatarShape };
 export class XtyleAvatar extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "avatar", {
 		applyIntent: () => {},
+		afterApply: () => this.wireImageFallback(),
 	});
+
+	private wiredImg: HTMLImageElement | null = null;
 
 	protected override get styleMode(): StyleMode {
 		return "auto";
@@ -127,11 +130,31 @@ export class XtyleAvatar extends XtyleElement {
 	/** A signature of the state ops can't express incrementally — the `<img>` source
 	 * (`src`), the status-dot (`status`), and the initials (`user-name`). The `src` value (not just
 	 * its presence) is folded in so a URL change forces a full rebuild: this both updates the
-	 * rendered image and resurrects an `<img>` that removed itself via `onerror`. `user-name` rides
+	 * rendered image and resurrects an `<img>` that was removed after a failed load. `user-name` rides
 	 * along because the initials are an element the mount emits, not an attribute an update op can
 	 * reach, so a renamed avatar has to rebuild to redraw them. */
 	private shapeSignature(): string {
 		return `${this.src ?? ""}|${this.status != null}|${this.userName ?? ""}`;
+	}
+
+	/**
+	 * Drop the `<img>` when its source fails to load, uncovering the initials/icon fallback
+	 * underneath. The image is positioned over that fallback, so a 404 would otherwise leave a
+	 * broken-image box hiding it. This is wired here rather than as an `onerror` attribute on the
+	 * fragment's markup because the sandbox strips every `on*` attribute before the markup reaches
+	 * the DOM, which left the fallback permanently covered inside a fill.
+	 */
+	private wireImageFallback(): void {
+		const img = this.root.querySelector<HTMLImageElement>(".xtyle-avatar__image");
+		if (!img || this.wiredImg === img) return;
+		this.wiredImg = img;
+		// INFO: an image that already failed before upgrade will never fire `error` again; `complete`
+		// with a zero `naturalWidth` is the only way to detect it.
+		if (img.complete && img.naturalWidth === 0) {
+			img.remove();
+			return;
+		}
+		img.addEventListener("error", () => img.remove(), { once: true });
 	}
 
 	private warnIfUnnamed(): void {

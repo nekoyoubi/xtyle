@@ -59,9 +59,8 @@ hooks.fragment.mount("timeline", (bindings, ops) => {
 	ops.replaceChildren("[data-events]", events.map(eventHtml).join(""));
 });
 
-// A non-destructive patch: it repaints the item classes only, never the content regions, so a
-// re-render can't discard the author's event content. A changed event count is a structural change,
-// so the element remounts instead of patching.
+// INFO: patch repaints item classes only, never content regions, so a re-render can't discard the
+// author's event content; a changed event count is structural and remounts instead of patching
 hooks.fragment.update("timeline", (bindings, ops) => {
 	for (const event of bindings.events ?? []) {
 		ops.setAttr(`[data-event="${event.index}"]`, "class", eventClass(event));

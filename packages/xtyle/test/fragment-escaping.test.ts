@@ -18,8 +18,7 @@ const modIds = readdirSync(fragments, { withFileTypes: true })
 		}
 	});
 
-// Normalized so the scan is a function of the source rather than of the checkout's line endings — a
-// CRLF working copy would otherwise slip past the declaration matching below and quietly under-report.
+// INFO: normalize CRLF to \n; a CRLF checkout otherwise slips past the declaration matching below and under-reports.
 const read = (id: string): string => readFileSync(resolve(fragments, id, "mod.ts"), "utf8").replace(/\r\n/g, "\n");
 
 /**
@@ -122,11 +121,6 @@ function collectionStringMembers(src: string): Set<string> {
 }
 
 describe("fragment escaping", () => {
-	// Mods build markup as template-literal strings, which escape nothing for free. Six different local
-	// escapers used to exist across these files, under six names and four implementations, which meant
-	// any check like this one had to enumerate every variant to recognise a safe call — and silently
-	// stopped covering a mod the moment someone invented a seventh name. One shared module removes that
-	// failure mode: the set of escapers is closed, so "is this call safe" is decidable.
 	it("no mod defines its own escaper", () => {
 		const offenders = modIds.filter((id) =>
 			/function\s+(esc|escAttr|escape|escapeAttr|escapeHtml|escapeCaption)\s*\(/.test(read(id)),
@@ -143,16 +137,7 @@ describe("fragment escaping", () => {
 		expect(offenders).toEqual([]);
 	});
 
-	// The regression guard proper: a `string` binding interpolated straight into an attribute value or a
-	// text node, with no escaper around it, is an injection hole — `alert` shipped one for its
-	// `dismiss-label`. Interpolations in neither position ("other") are composing already-built markup
-	// fragments, which must NOT be escaped or the markup would be double-encoded.
-	//
-	// Tracking the binding one assignment deep is what makes this catch anything: mods overwhelmingly
-	// read the binding into a local first (`const label = b.dismissLabel ?? "Dismiss"`) and interpolate
-	// the local, so a check that only matched `b.<field>` at the interpolation would pass over the very
-	// hole it was written for. A local that builds markup is excluded — interpolating it is composition,
-	// not output, and the values inside it are checked where they are written.
+	// INFO: "other"-position interpolations compose already-built markup; escaping them would double-encode.
 	it("no string binding reaches attribute or text position unescaped", () => {
 		const escaped = /\b(escapeAttr|escapeHtml|escapeSelectorValue)\s*\(/;
 		const holes: string[] = [];
@@ -162,10 +147,6 @@ describe("fragment escaping", () => {
 			const itemMembers = collectionStringMembers(src);
 			if (!fields.size && !itemMembers.size) continue;
 
-			// A local function that returns markup owns its own escaping, exactly as an imported helper
-			// does — `navButton(…)` renders a whole `<button>` and escapes the label inside itself. A
-			// local assigned from one holds composed markup, so interpolating it is composition; escaping
-			// it would encode the element into visible text.
 			const markupHelpers = new Set(
 				[...src.matchAll(/function\s+(\w+)\s*\([^)]*\)[^{]*\{([\s\S]*?)\n\}/g)]
 					.filter(([, , body]) => /return\s*[`"']\s*<[a-z/]/.test(body) || /`\s*<[a-z]/.test(body))
@@ -182,13 +163,6 @@ describe("fragment escaping", () => {
 			for (const { expr, context } of markupInterpolations(src)) {
 				if (context === "other" || escaped.test(expr)) continue;
 
-				// Three shapes where an author value is *consumed* rather than emitted, so what reaches the
-				// output is never the author's string and escaping it would corrupt the real value:
-				//   - indexing a module-level table — `TREND_ICON[trend]` emits the mod's own markup;
-				//   - a lookup argument — `selected.has(item.value)` emits a boolean;
-				//   - an imported helper — `renderIcon(tab.icon)` emits markup the helper owns, and is
-				//     responsible for escaping at its own boundary.
-				// Strip all three, then ask whether anything author-controlled is still being written.
 				const imported = [...src.matchAll(/import \{([^}]+)\} from "[^"]+";/g)]
 					.flatMap((m) => m[1].split(",").map((s) => s.trim().split(/\s+as\s+/).pop()!))
 					.filter((n) => !/^escape/.test(n));

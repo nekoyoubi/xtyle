@@ -53,7 +53,7 @@ describe("apply() and emitCss agree on the footprint", () => {
 	it("apply() honors the same opt-out", () => {
 		const target = document.createElement("div");
 		apply(register, { target, scrollbars: false });
-		// never-set reads back as `undefined` in happy-dom and `""` in a browser; both mean untouched
+		// INFO: never-set reads back as `undefined` in happy-dom and `""` in a browser; both mean untouched
 		expect(target.style.scrollbarColor).toBeFalsy();
 		expect(target.style.colorScheme).toBe("dark");
 	});

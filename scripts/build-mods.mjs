@@ -21,11 +21,6 @@ for (const mod of mods) {
 	console.log(`bundled ${mod.id} mod -> algorithms/${mod.dir}/src/mod.js`);
 }
 
-// The static manifest block: what each algorithm produces, the knobs it reads and their domains, its
-// invariant count and pass names, stamped into the packaged mod manifest. Read off the *built* mod, so
-// the block is the algorithm's own account of itself rather than a second one derived from the engine.
-// A discovery index reads it without booting a sandbox per algorithm; the host cross-checks it against
-// the code on the one load that already happens, so a stale block cannot pass itself off as current.
 for (const mod of mods) {
 	const block = readAlgorithmManifest(readFileSync(mod.scriptPath, "utf8"), mod.id);
 	if (writeStaticManifest(mod, block)) {
@@ -35,9 +30,6 @@ for (const mod of mods) {
 
 const core = join(root, "packages", "xtyle");
 
-// The authoring prelude: the mod-side authoring helpers bundled into one IIFE that exposes them
-// on the sandbox global scope, embedded as a string an author's import-free Tier-2 source is
-// prepended to before `loadAlgorithm` runs it — so in-browser authoring needs no bundler.
 const prelude = await build({
 	entryPoints: [join(core, "src/host/authoring-prelude-entry.ts")],
 	bundle: true,
@@ -68,10 +60,6 @@ await build({
 });
 console.log("bundled batteries -> packages/xtyle/dist/batteries.js");
 
-// The browser-delivery bundle: each mod's manifest + its built `mod.js`, embedded as data so a
-// filesystem-free consumer (the browser) can load it through the neutral host without `node:fs`. The
-// disk-reading resolver stays the Node path; this is its client-side twin over the same `loadAlgorithm`,
-// discovered off the same scan, so the two can never disagree about which algorithms exist.
 const bundles = {};
 for (const mod of mods) {
 	bundles[mod.id] = {

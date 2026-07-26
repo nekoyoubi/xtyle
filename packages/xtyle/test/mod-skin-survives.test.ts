@@ -28,7 +28,7 @@ import { loadFill } from "../src/elements/fragment-host.js";
  *    wiped it on the first state change — proven against `badge` and `stack` before the fills were rekeyed
  *    onto their own classes.
  */
-// happy-dom ships no ElementInternals, and the form-associated components reach for it on construction
+// INFO: happy-dom ships no ElementInternals; form-associated components reach for it on construction
 beforeAll(() => {
 	const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
 	if (!proto.attachInternals) {
@@ -51,15 +51,15 @@ function fillsUnderTest(): Skinnable[] {
 function skinMod(id: string, slot: string) {
 	return {
 		manifest: {
-			$schema: "https://xript.dev/schema/mod/v0.7.json",
-			xript: "0.7",
+			$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+			xript: "0.8",
 			name: `test-skin-${id}`,
 			version: "0.0.1",
 			title: `test-skin-${id}`,
 			description: `A mod that renames ${id}'s root, and nothing else.`,
 			capabilities: [`xtyle.${slot}`],
 			entry: { script: "mod.js", format: "script" },
-			fills: { [slot]: [{ id, format: "text/html+jsml", source: "skin.html" }] },
+			fills: { [slot]: [{ id, format: "application/x-xtyle+html", source: "skin.html" }] },
 		},
 		fragmentSources: {
 			"skin.html": "<div data-root></div>\n",
@@ -83,15 +83,15 @@ function skinMod(id: string, slot: string) {
 function staticSkinMod(id: string, slot: string, marker: string) {
 	return {
 		manifest: {
-			$schema: "https://xript.dev/schema/mod/v0.7.json",
-			xript: "0.7",
+			$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+			xript: "0.8",
 			name: `test-static-skin-${id}`,
 			version: "0.0.1",
 			title: `test-static-skin-${id}`,
 			description: `A mount-only reskin of ${id} that keeps its part.`,
 			capabilities: [`xtyle.${slot}`],
 			entry: { script: "mod.js", format: "script" },
-			fills: { [slot]: [{ id, format: "text/html+jsml", source: "skin.html" }] },
+			fills: { [slot]: [{ id, format: "application/x-xtyle+html", source: "skin.html" }] },
 		},
 		fragmentSources: {
 			"skin.html": `<div data-root ${marker}></div>\n`,
@@ -128,8 +128,7 @@ describe("a mod's own class survives the built-in fill's repaint", () => {
 			await loadFill(mod.manifest, mod.fragmentSources);
 
 			const el = document.createElement(tag);
-			// content-driven components (carousel, tabs, tree…) decline to paint an empty shell, so every
-			// element under test gets something to render
+			// INFO: content-driven components (carousel, tabs, tree) decline to paint an empty shell, so each needs content
 			el.innerHTML = "<div>one</div><div>two</div>";
 			document.body.appendChild(el);
 			const root = (el.shadowRoot ?? el) as ShadowRoot | HTMLElement;

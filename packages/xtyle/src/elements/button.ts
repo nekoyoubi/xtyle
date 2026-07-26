@@ -103,8 +103,8 @@ export class XtyleButton extends XtyleElement {
 	}
 
 	attributeChangedCallback(name?: string): void {
-		// `aria-label`/`aria-labelledby` are prohibited on the roleless host and never reach the
-		// inner control, so capture them off the host and forward them onto the `<button>`/`<a>`.
+		// INFO: `aria-label`/`aria-labelledby` are invalid on the roleless host and never reach the
+		// inner control, so capture them off the host and forward them onto the `<button>`/`<a>`
 		if (name === "aria-label" || name === "aria-labelledby") {
 			const value = this.getAttribute(name);
 			if (value !== null) {
@@ -144,10 +144,8 @@ export class XtyleButton extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		// The name may still be on the host as an unprocessed attribute: on upgrade the attributes
-		// fire in DOM order, so a render (and this check) can run before `aria-label` (spread last by
-		// the bindings) has been captured onto `ariaLabelValue` and stripped. Honor the live attribute
-		// too, or a correctly-labelled icon-only button warns spuriously mid-upgrade.
+		// INFO: on upgrade, attributes fire in DOM order, so this can run before `aria-label` is
+		// captured onto `ariaLabelValue`; honor the live attribute too or it warns spuriously mid-upgrade
 		const named =
 			this.ariaLabelValue ||
 			this.ariaLabelledbyValue ||

@@ -9,9 +9,8 @@ Distinct from the emitters: an **emitter** themes a highlighter you already run
 (your Prism, your Monaco/CodeMirror); **`<xtyle-code>`** is xtyle's own block, with
 the tokenizer included. They coexist.
 
-Build this **after** the de-orgy rework lands — it lives at `@xtyle/core/elements`
-(the post-fold home) and leans on the `--code-*` family + the Prism emitter that
-already ship.
+The component ships and lives at `@xtyle/core/elements`, leaning on the `--code-*`
+family + the Prism emitter that already ship.
 
 ## Decisions
 
@@ -80,6 +79,9 @@ makes §14 a consumed contract, not just produced tokens.
 ## Component API
 - `lang` — language id (aliases resolved). **decided**
 - code — slotted text content (or a `code` prop). **decided**
+- `caption` — optional filename/label header strip above the block. **decided** (rounds
+  the block's top corners into it, reuses chrome tokens so it adds none, and renders on
+  the zero-JS Astro path)
 - `preload` — eager-load this block's grammar. **decided** (name `preload`, not `eager`)
 - `line-numbers` — counter gutter, sticky on horizontal scroll, tag-aware so a token
   spanning lines still numbers cleanly. **decided** (borrows `--code-comment` /
@@ -99,9 +101,9 @@ makes §14 a consumed contract, not just produced tokens.
   it by capability, and a lint asserts every declared marker ships in the scaffold — so
   the next host-wired control is a manifest row, not a new hardcoded element branch.
 
-## Still open
-- `warm`/`registerLanguage` as statics on `XtyleCode` — leaning yes; the alternative
-  is a `code` namespace object (`import { code } from "@xtyle/core/elements"`).
-- Ship in `@xtyle/core/elements` (leaning yes; the class is tiny, only Prism is
-  deferred) vs. its own opt-in subpath.
-- Whether Prism's maintenance status warrants the hljs fallback up front.
+## Settled
+- `warm`/`registerLanguage` ship as **statics on `XtyleCode`** (not a `code` namespace
+  object).
+- The class ships in `@xtyle/core/elements` (the class is tiny, only Prism is deferred),
+  not a separate opt-in subpath.
+- Prism remains the tokenizer; no hljs fallback was added.

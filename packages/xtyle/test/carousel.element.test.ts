@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-// side effect: defines the <xtyle-carousel> custom element on the happy-dom registry
 import "../src/elements/carousel.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
@@ -28,8 +27,8 @@ beforeAll(async () => {
 	proto.scrollTo = function scrollTo(this: Element, opts: ScrollCall): void {
 		scrolls.push(opts);
 	};
-	// The DOM base class happy-dom's elements actually inherit from is not the `EventTarget` it exposes
-	// as a global, so the shim has to patch the prototype that really owns the method.
+	// INFO: happy-dom's elements don't inherit from the global `EventTarget`, so patch the prototype
+	// that really owns `addEventListener`.
 	let owner: object | null = HTMLElement.prototype;
 	while (owner && !Object.prototype.hasOwnProperty.call(owner, "addEventListener")) {
 		owner = Object.getPrototypeOf(owner);
@@ -197,7 +196,6 @@ describe("<xtyle-carousel> slide relocation", () => {
 	it("holds the same slide nodes across a remount", () => {
 		const el = make({ loop: "" }, 3);
 		const before = slides(el);
-		// a shape change (the play toggle appears) rebuilds the bar and re-places the slots
 		el.setAttribute("autoplay", "");
 		const after = slides(el);
 		expect(after).toHaveLength(3);
@@ -483,8 +481,8 @@ describe("<xtyle-carousel> nested in a carousel", () => {
 	});
 
 	it("still finds its own bar when the inner carousel reflects the same marker on its host", () => {
-		// `controls="overlay"` puts `data-controls` on the element itself, which is exactly the marker
-		// the fill's control bar carries — so the inner element sits in front of the outer's own bar.
+		// INFO: `controls="overlay"` reflects `data-controls` onto the host, the same marker the fill's
+		// bar carries, so the inner host precedes the outer's own bar in document order.
 		const { outer, inner } = nest({ controls: "overlay" });
 		expect(inner.hasAttribute("data-controls")).toBe(true);
 		expect(bar(outer).classList.contains("xtyle-carousel__controls")).toBe(true);

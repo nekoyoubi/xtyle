@@ -239,16 +239,11 @@ describe("registry token contract", () => {
 describe("the display name", () => {
 	const manifests = listComponents();
 
-	// `name` titles the page, the breadcrumb, the nav and the card — it is read, not typed. Half the
-	// multi-word components used to declare it as the *identifier* instead (`SplitButton` beside
-	// `Date Picker`), which is a coin-flip a reader can see. The symbol a consumer imports is derived from
-	// the id, so the display name is free to read as words.
 	it("reads as words: a multi-word component never declares its name as an identifier", () => {
 		const jammed = manifests.filter((m) => m.id.includes("-") && !m.name.includes(" ")).map((m) => `${m.id} → ${m.name}`);
 		expect(jammed, `these declare an identifier where a display name belongs: ${JSON.stringify(jammed)}`).toEqual([]);
 	});
 
-	// a display name may say *more* than the id ("qr" → "QR Code"), never something else
 	it("says what the id says", () => {
 		for (const m of manifests) {
 			const name = m.name.replace(/[\s-]/g, "").toLowerCase();
@@ -261,8 +256,6 @@ describe("the display name", () => {
 describe("the `since` provenance", () => {
 	const manifests = listComponents();
 
-	// an absent `since` reads as "not new" everywhere downstream, so a component that omits it lands with no
-	// badge, no announcement, and nothing to notice — the failure is silence, which is why it is a test
 	it("every registered component declares the version it first shipped in", () => {
 		const missing = manifests.filter((m) => !m.since || m.since.trim().length === 0).map((m) => m.id);
 		expect(missing, `components missing since: ${JSON.stringify(missing)}`).toEqual([]);
@@ -374,16 +367,13 @@ describe("tooltip escapes its container", () => {
 		const css = await loadCssModule("tooltip");
 		const content = css.match(/\.xtyle-tooltip__content\s*\{[^}]*\}/)?.[0] ?? "";
 		expect(content).toContain("position: fixed");
-		// a z-index here would be a claim it can win from inside a clipping ancestor, which it can't
 		expect(content).not.toContain("z-index");
 		expect(content).not.toContain("visibility: hidden");
 	});
 
 	it("leans on no ancestor for placement, since its containing block is the viewport", async () => {
 		const css = await loadCssModule("tooltip");
-		// the old model anchored the tip off the root with `bottom: 100%` / `left: 50%` per placement
 		expect(css).not.toMatch(/\.xtyle-tooltip--(top|bottom|left|right)\s+\.xtyle-tooltip__content\s*\{/);
-		// the arrow still hangs off the tip, which is its own containing block
 		expect(css).toMatch(/\.xtyle-tooltip--top\s+\.xtyle-tooltip__arrow\s*\{/);
 	});
 
@@ -406,9 +396,7 @@ describe("card action button semantics", () => {
 
 	it("rings an action card on keyboard focus only, and never on a pointer click", async () => {
 		const css = await loadCssModule("card");
-		// the action card (it is the button) keys its ring on :focus-visible, so a mouse click never paints it
 		expect(css).toContain(".xtyle-card--action:focus-visible");
-		// the interactive-only ring (focus lands on an inner control) is scoped away from action cards
 		expect(css).toContain(".xtyle-card--interactive:not(.xtyle-card--action):focus-within");
 		expect(css).not.toMatch(/\.xtyle-card--interactive:focus-within\s*\{/);
 	});
@@ -547,8 +535,6 @@ describe("svelte wrappers do not clobber a rest-passed aria-label", () => {
 	for (const [path, source] of Object.entries(svelteWrappers)) {
 		const name = path.split("/").pop();
 		it(`${name} never sets a bare aria-label={ariaLabel} after a {...rest} spread`, () => {
-			// a bare explicit aria-label={ariaLabel} overwrites the rest-passed kebab attribute with undefined;
-			// the merge form (aria-label={ariaLabel ?? rest["aria-label"]}) preserves it
 			if (source.includes("{...rest}") && source.includes("aria-label={ariaLabel")) {
 				expect(source).not.toMatch(/aria-label=\{ariaLabel\}/);
 			}
@@ -563,10 +549,6 @@ describe("button unnamed-check honors the live host attribute", () => {
 	>;
 	const buttonSource = Object.values(src)[0] ?? "";
 
-	// The button strips `aria-label` off the host into `ariaLabelValue`; on upgrade the attributes fire in
-	// DOM order, so the render-time unnamed-check can run before that capture. Reading only the cached value
-	// gave a correctly-labelled icon-only button a spurious "no accessible name" warning. Guard that the
-	// check still reads the live host attribute so the fix can't silently regress.
 	it("reads the live aria-label attribute in the unnamed check", () => {
 		const check = buttonSource.slice(buttonSource.indexOf("warnIfUnnamed"));
 		const body = check.slice(0, check.indexOf("console.warn"));

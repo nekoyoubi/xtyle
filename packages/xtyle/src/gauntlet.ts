@@ -85,9 +85,6 @@ function randomSeeds(rand: () => number): Seeds {
 const SCHEME_DRAWS: Array<Scheme | undefined> = [undefined, "dark", "light"];
 const SHIFT_STEP_DRAWS = [30, 45, 90, 120];
 const ACCENT_SPLIT_DRAWS = [20, 30, 45, 60];
-// Every accent strategy an algorithm can be driven into, plus `undefined` for its own taste. The knob
-// reshapes the accent family itself, so without this an algorithm is only ever proven in the posture
-// it happens to ship with — and `duo`'s two-anchor derivation would never meet a hostile seed.
 const ACCENT_STRATEGY_DRAWS: Array<AccentStrategy | undefined> = [
 	undefined,
 	"fan",
@@ -106,9 +103,6 @@ const DENSITY_DRAWS: Array<"compact" | "normal" | "comfortable" | undefined> = [
 	"normal",
 	"comfortable",
 ];
-// Hour-of-day coverage for the nxi-nite day/night algorithm. Neutral on the others (a
-// no-op knob a settle-only pipeline ignores) — a coverage range, not an opinion. Without
-// it the gauntlet never varies hour and "AA at every hour" goes untested.
 const HOUR_DRAWS: Array<number | undefined> = [undefined, 0, 6, 12, 18, 23, 24];
 
 const POLE_WHITE = oklch(0.98, 0, 0);
@@ -143,13 +137,11 @@ function randomKnobs(rand: () => number, base: Knobs, run: number): Knobs {
 	if (base.accentShiftStep === undefined) {
 		knobs.accentShiftStep = pick(rand, SHIFT_STEP_DRAWS);
 	}
-	// Walked deterministically by run index — fuzzing the split this way covers its values without
-	// consuming the shared RNG, so adding it leaves every other draw's sequence byte-identical.
+	// INFO: indexed by run, not rand(), so the other draws' RNG sequence stays byte-identical
 	if (base.accentSplit === undefined) {
 		knobs.accentSplit = ACCENT_SPLIT_DRAWS[run % ACCENT_SPLIT_DRAWS.length] as number;
 	}
-	// Same deterministic walk, and coprime in length with the split's, so runs cross every
-	// strategy against every split rather than pairing them off in lockstep.
+	// INFO: length is coprime with the split's, so runs cross every strategy against every split
 	if (base.accentStrategy === undefined) {
 		const strategy = ACCENT_STRATEGY_DRAWS[run % ACCENT_STRATEGY_DRAWS.length];
 		if (strategy !== undefined) knobs.accentStrategy = strategy;
@@ -198,20 +190,13 @@ export function gauntlet(
 				? (EXTREMES[run] as Seeds)
 				: randomSeeds(rand);
 		const knobs = randomKnobs(rand, baseKnobs, run);
-		// The seeds and any extra pins all enter through the one token channel; an extra draw can
-		// override a seed (e.g. re-pinning `--bg-0`), which is exactly the layering the engine allows.
 		const constraints: TokenRegister = seedsToConstraints(seeds);
 		if (run % 5 === 0) {
 			constraints[pick(rand, CONSTRAINT_TARGETS)] = headroomColor(rand);
 		} else if (run % 5 === 2) {
 			constraints["--bg-0"] = midLightnessColor(rand);
 		}
-		// `duo` is the one strategy whose headline input is a *second* pinned brand, and without this
-		// it would only ever be fuzzed in its degenerate fallback — no second brand, `--accent-2`
-		// falling out of the accent by the fan split, which is very nearly just a `fan`. Pin a real
-		// second brand on most duo runs so the two-hostile-brands case (the reason the strategy
-		// exists) actually meets the invariants: same-hue pairs, wildly-split lightness pairs, and
-		// the pairs that force the shade placement to flip away from a pole it has no room at.
+		// INFO: duo degenerates to nearly a fan without a real second brand, so pin `--accent-2` on most duo runs
 		if (knobs.accentStrategy === "duo" && run % 3 !== 0) {
 			constraints["--accent-2"] = run % 3 === 1 ? headroomColor(rand) : midLightnessColor(rand);
 		}

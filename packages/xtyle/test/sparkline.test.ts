@@ -56,7 +56,7 @@ describe("sparkline", () => {
 		});
 		expect(html).toContain('class="xtyle-sparkline__track"');
 		const blocks = html.match(/class="xtyle-sparkline__block"/g) ?? [];
-		expect(blocks).toHaveLength(3); // three on-samples, the two off-samples leave gaps
+		expect(blocks).toHaveLength(3);
 		expect(html).not.toContain("xtyle-sparkline__end");
 	});
 
@@ -84,7 +84,7 @@ describe("sparkline", () => {
 			.trim()
 			.split(/\s+/)
 			.map((p) => Number(p.split(",")[0]));
-		// PAD = 3, innerW = 100 - 6 = 94, so x = 3 + nx * 94
+		// INFO: PAD = 3, innerW = 100 - 6 = 94, so x = 3 + nx * 94
 		expect(xs[0]).toBeCloseTo(3, 1);
 		expect(xs[1]).toBeCloseTo(3 + 0.25 * 94, 1);
 		expect(xs[2]).toBeCloseTo(97, 1);
@@ -101,7 +101,7 @@ describe("sparkline", () => {
 		const count = (h: string): number =>
 			((h.match(/points="([^"]*)"/) ?? [])[1] ?? "").trim().split(/\s+/).length;
 		expect(count(straight)).toBe(3);
-		expect(count(stepped)).toBe(5); // 2n - 1: a hold segment between each pair
+		expect(count(stepped)).toBe(5); // INFO: 2n - 1 points, a hold segment between each pair
 	});
 });
 
@@ -112,14 +112,14 @@ describe("windowedPlot", () => {
 			[
 				{ at: now, value: 3 },
 				{ at: now - 50_000, value: 2 },
-				{ at: now - 200_000, value: 9 }, // older than the 100s window, dropped
+				{ at: now - 200_000, value: 9 },
 			],
 			{ window: 100_000, now },
 		);
 		expect(plot).toHaveLength(2);
 		expect(plot[0]?.x).toBeCloseTo(0.5, 5);
 		expect(plot[1]?.x).toBeCloseTo(1, 5);
-		expect(plot.map((p) => p.value)).toEqual([2, 3]); // sorted by time, not input order
+		expect(plot.map((p) => p.value)).toEqual([2, 3]);
 	});
 
 	it("honors an explicit domain over the sliding window", () => {
@@ -167,7 +167,7 @@ describe("resolveSparklineBounds", () => {
 
 	it("caps a duration series at a rolling power of two above the peak", () => {
 		expect(resolveSparklineBounds([120, 90, 760, 150], { bounds: "duration" })).toEqual({ min: 0, max: 1024 });
-		// a low, flat series still gets a sane floor of 1
+		// INFO: a low, flat series still gets a sane floor of 1
 		expect(resolveSparklineBounds([0.2, 0.3], { bounds: "duration" })).toEqual({ min: 0, max: 1 });
 	});
 

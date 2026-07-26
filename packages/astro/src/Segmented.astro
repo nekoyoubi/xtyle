@@ -45,10 +45,6 @@ const elementId = `xtyle-segmented-${Math.random().toString(36).slice(2, 8)}`;
 const segments = normalizeSegments(options);
 const optionsAttr = typeof options === "string" ? options : options ? JSON.stringify(options) : undefined;
 
-// Two authoring modes, mirroring Tabs. The `options` bar renders its whole chrome light from `bindings`
-// and ships no children (the zero-JS SSR path). The rich-content mode pairs `<Segment>` children by
-// order — live framework markup that can't be snapshotted — so it passes them through untouched and the
-// element projects them on connect (shadow `<slot>`, client-hydrated).
 const useSlotted = Astro.slots.has("default");
 
 const bindings = {

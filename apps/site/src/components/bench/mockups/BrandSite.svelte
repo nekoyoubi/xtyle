@@ -35,10 +35,8 @@
 
 	const nav = ["Product", "Pricing", "Docs", "Changelog"] as const;
 
-	// The accent family is the brand axis here, not a semantic one: `accent` is the primary voice and
-	// `accent-2` the secondary. Under `duo` that reads as two brands; under `shade` it collapses to one
-	// hue in two depths — so every place a second accent appears it also carries a label, an icon, a
-	// ribbon, or a different variant, and nothing is told apart by hue alone.
+	// INFO: under the `shade` accent strategy the accents collapse to one hue in two depths, so second
+	// accents are always paired with a label/icon/ribbon/variant, never told apart by hue alone
 	const features = [
 		{
 			icon: "palette",

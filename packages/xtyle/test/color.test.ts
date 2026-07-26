@@ -40,7 +40,7 @@ describe("contrast — CSS hex contract", () => {
 	});
 
 	it("misparses an alpha-first ARGB hex (the documented footgun)", () => {
-		// #ff112233 read as CSS #RRGGBBAA is a reddish rgb(255,17,34), not the intended #112233
+		// INFO: #ff112233 read as CSS #RRGGBBAA is a reddish rgb(255,17,34), not the intended #112233
 		expect(ratio("#ff112233")).not.toBe(16.15);
 	});
 

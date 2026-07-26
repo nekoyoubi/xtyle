@@ -12,8 +12,7 @@ export class XtyleAppShell extends XtyleElement {
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "app-shell", {
 		applyIntent: () => {},
-		// Handles are built by `mount` / reshape, so they may not exist when `render()` runs; wire them
-		// after every apply. A fresh handle wires; an already-wired one no-ops.
+		// INFO: handles are built by `mount`/reshape and may not exist when `render()` runs, so wire them after every apply
 		afterApply: () => this.wireHandles(),
 	});
 
@@ -78,7 +77,6 @@ export class XtyleAppShell extends XtyleElement {
 		return this.clampSide(side, Number.isFinite(parsed) ? parsed : side === "left" ? 240 : 320);
 	}
 
-	// Live rail sizes, lazily seeded from the attribute; the drag / keys own them after that.
 	private current: Record<Side, number | null> = { left: null, right: null };
 
 	private sizePx(side: Side): number {
@@ -102,7 +100,6 @@ export class XtyleAppShell extends XtyleElement {
 	}
 
 	attributeChangedCallback(name: string): void {
-		// An external size / bound / resizable change re-seeds the live value on the next render.
 		if (name.startsWith("left-")) this.current.left = null;
 		if (name.startsWith("right-")) this.current.right = null;
 		if (this.root.firstChild) this.render();
@@ -157,7 +154,6 @@ export class XtyleAppShell extends XtyleElement {
 		handle.setAttribute("data-active", "");
 		const startX = event.clientX;
 		const startSize = this.sizePx(side);
-		// The right rail grows as the handle moves left; the left rail grows as it moves right.
 		const sign = side === "right" ? -1 : 1;
 		(event.target as Element).setPointerCapture?.(event.pointerId);
 		const move = (e: PointerEvent): void => this.setSize(side, startSize + sign * (e.clientX - startX), "resize");

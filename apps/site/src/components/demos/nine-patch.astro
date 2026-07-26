@@ -1,0 +1,210 @@
+---
+import NinePatch from "@xtyle/astro/NinePatch.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import { TORN_PANEL, PLAQUE_PANEL, SCALLOP_PANEL, CREST, BUNTING, REGION_PIECES, REGION_TINTS } from "../../data/nine-patch-art.ts";
+
+const REPEATS = [
+	{ mode: "stretch", note: "two scallops pulled the length of the run" },
+	{ mode: "repeat", note: "scallops at their drawn size, cut where they run out" },
+	{ mode: "round", note: "scaled a hair so a whole number fits" },
+	{ mode: "space", note: "whole scallops, the slack spread between them" },
+] as const;
+
+const TOKENS = ["--accent", "--accent-2", "--success", "--danger"];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">A shape no border can describe</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				One 96×96 drawing: a plaque with a riveted boss at each corner and a hole punched down every
+				edge. The bosses bulge out past the edge, the rivets are holes you see straight through, and
+				the corners are cut on the diagonal. No combination of <code>border</code> and
+				<code>border-radius</code> gets there. Scale the whole drawing to fill a wider box and the
+				rivets go oval; cut it into nine and the corners keep the size they were drawn at, so only the
+				straight runs between them stretch.
+			</Text>
+			<Cluster gap={5} align="end">
+				<Stack gap={2} align="center">
+					<NinePatch src={PLAQUE_PANEL} slice="0" fill tint="var(--fg-2)" style="width: 96px; height: 96px;" />
+					<Text size="xs" tone="subtle">the drawing, at 96×96</Text>
+				</Stack>
+				<Stack gap={2} align="center" style="flex: 1 1 13rem;">
+					<NinePatch src={PLAQUE_PANEL} slice="0" fill tint="var(--danger)" style="width: 100%; height: 96px;" />
+					<Text size="xs" tone="subtle">scaled to fit — the rivets go oval</Text>
+				</Stack>
+				<Stack gap={2} align="center" style="flex: 1 1 13rem;">
+					<NinePatch src={PLAQUE_PANEL} slice="32" repeat="repeat" fill tint="var(--accent)" style="width: 100%; height: 96px;" />
+					<Text size="xs" tone="subtle">sliced at 32 — every rivet still round</Text>
+				</Stack>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">A panel you can put things in</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				A second drawing, torn rather than riveted. With <code>fill</code> the middle is painted too, so
+				the artwork is a surface rather than a frame around a hole, and <code>inset</code> holds the
+				content clear of the ragged edge. Two scraps off the same sheet, each the size its content
+				needed.
+			</Text>
+			<Cluster gap={5} align="start">
+				<NinePatch
+					src={TORN_PANEL}
+					slice="32"
+					repeat="repeat"
+					fill
+					tint="var(--accent-bg)"
+					inset="2.25rem"
+					style="flex: 1 1 15rem;"
+				>
+					<Text size="sm">
+						A note torn from something bigger. The paper grew to fit this paragraph, and not one tear
+						along its edge got longer to do it.
+					</Text>
+				</NinePatch>
+				<NinePatch
+					src={TORN_PANEL}
+					slice="32"
+					repeat="repeat"
+					fill
+					tint="var(--accent-bg)"
+					inset="2.25rem"
+					style="flex: 0 1 11rem;"
+				>
+					<Text size="sm">A shorter scrap, same sheet.</Text>
+				</NinePatch>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Where the nine regions go</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>slice</code> makes four cuts in the artwork. The corners never change size, the four
+				edges cover their own run, and the centre takes whatever is left. Both plaques below are the
+				same drawing at the same slice, washed by region — the corner blocks are identical, and only
+				the edges and the middle grew to fill the difference.
+			</Text>
+			<Cluster gap={5} align="end">
+				<Stack gap={2} align="center" style="flex: 0 0 10rem;">
+					<NinePatch
+						src={PLAQUE_PANEL}
+						slice="32"
+						repeat="repeat"
+						fill
+						tint="var(--fg-2)"
+						pieces={REGION_PIECES}
+						tints={REGION_TINTS}
+						style="width: 100%; height: 112px;"
+					/>
+					<Text size="xs" tone="subtle">10rem wide</Text>
+				</Stack>
+				<Stack gap={2} align="center" style="flex: 1 1 18rem;">
+					<NinePatch
+						src={PLAQUE_PANEL}
+						slice="32"
+						repeat="repeat"
+						fill
+						tint="var(--fg-2)"
+						pieces={REGION_PIECES}
+						tints={REGION_TINTS}
+						style="width: 100%; height: 112px;"
+					/>
+					<Text size="xs" tone="subtle">the rest of the row, same corners</Text>
+				</Stack>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Tinted from a token</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>tint</code> uses the artwork as a mask over a colour rather than painting it, so one
+				monochrome drawing wears whatever the algorithm derived. Same torn scrap in all four, and it
+				will follow a theme built long after it was drawn.
+			</Text>
+			<Grid minColWidth="11rem" gap={4}>
+				{TOKENS.map((token) => (
+					<Stack gap={2}>
+						<NinePatch src={TORN_PANEL} slice="32" repeat="repeat" fill tint={`var(${token})`} style="width: 100%; height: 84px;" />
+						<Text size="xs" tone="subtle"><code>{token}</code></Text>
+					</Stack>
+				))}
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">How the edges cover their run</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				A third drawing, scalloped. Between the corners sits one tile holding two scallops, and
+				<code>repeat</code> decides what happens to it when the run is longer than the tile. This is the
+				dial that keeps a motif from being pulled out of shape.
+			</Text>
+			<Grid minColWidth="15rem" gap={4}>
+				{REPEATS.map(({ mode, note }) => (
+					<Stack gap={2}>
+						<NinePatch src={SCALLOP_PANEL} slice="32" repeat={mode} tint="var(--accent)" style="width: 100%; height: 92px;" />
+						<Text size="xs" tone="subtle"><code>{mode}</code> — {note}</Text>
+					</Stack>
+				))}
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Overriding one region</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				The nine regions stay addressable. <code>pieces</code> names artwork for any of them and draws
+				it over the sliced base, so a corner can take a crest or the top edge a run of bunting without
+				cutting a new sheet. Anything unnamed is still the base showing through, and <code>tints</code>
+				gives one region its own token.
+			</Text>
+			<Grid minColWidth="15rem" gap={4}>
+				<Stack gap={2}>
+					<NinePatch src={TORN_PANEL} slice="32" repeat="repeat" fill tint="var(--bg-3)" style="width: 100%; height: 104px;" />
+					<Text size="xs" tone="subtle">the base, untouched</Text>
+				</Stack>
+				<Stack gap={2}>
+					<NinePatch
+						src={TORN_PANEL}
+						slice="32"
+						repeat="repeat"
+						fill
+						tint="var(--bg-3)"
+						pieces={{ "top-left": CREST, "top-right": CREST }}
+						tints={{ "top-left": "var(--accent)", "top-right": "var(--accent)" }}
+						style="width: 100%; height: 104px;"
+					/>
+					<Text size="xs" tone="subtle">two corners given a crest, in their own token</Text>
+				</Stack>
+				<Stack gap={2}>
+					<NinePatch
+						src={TORN_PANEL}
+						slice="32"
+						repeat="repeat"
+						fill
+						tint="var(--bg-3)"
+						pieces={{ top: BUNTING }}
+						tints={{ top: "var(--accent-2)" }}
+						style="width: 100%; height: 104px;"
+					/>
+					<Text size="xs" tone="subtle">bunting hung across the top edge</Text>
+				</Stack>
+			</Grid>
+		</Stack>
+	</Card>
+</Stack>

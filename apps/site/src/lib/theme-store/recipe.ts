@@ -5,6 +5,7 @@ import type { BenchState } from "../../components/bench/state.js";
 import {
 	anchorsToConstraints,
 	defaultState,
+	foldLegacyAnchors,
 	retireAlgorithm,
 	toDeriveKnobs,
 } from "../../components/bench/state.js";
@@ -21,14 +22,15 @@ export function normalizeRecipe(partial: unknown): ThemeRecipe {
 		typeof p.algorithm === "string" ? p.algorithm : base.algorithm,
 		{ ...base.knobs, ...(p.knobs ?? {}) },
 	);
+	const existingOverrides =
+		rawOverrides && typeof rawOverrides === "object"
+			? ({ ...rawOverrides } as TokenRegister)
+			: {};
 	const recipe: ThemeRecipe = {
 		algorithm: retired.algorithm,
-		anchors: { ...base.anchors, ...(p.anchors ?? {}) },
+		anchors: {},
 		knobs: retired.knobs,
-		overrides:
-			rawOverrides && typeof rawOverrides === "object"
-				? ({ ...rawOverrides } as TokenRegister)
-				: {},
+		overrides: foldLegacyAnchors({ ...base.anchors, ...(p.anchors ?? {}) }, existingOverrides),
 	};
 	if (typeof p.customSpec === "string") recipe.customSpec = p.customSpec;
 	if (typeof p.customCode === "string") recipe.customCode = p.customCode;
@@ -47,6 +49,7 @@ export interface DeriveRegisterResult {
 export function deriveRegister(
 	recipe: ThemeRecipe,
 	algos?: Map<string, Algorithm> | null,
+	options?: { invert?: boolean },
 ): DeriveRegisterResult {
 	let algorithm: Algorithm;
 	try {
@@ -59,6 +62,7 @@ export function deriveRegister(
 		const register = derive(algorithm, {
 			knobs: toDeriveKnobs(recipe.knobs),
 			constraints: { ...anchorsToConstraints(recipe.anchors), ...recipe.overrides },
+			invert: options?.invert,
 		});
 		return { register, error: null };
 	} catch (e) {

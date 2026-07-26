@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-accordion> custom element on the happy-dom registry
 import "../src/elements/accordion.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/accordion/source.generated.js";
@@ -37,8 +36,14 @@ function trigger(el: HTMLElement, key: string): HTMLElement {
 	return root(el).querySelector<HTMLElement>(`.xtyle-accordion__trigger[data-key="${key}"]`) as HTMLElement;
 }
 
+function item(el: HTMLElement, key: string): HTMLDetailsElement {
+	return root(el).querySelector<HTMLDetailsElement>(`.xtyle-accordion__item[data-key="${key}"]`) as HTMLDetailsElement;
+}
+
+/** Each section is a `<details>`, so its expanded state lives on the element itself rather than an
+ * `aria-expanded` the component maintains — the browser owns the disclosure and announces it. */
 function expandedOf(el: HTMLElement, key: string): string | null {
-	return trigger(el, key).getAttribute("aria-expanded");
+	return String(item(el, key).open);
 }
 
 function click(el: HTMLElement, key: string): void {
@@ -60,7 +65,6 @@ describe("<xtyle-accordion> chevron", () => {
 
 	it("carries an inline glyph inside the icon element, so the zero-JS render still shows a caret", () => {
 		const chevron = root(make()).querySelector(".xtyle-accordion__chevron") as HTMLElement;
-		// the fallback is the icon set's own `chevron-down` body, not a hand-copied path
 		expect(chevron.innerHTML).toContain("<svg");
 		expect(chevron.innerHTML).toContain("M6 9l6 6 6-6");
 	});
@@ -71,27 +75,37 @@ describe("<xtyle-accordion> expand/collapse survives the chevron swap", () => {
 		const el = make();
 		expect(expandedOf(el, "a")).toBe("false");
 		expect(expandedOf(el, "b")).toBe("true");
-		expect(root(el).querySelector<HTMLElement>('.xtyle-accordion__panel[data-key="b"]')?.hidden).toBe(false);
-		expect(root(el).querySelector<HTMLElement>('.xtyle-accordion__panel[data-key="a"]')?.hidden).toBe(true);
 	});
 
-	it("toggles a section open on click and closes the previously open one (single-open)", () => {
+	it("never hides a panel by attribute — the disclosure owns visibility", () => {
+		const el = make();
+		const panels = root(el).querySelectorAll<HTMLElement>(".xtyle-accordion__panel");
+		expect(panels).toHaveLength(3);
+		for (const panel of panels) expect(panel.hasAttribute("hidden")).toBe(false);
+	});
+
+	it("opens a section on click", () => {
 		const el = make();
 		click(el, "a");
 		expect(expandedOf(el, "a")).toBe("true");
-		expect(expandedOf(el, "b")).toBe("false");
-		expect(root(el).querySelector<HTMLElement>('.xtyle-accordion__panel[data-key="a"]')?.hidden).toBe(false);
 	});
 
 	it("closes an open section when it is clicked again", () => {
 		const el = make();
 		click(el, "b");
 		expect(expandedOf(el, "b")).toBe("false");
-		expect(root(el).querySelector<HTMLElement>('.xtyle-accordion__panel[data-key="b"]')?.hidden).toBe(true);
 	});
 
-	it("keeps several sections open under `multiple`", () => {
+	it("groups sections under one `name` so the browser enforces single-open", () => {
+		const names = [...root(make()).querySelectorAll(".xtyle-accordion__item")].map((s) => s.getAttribute("name"));
+		expect(new Set(names).size).toBe(1);
+		expect(names[0]).toBeTruthy();
+	});
+
+	it("drops the grouping under `multiple`, so sections open independently", () => {
 		const el = make({ multiple: "" });
+		const names = [...root(el).querySelectorAll(".xtyle-accordion__item")].map((s) => s.getAttribute("name"));
+		expect(names).toEqual([null, null, null]);
 		click(el, "a");
 		expect(expandedOf(el, "a")).toBe("true");
 		expect(expandedOf(el, "b")).toBe("true");
@@ -112,10 +126,12 @@ describe("<xtyle-accordion> expand/collapse survives the chevron swap", () => {
 		]);
 	});
 
-	it("clicking the chevron toggles its own section — the icon does not swallow the event", () => {
+	it("keeps the chevron inside the summary, so it cannot swallow the activation", () => {
 		const el = make();
-		const chevron = trigger(el, "a").querySelector(".xtyle-accordion__chevron") as HTMLElement;
-		chevron.dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true, cancelable: true }));
-		expect(expandedOf(el, "a")).toBe("true");
+		const summary = trigger(el, "a");
+		const chevron = summary.querySelector(".xtyle-accordion__chevron") as HTMLElement;
+		expect(summary.tagName.toLowerCase()).toBe("summary");
+		expect(summary.contains(chevron)).toBe(true);
+		expect(chevron.getAttribute("aria-hidden")).toBe("true");
 	});
 });

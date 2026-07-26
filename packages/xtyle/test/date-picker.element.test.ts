@@ -213,7 +213,7 @@ describe("bounds and disabled dates are enforced on typed input too", () => {
 	});
 
 	it("refuses a typed date the weekday rule rules out", () => {
-		// 2026-03-08 is a Sunday
+		// INFO: 2026-03-08 is a Sunday
 		const el = make({ "disabled-weekdays": "0,6" });
 		type(el, "date", "3/8/2026");
 		expect(el.value).toBe("");
@@ -240,8 +240,8 @@ describe("bounds and disabled dates are enforced on typed input too", () => {
 	});
 
 	it("never clamps onto a date the grid itself refuses", () => {
-		// 2026-03-08 is a Sunday, so the `min` bound falls on a day the weekday rule rules out. Clamping
-		// straight to it would hand back a value the user could neither click nor type.
+		// INFO: 2026-03-08 is a Sunday, so the `min` bound is a weekday-ruled-out day; clamping onto it
+		// would hand back a value the user could neither click nor type
 		const el = make({ min: "2026-03-08", max: "2026-03-20", "disabled-weekdays": "0,6" });
 		type(el, "date", "1/1/2026");
 		expect(el.value).toBe("2026-03-09");
@@ -249,7 +249,7 @@ describe("bounds and disabled dates are enforced on typed input too", () => {
 	});
 
 	it("settles backwards when the max bound is the refused one", () => {
-		// 2026-03-21 is a Saturday
+		// INFO: 2026-03-21 is a Saturday
 		const el = make({ min: "2026-03-02", max: "2026-03-21", "disabled-weekdays": "0,6" });
 		type(el, "date", "12/1/2026");
 		expect(el.value).toBe("2026-03-20");
@@ -296,7 +296,7 @@ describe("the keyboard steps the value without ever opening the popup", () => {
 		const el = make({ mode: "time", value: "23:45", step: "900" });
 		const field = input(el, "time");
 		press(field, "ArrowUp");
-		// saturates rather than wrapping into the next day, which would move a datetime's date half
+		// INFO: the clock saturates rather than wrapping; wrapping would shift a datetime's date
 		expect(el.value).toBe("23:59:59");
 	});
 
@@ -448,7 +448,7 @@ describe("the compose seam with Calendar", () => {
 		const calendar = q(el, ".xtyle-datepicker__calendar") as HTMLElement & {
 			isDateDisabled?: (iso: string) => boolean;
 		};
-		// 2026-03-08 is a Sunday; 2026-03-01 is before `min`; 2026-03-09 is a Monday in range
+		// INFO: 2026-03-08 is a Sunday; 2026-03-01 is before `min`; 2026-03-09 is a Monday in range
 		expect(calendar.isDateDisabled?.("2026-03-08")).toBe(true);
 		expect(calendar.isDateDisabled?.("2026-03-01")).toBe(true);
 		expect(calendar.isDateDisabled?.("2026-03-09")).toBe(false);
@@ -496,8 +496,6 @@ describe("the time listbox", () => {
 	});
 
 	it("scrolls the list to its selection on open, even when the grid takes focus", () => {
-		// datetime opens with focus in the grid, but a list left sitting at midnight hides the chosen
-		// time far below the fold — it has to be scrolled to whether or not it is focused
 		const el = make({ mode: "datetime", value: "2026-03-08T09:30", step: "900" });
 		const scrolled: Element[] = [];
 		for (const option of all(el, ".xtyle-datepicker__time-option")) {
@@ -556,7 +554,7 @@ describe("the value is a wall-clock reading, never an instant", () => {
 	});
 
 	it("resolves a bare day against the day it is in `timezone`, not the visitor's", () => {
-		// 20:00Z on the 31st is already the 1st of the next month in Tokyo
+		// INFO: 20:00Z on the 31st is already the 1st of the next month in Tokyo
 		vi.useFakeTimers();
 		vi.setSystemTime(new Date("2026-03-31T20:00:00Z"));
 		try {

@@ -34,7 +34,7 @@ describe("bar chart", () => {
 	it("renders an svg with one rect per series/category cell", async () => {
 		const html = await renderFragmentLight("bar", bindings);
 		const rects = html.match(/class="xtyle-bar__bar"/g) ?? [];
-		expect(rects).toHaveLength(8); // 2 series * 4 categories, grouped
+		expect(rects).toHaveLength(8);
 		expect(html).toContain("<svg");
 	});
 
@@ -74,7 +74,6 @@ describe("bar chart", () => {
 	it("stacks into one bar per category when stacked", async () => {
 		const html = await renderFragmentLight("bar", { ...bindings, stacked: true });
 		const rects = html.match(/class="xtyle-bar__bar"/g) ?? [];
-		// 2 non-zero series per category * 4 = 8 segments, one column each
 		expect(rects.length).toBeGreaterThan(0);
 		expect(html).toContain("xtyle-bar--stacked");
 	});
@@ -91,7 +90,6 @@ describe("bar chart", () => {
 		expect(html).toContain("xtyle-bar--selectable");
 		expect(html).toContain('role="button"');
 		expect(html).not.toContain('role="img"');
-		// every bar takes the button role, not just the first
 		const buttons = html.match(/role="button"/g) ?? [];
 		const rects = html.match(/class="xtyle-bar__bar"/g) ?? [];
 		expect(buttons).toHaveLength(rects.length);

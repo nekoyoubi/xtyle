@@ -104,7 +104,6 @@ const pinned = [
 		if (echo) echo.textContent = `Ran ${detail.label} (${detail.id}).`;
 	});
 
-	// the override hook: one function decides what survives and in what order
 	const ranked = document.querySelector<PaletteEl>("#cp-scorer");
 	const rankedEcho = document.querySelector<HTMLElement>("#cp-scorer-echo");
 	if (ranked) {

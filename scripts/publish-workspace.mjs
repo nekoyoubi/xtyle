@@ -1,14 +1,4 @@
 #!/usr/bin/env node
-// Publishes one workspace, treating "this exact version is already on the registry" as success and
-// every other failure as fatal.
-//
-// The workflow used to give each publish step `continue-on-error: true`. That covers the case worth
-// covering — re-running a release after a partial success, where the packages that already landed
-// would otherwise fail with EPUBLISHCONFLICT — but it covers it by swallowing *every* failure, which
-// is far too broad: `@xtyle/svelte` and `@xtyle/astro` both depend on `@xtyle/core`, so a core publish
-// that genuinely failed still let its dependents ship against a version nobody could install. On a
-// public registry that is not reversible. This narrows the tolerance to the one case that earned it.
-
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -25,8 +15,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { name, version } = JSON.parse(readFileSync(join(ROOT, workspace, "package.json"), "utf8"));
 const spec = `${name}@${version}`;
 
-// `npm` is `npm.cmd` on Windows, which `execFileSync` cannot resolve without a shell. CI is Linux, so
-// this is only what makes the script runnable (and therefore testable) on a maintainer's machine.
+// INFO: npm is npm.cmd on Windows; execFileSync needs a shell to resolve it
 const shell = process.platform === "win32";
 
 /**

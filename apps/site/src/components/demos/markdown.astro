@@ -51,6 +51,27 @@ const untrusted = `This came from an LLM and is rendered **as-is**:
 [a link that looks fine](javascript:alert("refused"))
 and [one that is fine](https://xtyle.dev).`;
 
+const trusted = `This one *is* the app's own copy, so its markup renders:
+
+<kbd>Ctrl</kbd>+<kbd>K</kbd> opens the palette, and <mark>a highlight</mark>
+survives as a highlight.
+
+<details><summary>Even a disclosure</summary>
+
+…with markdown **inside** it.
+
+</details>`;
+
+const components = `And a document can carry components, themed like every other one:
+
+Shipped <xtyle-badge variant="soft" tone="success">v0.10.0</xtyle-badge> with
+<xtyle-badge variant="soft" tone="info">3 fixes</xtyle-badge> riding along
+
+<xtyle-alert severity="info">Rendered from markdown, not from Astro.</xtyle-alert>
+
+What xtyle never declared is still refused — a \`<script>\`, an \`onclick=\`, or
+someone else's \`<my-widget>\` does not survive the trip.`;
+
 const draft = `# Edit me
 
 Switch to **source** with the toggle, change something, and switch back.
@@ -120,7 +141,7 @@ const labels = [
 		<Stack slot="header" gap={1}>
 			<Cluster gap={2} align="center" justify="between">
 				<Heading level={3} size="body">Untrusted input</Heading>
-				<Badge variant="soft" tone="success">no sanitizer</Badge>
+				<Badge variant="soft" tone="success">escaped by default</Badge>
 			</Cluster>
 			<Text tone="muted" size="sm">
 				Raw HTML is escaped to text and refused URLs lose their <code>href</code> —
@@ -129,6 +150,37 @@ const labels = [
 			</Text>
 		</Stack>
 		<Markdown source={untrusted} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Cluster gap={2} align="center" justify="between">
+				<Heading level={3} size="body">Markdown you wrote yourself</Heading>
+				<Badge variant="soft" tone="warn">allow-html</Badge>
+			</Cluster>
+			<Text tone="muted" size="sm">
+				<code>allow-html</code> renders the source's markup instead of escaping it,
+				for a document whose origin the app controls. The fragment format still has
+				the last word: scripts, event handlers, and elements xtyle never declared are
+				refused either way. The body carries <code>data-allow-html</code> — inspect it.
+			</Text>
+		</Stack>
+		<Markdown allowHtml source={trusted} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Cluster gap={2} align="center" justify="between">
+				<Heading level={3} size="body">Components inside a document</Heading>
+				<Badge variant="soft" tone="accent">vocabulary</Badge>
+			</Cluster>
+			<Text tone="muted" size="sm">
+				What survives <code>allow-html</code> is standard HTML <em>and xtyle's own
+				components</em>, because that is what the fragment format declares. Release
+				notes and changelogs can carry a real badge or alert without leaving markdown.
+			</Text>
+		</Stack>
+		<Markdown allowHtml source={components} />
 	</Card>
 
 	<Card>

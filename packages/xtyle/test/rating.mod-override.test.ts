@@ -17,8 +17,8 @@ import { manifest } from "../src/elements/fragments/rating/source.generated.js";
  */
 const heartMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-rating-hearts",
 		version: "0.0.1",
 		title: "test-rating-hearts",
@@ -26,7 +26,7 @@ const heartMod = {
 		capabilities: ["xtyle.component.rating"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.rating": [{ id: "rating", format: "text/html+jsml", source: "rating.html" }],
+			"component.rating": [{ id: "rating", format: "application/x-xtyle+html", source: "rating.html" }],
 		},
 	},
 	fragmentSources: {

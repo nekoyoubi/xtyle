@@ -3,10 +3,6 @@ import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-
-// The `xtyle` CLI is a first-class product surface (dual-entry: importable API + CLI bin + DOM helper).
-// The engine tests cover derivation; this smokes the built bin end-to-end — arg parsing, the seed
-// channel (`--bg` / `--accent` → constraints), format dispatch, and emit — so the wiring can't rot silently.
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = resolve(here, "../dist/cli.js");
 const run = (...args: string[]): string => execFileSync("node", [cli, ...args], { encoding: "utf8" });
@@ -17,7 +13,6 @@ describe.runIf(existsSync(resolve(here, "../dist/cli.js")))("xtyle CLI", () => {
 		expect(css).toContain(":root {");
 		expect(css).toContain("--accent: #5b8cff;");
 		expect(css).not.toMatch(/NaN|undefined|null/);
-		// every custom-property declaration carries a non-empty value
 		const decls = [...css.matchAll(/^\s*(--[a-z0-9-]+):\s*(.*);$/gim)];
 		expect(decls.length).toBeGreaterThan(200);
 		expect(decls.every(([, , value]) => (value ?? "").trim().length > 0)).toBe(true);
@@ -38,9 +33,6 @@ describe.runIf(existsSync(resolve(here, "../dist/cli.js")))("xtyle CLI", () => {
 		expect(out).toContain("xtyle-default");
 	});
 
-	// The knob tier is "the whole casual UX", and until now none of it was reachable without writing
-	// code: there was no `--knob`, so `step` and `duo` could not be derived headlessly by any means, and
-	// `shade` was only ever reachable as `-a xtyle-brand` — which the retirement then took away.
 	describe("the knob tier is reachable", () => {
 		const registerOf = (...args: string[]): Record<string, string> =>
 			JSON.parse(run("derive", "--format", "json", ...args)) as Record<string, string>;
@@ -58,8 +50,6 @@ describe.runIf(existsSync(resolve(here, "../dist/cli.js")))("xtyle CLI", () => {
 		});
 
 		it("types a numeric knob as a number rather than the string the shell hands over", () => {
-			// `typeof knobs.surfaceRamp === "number"` guards the derivation, so a knob arriving as "-0.06"
-			// would be silently ignored and the theme would derive as if it had never been set.
 			expect(registerOf("--knob", "surfaceRamp=-0.06")["--bg-2"]).not.toBe(registerOf()["--bg-2"]);
 		});
 
@@ -72,23 +62,18 @@ describe.runIf(existsSync(resolve(here, "../dist/cli.js")))("xtyle CLI", () => {
 		});
 
 		it("fails loudly on a knob value outside the algorithm's domain", () => {
-			// The whole point of a headless knob surface: a typo must not exit 0 with a different theme.
 			expect(() => run("derive", "--knob", "accentStrategy=duoo")).toThrow();
 			expect(() => run("derive", "--knob", "mood=wistful")).toThrow();
 			expect(() => run("derive", "--knob", "surfaceRamp=9")).toThrow();
 		});
 
 		it("keeps `xtyle list` printing bare ids, one per line", () => {
-			// `list` is an existing surface someone may be parsing; a patch does not get to reshape its
-			// output. The domains got their own command rather than being folded into this one.
 			const lines = run("list").trim().split(/\r?\n/);
 			expect(lines).toContain("xtyle-default");
 			expect(lines.every((l) => /^[a-z0-9-]+$/.test(l))).toBe(true);
 		});
 	});
 
-	// `derive` and `gauntlet` ran the retirement migration; `coverage` and `audit` resolved the raw id and
-	// died on it. One retired algorithm, two commands that worked and two that threw.
 	describe("every command survives a retired algorithm id", () => {
 		it("derives it as the knob it retired into", () => {
 			const viaRetired = run("derive", "-a", "xtyle-brand", "--format", "json");
@@ -105,8 +90,6 @@ describe.runIf(existsSync(resolve(here, "../dist/cli.js")))("xtyle CLI", () => {
 		});
 
 		it("writes a theme file naming a live algorithm, never the retired one", () => {
-			// A recipe is the source of truth of a re-derivable artifact. Writing the dead id into it mints a
-			// theme file that names an algorithm the engine can no longer resolve.
 			const theme = JSON.parse(run("derive", "-a", "xtyle-brand", "--format", "theme")) as {
 				recipe: { algorithm: string; knobs?: Record<string, unknown> };
 			};

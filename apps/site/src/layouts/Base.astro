@@ -1,8 +1,8 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import { emit } from "@xtyle/core";
-import { utilitiesCss, componentsCss } from "@xtyle/core/css";
-import { getStats, displayStats, benchStats } from "../data/stats";
+import { utilitiesCss, componentsCss, effectsCss } from "@xtyle/core/css";
+import { getStats, statusbarStats } from "../data/stats";
 import AppShell from "@xtyle/astro/AppShell.astro";
 import Toolbar from "@xtyle/astro/Toolbar.astro";
 import Dock from "@xtyle/astro/Dock.astro";
@@ -16,6 +16,7 @@ import Text from "@xtyle/astro/Text.astro";
 import SiteNav from "../components/SiteNav.astro";
 import ThemeReapply from "../components/ThemeReapply.astro";
 import Icon from "@xtyle/astro/Icon.astro";
+import SchemeToggle from "@xtyle/astro/SchemeToggle.astro";
 import ThemeSwitcher from "../components/ThemeSwitcher.svelte";
 import "@fontsource/teko/600.css";
 import "@fontsource/knewave/latin-400.css";
@@ -46,8 +47,9 @@ const canonicalUrl = new URL(
 const site = await getStats();
 const documentTitle = `xtyle · ${title}`;
 const themeCss = emit(site.register, "css");
-const baseCss = `${utilitiesCss(site.algorithm.produces, site.algorithm.categories)}\n${componentsCss}`;
-const numberStats = [...displayStats(site), ...benchStats(site)].map((s) => ({
+const invertedCss = emit(site.invertedRegister, "css", { selector: ':root[data-scheme="light"]' });
+const baseCss = `${utilitiesCss(site.algorithm.produces, site.algorithm.categories)}\n${componentsCss}\n${effectsCss()}`;
+const numberStats = statusbarStats(site).map((s) => ({
 	label: s.label,
 	value: s.value,
 	delta: site.delta(s.key),
@@ -83,6 +85,22 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		<script is:inline>
 			(function () {
 				try {
+					var stored = localStorage.getItem("xtyle.scheme");
+					var scheme = stored === "light" || stored === "dark" ? stored : null;
+					if (!scheme && window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) scheme = "light";
+					if (scheme === "light") document.documentElement.setAttribute("data-scheme", "light");
+					var active = null;
+					try {
+						var vars = JSON.parse(localStorage.getItem("xtyle.theme.active-vars") || "null");
+						active = vars && (vars["--scheme"] || vars["scheme"]);
+					} catch (e) {}
+					document.documentElement.setAttribute("data-effective-scheme", active === "light" || (!active && scheme === "light") ? "light" : "dark");
+				} catch (e) {}
+			})();
+		</script>
+		<script is:inline>
+			(function () {
+				try {
 					var raw = localStorage.getItem("xtyle.theme.active-vars");
 					if (!raw) return;
 					var vars = JSON.parse(raw);
@@ -97,13 +115,14 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		</script>
 		<ClientRouter />
 		<style is:global set:html={themeCss}></style>
+		<style is:global set:html={invertedCss}></style>
 		<style is:global set:html={baseCss}></style>
 		<ThemeReapply />
 	</head>
 	<body>
 		<AppShell skipLink leftSize={288}>
 			<Toolbar slot="toolbar">
-				<a slot="start" class="x-brand" href="/" aria-label="xtyle home">
+				<a slot="start" class="x-brand" href="/" aria-label="xtyle home" data-fx="throb">
 					<Icon
 						class="x-brand__mark"
 						name="xtyle--letter-x-x-2-y-6-s120-c9-o2cb--column-x22-s145-ko--letter-t-x16-s105-cf-o2cb---d9p8s1t20--f0-Sigmar--ps-skittles"
@@ -118,7 +137,8 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						rel="noopener noreferrer"
 						aria-label="Built on xript"
 						title="Built on xript"
-						style="--glow: var(--pink)"
+						style="--fx-color: var(--pink)"
+						data-fx="glow@hover"
 					>
 						<Icon
 							class="x-xript-mark"
@@ -133,7 +153,8 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						rel="noopener noreferrer"
 						aria-label="@xtyle/core on npm"
 						title="npm"
-						style="--glow: var(--red)"
+						style="--fx-color: var(--red)"
+						data-fx="glow@hover"
 					>
 						<svg viewBox="0 0 24 24" width="22" height="22" fill="var(--red)" aria-hidden="true">
 							<path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0H1.763zM5.13 5.323h13.741v10.288h-3.435V8.748h-3.43v6.863H5.13V5.323z" />
@@ -146,12 +167,23 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 						rel="noopener noreferrer"
 						aria-label="xtyle on GitHub"
 						title="GitHub"
-						style="--glow: var(--blue)"
+						style="--fx-color: var(--blue)"
+						data-fx="glow@hover"
 					>
 						<svg viewBox="0 0 16 16" width="20" height="20" fill="var(--blue)" aria-hidden="true">
 							<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z" />
 						</svg>
 					</a>
+					<SchemeToggle
+						class="x-iconlink"
+						variant="link"
+						iconSize="lg"
+						label="Toggle light and dark mode"
+						lightIcon="light-theme--sun-c3--circle-s65-ko--circle-s55-c3---ps-skittles"
+						darkIcon="dark-theme--circle-c3--circle-x20-y-10-s80-ko---ps-skittles"
+						style="--fx-color: var(--yellow)"
+						data-fx="glow@hover"
+					/>
 					<ThemeSwitcher client:only="svelte" />
 				</Cluster>
 			</Toolbar>
@@ -262,6 +294,12 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 			document.addEventListener("astro:page-load", syncBuildTime);
 			document.addEventListener("astro:after-swap", syncBuildTime);
 		</script>
+		<script>
+			import { reapplyActiveTheme } from "../lib/theme-active.js";
+			import { SCHEME_CHANGE_EVENT } from "@xtyle/core/elements";
+			// INFO: delegated so it survives view transitions — the toggle is re-rendered, the document is not
+			document.addEventListener(SCHEME_CHANGE_EVENT, () => reapplyActiveTheme());
+		</script>
 	</body>
 </html>
 
@@ -275,27 +313,6 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 		font-weight: var(--weight-bold);
 		font-size: var(--text-lg);
 		letter-spacing: -0.01em;
-		filter: drop-shadow(0 0 2px color-mix(in oklab, var(--accent) 70%, transparent))
-			drop-shadow(0 0 7px color-mix(in oklab, var(--accent) 45%, transparent));
-		animation: x-brand-bias 7s ease-in-out infinite;
-	}
-	@keyframes x-brand-bias {
-		0%,
-		100% {
-			filter: drop-shadow(0 0 2px color-mix(in oklab, var(--accent) 60%, transparent))
-				drop-shadow(0 0 6px color-mix(in oklab, var(--accent) 40%, transparent));
-		}
-		50% {
-			filter: drop-shadow(0 0 3px color-mix(in oklab, var(--accent-2) 85%, transparent))
-				drop-shadow(0 0 10px color-mix(in oklab, var(--accent-2) 62%, transparent));
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.x-brand {
-			animation: none;
-			filter: drop-shadow(0 0 3px color-mix(in oklab, var(--accent) 70%, transparent))
-				drop-shadow(0 0 7px color-mix(in oklab, var(--accent) 45%, transparent));
-		}
 	}
 	.x-brand:hover {
 		color: var(--fg-0);
@@ -328,15 +345,6 @@ const buildLabel = new Date(buildIso).toLocaleString("en-US", {
 	.x-iconlink:hover {
 		color: var(--fg-0);
 		text-decoration: none;
-	}
-	.x-iconlink > svg,
-	.x-iconlink > .x-xript-mark {
-		transition: filter 0.18s ease;
-	}
-	.x-iconlink:hover > svg,
-	.x-iconlink:hover > .x-xript-mark {
-		filter: drop-shadow(0 1px 6px color-mix(in oklab, var(--glow, var(--accent)) 45%, transparent))
-			drop-shadow(0 0 13px color-mix(in oklab, var(--glow, var(--accent)) 32%, transparent));
 	}
 	.x-iconlink:focus-visible {
 		outline: var(--focus-ring, 2px solid var(--accent));

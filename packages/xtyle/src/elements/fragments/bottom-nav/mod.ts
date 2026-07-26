@@ -10,6 +10,7 @@ interface NavTab {
 	value: string;
 	label: string;
 	icon?: string;
+	iconBody?: string | null;
 	badge?: string | number | null;
 }
 
@@ -37,7 +38,7 @@ function activeValue(b: BottomNavBindings): string {
 
 function tabHtml(tab: NavTab, active: boolean): string {
 	const icon = tab.icon
-		? `<span class="xtyle-bottom-nav__icon" part="icon" aria-hidden="true">${renderIcon(tab.icon as never)}</span>`
+		? `<span class="xtyle-bottom-nav__icon" part="icon" aria-hidden="true">${renderIcon(tab.icon as never, { body: tab.iconBody })}</span>`
 		: "";
 	const badge =
 		tab.badge !== undefined && tab.badge !== null && tab.badge !== ""
@@ -46,8 +47,8 @@ function tabHtml(tab: NavTab, active: boolean): string {
 	return (
 		`<button type="button" class="xtyle-bottom-nav__item" part="item" role="tab"` +
 		` data-value="${escapeAttr(tab.value)}" aria-selected="${active ? "true" : "false"}"` +
-		// A roving tabindex: the bar is one tab stop and the arrows move within it, so a keyboard user
-		// doesn't tab past every section to leave the nav.
+		// INFO: roving tabindex — the bar is one tab stop and arrows move within it, so a keyboard user isn't
+		// trapped tabbing past every section to leave the nav
 		` tabindex="${active ? "0" : "-1"}">` +
 		icon +
 		`<span class="xtyle-bottom-nav__label" part="label">${escapeAttr(tab.label)}</span>` +
@@ -66,8 +67,7 @@ function navHtml(b: BottomNavBindings): string {
 	);
 }
 
-// The bar renders from data and holds no consumer slots, so a full repaint on update is safe and keeps
-// selection, roving tabindex, and aria in one place.
+// INFO: the bar renders from data and holds no consumer slots, so a full repaint on update is safe
 function render(bindings: BottomNavBindings, ops: OpsBuilder): void {
 	ops.replaceChildren("[data-bottom-nav]", navHtml(bindings));
 }

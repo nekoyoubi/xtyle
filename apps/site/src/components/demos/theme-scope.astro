@@ -1,0 +1,114 @@
+---
+import ThemeScope from "@xtyle/astro/ThemeScope.astro";
+import SchemeToggle from "@xtyle/astro/SchemeToggle.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+
+const ALGORITHMS = ["xtyle-default", "xtyle-quiet", "xtyle-loud", "xtyle-hc", "nxi-nite"];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">One algorithm per scope</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				Each scope invokes a different algorithm and applies the result to its own subtree only. The
+				page around them never moves, which is the whole point of <code>target="self"</code> being
+				the default.
+			</Text>
+			<Grid minColWidth="14rem" gap={4}>
+				{ALGORITHMS.map((algorithm) => (
+					<ThemeScope algorithm={algorithm}>
+						<Card>
+							<Stack gap={3}>
+								<Cluster gap={2} align="center">
+									<Badge tone="accent">{algorithm}</Badge>
+								</Cluster>
+								<Text size="sm">Surfaces, text, and controls all derive from this scope.</Text>
+								<Cluster gap={2}>
+									<Button variant="solid" tone="accent" size="sm">Primary</Button>
+									<Button variant="outline" size="sm">Secondary</Button>
+								</Cluster>
+							</Stack>
+						</Card>
+					</ThemeScope>
+				))}
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">The same invocation, both schemes</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>scheme</code> pins the mode. When the algorithm derives natively to the other one, the
+				scope re-derives with <code>invert</code>, so every surface lands where the algorithm puts it
+				rather than on a mirrored guess.
+			</Text>
+			<Grid minColWidth="16rem" gap={4}>
+				<ThemeScope scheme="dark">
+					<Card>
+						<Stack gap={3}>
+							<Badge>dark</Badge>
+							<Text size="sm">Derived natively.</Text>
+							<Button variant="solid" tone="accent" size="sm">Action</Button>
+						</Stack>
+					</Card>
+				</ThemeScope>
+				<ThemeScope scheme="light">
+					<Card>
+						<Stack gap={3}>
+							<Badge>light</Badge>
+							<Text size="sm">Re-derived inverted from the same inputs.</Text>
+							<Button variant="solid" tone="accent" size="sm">Action</Button>
+						</Stack>
+					</Card>
+				</ThemeScope>
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Anchors, knobs, and a toggle that drives the scope</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				An invocation is more than an algorithm id: <code>constraints</code> pin it and
+				<code>knobs</code> turn its own dials. The nested <code>&lt;xtyle-scheme-toggle&gt;</code>
+				finds the scope and flips <em>it</em>, re-deriving through the engine instead of touching
+				<code>:root</code>.
+			</Text>
+			<Grid minColWidth="16rem" gap={4}>
+				<ThemeScope constraints={{ "--accent": "#7c5cff" }}>
+					<Card>
+						<Stack gap={3}>
+							<Cluster gap={2} align="center" justify="between">
+								<Badge tone="accent">seeded accent</Badge>
+								<SchemeToggle />
+							</Cluster>
+							<Text size="sm">Click the toggle: only this card flips.</Text>
+							<Button variant="solid" tone="accent" size="sm">Accent</Button>
+						</Stack>
+					</Card>
+				</ThemeScope>
+				<ThemeScope algorithm="xtyle-loud" constraints={{ "--accent": "#00b894" }} knobs={{ accentStrategy: "duo" }}>
+					<Card>
+						<Stack gap={3}>
+							<Cluster gap={2} align="center" justify="between">
+								<Badge tone="accent">loud + duo</Badge>
+								<SchemeToggle />
+							</Cluster>
+							<Text size="sm">A knob turned on the same seed.</Text>
+							<Button variant="solid" tone="accent" size="sm">Accent</Button>
+						</Stack>
+					</Card>
+				</ThemeScope>
+			</Grid>
+		</Stack>
+	</Card>
+</Stack>

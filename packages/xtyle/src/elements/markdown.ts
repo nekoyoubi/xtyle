@@ -1,5 +1,6 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { markdownHostCss, renderMarkdown, renderMarkdownInline } from "../markup/index.js";
+import { markdownHostCss, renderMarkdown, renderMarkdownInline, type MarkdownOptions } from "../markup/index.js";
+import { onBbcodeRegistryChanged } from "../markup/bbcode.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/markdown/source.generated.js";
 
@@ -16,9 +17,33 @@ import { manifest, fragmentSources } from "./fragments/markdown/source.generated
  * itself. The `html` binding is therefore never author HTML — see `markup/markdown.ts`, which is
  * where the whole security surface lives and where it stays.
  *
+ * `allow-html` lifts the escaping for a source whose origin the app controls. It is not a hole: the
+ * body still reaches the DOM through the fragment op, so the format declared in `component-host.json`
+ * has the last word and refuses scripts, handlers, and undeclared elements regardless. What it buys
+ * is standard HTML and xtyle's own components inside a document. The attribute is spelt out in the
+ * markup because it is not a mode the element can infer, and the body carries `data-allow-html` so
+ * the choice is visible where the markup landed.
+ *
  * Fragment-backed: the body lands as an `html` binding, exactly as the code component takes Prism's
  * output, and the edit/view chrome renders through `component.markdown` so a mod owns it.
  */
+
+/**
+ * Every connected instance, so a later registry change can repaint them.
+ *
+ * App configuration and custom-element upgrade race by nature: a page that registers its tags in one
+ * module script and loads the components in another has no way to guarantee which runs first, and
+ * losing that race is quiet — the server-rendered markup is right, and the hydrated element paints a
+ * custom tag back to literal text a tick later. Repainting on change makes the order stop mattering.
+ */
+const live = new Set<XtyleMarkdown>();
+
+onBbcodeRegistryChanged(() => {
+	for (const el of live) {
+		if (el.isConnected && el.processBbcode !== false) el.repaint();
+	}
+});
+
 export class XtyleMarkdown extends XtyleElement {
 	protected override get styleMode(): StyleMode {
 		return "auto";
@@ -36,7 +61,7 @@ export class XtyleMarkdown extends XtyleElement {
 	private captured: string | null = null;
 
 	static get observedAttributes(): string[] {
-		return ["source", "inline", "editable", "editing"];
+		return ["source", "inline", "editable", "editing", "allow-html", "process-bbcode"];
 	}
 
 	/** The markdown to render. Falls back to the element's own text content. */
@@ -44,8 +69,6 @@ export class XtyleMarkdown extends XtyleElement {
 		const attr = this.getAttribute("source");
 		if (attr !== null) return attr;
 		if (this.draft !== null) return this.draft;
-		// light DOM: the element's `textContent` is the rendered output by now, so read what the host
-		// captured out of the light DOM before the scaffold painted — same shape as `code`.
 		if (this.captured !== null) return this.captured;
 		const slotted = this.fragment.slottedNodes("");
 		if (slotted.length) {
@@ -83,15 +106,65 @@ export class XtyleMarkdown extends XtyleElement {
 		this.reflectBoolean("editing", value);
 	}
 
+	/**
+	 * Render the source's HTML instead of escaping it to text.
+	 *
+	 * For markdown whose origin the app controls — bundled release notes, a document the app wrote.
+	 * The fragment format still has the last word, so `<script>`, event handlers, and elements outside
+	 * xtyle's declared vocabulary are refused either way; what this admits is standard HTML and xtyle's
+	 * own components, which is what makes a document able to carry an `<xtyle-badge>`.
+	 */
+	get allowHtml(): boolean {
+		return this.hasAttribute("allow-html");
+	}
+	set allowHtml(value: boolean) {
+		this.reflectBoolean("allow-html", value);
+	}
+
+	/**
+	 * Also process BBCode, so one document can carry both languages.
+	 *
+	 * Valueless (`process-bbcode`) reaches the whole BBCode registry; a value names a vocabulary,
+	 * which is how one surface accepts a tag another refuses. The two renders compose by staying out
+	 * of each other's way — see `markup/markdown.ts` — so this widens what renders without widening
+	 * what is reachable: BBCode has no raw-HTML passthrough, and every tag it emits came from a
+	 * closed registry.
+	 */
+	get processBbcode(): boolean | string {
+		const value = this.getAttribute("process-bbcode");
+		if (value === null) return false;
+		return value === "" ? true : value;
+	}
+	set processBbcode(value: boolean | string) {
+		if (value === false) this.removeAttribute("process-bbcode");
+		else this.setAttribute("process-bbcode", value === true ? "" : value);
+	}
+
+	override connectedCallback(): void {
+		live.add(this);
+		super.connectedCallback();
+	}
+
+	override disconnectedCallback(): void {
+		live.delete(this);
+		super.disconnectedCallback();
+	}
+
+	/** Re-run the paint from outside, for a registry change the element has no other way to notice. */
+	repaint(): void {
+		if (this.root.firstChild) this.render();
+	}
+
 	attributeChangedCallback(name: string): void {
-		// an authored `source` supersedes whatever was being edited
 		if (name === "source") this.draft = null;
 		if (this.root.firstChild) this.render();
 	}
 
-	/** The rendered body. `inline` picks the renderer, and both refuse to emit author HTML. */
+	/** The rendered body. `inline` picks the renderer; both refuse to emit author HTML unless the
+	 * element was told, in its own markup, to let it through. */
 	private get html(): string {
-		return this.inline ? renderMarkdownInline(this.source) : renderMarkdown(this.source);
+		const options: MarkdownOptions = { allowHtml: this.allowHtml, processBbcode: this.processBbcode };
+		return this.inline ? renderMarkdownInline(this.source, options) : renderMarkdown(this.source, options);
 	}
 
 	private get bindings(): Record<string, unknown> {
@@ -100,6 +173,7 @@ export class XtyleMarkdown extends XtyleElement {
 			inline: this.inline,
 			editable: this.editable,
 			editing: this.editable && this.editing,
+			allowHtml: this.allowHtml,
 		};
 	}
 
@@ -107,7 +181,6 @@ export class XtyleMarkdown extends XtyleElement {
 		if (intent.toggleEditing) this.editing = !this.editing;
 		if (typeof intent.value === "string" && intent.value !== this.source) {
 			this.draft = intent.value;
-			// the authored attribute would otherwise keep winning over what is being typed
 			if (this.hasAttribute("source")) this.setAttribute("source", intent.value);
 			else this.render();
 			this.dispatchEvent(new CustomEvent("input", { bubbles: true, detail: { source: intent.value } }));
@@ -150,10 +223,14 @@ export class XtyleMarkdown extends XtyleElement {
 	 * Paint the body synchronously on first render, before the async fragment runtime warms — so a
 	 * client-created element shows its content immediately rather than an empty box. The fill's mount
 	 * then replaces this wholesale, so a mod's structure is what survives, not this seed.
+	 *
+	 * **It skips the paint entirely while `allow-html` is set.** This assignment is the one path that
+	 * never meets the fragment format's vocabulary, and `innerHTML` is enough to fire an `<img onerror>`,
+	 * so the fill replacing it a tick later would be a tick too late.
 	 */
 	private seedBody(): void {
 		const body = this.root.querySelector("[data-body]");
-		if (!(body instanceof HTMLElement) || body.firstChild) return;
+		if (!(body instanceof HTMLElement) || body.firstChild || this.allowHtml) return;
 		body.innerHTML = this.html;
 	}
 }

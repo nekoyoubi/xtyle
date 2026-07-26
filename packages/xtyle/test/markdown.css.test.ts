@@ -22,8 +22,6 @@ import { manifest, fragmentSources } from "../src/elements/fragments/markdown/so
 /** The nodes the fill calls `ops.toggle` on — read from the fill itself rather than restated here,
  * so a fill that starts toggling something new is covered without anyone remembering to add it. */
 function toggledMarkers(): string[] {
-	// the nodes the fill calls `ops.toggle` on. `data-controls` is not among them: the chrome is
-	// *built* only when editable rather than hidden, so there is nothing to toggle.
 	return ["data-body", "data-editor"];
 }
 
@@ -36,10 +34,9 @@ describe("a toggled node can actually be hidden", () => {
 	for (const marker of toggledMarkers()) {
 		const cls = CLASS_FOR[marker];
 		it(`${cls} yields to [hidden]`, () => {
-			// find every rule that sets a display on this class
 			const setsDisplay = new RegExp(`${cls.replace(".", "\\.")}[^{]*\\{[^}]*display:`, "g");
 			const declares = markdownCss.match(setsDisplay);
-			if (!declares) return; // no display rule, so the UA's [hidden] already wins
+			if (!declares) return;
 
 			const guard = new RegExp(`${cls.replace(".", "\\.")}\\[hidden\\]`);
 			expect(
@@ -87,8 +84,6 @@ describe("the scaffold is legal inside a paragraph", () => {
 	});
 
 	it("still names the hooks the element and a mod bind to", () => {
-		// the static scaffold holds the always-present hooks; the edit chrome is built into
-		// `data-chrome` on mount, and only when editable, so it lives in the fill's script instead
 		for (const marker of ["data-root", "data-body", "data-chrome"]) {
 			expect(scaffold, `the scaffold dropped ${marker}`).toContain(marker);
 		}

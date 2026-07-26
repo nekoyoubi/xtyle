@@ -37,7 +37,7 @@ describe("heatmap", () => {
 	it("renders an svg grid with one cell rect per matrix entry", async () => {
 		const html = await renderFragmentLight("heatmap", bindings);
 		const cells = html.match(/class="xtyle-heatmap__cell"/g) ?? [];
-		expect(cells).toHaveLength(6); // 2 rows * 3 cols
+		expect(cells).toHaveLength(6);
 		expect(html).toContain("<svg");
 		expect(html).toContain('fill="#555555"');
 	});
@@ -90,7 +90,7 @@ describe("heatmap", () => {
 		];
 		const html = await renderFragmentLight("heatmap", { ...bindings, cellGlows });
 		const filters = html.match(/filter:drop-shadow/g) ?? [];
-		expect(filters).toHaveLength(3); // one per non-null glow cell
+		expect(filters).toHaveLength(3);
 		expect(html).toContain('style="filter:drop-shadow(0 0 7.0px #6ea8fe)"');
 	});
 
@@ -121,14 +121,14 @@ describe("heatmap", () => {
 		expect(withGlow).toContain('aria-label="A, x: 0, runtime 40"');
 		expect(withGlow).toContain('aria-label="B, y: 8, runtime 30"');
 		const noLabel = await renderFragmentLight("heatmap", { ...bindings, glowValues });
-		expect(noLabel).toContain('aria-label="A, x: 0"'); // no glow text without a label
+		expect(noLabel).toContain('aria-label="A, x: 0"');
 		expect(noLabel).not.toContain("runtime");
 	});
 
 	it("rings the current cells and pulses them only when currentPulse is set", async () => {
 		const marked = await renderFragmentLight("heatmap", { ...bindings, current: [[0, 1]] });
 		const current = marked.match(/xtyle-heatmap__cell--current/g) ?? [];
-		expect(current).toHaveLength(1); // exactly the one flagged cell
+		expect(current).toHaveLength(1);
 		expect(marked).not.toContain("xtyle-heatmap__cell--pulse");
 		const pulsing = await renderFragmentLight("heatmap", { ...bindings, current: [[0, 1]], currentPulse: true });
 		expect(pulsing).toContain("xtyle-heatmap__cell--pulse");
@@ -148,7 +148,7 @@ describe("heatmap", () => {
 		];
 		const html = await renderFragmentLight("heatmap", { ...bindings, titles });
 		expect(html).toContain('aria-label="custom hover for x,B"');
-		expect(html).toContain('aria-label="A, x: 0"'); // untitled cell keeps the default readout
+		expect(html).toContain('aria-label="A, x: 0"');
 	});
 
 	it("renders a categorical legend instead of the ramp scale when a legend binding is present", async () => {
@@ -196,18 +196,16 @@ describe("categoricalHeatColors", () => {
 
 	it("gives each column its own hue and blends toward the surface at low values", () => {
 		const { cellColors, hues } = categoricalHeatColors("skittles", values, register);
-		expect(hues.length).toBe(3); // one per column
-		expect(new Set(hues).size).toBe(3); // distinct
-		// column max (value === ceiling) lands on the column's own hue…
+		expect(hues.length).toBe(3);
+		expect(new Set(hues).size).toBe(3);
 		expect(cellColors[0][0].toLowerCase()).toBe(hues[0].toLowerCase());
-		// …and a zero cell washes to the neutral surface, not the hue.
 		expect(cellColors[0][1].toLowerCase()).not.toBe(hues[1].toLowerCase());
 		expect(cellColors[0][1]).toMatch(/^#[0-9a-f]{6}$/i);
 	});
 
 	it("colors by row when axis is row", () => {
 		const { hues } = categoricalHeatColors("skittles", values, register, { axis: "row" });
-		expect(hues.length).toBe(2); // one per row
+		expect(hues.length).toBe(2);
 	});
 
 	it("shares its palette with seriesPalette (the Bar/Pie categorical path)", () => {

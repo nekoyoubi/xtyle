@@ -43,7 +43,7 @@ theme, and [xtyle.dev](https://xtyle.dev) for the full component reference.
 (`@xtyle/core/elements/button.js`) instead of the whole-element barrel. Importing `Button`
 registers `<xtyle-button>` — and nothing else.
 
-Previously, importing *any* component registered *all* 87 elements as a side effect, so
+Previously, importing *any* component registered *all* 91 elements as a side effect, so
 hand-written markup happened to work whether or not you had imported the matching wrapper.
 That also meant a page rendering a single `Card` shipped every element in the library, plus
 the ~300 Prism grammar chunks the code element's language table reaches. A single-component
@@ -84,7 +84,7 @@ raw markup and don't want to enumerate them:
 <xtyle-badge tone="accent">upgraded</xtyle-badge>
 ```
 
-`@xtyle/svelte/register` registers all 87 elements up front. It is the explicit opt-in to the
+`@xtyle/svelte/register` registers all 91 elements up front. It is the explicit opt-in to the
 old behavior, and it costs the old bundle size — reach for it only when you need it.
 
 ## Trimming the QuickJS debug WebAssembly

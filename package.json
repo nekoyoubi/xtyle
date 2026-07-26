@@ -1,6 +1,6 @@
 {
 	"name": "xtyle-workspace",
-	"version": "0.9.0",
+	"version": "0.10.0",
 	"private": true,
 	"type": "module",
 	"workspaces": [
@@ -15,7 +15,7 @@
 		"check:mods": "node scripts/check-mods-fresh.mjs",
 		"check:packaging": "node scripts/check-packaged-resolution.mjs",
 		"audit:css": "node scripts/audit-css.mjs",
-		"pretest": "node scripts/check-mods-fresh.mjs",
+		"pretest": "node scripts/check-mods-fresh.mjs && node scripts/audit-comments.mjs",
 		"test": "npm run test --workspaces --if-present",
 		"test:visual": "npm run test -w tests/visual",
 		"test:visual:update": "npm run test:update -w tests/visual",
@@ -23,7 +23,8 @@
 		"version:bump": "node scripts/bump-version.mjs",
 		"stats:snapshot": "node scripts/snapshot-stats.mjs",
 		"release": "node scripts/release.mjs",
-		"dev:fast": "node scripts/dev.mjs --no-build"
+		"dev:fast": "node scripts/dev.mjs --no-build",
+		"audit:comments": "node scripts/audit-comments.mjs"
 	},
 	"devDependencies": {
 		"esbuild": "^0.21.5"

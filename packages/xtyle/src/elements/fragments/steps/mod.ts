@@ -68,8 +68,8 @@ hooks.fragment.mount("steps", (bindings, ops) => {
 	ops.replaceChildren("[data-steps]", steps.map(stepHtml).join(""));
 });
 
-// A non-destructive patch: it repaints the state classes and the marker glyphs, never the label
-// regions, so advancing `current` can't discard the author's step content.
+// INFO: patch only the state classes and marker glyphs, never the label regions, so advancing
+// `current` doesn't discard the author's step content
 hooks.fragment.update("steps", (bindings, ops) => {
 	for (const step of bindings.steps ?? []) {
 		const selector = `[data-step="${step.index}"]`;

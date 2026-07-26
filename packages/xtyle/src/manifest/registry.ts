@@ -22,6 +22,12 @@ import { badgeManifest } from "./badge.manifest.js";
 import { dotManifest } from "./dot.manifest.js";
 import { ribbonManifest } from "./ribbon.manifest.js";
 import { switchManifest } from "./switch.manifest.js";
+import { schemeToggleManifest } from "./scheme-toggle.manifest.js";
+import { themeScopeManifest } from "./theme-scope.manifest.js";
+import { themeCardManifest } from "./theme-card.manifest.js";
+import { themeSwatchManifest } from "./theme-swatch.manifest.js";
+import { themePickerManifest } from "./theme-picker.manifest.js";
+import { ninePatchManifest } from "./nine-patch.manifest.js";
 import { alertManifest } from "./alert.manifest.js";
 import { linkManifest } from "./link.manifest.js";
 import { appShellManifest } from "./app-shell.manifest.js";
@@ -95,6 +101,7 @@ import { commandPaletteManifest } from "./command-palette.manifest.js";
 import { splitterManifest } from "./splitter.manifest.js";
 import { codeManifest } from "./code.manifest.js";
 import { markdownManifest } from "./markdown.manifest.js";
+import { bbcodeManifest } from "./bbcode.manifest.js";
 import { paginationManifest } from "./pagination.manifest.js";
 import { calendarManifest } from "./calendar.manifest.js";
 import { qrManifest } from "./qr.manifest.js";
@@ -108,6 +115,12 @@ export const components: ComponentRegistry = {
 	dot: dotManifest,
 	ribbon: ribbonManifest,
 	switch: switchManifest,
+	"scheme-toggle": schemeToggleManifest,
+	"theme-scope": themeScopeManifest,
+	"theme-card": themeCardManifest,
+	"theme-swatch": themeSwatchManifest,
+	"theme-picker": themePickerManifest,
+	"nine-patch": ninePatchManifest,
 	alert: alertManifest,
 	link: linkManifest,
 	"app-shell": appShellManifest,
@@ -181,6 +194,7 @@ export const components: ComponentRegistry = {
 	splitter: splitterManifest,
 	code: codeManifest,
 	markdown: markdownManifest,
+	bbcode: bbcodeManifest,
 	pagination: paginationManifest,
 	calendar: calendarManifest,
 	qr: qrManifest,

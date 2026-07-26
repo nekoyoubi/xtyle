@@ -18,8 +18,7 @@ const findXtyleElement = (root: Element, tag?: string): Element | null => {
 		}
 		return null;
 	};
-	// A preferred tag is a hint, not a requirement: some wrappers render a different element than
-	// their id suggests (`CardLink` renders `<xtyle-card>`), so fall back to the first xtyle element.
+	// INFO: the preferred tag is a hint; some wrappers render a different element than their id (`CardLink` → `<xtyle-card>`), so fall back to the first xtyle element.
 	return (tag ? walk(root) : null) ?? walk(root);
 };
 

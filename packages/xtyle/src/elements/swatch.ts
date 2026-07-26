@@ -107,9 +107,8 @@ export class XtyleSwatch extends XtyleElement {
 			return;
 		}
 		this.placeDetails();
-		// The readout is placed from viewport coordinates, so it only stays on its chip while something
-		// keeps it there — and a swatch's home is a scrolling palette. Escape reaches the document for
-		// the reason below: raised by hover, the key never lands anywhere inside this element.
+		// INFO: placed from viewport coordinates, so track the anchor as a scrolling palette moves it;
+		// Escape listens on document because a hover-raised popover never focuses inside this element
 		this.tracker.start(swatch, details);
 		document.addEventListener("keydown", this.onKeydown, { capture: true });
 	};

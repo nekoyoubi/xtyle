@@ -8,7 +8,6 @@ import Text from "@xtyle/astro/Text.astro";
 
 const hues = ["#6ea8fe", "#7c5cff", "#ff7ac6", "#4ade80", "#fbbf24"];
 
-// Real-looking photos rather than "Slide N" placeholders: a gallery demo should look like a gallery.
 const photo = (sky: string, mid: string, deep: string, sun: string) =>
 	"data:image/svg+xml," +
 	encodeURIComponent(
@@ -23,8 +22,6 @@ const gallery = [
 	{ src: photo("#4a6bd8", "#2a3a8f", "#0d1230", "#dfe6ff"), alt: "Nightfall" },
 ];
 
-// A self-contained moving preview, so the hover demo shows three different kinds of preview rather
-// than the same clip twice.
 const driftSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block"><defs><linearGradient id="d" x1="0" y1="0" x2="0.5" y2="1"><stop offset="0" stop-color="#ffc978"><animate attributeName="stop-color" values="#ffc978;#ff8f5e;#c9a7ff;#ffc978" dur="8s" repeatCount="indefinite"/></stop><stop offset="1" stop-color="#6d2f26"><animate attributeName="stop-color" values="#6d2f26;#2e2154;#6d2f26" dur="8s" repeatCount="indefinite"/></stop></linearGradient></defs><rect width="640" height="360" fill="url(#d)"/><circle cx="486" cy="94" r="40" fill="#fff2d6" opacity="0.9"><animate attributeName="cy" values="94;150;94" dur="9s" repeatCount="indefinite"/></circle><path d="M0 312 L190 236 L340 296 L470 232 L640 288 L640 360 L0 360 Z" fill="#0b0d12" opacity="0.62"/></svg>`;
 ---
 

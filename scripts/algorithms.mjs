@@ -2,8 +2,8 @@ import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 
-/** The key a packaged mod manifest carries its static algorithm manifest under. Mirrors `host/index.ts`. */
-export const STATIC_MANIFEST_KEY = "x-xtyle";
+/** The host slot a packaged mod fills with its static algorithm manifest. Mirrors `host/index.ts`. */
+export const STATIC_MANIFEST_SLOT = "xtyle.pack-meta";
 
 /** The path, relative to the mod's directory, of the script a mod manifest names as its entry. */
 export function entryScript(manifest) {
@@ -77,15 +77,19 @@ export function readAlgorithmManifest(source, id) {
 }
 
 /**
- * Stamp an algorithm's static manifest into its packaged mod manifest, so a discovery surface can list
- * what the algorithm accepts without executing it. Rewrites only on a real change, and returns whether
- * it did — the freshness guard reads that to catch a block that has drifted from its code.
+ * Stamp an algorithm's static manifest into its packaged mod manifest as the `xtyle.pack-meta` data
+ * fill, so a discovery surface can list what the algorithm accepts without executing it. Rewrites only
+ * on a real change, and returns whether it did — the freshness guard reads that to catch a block that
+ * has drifted from its code.
  */
 export function writeStaticManifest(entry, block) {
-	const current = entry.manifest[STATIC_MANIFEST_KEY];
+	const current = entry.manifest.fills?.[STATIC_MANIFEST_SLOT]?.[0];
 	if (current && JSON.stringify(current) === JSON.stringify(block)) return false;
 
-	const next = { ...entry.manifest, [STATIC_MANIFEST_KEY]: block };
+	const next = {
+		...entry.manifest,
+		fills: { ...entry.manifest.fills, [STATIC_MANIFEST_SLOT]: [block] },
+	};
 	writeFileSync(entry.manifestPath, `${JSON.stringify(next, null, "\t")}\n`);
 	entry.manifest = next;
 	return true;

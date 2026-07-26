@@ -110,9 +110,8 @@
 	$effect(() => {
 		const target = el;
 		if (!target) return;
-		// Defer to a microtask so an `open`-by-default popover doesn't fire the element's popover
-		// logic synchronously inside Svelte's mount-effect flush (which corrupts Svelte's
-		// reconciliation). Post-mount toggles settle a microtask later — imperceptible.
+		// HACK: defer to a microtask so an `open`-by-default popover doesn't run the element's popover
+		// logic during Svelte's mount-effect flush, which corrupts reconciliation
 		queueMicrotask(() => {
 			target.open = open;
 		});

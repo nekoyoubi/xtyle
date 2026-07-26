@@ -34,9 +34,8 @@ const {
 await checkAuthoring("icon", Astro.props);
 const tone = resolveOptionalTone(toneInput);
 
-// A functional glyph is looked up; any other name is offered to the mark generators and baked when one claims it.
 const isGlyph = typeof name !== "string" || (ICON_NAMES as readonly string[]).includes(name);
-const mark = isGlyph ? null : await bakeIconMark(name, colors, iconClass({ size, tone, spin }));
+const mark = isGlyph ? null : await bakeIconMark(name, colors, iconClass({ size, tone, spin }), label);
 const composed =
 	mark != null ? `<span data-root data-icon>${mark}</span>` : await renderFragmentLight("icon", { name, size, tone, label, spin });
 ---

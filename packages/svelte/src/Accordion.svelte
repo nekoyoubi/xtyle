@@ -15,6 +15,8 @@
 		multiple?: boolean;
 		size?: Size;
 		headingLevel?: 2 | 3 | 4 | 5 | 6;
+		/** The roster glyph drawn as the disclosure marker. */
+		chevronIcon?: string;
 		ontoggle?: (event: Event) => void;
 		panel: Snippet<[string]>;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -26,6 +28,7 @@
 		multiple = false,
 		size = "md",
 		headingLevel,
+		chevronIcon,
 		ontoggle,
 		panel,
 		...rest
@@ -37,6 +40,7 @@
 	multiple={multiple || undefined}
 	{size}
 	heading-level={headingLevel}
+	chevron-icon={chevronIcon}
 	{ontoggle}
 >
 	{#each sections as section (section.value)}

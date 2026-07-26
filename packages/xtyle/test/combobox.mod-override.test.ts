@@ -15,8 +15,8 @@ import { manifest as popoverManifest, fragmentSources as popoverSources } from "
  */
 const dotMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-combobox-dots",
 		version: "0.0.1",
 		title: "test-combobox-dots",
@@ -24,7 +24,7 @@ const dotMod = {
 		capabilities: ["xtyle.component.combobox"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.combobox": [{ id: "combobox", format: "text/html+jsml", source: "combobox.html" }],
+			"component.combobox": [{ id: "combobox", format: "application/x-xtyle+html", source: "combobox.html" }],
 		},
 	},
 	fragmentSources: {
@@ -99,9 +99,7 @@ beforeAll(async () => {
 		this.removeAttribute(OPEN_FLAG);
 		toggle(this, "closed");
 	};
-	// Popover is a collaborator the combobox renders inside, not the slot under test: warming its fill
-	// keeps the panel's first paint synchronous. The combobox's own fill is left for the host to pull
-	// in behind the mod.
+	// INFO: warm popover's fill for a synchronous first paint; leave the combobox's for the host to pull in behind the mod
 	await loadFill(popoverManifest, popoverSources);
 	await loadFill(dotMod.manifest, dotMod.fragmentSources);
 });
@@ -177,9 +175,9 @@ describe("a mod reshapes the combobox", () => {
 
 	it("keeps multi-select working with chips the mod drew itself", () => {
 		const el = make({ multiple: "", name: "labels" });
-		key(el, "ArrowDown"); // cursor onto the first row
-		key(el, "Enter"); // pick it; the list stays open with the cursor where it was
-		key(el, "ArrowDown"); // onto the next row
+		key(el, "ArrowDown");
+		key(el, "Enter");
+		key(el, "ArrowDown");
 		key(el, "Enter");
 		expect(el.values).toEqual(["bug", "docs"]);
 		const chips = [...root(el).querySelectorAll<HTMLElement>(".modded-chip")];

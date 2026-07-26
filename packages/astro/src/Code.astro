@@ -30,9 +30,6 @@ const { lang, code = "", preload = false, static: isStatic = false, copy = true,
 await checkAuthoring("code", Astro.props);
 
 const result = await highlight(code, lang ?? null);
-// The fill owns the line rows, the number gutter, and the highlight tint — hand it the tokenized
-// source and the two flags and let it compose, so the build-time markup is the same structure the
-// browser paints (and the same one a mod replacing `component.code` gets to reshape).
 const bindings = {
 	html: result.language === null ? plainCodeHtml(code) : result.html,
 	language: result.language,

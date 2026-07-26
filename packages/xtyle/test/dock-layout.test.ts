@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveDrop, type DockTarget } from "../src/elements/dock-layout.js";
 
-// A single 200x200 target at the origin. Center spans [50,150] on each axis at the
-// default edgeRatio 0.25 (the outer 50px on each side is an edge band).
+// INFO: 200x200 target at origin; at default edgeRatio 0.25 the center spans [50,150] per axis, the outer 50px is edge band.
 const zone: DockTarget = { id: "main", rect: { top: 0, left: 0, width: 200, height: 200 } };
 
 describe("resolveDrop", () => {
@@ -33,7 +32,7 @@ describe("resolveDrop", () => {
 	});
 
 	it("resolves a corner to the nearer edge", () => {
-		// Closer to the top edge than the left edge.
+		// INFO: (30,10) is closer to the top edge (10px) than the left (30px).
 		const r = resolveDrop({ pointer: { x: 30, y: 10 }, targets: [zone] });
 		expect(r?.region).toBe("top");
 	});
@@ -50,7 +49,7 @@ describe("resolveDrop", () => {
 	});
 
 	it("honors a custom edgeRatio for the center band", () => {
-		// At edgeRatio 0.1 the center spans [20,180]; x=30 now lands in the center, not the left band.
+		// INFO: at edgeRatio 0.1 the center spans [20,180], so x=30 lands in the center, not the left band.
 		const r = resolveDrop({ pointer: { x: 30, y: 100 }, targets: [zone], edgeRatio: 0.1 });
 		expect(r?.region).toBe("center");
 	});

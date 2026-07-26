@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-// side effect: defines the <xtyle-sheet> custom element on the happy-dom registry
+// INFO: side-effect import; registers <xtyle-sheet> on the happy-dom registry
 import "../src/elements/sheet.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/sheet/source.generated.js";
@@ -108,8 +108,6 @@ describe("the sheet's chrome comes from the fragment", () => {
 		expect(root(el).querySelector(".xtyle-sheet__close")).not.toBeNull();
 	});
 
-	// The grabber is a PART, not a finish: a mod has to be able to replace it, which a `::before`
-	// with a `content:` could never allow. Guard that it is real markup inside the handle.
 	it("draws the grabber as real markup, never as a stylesheet pseudo-element", () => {
 		const el = make();
 		const grabber = root(el).querySelector(".xtyle-sheet__grabber") as HTMLElement;
@@ -254,8 +252,7 @@ describe("accessible naming and keyboard", () => {
 		expect(close.querySelector("svg")!.getAttribute("aria-hidden")).toBe("true");
 	});
 
-	// The platform only closes a *modal* dialog on Escape, so a non-modal sheet would have no keyboard
-	// exit at all if the element did not wire the key itself.
+	// INFO: the platform closes a <dialog> on Escape only when modal; a non-modal sheet needs its own key wiring
 	it("closes a non-modal sheet on Escape, the key the platform ignores there", () => {
 		const el = make({ heading: "Inspector", "non-modal": "" });
 		const cancelled = vi.fn();

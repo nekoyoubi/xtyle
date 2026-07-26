@@ -4,6 +4,7 @@ import { accordionHostCss, type AccordionSection } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/accordion/source.generated.js";
 import { resolveVocab, SIZES } from "../vocab.js";
+import { iconBody } from "../icon-registry.js";
 
 let accordionSeq = 0;
 
@@ -16,12 +17,21 @@ export class XtyleAccordion extends XtyleElement {
 	private openKeys: Set<string> | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "accordion", {
 		context: (handler) =>
-			handler === "toggleSection" ? this.toggleContext() : handler === "navKeydown" ? this.navContext() : undefined,
+			handler === "syncToggle" ? this.toggleContext() : handler === "navKeydown" ? this.navContext() : undefined,
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["multiple", "size", "heading-level", "items"];
+		return ["multiple", "size", "heading-level", "items", "chevron-icon"];
+	}
+
+	/** The roster glyph drawn as the disclosure marker. Any name the icon roster can draw, built-in
+	 * or mod-contributed. */
+	get chevronIcon(): string {
+		return this.getAttribute("chevron-icon") || "chevron-down";
+	}
+	set chevronIcon(value: string) {
+		this.setAttribute("chevron-icon", value);
 	}
 
 	get multiple(): boolean {
@@ -72,9 +82,10 @@ export class XtyleAccordion extends XtyleElement {
 	 * so an unmarked element warns instead of pairing silently.
 	 */
 	private lightPairs(): { header: HTMLElement; panel: HTMLElement | null }[] {
-		const direct = Array.from(this.children) as HTMLElement[];
+		const direct = (Array.from(this.children) as HTMLElement[]).filter((el) => !el.hasAttribute("data-root"));
 		const isPanelSlot = (slot: string | null) => slot === "panel" || (slot?.startsWith("panel-") ?? false);
-		let headers = direct.filter((el) => el.hasAttribute("data-xtyle-header") || el.getAttribute("slot") === "header");
+		const isHeaderSlot = (slot: string | null) => slot === "header" || (slot?.startsWith("header-") ?? false);
+		let headers = direct.filter((el) => el.hasAttribute("data-xtyle-header") || isHeaderSlot(el.getAttribute("slot")));
 		let panels = direct.filter((el) => el.hasAttribute("data-xtyle-panel") || isPanelSlot(el.getAttribute("slot")));
 		if (headers.length === 0) {
 			const half = Math.ceil(direct.length / 2);
@@ -119,14 +130,44 @@ export class XtyleAccordion extends XtyleElement {
 	 */
 	private assignPanelSlots(): void {
 		if (this.items.length > 0) return;
-		this.lightPairs().forEach((pair, i) => pair.panel?.setAttribute("slot", `panel-${i}`));
+		this.lightPairs().forEach((pair, i) => {
+			pair.header.setAttribute("slot", `header-${i}`);
+			pair.panel?.setAttribute("slot", `panel-${i}`);
+		});
+	}
+
+	/**
+	 * The sections a composed (Astro SSR) scaffold already holds. Slotted authoring that went through
+	 * the server binding has no pairable children left — the authored header and panel sit inside the
+	 * fill's own regions — so identity and open state are read back off the rendered items instead.
+	 * Safe because the `update` hook only ever toggles attributes; it never rebuilds the structure, so
+	 * the authored content (nested components included) is never re-rendered or lost.
+	 */
+	private composedSections(): AccordionSection[] | null {
+		const scaffold = Array.from(this.children).find((el) => el.hasAttribute("data-root"));
+		if (!scaffold) return null;
+		return Array.from(scaffold.children).map((item, i) => {
+			const trigger = item.querySelector(".xtyle-accordion__trigger");
+			return {
+				header: "",
+				headerSlot: `header-${i}`,
+				panel: "",
+				panelSlot: `panel-${i}`,
+				open: item.hasAttribute("open"),
+				disabled: trigger?.getAttribute("aria-disabled") === "true",
+				value: item.getAttribute("data-key") ?? String(i),
+			};
+		});
 	}
 
 	private get sections(): AccordionSection[] {
 		const fromAttr = this.items;
 		if (fromAttr.length > 0) return fromAttr;
+		const composed = this.composedSections();
+		if (composed) return composed;
 		return this.lightPairs().map(({ header }, i) => ({
-			header: header.innerHTML,
+			header: "",
+			headerSlot: `header-${i}`,
 			panel: "",
 			panelSlot: `panel-${i}`,
 			open: readBoolAttrOrProp(header, "open") || header.getAttribute("aria-expanded") === "true",
@@ -153,6 +194,7 @@ export class XtyleAccordion extends XtyleElement {
 		return {
 			sections: this.sections.map((section, i) => ({
 				header: section.header,
+				headerSlot: section.headerSlot,
 				panel: section.panel,
 				panelSlot: section.panelSlot,
 				value: section.value ?? String(i),
@@ -162,6 +204,9 @@ export class XtyleAccordion extends XtyleElement {
 			size: this.size,
 			headingLevel: this.headingLevel,
 			uid: this.uid,
+			multiple: this.multiple,
+			chevronIcon: this.chevronIcon,
+			chevronBody: iconBody(this.chevronIcon) ?? null,
 		};
 	}
 
@@ -186,8 +231,9 @@ export class XtyleAccordion extends XtyleElement {
 			trigger?.focus();
 		}
 		if (intent.open !== undefined) {
+			// INFO: `<details>` toggles itself before `toggle` fires, and single-open mode fires two
+			// toggles per click, so re-rendering here would race the browser. Record state only.
 			this.openKeys = new Set(intent.open);
-			this.render();
 			this.dispatchEvent(
 				new CustomEvent("toggle", {
 					bubbles: true,

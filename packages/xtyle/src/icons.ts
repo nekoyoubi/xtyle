@@ -73,6 +73,14 @@ export interface RenderIconOptions {
 	class?: string | null;
 	/** A `part` attribute for the `<svg>`, so a host element exposes it for styling. */
 	part?: string | null;
+	/**
+	 * The glyph body to draw, bypassing the name lookup.
+	 *
+	 * This module is inlined whole into each sandboxed fragment bundle, so the table it carries is a
+	 * build-time snapshot that no mod can reach. A trusted caller resolves the name against the live
+	 * registry and passes the body here; the sandbox draws what it is handed and stays authority-free.
+	 */
+	body?: string | null;
 }
 
 const stroke = (d: string): string =>
@@ -149,7 +157,7 @@ export function hasIcon(name: string): name is IconName {
 	return Object.prototype.hasOwnProperty.call(ICONS, name);
 }
 
-// Inlined rather than imported from markup/escape: this module must stay import-free so esbuild can bundle it whole into the sandboxed component fragment.
+// INFO: kept import-free (not imported from markup/escape) so esbuild bundles this module whole into the sandboxed fragment.
 function escapeAttr(value: string): string {
 	return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
@@ -173,10 +181,11 @@ const MISSING = stroke("M5 5h14v14H5z");
  * Renders a named glyph as a themeable `<svg>` string. An unknown name renders a
  * visible placeholder box rather than nothing, so a typo shows on screen instead
  * of silently vanishing. When `label` is set the icon carries `role="img"` and
- * the name; otherwise it is `aria-hidden`.
+ * the name; otherwise it is `aria-hidden`. `opts.body` wins over the name, which
+ * is how a mod-supplied glyph reaches a sandboxed fragment.
  */
 export function renderIcon(name: string, opts: RenderIconOptions = {}): string {
-	const body = hasIcon(name) ? ICONS[name] : MISSING;
+	const body = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
 	const part = opts.part ? ` part="${escapeAttr(opts.part)}"` : "";
 	const a11y = opts.label
 		? `role="img" aria-label="${escapeAttr(opts.label)}"`

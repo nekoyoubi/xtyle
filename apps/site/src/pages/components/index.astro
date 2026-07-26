@@ -4,6 +4,7 @@ import { getStats, displayStats } from "../../data/stats";
 import Base from "../../layouts/Base.astro";
 import Card from "@xtyle/astro/Card.astro";
 import Badge from "@xtyle/astro/Badge.astro";
+import Stat from "@xtyle/astro/Stat.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Grid from "@xtyle/astro/Grid.astro";
@@ -46,8 +47,92 @@ function coverageFor(component: ComponentManifest) {
 	};
 }
 
-const stats = displayStats(site).map((s) => ({ num: `${s.value}`, label: s.label, delta: site.delta(s.key) }));
-const newThisCycle = all.filter((c) => isNewComponent(c.since));
+/**
+ * When each component arrived, newest first.
+ *
+ * Sorted numerically rather than lexically, because the string sort puts `0.10.0` *below* `0.9.0`
+ * and would quietly file the newest release under the oldest — the one bug this data is guaranteed
+ * to grow into.
+ */
+const compareVersions = (a: string, b: string): number => {
+	const parse = (v: string) => v.split(".").map((n) => Number.parseInt(n, 10) || 0);
+	const [x, y] = [parse(a), parse(b)];
+	for (let i = 0; i < Math.max(x.length, y.length); i++) {
+		const d = (x[i] ?? 0) - (y[i] ?? 0);
+		if (d !== 0) return d;
+	}
+	return 0;
+};
+
+const versions = [...new Set(all.map((c) => c.since ?? "0.1.0"))].sort(compareVersions);
+const advent = versions.map((version, i) => ({
+	version,
+	added: all.filter((c) => (c.since ?? "0.1.0") === version).length,
+	total: all.filter((c) => compareVersions(c.since ?? "0.1.0", version) <= 0).length,
+	first: i === 0,
+}));
+const producedSince: Record<string, string> = site.algorithm?.producedSince ?? {};
+const tokensAt = (version: string) =>
+	Object.keys(register).filter(
+		(name) => compareVersions(producedSince[name] ?? "0.1.0", version) <= 0,
+	).length;
+
+const scopes = Object.fromEntries(
+	versions.map((version) => {
+		const existed = all.filter((c) => compareVersions(c.since ?? "0.1.0", version) <= 0);
+		return [
+			version,
+			{
+				components: existed.length,
+				categories: new Set(existed.map((c) => c.category)).size,
+				tokens: tokensAt(version),
+				bindings: site.bindings,
+			},
+		];
+	}),
+);
+const peakAdded = Math.max(...advent.filter((a) => !a.first).map((a) => a.added), 1);
+
+const foundingVersion = versions[0] ?? "0.1.0";
+const latestVersion = versions[versions.length - 1] ?? foundingVersion;
+
+const deltaKeys = ["components", "categories", "tokens", "bindings"] as const;
+type DeltaKey = (typeof deltaKeys)[number];
+interface VersionDelta extends Record<DeltaKey, number> {
+	prior: string | null;
+}
+const versionDeltas: Record<string, VersionDelta> = Object.fromEntries(
+	versions.map((version, i) => {
+		const prior = i > 0 ? versions[i - 1] : null;
+		const cur = scopes[version] as Record<DeltaKey, number>;
+		const prev = prior ? (scopes[prior] as Record<DeltaKey, number>) : null;
+		const growth = Object.fromEntries(
+			deltaKeys.map((k) => [k, prev ? cur[k] - prev[k] : 0]),
+		) as Record<DeltaKey, number>;
+		return [version, { prior, ...growth }];
+	}),
+);
+
+const latestDeltas = versionDeltas[latestVersion] ?? ({ prior: null } as VersionDelta);
+const stats = displayStats(site).map((s) => {
+	const delta = latestDeltas[s.key as DeltaKey] ?? 0;
+	return {
+		key: s.key,
+		num: `${s.value}`,
+		label: s.label,
+		deltaLabel: `+${delta}`,
+		prior: latestDeltas.prior,
+		move: delta > 0 && latestDeltas.prior ? "up" : "none",
+	};
+});
+const addedByVersion: Record<string, number> = Object.fromEntries(advent.map((a) => [a.version, a.added]));
+const bandComponents = all
+	.filter((c) => (c.since ?? "0.1.0") !== foundingVersion)
+	.sort(
+		(a, b) =>
+			compareVersions(b.since ?? "0.1.0", a.since ?? "0.1.0") || a.name.localeCompare(b.name),
+	);
+const currentAdded = addedByVersion[site.version] ?? 0;
 
 const metaDescription = `The xtyle component contract: ${total} components across ${grouped.length} categories, each rendered live from the active xtyle-default theme with a live token-coverage check.`;
 ---
@@ -72,13 +157,15 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		<Grid columns={4} gap={3} role="list" class="cx-stats">
 			{stats.map((stat) => (
 				<Card compact role="listitem" class="cx-stat">
-					<p class="cx-stat__num">{stat.num}</p>
-					<Text size="xs" tone="muted" class="cx-stat__label">{stat.label}</Text>
-					{stat.delta > 0 && (
-						<Badge tone="success" variant="soft" size="sm" class="cx-stat__delta">
-							+{stat.delta} since v{site.baseline.version}
-						</Badge>
-					)}
+					<Stat
+						label={stat.label}
+						delta={stat.deltaLabel}
+						trend="up"
+						caption={stat.prior ? `since v${stat.prior}` : undefined}
+						data-cx-stat={stat.key}
+						data-move={stat.move}
+						class="cx-stat__stat"
+					>{stat.num}</Stat>
 				</Card>
 			))}
 		</Grid>
@@ -94,50 +181,111 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 			autocomplete="off"
 			data-search-input
 		/>
+		<div class="cx-version">
+			<label class="cx-version__label" for="cx-since">Available as of</label>
+			<select
+				id="cx-since"
+				class="cx-version__select xtyle-control"
+				autocomplete="off"
+				data-version-select
+				data-latest={latestVersion}
+			>
+				{[...advent].reverse().map((a) => (
+					<option value={a.version} selected={a.version === latestVersion}>{a.version} — {a.total} available</option>
+				))}
+			</select>
+		</div>
 		<p class="cx-search__status" data-search-status aria-live="polite" role="status"></p>
+		<script is:inline type="application/json" data-version-scopes set:html={JSON.stringify(scopes)}></script>
+		<script is:inline type="application/json" data-version-deltas set:html={JSON.stringify(versionDeltas)}></script>
 	</div>
 
-	{newThisCycle.length > 0 && (
-		<section class="cx-new" aria-labelledby="cx-new-title" data-new-band>
-			<div class="cx-new__head">
-				<span class="cx-new__spark" aria-hidden="true">✦</span>
-				<Heading level={2} size="lg" id="cx-new-title">New in v{site.version}</Heading>
-				<Text size="sm" tone="muted" class="cx-new__blurb">
-					{`${newThisCycle.length} ${newThisCycle.length === 1 ? "component" : "components"}`} landed this cycle. Each renders live below, from the same theme.
-				</Text>
-			</div>
-			<Grid minColWidth="15rem" gap={4} align="stretch" class="cx-new__grid">
-				{newThisCycle.map((component) => {
-					const cov = coverageFor(component);
-					return (
-					<article class="cx-new-card">
-						<Card class="cx-new-card__inner">
-							<Cluster justify="between" align="start" gap={2} class="cx-new-card__title">
-								<Cluster gap={2} align="center">
-									<Heading level={3} size="md">
-										<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
-									</Heading>
-									<Badge variant="solid" tone="accent" size="sm">New</Badge>
-								</Cluster>
-								<CoverageMeter
-									covered={cov.covered}
-									missing={cov.missing}
-									produced={producedCount}
-									consumed={cov.consumed}
-									peak={peakFootprint}
-								/>
+	<section class="cx-advent" aria-labelledby="cx-advent-title">
+		<Stack gap={1}>
+			<Heading level={2} size="md" id="cx-advent-title">How the set grew</Heading>
+			<Text tone="muted" size="sm">
+				Components introduced per release, with the running total. Pick a bar to filter the
+				catalogue to what existed then.
+			</Text>
+		</Stack>
+		<ol class="cx-advent__plot">
+			{advent.map((a) => (
+				<li class="cx-advent__col">
+					<button
+						type="button"
+						class="cx-advent__bar-btn"
+						data-advent-bar
+						data-version={a.version}
+						aria-label={`${a.version}: ${a.added} new, ${a.total} available in total`}
+					>
+						<span class="cx-advent__count">{a.added}</span>
+						<span
+							class="cx-advent__bar"
+							style={`--h: ${a.first ? 100 : Math.round((a.added / peakAdded) * 100)}%`}
+							data-seed={a.first ? "true" : undefined}
+							data-latest={a.version === site.version ? "true" : undefined}
+						/>
+						<span class="cx-advent__tick">{a.version}</span>
+						<span class="cx-advent__total">{a.total}</span>
+					</button>
+				</li>
+			))}
+		</ol>
+		<Text tone="muted" size="xs" class="cx-advent__note">
+			The first bar is the founding set, not a release that added that many at once.
+		</Text>
+	</section>
+
+	<section
+		class="cx-new"
+		aria-labelledby="cx-new-title"
+		data-new-band
+		data-version={site.version}
+		data-founding={foundingVersion}
+		hidden={currentAdded === 0 ? true : undefined}
+	>
+		<div class="cx-new__head">
+			<span class="cx-new__spark" aria-hidden="true">✦</span>
+			<Heading level={2} size="lg" id="cx-new-title">New in <span data-new-version>v{site.version}</span></Heading>
+			<Text size="sm" tone="muted" class="cx-new__blurb">
+				<span data-new-blurb>
+					{`${currentAdded} ${currentAdded === 1 ? "component" : "components"}`} landed this cycle. Each renders live below, from the same theme.
+				</span>
+			</Text>
+		</div>
+		<script is:inline type="application/json" data-new-counts set:html={JSON.stringify(addedByVersion)}></script>
+		<Grid minColWidth="15rem" gap={4} align="stretch" class="cx-new__grid">
+			{bandComponents.map((component) => {
+				const cov = coverageFor(component);
+				const since = component.since ?? "0.1.0";
+				return (
+				<article class="cx-new-card" data-new-card data-band-since={since} hidden={since !== site.version ? true : undefined}>
+					<Card class="cx-new-card__inner">
+						<Cluster justify="between" align="start" gap={2} class="cx-new-card__title">
+							<Cluster gap={2} align="center">
+								<Heading level={3} size="md">
+									<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
+								</Heading>
+								<Badge variant="solid" tone="success" size="sm">New</Badge>
 							</Cluster>
-							<div class="cx-card__preview" aria-hidden="true" inert>
-								<CardPreview id={component.id} />
-							</div>
-							<p class="cx-new-card__summary" set:html={renderMarkdownInline(component.summary)} />
-						</Card>
-					</article>
-					);
-				})}
-			</Grid>
-		</section>
-	)}
+							<CoverageMeter
+								covered={cov.covered}
+								missing={cov.missing}
+								produced={producedCount}
+								consumed={cov.consumed}
+								peak={peakFootprint}
+							/>
+						</Cluster>
+						<div class="cx-card__preview" aria-hidden="true" inert>
+							<CardPreview id={component.id} />
+						</div>
+						<p class="cx-new-card__summary" set:html={renderMarkdownInline(component.summary)} />
+					</Card>
+				</article>
+				);
+			})}
+		</Grid>
+	</section>
 
 	{grouped.map((group, gi) => {
 		const groupCovered = group.items.filter(
@@ -158,6 +306,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 						tone={groupHealthy ? "success" : "warn"}
 						size="sm"
 						title={`${groupCovered} of ${group.items.length} fully covered`}
+						data-group-badge
 					>
 						{groupCovered}/{group.items.length}
 					</Badge>
@@ -171,6 +320,8 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 						<article
 							class={`cx-card-link ${cov.covered ? "is-covered" : "has-gaps"}`}
 							data-cx-card
+							data-since={component.since ?? "0.1.0"}
+							data-covered={cov.covered ? "true" : "false"}
 							data-search={`${component.name} ${component.summary} ${(component.keywords ?? []).join(" ")} ${(component.seeAlso ?? []).join(" ")}`.toLowerCase()}
 						>
 							<Card interactive class="cx-card">
@@ -179,8 +330,12 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 										<Heading level={3} size="md" class="cx-card__name">
 											<a class="cx-card__link" href={`/components/${component.id}`}>{component.name}</a>
 										</Heading>
-										{isNewComponent(component.since) && (
-											<Badge variant="solid" tone="accent" size="sm">New</Badge>
+										{isNewComponent(component.since) ? (
+											<Badge variant="solid" tone="success" size="sm">New</Badge>
+										) : (
+											<Badge variant="soft" tone="neutral" size="sm" class="cx-card__since">
+												{component.since ?? "0.1.0"}
+											</Badge>
 										)}
 									</Cluster>
 									<CoverageMeter
@@ -215,17 +370,65 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 
 <script>
 	const input = document.querySelector("[data-search-input]") as HTMLInputElement | null;
+	const picker = document.querySelector("[data-version-select]") as HTMLSelectElement | null;
 	const status = document.querySelector("[data-search-status]") as HTMLElement | null;
 	const empty = document.querySelector("[data-search-empty]") as HTMLElement | null;
 	const sections = Array.from(document.querySelectorAll("[data-cx-section]")) as HTMLElement[];
 	const cards = Array.from(document.querySelectorAll("[data-cx-card]")) as HTMLElement[];
+	const bars = Array.from(document.querySelectorAll("[data-advent-bar]")) as HTMLElement[];
+	const groupBadges = Array.from(document.querySelectorAll("[data-group-badge]")) as HTMLElement[];
+	const statHosts = Array.from(document.querySelectorAll("[data-cx-stat]")) as HTMLElement[];
+	const statValue = (host: HTMLElement) => host.querySelector(".xtyle-stat__value") as HTMLElement | null;
+	const newBand = document.querySelector("[data-new-band]") as HTMLElement | null;
 	const total = cards.length;
 
-	function apply(raw: string) {
-		const q = raw.trim().toLowerCase();
+	const scopeNode = document.querySelector("[data-version-scopes]");
+	const scopes: Record<string, Record<string, number>> = scopeNode
+		? JSON.parse(scopeNode.textContent ?? "{}")
+		: {};
+	const deltaNode = document.querySelector("[data-version-deltas]");
+	const versionDeltas: Record<string, { prior: string | null } & Record<string, number>> = deltaNode
+		? JSON.parse(deltaNode.textContent ?? "{}")
+		: {};
+	const liveStats = Object.fromEntries(
+		statHosts.map((host) => [host.dataset.cxStat ?? "", Number.parseInt(statValue(host)?.textContent ?? "0", 10)]),
+	);
+	const currentVersion = newBand?.dataset.version ?? "";
+	const foundingVersion = newBand?.dataset.founding ?? "";
+	const latestVersion = picker?.dataset.latest ?? currentVersion;
+	const newBandCards = Array.from(document.querySelectorAll("[data-new-card]")) as HTMLElement[];
+	const newVersionEl = document.querySelector("[data-new-version]") as HTMLElement | null;
+	const newBlurbEl = document.querySelector("[data-new-blurb]") as HTMLElement | null;
+	const newCountsNode = document.querySelector("[data-new-counts]");
+	const newCounts: Record<string, number> = newCountsNode
+		? JSON.parse(newCountsNode.textContent ?? "{}")
+		: {};
+
+	/** Numeric, so 0.10.0 sorts above 0.9.0 rather than below it. */
+	function compare(a: string, b: string) {
+		const parse = (v: string) => v.split(".").map((n) => Number.parseInt(n, 10) || 0);
+		const [x, y] = [parse(a), parse(b)];
+		for (let i = 0; i < Math.max(x.length, y.length); i++) {
+			const d = (x[i] ?? 0) - (y[i] ?? 0);
+			if (d !== 0) return d;
+		}
+		return 0;
+	}
+
+	/**
+	 * The two filters compose rather than replace: a search inside a pinned version keeps the pin, and
+	 * clearing the search does not silently widen the version back to everything. Anything else makes
+	 * one control quietly undo the other.
+	 */
+	function apply() {
+		const q = (input?.value ?? "").trim().toLowerCase();
+		const asOf = picker?.value ?? "";
 		let visible = 0;
 		for (const card of cards) {
-			const match = q === "" || (card.dataset.search ?? "").includes(q);
+			const since = card.dataset.since ?? "0.1.0";
+			const matchesQuery = q === "" || (card.dataset.search ?? "").includes(q);
+			const existedYet = asOf === "" || compare(since, asOf) <= 0;
+			const match = matchesQuery && existedYet;
 			card.hidden = !match;
 			if (match) visible++;
 		}
@@ -233,19 +436,83 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 			section.hidden = !section.querySelector("[data-cx-card]:not([hidden])");
 		}
 		if (empty) empty.hidden = visible !== 0;
+		for (const bar of bars) {
+			bar.setAttribute("aria-pressed", String(bar.dataset.version === asOf && asOf !== ""));
+			const future = asOf !== "" && compare(bar.dataset.version ?? "0.1.0", asOf) > 0;
+			bar.toggleAttribute("data-out-of-scope", future);
+		}
+
+		for (const badge of groupBadges) {
+			const section = badge.closest("[data-cx-section]");
+			if (!section) continue;
+			const shown = Array.from(
+				section.querySelectorAll("[data-cx-card]:not([hidden])"),
+			) as HTMLElement[];
+			const covered = shown.filter((c) => c.dataset.covered === "true").length;
+			badge.textContent = `${covered}/${shown.length}`;
+			badge.title = `${covered} of ${shown.length} fully covered`;
+		}
+
+		const scope = scopes[asOf] ?? liveStats;
+		const deltas = versionDeltas[asOf];
+		for (const host of statHosts) {
+			const key = host.dataset.cxStat ?? "";
+			const valueEl = statValue(host);
+			if (valueEl && key in scope) valueEl.textContent = `${scope[key]}`;
+			const grew = deltas?.[key] ?? 0;
+			const prior = deltas?.prior ?? null;
+			const moved = grew > 0 && prior !== null;
+			host.dataset.move = moved ? "up" : "none";
+			if (moved) {
+				const numEl = host.querySelector(".xtyle-stat__delta")?.lastElementChild;
+				if (numEl) numEl.textContent = `+${grew}`;
+				const capEl = host.querySelector(".xtyle-stat__caption");
+				if (capEl) capEl.textContent = `since v${prior}`;
+			}
+		}
+
+		const active = asOf === "" ? currentVersion : asOf;
+		const activeAdded = newCounts[active] ?? 0;
+		const isFounding = active === foundingVersion;
+		for (const card of newBandCards) card.hidden = card.dataset.bandSince !== active;
+		if (newVersionEl) newVersionEl.textContent = `v${active}`;
+		if (newBlurbEl) {
+			newBlurbEl.textContent = isFounding
+				? `The founding set: ${activeAdded} components. Every one is live in the catalogue below.`
+				: `${activeAdded} ${activeAdded === 1 ? "component" : "components"} landed in v${active}. Each renders live below, from the same theme.`;
+		}
+		if (newBand) newBand.hidden = activeAdded === 0;
 		if (status) {
-			status.textContent = q === "" ? "" : `${visible} of ${total} match`;
+			if (q === "" && asOf === latestVersion) status.textContent = "";
+			else if (asOf === latestVersion) status.textContent = `${visible} of ${total} match`;
+			else if (q === "") status.textContent = `${visible} of ${total} existed as of ${asOf}`;
+			else status.textContent = `${visible} of ${total} match, as of ${asOf}`;
 		}
 	}
 
-	if (input) {
-		input.addEventListener("input", () => apply(input.value));
-		const initial = new URLSearchParams(location.search).get("q");
-		if (initial) {
-			input.value = initial;
-			apply(initial);
-		}
+	input?.addEventListener("input", apply);
+	picker?.addEventListener("change", apply);
+
+	for (const bar of bars) {
+		bar.addEventListener("click", () => {
+			if (!picker) return;
+			const version = bar.dataset.version ?? "";
+			picker.value = picker.value === version ? latestVersion : version;
+			apply();
+		});
 	}
+
+	const params = new URLSearchParams(location.search);
+	const initialQuery = params.get("q");
+	const initialVersion = params.get("since");
+	// INFO: browsers restore form state across reload and back-nav, so both controls are assigned
+	// outright rather than only when a URL param is present.
+	if (input) input.value = initialQuery ?? "";
+	if (picker) {
+		const known = initialVersion && Array.from(picker.options).some((o) => o.value === initialVersion);
+		picker.value = known ? initialVersion : latestVersion;
+	}
+	apply();
 </script>
 
 <style>
@@ -280,30 +547,19 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
-	.cx-stat__num {
-		font-family: var(--font-display);
-		font-size: var(--text-2xl);
-		font-weight: var(--weight-bold);
-		color: var(--fg-0);
-		line-height: 1;
-		margin: 0;
-	}
-	.cx-stat :global(.cx-stat__label) {
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		margin: var(--space-1) 0 0;
-	}
-	.cx-stat :global(.cx-stat__delta) {
-		margin-top: var(--space-2);
-		align-self: start;
+	/* Each stat's delta reads against the pinned version's own predecessor; a number that didn't move
+	   that release carries no delta, so its trend and baseline caption are hidden for that pin. */
+	.cx-stats :global([data-move="none"] .xtyle-stat__delta),
+	.cx-stats :global([data-move="none"] .xtyle-stat__caption) {
+		display: none;
 	}
 
 	.cx-new {
 		margin-bottom: var(--space-8);
 		padding: var(--space-5);
 		border-radius: var(--radius-lg);
-		border: var(--border-thin) solid var(--accent);
-		background: linear-gradient(to bottom right, var(--accent-bg), transparent 72%);
+		border: var(--border-thin) solid var(--success);
+		background: linear-gradient(to bottom right, var(--success-bg), transparent 72%);
 	}
 	.cx-new__head {
 		display: flex;
@@ -313,7 +569,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		margin-bottom: var(--space-4);
 	}
 	.cx-new__spark {
-		color: var(--accent);
+		color: var(--success);
 		font-size: var(--text-xl);
 		line-height: 1;
 	}
@@ -349,7 +605,142 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		margin: var(--space-4) 0 0;
 	}
 	.cx-search {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: var(--space-3);
+		margin-bottom: var(--space-6);
+	}
+	.cx-search__status {
+		grid-column: 1 / -1;
+	}
+	@media (max-width: 40rem) {
+		.cx-search {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+
+	.cx-version {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.cx-version__label {
+		color: var(--fg-2);
+		font-size: var(--text-sm);
+		white-space: nowrap;
+	}
+	.cx-version__select {
+		font-size: var(--text-sm);
+	}
+
+	/* ── the advent plot ──────────────────────────────────────────────────────────────────────
+	   Bars are buttons because they *do* something — each one pins the catalogue to that release —
+	   so they get the keyboard and the focus ring for free rather than having a click handler
+	   bolted onto a div. */
+	.cx-advent {
+		display: grid;
+		gap: var(--space-3);
 		margin-bottom: var(--space-8);
+		padding: var(--space-4);
+		border: var(--border-thin) solid var(--bg-2);
+		border-radius: var(--radius-md);
+		background: var(--bg-1);
+	}
+	.cx-advent__plot {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: minmax(0, 1fr);
+		align-items: end;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		min-height: 9rem;
+	}
+	.cx-advent__col {
+		display: flex;
+		min-width: 0;
+	}
+	.cx-advent__bar-btn {
+		display: grid;
+		grid-template-rows: auto 1fr auto auto;
+		align-items: end;
+		justify-items: center;
+		gap: var(--space-1);
+		width: 100%;
+		min-height: 8rem;
+		padding: var(--space-1);
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: transparent;
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+	}
+	.cx-advent__bar-btn:hover {
+		background: var(--bg-2);
+	}
+	.cx-advent__bar-btn:focus-visible {
+		outline: var(--border-thin) solid var(--accent);
+		outline-offset: 2px;
+	}
+	.cx-advent__count {
+		color: var(--fg-1);
+		font-size: var(--text-xs);
+		font-variant-numeric: tabular-nums;
+	}
+	.cx-advent__bar {
+		width: 100%;
+		min-height: 2px;
+		height: var(--h);
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		background: var(--accent);
+		align-self: end;
+		transition: background var(--duration-fast) var(--ease-standard);
+	}
+	/* The founding set is not a release that shipped 50 components in one go, and drawing it in the
+	   same accent as the rest would tell that lie at a glance. */
+	.cx-advent__bar[data-seed] {
+		background: var(--bg-2);
+	}
+	.cx-advent__bar[data-latest] {
+		background: var(--success);
+	}
+	.cx-advent__bar-btn:hover .cx-advent__bar,
+	.cx-advent__bar-btn[aria-pressed="true"] .cx-advent__bar {
+		background: var(--fg-0);
+	}
+	.cx-advent__tick {
+		color: var(--fg-2);
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+	}
+	.cx-advent__total {
+		color: var(--fg-2);
+		font-size: var(--text-xs);
+		font-variant-numeric: tabular-nums;
+		opacity: 0.65;
+	}
+	.cx-advent__bar-btn[aria-pressed="true"] .cx-advent__tick {
+		color: var(--fg-0);
+		font-weight: var(--weight-semibold);
+	}
+	.cx-advent__bar-btn[data-out-of-scope] {
+		opacity: 0.3;
+	}
+	@media (max-width: 48rem) {
+		.cx-advent__tick {
+			writing-mode: vertical-rl;
+		}
+		.cx-advent__total {
+			display: none;
+		}
+	}
+
+	.cx-card__since {
+		font-family: var(--font-mono);
+		font-variant-numeric: tabular-nums;
 	}
 	.cx-search__label {
 		position: absolute;
@@ -397,6 +788,14 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
 		gap: var(--space-3);
 	}
+	/* INFO: an author `display` beats the UA's `[hidden]` rule, so the filter's hide is explicit. */
+	[data-cx-card][hidden],
+	[data-cx-section][hidden],
+	[data-new-band][hidden],
+	[data-new-card][hidden] {
+		display: none;
+	}
+
 	.cx-card-link {
 		text-decoration: none;
 		color: inherit;

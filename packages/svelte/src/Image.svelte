@@ -19,6 +19,8 @@
 		loading?: ImageLoading;
 		lightbox?: boolean;
 		trigger?: ImageTrigger;
+		/** The roster glyph on the zoom button (with trigger="button"). */
+		zoomIcon?: string;
 		caption?: string;
 		/** A video (`.mp4`/`.webm`) or gif shown on hover/focus; the still `src` is the poster. */
 		hoverSrc?: string;
@@ -41,6 +43,7 @@
 		loading = "lazy",
 		lightbox = false,
 		trigger = "frame",
+		zoomIcon,
 		caption,
 		hoverSrc,
 		hoverPoster,
@@ -61,6 +64,7 @@
 	{caption}
 	lightbox={lightbox ? true : undefined}
 	trigger={trigger === "button" ? "button" : undefined}
+	zoom-icon={zoomIcon}
 	hover-src={hoverSrc}
 	hover-poster={hoverPoster}
 	hover-audio={hoverAudio}

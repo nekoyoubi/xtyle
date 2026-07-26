@@ -29,7 +29,7 @@ The spine is locked; don't relitigate. Captured in full in `derivation-model.md`
 The derivation engine is **TypeScript**, shipped as the npm source of truth.
 
 **Why.** The engine is tiny, rarely-run math (parse colors → OKLCH arithmetic →
-contrast-safe pairs → ~80 tokens, once per theme load/switch), so perf is a
+contrast-safe pairs → ~300 tokens, once per theme load/switch), so perf is a
 non-factor and Rust's speed/size edge buys nothing perceptible. That leaves one
 question (where does friction hurt?) and it hurts most on the web, which is the
 bigger audience and the whole reason xtyle is standalone. TS-core is frictionless
@@ -100,8 +100,8 @@ does xtyle expose back?
 
 ## 7. Component catalog scope: RESOLVED (growing as designed)
 
-The first cut landed and kept growing: ~60 components across shell, layout, forms,
-navigation, feedback, content, media, and metrics, each a xript fragment whose `consumedTokens`
+The first cut landed and kept growing: ~91 components across shell, layout, form,
+navigation, feedback, content, control, media, metrics, and overlay, each a xript fragment whose `consumedTokens`
 the coverage lint verifies. The premise held: the catalog grows freely because every
 component speaks only contract verbs; no fixed scope, no engine coupling. Adding the
 next component is a registration checklist, not an architecture decision.

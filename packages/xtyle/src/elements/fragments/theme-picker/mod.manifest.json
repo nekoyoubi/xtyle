@@ -1,0 +1,23 @@
+{
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
+	"name": "xtyle-theme-picker-default",
+	"version": "0.0.1",
+	"title": "Xtyle Theme Picker (default)",
+	"description": "The built-in fill for the xtyle Theme Picker component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.theme-picker"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.theme-picker": [
+			{
+				"id": "theme-picker",
+				"format": "application/x-xtyle+html",
+				"source": "theme-picker.html",
+				"handlers": [],
+				"meta": {
+					"tokens": ["--space-2", "--space-3", "--text-xs", "--fg-2", "--danger", "--font-sans", "--leading-tight"]
+				}
+			}
+		]
+	}
+}

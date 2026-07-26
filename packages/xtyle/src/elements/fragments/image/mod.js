@@ -104,7 +104,7 @@
   }
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
-    const body = hasIcon(name) ? ICONS[name] : MISSING;
+    const body = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
     const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
     const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
     const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
@@ -132,22 +132,22 @@
   }
   function zoomHtml(b) {
     if (!b.zoom) return "";
-    return `<button class="xtyle-image__zoom" part="zoom" type="button" aria-label="${escapeAttr(b.zoomLabel ?? "View image")}">${renderIcon("maximize")}</button>`;
+    return `<button class="xtyle-image__zoom" part="zoom" type="button" aria-label="${escapeAttr(b.zoomLabel ?? "View image")}">${renderIcon(b.zoomIcon ?? "maximize", { body: b.zoomBody })}</button>`;
   }
   function audioHtml(b) {
     if (!b.audio) return "";
     const muted = b.audioMuted !== false;
-    return `<button class="xtyle-image__audio" part="audio" type="button" aria-pressed="${muted ? "false" : "true"}" aria-label="${escapeAttr(b.audioLabel ?? (muted ? "Unmute preview" : "Mute preview"))}"><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--muted">${renderIcon("volume-off")}</span><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--live">${renderIcon("volume")}</span></button>`;
+    return `<button class="xtyle-image__audio" part="audio" type="button" aria-pressed="${muted ? "false" : "true"}" aria-label="${escapeAttr(b.audioLabel ?? (muted ? "Unmute preview" : "Mute preview"))}"><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--muted">${renderIcon("volume-off", { body: b.volumeOffBody })}</span><span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--live">${renderIcon("volume", { body: b.volumeBody })}</span></button>`;
   }
-  function errorHtml() {
-    return `<span class="xtyle-image__error" part="error" aria-hidden="true">${renderIcon("warning", { size: "lg" })}</span>`;
+  function errorHtml(b) {
+    return `<span class="xtyle-image__error" part="error" aria-hidden="true">${renderIcon("warning", { size: "lg", body: b.warningBody })}</span>`;
   }
   function imageHtml(b) {
     const ratioStyle = b.ratio ? ` style="aspect-ratio: ${escapeAttr(b.ratio)}"` : "";
     const placeholder = `<span class="xtyle-image__placeholder" part="placeholder" aria-hidden="true"></span>`;
     const media = `<span class="xtyle-image__media" data-image-media>${mediaHtml(b)}</span>`;
     const hover = `<span class="xtyle-image__hover" part="hover" aria-hidden="true" data-slot="hover"><slot name="hover"></slot></span>`;
-    const chrome = `${zoomHtml(b)}${audioHtml(b)}${errorHtml()}`;
+    const chrome = `${zoomHtml(b)}${audioHtml(b)}${errorHtml(b)}`;
     const frame = `<span class="xtyle-image__frame" part="frame"${ratioStyle}>${placeholder}${media}${hover}${chrome}</span>`;
     return `<figure class="${imageClass(b)}" part="figure">${frame}${captionHtml(b)}</figure>`;
   }

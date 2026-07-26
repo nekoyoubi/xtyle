@@ -58,7 +58,7 @@ import { Content as Changelog } from "../../../../CHANGELOG.md";
 			details.appendChild(panel);
 			section.summary.replaceWith(details);
 		});
-		// Single-open fallback for browsers without the exclusive `<details name>` accordion.
+		// INFO: single-open fallback for browsers without the exclusive `<details name>` accordion
 		const all = [...body.querySelectorAll<HTMLDetailsElement>("details.changelog-version")];
 		for (const d of all) {
 			d.addEventListener("toggle", () => {

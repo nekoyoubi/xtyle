@@ -9,9 +9,8 @@ async function prepareForShot(page: Page) {
 	await hideChrome(page);
 
 	const canvas = page.locator(".ref-stage-card__canvas");
-	// Fit the viewport to the demo, then wait for its height to hold steady: a
-	// late font swap or reflow shifts everything below it, and a capture caught
-	// mid-shift diffs the whole lower half of a tall demo against the baseline.
+	// INFO: wait for the demo height to hold steady before capture; a late font swap or reflow shifts
+	// everything below it, and a mid-shift capture diffs a tall demo's lower half against the baseline
 	let lastHeight = -1;
 	for (let i = 0; i < 10; i++) {
 		const box = await canvas.boundingBox();

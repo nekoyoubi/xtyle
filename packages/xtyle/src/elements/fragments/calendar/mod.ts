@@ -50,6 +50,10 @@ interface CalendarBindings {
 	hideNav?: boolean;
 	prevLabel?: string;
 	nextLabel?: string;
+	prevIcon?: string;
+	nextIcon?: string;
+	prevBody?: string | null;
+	nextBody?: string | null;
 	prevDisabled?: boolean;
 	nextDisabled?: boolean;
 	readonly?: boolean;
@@ -71,16 +75,17 @@ function calendarClass(bindings: CalendarBindings): string {
 		.join(" ");
 }
 
-// The inline glyph is the zero-JS fallback: `<xtyle-icon>` only paints once the custom element
-// upgrades, and the `static` render never loads the runtime. Once it does upgrade, the icon's
-// shadow root has no `<slot>`, so this light child stops rendering and the fragment-backed glyph
-// takes over.
-function chevron(name: "chevron-left" | "chevron-right"): string {
-	return `<xtyle-icon class="xtyle-calendar__chevron" part="chevron" name="${name}" aria-hidden="true">${renderIcon(name)}</xtyle-icon>`;
+// INFO: inline glyph is the zero-JS fallback; `<xtyle-icon>` renders nothing until it upgrades,
+// and its slotless shadow root then hides this light child once it does
+function chevron(name: string, body: string | null | undefined): string {
+	return `<xtyle-icon class="xtyle-calendar__chevron" part="chevron" name="${escapeAttr(name)}" aria-hidden="true">${renderIcon(name, { body })}</xtyle-icon>`;
 }
 
-function navButton(rel: "prev" | "next", label: string, disabled: boolean): string {
-	const glyph = chevron(rel === "prev" ? "chevron-left" : "chevron-right");
+function navButton(rel: "prev" | "next", label: string, disabled: boolean, bindings: CalendarBindings): string {
+	const glyph =
+		rel === "prev"
+			? chevron(bindings.prevIcon ?? "chevron-left", bindings.prevBody)
+			: chevron(bindings.nextIcon ?? "chevron-right", bindings.nextBody);
 	const dis = disabled ? ' aria-disabled="true"' : "";
 	return `<button type="button" class="xtyle-calendar__nav xtyle-calendar__nav--${rel}" part="nav" data-nav="${rel}" aria-label="${escapeAttr(label)}"${dis}>${glyph}</button>`;
 }
@@ -89,8 +94,8 @@ function header(bindings: CalendarBindings): string {
 	const uid = bindings.uid ?? "xtyle-calendar";
 	const title = `<div class="xtyle-calendar__title" part="title" data-title id="${escapeAttr(uid)}-title" aria-live="polite">${escapeHtml(bindings.title ?? "")}</div>`;
 	if (bindings.hideNav) return `<div class="xtyle-calendar__header" part="header">${title}</div>`;
-	const prev = navButton("prev", bindings.prevLabel ?? "Previous month", bindings.prevDisabled === true);
-	const next = navButton("next", bindings.nextLabel ?? "Next month", bindings.nextDisabled === true);
+	const prev = navButton("prev", bindings.prevLabel ?? "Previous month", bindings.prevDisabled === true, bindings);
+	const next = navButton("next", bindings.nextLabel ?? "Next month", bindings.nextDisabled === true, bindings);
 	return `<div class="xtyle-calendar__header" part="header">${prev}${title}${next}</div>`;
 }
 
@@ -185,10 +190,8 @@ hooks.fragment.mount("calendar", (bindings, ops) => {
 	ops.replaceChildren("[data-calendar]", `${header(bindings)}${grid(bindings)}`);
 });
 
-// The month, the selection, and the range preview all live in the day cells, so an update rebuilds
-// the row body and patches the header in place — never the whole calendar. Re-creating the title
-// would re-create the `aria-live` region with it, and a live region that appears already populated
-// is not announced, so a month change would go silent for a screen reader on the nav buttons.
+// INFO: patch the title in place, never recreate it; an aria-live region born already-populated
+// is not announced, so a month change would go silent for a screen reader
 hooks.fragment.update("calendar", (bindings, ops) => {
 	shell(bindings, ops);
 	ops.setText("[data-title]", bindings.title ?? "");

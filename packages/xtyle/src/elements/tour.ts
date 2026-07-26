@@ -2,7 +2,6 @@ import { XtyleElement, XtyleDecoratorElement, define, type StyleMode } from "./b
 import { tourHostCss, type TourProgress } from "../markup/tour.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/tour/source.generated.js";
-// the tour drives a real <xtyle-spotlight> (and, through it, <xtyle-popover>), so the tags must be defined
 import "./spotlight.js";
 import type { XtyleSpotlight } from "./spotlight.js";
 
@@ -217,7 +216,6 @@ export class XtyleTour extends XtyleElement {
 		this.setSpot(spot, "scroll-into-view", scroll ? "" : null);
 		const modal = step.hasAttribute("no-dismiss") || this.hasAttribute("no-dismiss");
 		this.setSpot(spot, "no-dismiss", modal ? "" : null);
-		// resolve the target ourselves: the selector must resolve against the page, not the tour's shadow
 		spot.targetElement = this.resolveTarget(step.getAttribute("target"));
 		spot.setAttribute("open", "");
 	}

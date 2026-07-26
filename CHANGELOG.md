@@ -1,5 +1,113 @@
 # Changelog
 
+## v0.10.0
+
+Most of this release is new kinds rather than new instances, though seven components land too, taking the set from 84 to 91. Effects are a third primitive beside tokens and components, because a token is a value and a component is a thing and neither one can hold a verb. The theme components put the engine on the page, so an app picks, previews, and applies a theme in markup instead of the glue the docs site had been carrying on its behalf. Every surface that lists something can now be asked what existed at a given version, since an agent building against 0.8 should not be told about a component that arrived in 0.10. And a nine-patch surface takes artwork a token cannot describe (a carved frame, a torn edge, a game panel) and scales it to any box without smearing the corners.
+
+### Effects
+
+A token can't say "on hover" and a component can't decorate something that already exists without wrapping it, so a visual *behavior* had nowhere to live. It lives in the element's own attribute now: `data-fx="glow@hover"`, `data-fx="glare@hover lift@active"`, a bare `data-fx="throb"` for an ambient one. Nine effects, eight conditions, the same name-is-its-spec shape as an icon name.
+
+- **Nothing needs a runtime.** The whole cross product emits as plain attribute-selector CSS, 3 KB gzipped with parameters and all, joined into `baseCss` last so a `data-fx` rule outranks the component it decorates
+- **The intensity is the algorithm's policy, not the effect's.** Five shared `--fx-*` tokens that every effect composes from, dialed per algorithm: quiet `0.49`, default `0.73`, loud `0.98`, and `xtyle-hc` a flat `0`, since a halo spends exactly the edge contrast a high-contrast taste exists to protect. They are ordinary register tokens, so a theme overrides them and never needs a knob
+- **Parameters are named, after a `?`.** `throb?rate:3s,colors:[accent,accent-2]`, `glow@hover?spread:18`. A value resolves the three ways an icon's `---pc` override does: a hex is fixed, a bare number takes the param's declared unit, and a name resolves to `var(--name)` so it stays theme-reactive
+  - positional would have been order-locked: setting a late param means restating every earlier one, and adding a param to an effect later means renumbering existing markup or bolting the new one on the end
+  - a CSS attribute selector can match a token but never parse one, so the values route through custom properties the sheet already reads, resolved at build or at SSR
+  - an unknown key is reported by `unknownEffects` rather than ignored
+- **The library is last-wins on the name**, like a fill. `registerEffect` / `registerCondition` with the built-ins first, so an addon replaces one entry or adds a new one without restating the rest, and a new condition regenerates the cross product: `glow@dragging` works the moment someone registers `dragging`
+- **`saturate` runs both directions.** `amount` is the target rather than a boost, and the reduce half is absolute while the vivify half rides intensity, so `amount:0` is grayscale on every theme, `xtyle-hc` included
+- **`xtyle_effects`** puts the catalog, the `--fx-*` tokens, and the spec grammar on the MCP surface, with an `xtyle://concept/effects` resource behind it so the narrative flows into `llms-full.txt` too
+
+### Themes
+
+Five components, and between them an app can do what the docs site had been hand-rolling for five releases.
+
+- **`<xtyle-theme-scope>` materializes an invocation and applies it**, to its own subtree by default. An element named "scope" that silently restyled the whole document would be a bad default; `target="root"` is there for the one scope that themes a page. It invents no rendered furniture, so it stays plumbing and gets no fragment
+- **`<xtyle-theme-card>` derives a theme and paints it instead of wearing it**, as a small simulated interface in the theme's own colors. A fake reads a palette faster than a column of hex values, because it shows the colors doing the job they were derived for. The whole drawing lives in the fill, so a mod can redraw the preview into whatever an app wants
+- **`<xtyle-theme-swatch>` is the parts list beside the picture.** It composes `<xtyle-swatch>` for every chip rather than reinventing one, so a Swatch mod restyles these along with every other chip in the app, and `tokens` names any set: the default read, one family, or a bare strip
+- **`<xtyle-theme-picker>` is a gallery of those cards**, with `layout="menu"` putting the same gallery behind a trigger that names the current choice. The panel is an `<xtyle-popover>`, so placement, light dismiss, Escape, and focus return come from the overlay component instead of a second hand-rolled dropdown
+  - the pick carries the whole invocation rather than a name, so a scope applies it with no lookup table in between
+  - it has no cursor of its own, because the cards are real buttons and focus already moves through them like any other group of controls
+  - a pick patches one attribute rather than rebuilding the gallery, so focus stays on the card you just pressed and no other card re-derives for a change that touched neither
+- **`<xtyle-scheme-toggle>` is the dark/light control**, composing `<xtyle-button>` rather than restating a hover, a focus ring, and a radius that component already owns. Standalone it flips `:root[data-scheme]` and persists; inside a scope it delegates, so the scope re-derives through the engine's inversion
+  - it reads `data-effective-scheme` before `data-scheme`, because the two answer different questions: one is what the visitor asked for, the other is what the page is rendering, and the control has to offer the opposite of what is on screen
+- **The site's own switcher is gone.** 254 hand-rolled lines became 57 that map the bench store onto the picker and listen for the pick; the store wiring is the site's business and the dropdown never was
+- **Inversion re-derives from the seed instead of mirroring the dump.** `invert` turns only `--bg-0` / `--fg-0` / `--accent` and re-runs the whole ladder natively for the flipped scheme, so every surface lands where the algorithm puts it rather than on a hand-mirrored guess. The hand-rolled straggler classifier the earlier shape needed is deleted, because the algorithm already encodes per-scheme placement
+  - a directly overridden `--surface-overlay` or `--field-bg` used to stay dark under a flipped-light scheme
+  - `reprojectOverrides` re-projects a derived-token override against both registers, so an untouched one re-derives clean while a real customization rides across as its offset from native
+- **The default anchors are the dark theme they were always meant to be**, and the site's separate palette is deleted, so the docs render the engine default and cannot drift from it
+- **`anchors` stopped being sold as its own kind of input.** The hazard is the word: "anchor" reads as a soft seed the algorithm derives around, while a constraint reads as a hard pin, and they are the same hard pin. `constraints` is the word everywhere now, and the `derive` error that recommended `anchors` is what sold the term as load-bearing in the first place. Stored invocations keep deriving; only the advertising changed
+
+### Nine-patch
+
+- **`<xtyle-nine-patch>` scales a frame without smearing it.** Artwork cuts into four fixed corners, four edges that cover their own run, and a center that fills. `src` takes a URL, a `data:` URI, or raw SVG markup that the element encodes itself, and `pieces` / `tints` address any of the nine regions individually, so a crest on one corner costs an attribute rather than a new sheet
+- **`tint` masks the artwork over a color instead of painting it**, which is the whole point of the component: one monochrome drawing wears any token and follows a theme it was never drawn for
+- **A tinted patch draws as nine cells on a CSS grid**, each masked with its own `viewBox` cut of the source through `mask-image`, so the component rests only on masking and border properties every engine implements
+  - a grid resolves its own geometry at layout, so it needs no JavaScript and no resize observer, and a patch still renders with the runtime switched off
+  - the cut is a `viewBox` over the source rather than a re-export, so a bitmap slices and tints exactly like a drawing
+  - an untinted patch draws through plain `border-image`, since nothing has to be recolored
+
+### BBCode
+
+- **`<xtyle-bbcode>` renders BBCode against the derived theme**, as a single-pass stack parser over a closed tag registry. Everything that is not a registered tag is escaped and every tag emits markup the renderer wrote itself, so there is no `allowHtml` counterpart to get wrong. An unclosed tag renders as its literal source instead of swallowing the rest of the document, and a stray closer is text
+- **Vocabularies are the part worth caring about.** `defineBbcodeVocabulary()` names a subset of the registry and an instance picks one, so a story body can admit `[choice]` while the bio beside it cannot. A tag outside the set is inert and renders as its own text, which means the surface refuses by construction rather than by filtering afterward
+- **The roster hands its tags to the components that own them.** `[spoiler]` is an `<xtyle-accordion>`, `[url]` an `<xtyle-link>`, `[img]` an `<xtyle-image>`, `[h1]`-`[h6]` an `<xtyle-heading>`, and `[table]` hands its markup to `<xtyle-table>`, which decorates a real `<table>` and is exactly the shape a `[table]` produces. `[list]` stays on a plain `<ul>` on purpose, because `<xtyle-list>` is the collection substrate's reference skin and a run of bullets in a paragraph is none of that
+- **Markdown composes it.** `processBbcode` lifts balanced constructs out behind a per-render GUID before markdown parses and drops them back in after, so neither renderer ever reads the other's output and the closed-vocabulary property survives intact; a code fence or an inline span is skipped, so a `[b]` an author is writing *about* stays literal
+- **`inline` refuses block tags**, matching what markdown's label render already promised, so a thread title dropped into a tab strip cannot erupt an `[h1]`
+
+### Icons
+
+- **The roster is a slot a mod can fill.** `xtyle.icons` and `xtyle.icon-primitives` are data-fill slots on the component host, resolved last-registration-wins the way fills already concatenate, so a mod reskins `check` as readily as it adds a name
+  - the sandbox stays authority-free while doing it: `icons.ts` is inlined whole into every fragment bundle, which makes its table a build-time snapshot no mod could ever reach, so the trusted element resolves the name and passes the *body* in as binding data
+- **Every component that draws a glyph reads that roster**, rather than the inlined snapshot no mod can reach, so a reskin lands everywhere instead of on whichever component happened to ask. `panel` gained `markerIcon`, `calendar` `prevIcon` / `nextIcon`, `image` `zoomIcon`, and `carousel` and `bottom-nav` resolve theirs through a body map, with the carousel arrows staying direction-derived so no override can point them the wrong way
+- **A mark's box is the ink it leaves standing.** `compositionBox` used to union its layers' bounding boxes, and a knockout is not ink, it is the tool that carves ink, so `---center` seated marks on a box half of which was empty. The composite is walked the way it paints and sampled to a quarter unit now, with pen strokes keeping their width so a `ring` measures its rim and not the hole
+- **`sx` / `sy` layer onto `s` instead of competing with it**, so `s50-sx200` reads "half size, then twice as wide" where the axis flag used to throw the uniform size away silently
+- **The site's sun and moon are generated marks**, so the toggle dogfoods the grammar it documents, and the bench's Finish panel finally has controls for the whole-mark outline and canvas-expand flags that existed in the grammar but only ever survived the round trip
+- **`xtyle_icons`** puts the grammar on the MCP surface: the roster with every primitive's keywords and family, the object-flag and color-nibble and finish-flag tables, the render model, and a spec composed straight to SVG so an agent can see the mark it just wrote
+
+### Provenance
+
+- **`src/provenance.ts` is the one vocabulary for when a thing arrived**, so the engine, the site, the CLI, and the MCP surface all answer "which came first" the same way instead of drifting into disagreeing about 0.10 versus 0.9. Algorithm packs, emit formats, knob specs, and produced tokens all carry a `since` now, and a test fails the build if anything is undated or claims a version that has not shipped, which is what catches a copied `since` before it hides a feature from every consumer
+  - the token history is recovered from the release tags rather than asserted. The packs only began declaring `produces` at 0.8.0, so a token first seen there predates the record and stays at the floor; dating those to 0.8.0 would tell someone on 0.7 to upgrade for `--bg-0`, which is false and the expensive direction to be wrong in
+- **`xtyle_components` answers as of a version.** Every pinned answer carries an `asOf` envelope: what it answered for, what this build speaks, whether the caller pinned, and an `omitted` count
+  - `omitted` is the load-bearing part, because a silently filtered list reads exactly like a short one and nobody upgrades over it
+  - asking for a component that exists but postdates the pin says so and names the version to upgrade to, rather than answering "unknown component" and sending someone hunting for a typo
+  - `xtyle_server_info` states which version the surface speaks and which tools will never take one, since a tool that runs the engine cannot be rewound and advertising a version argument there would be worse than having none
+- **The component catalog is dated.** Every card carries the version it arrived in, an "Available as of" filter narrows the page to what existed then, and a plot of components-per-release pins the catalog to whichever bar you press. The founding set is drawn apart and kept off the scale, because 50 components against a largest release of 12 turns every real release into a sliver
+  - the pin governs the whole page and not just the cards: the stat tiles recount, the group badges recount to what is shown, the growth deltas hide, later bars dim, and the "New in" band becomes that release's arrivals instead of advertising the latest one against a filtered page
+  - the hero's by-the-numbers cards are real `<Stat>` components now, trending against the pinned version's own predecessor, so the page dogfoods the same widget the statusbar uses
+- **The stats baseline refuses to be wrong.** It stamps the newest git tag rather than `package.json`, since the bump happens at the start of a cycle, and refuses to run when the tag is not strictly behind it. That case is what erased v0.9.0 from the site: `main` deploys on push, so a baseline naming the version `main` is currently showing publishes a release that appears to have added nothing
+
+### xript 0.8
+
+- **`allow-html` on `<xtyle-markdown>`** renders the source's markup instead of escaping it, for markdown whose origin the app controls. The fragment format still has the last word, so `<script>`, `<iframe>`, event handlers, and undeclared elements are refused either way, and what survives is standard HTML *and* xtyle's own components, so a document can carry an `<xtyle-badge>` and have it theme like every other one
+  - the HTML that becomes reachable is themed rather than left to the browser: `mark`, `kbd`, `abbr`, `sub`/`sup`, and `details`/`summary`, since an unstyled `mark` paints a fixed browser yellow with no idea what theme it is in
+- **`tel:` links were losing their `href` in every paint.** `component-host.json` declared no `schemes`, so it inherited a default set with no `tel` in it: the renderer allowed it, the manifest documented it, and the fragment sanitizer stripped it. `allowUriSchemes()` widens the markup renderers' allowlist and the fragment format's together, because widening one alone is exactly the defect above
+- **Every algorithm pack passes `validateModManifest` and `crossValidate`**, which was never possible before. The static manifests moved out of a top-level `x-xtyle` vendor key and into an `xtyle.pack-meta` data fill, since the mod-manifest schema is closed in every published version, and 80 fill manifests stopped pointing at a schema URL that has never resolved in any version
+- **`strictBindings` is on for both runtimes**, so a documented-but-unwired binding refuses to construct instead of throwing inside somebody's derive
+- **The packs declare their execution intent**, which is the one property 0.8 added to the schema: `affinity: "isolated"` states in the manifest what `loadAlgorithm` was already enforcing, since a flat export map means two packs sharing a runtime collide on `graph`
+
+### Fixes
+
+- **A fragment op landed on the wrong node, twice, and the two were cancelling each other out.** `nodeMatcher` bounded its markers with `\b`, and a hyphen is a non-word character, so `\bxtyle-code\b` matched `class="xtyle-code-caption"` and every op meant for the `<pre>` hit the caption instead; the attribute arm had the same hole and was saved only by the order of the tags
+  - `applyOps` matched the first marked node rather than all of them, so a mod that restructured one marked node into several got the paint on only the first
+  - the `code` baselines had been pinning a caption that rendered as bare unstyled text instead of the header strip its own demo describes
+- **Astro pairs slotted lead and body children on the server**, in document order via a marker rather than by index, and `Accordion` and `Tabs` read that composed scaffold back instead of re-pairing it
+  - `topLevelElements` skips non-rendering elements, because a framework-hoisted `<script>` counted as one of a slot's authored children and the index zip shifted every panel by one. It only ever showed up under `astro dev`, where the script renders inline and a production build bundles it out
+  - the docs' code-tab copy button had been producing an empty string the whole time, reading a `data-source` that never survived composition
+- **A missing grammar degrades to plain themed text instead of taking the page with it.** A thrown highlighter load left the code block missing entirely, which collapsed whatever tab set held it; a dev server mid-optimize, an offline runtime, or a flaky import now renders unhighlighted
+- **A `link` button stopped painting a surface it has no surface for.** `--link` declared its transparent `::after` before the generic hover rule, which then won at identical specificity, and the pressed and selected opt-outs lost the same way to higher specificity. Source order has now caused this twice, so the ordering is a test
+- **`Avatar` stopped covering its own fallback** when the image 404s. The sandbox strips every `on*` attribute before a fill's markup lands, so the `onerror` never survived and had to be wired from the element
+- **The theme bench exports every knob.** `toInvocation` built its `knobs` block from a hardcoded whitelist that never listed `surfaceRamp`, and the same gap ate the font stacks and any novel knob a custom algorithm declares. It builds off `toDeriveKnobs`, the exact shape the live preview derives from, so the two cannot drift again
+- **The bench's export panel is a `Code` block** with per-format highlighting instead of a bare resizable `<textarea>` you had to drag open to read, and the import box is a real `<Textarea>`, so both halves of the panel are components the site exists to prove
+- **`spellcheck` is typed as the enumerated attribute it is**, not a boolean, since a bare `spellcheck` is the HTML spelling of *on* and a consumer writing it to mean off would have got the opposite. The six native input attributes that had been quietly forwarded for a while are in the manifests now, so the reference page, the MCP surface, and typegen can all see them, and `command-palette` forwards them at all
+
+| package | tests |
+|---|---|
+| `@xtyle/core` | 2726 |
+| `@xtyle/svelte` | 26 |
+| visual regression | 539 |
+
 ## v0.9.0: Nameless
 
 People built on v0.8.0 and told us what broke. Nearly every report described the same shape: a mistake that rendered as something plausible instead of as an error. A wrong prop name became a tooltip. An invalid tone became an unstyled box. A documented prop evaporated between the wrapper and the element. Tabs came out empty. Every one of those shipped under a green suite. The tests could not see the failures, because the layers that would have caught them did not exist. This release fixes the reports, fixes the class behind each one, and builds the two test layers that were missing. It also collapses eight components that were secretly the same machine.

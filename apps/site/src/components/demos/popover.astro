@@ -242,7 +242,6 @@ const sides = ["top", "bottom", "left", "right"] as const;
 		if (echo) echo.textContent = `Filters closed: ${(event as CustomEvent).detail.reason}.`;
 	});
 
-	// the modal posture swallows the click; the non-modal one lets it through
 	const counter = document.querySelector<HTMLElement>("#pop-counter");
 	const count = document.querySelector<HTMLElement>("#pop-count");
 	let clicks = 0;
@@ -251,9 +250,6 @@ const sides = ["top", "bottom", "left", "right"] as const;
 		if (count) count.textContent = String(clicks);
 	});
 
-	// the inertness probe: hit-test the counter behind the open panel. A modal <dialog> is in the top
-	// layer, so the platform's hit test never reaches the page under it — which is the same inertness a
-	// screen reader in browse mode is held to, and the reason `aria-modal` is honest here
 	for (const button of document.querySelectorAll<HTMLElement>("[data-pop-probe]")) {
 		button.addEventListener("click", () => {
 			const readout = document.querySelector<HTMLElement>(`#${button.dataset.popProbe}`);
@@ -267,7 +263,6 @@ const sides = ["top", "bottom", "left", "right"] as const;
 		});
 	}
 
-	// a `select` bubbling out of the panel closes it — nothing else is wired
 	for (const id of ["#pop-confirm", "#pop-cancel"]) {
 		document.querySelector<HTMLElement>(id)?.addEventListener("click", (event) => {
 			event.currentTarget?.dispatchEvent(
@@ -276,7 +271,6 @@ const sides = ["top", "bottom", "left", "right"] as const;
 		});
 	}
 
-	// the point anchor
 	const canvas = document.querySelector<HTMLElement>("#pop-canvas");
 	const point = document.querySelector<PopoverEl>("#pop-point");
 	const coords = document.querySelector<HTMLElement>("#pop-coords");
@@ -295,7 +289,6 @@ const sides = ["top", "bottom", "left", "right"] as const;
 		openPointAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
 	});
 
-	// the substrate shape: anchor to an input the caller owns, keep the caret in it, close on select
 	const ALGORITHMS = ["xtyle-default", "xtyle-hc", "xtyle-quiet", "xtyle-loud", "nxi-nite"];
 	const input = document.querySelector<HTMLInputElement>("#pop-input");
 	const results = document.querySelector<PopoverEl>("#pop-results");
@@ -313,7 +306,6 @@ const sides = ["top", "bottom", "left", "right"] as const;
 				li.addEventListener("click", () => {
 					if (input) input.value = name;
 					if (picked) picked.textContent = `Picked ${name}.`;
-					// the same `select` the rest of the overlay family speaks — the popover closes itself
 					li.dispatchEvent(new CustomEvent("select", { bubbles: true, composed: true, detail: { value: name } }));
 				});
 				return li;

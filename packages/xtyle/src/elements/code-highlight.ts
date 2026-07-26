@@ -94,7 +94,11 @@ function escapeCode(code: string): string {
 export async function highlight(code: string, lang: string | null | undefined): Promise<HighlightResult> {
 	const canonical = resolveLanguage(lang);
 	if (!canonical) return { language: null, html: escapeCode(code) };
-	await loadGrammar(canonical);
+	try {
+		await loadGrammar(canonical);
+	} catch {
+		return { language: null, html: escapeCode(code) };
+	}
 	const prism = await loadPrism();
 	const grammar = prism.languages[canonical];
 	if (!grammar) return { language: null, html: escapeCode(code) };

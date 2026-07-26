@@ -70,6 +70,18 @@ const logLines = [
 				</Text>
 			</Stack>
 		</Panel>
+
+		<Panel variant="collapsible" title="A different marker" level={3} markerIcon="plus">
+			<Stack gap={2}>
+				<Text size="sm">
+					<code>markerIcon</code> names any glyph the icon roster can draw, so this
+					disclosure leads with a <code>plus</code> instead of the caret.
+				</Text>
+				<Text tone="muted" size="sm">
+					A mod that fills <code>xtyle.icons</code> can supply its own glyph and name it here.
+				</Text>
+			</Stack>
+		</Panel>
 	</Grid>
 
 	<Panel title="Build log" level={3} scroll>

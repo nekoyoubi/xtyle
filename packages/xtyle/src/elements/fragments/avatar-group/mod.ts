@@ -43,9 +43,7 @@ hooks.fragment.mount("avatar-group", (bindings, ops) => {
 	ops.replaceChildren("[data-avatar-group]", groupHtml(bindings));
 });
 
-// Update only re-classes the row (which re-sizes the chip via CSS); rebuilding the children would
-// blow away the adopted light-DOM avatars, since a bare `<slot>` projects nothing without a shadow
-// root. The `+N` chip is seeded at mount / SSR from the explicit `overflow`.
+// INFO: update only re-classes the row; rebuilding children would drop the adopted light-DOM avatars, since a bare <slot> projects nothing without a shadow root
 hooks.fragment.update("avatar-group", (bindings, ops) => {
 	ops.setAttr(".xtyle-avatar-group", "class", groupClass(bindings));
 });

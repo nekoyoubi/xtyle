@@ -68,9 +68,7 @@ const EC_ORDINAL: Record<QrEcLevel, number> = { L: 0, M: 1, Q: 2, H: 3 };
 
 const ALPHANUMERIC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
 
-// ISO/IEC 18004 error-correction tables, indexed [ecOrdinal][version]. Index 0 (version "0") is a
-// sentinel so real versions read 1-based. These two arrays plus the raw-module formula fully
-// determine the block layout for every version/level pair.
+// INFO: ISO 18004 EC tables, indexed [ecOrdinal][version]; index 0 is a -1 sentinel so versions read 1-based
 const ECC_CODEWORDS_PER_BLOCK: number[][] = [
 	[-1, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30],
 	[-1, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28],
@@ -186,7 +184,6 @@ function encodeSegment(text: string, mode: Mode): { charCount: number; dataBits:
 	};
 }
 
-// --- Reed-Solomon over GF(256), primitive polynomial 0x11d ---
 
 const GF_EXP = new Uint8Array(512);
 const GF_LOG = new Uint8Array(256);
@@ -261,7 +258,6 @@ function addEcAndInterleave(data: number[], version: number, ec: QrEcLevel): num
 	return result;
 }
 
-// --- Matrix construction ---
 
 function alignmentPositions(version: number): number[] {
 	if (version === 1) return [];
@@ -308,16 +304,14 @@ function drawAlignment(grid: Grid, cx: number, cy: number): void {
 
 function drawFunctionPatterns(grid: Grid, version: number): void {
 	const size = grid.size;
-	// Timing lines.
 	for (let i = 0; i < size; i++) {
 		setModule(grid, 6, i, i % 2 === 0);
 		setModule(grid, i, 6, i % 2 === 0);
 	}
-	// Finders + their separators (the separators fall out of the 9x9 clamp in drawFinder).
+	// INFO: separators fall out of the 9x9 clamp in drawFinder, not drawn separately
 	drawFinder(grid, 3, 3);
 	drawFinder(grid, size - 4, 3);
 	drawFinder(grid, 3, size - 4);
-	// Alignment patterns, skipping any that collide with a finder.
 	const positions = alignmentPositions(version);
 	for (const cy of positions) {
 		for (const cx of positions) {
@@ -325,10 +319,8 @@ function drawFunctionPatterns(grid: Grid, version: number): void {
 			if (!nearFinder) drawAlignment(grid, cx, cy);
 		}
 	}
-	// Reserve the format-info strips (filled later) and the dark module. The first copy wraps the
-	// top-left finder (9 cells down col 8, 9 across row 8); the second copy is 8 cells along row 8 by
-	// the top-right finder and 8 down col 8 by the bottom-left finder (the last of which is the dark
-	// module). Running the second copy to 9 would wrongly reserve a data cell at `size - 9`.
+	// INFO: format-info strips run 9 cells for the first copy but only 8 for the second; running
+	// the second to 9 would wrongly reserve a data cell at `size - 9`
 	for (let i = 0; i < 9; i++) {
 		grid.reserved[i]![8] = true;
 		grid.reserved[8]![i] = true;
@@ -337,8 +329,7 @@ function drawFunctionPatterns(grid: Grid, version: number): void {
 		grid.reserved[8]![size - 1 - i] = true;
 		grid.reserved[size - 1 - i]![8] = true;
 	}
-	setModule(grid, 8, size - 8, true); // the always-dark module
-	// Reserve version-info blocks for v7+.
+	setModule(grid, 8, size - 8, true); // INFO: spec-mandated always-dark module
 	if (version >= 7) {
 		for (let i = 0; i < 18; i++) {
 			const a = size - 11 + (i % 3);
@@ -355,7 +346,7 @@ function placeData(grid: Grid, codewords: number[]): void {
 	let bitIndex = 0;
 	const totalBits = codewords.length * 8;
 	for (let right = size - 1; right >= 1; right -= 2) {
-		if (right === 6) right = 5; // the timing column shifts the pair left
+		if (right === 6) right = 5; // INFO: the timing column shifts the pair left
 		for (let vert = 0; vert < size; vert++) {
 			for (let j = 0; j < 2; j++) {
 				const x = right - j;
@@ -401,13 +392,11 @@ function drawFormatBits(grid: Grid, ec: QrEcLevel, mask: number): void {
 	for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >> 9) * 0x537);
 	const bits = ((data << 10) | rem) ^ 0x5412;
 	const get = (i: number): boolean => ((bits >> i) & 1) === 1;
-	// First copy: around the top-left finder.
 	for (let i = 0; i <= 5; i++) setModule(grid, 8, i, get(i));
 	setModule(grid, 8, 7, get(6));
 	setModule(grid, 8, 8, get(7));
 	setModule(grid, 7, 8, get(8));
 	for (let i = 9; i < 15; i++) setModule(grid, 14 - i, 8, get(i));
-	// Second copy: along the top-right and bottom-left finders.
 	for (let i = 0; i < 8; i++) setModule(grid, size - 1 - i, 8, get(i));
 	for (let i = 8; i < 15; i++) setModule(grid, 8, size - 15 + i, get(i));
 	setModule(grid, 8, size - 8, true);
@@ -433,7 +422,7 @@ function maskPenalty(grid: Grid): number {
 	const size = grid.size;
 	const m = grid.modules;
 	let penalty = 0;
-	// Rule 1: runs of 5+ same-color modules in a row/column.
+	// INFO: ISO penalty rule 1: runs of 5+ same-color modules in a row/column
 	for (let y = 0; y < size; y++) {
 		let runColor = m[y]![0]!;
 		let run = 1;
@@ -448,14 +437,14 @@ function maskPenalty(grid: Grid): number {
 		if (run >= 5) penalty += run - 2;
 		if (runV >= 5) penalty += runV - 2;
 	}
-	// Rule 2: 2x2 blocks of one color.
+	// INFO: ISO penalty rule 2: 2x2 blocks of one color
 	for (let y = 0; y < size - 1; y++) {
 		for (let x = 0; x < size - 1; x++) {
 			const c = m[y]![x];
 			if (c === m[y]![x + 1] && c === m[y + 1]![x] && c === m[y + 1]![x + 1]) penalty += 3;
 		}
 	}
-	// Rule 3: finder-like 1:1:3:1:1 patterns with a 4-module clear run, in both orientations.
+	// INFO: ISO penalty rule 3: finder-like 1:1:3:1:1 patterns with a 4-module clear run
 	const hasPattern = (get: (i: number) => boolean): boolean => {
 		const p = [true, false, true, true, true, false, true];
 		const check = (start: number): boolean => {
@@ -478,7 +467,7 @@ function maskPenalty(grid: Grid): number {
 			}
 		}
 	}
-	// Rule 4: deviation of the dark-module ratio from 50%.
+	// INFO: ISO penalty rule 4: deviation of the dark-module ratio from 50%
 	let dark = 0;
 	for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (m[y]![x]) dark++;
 	const ratio = (dark * 100) / (size * size);
@@ -529,7 +518,7 @@ export function encodeQr(text: string, options: EncodeQrOptions = {}): QrMatrix 
 	bb.append(MODE_INDICATOR[mode], 4);
 	bb.append(segment.charCount, charCountBits(mode, version));
 	segment.write(bb);
-	// Terminator (up to 4 zero bits) then pad to a byte boundary.
+	// INFO: terminator (up to 4 zero bits) then pad to a byte boundary
 	for (let i = 0; i < 4 && bb.bits.length < capacityBits; i++) bb.bits.push(0);
 	while (bb.bits.length % 8 !== 0) bb.bits.push(0);
 
@@ -539,7 +528,7 @@ export function encodeQr(text: string, options: EncodeQrOptions = {}): QrMatrix 
 		for (let j = 0; j < 8; j++) byte = (byte << 1) | bb.bits[i + j]!;
 		codewords.push(byte);
 	}
-	// Pad codewords with the alternating fill bytes until the data capacity is met.
+	// INFO: pad with the spec's alternating fill bytes (0xec/0x11) to data capacity
 	for (let pad = 0xec; codewords.length < capacityBits / 8; pad ^= 0xec ^ 0x11) codewords.push(pad);
 
 	const interleaved = addEcAndInterleave(codewords, version, ec);

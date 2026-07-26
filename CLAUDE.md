@@ -18,7 +18,7 @@ xtyle/
 │   └── xtyle-default/ #   the neutral default; xtyle-hc / xtyle-quiet / xtyle-loud / nxi-nite follow
 ├── apps/
 │   └── site/         # xtyle.dev: Astro (docs, examples, marketplace, generator)
-├── docs/             # design record (derivation-model, dimensional-contract, collection-substrate, component-fragments, code-component, icon-name-grammar, repo-layout, roadmap, open-questions)
+├── docs/             # design record (derivation-model, dimensional-contract, collection-substrate, component-fragments, code-component, icon-name-grammar, effects, repo-layout, roadmap, open-questions)
 ├── tests/visual/     # the cross-algorithm visual regression baseline (Playwright)
 └── scripts/          # version:bump · release · stats:snapshot · the build/check helpers
 ```
@@ -58,14 +58,53 @@ npx xtyle mcp                                          # start the MCP server (t
 # planned (next build): `xtyle add <pack>` / `xtyle search <query>`, the discovery surface
 ```
 
+## ⛔ NO AGENT-WRITTEN CODE COMMENTS — EVER, WITHOUT AN EXPLICIT REQUEST
+
+**An AI agent MUST NOT add a code comment to this repository unless the human explicitly asks for that comment, in the conversation, in that spot.** No inline `//`, no `/* */`, no block headers, no tagged comments (`// INFO:`, `// HACK:`, `// SAFETY:`, `// PERF:`, …), no "explaining the non-obvious bit," in any file (`.ts` / `.svelte` / `.astro` / `.mjs` / `.css` / anywhere). Default is zero. When unsure, none.
+
+- A tag is **not** a way to keep a comment. The comment audit gate accepts a tag; the human does not. Passing the gate is not permission — it is the floor, not the goal.
+- "The reasoning is non-obvious" is **not** an exception. Put the reasoning in the commit message, the PR description, or a `docs/` file — never in the code.
+- Editing code near an existing comment does not license a new one. Removing a stale or explanatory comment is always fine.
+- If a gate, linter, or reviewer seems to *want* a comment, leave it out and say so.
+- The **only** comments that may exist are JSDoc `/** */` blocks documenting the *public-API contract* of an exported symbol (what a consumer calls) — never to narrate implementation, and never inline. When in doubt, it is not this; write no comment.
+
+The reflex to explain code with a comment is the single most-repeated instruction-violation in this repo's history. Write the code so it reads without one. If it genuinely cannot, rename, extract, or restructure — do not annotate.
+
 ## Conventions
 
 - TypeScript for all new code
-- Self-documenting code preferred over inline comments (see global rules); JSDoc for public APIs
+- **No code comments** (see the hard rule above). Self-documenting code — clear names, small functions, types
 - Commit messages follow the project style: short header < 50 chars, past tense, markdown bullets for details
 - Branches: `feature/` new work · `fix/` bug fixes · `clean/` refactor/cleanup/docs
 - **Tests and dogfood passes clean up after themselves.** Anything a test or a manual derive-and-look session starts (a site preview server, a spawned `node` process, a temp file, a held port) gets torn down before the work is considered done. Don't leave orphaned preview servers or sockets bound; a pass that walks away with processes still running hasn't finished. Kill a stray preview by its PID on the port, never with a blanket `node` kill (that takes unrelated processes with it).
 - **The visual suite cannot run concurrently with itself.** `npm run test:visual` pins a fixed port and spawns its own preview server, so a second instance kills the first one's server mid-run. The symptom is a confusing cascade of "server is gone" failures rather than a clear port conflict, so check for an already-running instance before blaming the baseline.
+
+## ⚠️ REACH FOR XTYLE FIRST — NEVER HAND-ROLL UI THE SYSTEM CAN PROVIDE
+
+**xtyle is the design system. Building any user-facing surface — a control, a token value, a hover effect, a layout primitive — starts by reaching for what xtyle already ships, and when it ships nothing that fits, by *extending xtyle*, not by hand-rolling a one-off.** This applies inside the repo (the site, the bench, the demos) and to anything built against xtyle. A bespoke `<div>` switch when `<xtyle-switch>` exists, a hardcoded `#hex` when a token carries the value, a hand-written `@keyframes` glow when the effect layer has `glow` — each is a defect, not a shortcut, and the cost is a surface that drifts from the theme, ignores the algorithm, and duplicates work the library exists to own.
+
+The order of reach, every time you are about to write UI:
+
+1. **A component?** Check `packages/xtyle/src/manifest/` and `@xtyle/core/elements`. If a component fits, use it — through the `@xtyle/astro` / `@xtyle/svelte` binding on the site, or the raw element elsewhere. A switch is `<Switch>`, a toggle group is `<Segmented>`, a menu is `<Menu>`; do not rebuild them.
+2. **A token?** Colors, space, radius, shadow, duration, easing, layer, the named hues — all derive. Read the value from the token (`var(--accent)`, `var(--space-3)`), never a literal. A literal is a value the theme can't reach.
+3. **An effect?** A glow, pulse, sweep, lift, tint, blur, grayscale, shake — the effect layer owns these as `data-fx` specs that derive their intensity from the algorithm and honor reduced motion for free. Do not write a `filter`/`@keyframes`/`transition` by hand for anything the effect layer covers.
+
+**When nothing fits, the answer is to build it into xtyle — not around it.** A missing prop gets added to the component (and its manifest, demo, docs — see the rule below). A missing effect gets `registerEffect`ed into the library, last-wins on the name. A missing token gets derived by the algorithm. A whole missing capability that is user-extensible rather than core gets built as a **mod**: xtyle is xript-driven, and its components, effects, fonts, and generators are all fillable/registerable surfaces a mod can reshape or add to without touching core. The line is: promote to core what is blessed and universal; ship as a mod what is optional or opinionated. Either way it lands *in the system*, reusable, themed, and covered — never as a private snowflake in one page's stylesheet.
+
+The failure this rule exists to prevent: reaching for a raw `<div>`, a literal color, or a hand-rolled animation "just for this one spot" because it is faster in the moment. It is never just this one spot, the moment's shortcut becomes the codebase's drift, and the library it bypassed is the entire point of the project. If the reach turns up a gap, that gap is the work — fill it in xtyle.
+
+## ⚠️ EVERY MAJOR BROWSER, NOT JUST CHROME
+
+**xtyle targets Chromium, Firefox, and WebKit. A mechanism that only works in one engine is a defect, not an implementation detail — and picking one is a decision made *before* the code, not discovered after it ships.**
+
+When a capability could be built more than one way, browser support is part of choosing, ranked alongside fidelity and simplicity. Check it at the moment of the choice. "It works" means it works in all three; a local render proves one engine and nothing else.
+
+- **Verify in more than one engine before calling a visual feature done.** Playwright defaults to Chromium and `tests/visual` runs Chromium only, so a green suite and a clean local screenshot are both single-engine evidence. Anything that leans on a newer CSS property gets a second engine opened against it, deliberately.
+- **Prefer the broadly-implemented property over the elegant one.** `mask-image` and `border-image` are universal; `mask-border` / `-webkit-mask-box-image` are not implemented in Firefox at all. When a property is unevenly supported, the alternative that reaches every engine wins even when it costs more machinery.
+- **Degrade toward the shape, never away from it.** The worst failure is silent and inverted: an unsupported property drops out of the cascade and leaves whatever was underneath, so a masked frame becomes a solid rectangle and the feature reads as a *bug in the artwork* rather than a missing capability. If a path can't be made universal, it must fail into something recognisably the same thing — and be feature-detected, not assumed.
+- **`@supports` and `CSS.supports()` are the tools.** Branch on the capability, not on a browser.
+
+The failure this rule exists to prevent: reaching for the property that expresses the idea most neatly, confirming it in the one browser that happens to be open, and shipping a feature that renders wrong for every user on a different engine — where it is invisible to the person who wrote it and maddening to everyone else.
 
 ## ⚠️ DEMOS, DOCS, AND CODE SAMPLES ARE PART OF THE FEATURE — NEVER OPTIONAL
 
@@ -133,7 +172,7 @@ Mirrors xript. The version is cut at the **start** of a development cycle, not o
 
 1. **`npm run version:bump <version>`** syncs the version across the root and every workspace `package.json` (and internal `xtyle` / `@xtyle/*` dep ranges). Run `npm install` after to refresh the lockfile.
 2. **`npm run release`** cuts a GitHub Release from the current version and the matching `CHANGELOG.md` section. The user runs this after the cycle's work has merged.
-3. **`npm run stats:snapshot -- --release`** re-baselines `apps/site/src/data/stats-baseline.json` once a version has actually shipped. The baseline is the *last released* snapshot and every growth figure on the site is measured against it, so the script refuses to write without `--release` — a mid-cycle run must not silently move the mark.
+3. **`npm run stats:snapshot -- --rebaseline`** re-baselines `apps/site/src/data/stats-baseline.json`. It runs at the **start of a cycle, immediately after the version bump** — never at release. The baseline records the *last released* version, and every growth figure and "New" badge on the site is measured against it, so it must stay strictly behind `package.json`'s version: `main` deploys on push, and a baseline naming the version `main` is currently showing publishes a site claiming that release shipped nothing. The script stamps the newest git tag rather than `package.json`, refuses when the two are equal, refuses to move backwards, and still requires the flag.
 
 The `/start` command runs the whole version kickoff at the beginning of a cycle (validate → branch off `main` → bump all libs → changelog stub → verify → commit → push); work then lands on that version's branch. The `/bootstrap-npm` command handles a package's first publish, required to claim the npm name before CI can take over.
 
@@ -162,4 +201,12 @@ Pre-alpha. The architecture is settled and recorded in `docs/`. The engine (`pac
 - **The runtime is optional, not required.** Once derived, a theme is just CSS custom properties + the browser cascade; no engine needs to be running to use it. The engine *can* run live (the generator, novel-at-runtime inputs), but nothing about consuming a finished theme depends on it.
 - **Dual-entry.** One `@xtyle/core` package exposes a neutral importable API *and* a Node CLI bin (`xtyle`) *and* a browser DOM helper; the core stays environment-neutral (no `fs` / `path` / `process` outside the CLI).
 - **Manifest-as-source-of-truth.** Packs declare their own contents; discovery is an index over npm, not a hosted registry.
+- **Effects are a third kind.** A token is a value, a component is a thing, an **effect** is a verb: a
+  behavior applied to any element under a condition, addressed by a spec string (`data-fx="glow@hover"`, with named params after a `?`: `throb?rate:3s,colors:[accent,accent-2]`)
+  in the same name-is-its-spec shape as an icon name. It emits plain attribute-selector CSS, so it needs
+  no runtime; its values derive from five shared `--fx-*` tokens, so intensity is the algorithm's policy
+  (`xtyle-hc` flattens the layer to zero because a halo spends the edge contrast it protects); and its
+  library is **last-wins on the name**, so an addon replaces one effect or adds a new one without
+  restating the rest. Reduced-motion suppression is the library's job, decided once. Do not hand-roll a
+  hover glow, a pulse, or a sweep in a component's own CSS — see [`docs/effects.md`](docs/effects.md).
 - **The collection substrate.** The components that rope off items and move a cursor across them (`menu`, `tree`, `combobox`, `command-palette`, `tabs`, `segmented`, plus `<xtyle-list>` as the reference skin) share one keyboard reducer, roving tab stop, and selection model rather than each hand-rolling arrow wrapping, `Home`/`End`, typeahead, and the selection-cue contract. `table` consumes the selection core but keeps its own 2-D column identity; `pagination` stays out on purpose, because a page cursor is not a selection. Do not add a bespoke roving-tabindex handler to a new component — see [`docs/collection-substrate.md`](docs/collection-substrate.md).

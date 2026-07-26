@@ -139,8 +139,8 @@ function inner(b: FieldBindings): string {
 	const revealLabel = typeIsText ? "Hide value" : "Show value";
 
 	const clearHidden = clearShown ? "" : " hidden";
-	// The adornment keeps its `<slot>` whether or not it's filled, so `:empty` can never match it:
-	// a slot is a child node, and the nodes assigned to it are not. Only the host knows, so it says.
+	// INFO: a `<slot>` is itself a child node and slotted nodes aren't, so `:empty` can't tell a filled
+	// adornment from an empty one; the host reports it via `hasPrefix`/`hasSuffix`
 	const prefixHidden = b.hasPrefix ? "" : " hidden";
 	const suffixHidden = b.hasSuffix ? "" : " hidden";
 	const descriptionHidden = description.length === 0 ? " hidden" : "";

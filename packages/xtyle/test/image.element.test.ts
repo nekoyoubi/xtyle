@@ -1,13 +1,12 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-image> custom element on the happy-dom registry
 import "../src/elements/image.js";
 import { closeLightbox } from "../src/elements/lightbox.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/image/source.generated.js";
 
 beforeAll(async () => {
-	// happy-dom has no top-layer dialog and no media playback; the element only needs them not to throw
+	// INFO: happy-dom has no top-layer dialog or media playback; stub them so the element doesn't throw
 	HTMLDialogElement.prototype.showModal = function showModal(): void {
 		this.setAttribute("open", "");
 	};
@@ -120,7 +119,7 @@ describe("<xtyle-image> hover audio", () => {
 		const el = image({ "hover-src": "/p.mp4", "hover-audio": "off" });
 		const button = shadow(el, ".xtyle-image__audio");
 		expect(button).not.toBeNull();
-		// a frame control, not a child of the hover region: a rebuild refills that region from the slot
+		// INFO: lives on the frame, not the hover region, which gets refilled from the slot on rebuild
 		expect(button?.parentElement?.classList.contains("xtyle-image__frame")).toBe(true);
 		expect(button?.querySelectorAll(".xtyle-image__audio-glyph")).toHaveLength(2);
 		expect(button?.getAttribute("aria-pressed")).toBe("false");
@@ -139,7 +138,6 @@ describe("<xtyle-image> hover audio", () => {
 		expect(media!.muted).toBe(!before);
 		expect(button?.getAttribute("aria-pressed")).toBe(String(!media!.muted));
 		expect(button?.getAttribute("aria-label")).toBe(media!.muted ? "Unmute preview" : "Mute preview");
-		// the identity of the node survives, so focus does too
 		expect(shadow(el, ".xtyle-image__audio")).toBe(button);
 	});
 
@@ -162,18 +160,18 @@ describe("<xtyle-image> hover audio", () => {
 	});
 });
 
-// Last: the override registers hooks on the shared runtime for the rest of the file.
+// INFO: must run last; the override registers hooks on the shared runtime for the rest of the file
 describe("a component.image override", () => {
 	it("reshapes the zoom button the element used to hand-build", async () => {
 		await loadFill(
 			{
-				xript: "0.7",
+				xript: "0.8",
 				name: "test-image-override",
 				version: "0.0.1",
 				capabilities: ["xtyle.component.image"],
 				entry: { script: "mod.js", format: "script" },
 				fills: {
-					"component.image": [{ id: "image", format: "text/html+jsml", source: "image.html" }],
+					"component.image": [{ id: "image", format: "application/x-xtyle+html", source: "image.html" }],
 				},
 			},
 			{
@@ -191,7 +189,6 @@ describe("a component.image override", () => {
 		expect(zoom?.getAttribute("data-modded")).toBe("yes");
 		expect(zoom?.querySelector(".modded-zoom")).not.toBeNull();
 
-		// and the override's button still drives the built-in behavior
 		zoom?.click();
 		expect(lightboxOpen()).toBe(true);
 	});

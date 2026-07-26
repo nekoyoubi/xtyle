@@ -2,6 +2,14 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { CarouselTransition, CarouselDirection } from "../vocab.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/carousel/source.generated.js";
+import { iconBody } from "../icon-registry.js";
+
+/** The glyphs a carousel can draw — the four directional arrows and the play/pause pair — resolved
+ * against the live roster so a mod reskin of any of them reaches the sandbox. */
+function carouselIconBodies(): Record<string, string | null> {
+	const names = ["chevron-left", "chevron-right", "chevron-up", "chevron-down", "play", "pause"];
+	return Object.fromEntries(names.map((name) => [name, iconBody(name) ?? null]));
+}
 
 const DEFAULT_INTERVAL = 5000;
 const SETTLE_MS = 600;
@@ -42,24 +50,14 @@ export class XtyleCarousel extends XtyleElement {
 	private settleTimer = 0;
 	private retryHandle = 0;
 	private retried = false;
-	// Suppresses the observer's index writes while a programmatic scroll is in flight, so a
-	// fast click-through doesn't flutter the active dot as the smooth scroll passes intermediate slides.
 	private programmatic = false;
 	private mq = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
 	private index = 0;
 	private slides: HTMLElement[] = [];
 	private track: HTMLElement | null = null;
-	// The user's explicit pause intent (via the play/pause toggle), distinct from the transient
-	// hover/focus pause, so resuming on pointer-leave never overrides a deliberate pause.
 	private paused = false;
-	// A polite live region announcing the current slide, so a screen reader hears the change even
-	// though scrolling (or a stacked cross-fade) never moves focus. It renders nothing, so it is the
-	// element's plumbing rather than the fill's chrome.
 	private liveEl: HTMLElement | null = null;
 	private announcedIndex = 0;
-	// Seam clones for the smooth infinite loop: inert copies of the first/last slide sitting just past
-	// each end, so advancing off an end scrolls into a look-alike and then silently snaps to the real
-	// slide. `pendingSeam` holds the real scroll offset to snap to once the seam scroll settles.
 	private leadingClone: HTMLElement | null = null;
 	private trailingClone: HTMLElement | null = null;
 	private hasClones = false;
@@ -228,6 +226,7 @@ export class XtyleCarousel extends XtyleElement {
 			loop: this.loop,
 			label: this.label,
 			direction: this.direction,
+			iconBodies: carouselIconBodies(),
 		};
 	}
 
@@ -336,8 +335,6 @@ export class XtyleCarousel extends XtyleElement {
 			slide.setAttribute("role", "group");
 			slide.setAttribute("aria-roledescription", "slide");
 			slide.setAttribute("aria-label", `${i + 1} of ${this.slides.length}`);
-			// In a stacked transition the slides overlay, so only the active one is shown and reachable; the
-			// rest are hidden from assistive tech and made inert so a hidden slide's content can't be tabbed to.
 			if (!this.stacked) continue;
 			const active = i === this.index;
 			slide.classList.toggle("is-active", active);
@@ -456,8 +453,6 @@ export class XtyleCarousel extends XtyleElement {
 			"keydown",
 			(event) => {
 				if (!this.ownsEvent(event)) return;
-				// The arrow pair follows the track's axis: Up/Down for a vertical carousel, Left/Right for
-				// a horizontal one. `prev`/`next` stay logical (index-1 / index+1) as the buttons do.
 				const prevKey = this.vertical ? "ArrowUp" : "ArrowLeft";
 				const nextKey = this.vertical ? "ArrowDown" : "ArrowRight";
 				if (event.key === prevKey) {
@@ -477,9 +472,6 @@ export class XtyleCarousel extends XtyleElement {
 			{ signal },
 		);
 
-		// The transient hover/focus pause. A decorative carousel that only shows while its container is
-		// hovered (an Image hover-preview) wants to keep cycling under the pointer, so `pause-on-hover`
-		// opts out; the explicit play/pause toggle and `prefers-reduced-motion` still stop it.
 		if (this.pauseOnHover) {
 			this.addEventListener("pointerenter", () => this.stopAutoplay(), { signal });
 			this.addEventListener("focusin", () => this.stopAutoplay(), { signal });
@@ -487,8 +479,6 @@ export class XtyleCarousel extends XtyleElement {
 			this.addEventListener("focusout", () => this.resumeAutoplay(), { signal });
 		}
 
-		// `scrollend` is the precise settle signal (a smooth scroll, or the user's own swipe, coming to
-		// rest); the `armSettle` timer is only a fallback for engines that don't fire it.
 		this.track?.addEventListener("scrollend", () => this.onSettle(), { signal });
 	}
 
@@ -528,8 +518,6 @@ export class XtyleCarousel extends XtyleElement {
 		const n = this.slides.length;
 		if (n === 0) return;
 
-		// Stacked transitions have no track to scroll: the active slide is just re-marked and the CSS
-		// cross-fades. Looping is inherently seamless here, so no seam clones are involved.
 		if (this.stacked) {
 			this.index = this.loop ? (target + n) % n : Math.max(0, Math.min(n - 1, target));
 			this.render();
@@ -537,8 +525,6 @@ export class XtyleCarousel extends XtyleElement {
 		}
 
 		if (!this.track) return;
-		// Resolve any in-flight seam snap first, so a rapid second click scrolls from the real slide
-		// rather than the far-side clone it briefly rests on.
 		if (this.pendingSeam != null) this.finishSeam();
 
 		if (this.hasClones && !this.reducedMotion) {

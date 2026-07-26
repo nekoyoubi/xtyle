@@ -54,7 +54,6 @@ describe("tableParts export", () => {
 		expect(tableParts.head).toBe("xtyle-table__head");
 		expect(tableParts.body).toBe("xtyle-table__body");
 		expect(tableParts.headerCell).toBe("xtyle-table__header-cell");
-		// the decorator classes rows from the constant, not a literal, so the two can't drift
 		expect(source).toContain("tableParts.row");
 		expect(source).toContain("import { tableParts }");
 	});

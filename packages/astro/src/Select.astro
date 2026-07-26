@@ -42,10 +42,8 @@ const size = resolveVocab(sizeInput, SIZES, "md", "select size");
 const fieldId = `xtyle-select-${Math.random().toString(36).slice(2, 9)}`;
 const errorId = `${fieldId}-error`;
 
-// The consumer's `<option>`/`<optgroup>` children populate the rendered `<select>` (via
-// `bindings.optionsHtml`) AND ride along as hidden light-DOM children after the chrome, so the
-// element can re-read them on a rebuild. `xtyle-select > option` is `display:none` (see
-// `hostDisplayCss`), so the bare copies never show.
+// INFO: the consumer's `<option>`s populate the `<select>` and also ride along as hidden light-DOM
+// children (`display:none`) so the element can re-read them on a rebuild
 const optionsHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 
 const bindings = {

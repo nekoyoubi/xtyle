@@ -7,35 +7,24 @@ const register = derive(xtyleDefault, { constraints: { "--bg-0": "#0e1116", "--a
 describe("auditRegister", () => {
 	it("audits xtyle's canonical text/fill pairs and the default theme clears AA", () => {
 		const audit = auditRegister(register);
-		// fg-0 + 6 surface inks × 3 surfaces + placeholder + 9 on-fill + 3 accent-text + 5 tint-text
-		// + fg-0 / fg-1 on the accent tint = 39
+		// INFO: 39 = fg-0 + 6 surface inks × 3 surfaces + placeholder + 9 on-fill + 3 accent-text + 5 tint-text + fg-0/fg-1 on accent tint
 		expect(audit.tallies.total).toBe(39);
 		expect(audit.tallies.fail).toBe(0);
 		expect(audit.passes).toBe(true);
 		expect(audit.level).toBe("AA");
-		// each token is audited on its intended surface, matching xtyle-default's own invariants
 		expect(audit.entries.some((e) => e.fg === "--accent-fg" && e.bg === "--accent")).toBe(true);
-		// the neutral inks are held readable on the panel surfaces, not only the base
 		expect(audit.entries.some((e) => e.fg === "--fg-2" && e.bg === "--bg-2")).toBe(true);
 		expect(audit.entries.some((e) => e.fg === "--accent-text" && e.bg === "--bg-1")).toBe(true);
-		// the placeholder is checked on the field surface it actually sits on
 		expect(audit.entries.some((e) => e.fg === "--placeholder" && e.bg === "--field-bg")).toBe(true);
-		// status readable inks sit on their soft tint, not the base
 		expect(audit.entries.some((e) => e.fg === "--danger-text" && e.bg === "--danger-bg")).toBe(true);
 		expect(audit.entries.some((e) => e.fg === "--danger-text" && e.bg === "--bg-0")).toBe(false);
 		expect(audit.entries.some((e) => e.fg === "--accent-2-fg" && e.bg === "--accent-2")).toBe(true);
 	});
 
 	it("holds every ink a component can lay on the accent tint", () => {
-		// Selection / active states (table row, list item, tree row, menu item, combobox and
-		// command-palette options) fill with `--accent-bg` and ink with `--fg-0`; the soft tone
-		// surfaces (ribbon soft, dropzone dragging, combobox chip) ink with `--accent-text`, the
-		// same shape the status tones use on their own tint. Both pairs are consumed, so both are
-		// contracted — an algorithm that satisfies one and not the other is not conforming.
 		const pairs = canonicalContrastPairs();
 		expect(pairs).toContainEqual({ fg: "--fg-0", bg: "--accent-bg" });
 		expect(pairs).toContainEqual({ fg: "--accent-text", bg: "--accent-bg" });
-		// the calendar inks its in-range band with the secondary body ink
 		expect(pairs).toContainEqual({ fg: "--fg-1", bg: "--accent-bg" });
 
 		const audit = auditRegister(register);
@@ -70,7 +59,6 @@ describe("auditRegister", () => {
 	it("gates pass against the requested level", () => {
 		const aa = auditRegister(register, { level: "AA" });
 		const aaa = auditRegister(register, { level: "AAA" });
-		// the default theme is built to AA, so AAA gates most pairs out of `pass`
 		expect(aa.passes).toBe(true);
 		expect(aaa.passes).toBe(false);
 		expect(aaa.tallies.pass).toBeLessThan(aa.tallies.pass);
@@ -97,7 +85,6 @@ describe("auditRegister", () => {
 		const pairs = canonicalContrastPairs();
 		expect(pairs).toHaveLength(39);
 		expect(pairs[0]).toEqual({ fg: "--fg-0", bg: "--bg-0" });
-		// the same list the audit grades, so the exported data and the audit can't drift
 		expect(auditRegister(register).tallies.total).toBe(pairs.length);
 	});
 
@@ -110,9 +97,7 @@ describe("auditRegister", () => {
 		});
 		expect(audit.tallies.total).toBe(2);
 		expect(audit.entries[0]?.pair).toBe("danger ink on base");
-		// falls back to the "<fg> on <bg>" label when none is given
 		expect(audit.entries[1]?.pair).toBe("--success-text on --bg-0");
-		// these are the consumer's pairs, not the canonical status-on-tint pairs
 		expect(audit.entries.some((e) => e.bg === "--danger-bg")).toBe(false);
 	});
 });

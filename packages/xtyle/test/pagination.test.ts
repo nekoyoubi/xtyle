@@ -25,7 +25,6 @@ describe("paginationRange", () => {
 		const counts = new Set<number>();
 		for (let page = 1; page <= 20; page++) counts.add(paginationRange(page, 20).length);
 		expect([...counts]).toEqual([7]);
-		// a wider window stays constant at its own count, too
 		const wide = new Set<number>();
 		for (let page = 1; page <= 30; page++) wide.add(paginationRange(page, 30, 2).length);
 		expect([...wide]).toEqual([9]);
@@ -40,7 +39,7 @@ describe("paginationRange", () => {
 	});
 
 	it("renders a real gap rather than an ellipsis hiding a single page", () => {
-		// page 4 of 20: the left side is 1,2,3,4 — no ellipsis should hide the lone page 3
+		// INFO: an ellipsis must not replace a single hidden page (page 4 of 20 shows 1,2,3,4,5, not 1,ellipsis,...)
 		expect(paginationRange(4, 20)).toEqual([1, 2, 3, 4, 5, "ellipsis", 20]);
 	});
 

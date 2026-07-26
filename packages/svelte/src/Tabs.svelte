@@ -42,18 +42,17 @@
 	}: Props = $props();
 
 	const headless = $derived(!panel);
-	// Fall back to the first *enabled* tab, matching the element's own default selection.
 	const activeKey = $derived(value ?? items.find((t) => !t.disabled)?.value ?? items[0]?.value ?? "0");
-	// Keep-alive of shown panels. Must reassign the array: mutating a `$state` Set/array in place
-	// doesn't re-run Svelte 5's template dependents.
+	// INFO: reassign the array rather than mutate in place; Svelte 5 does not re-run template
+	// dependents on an in-place `$state` array mutation
 	let shownKeys = $state<string[]>([]);
 	$effect(() => {
 		if (lazy && !shownKeys.includes(activeKey)) shownKeys = [...shownKeys, activeKey];
 	});
 
 	function handleChange(event: Event) {
-		// `xtyle-tabs` dispatches `change` with `composed: true`, so a nested Tabs' change
-		// bubbles up to an outer one. Only act on changes from this element, not descendants.
+		// INFO: `xtyle-tabs` dispatches `change` with `composed: true`, so a nested Tabs' change bubbles
+		// to an outer one; act only on this element's own change, not a descendant's
 		if (event.target !== event.currentTarget) return;
 		const next = (event as CustomEvent<{ value: string }>).detail?.value;
 		if (next === undefined) return;

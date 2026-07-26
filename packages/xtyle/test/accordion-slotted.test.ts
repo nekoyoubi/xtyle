@@ -18,10 +18,18 @@ function mount(children: string): HTMLElement {
 	document.body.appendChild(el);
 	return el;
 }
+/** The text a browser paints, resolving `<slot>` to what it projects. An authored header reaches the
+ * trigger through a named slot (so header markup survives instead of being escaped to text), and a
+ * slot's own `textContent` is empty — only its assigned nodes carry the content. */
+function projectedText(node: Node): string {
+	if (node instanceof HTMLSlotElement) return node.assignedNodes().map(projectedText).join("");
+	if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+	return Array.from(node.childNodes).map(projectedText).join("");
+}
 function headers(el: HTMLElement): string[] {
 	const root = el.shadowRoot as ShadowRoot;
-	return Array.from(root.querySelectorAll<HTMLElement>(".xtyle-accordion__trigger")).map(
-		(t) => t.textContent?.trim() ?? "",
+	return Array.from(root.querySelectorAll<HTMLElement>(".xtyle-accordion__trigger")).map((t) =>
+		projectedText(t).trim(),
 	);
 }
 
@@ -31,8 +39,8 @@ const slotMarkup = `
 	<span slot="header">Returns</span>
 	<div slot="panel">Thirty days.</div>`;
 
-// Astro consumes a child's `slot` attribute to route it, so by the time the element upgrades the
-// children carry only the `data-` marker. This is the exact DOM the Astro binding produces.
+// INFO: Astro consumes a child's `slot` attribute to route it, so on upgrade children carry only the
+// `data-` marker; this is the exact DOM the Astro binding produces
 const dataMarkup = `
 	<span data-xtyle-header>Shipping</span>
 	<div data-xtyle-panel>Ships in two days.</div>

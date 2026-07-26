@@ -3,6 +3,9 @@ import Accordion from "@xtyle/astro/Accordion.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
+import Icon from "@xtyle/astro/Icon.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Alert from "@xtyle/astro/Alert.astro";
 ---
 
 <Stack gap={6} class="demo">
@@ -28,6 +31,23 @@ import Text from "@xtyle/astro/Text.astro";
 	</section>
 
 	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Rich headers · nested components</Heading>
+		<Accordion>
+			<span data-xtyle-header><Icon name="gear" /> Settings <Badge tone="info">3</Badge></span>
+			<div data-xtyle-panel>
+				<Stack gap={3}>
+					<Text>A panel is a full render slot, so components nest inside it.</Text>
+					<Alert severity="info">Including ones with their own chrome.</Alert>
+				</Stack>
+			</div>
+			<span data-xtyle-header><Icon name="bookmark" /> Saved</span>
+			<div data-xtyle-panel>
+				<Text>Headers carry markup too, not just text.</Text>
+			</div>
+		</Accordion>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={3} size="sm" tone="muted">Multiple open · compact</Heading>
 		<Accordion multiple size="sm">
 			<span data-xtyle-header aria-expanded="true">Availability</span>
@@ -36,6 +56,19 @@ import Text from "@xtyle/astro/Text.astro";
 			<div data-xtyle-panel>Price, rating, newest first.</div>
 			<span data-xtyle-header aria-disabled="true">Saved searches</span>
 			<div data-xtyle-panel>Sign in to save a search.</div>
+		</Accordion>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">A different marker</Heading>
+		<Accordion chevronIcon="plus">
+			<span data-xtyle-header>What is a marker glyph?</span>
+			<div data-xtyle-panel>
+				Any name the icon roster can draw, so a mod that fills <code>xtyle.icons</code> can
+				supply its own and name it here.
+			</div>
+			<span data-xtyle-header>Does it stay themed?</span>
+			<div data-xtyle-panel>Yes. The glyph inherits the derived color like every other icon.</div>
 		</Accordion>
 	</section>
 </Stack>

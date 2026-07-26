@@ -4,12 +4,6 @@ import { dirname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { listComponents } from "../src/manifest/index.js";
 
-// Each component manifest declares which bindings it supports; a declared `svelte`/`astro`
-// binding must have a matching wrapper file in the sibling package, or the binding is a
-// promise the package doesn't keep. The SSR registry test guards the core↔astro seam at
-// render time; this guards the manifest↔wrapper seam at the file level. Both sides are
-// compared by their letters-and-digits only (lowercased, separators dropped), so the id's
-// hyphens and the wrapper's PascalCase line up without assuming a specific casing scheme.
 const key = (name: string): string => name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -38,9 +32,6 @@ describe("binding parity", () => {
 		expect(missing.map((c) => c.id)).toEqual([]);
 	});
 
-	// A wrapper file that exists but isn't re-exported from the barrel is unreachable through the
-	// package's public surface (`import { X } from "@xtyle/svelte"` fails to type-check). This is how
-	// the chart wrappers shipped invisible: the files were present but never added to `index.ts`.
 	it("every Svelte wrapper file is re-exported from the @xtyle/svelte barrel", () => {
 		const svelteSrc = resolve(here, "../..", "svelte", "src");
 		const files = readdirSync(svelteSrc).filter((f) => f.endsWith(".svelte"));
@@ -49,11 +40,8 @@ describe("binding parity", () => {
 		expect(unexported).toEqual([]);
 	});
 
-	// A Svelte prop that is destructured out of `$props()` is thereby excluded from `...rest`, so unless
-	// the wrapper forwards it by hand it reaches the element nowhere: typed, defaulted, documented, and
-	// inert. Nothing in the type system catches it, because the prop is perfectly well-declared — it is
-	// only the *use* that is missing. This is how `Progress` shipped `ramp` / `ramp-mode` / `reverse` as
-	// dead props. A prop the wrapper never destructures is fine: it rides the spread to the element.
+	// INFO: a Svelte prop destructured from `$props()` is excluded from `...rest`, so it reaches the
+	// element only if the wrapper forwards it by hand; a prop never destructured rides the spread.
 	it("every Svelte prop destructured from $props() reaches the element", () => {
 		const svelteSrc = resolve(here, "../..", "svelte", "src");
 		const dropped: string[] = [];
@@ -72,8 +60,6 @@ describe("binding parity", () => {
 				else if (plain) names.push(plain[1]);
 			}
 
-			// Everything but the declaration itself: the `Props` interface and its doc comments describe
-			// the prop, they don't consume it, so a name that appears only there is still dropped.
 			let body = src.slice(0, destructure.index) + src.slice(destructure.index! + destructure[0].length);
 			const iface = body.match(/interface\s+Props\b/);
 			if (iface) {
@@ -96,13 +82,6 @@ describe("binding parity", () => {
 		expect(dropped).toEqual([]);
 	});
 
-	// A manifest can document a named slot the binding never wires up, which makes it unreachable: the
-	// element renders `<slot name="value">`, the manifest promises it, and the wrapper offers no way to
-	// fill it. Astro wrappers are exempt — they project through `Astro.slots`, where the consumer writes
-	// `slot="<name>"` on their own markup and no wrapper-side literal exists to look for.
-	//
-	// A few slots are filled by a companion wrapper the consumer composes in rather than by the parent
-	// itself, so the literal lives in the companion's file. Each is listed with the file that fills it.
 	const companionFilled: Record<string, string> = { "segmented:segment": "Segment.svelte" };
 
 	it("every named slot a Svelte binding declares is reachable from the wrapper", () => {
@@ -130,9 +109,6 @@ describe("binding parity", () => {
 		expect(unreachable).toEqual([]);
 	});
 
-	// The reference page's "Code" section renders each example's per-binding source. A component that
-	// declares a binding but ships no example source for it leaves that tab empty, so the sample the
-	// binding promises never appears (dock-zone shipped html-only despite declaring svelte + astro).
 	it("every component's examples cover each declared binding", () => {
 		const gaps = components
 			.map((c) => {

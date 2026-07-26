@@ -7,6 +7,8 @@ interface OpsBuilder {
 
 interface IconBindings {
 	name?: string;
+	/** The glyph body resolved against the live roster by the trusted host; the sandbox draws what it is handed. */
+	body?: string | null;
 	size?: string;
 	tone?: string;
 	label?: string;
@@ -19,6 +21,7 @@ declare const hooks: {
 
 function iconHtml(b: IconBindings): string {
 	return renderIcon(b.name ?? "", {
+		body: b.body,
 		size: (b.size as "sm" | "md" | "lg" | "xl") ?? "md",
 		tone: b.tone,
 		label: b.label,
@@ -27,7 +30,6 @@ function iconHtml(b: IconBindings): string {
 	});
 }
 
-// The whole SVG swaps on any change (a new `name` is a different glyph), so mount and update run the same full render.
 function render(bindings: IconBindings, ops: OpsBuilder): void {
 	ops.replaceChildren("[data-icon]", iconHtml(bindings));
 }

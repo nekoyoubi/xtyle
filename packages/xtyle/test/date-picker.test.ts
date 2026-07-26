@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-// the calendar-math half is Calendar's module, consumed here rather than duplicated
 import { addDays, addMonths, daysInMonth, weekdayOf, type CivilDate } from "../src/markup/calendar.js";
 import {
 	clampCivilValue,
@@ -27,7 +26,7 @@ const today: CivilDate = { year: 2026, month: 7, day: 14 };
 
 describe("calendar arithmetic is wall-clock, never instant", () => {
 	it("steps across a spring-forward boundary without losing the day", () => {
-		// 2026-03-08 is the US spring-forward date; an instant-based picker lands on 03-07T23:00 here
+		// INFO: 2026-03-08 is the US spring-forward date; an instant-based picker lands on 03-07T23:00 here
 		expect(addDays({ year: 2026, month: 3, day: 7 }, 1)).toEqual({ year: 2026, month: 3, day: 8 });
 		expect(addDays({ year: 2026, month: 3, day: 8 }, -1)).toEqual({ year: 2026, month: 3, day: 7 });
 	});
@@ -287,7 +286,7 @@ describe("bounds", () => {
 			minute: 0,
 			second: 0,
 		});
-		// the day after the floor is open from midnight — the bug where Monday's 9am floors every Tuesday
+		// INFO: the day after the floor is open from midnight, not floored by the bounding day's 9am
 		expect(effectiveTimeBounds({ year: 2026, month: 3, day: 9 }, "datetime", lo, hi).min).toBeNull();
 		expect(effectiveTimeBounds({ year: 2026, month: 3, day: 20 }, "datetime", lo, hi).max).toEqual({
 			hour: 17,

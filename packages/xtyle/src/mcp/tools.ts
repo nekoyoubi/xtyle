@@ -1,6 +1,9 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { derive } from "../index.js";
+import { derive, listEffects, listConditions, effectsCss, EFFECT_TOKENS } from "../index.js";
+import { iconPrimitiveRoster, iconComposition, composeIcon } from "../index.js";
+import { PALETTES } from "../series.js";
+import { ICON_GRAMMAR } from "./icon-grammar.js";
 import { auditRegister } from "../audit.js";
 import { emit, emitters } from "../emit/index.js";
 import { coverage, coverComponent, coverComponents } from "../coverage.js";
@@ -13,6 +16,7 @@ import { validateKnobs } from "../knobs.js";
 import { algorithmDomains, bakedAlgorithm } from "../baked.js";
 import { constraintsFrom } from "../constraints.js";
 import type { ServerBuildInfo } from "./server.js";
+import { existedAt, resolveAsOf, VERSION_INPUT_DESCRIPTION } from "./as-of.js";
 
 interface ToolResult {
 	[key: string]: unknown;
@@ -28,10 +32,8 @@ function json(value: unknown, isError = false): ToolResult {
 	return text(JSON.stringify(value, null, 2), isError);
 }
 
-// The SDK's generic `registerTool` infers a per-tool callback type from the Zod
-// shape; on the larger schemas that inference exceeds TypeScript's instantiation
-// depth (TS2589). Adapting it to one concrete signature sidesteps the generic
-// while leaving runtime validation, which is driven by the real shape, intact.
+// HACK: the SDK's generic `registerTool` infers its callback from the Zod shape, which blows
+// TypeScript's instantiation depth (TS2589) on the larger schemas; one concrete signature avoids it.
 type ToolHandler = (args: Record<string, any>) => ToolResult | Promise<ToolResult>;
 type RegisterTool = (name: string, config: { title: string; description: string; inputSchema: z.ZodRawShape }, cb: ToolHandler) => void;
 
@@ -52,6 +54,30 @@ const knobsInput = z
  * by `xtyle_derive`. `emitters()` is a runtime list, so the tuple `z.enum` wants is asserted here.
  */
 export const formatInput = z.enum([...emitters(), "theme"] as unknown as [string, ...string[]]);
+
+/** The spec-string grammar an agent needs to write a valid `data-fx`, stated once so the effects tool
+ * hands over the rules rather than making the agent infer them from the catalog. */
+const EFFECT_SYNTAX = {
+	spec: "{effect}[@{condition}][?{key}:{value},{key}:{value}…]",
+	attribute: "data-fx",
+	notes: [
+		"Write the spec in a `data-fx` attribute; the layer is plain attribute-selector CSS and needs no runtime.",
+		"No condition means ambient (always on). Space-separate multiple specs on one element.",
+		"Parameters are named, not positional: after a `?`, comma-separated, any subset in any order.",
+		"A bracketed list fans out to a related group — `colors:[accent,accent-2]` fills `color` and `color-alt`.",
+		"A value is a hex (`#fff`), a bare number that takes the param's unit (`315`→`315deg`, `3`→`3s`), or a token name resolved to `var(--name)` so it stays theme-reactive (`accent2`→`--accent-2`).",
+		"Intensity derives from the shared `--fx-*` tokens, so it is the algorithm's policy (`xtyle-hc` zeros `--fx-intensity` and flattens the layer).",
+	],
+	examples: ["throb", "glow@hover", "glare@hover lift@active", "throb?rate:3s,colors:[accent,accent-2]", "glow@hover?spread:18"],
+};
+
+const FX_TOKEN_ROLES: Record<string, string> = {
+	"--fx-intensity": "the algorithm's taste; 0 disables the whole layer",
+	"--fx-color": "the effect's primary color (derives from --accent)",
+	"--fx-color-alt": "the second hue a throb travels toward (derives from --accent-2)",
+	"--fx-duration": "the base timing (derives from --duration-base)",
+	"--fx-ease": "the base easing (derives from --ease-standard)",
+};
 
 /**
  * The resolved algorithm a tool derives with, and the knobs it derives under: the id through
@@ -76,10 +102,20 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		{
 			title: "Report this server's build identity",
 			description:
-				"Return the running xtyle MCP server's name, version, and build timestamp. If `builtAt` predates a change you made in the xtyle repo, the running server is stale, so rebuild and reconnect before trusting its results.",
+				"Return the running xtyle MCP server's name, version, build timestamp, and — the part that matters when you are building against a pinned dependency — **which version of xtyle this surface answers for**. If `builtAt` predates a change you made in the xtyle repo, the running server is stale, so rebuild and reconnect before trusting its results. `versionPinning` lists the tools that accept a `version` argument and the ones that cannot: a catalog can be answered as of an older version, but anything that *runs* the engine (derive, gauntlet, audit, coverage) executes this build and cannot be rewound.",
 			inputSchema: {},
 		},
-		async () => json({ ...buildInfo, runtime: `node ${process.version}` }),
+		async () =>
+			json({
+				...buildInfo,
+				runtime: `node ${process.version}`,
+				speaks: buildInfo.version,
+				versionPinning: {
+					accepts: ["xtyle_components", "xtyle_effects", "xtyle_icons"],
+					alwaysHead: ["xtyle_derive", "xtyle_coverage", "xtyle_gauntlet", "xtyle_audit", "xtyle_list_algorithms"],
+					note: "Catalog answers can be pinned with `version`; tools that execute the engine always run this build. Pinned answers carry an `asOf` envelope naming the version they describe and an `omitted` count for what was filtered out.",
+				},
+			}),
 	);
 
 	register(
@@ -182,25 +218,142 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 				"Without an id, list every shipped component (id, name, category, summary, keywords, seeAlso, bindings). With an id, return that component's full manifest: props, variants, states, slots, consumedTokens, accessibility, and examples. Reach for this first when building against xtyle so token names and prop shapes come from the manifest, not a guess. `keywords` are capability synonyms (a searcher's words, not the component's own name) and `seeAlso` cross-references overlapping components, so scan them to find the right component by what it does — e.g. `meter`/`gauge` lands on `progress`, `dropdown` on `select`, `modal` on `dialog`.",
 			inputSchema: {
 				id: z.string().optional().describe("A component id. Omit to list all components."),
+				version: z.string().optional().describe(VERSION_INPUT_DESCRIPTION),
 			},
 		},
-		async ({ id }) => {
+		async ({ id, version }) => {
+			const asOf = resolveAsOf(version, buildInfo.version);
+			const all = listComponents();
+			const available = all.filter((c) => existedAt(c.since, asOf.asOf));
+			const omitted = all.length - available.length;
+
 			if (!id) {
-				return json(
-					listComponents().map((c) => ({
+				return json({
+					...asOf,
+					omitted,
+					count: available.length,
+					components: available.map((c) => ({
 						id: c.id,
 						name: c.name,
 						category: c.category,
+						since: c.since,
 						summary: c.summary,
 						keywords: c.keywords ?? [],
 						seeAlso: c.seeAlso ?? [],
 						bindings: c.bindings,
 					})),
-				);
+				});
 			}
+
 			const manifest = getComponent(id);
 			if (!manifest) return text(`unknown component: ${id}`, true);
-			return json(manifest);
+			if (!existedAt(manifest.since, asOf.asOf)) {
+				return json(
+					{
+						...asOf,
+						error: `"${id}" was introduced in ${manifest.since}, which is newer than ${asOf.asOf}`,
+						since: manifest.since,
+						hint: `Upgrade xtyle to ${manifest.since} or later to use it, or omit \`version\` to see the current catalog.`,
+					},
+					true,
+				);
+			}
+			return json({ ...asOf, component: manifest });
+		},
+	);
+
+	register(
+		"xtyle_effects",
+		{
+			title: "List or describe effects and their spec grammar",
+			description:
+				"Effects are xtyle's third kind: a token is a value, a component is a thing, an **effect** is a *verb* — a behavior applied to any element under a condition through a `data-fx` spec string. Without an `effect`, return the whole catalog: every effect (its params, whether it animates, whether it is ambient), every condition, the shared `--fx-*` tokens, and the spec-string grammar with examples — everything needed to write a valid `data-fx`. Pass `effect` to detail one. Pass `format: \"css\"` to emit the effect-layer stylesheet (the full effects × conditions cross product), the artifact you drop next to a derived theme: it needs no runtime and suppresses motion under `prefers-reduced-motion` for free.",
+			inputSchema: {
+				effect: z.string().optional().describe("An effect name to describe in detail (e.g. `glow`). Omit to list the whole catalog."),
+				format: z.enum(["json", "css"]).optional().describe("`json` (default) returns the catalog; `css` emits the effect-layer stylesheet."),
+				version: z.string().optional().describe(VERSION_INPUT_DESCRIPTION),
+			},
+		},
+		({ effect, format, version }) => {
+			if ((format ?? "json") === "css") return text(effectsCss());
+			const asOf = resolveAsOf(version, buildInfo.version);
+			const conditions = listConditions()
+				.filter((c) => existedAt(c.since, asOf.asOf))
+				.map((c) => ({ name: c.name, selector: c.selector, since: c.since }));
+			const shape = (e: ReturnType<typeof listEffects>[number]) => ({
+				name: e.name,
+				description: e.description,
+				tags: e.tags ?? [],
+				animated: e.animated ?? false,
+				ambient: e.ambient !== false,
+				since: e.since,
+				params: (e.params ?? []).map((p) => ({ name: p.name, unit: p.unit, expands: p.expands })),
+				example: e.ambient === false || e.animated ? e.name : `${e.name}@hover`,
+			});
+			if (effect) {
+				const def = listEffects().find((e) => e.name === effect);
+				if (!def) return text(`unknown effect: ${effect}`, true);
+				if (!existedAt(def.since, asOf.asOf)) {
+					return json(
+						{ ...asOf, error: `"${effect}" was introduced in ${def.since}, which is newer than ${asOf.asOf}`, since: def.since },
+						true,
+					);
+				}
+				return json({ ...asOf, effect: shape(def), conditions, syntax: EFFECT_SYNTAX });
+			}
+			return json({
+				...asOf,
+				syntax: EFFECT_SYNTAX,
+				tokens: EFFECT_TOKENS.map((name) => ({ name, role: FX_TOKEN_ROLES[name] })),
+				effects: listEffects()
+					.filter((e) => existedAt(e.since, asOf.asOf))
+					.map(shape),
+				conditions,
+				registration: "Last-wins on the name: registerEffect / registerCondition replace a name or extend the set, built-ins first, so an addon re-points one effect without restating the rest.",
+			});
+		},
+	);
+
+	register(
+		"xtyle_icons",
+		{
+			title: "Speak the icon-name grammar: roster, rules, and render",
+			description:
+				"An icon name is its own spec — a short name is a known glyph, a longer name (`badge--circle-c2--star-s55-cf`) is a terse description of a mark composed to SVG on the fly. Without arguments, return everything needed to write one fluently: the full grammar (spec structure, object flags, the color-nibble palette, finish flags, the render model), the primitive roster (every primitive with its grammar keywords, aliases, family, description, and tags), the series palettes, and worked examples. Pass `primitive` to detail one primitive. Pass `name` to **compose that spec to SVG** and see the mark it produces — the fastest way to check a name renders what you meant.",
+			inputSchema: {
+				name: z.string().optional().describe("A full icon name/spec to compose to SVG, e.g. `database--cylinder-c1--disc-y-25-c3`. Returns the rendered SVG."),
+				primitive: z.string().optional().describe("A primitive keyword or library name to detail, e.g. `cylinder`. Omit both to get the full grammar and roster."),
+				version: z.string().optional().describe(VERSION_INPUT_DESCRIPTION),
+			},
+		},
+		({ name, primitive, version }) => {
+			if (name) {
+				try {
+					return text(composeIcon(iconComposition(name)));
+				} catch (error) {
+					return text(error instanceof Error ? error.message : String(error), true);
+				}
+			}
+			const asOf = resolveAsOf(version, buildInfo.version);
+			const roster = iconPrimitiveRoster().filter((p) => existedAt(p.since, asOf.asOf));
+			if (primitive) {
+				const entry =
+					roster.find((p) => p.keywords.includes(primitive)) ?? roster.find((p) => p.library === primitive);
+				if (!entry) return text(`unknown primitive: ${primitive}`, true);
+				const [keyword] = entry.keywords;
+				return json({
+					...asOf,
+					primitive: entry,
+					example: keyword ? `mark--${keyword}-c1` : `mark--${entry.library}-c1`,
+				});
+			}
+			return json({
+				...asOf,
+				grammar: ICON_GRAMMAR,
+				palettes: PALETTES,
+				primitiveCount: roster.length,
+				primitives: roster,
+			});
 		},
 	);
 

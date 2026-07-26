@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-command-palette> custom element on the happy-dom registry
 import "../src/elements/command-palette.js";
 import type { CommandItem, CommandScorer } from "../src/elements/command-palette.js";
 import { loadFill } from "../src/elements/fragment-host.js";
@@ -320,7 +319,6 @@ describe("<xtyle-command-palette> recents", () => {
 		el.show();
 		expect(headings(el)[0]).toBe("Recent");
 		expect(labels(el)[0]).toBe("Save");
-		// lifted, not duplicated
 		expect(labels(el).filter((label) => label === "Save")).toHaveLength(1);
 		expect(el.recent).toEqual(["file.save"]);
 	});
@@ -481,7 +479,6 @@ describe("<xtyle-command-palette> SSR", () => {
 		expect(html).toContain(">New file<");
 		expect(html).toContain('<kbd class="xtyle-kbd xtyle-kbd--sm" part="key">Ctrl</kbd>');
 		expect(html).toContain('aria-keyshortcuts="Ctrl+N"');
-		// no light-DOM `<style>` ships — the global sheet styles it
 		expect(html).not.toContain("<style>");
 	});
 });

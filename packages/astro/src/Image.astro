@@ -18,6 +18,8 @@ interface Props {
 	loading?: ImageLoading;
 	lightbox?: boolean;
 	trigger?: ImageTrigger;
+	/** The roster glyph on the zoom button (with trigger="button"). */
+	zoomIcon?: string;
 	caption?: string;
 	/** A video (`.mp4`/`.webm`) or gif shown on hover/focus; the still `src` is the poster. */
 	hoverSrc?: string;
@@ -41,6 +43,7 @@ const {
 	loading: loadingInput,
 	lightbox = false,
 	trigger: triggerInput,
+	zoomIcon,
 	caption,
 	hoverSrc,
 	hoverPoster,
@@ -58,8 +61,6 @@ const hoverAudio = resolveOptionalVocab(hoverAudioInput, IMAGE_HOVER_AUDIO, "ima
 
 const bindings = { src, alt, ratio, fit, radius, loading, caption };
 const scaffold = await renderFragmentLight("image", bindings);
-// Compose the hover slot: an author-supplied `hover` slot wins; otherwise `hoverSrc` generates the
-// media. Either way it replaces the fragment's `<slot name="hover">` so the zero-JS render is right.
 const hoverContent = Astro.slots.has("hover")
 	? await Astro.slots.render("hover")
 	: hoverSrc
@@ -78,6 +79,7 @@ const composed = composeFallbackSlot(scaffold, "hover", hoverContent);
 	caption={caption}
 	lightbox={lightbox ? "" : undefined}
 	trigger={trigger === "button" ? "button" : undefined}
+	zoom-icon={zoomIcon}
 	hover-src={hoverSrc}
 	hover-poster={hoverPoster}
 	hover-audio={hoverAudio}

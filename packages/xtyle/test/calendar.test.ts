@@ -27,8 +27,8 @@ import {
 } from "../src/markup/calendar.js";
 
 describe("civil dates are wall-clock, not instants", () => {
-	// The bug this suite exists to prevent: a local-midnight `new Date(y, m, d)` in a zone that
-	// springs forward at midnight lands on 23:00 the previous day, so "add a day" silently loses one.
+	// INFO: a local-midnight `new Date(y, m, d)` in a zone that springs forward at midnight lands on
+	// 23:00 the previous day, so a naive add-a-day silently loses one
 	it("crosses the US spring-forward boundary without drifting", () => {
 		const before = parseIso("2026-03-07")!;
 		expect(toIso(addDays(before, 1))).toBe("2026-03-08");
@@ -119,16 +119,16 @@ describe("locale week rules", () => {
 	});
 
 	it("finds the start of the week under either week start", () => {
-		// 2026-07-14 is a Tuesday
+		// INFO: 2026-07-14 is a Tuesday
 		expect(toIso(startOfWeek(parseIso("2026-07-14")!, 1))).toBe("2026-07-13");
 		expect(toIso(startOfWeek(parseIso("2026-07-14")!, 0))).toBe("2026-07-12");
 	});
 
 	it("numbers weeks per ISO-8601 at the turn of the year", () => {
-		// 2026-01-01 is a Thursday, so its week (starting Mon 2025-12-29) is week 1 of 2026
+		// INFO: 2026-01-01 is a Thursday, so its week (starting Mon 2025-12-29) is week 1 of 2026
 		expect(weekNumber(parseIso("2025-12-29")!, 1, 4)).toBe(1);
 		expect(weekNumber(parseIso("2026-01-01")!, 1, 4)).toBe(1);
-		// 2026 starts on a Thursday, so it runs to 53 weeks; 2027-01-01 (a Friday) is still in it
+		// INFO: 2026 starts on a Thursday, so it runs to 53 weeks; 2027-01-01 (a Friday) is still in it
 		expect(weekNumber(parseIso("2027-01-01")!, 1, 4)).toBe(53);
 		expect(weekNumber(parseIso("2026-07-14")!, 1, 4)).toBe(29);
 	});
@@ -197,7 +197,7 @@ describe("calendarBindings", () => {
 	it("lays a month out in whole weeks from the locale's first day", () => {
 		const bindings = calendarBindings({ ...base, firstDay: 0 });
 		expect(bindings.weeks[0]!.days).toHaveLength(7);
-		// July 2026 starts on a Wednesday; a Sunday-start grid opens on June 28
+		// INFO: July 2026 starts on a Wednesday; a Sunday-start grid opens on June 28
 		expect(bindings.weeks[0]!.days[0]!.date).toBe("2026-06-28");
 		expect(bindings.weeks[0]!.days[0]!.outside).toBe(true);
 		expect(bindings.weeks[0]!.days[3]!.date).toBe("2026-07-01");
@@ -212,7 +212,7 @@ describe("calendarBindings", () => {
 
 	it("pads to six rows under fixedWeeks, so the grid never changes height", () => {
 		expect(calendarBindings({ ...base, firstDay: 0, fixedWeeks: true }).weeks).toHaveLength(6);
-		// February 2026 opens on a Sunday and runs 28 days: exactly four rows, two short of July's five
+		// INFO: February 2026 opens on a Sunday and runs 28 days: exactly four rows, two short of July's five
 		expect(calendarBindings({ ...base, month: "2026-02", firstDay: 0 }).weeks).toHaveLength(4);
 		expect(calendarBindings({ ...base, month: "2026-02", firstDay: 0, fixedWeeks: true }).weeks).toHaveLength(6);
 	});

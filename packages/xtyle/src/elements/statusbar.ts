@@ -141,8 +141,8 @@ export class XtyleStatusbar extends XtyleElement {
 				.assignedElements({ flatten: true })
 				.filter((el): el is HTMLElement => el instanceof HTMLElement);
 		}
-		// Light DOM has no `<slot>`, so cells are the bar's own children. The scaffold's overflow
-		// menu and any injected script are excluded by matching only the item/spacer classes.
+		// INFO: light DOM has no `<slot>`; filter the bar's children by item/spacer class to exclude
+		// the overflow menu and any injected script
 		const bar = this.bar;
 		if (!bar) return [];
 		return [...bar.children].filter(

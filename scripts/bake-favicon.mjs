@@ -1,11 +1,6 @@
 #!/usr/bin/env node
-// Bakes `apps/site/public/favicon.svg` from the masthead mark.
-//
-// A favicon is rendered outside the page, so nothing the document provides reaches it: no stylesheet,
-// no `var(--…)`, and no webfont. The mark's `letter` layers typeset real `<text>`, so the font has to
-// travel with the file or the glyphs fall back to whatever the OS picks and the wordmark stops being
-// the wordmark. This inlines the Sigmar subset as a data URI, resolves the theme tokens the mark
-// carries to concrete values, and pins a pixel size in place of the `1em` an inline icon uses.
+// INFO: a favicon renders outside the page — no stylesheet, no var(--…), no webfont reach it — so this
+// inlines the Sigmar font as a data URI, resolves theme tokens to concrete values, and pins a pixel size
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

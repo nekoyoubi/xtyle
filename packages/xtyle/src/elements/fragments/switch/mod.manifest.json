@@ -1,6 +1,6 @@
 {
-	"$schema": "https://xript.dev/schema/mod/v0.7.json",
-	"xript": "0.7",
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
 	"name": "xtyle-switch-default",
 	"version": "0.0.1",
 	"title": "Xtyle Switch (default)",
@@ -11,7 +11,7 @@
 		"component.switch": [
 			{
 				"id": "switch",
-				"format": "text/html+jsml",
+				"format": "application/x-xtyle+html",
 				"source": "switch.html",
 				"handlers": [
 					{ "selector": ".xtyle-switch__track", "on": "click", "handler": "toggle" },

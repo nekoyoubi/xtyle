@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from "vitest";
-// side effect: defines <xtyle-table> (and, through it, the <xtyle-icon> its sort caret renders as)
+// INFO: side-effect import defines <xtyle-table> (and the <xtyle-icon> its sort caret renders as)
 import "../src/elements/table.js";
 import { tableParts } from "../src/markup/table.js";
 
@@ -92,7 +92,7 @@ describe("<xtyle-table> sort state and a11y survive the caret swap", () => {
 		expect(el.querySelector("td")?.classList.contains(tableParts.cell)).toBe(true);
 	});
 
-	// the subtree observer that re-decorates live rows fires on a microtask, so let it run
+	// INFO: the subtree observer re-decorates live rows on a microtask, so let it run before asserting
 	it("decorates a header appended after mount, caret and all", async () => {
 		const el = make(`<th data-sortable>Order</th>`);
 		const head = el.querySelector("thead tr") as HTMLElement;

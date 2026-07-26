@@ -1,6 +1,6 @@
 ---
 import { checkAuthoring } from "./internal/diagnose.js";
-import { resolveTone } from "@xtyle/core";
+import { resolveTone, iconBody } from "@xtyle/core";
 import { calendarBindings, parseCalendarValue, resolveWeekInfo, toIso, todayIn } from "@xtyle/core/markup";
 import type { CalendarDecorations, CalendarMode } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
@@ -23,6 +23,10 @@ interface Props {
 	fixedWeeks?: boolean;
 	hideOutsideDays?: boolean;
 	hideNav?: boolean;
+	/** The roster glyph for the previous-month nav arrow. */
+	prevIcon?: string;
+	/** The roster glyph for the next-month nav arrow. */
+	nextIcon?: string;
 	disabledDates?: string[];
 	decorations?: CalendarDecorations;
 	tone?: FullTone;
@@ -52,6 +56,8 @@ const {
 	fixedWeeks = false,
 	hideOutsideDays = false,
 	hideNav = false,
+	prevIcon,
+	nextIcon,
 	disabledDates = [],
 	decorations = {},
 	tone: toneInput,
@@ -92,6 +98,10 @@ const bindings = calendarBindings({
 	label: label ?? null,
 	labelledby: labelledby ?? null,
 	hideNav,
+	prevIcon,
+	nextIcon,
+	prevBody: iconBody(prevIcon ?? "chevron-left") ?? null,
+	nextBody: iconBody(nextIcon ?? "chevron-right") ?? null,
 	readonly,
 	disabled,
 	min,
@@ -116,6 +126,8 @@ const light = await renderFragmentLight("calendar", bindings as unknown as Recor
 	fixed-weeks={fixedWeeks || undefined}
 	hide-outside-days={hideOutsideDays || undefined}
 	hide-nav={hideNav || undefined}
+	prev-icon={prevIcon}
+	next-icon={nextIcon}
 	disabled-dates={disabledDates.length ? disabledDates.join(",") : undefined}
 	decorations={Object.keys(decorations).length ? JSON.stringify(decorations) : undefined}
 	tone={tone}

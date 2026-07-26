@@ -3,6 +3,7 @@ import { bottomNavHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/bottom-nav/source.generated.js";
 import type { BottomNavTab } from "../markup/bottom-nav.js";
+import { iconBody } from "../icon-registry.js";
 
 /**
  * The thumb-reachable bottom tab bar that pairs with `mobile-shell` the way `statusbar` pairs with
@@ -68,15 +69,15 @@ export class XtyleBottomNav extends XtyleElement {
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(bottomNavHostCss);
-		this.fragment.update({ tabs: this.tabs, value: this.value, label: this.label });
+		const tabs = this.tabs.map((tab) => ({ ...tab, iconBody: tab.icon ? (iconBody(tab.icon) ?? null) : null }));
+		this.fragment.update({ tabs, value: this.value, label: this.label });
 		this.wire();
 	}
 
 	private wire(): void {
 		if (this.wired) return;
 		this.wired = true;
-		// Click and keydown are composed, so they surface on the host from inside the shadow root; one
-		// listener pair on the host covers every tab, and survives the fragment repainting them.
+		// INFO: listeners go on the host, not per tab — the fragment repaints tabs, and composed events still surface here
 		this.addEventListener("click", (event) => {
 			const tab = (event.composedPath()[0] as HTMLElement | null)?.closest?.<HTMLElement>("[data-value]");
 			if (tab?.dataset.value) this.select(tab.dataset.value);

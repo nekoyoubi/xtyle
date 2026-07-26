@@ -19,8 +19,7 @@ import {
 } from "./dock-model.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/dock-zone/source.generated.js";
-// The fill's kebab opens a real `<xtyle-menu>` it renders, so the tag must be defined wherever the
-// zone is: importing the class both registers the element and types the popup the zone drives.
+// INFO: importing (not `import type`) registers <xtyle-menu>, which the fill opens as the kebab popup
 import { XtyleMenu } from "./menu.js";
 import type { MenuItem } from "../markup/index.js";
 
@@ -136,9 +135,8 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	}
 
 	connectedCallback(): void {
-		// Setup precedes `super.connectedCallback()` here (unlike the other elements): the base's first-connect
-		// render calls this override, and an un-collected, un-seeded render would paint the fill's scaffold over
-		// the panel children before `collectPanels` could capture them. Seed first, then let the base render.
+		// INFO: collect/seed must precede super.connectedCallback; the base's first-connect render would
+		// otherwise paint the fill's scaffold over the panel children before they're captured
 		this.collectPanels();
 		if (!this._layout) {
 			const init = this.initialLayout();
@@ -162,8 +160,6 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 				this.seedLeafCounter(parsed.tree);
 				return parsed;
 			} catch {
-				// Malformed authored layout: warn so the declarative path stays debuggable, then fall
-				// back to a single zone rather than render nothing.
 				console.warn("xtyle-dock-zone: malformed `layout` attribute; falling back to a single zone.", attr);
 			}
 		}
@@ -248,12 +244,12 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 			const floating = new Set(this._floating.map((f) => f.panelId));
 			const live = allPanels(this._layout).filter((p) => known.has(p));
 			for (const id of known) {
-				// A floating panel is legitimately absent from the tree; only re-dock a truly orphaned one.
+				// INFO: a floating panel is legitimately absent from the tree; only re-dock a truly orphaned one
 				if (!live.includes(id) && !floating.has(id)) this._layout = dockPanel(this._layout, { panel: id, target: this.rootLeafId(), region: "center" });
 			}
 		}
-		// The chrome's structure changes on nearly every render (a split appears, a tab moves zones, a
-		// window floats), which the patch ops cannot express — so each render rebuilds it.
+		// INFO: the chrome's structure changes nearly every render (splits, tab moves, floats), which the
+		// patch ops can't express, so each render rebuilds it
 		this.fragment.remount();
 		this.fragment.update(this.bindings());
 	}
@@ -472,7 +468,7 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 			this.onFloatResizedown(event, resize.dataset.ownerPanel ?? "");
 			return;
 		}
-		// A press on a float's own control must not also arm the titlebar drag under it.
+		// INFO: a press on a float's own control must not also arm the titlebar drag under it
 		if (target.closest("[data-float-control]")) return;
 		const head = target.closest("[data-float-head]");
 		if (head) {
@@ -508,8 +504,8 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 			this.dockFloating(dock.dataset.ownerPanel ?? "");
 			return;
 		}
-		// Keyboard activation only (`detail === 0`); a pointer press on a tab or a section header routes
-		// through the drag gesture, so click-vs-drag is decided by travel, not by a second racing handler.
+		// INFO: detail === 0 is keyboard activation; a pointer press on a tab/section routes through the
+		// drag gesture, so click-vs-drag is decided by travel
 		if (event.detail !== 0) return;
 		const tab = target.closest<HTMLElement>("[data-tab]");
 		if (tab) {
@@ -778,8 +774,6 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		this.drag = null;
 		this.hideFilms();
 		if (!d || !this._layout) return;
-		// A press that never crossed the threshold is a click: toggle a stacked section, or activate a
-		// tab, never re-dock.
 		if (!d.active) {
 			const leaf = allLeaves(this._layout).find((l) => l.id === d.zoneId);
 			if (leaf?.mode === "stack") this.toggleCollapse(d.panelId);
