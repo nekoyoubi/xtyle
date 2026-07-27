@@ -85,6 +85,8 @@ export { formGroupHostCss } from "./form-group.js";
 export { selectMarkup, selectClass, selectHostCss } from "./select.js";
 export type { SelectMarkupProps } from "./select.js";
 export { switchHostCss } from "./switch.js";
+export { schemeToggleGlyphs, schemeToggleHostClass } from "./scheme-toggle.js";
+export type { SchemeToggleGlyphOptions, SchemeToggleClassOptions } from "./scheme-toggle.js";
 export { textareaHostCss } from "./textarea.js";
 export type { TextareaResize } from "./textarea.js";
 export { toolbarMarkup, toolbarClass, toolbarHostCss } from "./toolbar.js";
@@ -92,6 +94,10 @@ export type { ToolbarMarkupProps } from "./toolbar.js";
 export { tooltipHostCss } from "./tooltip.js";
 export type { TooltipPlacement } from "./tooltip.js";
 export { swatchHostCss } from "./swatch.js";
+export { themeCardHostCss } from "./theme-card.js";
+export { themeSwatchHostCss } from "./theme-swatch.js";
+export { themePickerHostCss } from "./theme-picker.js";
+export { ninePatchHostCss, ninePatchSource, ninePatchFrameStyle } from "./nine-patch.js";
 export type { SwatchSize } from "./swatch.js";
 export { radioHostCss, radioGroupMarkup, radioGroupClass, radioGroupHostCss } from "./radio.js";
 export type { RadioGroupMarkupProps } from "./radio.js";
@@ -177,6 +183,20 @@ export { splitterHostCss } from "./splitter.js";
 export { codeMarkup, codeClass, codeHostCss, plainCodeHtml, splitCodeLines, codeGutterWidth, parseLineSpec } from "./code.js";
 export type { CodeMarkupProps } from "./code.js";
 export { renderMarkdown, renderMarkdownInline, markdownHostCss } from "./markdown.js";
+export { parseSchemeList } from "./uri.js";
+export {
+	renderBbcode,
+	bbcodeVocabulary,
+	bbcodeVocabularies,
+	bbcodeTags,
+	scanBbcodeRegions,
+	isBbcodeBlockTag,
+	bbcodeHostCss,
+	DEFAULT_VOCABULARY,
+} from "./bbcode.js";
+export type { BbcodeTag, BbcodeTagContext, BbcodeOptions, BbcodeRegion } from "./bbcode.js";
+export { BBCODE_CORE, BBCODE_EXTENSIONS } from "./bbcode-tags.js";
+export type { MarkdownOptions } from "./markdown.js";
 export { paginationMarkup, paginationClass, paginationHostCss, paginationRange, paginationHref } from "./pagination.js";
 export type { PaginationMarkupProps } from "./pagination.js";
 export {

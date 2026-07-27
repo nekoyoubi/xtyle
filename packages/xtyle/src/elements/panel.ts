@@ -3,6 +3,7 @@ import { panelHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/panel/source.generated.js";
 import { PANEL_VARIANTS, resolveVocab } from "../vocab.js";
+import { iconBody } from "../icon-registry.js";
 
 type PanelVariant = (typeof PANEL_VARIANTS)[number];
 
@@ -19,7 +20,7 @@ export class XtylePanel extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["title", "level", "variant", "open", "scroll", "label"];
+		return ["title", "level", "variant", "open", "scroll", "label", "marker-icon"];
 	}
 
 	get title(): string {
@@ -27,6 +28,15 @@ export class XtylePanel extends XtyleElement {
 	}
 	set title(value: string | null | undefined) {
 		this.reflectString("title", value);
+	}
+
+	/** The roster glyph drawn as the collapse marker, on the `collapsible` variant. Any name the icon
+	 * roster can draw, including one a mod contributed through the `xtyle.icons` slot. */
+	get markerIcon(): string {
+		return this.getAttribute("marker-icon") || "chevron-right";
+	}
+	set markerIcon(value: string) {
+		this.setAttribute("marker-icon", value);
 	}
 
 	get level(): number {
@@ -92,6 +102,8 @@ export class XtylePanel extends XtyleElement {
 			hasActions: this.hasActions,
 			titleId: this.titleId,
 			label: this.label || null,
+			markerIcon: this.markerIcon,
+			markerBody: iconBody(this.markerIcon) ?? null,
 		};
 	}
 
@@ -99,7 +111,7 @@ export class XtylePanel extends XtyleElement {
 	 * header presence, and scrollable body wiring. A change here rebuilds; an `open` toggle on
 	 * a collapsible panel is a cheap patch (aria-expanded + region visibility). */
 	private shapeSignature(): string {
-		return `${this.variant}|${this.level}|${this.hasHeader}|${this.title}|${this.scrollable}|${this.label}`;
+		return `${this.variant}|${this.level}|${this.hasHeader}|${this.title}|${this.scrollable}|${this.label}|${this.markerIcon}`;
 	}
 
 	private warnIfUnnamed(): void {

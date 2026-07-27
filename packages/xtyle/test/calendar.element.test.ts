@@ -195,7 +195,6 @@ describe("selecting", () => {
 		expect(cell(el, "2026-07-13").getAttribute("aria-disabled")).toBe("true");
 		cell(el, "2026-07-09").click();
 		expect(el.value).toBe("");
-		// still reachable by keyboard: the cursor passes over it rather than skipping the square
 		expect(cell(el, "2026-07-09").hasAttribute("tabindex")).toBe(true);
 	});
 
@@ -310,7 +309,6 @@ describe("the keyboard grid", () => {
 		expect(focused(today)).toBe("2026-07-14");
 		document.body.innerHTML = "";
 
-		// a month with neither a selection nor today in it opens on its first day
 		const elsewhere = make({ month: "2026-09", timezone: "UTC" });
 		expect(focused(elsewhere)).toBe("2026-09-01");
 		vi.useRealTimers();
@@ -345,7 +343,7 @@ describe("decorations", () => {
 describe("timezone", () => {
 	it("marks today from the wall clock of the zone it is pinned to", () => {
 		vi.useFakeTimers();
-		// 03:30 UTC on the 15th is still the 14th in New York — the calendar must mark the 14th
+		// INFO: 03:30 UTC on the 15th is still the 14th in New York
 		vi.setSystemTime(new Date("2026-07-15T03:30:00Z"));
 		const el = make({ month: "2026-07", timezone: "America/New_York" });
 		expect(cell(el, "2026-07-14").hasAttribute("data-today")).toBe(true);

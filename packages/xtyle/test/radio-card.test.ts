@@ -15,7 +15,6 @@ describe("radio description + card", () => {
 		expect(html).toContain('part="description"');
 		expect(html).toContain('id="desc-1"');
 		expect(html).toContain(">Changes sync both ways.</span>");
-		// the description span is visible (not hidden) when there is text
 		expect(html).not.toMatch(/part="description"[^>]*hidden/);
 	});
 

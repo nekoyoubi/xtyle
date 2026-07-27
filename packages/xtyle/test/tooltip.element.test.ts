@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines <xtyle-tooltip> on the happy-dom registry
+// INFO: side-effect import registers <xtyle-tooltip> on the happy-dom registry
 import "../src/elements/tooltip.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/tooltip/source.generated.js";
@@ -91,7 +91,6 @@ describe("dismissing a tooltip", () => {
 		escapeOn(document.body);
 		expect(tip.open).toBe(false);
 
-		// a second Escape must not throw or re-fire against a closed tip
 		expect(() => escapeOn(document.body)).not.toThrow();
 
 		tip.remove();
@@ -111,7 +110,7 @@ describe("a hint the author forced open", () => {
 
 		trigger.dispatchEvent(new Event("pointerenter"));
 		trigger.dispatchEvent(new Event("pointerleave"));
-		await new Promise((r) => setTimeout(r, 200)); // outlast the hide delay
+		await new Promise((r) => setTimeout(r, 200)); // INFO: outlast the hide delay
 
 		expect(tip.open).toBe(true);
 		expect(tip.hasAttribute("open")).toBe(true);

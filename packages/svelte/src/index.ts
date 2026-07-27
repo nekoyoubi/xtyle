@@ -5,6 +5,12 @@ export { default as Badge } from "./Badge.svelte";
 export { default as Dot } from "./Dot.svelte";
 export { default as Ribbon } from "./Ribbon.svelte";
 export { default as Switch } from "./Switch.svelte";
+export { default as SchemeToggle } from "./SchemeToggle.svelte";
+export { default as ThemeScope } from "./ThemeScope.svelte";
+export { default as ThemeCard } from "./ThemeCard.svelte";
+export { default as ThemeSwatch } from "./ThemeSwatch.svelte";
+export { default as ThemePicker } from "./ThemePicker.svelte";
+export { default as NinePatch } from "./NinePatch.svelte";
 export { default as Alert } from "./Alert.svelte";
 export { default as Link } from "./Link.svelte";
 export { default as AppShell } from "./AppShell.svelte";
@@ -82,6 +88,7 @@ export type { CommandItem, CommandMatch, CommandScorer, CommandCloseReason } fro
 export { default as Splitter } from "./Splitter.svelte";
 export { default as Code } from "./Code.svelte";
 export { default as Markdown } from "./Markdown.svelte";
+export { default as Bbcode } from "./Bbcode.svelte";
 export { default as Pagination } from "./Pagination.svelte";
 export { default as Calendar } from "./Calendar.svelte";
 export { default as QrCode } from "./Qr.svelte";
@@ -96,6 +103,12 @@ export {
 	XtyleDot,
 	XtyleRibbon,
 	XtyleSwitch,
+	XtyleSchemeToggle,
+	XtyleThemeScope,
+	XtyleThemeCard,
+	XtyleThemeSwatch,
+	XtyleThemePicker,
+	XtyleNinePatch,
 	XtyleAlert,
 	XtyleLink,
 	XtyleAppShell,
@@ -175,6 +188,7 @@ export {
 	XtyleSplitter,
 	XtyleCode,
 	XtyleMarkdown,
+	XtyleBbcode,
 	XtylePagination,
 	XtyleCalendar,
 	XtyleQrCode,

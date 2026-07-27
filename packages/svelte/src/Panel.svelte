@@ -9,6 +9,8 @@
 		title?: string;
 		level?: 1 | 2 | 3 | 4 | 5 | 6;
 		variant?: PanelVariant;
+		/** The roster glyph drawn as the collapsible header's marker. */
+		markerIcon?: string;
 		open?: boolean;
 		scroll?: boolean;
 		onToggle?: (open: boolean) => void;
@@ -23,6 +25,7 @@
 		title,
 		level = 2,
 		variant = "default",
+		markerIcon,
 		open = $bindable(false),
 		scroll = false,
 		onToggle,
@@ -43,6 +46,7 @@
 	{title}
 	level={level}
 	variant={variant}
+	marker-icon={markerIcon}
 	open={open || undefined}
 	scroll={scroll || undefined}
 	ontoggle={handleToggle}

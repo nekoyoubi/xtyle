@@ -45,8 +45,7 @@ export function bundledAlgorithmManifest(id: string): AlgorithmManifest | null {
  */
 export function resolveBundledAlgorithm(id: string, options: ResolveAlgorithmOptions = {}): Promise<Algorithm> {
 	const timeoutMs = railFor(options.timeoutMs);
-	// Keyed on the clamped rail for the same reason the Node twin is: a cache keyed on id alone hands
-	// a harness whichever instance a production caller warmed first, so the raise silently does nothing.
+	// INFO: key on the clamped rail too; keying on id alone returns whatever instance was warmed first, ignoring the requested timeout
 	const key = timeoutMs === undefined ? id : `${id}@${timeoutMs}`;
 	const cached = cache.get(key);
 	if (cached) return cached;
@@ -59,8 +58,7 @@ export function resolveBundledAlgorithm(id: string, options: ResolveAlgorithmOpt
 	}
 
 	const loaded = loadAlgorithm(bundle.manifest, bundle.source, { timeoutMs }).then((algorithm) => {
-		// `resolved` is the synchronous first-paint oracle, which wants the default-railed instance;
-		// the derivation is identical either way, so a harness load never displaces it.
+		// INFO: resolved is the sync first-paint oracle; only the default-railed instance belongs there
 		if (timeoutMs === undefined) resolved.set(id, algorithm);
 		return algorithm;
 	});

@@ -243,9 +243,8 @@ export class XtyleRadioGroup extends XtyleElement {
 	}
 
 	private onChange = (event: Event): void => {
-		// Each radio lives in its own shadow root, so the native `name`-based mutual
-		// exclusion never engages across the group — enforce single-selection here when a
-		// radio reports it became checked (click and keyboard both route through `change`).
+		// INFO: each radio has its own shadow root, so native name-based mutual exclusion never
+		// engages across the group; enforce single-selection here
 		const target = (event.target as Element | null)?.closest("xtyle-radio") as XtyleRadio | null;
 		if (target?.checked) {
 			for (const radio of Array.from(this.querySelectorAll<XtyleRadio>("xtyle-radio"))) {

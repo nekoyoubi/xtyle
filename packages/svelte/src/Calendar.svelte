@@ -41,6 +41,10 @@
 		hideOutsideDays?: boolean;
 		/** Drop the previous / next month steps. */
 		hideNav?: boolean;
+		/** The roster glyph for the previous-month nav arrow. */
+		prevIcon?: string;
+		/** The roster glyph for the next-month nav arrow. */
+		nextIcon?: string;
 		/** Days to refuse, as ISO dates. Composes with `min` / `max` and `isDateDisabled`. */
 		disabledDates?: string[];
 		/** A predicate for days to refuse — the rule a list can't express. */
@@ -78,6 +82,8 @@
 		fixedWeeks,
 		hideOutsideDays,
 		hideNav,
+		prevIcon,
+		nextIcon,
 		disabledDates,
 		isDateDisabled,
 		decorations,
@@ -99,8 +105,8 @@
 
 	let el: CalendarElement | undefined = $state();
 
-	// `decorations` and `isDateDisabled` are an object and a function: neither survives an attribute,
-	// so they are assigned as live properties.
+	// INFO: `decorations` (object) and `isDateDisabled` (function) can't ride an attribute, so they
+	// are assigned as live properties
 	$effect(() => {
 		if (el) el.decorations = decorations ?? {};
 	});
@@ -109,8 +115,8 @@
 		if (el) el.isDateDisabled = isDateDisabled;
 	});
 
-	// `month-change` is a hyphenated custom event, so it can't ride a Svelte `on…` prop; attach it
-	// directly and re-dispatch to the current handler, kept live across swaps.
+	// INFO: `month-change` is a hyphenated custom event, so it can't ride a Svelte `on…` prop; attach
+	// it directly and re-dispatch to the current handler
 	$effect(() => {
 		const node = el;
 		if (!node) return;
@@ -141,6 +147,8 @@
 	fixed-weeks={fixedWeeks || undefined}
 	hide-outside-days={hideOutsideDays || undefined}
 	hide-nav={hideNav || undefined}
+	prev-icon={prevIcon}
+	next-icon={nextIcon}
 	readonly={readonly || undefined}
 	disabled={disabled || undefined}
 	onchange={onchange as ((event: Event) => void) | undefined}

@@ -104,7 +104,7 @@
   }
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
-    const body2 = hasIcon(name) ? ICONS[name] : MISSING;
+    const body2 = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
     const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
     const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
     const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
@@ -112,7 +112,10 @@
   }
 
   // packages/xtyle/src/elements/fragments/panel/mod.ts
-  var MARKER = '<xtyle-icon class="xtyle-panel__marker" part="marker" name="chevron-right" aria-hidden="true">' + renderIcon("chevron-right") + "</xtyle-icon>";
+  function marker(b) {
+    const name = b.markerIcon ?? "chevron-right";
+    return `<xtyle-icon class="xtyle-panel__marker" part="marker" name="${escapeAttr(name)}" aria-hidden="true">` + renderIcon(name, { body: b.markerBody }) + "</xtyle-icon>";
+  }
   function level(b) {
     const raw = Number(b.level);
     return raw >= 1 && raw <= 6 ? Math.trunc(raw) : 2;
@@ -136,7 +139,7 @@
     const uid = b.titleId ?? "xtyle-panel";
     if (isCollapsible(b)) {
       const expanded = b.open ? "true" : "false";
-      return `<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header"><button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" aria-controls="${escapeAttr(uid)}-region">${MARKER}<span class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title ?? "")}</span></button>${ACTIONS_SLOT}</div><div class="xtyle-panel__collapse" part="collapse" id="${escapeAttr(uid)}-region" role="region" aria-labelledby="${escapeAttr(uid)}"${b.open ? "" : " hidden"}>${body(b)}</div>`;
+      return `<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header"><button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" aria-controls="${escapeAttr(uid)}-region">${marker(b)}<span class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title ?? "")}</span></button>${ACTIONS_SLOT}</div><div class="xtyle-panel__collapse" part="collapse" id="${escapeAttr(uid)}-region" role="region" aria-labelledby="${escapeAttr(uid)}"${b.open ? "" : " hidden"}>${body(b)}</div>`;
     }
     const tag = `h${level(b)}`;
     const heading = b.title ? `<${tag} class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title)}</${tag}>` : "";

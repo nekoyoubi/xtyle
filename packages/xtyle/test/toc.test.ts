@@ -107,15 +107,11 @@ describe("toc zero-JS target fallback", () => {
 		];
 		const css = tocTargetFallbackCss(hostile);
 
-		// Each item yields exactly one rule, and its declaration block is ours verbatim — so nothing
-		// in an id opened a block of its own. The hostile text survives, quoted and inert.
 		const rules = css.split("\n").filter(Boolean);
 		expect(rules).toHaveLength(hostile.length);
 		for (const rule of rules) {
 			expect(rule.endsWith(`{ ${tocCurrentDeclarations} }`)).toBe(true);
 			const selector = rule.slice(0, rule.lastIndexOf("{"));
-			// Every `"` in the selector is either a delimiter or backslash-escaped, so the value
-			// cannot terminate early; and a raw newline would end the string and invalidate the rule.
 			expect(selector.replace(/\\./g, "").match(/"/g) ?? []).toHaveLength(4);
 			expect(selector).not.toContain("\n");
 		}

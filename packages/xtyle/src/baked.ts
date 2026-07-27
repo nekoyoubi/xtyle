@@ -1,9 +1,8 @@
 import { resolveKnobSpecs } from "./algorithms/factory.js";
 import type { Algorithm, KnobSpec } from "./types.js";
 
-// `batteries.ts` (the baked algorithms) is bundled separately because it imports preset
-// sources outside this package's rootDir; a runtime dynamic import via a computed specifier
-// loads the bundled output without pulling it into the tsc program.
+// INFO: batteries.js is bundled separately (it imports presets outside rootDir); the computed-specifier
+// dynamic import loads the bundled output without pulling it into the tsc program.
 async function bakedOracle(id: string): Promise<Algorithm> {
 	const specifier = "./batteries.js";
 	const mod = (await import(specifier)) as { getAlgorithm(id: string): Algorithm };

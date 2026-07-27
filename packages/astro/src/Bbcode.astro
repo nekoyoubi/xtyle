@@ -1,0 +1,70 @@
+---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { renderBbcode, renderMarkdownInline } from "@xtyle/core/markup";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+interface Props {
+	/** The BBCode to render. Falls back to the slotted text content. */
+	source?: string;
+	/** Render as a label rather than a document. */
+	inline?: boolean;
+	/**
+	 * Which named tag vocabulary this instance may reach. Absent, the whole registry is in play; a
+	 * tag outside the named set renders as its literal text.
+	 */
+	vocabulary?: string;
+	/** Also run markdown's inline render over the prose between tags. */
+	markdown?: boolean;
+	/** Offer a source view the reader can switch to. Needs the runtime, so it is inert on the `static` path. */
+	editable?: boolean;
+	/** Whether the source view starts open. Only meaningful alongside `editable`. */
+	editing?: boolean;
+	/** Render zero-JS: emit the pre-rendered light-DOM markup but never load the runtime. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	source,
+	inline = false,
+	vocabulary,
+	markdown = false,
+	editable = false,
+	editing = false,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+await checkAuthoring("bbcode", Astro.props);
+
+const slotted = source === undefined && Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const bbcode = source ?? slotted;
+
+const options = markdown
+	? { vocabulary, inline, text: (raw: string) => renderMarkdownInline(raw) }
+	: { vocabulary, inline };
+const bindings = {
+	html: renderBbcode(bbcode, options),
+	inline,
+	editable,
+	editing: editable && editing,
+	vocabulary: vocabulary ?? "",
+};
+const light = await renderFragmentLight("bbcode", bindings);
+---
+
+<xtyle-bbcode
+	source={source}
+	vocabulary={vocabulary}
+	inline={inline || undefined}
+	markdown={markdown ? "" : undefined}
+	editable={editable || undefined}
+	editing={editable && editing ? "" : undefined}
+	class={extra}
+	set:html={light}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

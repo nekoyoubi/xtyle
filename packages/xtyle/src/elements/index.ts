@@ -8,6 +8,8 @@ export {
 	type FragmentIntent,
 	type SerializedEvent,
 } from "./fragment-host.js";
+export { allowUriSchemes, allowedUriSchemes } from "./uri-schemes.js";
+export { registerBbcodeTags, defineBbcodeVocabulary } from "./bbcode-registry.js";
 export {
 	wireHostControls,
 	declaredHostControls,
@@ -67,6 +69,14 @@ export { XtyleBadge } from "./badge.js";
 export { XtyleDot } from "./dot.js";
 export { XtyleRibbon } from "./ribbon.js";
 export { XtyleSwitch } from "./switch.js";
+export { XtyleSchemeToggle, SCHEME_CHANGE_EVENT } from "./scheme-toggle.js";
+export { XtyleThemeScope, THEME_SCOPE_EVENT } from "./theme-scope.js";
+export { XtyleThemeCard } from "./theme-card.js";
+export { XtyleThemeSwatch } from "./theme-swatch.js";
+export { XtyleThemePicker, THEME_PICK_EVENT } from "./theme-picker.js";
+export { XtyleNinePatch } from "./nine-patch.js";
+export type { NinePatchRegion } from "../markup/nine-patch.js";
+export type { PickerTheme } from "./theme-picker.js";
 export { XtyleAlert } from "./alert.js";
 export { XtyleLink } from "./link.js";
 export { XtyleAppShell } from "./app-shell.js";
@@ -168,6 +178,7 @@ export { XtyleCombobox, parseValueList } from "./combobox.js";
 export type { ComboboxFilter } from "./combobox.js";
 export { XtyleCode } from "./code.js";
 export { XtyleMarkdown } from "./markdown.js";
+export { XtyleBbcode } from "./bbcode.js";
 export { XtylePagination } from "./pagination.js";
 export { XtyleCalendar } from "./calendar.js";
 export { XtyleQrCode } from "./qr.js";
@@ -190,6 +201,12 @@ import "./badge.js";
 import "./dot.js";
 import "./ribbon.js";
 import "./switch.js";
+import "./scheme-toggle.js";
+import "./theme-scope.js";
+import "./theme-card.js";
+import "./theme-swatch.js";
+import "./theme-picker.js";
+import "./nine-patch.js";
 import "./alert.js";
 import "./link.js";
 import "./app-shell.js";
@@ -261,6 +278,7 @@ import "./command-palette.js";
 import "./combobox.js";
 import "./code.js";
 import "./markdown.js";
+import "./bbcode.js";
 import "./pagination.js";
 import "./calendar.js";
 import "./qr.js";

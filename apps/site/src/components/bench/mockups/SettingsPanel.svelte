@@ -41,10 +41,6 @@
 		{ name: "Danger zone", icon: "trash" },
 	] as const;
 
-	// The accent family is a categorical axis, never a semantic one. This row is the derived palette
-	// itself, so whatever `accentStrategy` produced (four hues, one hue at four lightnesses, two brands)
-	// is exactly what belongs on screen — and each chip carries its own name and token, so the row still
-	// reads under `shade`, where hue alone tells you nothing.
 	const palette = [
 		{ id: "accent", label: "Primary", token: "--accent" },
 		{ id: "accent-2", label: "Secondary", token: "--accent-2" },

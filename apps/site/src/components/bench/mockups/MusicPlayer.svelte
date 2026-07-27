@@ -29,8 +29,6 @@
 
 	let { register }: Props = $props();
 
-	// Cover art is content, not chrome: it is the record sleeve, so it carries its own palette the way a
-	// photograph would, and nothing in the UI depends on it for contrast.
 	const cover = (a: string, b: string, ink: string) =>
 		"data:image/svg+xml," +
 		encodeURIComponent(
@@ -46,8 +44,6 @@
 		emberline: cover("#fda4af", "#9f1239", "#1c0710"),
 	} as const;
 
-	// Moods are the categorical axis, so they are exactly what the accent family is for. Each one always
-	// arrives with its name attached; the color is a second signal, never the only one.
 	const moods = [
 		{ name: "Late Night", tone: "accent", tracks: 42 },
 		{ name: "Deep Focus", tone: "accent-2", tracks: 128 },

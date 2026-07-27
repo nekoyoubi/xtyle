@@ -1,6 +1,6 @@
 {
-	"$schema": "https://xript.dev/schema/mod/v0.7.json",
-	"xript": "0.7",
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
 	"name": "xtyle-accordion-default",
 	"version": "0.0.1",
 	"title": "Xtyle Accordion (default)",
@@ -11,11 +11,12 @@
 		"component.accordion": [
 			{
 				"id": "accordion",
-				"format": "text/html+jsml",
+				"format": "application/x-xtyle+html",
 				"source": "accordion.html",
 				"handlers": [
-					{ "selector": ".xtyle-accordion__trigger", "on": "click", "handler": "toggleSection" },
-					{ "selector": ".xtyle-accordion__trigger", "on": "keydown", "handler": "navKeydown" }
+					{ "selector": ".xtyle-accordion__trigger", "on": "click", "handler": "guardDisabled" },
+					{ "selector": ".xtyle-accordion__trigger", "on": "keydown", "handler": "navKeydown" },
+					{ "selector": ".xtyle-accordion__item", "on": "toggle", "handler": "syncToggle" }
 				]
 			}
 		]

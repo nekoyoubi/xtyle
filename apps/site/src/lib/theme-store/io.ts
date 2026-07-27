@@ -81,8 +81,6 @@ function adoptDoc(raw: unknown): ThemeDoc | null {
 	if (!isObject(raw)) return null;
 	const now = Date.now();
 	if (!isObject(raw.recipe)) {
-		// A bare token register (e.g. a flat `--format json` dump) still imports —
-		// every value becomes an override on the default algorithm.
 		if (!looksLikeTokenMap(raw)) return null;
 		return {
 			schemaVersion: CURRENT_SCHEMA_VERSION,

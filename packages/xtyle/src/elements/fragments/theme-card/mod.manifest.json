@@ -1,0 +1,46 @@
+{
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
+	"name": "xtyle-theme-card-default",
+	"version": "0.0.1",
+	"title": "Xtyle Theme Card (default)",
+	"description": "The built-in fill for the xtyle Theme Card component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.theme-card"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.theme-card": [
+			{
+				"id": "theme-card",
+				"format": "application/x-xtyle+html",
+				"source": "theme-card.html",
+				"handlers": [{ "selector": ".xtyle-theme-card--interactive", "on": "click", "handler": "select" }],
+				"meta": {
+					"tokens": [
+						"--bg-0",
+						"--bg-1",
+						"--line",
+						"--line-2",
+						"--fg-0",
+						"--fg-2",
+						"--accent",
+						"--ring",
+						"--radius-sm",
+						"--radius-md",
+						"--border-thin",
+						"--border-thick",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--text-sm",
+						"--text-xs",
+						"--weight-medium",
+						"--font-sans",
+						"--leading-tight",
+						"--duration-fast",
+						"--ease-standard"
+					]
+				}
+			}
+		]
+	}
+}

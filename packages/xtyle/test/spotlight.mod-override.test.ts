@@ -15,8 +15,8 @@ import { manifest } from "../src/elements/fragments/spotlight/source.generated.j
  */
 const plainMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-spotlight-plain",
 		version: "0.0.1",
 		title: "test-spotlight-plain",
@@ -24,7 +24,7 @@ const plainMod = {
 		capabilities: ["xtyle.component.spotlight"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.spotlight": [{ id: "spotlight", format: "text/html+jsml", source: "spotlight.html" }],
+			"component.spotlight": [{ id: "spotlight", format: "application/x-xtyle+html", source: "spotlight.html" }],
 		},
 	},
 	fragmentSources: {

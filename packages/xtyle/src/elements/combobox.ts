@@ -5,7 +5,7 @@ import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/combobox/source.generated.js";
 import { normalizeFieldOptions, type FieldOption } from "./field-options.js";
 import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attrs.js";
-// the listbox floats in a real <xtyle-popover> the fill declares, so the tag has to be defined
+// INFO: side-effect import registers <xtyle-popover>, which the fill's listbox floats in
 import "./popover.js";
 import type { PopoverOpenOptions } from "./popover.js";
 import { resolveVocab, COMBOBOX_FILTERS, SIZES } from "../vocab.js";
@@ -116,8 +116,6 @@ export class XtyleCombobox extends XtyleElement {
 	}
 	set options(value: ReadonlyArray<string | FieldOption> | string | null | undefined) {
 		this.optionsProp = value == null ? null : normalizeFieldOptions(value);
-		// the list may only now be able to name what was already selected (options assigned after the value, an
-		// async fetch landing) — so re-derive the input's text unless the user has typed over it
 		if (!this.queryDirty) this.queryText = this.selectedQuery();
 		this.repaint();
 	}
@@ -141,8 +139,8 @@ export class XtyleCombobox extends XtyleElement {
 		return single != null && single !== "" ? [single] : [];
 	}
 	set values(value: readonly string[] | string | null | undefined) {
-		// a framework that sets custom-element props by name (Svelte) hands the declarative `values` down as
-		// the JSON string it wrote, not as an array — take either, or the string would spread into characters
+		// INFO: Svelte passes the `values` prop as the JSON string it wrote, not an array; accept either so
+		// the string is not spread into characters
 		if (typeof value === "string") {
 			this.commitSelection(parseValueList(value));
 			return;
@@ -301,8 +299,8 @@ export class XtyleCombobox extends XtyleElement {
 		if (!pop || !anchor || !this.interactive) return;
 		this.setOpenSilently(true);
 		this.repaint();
-		// hand the panel the control's measured width; an unlaid-out control (a test DOM, a hidden form)
-		// measures 0, and pinning the list to 0 would collapse it — leave the CSS fallback standing instead
+		// INFO: an unlaid-out control (test DOM, hidden form) measures 0; pinning the list to 0 would
+		// collapse it, so leave the CSS fallback standing
 		const width = anchor.offsetWidth;
 		if (width > 0) pop.style.setProperty("--xtyle-combobox-anchor", `${width}px`);
 		pop.openFrom(anchor, { focus: "none" });
@@ -329,8 +327,6 @@ export class XtyleCombobox extends XtyleElement {
 			this.closeList();
 			return;
 		}
-		// the pointer that light-dismissed the panel a moment ago is the same one landing here; without this
-		// the toggle would close and instantly reopen, and a click would never shut the list
 		if (this.now() - this.dismissedAt < REOPEN_GUARD_MS) return;
 		this.openList();
 		this.setActiveEdge("first");
@@ -431,9 +427,6 @@ export class XtyleCombobox extends XtyleElement {
 		this.selectionProp = next;
 		this.reflectSelection(next);
 		this.selectionProp = next;
-		// a single-select input *is* the selection, so its text follows it and stops being a filter; a
-		// multi-select's query is its own thing (the chips carry the selection), so a commit leaves it alone —
-		// only `pick` and the clear action reset it
 		if (!this.multiple) {
 			this.queryText = this.selectedQuery();
 			this.queryDirty = false;
@@ -481,8 +474,6 @@ export class XtyleCombobox extends XtyleElement {
 
 	private get bindings(): Record<string, unknown> {
 		const selected = new Set(this.values);
-		// a closed combobox paints no options at all, so the zero-JS (pre-hydration) render is just the input:
-		// the listbox never flashes below it in the moment before the popover element upgrades
 		const matches = this.open ? this.visibleOptions : [];
 		const activeIndex = matches.findIndex((option) => option.value === this.activeValue);
 		return {

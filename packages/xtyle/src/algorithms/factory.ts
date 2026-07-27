@@ -46,14 +46,13 @@ const DEFAULT_ACCENT_SPLIT = 45;
  * The magnitude of one step on the surface stack. The *sign* is scheme-derived rather than constant
  * (see {@link defaultSurfaceRamp}), so this is a magnitude and never a `surfaceRamp` value on its own.
  */
-const DEFAULT_SURFACE_STEP = 0.045;
+const DEFAULT_SURFACE_STEP = 0.02;
 
 /** The `surfaceRamp` a scheme resolves to when the knob is unset: dark ascends the stack, light descends it. */
 function defaultSurfaceRamp(scheme: Scheme): number {
 	return scheme === "dark" ? DEFAULT_SURFACE_STEP : -DEFAULT_SURFACE_STEP;
 }
-// Chroma of the faint accent-hue wash on a surface synthesized from an accent (the "keep the tone"
-// derivation); kept low enough that any hue stays a neutral-reading surface rather than a muddy fill.
+// INFO: low chroma keeps an accent-derived surface reading as a neutral surface, not a muddy fill.
 const DERIVED_SURFACE_TINT_C = 0.02;
 const DEFAULT_ACCENT_STRATEGY: AccentStrategy = "fan";
 const ACCENT_STRATEGIES: readonly AccentStrategy[] = ["fan", "step", "shade", "duo"];
@@ -92,19 +91,12 @@ const DERIVED_ACCENT_L = 0.62;
 const DERIVED_ACCENT_C = 0.16;
 const ACCENT_RAMP_L_MIN = 0.1;
 const ACCENT_RAMP_L_MAX = 0.95;
-// The `shade` strategy steps lightness (not hue) by this much per rung: `accent-2` a tint one step
-// up, `accent-3`/`-4` one and two steps down, so the four read as distinct shades of the one brand hue.
 const SHADE_LADDER_L_STEP = 0.12;
-// How far `duo`'s two derived shades sit from the mean lightness of its two brand anchors. Larger than
-// a single `shade` rung: the shades must clear *both* anchors, not just step away from one.
+// INFO: larger than `SHADE_LADDER_L_STEP` because a duo shade must clear *both* brand anchors, not just step off one.
 const DUO_L_STEP = 0.16;
 const HUE_STABLE_CHROMA = 0.1;
-// The fan (accent-2/3/4) varies hue at the accent's L/C, which collapses to identical grays when the
-// accent has near-zero chroma. Floor the fan's *base* chroma (not the primary accent) so a near-gray
-// accent still fans into distinct faint tints instead of four identical grays. Above the floor the
-// base is the accent unchanged, so every chromatic theme derives byte-identically. Must stay below
-// HUE_STABLE_CHROMA: the constant-L/C fan invariant exempts accents under that line, and the floored
-// fan has to land inside that exempted band or it would trip the very invariant it derives under.
+// INFO: floors the fan's base chroma so a near-gray accent fans into distinct tints; must stay below
+// `HUE_STABLE_CHROMA` so the floored fan lands inside the constant-L/C fan invariant's exempt band.
 const FAN_MIN_CHROMA = 0.045;
 const HUE_TOLERANCE = 8;
 const LIGHTNESS_TOLERANCE = 0.05;
@@ -163,15 +155,8 @@ const PALETTE_HUES: Record<string, { h: number; c: number } | "gray" | "white" |
 
 const PALETTE_STOPS = ["subtle", "muted", "base", "strong", "contrast"] as const;
 
-// Syntax-highlighting scope colors. The vivid roles each take an evenly-spread hue
-// offset from the accent, so any accent yields a mutually-distinguishable code
-// palette that re-themes with the chrome. The structural roles (comment / operator
-// / punctuation / variable) stay quiet by design — they read by muted chroma and
-// lightness, not by a signature hue.
-// Vivid roles in lightness-rank order (index 0 = nearest the editor bg, 7 = nearest
-// the readable pole). Hue is decorrelated from rank by a bit-reversal permutation:
-// adjacent lightness ranks land far apart on the hue wheel and far-apart ranks share
-// a hue — so whichever axis a tight bg compresses, the other keeps neighbours apart.
+// INFO: `CODE_VIVID_ROLES` are in lightness-rank order; `CODE_HUE_RANK` decorrelates hue from rank by
+// a bit-reversal permutation, so whichever axis a tight bg compresses, the other keeps neighbours apart.
 const CODE_VIVID_ROLES = [
 	"keyword",
 	"number",
@@ -187,12 +172,8 @@ const CODE_STRUCTURAL_ROLES = ["comment", "operator", "punctuation", "variable"]
 const CODE_SCOPES = [...CODE_VIVID_ROLES, ...CODE_STRUCTURAL_ROLES];
 const CODE_SURFACES = ["--code-bg", "--code-fg", "--code-line-highlight", "--code-selection"] as const;
 
-// The ANSI palette. The four chrome roles map to xterm.js's ITheme
-// (background / foreground / cursor / cursorAccent), and the sixteen colors are the
-// standard 8 + 8-bright set. The six chromatic slots take fixed hue angles (aligned
-// with the named `--color-*` palette) so a terminal skin re-colours with the chrome
-// while staying recognisably red/green/yellow/blue/magenta/cyan; `black` and `white`
-// are the achromatic endpoints (bg-fill / text) that a terminal uses regardless of scheme.
+// INFO: chrome roles map to xterm.js ITheme keys; the six chromatic slots hold fixed palette-aligned
+// hue angles, and black/white are the achromatic fill/ink endpoints.
 const TERMINAL_CHROME = ["bg", "fg", "cursor", "cursor-accent"] as const;
 const ANSI_ORDER = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"] as const;
 const ANSI_HUES: Record<string, number> = {
@@ -405,6 +386,12 @@ function buildProduces(): { produces: string[]; categories: TokenCategories } {
 	for (const step of DURATION_STEPS) add(`--duration-${step}`, "duration");
 	for (const step of EASE_STEPS) add(`--ease-${step}`, "easing");
 
+	add("--fx-intensity", "number");
+	add("--fx-color", "color");
+	add("--fx-color-alt", "color");
+	add("--fx-duration", "duration");
+	add("--fx-ease", "easing");
+
 	for (const step of ELEVATION_STEPS) add(`--elevation-${step}`, "shadow");
 
 	for (const [role] of LAYER_STEPS) add(`--layer-${role}`, "number");
@@ -415,6 +402,32 @@ function buildProduces(): { produces: string[]; categories: TokenCategories } {
 }
 
 const { produces: PRODUCES, categories: CATEGORIES } = buildProduces();
+
+/**
+ * When a token arrived, for the ones that did not arrive at the beginning.
+ *
+ * **Sparse on purpose.** An absent token has been produced for as long as the record goes back, so
+ * anyone on any supported version can rely on it; spelling out three hundred entries at the floor
+ * would bury the handful of facts this map exists to carry. The pack manifest is *stamped from this
+ * export*, so this is the only place the dates can live — editing the generated manifest is editing
+ * an artifact, and the next build overwrites it.
+ *
+ * Recovered from the packed manifests at each release tag rather than asserted: the packs began
+ * declaring `produces` at 0.8.0, so a token first seen there predates the record and stays absent
+ * here. Dating those to 0.8.0 would tell a consumer on 0.7 to upgrade for `--bg-0`, which is both
+ * false and the expensive direction to be wrong in.
+ */
+export const PRODUCED_SINCE: Readonly<Record<string, string>> = {
+	"--layer-chrome": "0.9.0",
+	"--layer-overlay": "0.9.0",
+	"--layer-skip": "0.9.0",
+	"--layer-sticky": "0.9.0",
+	"--layer-toast": "0.9.0",
+	"--layer-veil": "0.9.0",
+};
+
+/** The version the blessed packs first shipped in. They are core-since-build, so this is the floor. */
+export const PACK_SINCE = "0.1.0";
 
 /**
  * Legal value sets for `keyword` (intent) tokens. A keyword token names a
@@ -720,7 +733,7 @@ function vividOnPanel(hue: number, panels: OklchColor[], floor: number, targetCh
 	for (let i = 0; i <= 80; i++) {
 		const t = i / 80;
 		const l = towardLight ? 0.5 + t * 0.45 : 0.5 - t * 0.42;
-		// In-gamut chroma at this lightness, capped at the target so it never blows out to neon.
+		// INFO: chroma stays capped at the target so the vivid never blows out to neon.
 		const chroma = clampToGamut(oklch(l, targetChroma, hue)).c;
 		const css = formatCss(oklch(l, chroma, hue));
 		if (minPanel(css) >= floor && chroma > bestChroma) {
@@ -728,8 +741,7 @@ function vividOnPanel(hue: number, panels: OklchColor[], floor: number, targetCh
 			best = css;
 		}
 	}
-	// No AA-clearing ink at this chroma exists (a mid-gray surface where even the poles
-	// barely read); fall back to the most-contrasting achromatic pole.
+	// INFO: when no ink at this chroma clears AA, fall back to the most-contrasting achromatic pole.
 	return best ?? (towardLight ? "#ffffff" : "#000000");
 }
 
@@ -792,9 +804,6 @@ function paletteRamp(
 		register[suffix ? `--color-${hue}-${suffix}` : `--color-${hue}`] = formatCss(color);
 	};
 
-	// The component-facing five-token tone family — solid / soft-tint / on-solid ink / on-tint
-	// ink / vivid panel ink — re-expressed from the ramp so `tone="pink"` resolves the same shape
-	// as `tone="accent"`.
 	const family = (solid: string, bg: string, fg: string, text: string, vivid: string): void => {
 		register[`--${hue}`] = solid;
 		register[`--${hue}-bg`] = bg;
@@ -808,7 +817,7 @@ function paletteRamp(
 		const baseStop = stops[2] as OklchColor;
 		const subtleStop = stops[0] as OklchColor;
 		const strongStop = liftStopForContrast(stops[3] as OklchColor, formatCss(subtleStop), AA + 0.2, (stops[3] as OklchColor).l >= subtleStop.l);
-		// Achromatic inks must stay neutral — a hued ink would read as tinted gray (e.g. blue text on a gray chip).
+		// INFO: achromatic inks stay neutral; a hued ink reads as tinted gray on a gray chip.
 		const contrast = readableOnTint(baseStop, 0, AA + 0.3, 0);
 		set("", baseStop);
 		set("subtle", subtleStop);
@@ -816,9 +825,8 @@ function paletteRamp(
 		set("base", baseStop);
 		set("strong", strongStop);
 		register[`--color-${hue}-contrast`] = contrast;
-		// Achromatic poles can't read `strong` on `subtle` (same end of the scale), so the soft ink
-		// is computed toward the opposite pole instead. Vivid is the readable achromatic ink that
-		// clears every panel — chroma 0, so it lands on the contrasting pole.
+		// INFO: achromatic poles can't read `strong` on `subtle` (same scale end), so the soft ink
+		// sweeps the opposite pole; vivid is the chroma-0 ink that lands on the contrasting pole.
 		family(
 			formatCss(baseStop),
 			formatCss(subtleStop),
@@ -841,9 +849,8 @@ function paletteRamp(
 		return;
 	}
 
-	// The named hues track the accent's posture: chroma scales with the accent's own chroma
-	// about a neutral reference (factor ~1), floored so a near-gray accent still leaves a color
-	// recognizable, and the lightness ladder biases gently toward the accent's lightness.
+	// INFO: named-hue chroma is floored so a near-gray accent stays recognizable, and the lightness
+	// ladder biases gently toward the accent's lightness.
 	const accentChromaFactor = Math.max(0.5, Math.min(1.6, accent.c / NEUTRAL_ACCENT_CHROMA));
 	const chroma = spec.c * accentChromaFactor * (0.6 + vibrancy * 0.7) * preset.paletteChromaMul;
 	const baseL = scheme === "dark" ? 0.7 : 0.55;
@@ -856,10 +863,8 @@ function paletteRamp(
 		clampToGamut(oklch(l as number, ladderC[i] as number, spec.h)),
 	);
 	const base = stops[2] as OklchColor;
-	// When the tone solid is pinned, the four-token family is built around the pinned color
-	// (its exact value as the solid, its readable ink as the on-solid fg) while the `--color-*`
-	// swatch ramp keeps its derived lightness ladder — so a pinned `--green` carries venom into
-	// `--green-bg/--green-fg/--green-text`, and the swatch scale stays monotonic.
+	// INFO: a pinned tone solid builds the four-token family around the pin while the `--color-*`
+	// swatch ramp keeps its derived lightness ladder.
 	const solidBase = pinnedBase ?? base;
 	const subtleStop = stops[0] as OklchColor;
 	const strongStop = liftStopForContrast(stops[3] as OklchColor, formatCss(subtleStop), AA + 0.2, (stops[3] as OklchColor).l >= subtleStop.l);
@@ -870,15 +875,12 @@ function paletteRamp(
 	set("base", base);
 	set("strong", strongStop);
 	register[`--color-${hue}-contrast`] = contrast;
-	// The tone `-bg` is a soft wash near the surface — lightness just off `--bg-0`, a fraction of the
-	// tone's chroma — like `--accent-bg`/`--{role}-bg`, not the swatch ramp's `subtle` chip (a
-	// recognizable color that reads garish as a full background). `-text` is then derived to clear AA
-	// on that wash. The `--color-*` swatch ramp keeps its own `subtle`/`strong` stops for swatches.
+	// INFO: tone `-bg` is a soft wash near `--bg-0` (a fraction of the chroma), not the swatch `subtle`
+	// chip; `-text` is derived to clear AA on that wash.
 	const bg0p = panels[0] as OklchColor;
 	const washL = scheme === "dark" ? Math.max(0.2, bg0p.l + 0.08) : Math.min(0.92, bg0p.l - 0.04);
 	const bgTint = ensureTextHeadroom(oklch(washL, chroma * 0.35, spec.h), scheme, AA + 0.3);
 	const bgText = readableHuedOnTintAndPanel(bgTint, spec.h, AA + 0.3, panels.slice(1), AA + 0.05, chroma);
-	// vivid carries the tone's own theme-scaled chroma to the panels' contrasting pole.
 	family(
 		formatCss(solidBase),
 		formatCss(bgTint),
@@ -946,9 +948,6 @@ interface CompletedAnchors {
  */
 function completeAnchors(preset: PresetDefaults, opts: DeriveOptions): CompletedAnchors {
 	const pin = opts.constraints ?? {};
-	// Every seed enters through the one token channel. A provided value of any token seeds the whole
-	// derivation — scheme included — with nothing privileged: `--bg-0`/`--fg-0`/`--accent` are simply
-	// the three you reach for most, not a separate tier.
 	const givenBg = parsePin(pin["--bg-0"]);
 	const givenFg = parsePin(pin["--fg-0"]);
 	const givenAccent = parsePin(pin["--accent"]);
@@ -1067,10 +1066,6 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const density = densityOf(knobs);
 	const fonts = fontsOf(knobs);
 
-	// The signed lightness delta the surface stack walks from `--bg-0`. Unset, it resolves to the
-	// scheme-derived direction (dark ascends, light descends) at the default magnitude, so output is
-	// unchanged; set, the author's sign wins and the whole stack (body-bg, bg-1/2/3, bg-sunken)
-	// follows the one number instead of six hand-pinned surfaces.
 	const surfaceRamp = typeof knobs.surfaceRamp === "number" ? knobs.surfaceRamp : defaultSurfaceRamp(scheme);
 
 	const nodes: TokenNode[] = [];
@@ -1177,12 +1172,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		}
 		return best;
 	};
-	// Hue-preserving contrast enforcement for brand-toned text tokens (link, accent-text):
-	// step lightness toward the readable pole keeping chroma + hue until it clears the floor
-	// against bg-0 and the same-side panels. Unlike `enforceOnPanels` — which leans on
-	// `sweepToward`'s desaturate-to-gray / true-pole fallback (right for neutral text) — this
-	// keeps a vivid accent vivid instead of collapsing it to black on light themes; it only
-	// falls back to that floor-guaranteeing path when hue can't survive the required contrast.
+	// INFO: steps lightness keeping chroma+hue to clear the floor so a brand-toned text stays vivid,
+	// unlike `enforceOnPanels` which desaturates to gray; falls back to that path when hue can't survive.
 	const enforceChromaticOnPanels = (color: OklchColor): OklchColor => {
 		const bg0Css = formatCss(bg0);
 		const sameSidePanels = panelSurfaces.filter((p) => p.l < 0.5 === textLight);
@@ -1215,9 +1206,6 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		["--fg-0", ...refIfPinned("--bg-0")],
 	);
 
-	// A chosen accent (provided or baked) is honored verbatim — the algorithm's taste lands in the
-	// expansion around it, not in overriding the color. Only a synthesized accent is shaped: scaled
-	// to the algorithm's chroma and floored for separation, since it is a guess that should read well.
 	const accentFill =
 		pinned["--accent"] || completed.accentExplicit
 			? accent
@@ -1235,9 +1223,7 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 
 	const accentTextColor = enforceChromaticOnPanels(accentFill);
 	const accentTextCss = formatCss(accentTextColor);
-	// The soft tint must read against the very ink the soft variant paints on it, so derive the
-	// tint to clear AA against `--accent-text` (nudging its lightness away from the ink), rather
-	// than leaving the pairing to chance.
+	// INFO: the soft tint is derived to clear AA against `--accent-text`, the ink painted on it.
 	const accentTint = liftStopForContrast(
 		oklch(
 			scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04),
@@ -1246,7 +1232,7 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		),
 		accentTextCss,
 		AA + 0.2,
-		accentTextColor.l < 0.5,
+		bestTruePole(accentTextCss) === TRUE_WHITE,
 	);
 	lit("--accent-bg", formatCss(accentTint), ["--accent", ...refIfPinned("--bg-0")]);
 	lit("--accent-text", accentTextCss, ["--accent", ...refIfPinned("--bg-0")]);
@@ -1359,18 +1345,12 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	let a2: OklchColor;
 	let a3: OklchColor;
 	let a4: OklchColor;
-	// The lineage edges differ per strategy: a `fan`'s 2/3 flank the accent and 4 is its complement
-	// (all off `--accent`, so a pinned flank pulls its mirror in), a `step` chains 3 off 2 and 4 off 3,
-	// and a `duo` reads *both* anchors into each shade. Declared per-branch so `lineage()` names what
-	// each token actually reads.
 	let a2Refs: TokenName[];
 	let a3Refs: TokenName[];
 	let a4Refs: TokenName[];
 	if (strategy === "fan") {
-		// The two flanks are symmetric either way: pin either wing and the other mirrors its hue
-		// across the accent, so the fan stays balanced around the author's choice. With neither
-		// pinned it's the default ∓split; with both pinned each holds its own value. Lightness and
-		// chroma stay the fan base's throughout, per the constant-L/C fan.
+		// INFO: pin either flank and the other mirrors its hue across the accent; lightness and chroma
+		// stay the fan base's throughout (constant-L/C fan).
 		const mirrorOf = (c: OklchColor): OklchColor => applyAccentDelta(fanBase, rotate(-hueDelta(a1.h, c.h)));
 		const a2Pin = pinned["--accent-2"];
 		const a3Pin = pinned["--accent-3"];
@@ -1385,10 +1365,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		a3Refs = a2Pin && !a3Pin ? ["--accent", "--accent-2"] : ["--accent"];
 		a4Refs = ["--accent"];
 	} else if (strategy === "shade") {
-		// 2/3/4 hold the accent's hue and step its lightness: a tint one step up, two shades down, so
-		// the fan reads as one brand color in four depths. The separation is on lightness, so a
-		// near-gray accent still fans into four distinguishable rungs where a hue rotation is a no-op.
-		// Each rung reads off `--accent` and is independently pinnable.
+		// INFO: 2/3/4 hold the accent's hue and step lightness (tint up, two shades down), so a
+		// near-gray accent still yields four distinguishable rungs where a hue rotation is a no-op.
 		a2 = fanned("2", applyAccentDelta(fanBase, { dL: SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
 		a3 = fanned("3", applyAccentDelta(fanBase, { dL: -SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
 		a4 = fanned("4", applyAccentDelta(fanBase, { dL: -2 * SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
@@ -1396,17 +1374,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		a3Refs = ["--accent"];
 		a4Refs = ["--accent"];
 	} else if (strategy === "duo") {
-		// Two brand colors, not one. `--accent` and `--accent-2` are both *inputs* — the only strategy
-		// where a fan slot is an anchor rather than an output — and 3/4 are their shades. Unpinned,
-		// `--accent-2` still has to come from somewhere, so it falls out of `--accent` by the same fan
-		// distance the split uses; a duo theme that never sets a second color is just a fan that kept
-		// two of its wings.
-		//
-		// The shades are placed against the *pair's* mean lightness rather than each anchor's own, which
-		// is what makes this more than two ladders side by side: both land on one common lightness, so
-		// they read as a matched secondary pair belonging to the same system. They step away from the
-		// surface (up from a dark scheme, down from a light one) and flip if that pole has no headroom
-		// left, so a pair of already-light brand colors on a light theme still yields separable rungs.
+		// INFO: `--accent` and `--accent-2` are both brand inputs; 3/4 are their shades, placed at the
+		// pair's mean lightness stepped away from the surface so they read as a matched pair.
 		a2 = fanned("2", applyAccentDelta(fanBase, rotate(accentSplit)));
 		const midL = (a1.l + a2.l) / 2;
 		const away = scheme === "dark" ? 1 : -1;
@@ -1425,13 +1394,11 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		a3 = fanned("3", shadeOf(a1));
 		a4 = fanned("4", shadeOf(a2));
 		a2Refs = ["--accent"];
-		// Both shades read both anchors: the hue is one brand's, the lightness is the pair's mean.
 		a3Refs = ["--accent", "--accent-2"];
 		a4Refs = ["--accent-2", "--accent"];
 	} else {
-		// `step`: each accent is one hue-step past the last. Chaining off `fanBase` (not `a1`) keeps the
-		// whole walk at the floored chroma for a near-gray accent instead of escalating it down the
-		// chain; a chromatic accent has `fanBase === a1`, so the step stays byte-identical.
+		// INFO: `step` chains each accent one hue-step past the last off `fanBase` (not `a1`), holding
+		// the walk at floored chroma for a near-gray accent.
 		a2 = fanned("2", applyAccentDelta(fanBase, rotate(shiftStep)));
 		a3 = fanned("3", applyAccentDelta(a2, accentDelta(fanBase, a2)));
 		a4 = fanned("4", applyAccentDelta(a3, accentDelta(a2, a3)));
@@ -1444,8 +1411,6 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	lit("--accent-4", emitAccent(a4), a4Refs);
 	lit("--accent-shift-step", String(shiftStep));
 
-	// Give each accent-ramp variant the same four-token family the primary accent has, so an
-	// `accent-3` button / rail reads the same way an `accent` one does — derived, not hand-tuned.
 	const emitAccentFamily = (n: string, raw: OklchColor): void => {
 		const color = toOklchColor(emitAccent(raw));
 		lit(`--accent-${n}-fg`, pickReadable(color, TEXT_POLES, floor), [`--accent-${n}`]);
@@ -1473,10 +1438,6 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 
 	const statusChroma = Math.max(0.12, accent.c) * (0.6 + vibrancy * 0.7) * preset.statusChromaMul;
 	for (const role of Object.keys(STATUS_TO_HUE)) {
-		// The role's hue comes from its named palette color (danger←red, success←green,
-		// warn←orange, info←blue), following a pin on that color — so a re-hued red moves danger.
-		// A direct pin on the status fill still wins: it drives its own tint and inks at the
-		// pin's hue, so a pinned `--danger` carries through `--danger-bg/--danger-fg/--danger-text`.
 		const namedHue = resolveStatusHue(role, pinned);
 		const pinnedFill = parseChromaticPin(pinned[`--${role}`]);
 		const roleHue = pinnedFill ? pinnedFill.h : namedHue;
@@ -1501,11 +1462,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	}
 
 	const overlayL = scheme === "dark" ? 1 : 0;
-	// A flat-alpha tint reads weakest where the surface sits closest to the overlay's
-	// opposite pole — 6% white over near-black (or black over near-white) barely registers
-	// (measured ~1.10:1 vs ~1.19:1 on a mid-range dark bg). Boost the alpha as the bg anchor
-	// approaches that extreme so hover/press/selected keep a perceptible step; mid-range
-	// themes are untouched (boost = 1).
+	// INFO: a flat-alpha overlay reads weakest where the surface nears the overlay's opposite pole, so
+	// alpha is boosted as `--bg-0` approaches that extreme (mid-range boost = 1).
 	const extremeDist = scheme === "dark" ? bg0.l : 1 - bg0.l;
 	const overlayBoost = 1 + Math.max(0, (0.15 - extremeDist) / 0.15) * 0.8;
 	const overlay = (a: number): string =>
@@ -1528,13 +1486,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const linkCss = formatCss(linkColor);
 	let linkHoverColor = enforceChromaticOnPanels(withLightness(accent, accent.l + (scheme === "dark" ? 0.08 : -0.08)));
 	if (formatCss(linkHoverColor) === linkCss) {
-		// The base hover step collapsed onto the link. Two causes: a low-chroma accent has no hue to
-		// keep them apart once enforcement pulls both to the same readable lightness; a high-chroma
-		// accent pinned near a lightness pole has its step erased by gamut clamping (both lightnesses
-		// clamp to one displayable hex). Force a distinct emitted value, re-enforcing each candidate so
-		// it always lands readable: grow the step toward the readable pole (the natural hover feel);
-		// if the pole clamps every step to one hex, nudge the other way (there is headroom off an
-		// extreme); if lightness is pinned at a pole for this hue, drop chroma so the value shifts.
+		// INFO: the hover step can collapse onto `--link` (low-chroma accent, or gamut clamping near a
+		// pole); force a distinct readable value by stepping lightness, then the other way, then chroma.
 		const pole = textLight ? 1 : 0;
 		const toward = linkColor.l < pole ? 1 : -1;
 		const distinctHover = (candidate: OklchColor): OklchColor | undefined => {
@@ -1557,8 +1510,6 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	lit("--link-hover", formatCss(linkHoverColor), ["--link", ...refIfPinned("--bg-0")]);
 
 	for (const [hue, spec] of Object.entries(PALETTE_HUES)) {
-		// Pinning the tone solid (or its swatch base) re-hues the whole derived family around it,
-		// so the soft tint and inks track the pin instead of the generic catalog hue.
 		const pinnedBase =
 			typeof spec === "object"
 				? parseChromaticPin(
@@ -1610,9 +1561,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	lit("--code-line-highlight", formatCss(withAlpha(accentFill, 0.1)), ["--accent"]);
 	lit("--code-selection", formatCss(withAlpha(accentFill, 0.3)), ["--accent"]);
 
-	// The readable ink direction follows the editor surface itself, not the page
-	// scheme — a vivid mid-lightness `--code-bg` (e.g. a saturated brand panel) can
-	// invert which pole reads, and sweeping the wrong way collapses the palette.
+	// INFO: readable ink direction follows `--code-bg` itself, not the page scheme; a vivid mid-lightness
+	// code bg can invert which pole reads.
 	const codeTowardLight = contrast("#ffffff", codeBgCss) >= contrast("#000000", codeBgCss);
 	const codePole = codeTowardLight ? 1 : 0;
 	const codeFloor = AA;
@@ -1645,19 +1595,16 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		0.08,
 		Math.max(0.1, accent.c) * (0.7 + vibrancy * 0.7) * preset.paletteChromaMul,
 	);
-	// A near-gray accent has no hue to anchor the spread to, so seed the code wheel
-	// from the fallback hue rather than letting `NaN` collapse every scope to one ink.
+	// INFO: seed the code wheel from the fallback hue when the accent is near-gray, so `NaN` doesn't
+	// collapse every scope to one ink.
 	const codeBaseHue = Number.isFinite(accent.h) ? accent.h : DERIVED_ACCENT_FALLBACK_HUE;
 	const codeBaseL = codeTowardLight ? 0.76 : 0.46;
-	// Place the vivid scopes inside the lightness band where `--code-bg` already
-	// clears AA toward its readable pole, rather than letting each scope sweep there
-	// independently — independent sweeps converge in lightness and collapse the
-	// palette on a tight bg. Spreading distinct lightnesses across the achievable
-	// band keeps neighbours separable by construction, by as much as the bg affords.
+	// INFO: vivid scopes are spread across the lightness band where `--code-bg` clears AA, so
+	// independent sweeps don't converge and collapse the palette on a tight bg.
 	const codePoleL = codeTowardLight ? 1 : 0;
 	const aaEdgeL = lightnessForContrast(oklch(codePoleL, 0, 0), codeBg, codeBgCss, codeFloor);
-	// Keep the band clear of the pole: near the pole gamut-clamping kills chroma, so
-	// the brightest scopes would desaturate into the neutral plain-text ink.
+	// INFO: keep the band off the pole; gamut-clamping there kills chroma and desaturates the
+	// brightest scopes into the plain-text ink.
 	const bandLo = aaEdgeL + (codePoleL - aaEdgeL) * 0.06;
 	const bandHi = codePoleL - (codePoleL - aaEdgeL) * 0.32;
 	CODE_VIVID_ROLES.forEach((role, rank) => {
@@ -1667,7 +1614,7 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		lit(`--code-${role}`, formatCss(fill), ["--accent", "--code-bg"]);
 	});
 
-	// Large-text floor (3:1) so comments recede without vanishing.
+	// INFO: large-text WCAG floor (3:1) so comments recede without vanishing.
 	const commentFloor = Math.max(3, codeFloor * 0.62);
 	const commentL = codeTowardLight ? 0.6 : 0.56;
 	lit(
@@ -1705,15 +1652,13 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const terminalFg = enforceContrastFloor(fg0, terminalBg, scheme, floor);
 	lit("--terminal-fg", formatCss(terminalFg), ["--fg-0", ...refIfPinned("--bg-0")]);
 
-	// A block cursor reads as the accent; the glyph under it flips to whichever pole
-	// stays legible against that block.
+	// INFO: block cursor is the accent; the glyph under it flips to whichever pole stays legible on it.
 	const terminalCursor = separateFillFromSurface(accentFill, terminalBg, SURFACE_SEPARATION, floor);
 	lit("--terminal-cursor", formatCss(terminalCursor), ["--accent"]);
 	lit("--terminal-cursor-accent", pickReadable(terminalCursor, TEXT_POLES, floor), ["--accent"]);
 
-	// The six chromatic slots sit at a mid band that clears AA on the terminal bg; the
-	// bright tier pushes each toward the readable pole (and up in chroma) so bright and
-	// normal stay separable while both stay legible.
+	// INFO: chromatic slots sit at a mid band clearing AA on the terminal bg; the bright tier steps
+	// toward the readable pole and up in chroma so bright and normal stay separable.
 	const terminalTowardLight =
 		contrast("#ffffff", terminalBgCss) >= contrast("#000000", terminalBgCss);
 	const terminalPole = terminalTowardLight ? 1 : 0;
@@ -1746,10 +1691,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		lit(`--terminal-bright-${name}`, formatCss(bright), ["--accent", "--terminal-bg"]);
 	}
 
-	// `black` and `white` are the achromatic endpoints — a terminal uses them as
-	// fills / ink, not as legible-on-bg scopes, so they anchor to fixed dark / light
-	// lightnesses (carrying a whisper of the bg hue for cohesion) rather than sweeping
-	// for contrast like the chromatic slots.
+	// INFO: terminal black/white are achromatic fill/ink endpoints, anchored to fixed lightnesses (a
+	// whisper of bg hue) rather than swept for contrast like the chromatic slots.
 	const terminalHue = Number.isFinite(bg0.h) ? bg0.h : 0;
 	const terminalAchroma = (l: number): OklchColor => oklch(l, 0.006, terminalHue);
 	lit("--terminal-black", formatCss(terminalAchroma(0.2)), refIfPinned("--bg-0"));
@@ -1794,6 +1737,18 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	}
 	lit("--ease-standard", "cubic-bezier(0.2, 0, 0, 1)");
 	lit("--ease-emphasized", "cubic-bezier(0.3, 0, 0, 1)");
+
+	/* How hard this taste lets the effect layer hit. It is one dial rather than a family because every
+	   effect — including one an addon ships that no algorithm has heard of — scales off it, so the
+	   library stays extensible without the register growing per effect. An extreme taste sits at zero:
+	   a halo, a lift, and a wash all spend edge contrast, which is the one thing `xtyle-hc` exists to
+	   protect, so it flattens the whole layer rather than toning each effect down. */
+	const effectIntensity = extreme ? 0 : Math.round(Math.min(1.25, 0.42 + vibrancy * 0.62) * 100) / 100;
+	lit("--fx-intensity", String(effectIntensity));
+	lit("--fx-color", formatCss(accentFill), ["--accent"]);
+	lit("--fx-color-alt", emitAccent(a2), ["--accent-2"]);
+	lit("--fx-duration", `${durationMs.base}ms`, ["--duration-base"]);
+	lit("--fx-ease", "cubic-bezier(0.2, 0, 0, 1)", ["--ease-standard"]);
 
 	const elevationStrings: Record<number, string> = {};
 	for (const level of ELEVATION_STEPS) {
@@ -2372,13 +2327,11 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			const link = ctx.register["--link"];
 			const hover = ctx.register["--link-hover"];
 			if (!link || !hover) return { name, ok: true };
-			// A user pinning either token owns the collapse; the guard only governs derived values.
+			// INFO: a user pinning either token owns the collapse; the guard governs only derived values.
 			if (ctx.constraints["--link"] || ctx.constraints["--link-hover"]) return { name, ok: true };
 			if (link === hover) {
-				// A `--link` forced to a pure pole to clear contrast against an un-clearable same-side
-				// panel (a mid-gray page whose panels sit too close to it) has no distinct *readable*
-				// neighbor: any different hover would drop below the floor. That genuine-pole collapse is
-				// acceptable — readability wins over a hover delta — but every other collapse is a bug.
+				// INFO: a `--link` forced to a pure pole (#000/#fff) to clear an un-clearable same-side
+				// panel has no distinct readable hover, so that collapse is acceptable; any other is a bug.
 				if (link === "#000000" || link === "#ffffff") return { name, ok: true };
 				return { name, ok: false, detail: `--link and --link-hover both ${link}` };
 			}
@@ -2401,22 +2354,20 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 				ctx.constraints["--accent-2"] && accent2Value ? toOklchColor(accent2Value) : null;
 			const pinnedAccent3 =
 				ctx.constraints["--accent-3"] && accent3Value ? toOklchColor(accent3Value) : null;
-			// The hue each slot owes the accent. A `shade` holds one hue and steps lightness, so every
-			// rung wants the accent's own. A `duo` carries two hues: 3 is brand one's (the accent's), 4 is
-			// brand two's — whatever `--accent-2` actually landed on, pinned or derived.
+			// INFO: the hue each slot owes the accent: `shade` holds one hue; `duo` carries two (3 is the
+			// accent's, 4 is whatever `--accent-2` landed on).
 			const duoSecondHue = (): number =>
 				pinnedAccent2 ? hueDelta(accent.h, pinnedAccent2.h) : split;
 			const fanOffset = (n: number): number => {
 				if (strategy === "shade") return 0;
 				if (strategy === "step") return step * (n - 1);
-				// 3 shades brand one (the accent's own hue); 2 and 4 are brand two's.
 				if (strategy === "duo") return n === 3 ? 0 : duoSecondHue();
 				if (n === 2) return pinnedAccent3 ? -hueDelta(accent.h, pinnedAccent3.h) : -split;
 				if (n === 3) return pinnedAccent2 ? -hueDelta(accent.h, pinnedAccent2.h) : split;
 				return 180;
 			};
-			// `shade` and `duo` both deliberately move lightness off the accent's, so the constant-L/C
-			// checks below belong only to the hue-rotating postures.
+			// INFO: `shade` and `duo` move lightness off the accent's, so the constant-L/C checks apply
+			// only to the hue-rotating postures.
 			const stepsLightness = strategy === "shade" || strategy === "duo";
 			for (let n = 2; n <= 4; n++) {
 				if (ctx.constraints[`--accent-${n}`]) continue;
@@ -2435,8 +2386,8 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 						};
 					}
 				}
-				// A lightness-stepping strategy gamut-clamps chroma per rung, so only the shared-hue check
-				// above is a promise it makes; the constant-L/C pair below is the hue-fan postures' promise.
+				// INFO: a lightness-stepping strategy gamut-clamps chroma per rung, so only the shared-hue
+				// check applies; constant-L/C is the hue-fan postures' promise.
 				if (!stepsLightness) {
 					if (Math.abs(rotated.l - accent.l) > LIGHTNESS_TOLERANCE) {
 						return {
@@ -2634,9 +2585,8 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 						detail: `--color-${hue}-contrast on -base = ${contrast(base, contrastStop).toFixed(2)}`,
 					};
 				}
-				// The pure achromatic poles (white/black) keep `subtle` and `strong` at the same
-				// end of the lightness scale by design — they are never paired as a soft
-				// badge/avatar tint+ink, so they are exempt from the readable-on-subtle rule.
+				// INFO: white/black keep `subtle` and `strong` at the same lightness end and are never a
+				// tint+ink pair, so they're exempt from the readable-on-subtle rule.
 				if (spec !== "white" && spec !== "black") {
 					const subtle = ctx.register[`--color-${hue}-subtle`];
 					const strong = ctx.register[`--color-${hue}-strong`];
@@ -2666,9 +2616,6 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			return { name: "palette ramps monotonic in OKLCH lightness", ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
-			// Every tone's four-token family must be self-consistent: the on-solid ink reads on the
-			// solid fill, and the soft ink reads on the soft tint. This is the "any tone, anywhere"
-			// guarantee — a pink or accent-3 button can't ship unreadable, same as the semantic six.
 			const name = "every tone family clears AA (fg on solid, text on bg)";
 			for (const tone of FULL_TONES) {
 				const solid = ctx.register[`--${tone}`];
@@ -2707,8 +2654,8 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			return { name, ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
-			// OKLab distance, not WCAG contrast — luminance-only contrast is blind to two equally-light hues.
-			// `variable` is excluded: it's the plain-text baseline (`--code-fg`), not a colored scope.
+			// INFO: OKLab distance, not WCAG contrast, which is blind to two equally-light hues; `variable`
+			// is excluded as the plain-text baseline.
 			const name = "code scopes mutually distinguishable";
 			const MIN_DE = 0.006;
 			const distinct = [...CODE_VIVID_ROLES, "comment"].map((r) => `--code-${r}`);
@@ -2747,11 +2694,8 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			return { name, ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
-			// OKLab distance, not WCAG contrast — two equally-light hues (a red and a green
-			// both readable on the bg) can still be one indistinguishable colour to a reader.
-			// Floored under the muted reality (the warm red/magenta pair converges to ~0.020
-			// once a low-chroma seed floors the palette), so it guards a real collapse, not the
-			// legitimate warm-family closeness a muted terminal skin is allowed.
+			// INFO: OKLab distance, not WCAG contrast; floored under the muted reality (warm red/magenta
+			// converge to ~0.020) so it guards a real collapse, not warm-family closeness.
 			const name = "terminal ANSI hues mutually distinguishable";
 			const MIN_DE = 0.012;
 			const slots = ANSI_CHROMATIC.map((n) => `--terminal-${n}`);
@@ -2771,9 +2715,8 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			return { name, ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
-			// Mistaking success for danger is a usability failure WCAG contrast can't see — two
-			// equally-light status hues read as one. Floored well under the muted reality
-			// (xtyle-quiet's closest pair sits ~0.044), so it guards a real collapse, not taste.
+			// INFO: OKLab distance catches two equally-light status hues reading as one; floored well
+			// under the muted reality (~0.044) so it guards a real collapse, not taste.
 			const name = "status roles mutually distinguishable";
 			const MIN_DE = 0.02;
 			const roles = Object.keys(STATUS_TO_HUE).map((r) => `--${r}`);
@@ -2817,7 +2760,9 @@ export function makeXtylePipelineAlgorithm(
 	const singlePass = buildPasses(preset, {}).length === 1;
 	return {
 		id: preset.id,
+		since: PACK_SINCE,
 		produces: PRODUCES,
+		producedSince: PRODUCED_SINCE,
 		knobs: preset.knobs,
 		knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),
 		categories: CATEGORIES,
@@ -2925,11 +2870,8 @@ export const SHARED_KNOB_SPECS: KnobSpec[] = [
 	{ name: "vibrancy", kind: "range", label: "Vibrancy", min: 0, max: 1, step: 0.05, default: 0.5 },
 	{ name: "typeScale", kind: "range", label: "Type scale", min: 1.05, max: 1.6, step: 0.01, default: 1.2 },
 	{ name: "radiusScale", kind: "range", label: "Radius scale", min: 0, max: 3, step: 0.1, default: 1 },
-	// The defaults are the engine's own constants, not a second copy of them: a slider that opens on a
-	// value the derivation does not actually use is a lie the control surface tells about the engine.
-	// `surfaceRamp` is signed and its sign is scheme-derived, so it declares a default per scheme; a
-	// lone `+0.045` would open the control on an *ascending* stack under a light theme, which is the
-	// exact inversion of what that theme derives.
+	// INFO: slider defaults reference the engine's own constants; `surfaceRamp` is signed with a
+	// scheme-derived sign, so it declares a per-scheme default.
 	{
 		name: "surfaceRamp",
 		kind: "range",
@@ -2942,10 +2884,6 @@ export const SHARED_KNOB_SPECS: KnobSpec[] = [
 	},
 	{ name: "accentSplit", kind: "range", label: "Accent split", min: 0, max: 90, step: 1, default: DEFAULT_ACCENT_SPLIT, unit: "°" },
 	{ name: "accentShiftStep", kind: "range", label: "Accent shift step", min: 0, max: 180, step: 5, default: DEFAULT_SHIFT_STEP, unit: "°" },
-	// Groups a consumer expands into a cluster of its own, not single scalar controls. They *declare*
-	// that rather than being named in a list the engine keeps: an algorithm with its own composite knob
-	// (a palette array, a per-role font map) has to be able to say so, and a name-keyed table of knob
-	// identities held by the engine is exactly what `knobSpecs` exists to delete.
 	{ name: "anchors", kind: "composite", label: "Anchors" },
 	{ name: "fonts", kind: "composite", label: "Fonts" },
 ];
@@ -2976,6 +2914,6 @@ export function resolveKnobSpecs(names: readonly string[], extra: readonly KnobS
 }
 
 export const DEFAULT_ANCHORS: PresetAnchors = {
-	bg: "#0f1115",
-	fg: "#e8eaed",
+	bg: "#25272e",
+	fg: "#e2e0e0",
 };

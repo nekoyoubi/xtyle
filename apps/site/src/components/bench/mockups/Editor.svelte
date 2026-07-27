@@ -9,11 +9,6 @@
 
 	let { register }: Props = $props();
 
-	// Git status is semantic, so it wears the semantic tones (and a letter, so the state survives a
-	// hue-less `shade` accent strategy and a monochrome print alike). Language is *categorical* — a set
-	// of peers with no ranking — which is exactly what the accent family is for.
-	// Git status is semantic, not categorical, so it keeps the semantic tones and never borrows an
-	// accent variant. The mark, the word, and the tone are always read together, so they travel together.
 	const gitMeta = {
 		modified: { tone: "warn", mark: "M", word: "Modified" },
 		added: { tone: "success", mark: "A", word: "Added" },

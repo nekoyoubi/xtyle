@@ -92,6 +92,36 @@ import Markdown from "@xtyle/astro/Markdown.astro";
 
 - [x] track the anchor\`} />`;
 
+const htmlTrustedExample = `<!-- markdown the app wrote, so its markup renders — components included -->
+<xtyle-markdown allow-html source="## Shipped
+
+<kbd>Ctrl</kbd>+<kbd>K</kbd> opens the palette. <xtyle-badge tone=&quot;success&quot;>new</xtyle-badge>"></xtyle-markdown>
+
+<!-- a host protocol is app-wide, declared once at startup rather than per element -->
+<script type="module">
+	import { allowUriSchemes } from "@xtyle/core/elements";
+
+	allowUriSchemes("asset", "tauri");
+</script>`;
+
+const svelteTrustedExample = `<script lang="ts">
+	import { Markdown } from "@xtyle/svelte";
+
+	// bundled with the app, so the markup in it is the app's own
+	import notes from "./release-notes.md?raw";
+</script>
+
+<Markdown allowHtml source={notes} />`;
+
+const astroTrustedExample = `---
+import Markdown from "@xtyle/astro/Markdown.astro";
+
+const notes = await Astro.glob("../content/release-notes.md");
+---
+
+<!-- build-time content from the repo: the HTML in it is ours -->
+<Markdown allowHtml source={notes[0].rawContent()} />`;
+
 export const markdownManifest: ComponentManifest = {
 	id: "markdown",
 	name: "Markdown",
@@ -101,13 +131,13 @@ export const markdownManifest: ComponentManifest = {
 	seeAlso: ["code", "text", "heading"],
 	summary: "Renders markdown as themed HTML, as a document or as an inline label, with an optional source view.",
 	description:
-		"Markdown renders GitHub-Flavored Markdown into HTML that themes entirely from the token register: headings ride the type scale, rules and quotes ride the border and surface ramps, and fenced code borrows the same `--code-*` family the Code component owns, so a fence inside a document and an `<xtyle-code>` beside it agree in any theme. GFM is on — tables, task lists, strikethrough, and autolinks all render. `inline` switches to a label render: emphasis, code, links and strikethrough, but no blocks and no paragraph wrapper, so it drops into a tab title or a chip and inherits its type — a generated label that opens with `# ` stays text instead of erupting a heading into a tab strip. `editable` adds a source view the reader can switch to, emitting `input` as it is typed. **It ships no sanitizer, by design.** Raw HTML in the source is escaped to text rather than rendered, and link and image URLs are written from a scheme allowlist, so everything that reaches the DOM is markup the renderer generated itself from a closed token set. There is no `allow-html` escape hatch: it would reintroduce the arbitrary-HTML problem the design exists to avoid.",
+		"Markdown renders GitHub-Flavored Markdown into HTML that themes entirely from the token register: headings ride the type scale, rules and quotes ride the border and surface ramps, and fenced code borrows the same `--code-*` family the Code component owns, so a fence inside a document and an `<xtyle-code>` beside it agree in any theme. GFM is on — tables, task lists, strikethrough, and autolinks all render. `inline` switches to a label render: emphasis, code, links and strikethrough, but no blocks and no paragraph wrapper, so it drops into a tab title or a chip and inherits its type — a generated label that opens with `# ` stays text instead of erupting a heading into a tab strip. `editable` adds a source view the reader can switch to, emitting `input` as it is typed. **It ships no sanitizer, by design.** Raw HTML in the source is escaped to text rather than rendered, and link and image URLs are written from a scheme allowlist, so everything that reaches the DOM is markup the renderer generated itself from a closed token set — the arbitrary-HTML problem never arises rather than being solved. `allowHtml` lifts the escaping for a source the app controls, and it is not the hole it sounds like: the body reaches the DOM through the component's fragment, so the format declared in `component-host.json` still has the last word and refuses `<script>`, event handlers, and elements outside xtyle's vocabulary no matter what the renderer emits. What survives is standard HTML **and xtyle's own components**, so a document can carry an `<xtyle-badge>` or an `<xtyle-alert>` inline. URL schemes are separate and app-wide rather than per-element: `allowUriSchemes()` from `@xtyle/core/elements` widens the renderer and the fragment format together, which is the only way to widen either — and xtyle adds no scheme on an app's behalf, because a hole nobody asked for is the worst kind.",
 	bindings: ["html", "svelte", "astro"],
 	anatomy: [
 		{
 			name: "body",
 			description:
-				"Where the rendered markdown lands. Every rule is scoped inside it and styles element types rather than named parts, since the content's structure is the author's, not ours — so nothing here reaches a consumer's own headings.",
+				"Where the rendered markdown lands. Every rule is scoped inside it and styles element types rather than named parts, since the content's structure is the author's, not ours — so nothing here reaches a consumer's own headings. Carries `data-allow-html` while `allowHtml` is set, so a body holding the author's own markup is recognizable in a DevTools inspection or a grep of the rendered page.",
 			selector: ".xtyle-markdown__body",
 			tokens: ["--fg-0", "--font-sans", "--text-body", "--leading-normal", "--space-4"],
 		},
@@ -116,6 +146,13 @@ export const markdownManifest: ComponentManifest = {
 			description: "Document headings, on the type scale; `h1` and `h2` carry a rule beneath them.",
 			selector: ".xtyle-markdown__body h1, .xtyle-markdown__body h2",
 			tokens: ["--text-2xl", "--text-xl", "--weight-semibold", "--leading-tight", "--field-border"],
+		},
+		{
+			name: "inline-html",
+			description:
+				"The HTML elements `allowHtml` makes reachable — `mark`, `kbd`, `abbr`, `sub`/`sup`, `details`/`summary`. Themed from the register rather than left to the browser, which would otherwise paint a `mark` in fixed yellow with no idea what theme it is in, and style a `kbd` unlike the Kbd component sitting next to it.",
+			selector: ".xtyle-markdown__body :is(mark, kbd, abbr, details)",
+			tokens: ["--warn-bg", "--warn-text", "--bg-2", "--line-2", "--border-thick", "--radius-sm"],
 		},
 		{
 			name: "code",
@@ -140,14 +177,14 @@ export const markdownManifest: ComponentManifest = {
 			name: "editor",
 			description: "The source textarea shown while editing, in the mono face on the field surface.",
 			selector: ".xtyle-markdown__editor",
-			tokens: ["--field-bg", "--field-border", "--font-mono", "--text-sm", "--radius-md", "--accent"],
+			tokens: [],
 		},
 		{
 			name: "toggle",
 			description:
 				"The edit/view switch. Chrome the component invents, so it is a real node in the fragment fill: a mod can reword it, make it an icon, or move it, and the element keeps working.",
 			selector: ".xtyle-markdown__toggle",
-			tokens: ["--neutral-bg", "--neutral-text", "--field-border", "--radius-sm", "--text-xs", "--accent-text"],
+			tokens: [],
 		},
 	],
 	props: [
@@ -179,6 +216,22 @@ export const markdownManifest: ComponentManifest = {
 			description: "Whether the source view is showing. Only meaningful alongside `editable`; setting it alone would strand the reader in a box with no way out, so it is ignored.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "allowHtml",
+			type: "boolean",
+			default: "false",
+			description:
+				"Render the source's HTML instead of escaping it to text, for markdown whose origin the app controls — bundled release notes, a document your own app wrote, a file the user opened. It is floored rather than open: the body is painted through the component's fragment, so the format declared in `component-host.json` refuses `<script>`, `<iframe>`, event handlers, and any element outside xtyle's vocabulary regardless of what the renderer emits. What it admits is standard HTML **and xtyle's own components**, so `<xtyle-badge tone=\"danger\">` inside a paragraph renders as a real badge. The rendered body carries `data-allow-html`, so the choice is visible where the markup landed.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "processBbcode",
+			type: "boolean | string",
+			default: "false",
+			description:
+				"Also process BBCode, so one document can carry both languages. `true` reaches the whole BBCode registry; a string names a vocabulary, which is how one surface accepts a tag another refuses. The two renderers never read each other's output: BBCode's balanced constructs are lifted out before markdown parses and dropped back in afterward, so markdown never sees a `[quote]` and a tag inside a code fence stays literal. Prose *inside* a construct still gets markdown's inline render, so `[quote]some **bold** text[/quote]` gets the quote from one language and the emphasis from the other. Unlike `allowHtml` this widens what renders without widening what is reachable — BBCode has no raw-HTML passthrough, and every tag it emits came from a closed registry.",
+			bindings: ["html", "svelte", "astro"],
+		},
 	],
 	variants: [],
 	sizes: [],
@@ -205,47 +258,47 @@ export const markdownManifest: ComponentManifest = {
 		},
 	],
 	consumedTokens: [
+		"--accent",
+		"--accent-text",
+		"--bg-1",
+		"--bg-2",
+		"--border-thick",
+		"--border-thin",
+		"--code-bg",
+		"--code-fg",
 		"--fg-0",
 		"--fg-1",
 		"--fg-2",
-		"--bg-1",
-		"--bg-2",
-		"--accent",
-		"--accent-text",
-		"--code-fg",
-		"--code-bg",
-		"--neutral-bg",
-		"--neutral-text",
-		"--field-bg",
 		"--field-border",
-		"--border-thin",
-		"--border-normal",
-		"--radius-sm",
-		"--radius-md",
-		"--font-sans",
 		"--font-mono",
-		"--text-xs",
-		"--text-sm",
-		"--text-body",
-		"--text-lg",
-		"--text-xl",
-		"--text-2xl",
-		"--weight-semibold",
-		"--weight-bold",
+		"--font-sans",
 		"--leading-normal",
 		"--leading-tight",
+		"--line-2",
+		"--radius-md",
+		"--radius-sm",
 		"--space-1",
 		"--space-2",
 		"--space-3",
 		"--space-4",
 		"--space-5",
 		"--space-6",
-		"--duration-fast",
-		"--ease-standard",
+		"--text-2xl",
+		"--text-body",
+		"--text-lg",
+		"--text-sm",
+		"--text-xl",
+		"--text-xs",
+		"--warn-bg",
+		"--warn-text",
+		"--weight-bold",
+		"--weight-semibold",
 	],
 	composition: [
 		"Reach for `inline` whenever the markdown is a label rather than a document — a tab title, a chip, a table cell, a menu item. It inherits the type around it instead of imposing its own.",
-		"Untrusted markdown needs no extra handling: raw HTML is escaped and URLs are allowlisted, so an LLM-authored or user-authored string is safe to pass straight in.",
+		"Untrusted markdown needs no extra handling: raw HTML is escaped and URLs are allowlisted, so an LLM-authored or user-authored string is safe to pass straight in. That is the default, and it is the right one for anything you did not write.",
+		"An image or link that renders blank is usually a scheme rather than a bug: xtyle allows `http`, `https`, `mailto`, `tel` and `data`, and nothing else until an app says so. A host protocol — `asset:` or `tauri:` in a desktop shell — needs `allowUriSchemes(\"asset\", \"tauri\")` from `@xtyle/core/elements`, called once at startup before anything paints. It is app-wide rather than per-element on purpose: the renderer's allowlist and the fragment format's have to move together, and one call moves both.",
+		"`allowHtml` is what lets a document carry components. Markdown with `<xtyle-badge tone=\"success\">shipped</xtyle-badge>` in it renders a real badge, themed like every other one — useful for release notes, changelogs, and anything generated where the markup is yours. Elements xtyle doesn't declare are still dropped, so it composes with your own components only if they're in the vocabulary.",
 		"Pair `editable` with the `input` event to keep your own state in sync; the event's `detail.source` carries the markdown as it's typed.",
 		"A fenced block inside a document borrows the same `--code-*` tokens as `<xtyle-code>`, so the two agree without any configuration.",
 	],
@@ -275,6 +328,13 @@ export const markdownManifest: ComponentManifest = {
 			title: "Tables and task lists",
 			description: "GFM is on: tables, task lists, strikethrough and autolinks all render. A wide table scrolls inside its own box.",
 			source: { html: htmlGfmExample, svelte: svelteGfmExample, astro: astroGfmExample },
+		},
+		{
+			id: "trusted-source",
+			title: "Markdown you wrote yourself",
+			description:
+				"`allow-html` renders the source's markup, so a document can carry an `<xtyle-badge>` and have it theme like any other. The fragment format still refuses scripts, handlers, and undeclared elements. A host protocol like `asset:` is a separate, app-wide decision: `allowUriSchemes` at startup, which widens the renderer and the fragment format together.",
+			source: { html: htmlTrustedExample, svelte: svelteTrustedExample, astro: astroTrustedExample },
 		},
 		{
 			id: "editable",

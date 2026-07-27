@@ -232,6 +232,20 @@ export const calendarManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "prevIcon",
+			type: "string",
+			default: '"chevron-left"',
+			description: "The roster glyph for the previous-month arrow. Any name the icon roster can draw, including one a mod contributed through the `xtyle.icons` slot.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "nextIcon",
+			type: "string",
+			default: '"chevron-right"',
+			description: "The roster glyph for the next-month arrow. Any name the icon roster can draw, including one a mod contributed through the `xtyle.icons` slot.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "disabledDates",
 			type: "string[]",
 			description:

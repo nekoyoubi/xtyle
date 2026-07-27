@@ -150,7 +150,7 @@ export class XtyleMenu extends XtyleElement {
 		this.cursorAlign = opts.align ?? "start";
 		this.captureReturnFocus();
 		this.open = true;
-		// the popup's `toggle` event is async, so a place() deferred to it paints one frame at 0,0
+		// INFO: the popup's `toggle` event is async; deferring place() to it paints one frame at 0,0
 		this.place();
 		const focus = opts.focus ?? "first";
 		if (focus !== "none") this.focusEdge(focus);
@@ -167,8 +167,8 @@ export class XtyleMenu extends XtyleElement {
 		this.cursorPlacement = opts.placement ?? "bottom";
 		this.cursorAlign = opts.align ?? "start";
 		this.captureReturnFocus();
-		// a pointer press doesn't focus a button on every platform, so the anchor is the fallback: closing
-		// must always land focus back on the control that opened the menu, never on the body
+		// INFO: a pointer press doesn't focus a button on every platform; fall back to the anchor so
+		// close returns focus to the opener, never the body
 		this.returnFocusTo = this.returnFocusTo ?? anchor;
 		this.open = true;
 		this.place();
@@ -195,9 +195,8 @@ export class XtyleMenu extends XtyleElement {
 		const popup = this.popup;
 		if (!popup || !popup.isConnected) return;
 		const isShown = popup.matches(":popover-open");
-		// `showPopover()` throws if the element isn't in a stable state — which happens when a host
-		// framework sets `open` synchronously during its own mount (e.g. a Svelte `client:only`
-		// island). Swallow it; the next open/close, or the connect-time `afterApply`, settles it.
+		// INFO: showPopover() throws if the element isn't in a stable state (a host framework setting
+		// `open` synchronously during mount); swallow it and let the next open/close settle it
 		try {
 			if (this.open && !isShown) popup.showPopover();
 			else if (!this.open && isShown) popup.hidePopover();
@@ -245,8 +244,8 @@ export class XtyleMenu extends XtyleElement {
 	private positionPopup = (event: Event): void => {
 		const state = (event as { newState?: string }).newState;
 		if (state === "closed") {
-			// a popup dismissed while it still holds focus (a programmatic close) would drop focus to
-			// the body; hand it back to where it came from — the trigger, or the `openAt` caller's element
+			// INFO: a programmatic popup close drops focus to the body; hand it back to the trigger
+			// or the `openAt` caller's element
 			const target = this.returnFocusTo ?? this.trigger;
 			const stranded = this.holdsFocus();
 			this.clearCursor();

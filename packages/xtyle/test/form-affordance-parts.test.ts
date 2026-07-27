@@ -30,8 +30,8 @@ beforeAll(async () => {
 			},
 		};
 	};
-	// side effect: defines the custom elements. Imported after the stub so the constructors,
-	// which call `attachInternals()`, see it on first construction.
+	// INFO: these imports must follow the stub above, since the constructors call
+	// `attachInternals()` on first construction
 	await import("../src/elements/radio.js");
 	await import("../src/elements/switch.js");
 	await import("../src/elements/slider.js");
@@ -116,8 +116,7 @@ describe("radio: form participation and a11y survive the move", () => {
 		el.addEventListener("change", () => changes++);
 		const input = el.control!;
 		input.checked = true;
-		// a native `change` bubbles but is not composed, so it never leaves the shadow root — the
-		// fill's handler is what turns it into a selection
+		// INFO: a native `change` bubbles but is not composed, so it never leaves the shadow root
 		input.dispatchEvent(new Event("change", { bubbles: true }));
 		expect(el.checked).toBe(true);
 		expect(el.control!.checked).toBe(true);
@@ -140,7 +139,6 @@ describe("radio: form participation and a11y survive the move", () => {
 		const team = make<Radio>("xtyle-radio", { name: "plan", value: "team", label: "Team" }, group);
 		await Promise.resolve();
 
-		// roving tabindex parks on the checked option
 		expect(pro.control!.tabIndex).toBe(0);
 		expect(free.control!.tabIndex).toBe(-1);
 
@@ -166,8 +164,6 @@ describe("slider: the rail groove is a node, not a pseudo-element", () => {
 		const groove = rail.querySelector(".xtyle-slider__groove");
 		expect(groove).not.toBeNull();
 		expect(groove!.getAttribute("part")).toBe("groove");
-		// paint order: the groove is the first positioned child, so the fill and thumb sit on top of it
-		// exactly as they did over the pseudo-element
 		const children = [...rail.children].map((c) => c.className);
 		expect(children).toEqual(["xtyle-slider__groove", "xtyle-slider__fill", "xtyle-slider__thumb"]);
 	});
@@ -264,6 +260,29 @@ describe("switch: form participation and a11y", () => {
 		expect(track.getAttribute("role")).toBe("switch");
 		expect(track.getAttribute("aria-checked")).toBe("true");
 		expect(track.getAttribute("aria-labelledby")).toBeTruthy();
+	});
+
+	it("takes its accessible name from `label-on`/`label-off`", () => {
+		const el = make<Switch>("xtyle-switch", { "label-on": "Wi-Fi on", "label-off": "Wi-Fi off" });
+		const state = shadow(el).querySelector(".xtyle-switch__state")!;
+		const track = shadow(el).querySelector(".xtyle-switch__track")!;
+
+		expect(state.id).toBeTruthy();
+		expect(state.textContent).toBe("Wi-Fi off");
+		expect(track.getAttribute("aria-labelledby")).toBe(state.id);
+
+		(track as HTMLElement).click();
+
+		const onState = shadow(el).querySelector(".xtyle-switch__state")!;
+		expect(onState.textContent).toBe("Wi-Fi on");
+		expect(shadow(el).querySelector(".xtyle-switch__track")!.getAttribute("aria-labelledby")).toBe(onState.id);
+	});
+
+	it("keeps the original `on-label`/`off-label` spelling working for host-side markup", () => {
+		const el = make<Switch>("xtyle-switch", { "on-label": "On", "off-label": "Off" });
+		const state = shadow(el).querySelector(".xtyle-switch__state")!;
+		expect(state.textContent).toBe("Off");
+		expect(shadow(el).querySelector(".xtyle-switch__track")!.getAttribute("aria-labelledby")).toBe(state.id);
 	});
 
 	it("toggles on a click, mirrors aria-checked, fires change, and submits its value", () => {

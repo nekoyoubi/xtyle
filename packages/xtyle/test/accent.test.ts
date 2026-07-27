@@ -54,9 +54,7 @@ describe("xtyle-default accent ramp", () => {
 	it("fans a near-gray accent into distinct tints, so a categorical chart stays legible", () => {
 		const r = derive(xtyleDefault, { constraints: { "--accent": "#888888" } });
 		const fan = ["--accent", "--accent-2", "--accent-3", "--accent-4"].map((n) => r[n] as string);
-		// hue rotation on a zero-chroma accent would collapse the fan to four identical grays
 		expect(new Set(fan).size).toBe(4);
-		// the primary accent stays as authored (near-gray); only the fan floors its chroma for distinctness
 		expect(toOklchColor(fan[0] as string).c).toBeLessThan(0.02);
 		for (const v of fan.slice(1)) expect(toOklchColor(v as string).c).toBeGreaterThan(0.03);
 	});
@@ -69,8 +67,6 @@ describe("xtyle-default accent ramp", () => {
 		expect(r["--accent-2"]).toBe("#00ff00");
 
 		const { under, over, complement } = splitDeltas(accentHues(r));
-		// accent-3 is now the mirror of the pinned accent-2 across the accent, not the fixed +split,
-		// so the two wings stay symmetric around the author's choice.
 		expect(over).toBeCloseTo(-under, 0);
 		expect(Math.abs(over - DEFAULT_STEP / 2)).toBeGreaterThan(10);
 		expect(complement).toBeCloseTo(180, 0);
@@ -84,7 +80,6 @@ describe("xtyle-default accent ramp", () => {
 		expect(r["--accent-3"]).toBe("#00ff00");
 
 		const { under, over, complement } = splitDeltas(accentHues(r));
-		// The fan is symmetric either way: pinning accent-3 pulls accent-2 into its mirror.
 		expect(under).toBeCloseTo(-over, 0);
 		expect(Math.abs(under - -DEFAULT_STEP / 2)).toBeGreaterThan(10);
 		expect(complement).toBeCloseTo(180, 0);
@@ -96,9 +91,8 @@ describe("xtyle-default accent ramp", () => {
 		expect(a1.c).toBeGreaterThan(0.05);
 		expect(r["--accent"]).not.toBe(toOklchColor("#5b8cff"));
 
-		// The desaturated bg-derived accent sits near a gamut edge, so emitAccent's clamp can
-		// nudge a flank's hue by ~1° — looser than the in-gamut #ff0000 cases, well inside the
-		// gauntlet's own 8° tolerance.
+		// INFO: bg-derived accent sits near a gamut edge, so emitAccent's clamp can nudge a flank's
+		// hue by ~1°; these tolerances stay looser than the in-gamut cases, inside the gauntlet's 8°
 		const { under, over, complement } = splitDeltas(accentHues(r));
 		expect(Math.abs(under - -DEFAULT_STEP / 2)).toBeLessThan(1.5);
 		expect(Math.abs(over - DEFAULT_STEP / 2)).toBeLessThan(1.5);
@@ -172,27 +166,21 @@ describe("accent fan posture", () => {
 	});
 
 	it("the knob overrides the algorithm's taste, and matches the algorithm that ships it", () => {
-		// The whole point of the promotion: a theme reshapes the accent family without a new algorithm.
 		expect(derive(splitComplement, { knobs: { accentStrategy: "step" } })).toEqual(derive(wheel, {}));
-		// and the taste is only a default — an explicit `fan` pulls the step algorithm back to flanks.
 		expect(derive(wheel, { knobs: { accentStrategy: "fan" } })).toEqual(derive(splitComplement, {}));
 	});
 
 	it("wheel fans evenly, landing -3 near the complement instead of on a near flank", () => {
 		const w = accentHues(derive(wheel, {}));
 		const sc = accentHues(derive(splitComplement, {}));
-		// split-complement: -3 is a near flank of the accent (∓ the split angle)
 		expect(Math.abs(hueDelta(sc[0] as number, sc[2] as number))).toBeLessThan(90);
-		// wheel: two even steps carry -3 near the accent's complement — a distinct fan shape
 		expect(Math.abs(hueDelta(w[0] as number, w[2] as number))).toBeGreaterThan(150);
 	});
 
 	it("wheel chains 3 and 4 off a pinned wing, with honest lineage under the pin", () => {
 		const opts = { constraints: { "--accent-2": "#22cc55" } };
 		const register = derive(wheel, opts);
-		// pinning -2 carries the chain: -3 and -4 both shift off it, unlike the default fan.
 		expect(register["--accent-3"]).not.toBe(derive(wheel, {})["--accent-3"]);
-		// the lineage names what each token reads, and resolving it reproduces the derive exactly.
 		const lineage = wheel.lineage(opts);
 		const resolved = resolveGraph(lineage);
 		for (const t of ["--accent-2", "--accent-3", "--accent-4"]) {
@@ -208,9 +196,7 @@ describe("accent fan posture", () => {
 		const [a1, a2, a3, a4] = accentHues(r).map((_, i) =>
 			toOklchColor(r[["--accent", "--accent-2", "--accent-3", "--accent-4"][i] as string] as string),
 		);
-		// every rung sits on the accent's own hue: a shade of one brand color, not a hue harmony
 		for (const c of [a2, a3, a4]) expect(Math.abs(hueDelta(a1.h, c.h))).toBeLessThan(4);
-		// and the lightnesses spread: a tint above the accent, two shades below it
 		expect(a2.l).toBeGreaterThan(a1.l);
 		expect(a3.l).toBeLessThan(a1.l);
 		expect(a4.l).toBeLessThan(a3.l);
@@ -223,9 +209,7 @@ describe("accent fan posture", () => {
 				(k) => toOklchColor(derive(algo, gray)[k] as string).l,
 			);
 		const ladder = rungLs(shadeLadder);
-		// the ladder spreads its near-gray rungs across lightness, so they stay mutually legible
 		expect(Math.max(...ladder) - Math.min(...ladder)).toBeGreaterThan(0.25);
-		// the hue fan can't separate what has no chroma: its near-gray rungs huddle at one lightness
 		const hueFan = rungLs(splitComplement);
 		expect(Math.max(...hueFan) - Math.min(...hueFan)).toBeLessThan(0.1);
 	});
@@ -233,7 +217,7 @@ describe("accent fan posture", () => {
 	it("shade-ladder rungs read off --accent, hold a pin in isolation, and resolve their lineage", () => {
 		const opts = { constraints: { "--accent-3": "#114488" } };
 		const register = derive(shadeLadder, opts);
-		// each rung derives independently off --accent, so pinning one leaves the others put
+		// INFO: each rung derives independently off --accent, so pinning one leaves the others put
 		expect(register["--accent-2"]).toBe(derive(shadeLadder, {})["--accent-2"]);
 		expect(register["--accent-4"]).toBe(derive(shadeLadder, {})["--accent-4"]);
 		expect(register["--accent-3"]).not.toBe(derive(shadeLadder, {})["--accent-3"]);
@@ -260,17 +244,13 @@ describe("accent fan posture", () => {
 			OklchColor,
 			OklchColor,
 		];
-		// the second anchor is honored verbatim — it is an input here, not a derived flank
 		expect(Math.abs(hueDelta(a2.h, toOklchColor("#f0883e").h))).toBeLessThan(1);
-		// each shade holds its own brand's hue
 		expect(Math.abs(hueDelta(a3.h, a1.h))).toBeLessThan(4);
 		expect(Math.abs(hueDelta(a4.h, a2.h))).toBeLessThan(4);
-		// and the two brands really are two different hues, not one ladder
 		expect(Math.abs(hueDelta(a1.h, a2.h))).toBeGreaterThan(30);
 	});
 
 	it("duo's shades land on one lightness, placed off the pair's mean rather than each anchor", () => {
-		// The anchors sit at very different lightnesses; a per-anchor ladder would inherit that split.
 		const opts = { anchors: { accent: "#20304a" }, constraints: { "--accent-2": "#ffd9a0" } };
 		const [a1, a2, a3, a4] = accentColors(derive(duo, opts)) as [
 			OklchColor,
@@ -278,15 +258,12 @@ describe("accent fan posture", () => {
 			OklchColor,
 			OklchColor,
 		];
-		// the shades are a matched pair: one common lightness, so they read as one secondary tier
 		expect(Math.abs(a3.l - a4.l)).toBeLessThan(0.01);
-		// and that lightness is a step off the *mean* of the anchors, not off either one of them
 		const midL = (a1.l + a2.l) / 2;
 		expect(Math.abs(Math.abs(a3.l - midL) - 0.16)).toBeLessThan(0.02);
 	});
 
 	it("duo with no second brand set falls out of the accent by the fan distance", () => {
-		// A duo theme that never picked a second color is still a valid theme — 2 derives like a flank.
 		const r = derive(duo, { anchors: { accent: "#6ea8fe" }, knobs: { accentSplit: 45 } });
 		const [a1, a2] = accentColors(r) as [OklchColor, OklchColor];
 		expect(Math.abs(hueDelta(a1.h, a2.h) - 45)).toBeLessThan(2);
@@ -297,13 +274,11 @@ describe("accent fan posture", () => {
 		const register = derive(duo, opts);
 		const lineage = duo.lineage(opts);
 		expect(resolveGraph(lineage)).toEqual(register);
-		// the mean lightness depends on both brands, so both shades honestly name both
 		for (const t of ["--accent-3", "--accent-4"]) {
 			const refs = lineage.find((n) => n.name === t)?.refs ?? [];
 			expect(refs, `${t} refs`).toContain("--accent");
 			expect(refs, `${t} refs`).toContain("--accent-2");
 		}
-		// and a pinned second brand is an input: a ref-less value node, not a derived one
 		expect(lineage.find((n) => n.name === "--accent-2")?.refs ?? []).toEqual([]);
 	});
 

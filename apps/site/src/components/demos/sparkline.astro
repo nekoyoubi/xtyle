@@ -16,7 +16,6 @@ const metrics = [
 	{ label: "Errors", value: "0.4%", tone: "danger" as const, data: dip },
 ];
 
-// A fixed reference and explicit domain keep the demo deterministic; a live app would pass a sliding `window`.
 const t0 = Date.parse("2026-07-02T12:00:00Z");
 const domain: [number, number] = [t0, t0 + 300_000];
 const signal = [0, 9, 23, 38, 55, 74, 96, 128, 171, 214, 262, 298].map((s, i) => ({

@@ -81,10 +81,8 @@ function options(bindings: SegmentedBindings, selected: string): string {
 			const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
 			const disabledAttr = segDisabled ? " disabled" : "";
 			const badge = seg.badge ? `<span class="xtyle-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
-			// A slotted segment carries framework-owned content (an icon), so the radio itself owns the
-			// option's accessible name (`aria-label` from `label`) while its body is the live `<slot>`.
-			// The tooltip is an explicit per-segment `title` when given, else the label for a slotted
-			// segment (whose visible body isn't text) — a text segment needs no tooltip unless it asks.
+			// INFO: a slotted segment's body is an icon (not text), so it needs an aria-label for its
+			// accessible name and a title tooltip; a text segment needs neither unless a title is given
 			const ariaLabel = seg.slot ? ` aria-label="${escapeAttr(seg.label)}"` : "";
 			const tooltip = seg.title ?? (seg.slot ? seg.label : undefined);
 			const titleAttr = tooltip ? ` title="${escapeAttr(tooltip)}"` : "";
@@ -104,8 +102,6 @@ function fieldInner(bindings: SegmentedBindings, selected: string): string {
 	const labelledby = bindings.labelledby ?? null;
 	const ariaLabel = bindings.ariaLabel ?? null;
 	const labelId = `${bindings.elementId ?? "xtyle-segmented"}-label`;
-	// An external id wins, then a visible label, then a bare `aria-label` that names the group with no
-	// visible text (an icon bar in a toolbar where the label would just be noise).
 	const groupName = labelledby
 		? ` aria-labelledby="${escapeAttr(labelledby)}"`
 		: labelText
@@ -151,7 +147,7 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Selec
 	if (e.disabled || e.ariaDisabled === "true") return {};
 	const ctx = context as NavContext;
 	const navItems = (ctx.enabledKeys ?? []).map((key) => ({ key }));
-	// A radiogroup activates on move, so a focus step is always also a selection.
+	// INFO: a radiogroup activates on move, so a focus step is always also a selection
 	const move = linearNav(navItems, e.dataset?.value ?? "", e.key ?? "", { orientation: "both", wrap: true, homeEnd: true });
 	return move.focus !== undefined ? { select: move.focus, focus: move.focus, preventDefault: true } : {};
 });

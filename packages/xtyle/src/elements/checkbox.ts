@@ -224,7 +224,7 @@ export class XtyleCheckboxGroup extends XtyleElement {
 	override connectedCallback(): void {
 		super.connectedCallback();
 		this.addEventListener("change", this.onItemChange);
-		// Slotted items can arrive after connect (client frameworks), so derive once a microtask later.
+		// INFO: slotted items can arrive after connect (client frameworks), so derive one microtask later
 		queueMicrotask(() => {
 			if (!this.manual) this.sync();
 		});
@@ -266,8 +266,8 @@ export class XtyleCheckboxGroup extends XtyleElement {
 	}
 
 	private onItemChange = (event: Event): void => {
-		// The heading is a native input in the shadow; its change isn't composed and never reaches
-		// here. Only composed item changes (from `xtyle-checkbox`) do, so this only ever rolls up.
+		// INFO: the heading is a native shadow input whose change is not composed, so it never reaches
+		// this host listener; only composed item changes (from `xtyle-checkbox`) roll up
 		if (this.manual) return;
 		if (!(event.target as Element | null)?.closest("xtyle-checkbox")) return;
 		this.sync();
@@ -321,7 +321,7 @@ export class XtyleCheckboxGroup extends XtyleElement {
 		const input = this.headingInput;
 		if (input) {
 			input.disabled = this.disabled;
-			// `render()` rebuilds the shadow, so the input is a fresh node each call — wire it anew.
+			// INFO: render() rebuilds the shadow, so the input is a fresh node each call; wire it anew
 			input.addEventListener("change", this.onHeadingToggle);
 		}
 		this.root

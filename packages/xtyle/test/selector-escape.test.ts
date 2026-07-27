@@ -6,10 +6,6 @@ import { escapeSelectorValue } from "../src/elements/fragments/selector-escape.j
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-// Values reach the fragment update hooks (tree, segmented) as opaque strings and are
-// interpolated into `[data-value="..."]` selectors that run through `querySelector`.
-// A raw quote produced an invalid selector that threw and took the render down; these
-// guard that the escape keeps the selector well-formed for hostile values.
 describe("escapeSelectorValue", () => {
 	it("escapes a double quote so a value with quotes stays a valid selector string", () => {
 		expect(escapeSelectorValue('find "Untitled - Notepad"')).toBe('find \\"Untitled - Notepad\\"');
@@ -31,8 +27,6 @@ describe("escapeSelectorValue", () => {
 	});
 });
 
-// The two fragment update hooks are the reported sites; guard that neither reintroduces a
-// raw `data-value="${…}"` read-side selector (the write side stays `escapeAttr`).
 describe("fragment update selectors escape their value", () => {
 	for (const id of ["tree", "segmented"]) {
 		it(`${id} never builds a raw data-value selector`, () => {

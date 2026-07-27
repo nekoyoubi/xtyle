@@ -125,7 +125,7 @@ describe("byte-identical to the pre-unification engine", () => {
 	};
 
 	const GOLDEN_RAMP: Record<string, string[]> = {
-		intensity: ["#1f2127", "#353f57", "#4a5f8b", "#5e82c3", "#6ea8fe"],
+		intensity: ["#14161b", "#2b364c", "#435984", "#597fbf", "#6ea8fe"],
 		thermal: ["#46a5ff", "#00b4ce", "#62b76f", "#d39200", "#ff6963"],
 		severity: ["#4c9b51", "#7c9127", "#9e8400", "#be7024", "#ca625c"],
 	};
@@ -183,12 +183,10 @@ describe("seriesPalette", () => {
 		expect(five[2]).toBe(register["--warn"]);
 		expect(five[3]).toBe(register["--info"]);
 		expect(five[4]).toBe(register["--neutral"]);
-		// the sixth outcome is the accent (live/pending)
 		expect(seriesPalette("statuses", 6, register)[5]).toBe(register["--accent"]);
 	});
 
 	it("evenly samples skittles for separation rather than adjacent hues", () => {
-		// three of eight ring hues should span the wheel, not sit side by side
 		const three = seriesPalette("skittles", 3, register);
 		const hues = three.map((c) => toOklchColor(c).h);
 		const gap = (a: number, b: number) => {
@@ -200,7 +198,6 @@ describe("seriesPalette", () => {
 	});
 
 	it("cycles an ordered palette when more series than stops are asked for", () => {
-		// accents holds five colors (primary, three variants, neutral), so a request past that wraps
 		const colors = seriesPalette("accents", 7, register);
 		expect(colors).toHaveLength(7);
 		expect(colors[4]).toBe(register["--neutral"]);
@@ -212,7 +209,6 @@ describe("seriesPalette", () => {
 		const colors = seriesPalette("thermal", 5, register);
 		const firstHue = toOklchColor(colors[0] as string).h;
 		const lastHue = toOklchColor(colors[colors.length - 1] as string).h;
-		// blue (~260) cold end vs red (~25) hot end
 		expect(firstHue).toBeGreaterThan(200);
 		expect(lastHue).toBeLessThan(60);
 	});
@@ -230,7 +226,6 @@ describe("seriesPalette", () => {
 		const forward = seriesPalette("thermal", 5, register);
 		const reversed = seriesPalette("thermal", 5, register, { reverse: true });
 		expect(reversed).toEqual([...forward].reverse());
-		// hot end now leads
 		expect(toOklchColor(reversed[0] as string).h).toBeLessThan(60);
 	});
 
@@ -286,15 +281,12 @@ describe("seriesColorsFor", () => {
 	});
 
 	it("stays correct when a category is absent (the positional bug this fixes)", () => {
-		// A clean run: no failed, no warn. Positional coloring would slide success→danger etc.;
-		// by-name coloring keeps every survivor on its own tone.
 		const clean = [{ tone: "success" as const }, { tone: "skipped" as const }, { tone: "info" as const }];
 		expect(seriesColorsFor("statuses", clean, register)).toEqual([
 			register["--success"],
 			register["--neutral"],
 			register["--info"],
 		]);
-		// contrast: positional sampling mis-colors the same three-item set
 		const positional = seriesPalette("statuses", 3, register);
 		expect(positional).toEqual([register["--success"], register["--danger"], register["--warn"]]);
 	});

@@ -113,7 +113,7 @@ export function avatarMarkup(props: AvatarMarkupProps): string {
 	const label = avatarLabel(props);
 	const image =
 		src !== null
-			? `<img class="xtyle-avatar__image" part="image" src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" onerror="this.remove()" />`
+			? `<img class="xtyle-avatar__image" part="image" src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" />`
 			: "";
 	const initials = escapeHtml(props.initials ?? avatarInitials(props.userName));
 	const initialsSpan = initials
@@ -124,9 +124,8 @@ export function avatarMarkup(props: AvatarMarkupProps): string {
 	const statusDot = props.status
 		? `<span class="${avatarStatusDotClass(props)}" part="status-dot" aria-hidden="true"></span>`
 		: "";
-	// Only name the avatar when there is a name to give it. An unnamed `role="img"` is a WCAG failure
-	// on its own, and worse: `role="img"` makes the subtree presentational, so an avatar carrying only
-	// a slotted icon would announce as a nameless image instead of exposing what it holds.
+	// INFO: role="img" makes the subtree presentational and an unnamed one is a WCAG failure, so
+	// only apply it when a label exists
 	const naming = label ? ` role="img" aria-label="${escapeAttr(label)}"` : "";
 	return `<span part="avatar" class="${avatarClass(props)}"${naming}>${content}${statusDot}</span>`;
 }

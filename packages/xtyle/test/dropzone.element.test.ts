@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-// side effect: defines the <xtyle-dropzone> custom element on the happy-dom registry
 import { routeNativeDrop, formatBytes, parseByteSize, type DropFile, type XtyleDropzone } from "../src/elements/dropzone.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { renderFragmentLight } from "../src/elements/fragment-ssr.js";
@@ -87,7 +86,6 @@ describe("<xtyle-dropzone> chrome", () => {
 		expect(input?.getAttribute("name")).toBe("docs");
 		expect(input?.getAttribute("accept")).toBe("image/*");
 		expect(input?.getAttribute("aria-label")).toBe("Upload attachments");
-		// the keyboard path is a real focusable input the visible surface labels
 		expect(surface(el).tagName).toBe("LABEL");
 		expect(surface(el).getAttribute("for")).toBe(input?.id);
 		expect(input?.getAttribute("aria-describedby")).toBe(el.querySelector("[data-hint]")?.id);
@@ -116,7 +114,6 @@ describe("the programmatic drop path (what a native host drives)", () => {
 		const el = make({ multiple: "" });
 		const result = el.addFiles(["C:/shots/hero.png", "/home/me/brief.pdf"]);
 		expect(result.accepted.map((f) => f.name)).toEqual(["hero.png", "brief.pdf"]);
-		// no File behind a path: the size is unknown, and the type is inferred from the extension
 		expect(result.accepted[0]?.size).toBe(-1);
 		expect(result.accepted[0]?.type).toBe("image/png");
 		expect(result.accepted[0]?.path).toBe("C:/shots/hero.png");
@@ -342,7 +339,7 @@ describe("the upload list", () => {
 		const row = rows(el)[0];
 		el.setProgress(id, 40);
 
-		expect(rows(el)[0]).toBe(row); // the same node — focus inside it survives an upload
+		expect(rows(el)[0]).toBe(row);
 		const bar = el.querySelector(`[data-bar="${id}"]`) as HTMLElement;
 		const track = el.querySelector(`[data-track="${id}"]`) as HTMLElement;
 		expect(bar.getAttribute("style")).toContain("40%");
@@ -444,7 +441,6 @@ describe("the server render (what the Astro binding emits, and what the element 
 		expect(html).toContain(".png · up to 200 KB · 3 files max");
 		expect(html).toContain("or browse");
 		expect(html).toContain('type="file"');
-		// the slot is resolved at build: a zero-JS page never runs the code that would project it
 		expect(html).not.toContain("<slot>");
 	});
 
@@ -480,11 +476,10 @@ describe("form participation", () => {
 		const input = el.querySelector<HTMLInputElement>("input[type=file]") as HTMLInputElement;
 		const clicked = vi.spyOn(input, "click");
 
-		// the surface IS a <label for>, so the browser already opens the picker — no double-fire from us
+		// INFO: a <label for> natively opens its associated file input
 		surface(el).click();
 		expect(clicked).not.toHaveBeenCalled();
 
-		// a mod could draw the surface as anything; a click on the zone's own chrome still opens it
 		(el.querySelector("[data-root]") as HTMLElement).click();
 		expect(clicked).toHaveBeenCalledTimes(1);
 	});

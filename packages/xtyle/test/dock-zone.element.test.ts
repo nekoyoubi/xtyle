@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-dock-zone> (and, through it, <xtyle-menu>) custom elements
 import "../src/elements/dock-zone.js";
 import type { DockLayout, DockNode } from "../src/elements/dock-model.js";
 import { loadFill } from "../src/elements/fragment-host.js";
@@ -130,7 +129,6 @@ describe("dock-zone renders its chrome through the fragment", () => {
 		const el = make(THREE);
 		expect(el.querySelector("[data-root][data-dock-zone]")).not.toBeNull();
 		expect(tabs(el).map((t) => t.textContent)).toEqual(["files", "outline", "preview"]);
-		// every drawn surface lives under the fill's root, not beside it
 		for (const tab of tabs(el)) expect(el.querySelector("[data-dock-zone]")!.contains(tab)).toBe(true);
 	});
 
@@ -139,7 +137,6 @@ describe("dock-zone renders its chrome through the fragment", () => {
 		const active = panelBody(el, "files");
 		expect(active?.parentElement?.dataset.bodyFor).toBe("zone-0");
 		expect(active?.textContent).toBe("files content");
-		// only the active panel is placed; the rest stay in the element's custody, detached
 		expect(panelBody(el, "outline")).toBeNull();
 	});
 
@@ -173,7 +170,6 @@ describe("dock-zone renders its chrome through the fragment", () => {
 		before.setAttribute("data-scribble", "live state");
 		click(tabs(el)[1]!, 0);
 		click(tabs(el)[0]!, 0);
-		// the same node comes back, so a panel's live content and state survive a rebuild of the chrome
 		expect(panelBody(el, "files")).toBe(before);
 		expect(panelBody(el, "files")!.getAttribute("data-scribble")).toBe("live state");
 	});
@@ -202,7 +198,6 @@ describe("dock-zone behavior survives the conversion", () => {
 		withLayout(el);
 		const changes: DockLayout[] = [];
 		el.addEventListener("layout-change", (e) => changes.push((e as CustomEvent<{ layout: DockLayout }>).detail.layout));
-		// drop far right of the only zone: an edge drop, so the zone splits
 		drag(el, tabs(el)[0]!, { x: 395, y: 100 });
 		const tree = el.layout!.tree as DockNode & { kind: "split" };
 		expect(tree.kind).toBe("split");
@@ -224,7 +219,6 @@ describe("dock-zone behavior survives the conversion", () => {
 		});
 		withLayout(el);
 		const tab = tabs(el).find((t) => t.dataset.panelId === "outline")!;
-		// the center of the second zone (which spans x 200..400)
 		drag(el, tab, { x: 300, y: 100 });
 		const tree = el.layout!.tree as DockNode & { kind: "split"; children: DockNode[] };
 		const second = tree.children[1] as DockNode & { kind: "leaf"; panels: string[] };
@@ -238,7 +232,6 @@ describe("dock-zone behavior survives the conversion", () => {
 		expect(el.layout!.floating.map((f) => f.panelId)).toEqual(["files"]);
 		const win = el.querySelector<HTMLElement>('[data-float-id="files"]');
 		expect(win).not.toBeNull();
-		// the panel's own element moved into the float window's body, not a copy of it
 		expect(panelBody(el, "files")!.parentElement!.dataset.floatBodyFor).toBe("files");
 	});
 
@@ -265,7 +258,6 @@ describe("dock-zone behavior survives the conversion", () => {
 		pointermove(240, 190);
 		pointerup(240, 190);
 		expect(el.layout!.floating[0]).toMatchObject({ w: 240, h: 190 });
-		// a press on the grip must not also arm the titlebar drag
 		expect(el.layout!.floating[0]).toMatchObject({ x: 0, y: 0 });
 	});
 
@@ -282,8 +274,6 @@ describe("dock-zone behavior survives the conversion", () => {
 	});
 
 	it("moves a floating window dragged across the open workspace, rather than re-docking it", () => {
-		// the zones tile the whole workspace, so every point inside it resolves to a drop target. A titlebar
-		// drag that stopped at the first one would re-dock the window the moment it was nudged.
 		const el = make(THREE);
 		withLayout(el);
 		el.floatPanel("outline", { x: 300, y: 120, w: 80, h: 60 });
@@ -304,11 +294,9 @@ describe("dock-zone behavior survives the conversion", () => {
 		const head = el.querySelector('[data-float-id="outline"] [data-float-head]')!;
 		pointerdown(head, 310, 130);
 
-		// still open floor: the pointer is 100px in from the nearest boundary, past the 48px band
 		pointermove(200, 100);
 		expect(films(el).drop.hidden).toBe(true);
 
-		// inside the band along the zone's left boundary: the split is on offer, so the films light up
 		pointermove(10, 100);
 		expect(films(el).drop.hidden).toBe(false);
 		expect(films(el).remnant.hidden).toBe(false);
@@ -353,10 +341,8 @@ describe("dock-zone panel controls", () => {
 		]);
 		const fired: { panelId: string; actionId: string }[] = [];
 		el.addEventListener("panel-action", (e) => fired.push((e as CustomEvent).detail));
-		// the overflow menu is one shared, cursor-anchored <xtyle-menu> the kebab loads and opens
 		const popup = el.querySelector<HTMLElement>("[data-panel-menu-popup]")!;
 		expect(el.querySelectorAll("[data-panel-menu-popup]").length).toBe(1);
-		// only the active panel's controls render in tabs mode
 		const kebab = el.querySelector<HTMLElement>('[data-panel-menu][data-owner-panel="files"]')!;
 		kebab.getBoundingClientRect = () =>
 			({ left: 0, top: 0, right: 20, bottom: 20, width: 20, height: 20, x: 0, y: 0, toJSON() {} }) as DOMRect;
@@ -396,10 +382,8 @@ describe("dock-zone stack mode", () => {
 		expect(toggles.map((t) => t.dataset.panelId)).toEqual(["layers", "props"]);
 		expect(toggles[0]!.querySelector(".xtyle-dock-zone__chevron")).not.toBeNull();
 		expect(toggles[0]!.getAttribute("aria-expanded")).toBe("true");
-		// every stacked panel is placed, not just one
 		expect(panelBody(el, "layers")).not.toBeNull();
 		expect(panelBody(el, "props")).not.toBeNull();
-		// controls ride on each section, not only the active panel
 		expect(el.querySelector('[data-panel-action][data-owner-panel="layers"]')).not.toBeNull();
 	});
 

@@ -48,7 +48,7 @@
 
 	let host: (HTMLElement & { items: string | ReadonlyArray<string | Item> }) | undefined = $state();
 
-	// A structured items array can't survive an attribute; set it as a property once the element exists.
+	// INFO: a structured items array can't survive an attribute; set it as a property once the element exists
 	$effect(() => {
 		if (host && items != null && typeof items !== "string") host.items = items;
 	});

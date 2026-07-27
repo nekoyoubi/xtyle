@@ -138,7 +138,6 @@ export function migrateRecipe<T extends ThemeRecipe>(recipe: T): T {
  */
 export function migratedTarget(id: string, knobs: Record<string, unknown> = {}): { algorithm: string; knobs: Record<string, unknown> } {
 	const migrated = migrateRecipe<ThemeRecipe>({ algorithm: id, knobs });
-	// `ThemeRecipe.knobs` is deliberately `object` — the engine owns the envelope, not any one
-	// front-end's input model — so the shape is narrowed here, at the boundary a caller derives from.
+		// INFO: `ThemeRecipe.knobs` is deliberately typed `object`; narrow it here at the boundary a caller derives from
 	return { algorithm: migrated.algorithm, knobs: (migrated.knobs ?? {}) as Record<string, unknown> };
 }

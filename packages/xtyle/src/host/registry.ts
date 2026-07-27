@@ -12,8 +12,6 @@ import {
 	type ResolveAlgorithmOptions,
 } from "./index.js";
 
-// The rail vocabulary is shared with the filesystem-free resolver, so it is defined beside
-// `loadAlgorithm` and re-exported here for the callers that have always imported it from this module.
 export { HARNESS_TIMEOUT_MS, type ResolveAlgorithmOptions };
 
 /**
@@ -173,18 +171,13 @@ const resolved = new Map<string, Algorithm>();
  */
 export function resolveInstalledAlgorithm(id: string, options: ResolveAlgorithmOptions = {}): Promise<Algorithm> {
 	const timeoutMs = railFor(options.timeoutMs);
-	// The rail is part of the identity of the loaded mod: a cache keyed on id alone would hand a
-	// harness the 5s-railed instance that a production caller warmed first, and the raise would silently
-	// do nothing. Keyed on the *clamped* rail, so the space is {default, harness} and no larger.
+	// INFO: key on the clamped rail, not id alone, or a harness-railed instance gets handed to a production caller.
 	const key = timeoutMs === undefined ? id : `${id}@${timeoutMs}`;
 	const cached = cache.get(key);
 	if (cached) return cached;
 
 	const entry = mods().get(id);
 	if (!entry) {
-		// Two different failures wearing one message helps nobody: an id missing from a directory that
-		// exists is a typo or an uninstalled pack, while no directory at all almost always means this
-		// resolver was imported where its filesystem-free twin was wanted.
 		const root = algorithmsDir();
 		return Promise.reject(
 			new Error(
@@ -200,8 +193,7 @@ export function resolveInstalledAlgorithm(id: string, options: ResolveAlgorithmO
 	const source = readFileSync(entry.sourcePath, "utf8");
 
 	const loaded = loadAlgorithm(entry.manifest, source, { timeoutMs }).then((algorithm) => {
-		// `resolved` is the synchronous first-paint oracle, which wants the mod under whatever rail it
-		// was loaded with — the derivation is identical either way, so the default keeps its slot.
+		// INFO: only the default rail populates the first-paint `resolved` cache; a harness rail must not overwrite it.
 		if (timeoutMs === undefined) resolved.set(id, algorithm);
 		return algorithm;
 	});

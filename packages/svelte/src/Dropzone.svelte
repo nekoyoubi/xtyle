@@ -90,9 +90,8 @@
 		element = el;
 	});
 
-	// `file-drop` / `file-reject` / `file-remove` are hyphenated custom events, so they can't ride a
-	// Svelte `on…` prop; attach them directly and re-dispatch to the current handlers, kept live across
-	// handler swaps.
+	// INFO: hyphenated custom events (`file-drop`, `file-reject`, `file-remove`) can't ride a Svelte
+	// `on…` prop, so attach them directly and re-dispatch to the current handlers
 	$effect(() => {
 		const node = el;
 		if (!node) return;

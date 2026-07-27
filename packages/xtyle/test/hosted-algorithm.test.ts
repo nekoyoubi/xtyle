@@ -11,8 +11,8 @@ const IDS = ["xtyle-default", "xtyle-hc", "xtyle-quiet", "xtyle-loud", "nxi-nite
 const constraints = { "--bg-0": "#0b0d12", "--fg-0": "#e6e9ef", "--accent": "#6ea8fe" };
 
 describe("hostedAlgorithm", () => {
-	// The module cache is cold at the first assertion (vitest isolates modules per file), so this
-	// must run first to exercise the cold branch deterministically.
+	// INFO: vitest isolates modules per file, so the module cache is cold here; this must run first to
+	// exercise the cold branch deterministically
 	it("bridges on the baked oracle before the hosted mod is warm", () => {
 		expect(snapshotAlgorithm("xtyle-loud")).toBeNull();
 		expect(hostedAlgorithm("xtyle-loud")).toBe(getAlgorithm("xtyle-loud"));

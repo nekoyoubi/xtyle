@@ -117,7 +117,6 @@ const TONE_GROUPS = [
 	type Toggle = HTMLElement & { checked: boolean };
 
 	customElements.whenDefined("xtyle-switch").then(() => {
-		// "Toggle all" master flips every tone switch.
 		const all = document.getElementById("tone-all") as Toggle | null;
 		if (all) {
 			const switches = Array.from(document.querySelectorAll<Toggle>(".tone-sw"));
@@ -126,9 +125,7 @@ const TONE_GROUPS = [
 			});
 		}
 
-		// "Reduced motion" honors prefers-reduced-motion and lets you override it for this page.
-		// Components read the `--duration-*` tokens for their transitions, and custom properties
-		// inherit through shadow boundaries, so zeroing them on the root reaches every component.
+		// INFO: custom properties inherit through shadow boundaries, so zeroing --duration-* on the root reaches every component.
 		const motion = document.getElementById("reduced-motion") as Toggle | null;
 		if (motion) {
 			const query = window.matchMedia("(prefers-reduced-motion: reduce)");

@@ -12,12 +12,8 @@
 
 	let range = $state("30d");
 
-	// The channel axis is categorical, not semantic: a channel has no outcome, it is just one of four
-	// things that want to be told apart. That is exactly what the accent family is for. The order here
-	// is load-bearing — the `accents` scheme hands series colors out by index (accent, accent-2,
-	// accent-3, accent-4), so a badge painted with `tone` matches its bar only while the two stay
-	// parallel. Every chip carries its channel's name, so the pairing survives a `shade` strategy where
-	// all four are one hue.
+	// INFO: channel order is load-bearing — the `accents` scheme assigns series colors by index
+	// (accent, accent-2, accent-3, accent-4), so each badge's tone matches its bar only while parallel
 	const channels = [
 		{ name: "Direct", tone: "accent" },
 		{ name: "Search", tone: "accent-2" },
@@ -48,8 +44,8 @@
 		{ label: "Enterprise", value: 25 },
 	];
 
-	// Deploy outcomes are semantic, so they take the `statuses` scheme and pin by name — a week with no
-	// failures must not shift "skipped" onto the danger tone.
+	// INFO: deploy outcomes are semantic, pinned by name via the `statuses` scheme so a missing
+	// category doesn't shift another onto the wrong tone
 	const deploys: PieDatum[] = [
 		{ label: "Passed", value: 128, tone: "success" },
 		{ label: "Warned", value: 17, tone: "warn" },

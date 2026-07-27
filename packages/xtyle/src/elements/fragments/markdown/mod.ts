@@ -8,12 +8,16 @@ interface OpsBuilder {
 }
 
 interface MarkdownBindings {
-	/** The rendered body, already HTML. Built by the element from the author's markdown — never raw
-	 * author HTML, because the renderer escapes that to text before it ever gets here. */
+	/** The rendered body, already HTML. Built by the element from the author's markdown — raw author
+	 * HTML is escaped to text before it ever gets here, unless the element was told otherwise. */
 	html?: string;
 	inline?: boolean;
 	editable?: boolean;
 	editing?: boolean;
+	/** Whether that body carries the author's own HTML — the `allow-html` case. Marks the body rather
+	 * than changing it: what landed there came from the source rather than from the renderer's closed
+	 * token set, and a fill that reshapes the body should carry the mark with it. */
+	allowHtml?: boolean;
 }
 
 interface EventPayload {
@@ -53,23 +57,19 @@ function chrome(b: MarkdownBindings): string {
 	if (!b.editable) return "";
 	const pressed = String(!!b.editing);
 	return (
-		`<textarea class="xtyle-markdown__editor" part="editor" data-editor aria-label="Markdown source" spellcheck="false"${b.editing ? "" : " hidden"}></textarea>` +
+		`<xtyle-textarea class="xtyle-markdown__editor" part="editor" data-editor label="Markdown source" mono rows="8" spellcheck="false"${b.editing ? "" : " hidden"}></xtyle-textarea>` +
 		`<span class="xtyle-markdown__controls" part="controls" data-controls>` +
-		`<button class="xtyle-markdown__toggle" part="toggle" type="button" data-toggle aria-pressed="${pressed}">${b.editing ? "Done" : "Edit"}</button>` +
+		`<xtyle-button class="xtyle-markdown__toggle" part="toggle" variant="subtle" size="xs" data-toggle aria-pressed="${pressed}">${b.editing ? "Done" : "Edit"}</xtyle-button>` +
 		`</span>`
 	);
 }
 
 /** The cheap half: everything a running component changes without changing its shape. */
 function patch(b: MarkdownBindings, ops: OpsBuilder): void {
-	// Add and remove the modifier rather than writing `class` wholesale. A class is *this* fill's
-	// private name for a node; `[data-root]` is the shared hook a reskin must keep in order to inherit
-	// the behavior. Stamping the whole attribute through that hook would overwrite the mod's own name
-	// on every repaint, so a reskin would survive until the first state change and then quietly revert.
 	if (b.inline) ops.addClass("[data-root]", "xtyle-markdown--inline");
 	else ops.removeClass("[data-root]", "xtyle-markdown--inline");
 	ops.replaceChildren("[data-body]", b.html ?? "");
-	// the source and the render are two views of one thing, so exactly one is on screen at a time
+	ops.setAttr("[data-body]", "data-allow-html", b.allowHtml ? "true" : "");
 	ops.toggle("[data-body]", !b.editing);
 	ops.toggle("[data-editor]", !!b.editing);
 	ops.setAttr("[data-toggle]", "aria-pressed", String(!!b.editing));

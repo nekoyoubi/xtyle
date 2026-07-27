@@ -12,6 +12,7 @@ interface OpsBuilder {
 
 interface Section {
 	header: string;
+	headerSlot?: string;
 	panel?: string;
 	panelSlot?: string;
 	value?: string;
@@ -24,6 +25,12 @@ interface AccordionBindings {
 	size?: string;
 	headingLevel?: number;
 	uid?: string;
+	/** Single-open mode names the `<details>` group so the browser enforces exclusivity itself. */
+	multiple?: boolean;
+	/** The roster glyph drawn as the disclosure marker. */
+	chevronIcon?: string;
+	/** That glyph's body, resolved against the live roster by the trusted host. */
+	chevronBody?: string | null;
 }
 
 interface EventPayload {
@@ -31,6 +38,8 @@ interface EventPayload {
 	key?: string;
 	disabled?: boolean;
 	ariaDisabled?: string;
+	/** The `<details>` open state, read after the browser's own toggle. */
+	open?: boolean;
 }
 
 interface ToggleContext {
@@ -55,14 +64,16 @@ declare const hooks: {
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
-// The inline glyph is the zero-JS fallback: `<xtyle-icon>` only paints once the custom element
-// upgrades, and the `static` render never loads the runtime. Once it does upgrade, the icon's
-// shadow root has no `<slot>`, so this light child stops rendering and the fragment-backed glyph
-// takes over.
-const CHEVRON =
-	'<xtyle-icon class="xtyle-accordion__chevron" part="chevron" name="chevron-down" aria-hidden="true">' +
-	renderIcon("chevron-down") +
-	"</xtyle-icon>";
+// INFO: `<xtyle-icon>` paints nothing until the custom element upgrades, and its shadow root has
+// no `<slot>`, so this light child renders only pre-upgrade and never doubles up after.
+function chevron(bindings: AccordionBindings): string {
+	const name = bindings.chevronIcon ?? "chevron-down";
+	return (
+		`<xtyle-icon class="xtyle-accordion__chevron" part="chevron" name="${escapeAttr(name)}" aria-hidden="true">` +
+		renderIcon(name, { body: bindings.chevronBody }) +
+		"</xtyle-icon>"
+	);
+}
 
 function accordionClass(bindings: AccordionBindings): string {
 	const size = bindings.size ?? "md";
@@ -79,23 +90,30 @@ function items(bindings: AccordionBindings): string {
 	const open = new Set(bindings.openKeys ?? []);
 	const uid = bindings.uid ?? "xtyle-accordion";
 	const level = headingLevel(bindings);
+	const chev = chevron(bindings);
 	return sections
 		.map((section, i) => {
 			const key = section.value ?? String(i);
 			const isOpen = open.has(key);
 			const triggerId = `${uid}-h-${i}`;
 			const panelId = `${uid}-p-${i}`;
-			const disabledAttr = section.disabled ? " disabled aria-disabled=\"true\"" : "";
+			const disabledAttr = section.disabled ? " aria-disabled=\"true\"" : "";
 			const body = section.panelSlot ? `<slot name="${escapeAttr(section.panelSlot)}"></slot>` : (section.panel ?? "");
+			const bodyRegion = section.panelSlot ? ` data-slot="${escapeAttr(section.panelSlot)}"` : "";
+			const label = section.headerSlot
+				? `<slot name="${escapeAttr(section.headerSlot)}"></slot>`
+				: escapeHtml(section.header);
+			const labelRegion = section.headerSlot ? ` data-slot="${escapeAttr(section.headerSlot)}"` : "";
+			const group = bindings.multiple ? "" : ` name="${escapeAttr(uid)}-group"`;
 			return (
-				`<div class="xtyle-accordion__item${isOpen ? " is-open" : ""}" part="item" data-key="${key}">` +
+				`<details class="xtyle-accordion__item" part="item" data-key="${key}"${group}${isOpen ? " open" : ""}>` +
+				`<summary class="xtyle-accordion__trigger" part="trigger" id="${triggerId}" ` +
+				`data-key="${key}" aria-controls="${panelId}"${disabledAttr}>` +
 				`<h${level} class="xtyle-accordion__heading" part="heading">` +
-				`<button class="xtyle-accordion__trigger" part="trigger" type="button" id="${triggerId}" ` +
-				`data-key="${key}" aria-expanded="${String(isOpen)}" aria-controls="${panelId}"${disabledAttr}>` +
-				`<span class="xtyle-accordion__label">${escapeHtml(section.header)}</span>${CHEVRON}</button></h${level}>` +
+				`<span class="xtyle-accordion__label"${labelRegion}>${label}</span></h${level}>${chev}</summary>` +
 				`<div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" ` +
-				`aria-labelledby="${triggerId}"${isOpen ? "" : " hidden"}>` +
-				`<div class="xtyle-accordion__content">${body}</div></div></div>`
+				`aria-labelledby="${triggerId}">` +
+				`<div class="xtyle-accordion__content"${bodyRegion}>${body}</div></div></details>`
 			);
 		})
 		.join("");
@@ -110,30 +128,39 @@ hooks.fragment.update("accordion", (bindings, ops) => {
 	const open = new Set(bindings.openKeys ?? []);
 	(bindings.sections ?? []).forEach((section, i) => {
 		const key = section.value ?? String(i);
-		const isOpen = open.has(key);
-		ops.setAttr(`.xtyle-accordion__trigger[data-key="${key}"]`, "aria-expanded", String(isOpen));
-		ops.toggle(`.xtyle-accordion__panel[data-key="${key}"]`, isOpen);
-		if (isOpen) ops.addClass(`.xtyle-accordion__item[data-key="${key}"]`, "is-open");
-		else ops.removeClass(`.xtyle-accordion__item[data-key="${key}"]`, "is-open");
+		ops.setAttr(`.xtyle-accordion__item[data-key="${key}"]`, "open", open.has(key) ? "open" : "");
 	});
 });
 
-xript.exports.register("toggleSection", (payload: unknown, context: unknown): Intent => {
+/**
+ * A disabled section: `<summary>` has no native disabled state, so the click is cancelled before the
+ * browser acts on it. This is the only case where the component overrides the platform's toggle.
+ */
+xript.exports.register("guardDisabled", (payload: unknown): Intent => {
+	const e = payload as EventPayload;
+	const blocked = e.disabled === true || e.ariaDisabled === "true";
+	return blocked ? { preventDefault: true } : {};
+});
+
+/**
+ * The browser has already opened or closed the section by the time this runs — `toggle` fires after
+ * the fact. So this reports rather than decides: it reads the new state off the element and hands
+ * back the key set, which the host stores and re-emits as the component's own `toggle` event. Single-
+ * open exclusivity is enforced by the shared `name` on the `<details>` group, not here, which is why
+ * the closing sibling needs no bookkeeping — the browser already closed it and fired its own `toggle`.
+ */
+xript.exports.register("syncToggle", (payload: unknown, context: unknown): Intent => {
 	const e = payload as EventPayload;
 	const ctx = context as ToggleContext;
-	if (e.disabled || e.ariaDisabled === "true") return {};
 	const key = e.dataset?.key;
 	if (!key) return {};
+	const nowOpen = e.open === true;
 	const open = new Set(ctx.openKeys ?? []);
-	const wasOpen = open.has(key);
-	if (ctx.multiple) {
-		if (wasOpen) open.delete(key);
-		else open.add(key);
-	} else {
-		open.clear();
-		if (!wasOpen) open.add(key);
-	}
-	return { open: [...open], toggledKey: key, isOpen: open.has(key) };
+	if (nowOpen) {
+		if (!ctx.multiple) open.clear();
+		open.add(key);
+	} else open.delete(key);
+	return { open: [...open], toggledKey: key, isOpen: nowOpen };
 });
 
 xript.exports.register("navKeydown", (payload: unknown, context: unknown): Intent => {

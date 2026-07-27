@@ -67,8 +67,6 @@ hooks.fragment.update("tour", (bindings, ops) => {
 	paint(bindings, ops);
 });
 
-// the nav is the only chrome a tour invents; the isolation is the spotlight's. Each button hands the
-// element a nav intent, and the element moves the tour to the next step.
 xript.exports.register("back", (): Intent => ({ tourNav: "back", stopPropagation: true }));
 xript.exports.register("next", (): Intent => ({ tourNav: "next", stopPropagation: true }));
 xript.exports.register("skip", (): Intent => ({ tourNav: "skip", stopPropagation: true }));

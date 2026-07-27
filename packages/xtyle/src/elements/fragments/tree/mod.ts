@@ -176,7 +176,7 @@ function buildNodes(
 			const isStatic = locked && !isLink;
 			const staticData = isStatic ? ` data-static="true"` : "";
 			const rowClass = isStatic ? "xtyle-tree__row xtyle-tree__row--static" : "xtyle-tree__row";
-			// Supplementary only — `label` remains the accessible name, so this never announces.
+			// INFO: title is supplementary; `label` stays the accessible name, so title never announces.
 			const titleAttr = node.title ? ` title="${escapeAttr(node.title)}"` : "";
 			const rowOpen = isLink
 				? `<a class="xtyle-tree__row" part="row" href="${escapeAttr(node.href as string)}" tabindex="-1" data-value="${escapeAttr(value)}"${disabledData}${titleAttr} style="--tree-level: ${level}">`
@@ -251,7 +251,7 @@ xript.exports.register("rowAction", (payload: unknown): Intent => {
 	const action = e.dataset?.action;
 	const value = e.dataset?.value;
 	if (!action || value === undefined) return { stopPropagation: true };
-	// stopPropagation so the row's own selectRow (a bubbling sibling handler) doesn't fire too.
+	// INFO: stopPropagation so the row's own bubbling selectRow handler doesn't also fire.
 	return { emit: { type: "tree-action", detail: { value, action } }, stopPropagation: true, preventDefault: true };
 });
 
@@ -272,13 +272,9 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 	const here = rows.findIndex((r) => r.key === current);
 	const row = here >= 0 ? rows[here] : undefined;
 	if (!row) return {};
-	// A locked branch with no route is a section header, skipped by roving focus.
 	const isStatic = (r: NavRow): boolean => r.locked && !r.isLink;
 	const navItems = rows.map((r) => ({ key: r.key, skip: isStatic(r) }));
 
-	// Tree's own hierarchical axis and activation semantics — composed on top of the shared linear
-	// core, which owns only Up/Down/Home/End (see docs/collection-substrate.md, the "wrap the core"
-	// pattern). Left/Right expand-collapse and Enter/Space are tree's; everything else delegates.
 	switch (k) {
 		case "ArrowRight": {
 			if (row.expandable && !row.expanded)
@@ -296,7 +292,6 @@ xript.exports.register("navKeydown", (payload: unknown, context: unknown): Inten
 				return { expandKey: row.key, expand: false, focus: row.key, preventDefault: true, stopPropagation: true };
 			if (row.parent !== null) {
 				const parent = rows.find((r) => r.key === row.parent);
-				// Skip a static-header parent — hop to the nearest focusable row above it instead.
 				if (parent && !isStatic(parent)) return { focus: row.parent, preventDefault: true, stopPropagation: true };
 				const above = stepKey(navItems, row.parent, -1);
 				if (above !== null) return { focus: above, preventDefault: true, stopPropagation: true };

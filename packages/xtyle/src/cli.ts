@@ -32,6 +32,7 @@ interface ParsedArgs {
 	overrides?: Record<string, string>;
 	knobs?: Record<string, string>;
 	scrollbars?: boolean;
+	invert?: boolean;
 }
 
 
@@ -75,10 +76,8 @@ function parse(argv: string[]): ParsedArgs {
 			case "-k": {
 				const eq = next?.indexOf("=") ?? -1;
 				if (next && eq > 0) {
-					// Kept as the raw string the shell handed over. The value is coerced against the knob's
-					// *declared* kind once the algorithm is known — guessing a type from the string's shape
-					// here would read a `text` knob set to "12" as a number and a `select` set to "false" as
-					// a boolean.
+					// INFO: keep the raw string; coercion happens later against the knob's declared kind,
+					// since guessing by shape would misread a `text` "12" as a number
 					(args.knobs ??= {})[next.slice(0, eq).trim()] = next.slice(eq + 1);
 				} else if (next !== undefined) {
 					process.stderr.write(`xtyle: ignoring malformed --knob "${next}" (expected name=value)\n`);
@@ -93,6 +92,9 @@ function parse(argv: string[]): ParsedArgs {
 				break;
 			case "--no-scrollbars":
 				args.scrollbars = false;
+				break;
+			case "--invert":
+				args.invert = true;
 				break;
 			case "--name":
 				args.name = next;
@@ -149,7 +151,7 @@ function usage(): void {
 			"xtyle: themable-derivation engine",
 			"",
 			"usage:",
-			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--format css|json|theme|prism|monaco|terminal] [--no-scrollbars] [--name <s>] [--out <file>]",
+			"  xtyle derive [-a <algorithm>] [--bg <c>] [--fg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--invert] [--format css|json|theme|prism|monaco|terminal] [--no-scrollbars] [--name <s>] [--out <file>]",
 			"  xtyle gauntlet [-a <algorithm>|all] [--mode baked|hosted] [--depth quick|standard|full] [--runs <n>]",
 			"  xtyle coverage --consumed <a,b,c> [-a <algorithm>] [--bg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]...",
 			"  xtyle audit [-a <algorithm>] [--bg <c>] [--accent <c>] [--knob <name>=<value>]... [--set <token>=<value>]... [--level AA|AAA] [--large-text]",
@@ -158,6 +160,7 @@ function usage(): void {
 			"         `xtyle knobs` prints each algorithm's dials and the values they accept. Alias: -k.",
 			"  --set  pins any token (repeatable): --set --accent-2=#7c3aed --set font-sans='Inter, sans-serif'",
 			"         the leading -- is optional (--set radius-md=10px). Alias: --constraint.",
+			"  --invert swaps the bg/fg anchors before deriving: the light counterpart of a dark theme (or back)",
 			"  xtyle list",
 			"  xtyle knobs [-a <algorithm>]",
 			"  xtyle mcp",
@@ -216,7 +219,7 @@ async function main(): Promise<void> {
 	if (args.command === "derive") {
 		const { id, algorithm, knobs } = await target(args);
 		const constraints = constraintsFrom(args);
-		const register = derive(algorithm, { constraints, knobs });
+		const register = derive(algorithm, { constraints, knobs, invert: args.invert });
 		const output =
 			args.format === "theme"
 				? serializeThemeFile(
@@ -256,7 +259,7 @@ async function main(): Promise<void> {
 		const { algorithm, knobs } = await target(args);
 		const consumedArg = argv[argv.indexOf("--consumed") + 1] ?? "";
 		const consumed = consumedArg.split(",").map((s) => s.trim()).filter(Boolean);
-		const register = derive(algorithm, { constraints: constraintsFrom(args), knobs });
+		const register = derive(algorithm, { constraints: constraintsFrom(args), knobs, invert: args.invert });
 		const result = coverage(consumed, register);
 		process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 		process.exitCode = result.covered ? 0 : 1;
@@ -265,7 +268,7 @@ async function main(): Promise<void> {
 
 	if (args.command === "audit") {
 		const { algorithm, knobs } = await target(args);
-		const register = derive(algorithm, { constraints: constraintsFrom(args), knobs });
+		const register = derive(algorithm, { constraints: constraintsFrom(args), knobs, invert: args.invert });
 		const levelIndex = argv.indexOf("--level");
 		const level = levelIndex >= 0 && argv[levelIndex + 1] === "AAA" ? "AAA" : "AA";
 		const result = auditRegister(register, { level, largeText: argv.includes("--large-text") });

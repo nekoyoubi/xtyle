@@ -287,13 +287,13 @@ export const tabsManifest: ComponentManifest = {
 		{
 			name: "tab",
 			description:
-				"A tab trigger's label. Each `slot=\"tab\"` or `data-xtyle-tab` element becomes a tab; its `value` attribute keys it and `disabled` marks it unselectable. Astro consumes `slot` to route children, so use `data-xtyle-tab` there. (html / astro)",
+				"A tab trigger's label. Each `slot=\"tab\"` or `data-xtyle-tab` element becomes a tab; its `value` attribute keys it and `disabled` marks it unselectable. Astro consumes `slot` to route children, so use `data-xtyle-tab` there. Carries markup, not just text: an icon or a count badge beside the label survives into the render, including the static one. (html / astro)",
 			bindings: ["html", "astro"],
 		},
 		{
 			name: "panel",
 			description:
-				"A tab's content. Each `slot=\"panel\"` or `data-xtyle-panel` element is paired with the tab of the same order (use `data-xtyle-panel` under Astro). In Svelte this is a `panel` snippet receiving the active value.",
+				"A tab's content. Each `slot=\"panel\"` or `data-xtyle-panel` element is paired with the tab of the same order (use `data-xtyle-panel` under Astro). A full render slot: nested components keep working, and under Astro the pairing resolves at build time so the tab strip and panels are complete before any script runs. In Svelte this is a `panel` snippet receiving the active value.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],

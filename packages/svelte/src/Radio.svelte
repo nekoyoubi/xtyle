@@ -45,8 +45,6 @@
 		...rest
 	}: Props = $props();
 
-	// With `bind:group`, the group's selected value drives checked (native radio-group semantics); a
-	// standalone radio keeps its own two-way `checked`.
 	const isChecked = $derived(group !== undefined ? group === value : checked);
 
 	function handleChange(event: Event) {

@@ -6,7 +6,7 @@ components on xtyle's theming. Built-in and app-authored fills are identical in 
 the built-ins are xtyle's own mod-zero fills of the same slots an app fills. The only
 privileged thing about a built-in is that it ships in the box.
 
-This is not a xtyle invention. xript 0.7 ships a canonical fragment seam
+This is not a xtyle invention. xript 0.8 ships a canonical fragment seam
 (`slots` / `fills` / `bindings` / `handlers`, host API `createRuntime` → `loadMod` →
 `fireFragmentHook` → `invokeExport`). xtyle **adopts** it; it builds no fragment runtime
 of its own. See the xript `host-fragments` guidance.
@@ -15,12 +15,12 @@ of its own. See the xript `host-fragments` guidance.
 
 - **Slot** — host-declared plug-point, all of them in
   `packages/xtyle/src/elements/fragments/component-host.json`. One per component:
-  `component.<name>`, `accepts: ["text/html+jsml"]`, `multiple: false`, gated by a
+  `component.<name>`, `accepts: ["application/x-xtyle+html"]`, `multiple: false`, gated by a
   per-component `capability` (`xtyle.component.<name>`).
 - **Fill** — a mod's contribution to a slot: `{ id, format, source, handlers?, meta? }`.
   The `id` is the **fragment id** the element drives (`"calendar"`, `"button"`), and it
   is the key the runtime registers hooks under.
-- **Template** — the fill's `source`, an inert `text/html+jsml` document. In practice a
+- **Template** — the fill's `source`, an inert `application/x-xtyle+html` document. In practice a
   component's template is a bare scaffold (`<div data-root data-bar></div>`); everything
   else is drawn by the hook. **No logic, no iteration** in the template. xtyle does not
   use xript's declarative binding attributes (`data-bind` / `data-if`): the host never
@@ -58,9 +58,7 @@ logic and stays in the sandbox. Static components (Button, Badge) ship a hook to
 component does, because the ops are the only paint path — but theirs is a one-liner.
 
 `<xtyle-table>` is **not** in this list. It decorates the author's own `<table>` in place
-rather than rendering one, so there is nothing for a fill to draw. (A `component.table`
-slot is nevertheless declared in `component-host.json` today with no fill behind it — a
-dead slot, being resolved.)
+rather than rendering one, so there is nothing for a fill to draw.
 
 ## Writing a fill
 
@@ -75,15 +73,15 @@ my-calendar/
 
 ```json
 {
-  "$schema": "https://xript.dev/schema/mod/v0.7.json",
-  "xript": "0.7",
+  "$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+  "xript": "0.8",
   "name": "acme-calendar",
   "version": "1.0.0",
   "capabilities": ["xtyle.component.calendar"],
   "entry": { "script": "mod.js", "format": "script" },
   "fills": {
     "component.calendar": [
-      { "id": "calendar", "format": "text/html+jsml", "source": "calendar.html" }
+      { "id": "calendar", "format": "application/x-xtyle+html", "source": "calendar.html" }
     ]
   }
 }
@@ -182,6 +180,79 @@ the component's next state change (which, on a component that never changes, is 
 - **Fill more than one component per manifest.** `fillSource()` returns the first fill that
   has a `source`, whatever its `id`, and `collectHandlers()` unions handlers across every
   fill in the manifest. One mod manifest = one component fill.
+
+## The sanitize floor — what a fill may actually paint
+
+A hook returns markup as a *string*, and that string does not go straight into the DOM.
+xript's host code (`finalizeOps`) sanitizes every op value against the profile of the
+format the fill declares: `replaceChildren` markup goes through the vocabulary, and any
+prop carrying a URL sink goes through the scheme allowlist. This runs in host code, after
+the sandbox and before the paint, and a refused element or attribute is **dropped without
+an error**.
+
+Both halves of that profile are declared in `component-host.json`:
+
+```json
+"formats": {
+  "application/x-xtyle+html": {
+    "syntax": "html",
+    "schemes": ["http", "https", "mailto", "tel", "data"],
+    "vocabularies": ["xtyle.components", "html"]
+  }
+}
+```
+
+- **`vocabularies`** is why a fill may paint `<xtyle-badge tone="danger">` and may not paint
+  `<script>`, `<iframe>`, an `onclick=`, or somebody's undeclared `<my-widget>`. It is also
+  what makes `<xtyle-markdown allow-html>` defensible: the option lifts *xtyle's* escaping,
+  and this floor is still underneath it.
+- **`schemes`** is the URL allowlist. Declaring it **replaces** xript's default set rather
+  than extending it, and omitting the key inherits that default — which is
+  `http`/`https`/`mailto`/`data`, with **no `tel`**.
+
+**The trap, which has already cost us once.** There are two allowlists between a URL and the
+DOM: the markup renderers' (`markup/markdown.ts` and friends) and this one. They are
+separate lists, this one runs last, and it fails silently. `tel:` was permitted by the
+renderer, documented in the manifest, asserted by a renderer-level test, and *still* stripped
+in every paint, because the format declared no `schemes` and quietly inherited a set without
+it. Nothing was red.
+
+Two rules fall out of that:
+
+- **Assert at the paint, not at the renderer.** A test that renders a string and inspects it
+  proves nothing about what the component puts on screen. `markdown.element.test.ts` walks
+  every scheme the renderer allows through a real element for exactly this reason.
+- **Widen both lists at once, or neither.** `allowUriSchemes()`
+  (`packages/xtyle/src/elements/uri-schemes.ts`) is the only supported way to add a host
+  protocol like `asset:` — it writes the renderer's registry *and* this `schemes` array, and
+  it throws if called after the runtime has read the manifest, because a half-applied
+  security decision is worse than a refused one. Nothing is added on an app's behalf.
+
+### Registering a component is three gates, not two
+
+The floor above is also a **registration obligation**, and it is the half of the checklist
+that gets forgotten. A new component is reachable by mods only once all three of these exist
+in `component-host.json`, and each one fails in a different register:
+
+| gate | what it grants | how a missing one looks |
+|---|---|---|
+| the **slot**, `component.<name>` | a fill has somewhere to land | there is nothing to fill; an override is inert |
+| the **capability**, `xtyle.component.<name>` | the mod's declaration is grantable | the mod is refused, surfacing as a wasm/CSP-shaped load error rather than a named missing capability |
+| the **vocabulary node**, `xtyle.components.nodes["xtyle-<name>"]` | any fill may *emit* the element | the tag is dropped from the paint with **no error at all** |
+
+The first two are what the checklist feels like; the third is the only one that is silent,
+which is why it is the one that slips. A component can hold a slot, a capability, a built-in
+fill, a full manifest and a green suite, and still be the one component of the set that no
+mod can put on screen — the sanitize floor strips every `<xtyle-…>` a fill tries to emit,
+exactly as designed, because the vocabulary never heard of it.
+
+A node also declares the props the tag accepts, and any prop carrying a URL needs its `sink`
+(`uri` for a link, `image-uri` for a source, `css` for `style`). Miss the sink and the
+element survives while that one attribute vanishes — the same silence, one level down.
+
+`component-host.test.ts` holds all three: every slot names a capability, every markup slot
+has a built-in fill that holds it, every `component.*` slot has a matching node, and every
+`src`/`href`/`poster` prop carries a sink.
 
 ## The capability model — what it actually grants
 

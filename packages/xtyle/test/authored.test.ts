@@ -25,7 +25,6 @@ describe("loadAuthoredAlgorithm", () => {
 		const register = derive(algo, { constraints: { "--bg-0": "#0a0c10", "--accent": "#22c55e" } });
 		expect(register["--bg-0"]).toBe("#0a0c10");
 		expect(register["--accent"]).toBe("#22c55e");
-		// the host `cuti` binding resolved a readable ink against the dark background
 		expect(register["--fg-0"]).toBe("#ffffff");
 	});
 
@@ -46,7 +45,6 @@ describe("loadAuthoredAlgorithm", () => {
 	});
 
 	it("exposes the engine's color helpers to a from-scratch source", async () => {
-		// uses the prelude-exposed `oklch` / `formatCss` globals directly — no `cuti`, no imports
 		const source = `
 			defineAlgorithm({
 				id: "helpers",

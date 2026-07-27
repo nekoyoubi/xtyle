@@ -91,7 +91,7 @@
   }
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
-    const body = hasIcon(name) ? ICONS[name] : MISSING;
+    const body = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
     const part = opts.part ? ` part="${escapeAttr(opts.part)}"` : "";
     const a11y = opts.label ? `role="img" aria-label="${escapeAttr(opts.label)}"` : `aria-hidden="true"`;
     const title = opts.label ? `<title>${escapeAttr(opts.label)}</title>` : "";
@@ -101,6 +101,7 @@
   // packages/xtyle/src/elements/fragments/icon/mod.ts
   function iconHtml(b) {
     return renderIcon(b.name ?? "", {
+      body: b.body,
       size: b.size ?? "md",
       tone: b.tone,
       label: b.label,

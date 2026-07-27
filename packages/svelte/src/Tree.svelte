@@ -34,8 +34,7 @@
 		if (el) el.items = items;
 	});
 
-	// `tree-action` is a hyphenated custom event, so it can't ride a Svelte `on…` prop; attach it
-	// directly and re-dispatch to the current `ontreeaction`, kept live across handler swaps.
+	// INFO: Svelte's on… prop can't bind a hyphenated custom event, so tree-action is attached directly
 	$effect(() => {
 		const node = el;
 		if (!node) return;

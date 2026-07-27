@@ -9,10 +9,6 @@
 
 	let { register }: Props = $props();
 
-	// Sections are the categorical axis, so they wear the accent family — whatever `accentStrategy`
-	// builds (flanks, a hue walk, one hue in four depths, two brands) is a valid section palette.
-	// Each section carries an icon and a name alongside its color, so `shade` (where all four accents
-	// share a hue) still tells World from Tech from Culture.
 	const sections = {
 		world: { name: "World", tone: "accent-2", icon: "external-link", stories: 24 },
 		tech: { name: "Tech", tone: "accent-3", icon: "gear", stories: 18 },
@@ -27,8 +23,7 @@
 		{ label: "Opinion", tone: undefined, active: false },
 	] as const;
 
-	// The art is content, not chrome: a data-URI SVG cannot read the theme's custom properties, so
-	// these stand-ins keep a fixed photographic palette the way real press photography would.
+	// INFO: a data-URI SVG can't read the theme's custom properties, so the art uses fixed hex colors
 	const art = (body: string) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">${body}</svg>`)}`;
 
 	const leadArt = art(

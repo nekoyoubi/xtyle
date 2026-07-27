@@ -10,6 +10,8 @@ import {
 	makeXtyleAlgorithm,
 	makeXtylePipelineAlgorithm,
 	PRODUCED_TOKENS,
+	PRODUCED_SINCE,
+	PACK_SINCE,
 	registerToNodes,
 	resolveKnobSpecs,
 	runPipeline,
@@ -97,7 +99,9 @@ function registerExports(
 	graph: (input: DeriveOptions) => TokenNode[],
 	traced: (input: DeriveOptions) => TraceSnapshot[],
 	manifest: {
+		since?: string;
 		produces: TokenName[];
+		producedSince?: Readonly<Record<string, string>>;
 		categories: TokenCategories;
 		knobs: string[];
 		knobSpecs: KnobSpec[];
@@ -169,9 +173,8 @@ export function toPreset(spec: XtyleAlgorithmSpec): PresetDefaults {
 		id: spec.id,
 		knobs: spec.knobs ?? SHARED_KNOBS,
 		knobSpecs: spec.knobSpecs,
-		// Merge over the full default so a spec that names only some anchors (e.g. just `bg` and
-		// `accent`) still yields a complete `bg`/`fg` default — derivation reads both, so a partial
-		// `defaultAnchors` would crash when invoked with no anchor overrides.
+		// INFO: merge over the full default so a spec naming only some anchors still yields complete
+		// bg/fg; derivation reads both, so a partial defaultAnchors would crash with no anchor overrides
 		defaultAnchors: spec.anchors ? { ...DEFAULT_ANCHORS, ...spec.anchors } : DEFAULT_ANCHORS,
 		contrastFloor: contrast.floor ?? 4.7,
 		declaredTextOnFillFloor: contrast.textOnFill ?? 4.5,
@@ -206,7 +209,9 @@ export function defineXtyleAlgorithm(spec: XtyleAlgorithmSpec): void {
 		finalNodes,
 		(input) => tracePreset(preset, buildPasses, input),
 		{
+			since: PACK_SINCE,
 			produces: PRODUCED_TOKENS,
+			producedSince: PRODUCED_SINCE,
 			categories: TOKEN_CATEGORIES,
 			knobs: preset.knobs,
 			knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),

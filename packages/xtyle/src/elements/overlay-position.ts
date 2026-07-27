@@ -290,7 +290,7 @@ export function tooltipTetherShift(input: TetherShiftInput): TetherShift {
 		: anchor.top + anchor.height / 2 - content.height / 2;
 	const contentShift = (vertical ? placedLeft : placedTop) - naturalStart;
 	const bound = Math.max(0, (vertical ? content.width : content.height) / 2 - arrowInset);
-	// + 0 normalizes -0 to 0 for stable equality/serialization
+	// INFO: + 0 normalizes -0 to 0 for stable equality/serialization
 	const arrow = clamp(-contentShift, -bound, bound) + 0;
 	return { content: contentShift + 0, arrow };
 }

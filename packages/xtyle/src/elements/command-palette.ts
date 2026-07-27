@@ -1,4 +1,5 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
+import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs, type NativeInputDefaults } from "./native-input-attrs.js";
 import { stepKey } from "./collection/index.js";
 import {
 	commandPaletteHostCss,
@@ -85,6 +86,13 @@ function parseHotkey(spec: string): Hotkey | null {
  * focus goes back to wherever it came from. Home/End are deliberately left to the caret. Bind `hotkey`
  * (`mod+k`) and the palette opens itself from anywhere on the page.
  */
+/** What the palette believes about its own search box before a consumer weighs in. */
+const PALETTE_INPUT_DEFAULTS: NativeInputDefaults = {
+	spellcheck: "false",
+	autocomplete: "off",
+	enterkeyhint: "go",
+};
+
 export class XtyleCommandPalette extends XtyleElement {
 	protected override get styleMode(): StyleMode {
 		return "auto";
@@ -114,6 +122,7 @@ export class XtyleCommandPalette extends XtyleElement {
 
 	static get observedAttributes(): string[] {
 		return [
+			...NATIVE_INPUT_ATTRS,
 			"open",
 			"items",
 			"label",
@@ -647,7 +656,23 @@ export class XtyleCommandPalette extends XtyleElement {
 
 	private afterApply(): void {
 		this.wire();
+		this.forwardInputAttrs();
 		this.scrollActiveIntoView();
+	}
+
+	/**
+	 * Carry the consumer's native input attributes onto the search box.
+	 *
+	 * A palette's search field is a real `<input>` living inside the component's own root, so a
+	 * consumer has no way to reach it — the attributes have to be forwarded or they are simply
+	 * unavailable here. The defaults are the component's own opinion: nothing about a command search
+	 * wants a spell-checker underlining command names, an autofill dropdown covering the results, or
+	 * an Enter key that says "return" when it means "run this". A consumer who states any of them
+	 * wins; one who says nothing keeps the opinion.
+	 */
+	private forwardInputAttrs(): void {
+		const input = this.root.querySelector("[data-input]");
+		if (input) forwardNativeInputAttrs(this, input, PALETTE_INPUT_DEFAULTS);
 	}
 
 	/** Virtual focus never scrolls on its own — the caret stays in the input — so the active row is walked
@@ -669,6 +694,7 @@ export class XtyleCommandPalette extends XtyleElement {
 		this.compute();
 		this.fragment.update(this.bindings);
 		this.wire();
+		this.forwardInputAttrs();
 		this.syncOpen();
 	}
 }

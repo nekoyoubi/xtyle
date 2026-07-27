@@ -104,7 +104,7 @@
   }
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
-    const body = hasIcon(name) ? ICONS[name] : MISSING;
+    const body = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
     const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
     const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
     const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
@@ -118,7 +118,7 @@
     return tabs[0]?.value ?? "";
   }
   function tabHtml(tab, active) {
-    const icon = tab.icon ? `<span class="xtyle-bottom-nav__icon" part="icon" aria-hidden="true">${renderIcon(tab.icon)}</span>` : "";
+    const icon = tab.icon ? `<span class="xtyle-bottom-nav__icon" part="icon" aria-hidden="true">${renderIcon(tab.icon, { body: tab.iconBody })}</span>` : "";
     const badge = tab.badge !== void 0 && tab.badge !== null && tab.badge !== "" ? `<span class="xtyle-bottom-nav__badge" part="badge">${escapeAttr(String(tab.badge))}</span>` : "";
     return `<button type="button" class="xtyle-bottom-nav__item" part="item" role="tab" data-value="${escapeAttr(tab.value)}" aria-selected="${active ? "true" : "false"}" tabindex="${active ? "0" : "-1"}">` + icon + `<span class="xtyle-bottom-nav__label" part="label">${escapeAttr(tab.label)}</span>` + badge + `</button>`;
   }

@@ -39,7 +39,6 @@ const bindings = {
 	label,
 };
 const light = await renderFragmentLight("breadcrumb", bindings);
-// only the no-items (consumer-slotted) render carries a marker; the items render fills the list
 const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 const composed = light.replace("<slot></slot>", () => slotHtml);
 ---

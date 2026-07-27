@@ -25,8 +25,8 @@ const { overlay = false, interactive = false, action = false, compact = false, t
 await checkAuthoring("card", Astro.props);
 const tone = resolveOptionalTone(toneInput);
 
-// The fill hides an unfilled header/footer, and it can only know from a binding: the composed markup
-// keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+// INFO: a `<slot>` in the composed markup can't be told filled from empty by any selector, so the fill
+// needs the hasHeader/hasFooter bindings to hide an empty region.
 const bindings = {
 	overlay,
 	interactive,

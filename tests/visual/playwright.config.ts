@@ -11,16 +11,10 @@ export default defineConfig({
 	snapshotPathTemplate: "{testDir}/__baselines__/{projectName}/{arg}{ext}",
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
-	// A missing baseline is a hard failure, never an auto-write. Under the default
-	// "missing", the first attempt writes the actual and fails, then a retry finds
-	// the file it just wrote and passes: a new component silently baselines itself
-	// to whatever it rendered that day. "none" writes nothing, so every retry fails
-	// identically. `npm run test:visual:update` passes --update-snapshots, which
-	// overrides this and stays the one way to create or refresh a baseline.
+	// INFO: the default "missing" auto-writes a baseline on retry (a new component silently
+	// self-baselines); "none" fails every retry, and --update-snapshots is the only way to create/refresh
 	updateSnapshots: "none",
-	// Animation-adjacent demos (carousel, timeline) can catch a mid-settle frame
-	// under heavy worker contention; a real regression fails every attempt, a
-	// timing flake passes on retry.
+	// INFO: retries absorb animation-adjacent flake (carousel, timeline) catching a mid-settle frame; a real regression still fails every attempt
 	retries: 2,
 	workers: process.env.CI ? 4 : 6,
 	reporter: [["list"], ["html", { open: "never" }]],

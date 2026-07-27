@@ -80,7 +80,7 @@
 
 	let host: ComboboxElement | undefined = $state();
 
-	// options is an array, not a string attribute: it goes on as a property, like Field's does
+	// INFO: options is an array, so it's set as a property, not a string attribute
 	$effect(() => {
 		if (host) host.options = options ?? [];
 	});

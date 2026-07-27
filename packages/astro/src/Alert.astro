@@ -37,8 +37,7 @@ const severity = resolveOptionalVocab(severityInput, ALERT_SEVERITIES, "alert se
 const variant = resolveVocab(variantInput, ALERT_VARIANTS, "soft", "alert variant");
 const tone = resolveOptionalTone(toneInput);
 
-// The fill hides an unfilled title/actions, and it can only know from a binding: the composed markup
-// keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+// INFO: a composed SSR `<slot>` can't be told filled from empty by any selector, so the fill needs explicit hasTitle/hasActions bindings.
 const bindings = {
 	tone,
 	severity,

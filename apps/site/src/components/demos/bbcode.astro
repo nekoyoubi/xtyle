@@ -1,0 +1,234 @@
+---
+import Bbcode from "@xtyle/astro/Bbcode.astro";
+import Markdown from "@xtyle/astro/Markdown.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import { defineBbcodeVocabulary, registerBbcodeTags } from "@xtyle/core/elements/bbcode-registry.js";
+
+registerBbcodeTags([
+	{
+		name: "choice",
+		block: true,
+		description: "A branch the reader can take.",
+		render: (c) => `<xtyle-button variant="outline" block align="start">${c.content}</xtyle-button>`,
+	},
+]);
+defineBbcodeVocabulary("demo-story", ["b", "i", "u", "url", "quote", "color", "list", "*", "choice"]);
+defineBbcodeVocabulary("demo-bio", ["b", "i", "url"]);
+
+const document = `[b]Derivation[/b]
+
+An [i]algorithm[/i] maps a few anchors and knobs into a full, internally consistent
+token set. See [url=/start]the derivation model[/url] for the long version.
+
+[list]
+[*]the anchors you pin
+[*]the knobs you turn
+[*]everything else, [color=accent]derived[/color]
+[/list]
+
+[quote=the docs]A theme is a print. The algorithm is the press.[/quote]`;
+
+const blocks = `[h3]Quotes, spoilers, and code[/h3]
+
+[quote=ada]The Analytical Engine weaves algebraic patterns, just as the
+Jacquard loom weaves flowers and leaves.[/quote]
+
+[spoiler=The ending]She was the engine all along.[/spoiler]
+
+[code=ts]const theme = derive({ bg: "#0f1115", accent: "#5b8cff" });[/code]`;
+
+const roster = `[b]bold[/b] · [i]italic[/i] · [u]underline[/u] · [s]struck[/s] ·
+[mark]marked[/mark] · x[sup]2[/sup] · H[sub]2[/sub]O · [font=mono]mono[/font] ·
+[color=accent]accent[/color] · [bg=#2a3550]background[/bg] · [size=5]bigger[/size]
+
+[hr]
+
+[table]
+[tr][th]tag[/th][th]renders[/th][/tr]
+[tr][td][noparse][code][/noparse][/td][td]a real Code component[/td][/tr]
+[tr][td][noparse][spoiler][/noparse][/td][td]an Accordion[/td][/tr]
+[/table]`;
+
+const untrusted = `This came from a forum post and is rendered [b]as-is[/b]:
+
+<script>alert("this never runs")</script>
+<img src=x onerror=alert("nor this")>
+
+[url=javascript:alert("refused")]a link that looks fine[/url]
+and [url=https://xtyle.dev]one that is fine[/url].
+
+[color=red;background:url(javascript:alert(1))]a colour with a second declaration[/color]`;
+
+const story = `The path forks at the standing stones.
+
+[choice]Go north[/choice]
+[choice]Follow the river[/choice]`;
+
+const bio = `Writes fiction about engines. [b]Three novels.[/b]
+[choice]this tag is not in the bio vocabulary[/choice]`;
+
+const composed = `## Both languages, one body
+
+[quote=ada]It **weaves** algebraic patterns — markdown emphasis, inside a BBCode quote.[/quote]
+
+Markdown owns the prose: **bold**, \`code\`, and [links](https://xtyle.dev).
+BBCode owns the tags, like [color=accent]colour[/color].
+
+[spoiler=A spoiler, mid-document]Block tags stand on their own rather than nesting inside a paragraph.[/spoiler]
+
+\`\`\`
+[b]inside a fence, BBCode stays literal[/b]
+\`\`\``;
+
+const draft = `[b]Edit me[/b]
+
+Switch to [i]source[/i] with the toggle, change something, and switch back.
+
+[list]
+[*]the textarea is the source of truth while editing
+[*][code]input[/code] fires with the BBCode as you type
+[/list]`;
+
+const labels = [
+	"Fix [b]tooltip[/b] placement",
+	"Refactor [color=accent]AnchorTracker[/color]",
+	"[s]Drop[/s] keep the swatch fix",
+	"Review [url=https://xtyle.dev]PR #12[/url]",
+	"[h1]a heading in a label[/h1]",
+];
+---
+
+<Stack gap={6} class="bb-demo">
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">A document</Heading>
+			<Text tone="muted" size="sm">
+				phpBB's core roster, themed from the register: quotes ride the border and
+				surface ramps, <code>[color]</code> reaches theme tokens by name.
+			</Text>
+		</Stack>
+		<Bbcode source={document} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">Quotes, spoilers, and code</Heading>
+			<Text tone="muted" size="sm">
+				<code>[spoiler]</code> renders an Accordion and <code>[code]</code> a Code, rather
+				than either growing a second opinion about something the library already ships.
+				Both own their own fragment, so a mod reshapes them through a surface it knows.
+			</Text>
+		</Stack>
+		<Bbcode source={blocks} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">The rest of the roster</Heading>
+			<Text tone="muted" size="sm">
+				The declared extensions, where the major dialects agree: strike, marks,
+				sub/sup, fonts, backgrounds, sizes, rules and tables.
+			</Text>
+		</Stack>
+		<Bbcode source={roster} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">An inline label</Heading>
+			<Text tone="muted" size="sm">
+				<code>inline</code> flows with the text around it and inherits its type, so it
+				drops into a chip or a tab title. Note the last one: a block tag in a label
+				never erupts a heading into the row.
+			</Text>
+		</Stack>
+		<Stack gap={2}>
+			{labels.map((label) => (
+				<Cluster gap={2} align="center">
+					<Text tone="muted" size="sm">label:</Text>
+					<Bbcode inline source={label} />
+				</Cluster>
+			))}
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">Two vocabularies, one registry</Heading>
+			<Text tone="muted" size="sm">
+				The app registered its own <code>[choice]</code> tag and listed it in the story
+				vocabulary but not the bio's. Same registry, same source syntax — the bio simply
+				has no such tag, so it renders as the text it was. Refusal by construction.
+				The handler returns an <code>&lt;xtyle-button&gt;</code> rather than a bare one, so a
+				custom tag inherits real components instead of re-deriving its own hover state.
+			</Text>
+		</Stack>
+		<Stack gap={4}>
+			<Stack gap={1}>
+				<Text tone="muted" size="sm"><code>vocabulary="demo-story"</code></Text>
+				<Bbcode vocabulary="demo-story" source={story} />
+			</Stack>
+			<Stack gap={1}>
+				<Text tone="muted" size="sm"><code>vocabulary="demo-bio"</code></Text>
+				<Bbcode vocabulary="demo-bio" source={bio} />
+			</Stack>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">Both languages at once</Heading>
+			<Text tone="muted" size="sm">
+				The Markdown component's <code>process-bbcode</code> composes the two. Neither
+				renderer reads the other's output: BBCode constructs are lifted out before
+				markdown parses and dropped back in after, so a tag inside a fence stays literal.
+			</Text>
+		</Stack>
+		<Markdown processBbcode source={composed} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">Untrusted input</Heading>
+			<Text tone="muted" size="sm">
+				No sanitizer, and no <code>allowHtml</code> to get wrong — BBCode has no raw-HTML
+				passthrough at all. The markup below is escaped to text, the
+				<code>javascript:</code> URL loses its link, and the colour carrying a second CSS
+				declaration is dropped rather than escaped.
+			</Text>
+		</Stack>
+		<Bbcode source={untrusted} />
+	</Card>
+
+	<Card>
+		<Stack slot="header" gap={1}>
+			<Heading level={3} size="body">With a source view</Heading>
+			<Text tone="muted" size="sm">
+				<code>editable</code> adds a toggle the fragment fill draws, so a mod can reword
+				it, make it an icon, or move it. <code>input</code> fires as the source is typed.
+			</Text>
+		</Stack>
+		<Bbcode editable source={draft} />
+	</Card>
+</Stack>
+
+<script>
+	// INFO: the tag registry is per-runtime, so the build-time declaration above must be repeated
+	// here or the hydrated element re-renders without `[choice]`
+	import { registerBbcodeTags, defineBbcodeVocabulary } from "@xtyle/core/elements/bbcode-registry.js";
+
+	registerBbcodeTags([
+		{
+			name: "choice",
+			block: true,
+			description: "A branch the reader can take.",
+			render: (c) => `<xtyle-button variant="outline" block align="start">${c.content}</xtyle-button>`,
+		},
+	]);
+	defineBbcodeVocabulary("demo-story", ["b", "i", "u", "url", "quote", "color", "list", "*", "choice"]);
+	defineBbcodeVocabulary("demo-bio", ["b", "i", "url"]);
+</script>

@@ -143,14 +143,13 @@ export class XtyleFormGroup extends XtyleElement {
 			control.id = this.controlId;
 		}
 
-		// `aria-describedby` is a global attribute, valid on any element.
+		// INFO: `aria-describedby` is a global ARIA attribute, valid on any element
 		const describedBy = this.describedBy;
 		if (describedBy.length > 0) control.setAttribute("aria-describedby", describedBy);
 		else control.removeAttribute("aria-describedby");
 
-		// `aria-invalid` / `aria-required` are prohibited on a roleless element, so only apply
-		// them to a native form control (or one that declares a role). A custom element is
-		// expected to carry its own validity semantics.
+		// INFO: `aria-invalid`/`aria-required` are prohibited on a roleless element; only native
+		// controls or role-bearing elements get them
 		if (this.isNameable(control)) {
 			if (this.invalid) control.setAttribute("aria-invalid", "true");
 			else control.removeAttribute("aria-invalid");
@@ -159,11 +158,8 @@ export class XtyleFormGroup extends XtyleElement {
 			else control.removeAttribute("aria-required");
 		}
 
-		// In light DOM the label and control share a tree, so native `<label for>` resolves —
-		// it names labelable controls and gives click-to-focus for free, no `aria-label` mirror
-		// and no manual click handler. (A roleless custom element isn't labelable by `for`; it
-		// names itself, as before.) When the consumer set `for` on the host, the fill already
-		// emitted that `for` and we leave it be.
+		// INFO: native `<label for>` names labelable controls but not roleless custom elements,
+		// which name themselves
 		const label = this.root.querySelector<HTMLElement>(`#${CSS.escape(this.labelId)}`);
 		if (label && this.getAttribute("for") === null && control.id) {
 			label.setAttribute("for", control.id);
@@ -182,11 +178,8 @@ export class XtyleFormGroup extends XtyleElement {
 		return "";
 	}
 
-	// Light DOM has no `slotchange`, so watch the region for a swapped-in control instead.
-	// `wireControl` only sets attributes (never children), so observing `childList` can't loop.
-	// Runs from both `render` and `afterApply`: the `[data-slot]` region is built by the async
-	// fragment fill, so the first shadow-DOM instance has no region when `render` runs and the
-	// observer would never arm without the `afterApply` pass. Idempotent (the observer arms once).
+	// INFO: light DOM has no `slotchange`, so observe the region's `childList`; `wireControl` sets
+	// only attributes, so it can't retrigger the observer
 	private bindRegion = (): void => {
 		this.wireControl();
 		if (!this.contentObserver) {

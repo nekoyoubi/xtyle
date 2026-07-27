@@ -77,9 +77,6 @@ function paint(b: SplitButtonBindings, ops: OpsBuilder): void {
 	ops.setAttr(".xtyle-split-button", "class", rootClass(b));
 	ops.setAttr(".xtyle-split-button__primary", "class", buttonClasses(b, "primary"));
 	ops.setAttr("[data-primary]", "type", b.type ?? "button");
-	// a loading primary is not a pressable primary — the same block Button applies, so the click can't fire
-	// twice while the first one is still in flight. The caret stays live: a running export is still cancellable
-	// from its own menu.
 	ops.setAttr("[data-primary]", "disabled", disabled || loading ? "disabled" : "");
 	ops.setAttr("[data-primary]", "aria-busy", loading ? "true" : "");
 	ops.setAttr("[data-busy]", "hidden", loading ? "" : "hidden");
@@ -101,13 +98,9 @@ hooks.fragment.update("split-button", (bindings, ops) => {
 xript.exports.register("toggleClick", (payload: unknown): Intent => {
 	const e = payload as EventPayload;
 	if (e.disabled || e.ariaDisabled === "true") return {};
-	// the caret's click never reaches a consumer's `click` listener, so the default action and the menu
-	// stay two distinct paths
 	return { toggleOpen: true, preventDefault: true, stopPropagation: true };
 });
 
-// the caret is a menu button, so the menu keys answer from either half of the group: a split button whose
-// primary action is focused still drops its menu on ArrowDown, the way a real one does
 xript.exports.register("groupKeydown", (payload: unknown): Intent => {
 	const e = payload as EventPayload;
 	switch (e.key) {

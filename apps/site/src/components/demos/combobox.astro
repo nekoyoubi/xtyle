@@ -169,7 +169,6 @@ const labels = ["bug", "docs", "enhancement", "good first issue", "help wanted",
 	};
 	labels?.addEventListener("change", renderPost);
 
-	// the async path: `filter="none"` means whatever comes back is shown verbatim
 	const REPOS = [
 		"nekoyoubi/xtyle",
 		"nekoyoubi/xript",
@@ -184,7 +183,6 @@ const labels = ["bug", "docs", "enhancement", "good first issue", "help wanted",
 	repo?.addEventListener("input", () => {
 		const query = repo.query.trim().toLowerCase();
 		const ticket = ++pending;
-		// stand in for a fetch: the list is filtered *there*, not here
 		window.setTimeout(() => {
 			if (ticket !== pending) return;
 			repo.options = query.length === 0 ? [] : REPOS.filter((name) => name.toLowerCase().includes(query));

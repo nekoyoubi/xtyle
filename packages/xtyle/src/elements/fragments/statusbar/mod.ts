@@ -45,7 +45,7 @@ function overflowMenu(b: StatusbarBindings): string {
 function statusbarHtml(b: StatusbarBindings): string {
 	const live = b.live ? ` role="status" aria-live="polite"` : "";
 	const label = b.label ? ` aria-label="${escapeAttr(b.label)}"` : "";
-	// A horizontally-scrolling statusbar must be reachable by keyboard to scroll it.
+	// INFO: a horizontally-scrolling statusbar needs a tabindex to be keyboard-scrollable
 	const scrollable = (b.overflow ?? "clip") === "scroll" ? ` tabindex="0"` : "";
 	return `<footer part="statusbar" class="${statusbarClass(b)}"${live}${label}${scrollable}><slot></slot>${overflowMenu(b)}</footer>`;
 }

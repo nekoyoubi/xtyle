@@ -1,6 +1,6 @@
 {
-	"$schema": "https://xript.dev/schema/mod/v0.7.json",
-	"xript": "0.7",
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
 	"name": "xtyle-panel-default",
 	"version": "0.0.1",
 	"title": "Xtyle Panel (default)",
@@ -11,7 +11,7 @@
 		"component.panel": [
 			{
 				"id": "panel",
-				"format": "text/html+jsml",
+				"format": "application/x-xtyle+html",
 				"source": "panel.html",
 				"handlers": [{ "selector": ".xtyle-panel__toggle", "on": "click", "handler": "togglePanel" }],
 				"meta": {

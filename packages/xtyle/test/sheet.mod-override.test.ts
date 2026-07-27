@@ -20,8 +20,8 @@ import { manifest } from "../src/elements/fragments/sheet/source.generated.js";
  */
 const railMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-sheet-rail",
 		version: "0.0.1",
 		title: "test-sheet-rail",
@@ -29,7 +29,7 @@ const railMod = {
 		capabilities: ["xtyle.component.sheet"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.sheet": [{ id: "sheet", format: "text/html+jsml", source: "sheet.html" }],
+			"component.sheet": [{ id: "sheet", format: "application/x-xtyle+html", source: "sheet.html" }],
 		},
 	},
 	fragmentSources: {

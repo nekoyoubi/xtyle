@@ -11,6 +11,17 @@
 		editable?: boolean;
 		/** Whether the source view is open. Bindable, so a toggle click flows back. */
 		editing?: boolean;
+		/**
+		 * Render the source's HTML instead of escaping it to text, for markdown whose origin the app
+		 * controls. Still floored by the fragment format's vocabulary — scripts, event handlers, and
+		 * undeclared elements are refused regardless; standard HTML and xtyle's own components survive.
+		 */
+		allowHtml?: boolean;
+		/**
+		 * Also process BBCode, so one document can carry both languages. `true` reaches the whole
+		 * BBCode registry; a string names a vocabulary.
+		 */
+		processBbcode?: boolean | string;
 		/** The source changed in the editor; `event.detail.source` carries the markdown. */
 		oninput?: (event: CustomEvent<{ source: string }>) => void;
 		children?: Snippet;
@@ -23,6 +34,8 @@
 		inline = false,
 		editable = false,
 		editing = $bindable(false),
+		allowHtml = false,
+		processBbcode = false,
 		oninput,
 		children,
 		...rest
@@ -56,6 +69,8 @@
 	inline={inline || undefined}
 	editable={editable || undefined}
 	editing={editing || undefined}
+	allow-html={allowHtml || undefined}
+	process-bbcode={processBbcode === true ? "" : processBbcode || undefined}
 	oninput={handleInput}
 	use:trackEditing
 >

@@ -142,7 +142,7 @@ export class XtyleRedact extends XtyleElement {
 			interactive: this.interactive,
 			blur: amount === null ? null : `${Number(amount) || 0}px`,
 			cue,
-			// a blur says "I'm interactive" on its own; a block or a mask is an opaque wall, so it earns a hint
+			// INFO: a blur reads as interactive on its own; a block or mask is opaque, so it earns a reveal hint
 			showCue: cue != null || (this.interactive && this.mode !== "blur"),
 			coverLabel,
 			contentHidden: !revealed,
@@ -170,7 +170,6 @@ export class XtyleRedact extends XtyleElement {
 			return;
 		}
 		if (name === "reveal") {
-			// the trigger changed under us: drop whatever the old trigger had latched, then re-wire
 			this.hovering = this.holding = this.toggled = false;
 			this.teardownCover();
 		}
@@ -232,7 +231,7 @@ export class XtyleRedact extends XtyleElement {
 	private onHoldStart = (event: PointerEvent): void => {
 		event.preventDefault();
 		this.holding = true;
-		// the release can land anywhere once the pointer is down, so catch it on the document
+		// INFO: pointer release can land outside the cover once the pointer is down, so listen on the window
 		window.addEventListener("pointerup", this.onHoldEnd);
 		window.addEventListener("pointercancel", this.onHoldEnd);
 		this.syncRevealed();

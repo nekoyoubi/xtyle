@@ -25,7 +25,7 @@ motion, self-hosted fonts, chrome hidden, theme seeded per-algorithm via
 
 ## Leg 1 — visual regression (`specs/demos.spec.ts`)
 
-Screenshots each of the 83 live demos (`apps/site/src/components/demos/*.astro`)
+Screenshots each of the 85 live demos (`apps/site/src/components/demos/*.astro`)
 under all five baked algorithms (`xtyle-default`, `xtyle-hc`, `xtyle-quiet`,
 `xtyle-loud`, `nxi-nite`) and diffs against a committed baseline in
 `specs/__baselines__/<algorithm>/<id>.png`. Because the demos are comprehensive

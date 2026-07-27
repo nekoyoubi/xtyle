@@ -56,7 +56,6 @@ const binder: TreeNode[] = [
 		label: "Chapter 1",
 		value: "ch1",
 		expanded: true,
-		// a live word count plus a distinct, toned drift pill — two trailing badges, each its own color
 		badge: ["1,204", { text: "3", tone: "warn" }],
 		children: [
 			{
@@ -64,8 +63,6 @@ const binder: TreeNode[] = [
 				value: "ch1-1",
 				selected: true,
 				badge: "512",
-				// a positional move cluster: "up" is disabled on the first sibling (greyed, not omitted,
-				// so the button count stays stable row to row)
 				actions: [
 					{ id: "up", label: "Move up", icon: "↑", disabled: true },
 					{ id: "down", label: "Move down", icon: "↓" },
@@ -143,12 +140,11 @@ const live: TreeNode[] = [
 
 <script>
 	import "@xtyle/core/elements";
-	// Row actions fire tree-action; a real app would rename/delete here. Flash the row for the demo.
 	document.addEventListener("tree-action", (event) => {
 		const tree = event.target as HTMLElement | null;
 		if (!tree?.classList?.contains("binder")) return;
 		const { value } = (event as CustomEvent<{ value: string; action: string }>).detail;
-		// Light-DOM (Astro) mode has no shadow root; the rows live directly under the element.
+		// INFO: Astro/light-DOM mode has no shadow root; rows live directly under the element
 		const root: ParentNode = tree.shadowRoot ?? tree;
 		const row = root.querySelector(`[data-value="${value}"] .xtyle-tree__row`) as HTMLElement | null;
 		if (row) {
@@ -169,9 +165,6 @@ const live: TreeNode[] = [
 	const liveTree = document.querySelector("xtyle-tree.live") as LiveTree | null;
 	const counts: Record<string, number> = { "act1-1": 512, "act1-2": 692, "act2-1": 640 };
 
-	// The feed keeps declaring `expanded` / `selected` on every push, exactly as a real data source
-	// would. Those flags only seed a node the tree has never seen before, so a branch the user
-	// collapsed stays collapsed no matter how many times the counts land.
 	function manuscript(): LiveNode[] {
 		return [
 			{

@@ -11,16 +11,8 @@ import { buildMatrix } from "./matrix.js";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const ALGORITHM_IDS = ["xtyle-default", "xtyle-hc", "xtyle-quiet", "xtyle-loud", "nxi-nite"] as const;
 
-// These assert byte-identical output, not speed: run the sandbox with a generous wall-clock
-// rail and a generous per-test timeout so correctness never depends on how busy the machine is.
 const HOST_TIMEOUT_MS = 60_000;
 
-// The hosted byte-identical proof is by far the slowest thing in the suite: every case crosses the
-// QuickJS sandbox, where the same derivation math runs ~30× slower than baked (~1.3s vs ~35ms). It's
-// a production-push guarantee, so `full` runs the whole matrix across all three projections
-// (register / lineage / deriveTraced). `standard` keeps an even-spread sample as a heavier local
-// gate. Routine (`quick` / unset) drops to a single byte-identical smoke per algorithm — enough to
-// catch a baked↔hosted divergence early without paying the sandbox tax on every save.
 const DEPTH = process.env.XTYLE_GAUNTLET_DEPTH;
 const full = DEPTH === "full";
 const heavy = full || DEPTH === "standard";
@@ -85,9 +77,6 @@ for (const id of ALGORITHM_IDS) {
 	});
 }
 
-// The browser-delivery bundle resolves the same mods through the same host, sourced from the embedded
-// data instead of disk, so it inherits the byte-identical guarantee. A single smoke per algorithm proves
-// the bundle data is valid and the filesystem-free resolver is wired; the disk path above is the deep proof.
 describe("browser bundle resolver", () => {
 	const smoke = matrix[0]!.opts;
 
@@ -106,9 +95,6 @@ describe("browser bundle resolver", () => {
 		await expect(resolveBundledAlgorithm("not-a-mod")).rejects.toThrow(/no bundled mod/);
 	});
 
-	// This resolver used to take no options at all, so it always ran on the 5s production rail no
-	// matter what the caller asked for — and a byte-identity test racing that rail fails as
-	// `InvokeError: interrupted`, which reads as a derivation divergence rather than a busy machine.
 	it("honors a raised rail, clamps it, and caches per rail", async () => {
 		const [a, b] = await Promise.all([
 			resolveBundledAlgorithm("xtyle-default", { timeoutMs: HOST_TIMEOUT_MS }),
@@ -116,11 +102,9 @@ describe("browser bundle resolver", () => {
 		]);
 		expect(a).toBe(b);
 
-		// Above the ceiling is clamped rather than honored, so the cache key space stays {default, harness}
 		const clamped = await resolveBundledAlgorithm("xtyle-default", { timeoutMs: HARNESS_TIMEOUT_MS * 10 });
 		expect(clamped).toBe(a);
 
-		// ...and the default rail keeps its own slot, so a harness load never displaces production's
 		const production = await resolveBundledAlgorithm("xtyle-default");
 		expect(production).not.toBe(a);
 		expect(snapshotBundledAlgorithm("xtyle-default")).toBe(production);

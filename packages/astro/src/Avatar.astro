@@ -53,8 +53,6 @@ const bindings = {
 	src: src ?? null,
 	alt,
 	userName: userName ?? null,
-	// Resolved here rather than left to the slot: the initials are real content, and this is the
-	// layer that knows whether the consumer supplied any of their own.
 	initials: bodyHtml.trim() ? "" : avatarInitials(userName),
 	tone,
 	size,

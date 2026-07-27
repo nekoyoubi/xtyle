@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines <xtyle-markdown> on the happy-dom registry
 import "../src/elements/markdown.js";
 import { loadFill } from "../src/elements/fragment-host.js";
 import { manifest, fragmentSources } from "../src/elements/fragments/markdown/source.generated.js";
@@ -10,6 +9,7 @@ type MarkdownEl = HTMLElement & {
 	inline: boolean;
 	editable: boolean;
 	editing: boolean;
+	allowHtml: boolean;
 };
 
 beforeAll(async () => {
@@ -60,11 +60,100 @@ describe("rendering", () => {
 		expect(painted.textContent).toContain("<script>");
 	});
 
+	/**
+	 * The gap a real defect shipped through. There are **two** allowlists on the way to the DOM — the
+	 * renderer's, and the one the fragment format declares in `component-host.json` — and the fragment
+	 * one runs last, in host code, silently. `tel:` passed every renderer test in the suite and still
+	 * lost its `href` in the paint, because the declared format named no schemes and inherited xript's
+	 * default four. Asserting at the renderer proves nothing about what the component does; this asserts
+	 * at the paint, which is the only place the two lists have to agree.
+	 */
+	it("keeps every scheme the renderer allows through the fragment sanitizer too", () => {
+		const survives: [string, string][] = [
+			["https", "https://ok.example/a"],
+			["http", "http://ok.example"],
+			["mailto", "mailto:a@b.example"],
+			["tel", "tel:+15551234"],
+			["relative", "/docs/page"],
+			["anchor", "#section"],
+		];
+		for (const [name, url] of survives) {
+			const el = make({ source: `[${name}](${url})` });
+			expect(body(el)?.querySelector("a")?.getAttribute("href"), name).toBe(url);
+		}
+	});
+
+	it("keeps a data:image src through the fragment sanitizer", () => {
+		const el = make({ source: `![a](data:image/png;base64,iVBORw0KGgo=)` });
+		expect(body(el)?.querySelector("img")?.getAttribute("src")).toBe("data:image/png;base64,iVBORw0KGgo=");
+	});
+
 	it("drops a javascript: href but keeps the text", () => {
 		const el = make({ source: `[click](javascript:alert(1))` });
 		const a = body(el)?.querySelector("a");
 		expect(a?.hasAttribute("href")).toBe(false);
 		expect(a?.textContent).toBe("click");
+	});
+});
+
+/**
+ * `allow-html` is opt-in *in the markup*, which is the disclosure model: no mode to infer, no config
+ * to inherit. And it is floored rather than open — the body is painted through the fragment op, so
+ * the format declared in `component-host.json` gets the last word on what may exist. These assert the
+ * floor as much as the option, because the floor is what makes the option defensible.
+ */
+describe("allow-html", () => {
+	it("escapes the source's HTML until asked not to", () => {
+		expect(body(make({ source: `<mark>x</mark>` }))?.querySelector("mark")).toBeNull();
+		expect(body(make({ "allow-html": "", source: `<mark>x</mark>` }))?.querySelector("mark")).not.toBeNull();
+	});
+
+	/** The reason the option is worth having: a document can carry a component and have it theme like
+	 * any other, because xtyle's own elements are in the format's declared vocabulary. */
+	it("renders xtyle components declared in the vocabulary", () => {
+		const el = make({ "allow-html": "", source: `<xtyle-badge tone="danger">new</xtyle-badge>` });
+		expect(body(el)?.querySelector("xtyle-badge")?.getAttribute("tone")).toBe("danger");
+	});
+
+	it("refuses what the vocabulary never declared, option or not", () => {
+		const script = make({ "allow-html": "", source: `<script>alert(1)</` + `script>` });
+		expect(body(script)?.querySelector("script")).toBeNull();
+		const frame = make({ "allow-html": "", source: `<iframe src="https://ok.example"></iframe>` });
+		expect(body(frame)?.querySelector("iframe")).toBeNull();
+		const unknown = make({ "allow-html": "", source: `<my-widget>x</my-widget>` });
+		expect(body(unknown)?.querySelector("my-widget")).toBeNull();
+	});
+
+	it("strips an event handler off an element it does allow", () => {
+		const el = make({ "allow-html": "", source: `<xtyle-badge onclick="alert(1)">x</xtyle-badge>` });
+		expect(body(el)?.querySelector("xtyle-badge")?.hasAttribute("onclick")).toBe(false);
+	});
+
+	it("marks the body so the choice is visible where the markup landed", () => {
+		expect(body(make({ "allow-html": "", source: `<mark>x</mark>` }))?.getAttribute("data-allow-html")).toBe("true");
+		expect(body(make({ source: "x" }))?.hasAttribute("data-allow-html")).toBe(false);
+	});
+
+	it("clears the mark and re-escapes when the attribute goes away", () => {
+		const el = make({ "allow-html": "", source: `<mark>x</mark>` });
+		el.allowHtml = false;
+		expect(body(el)?.hasAttribute("data-allow-html")).toBe(false);
+		expect(body(el)?.querySelector("mark")).toBeNull();
+	});
+
+	/**
+	 * The element's own seed paint is the one write that never meets the fragment vocabulary, and
+	 * `innerHTML` is enough to fire an `<img onerror>`. So it declines to paint rather than putting
+	 * markup nothing vetted into the DOM for the tick before the fill mounts.
+	 */
+	it("never seeds the body itself while the option is set", () => {
+		const el = document.createElement("xtyle-markdown") as MarkdownEl;
+		el.setAttribute("allow-html", "");
+		el.setAttribute("source", `<img src=x onerror="alert(1)">`);
+		document.body.appendChild(el);
+		for (const img of Array.from(root(el).querySelectorAll("img"))) {
+			expect(img.hasAttribute("onerror")).toBe(false);
+		}
 	});
 });
 

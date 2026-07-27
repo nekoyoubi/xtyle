@@ -1,6 +1,6 @@
 {
-	"$schema": "https://xript.dev/schema/mod/v0.7.json",
-	"xript": "0.7",
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
 	"name": "xtyle-icon-default",
 	"version": "0.0.1",
 	"title": "Xtyle Icon (default)",
@@ -11,7 +11,7 @@
 		"component.icon": [
 			{
 				"id": "icon",
-				"format": "text/html+jsml",
+				"format": "application/x-xtyle+html",
 				"source": "icon.html",
 				"meta": {
 					"tokens": []

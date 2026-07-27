@@ -46,8 +46,6 @@
 
 	let el: HTMLElement | undefined = $state();
 
-	// the menu closes on paths the binding never sees (a light dismiss, a chosen row), so `open` follows the
-	// element rather than the element following `open`
 	$effect(() => {
 		const node = el;
 		if (!node) return;

@@ -64,7 +64,6 @@ const bindings = {
 };
 const light = await renderFragmentLight("radio", bindings);
 const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : null;
-// the label slot carries the `label` text as its fallback; a consumer's slotted label replaces it
 const composed = slotHtml !== null ? light.replace(/<slot>[\s\S]*?<\/slot>/, () => slotHtml) : light.replace(/<slot>([\s\S]*?)<\/slot>/, "$1");
 ---
 

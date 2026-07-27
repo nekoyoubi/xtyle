@@ -6,7 +6,7 @@
 
 A **themable-derivation engine and component contract**. Hand it an *algorithm* and a few
 pinned colors and it derives a full, internally-consistent design-token set; on top of those
-tokens ships a library of **82 components** that read their styling straight from it.
+tokens ships a library of **91 components** that read their styling straight from it.
 
 ```sh
 npm install @xtyle/core
@@ -29,25 +29,25 @@ npm install @xtyle/core
 
 ## Components
 
-**82 components across 10 categories**, all styled purely by the design tokens an algorithm
+**91 components across 10 categories**, all styled purely by the design tokens an algorithm
 derives (no per-component color, no magic numbers). Drop a derived theme on `:root` and every
 component themes with it.
 
 | category | what's in it |
 |---|---|
 | **shell** | the app frame: `app-shell`, `mobile-shell`, `toolbar`, `dock`, `panel`, `statusbar`, `bottom-nav` |
-| **layout** | primitives that arrange everything: `stack`, `cluster`, `grid`, `section`, `splitter`, `separator`, and more |
-| **control** | things people click, toggle, drag: `button`, `split-button`, `switch`, `checkbox`, `radio`, `slider`, `segmented`, `rating` |
-| **form** | fields and the structure that binds them: `field`, `select`, `textarea`, `combobox`, `number-input`, `date-picker`, `color-picker`, `dropzone`, `form-group` |
+| **layout** | primitives that arrange everything: `stack`, `cluster`, `grid`, `section`, `splitter`, `separator`, `theme-scope`, and more |
+| **control** | things people click, toggle, drag: `button`, `split-button`, `switch`, `checkbox`, `radio`, `slider`, `segmented`, `rating`, `scheme-toggle` |
+| **form** | fields and the structure that binds them: `field`, `select`, `textarea`, `combobox`, `number-input`, `date-picker`, `color-picker`, `theme-picker`, `dropzone`, `form-group` |
 | **navigation** | paths between views: `tabs`, `breadcrumb`, `link`, `menu`, `pagination`, `command-palette`, `tree`, `toc` |
 | **feedback** | signals of what's happening: `alert`, `progress`, `spinner`, `skeleton`, `toast`, `steps`, `empty` |
 | **overlay** | layers above the page: `dialog`, `sheet`, `popover`, `tooltip`, `spotlight`, `tour` |
-| **content** | shapes that carry words and structured detail: `heading`, `text`, `card`, `code`, `table`, `accordion`, `kbd` |
-| **media** | the visual pieces: `icon`, `image`, `avatar`, `avatar-group`, `badge`, `hero`, `carousel`, `parallax` |
+| **content** | shapes that carry words and structured detail: `heading`, `text`, `code`, `table`, `kbd`, `list`, `markdown`, `bbcode`, `timeline`, `eyebrow`, `redact`, `theme-card`, `theme-swatch` |
+| **media** | the visual pieces: `icon`, `image`, `avatar`, `avatar-group`, `badge`, `hero`, `carousel`, `parallax`, `nine-patch` |
 | **metrics** | numbers at a glance: `chart`, `bar`, `pie`, `sparkline`, `heatmap`, `stat` |
 
-Counts by category: form 10, layout 9, feedback 9, control 9, overlay 8, navigation 8, media
-8, content 8, shell 7, metrics 6. See [xtyle.dev](https://xtyle.dev) for the live reference and
+Counts by category: content 13, form 11, control 10, layout 10, feedback 9, media 9, navigation
+8, overlay 8, shell 7, metrics 6. See [xtyle.dev](https://xtyle.dev) for the live reference and
 every component's full manifest.
 
 ### Raw custom elements
@@ -139,7 +139,7 @@ import { apply } from "@xtyle/core/dom";
 apply(register, { persistKey: "theme" });
 ```
 
-**`xtyle-default` produces ~299 tokens** across seven dimensions: color, a literal 12-hue
+**`xtyle-default` produces ~310 tokens** across seven dimensions: color, a literal 12-hue
 palette, type, geometry, motion, elevation, and space. The scheme (light / dark) auto-derives
 from `--bg-0` lightness; surfaces step monotonically; on-fill text is swept to clear AA
 against its pairing.
@@ -158,6 +158,26 @@ module with its own declared invariants:
 How the accent family relates to `--accent` is a **knob, not an algorithm**: `accentStrategy`
 (`fan` / `step` / `shade` / `duo`) reshapes `--accent-2/3/4` against any of the five. `duo`
 takes a second brand color and shades the pair.
+
+## Effects
+
+An **effect** is a verb: a behavior applied to any element under a condition, addressed by a
+spec string in the same name-is-its-spec shape as an icon name. Set it with a `data-fx`
+attribute; it emits plain attribute-selector CSS and needs no runtime.
+
+```html
+<xtyle-button data-fx="glow@hover">Save</xtyle-button>
+<xtyle-card data-fx="throb?rate:3s,colors:[accent,accent-2]">…</xtyle-card>
+```
+
+Nine effects ship (`glow`, `throb`, `glare`, `lift`, `tint`, `frost`, `reveal`, `shake`,
+`saturate`) over eight conditions (`hover`, `focus`, `active`, `checked`, `disabled`, `open`,
+`invalid`, `armed`). Their intensity derives from five shared `--fx-*` tokens, so it is the
+algorithm's policy, and reduced-motion suppression is handled once by the library. The library
+is last-wins on the name, so a mod replaces one effect or adds a new one without restating the
+rest. Programmatic access lives on `@xtyle/core`: `registerEffect`, `registerCondition`,
+`listEffects`, `effectsCss`, `fxStyle`, and `EFFECT_TOKENS`. The effect layer is not yet
+surfaced via the CLI or MCP.
 
 ## CLI
 
@@ -190,11 +210,11 @@ rather than from memory.
 
 | import | what it is |
 |---|---|
-| `@xtyle/core` | the neutral engine: `derive`, `emit`, `coverage`, `gauntlet`, color and graph helpers. No `node:*`, no DOM globals. |
+| `@xtyle/core` | the neutral engine: `derive`, `emit`, `coverage`, `gauntlet`, the effect layer (`registerEffect`, `listEffects`, `effectsCss`, `fxStyle`, `EFFECT_TOKENS`), color and graph helpers. No `node:*`, no DOM globals. |
 | `@xtyle/core/algorithms` | the five blessed algorithms plus a re-export of the engine, so the whole derive path is one import. |
 | `@xtyle/core/elements` | the raw custom-element library (barrel registers all); `./elements/<id>.js` for one; `./elements/ssr` for server rendering. |
 | `@xtyle/core/dom` | browser helpers (`apply`, `clear`, `persist`, `restore`, `toStyleSheet`) that write tokens to a live `:root`. |
-| `@xtyle/core/css` | the component and utility CSS as strings (`componentsCss`, `utilitiesCss`, and per-component exports). |
+| `@xtyle/core/css` | the component, utility, and effect CSS as strings (`componentsCss`, `utilitiesCss`, `effectsCss`, and per-component exports). |
 | `@xtyle/core/authoring` | `defineXtyleAlgorithm` / `defineAlgorithm` for writing your own algorithm. |
 | `@xtyle/core/concepts` | the concept documentation the reference site and MCP server read. |
 | `xtyle` (bin) | the Node CLI. |

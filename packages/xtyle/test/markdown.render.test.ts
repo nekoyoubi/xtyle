@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 import { renderMarkdown, renderMarkdownInline } from "../src/markup/markdown.js";
+import { parseSchemeList } from "../src/markup/uri.js";
 
 /**
  * The markdown renderer ships **no sanitizer**, which is a claim that has to be earned rather than
@@ -10,7 +11,8 @@ import { renderMarkdown, renderMarkdownInline } from "../src/markup/markdown.js"
  *
  * These tests exist to keep that true. Two of the three guards are one-line deletions away from
  * being gone (the `html` renderer override, the `safeUrl` calls) and nothing else in the system
- * would notice.
+ * would notice. The escaping is now also *deliberately* liftable, by name, via `allowHtml` — so the
+ * corpus below is what proves the default did not move when the option landed.
  *
  * **They audit a real parsed DOM, not the string.** Writing them against the output text was tried
  * and is a trap: a regex for `onerror` matches just as happily inside `&lt;img onerror=…&gt;`, which
@@ -242,5 +244,79 @@ describe("empty input", () => {
 		expect(renderMarkdown("")).toBe("");
 		expect(renderMarkdown("   \n  ")).toBe("");
 		expect(renderMarkdownInline("")).toBe("");
+	});
+});
+
+/**
+ * `allowHtml` renders the source's markup rather than escaping it. At *this* layer that is genuinely
+ * open — a caller putting the string into `innerHTML` owns the result — so what these assert is the
+ * blast radius: that it renders when asked, that it stays off when not, and above all that it does
+ * not quietly widen the *other* guard, since a URL is not markup and the two lists are separate.
+ */
+describe("allowHtml", () => {
+	const render = (md: string, options?: Parameters<typeof renderMarkdown>[1]): HTMLElement => {
+		const host = document.createElement("div");
+		host.innerHTML = renderMarkdown(md, options);
+		return host;
+	};
+
+	it("renders the source's HTML as markup", () => {
+		expect(render(`<mark id="live">kept</mark>`, { allowHtml: true }).querySelector("mark")?.id).toBe("live");
+	});
+
+	it("renders it in the inline mode too", () => {
+		const host = document.createElement("div");
+		host.innerHTML = renderMarkdownInline(`a <kbd>Ctrl</kbd> label`, { allowHtml: true });
+		expect(host.querySelector("kbd")?.textContent).toBe("Ctrl");
+	});
+
+	/** Markup and URLs are separate decisions: rendering the author's HTML says nothing about where a
+	 * *markdown* link may point, so the scheme allowlist is untouched by it. */
+	it("does not widen the URL allowlist", () => {
+		expect(render(`[click](javascript:alert(1))`, { allowHtml: true }).querySelector("a")?.hasAttribute("href")).toBe(false);
+	});
+
+	/**
+	 * Renderers are cached per mode, which is the one way this could go quietly wrong: an `allowHtml`
+	 * render leaving a shared instance behind would make every later default render permissive, and
+	 * nothing else in the system would notice.
+	 */
+	it("does not contaminate the default render", () => {
+		renderMarkdown(`<mark>live</mark>`, { allowHtml: true });
+		expect(render(`<mark>escaped</mark>`).querySelector("mark")).toBeNull();
+		expect(render(`<mark>escaped</mark>`, { allowHtml: false }).querySelector("mark")).toBeNull();
+	});
+});
+
+describe("nothing rides the allowlist that was not named", () => {
+	const refuses = (md: string): void => {
+		const host = document.createElement("div");
+		host.innerHTML = renderMarkdown(md);
+		const el = host.querySelector("a, img");
+		expect(el?.hasAttribute("href") || el?.hasAttribute("src")).toBe(false);
+	};
+
+	/** A host protocol is a decision for the app that serves it, so none of these are on the list
+	 * until an app calls `allowUriSchemes`. */
+	it("asset:", () => refuses(`[x](asset://localhost/f)`));
+	it("tauri:", () => refuses(`[x](tauri://localhost/f)`));
+	it("blob:", () => refuses(`[x](blob:https://h/1)`));
+	it("file:", () => refuses(`[x](file:///etc/hosts)`));
+	it("image asset:", () => refuses(`![x](asset://localhost/i.png)`));
+});
+
+describe("parseSchemeList", () => {
+	it("normalizes names, drops the colon, and sorts", () => {
+		expect(parseSchemeList("Tauri:, asset ,,")).toEqual(["asset", "tauri"]);
+	});
+
+	it("takes an array as readily as a string", () => {
+		expect(parseSchemeList(["asset", "asset:"])).toEqual(["asset"]);
+	});
+
+	it("reads nothing as nothing", () => {
+		expect(parseSchemeList("")).toEqual([]);
+		expect(parseSchemeList(undefined)).toEqual([]);
+		expect(parseSchemeList(null)).toEqual([]);
 	});
 });

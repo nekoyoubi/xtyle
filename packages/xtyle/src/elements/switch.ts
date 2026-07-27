@@ -19,7 +19,7 @@ export class XtyleSwitch extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["checked", "disabled", "size", "tone", "shape", "orientation", "reverse", "label-side", "label", "labelledby", "on-label", "off-label", "name", "value"];
+		return ["checked", "disabled", "size", "tone", "shape", "orientation", "reverse", "label-side", "label", "labelledby", "on-label", "off-label", "label-on", "label-off", "name", "value"];
 	}
 
 	constructor() {
@@ -108,16 +108,23 @@ export class XtyleSwitch extends XtyleElement {
 			labelSide: this.labelSide,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
-			onLabel: this.getAttribute("on-label"),
-			offLabel: this.getAttribute("off-label"),
+			onLabel: this.stateLabel("on"),
+			offLabel: this.stateLabel("off"),
 			elementId: this.elementId,
 		};
+	}
+
+	/** `on-label`/`off-label` are the original host-side names. A fragment can't declare a prop
+	 * matching /^on/ — that shape is reserved for declarative event binding — so `label-on` and
+	 * `label-off` are the fragment-facing spellings. Both are read; the newer name wins. */
+	private stateLabel(side: "on" | "off"): string | null {
+		return this.getAttribute(`label-${side}`) ?? this.getAttribute(`${side}-label`);
 	}
 
 	/** Structural state ops can't patch incrementally: the `disabled` boolean attr and whether
 	 * the label / state spans exist. A change here rebuilds; a `checked` toggle is a cheap patch. */
 	private shapeSignature(): string {
-		const hasState = this.getAttribute("on-label") != null || this.getAttribute("off-label") != null;
+		const hasState = this.stateLabel("on") != null || this.stateLabel("off") != null;
 		return `${this.disabled}|${this.getAttribute("label") != null}|${hasState}`;
 	}
 
@@ -130,11 +137,11 @@ export class XtyleSwitch extends XtyleElement {
 		const hasName =
 			this.getAttribute("labelledby") ||
 			this.getAttribute("label") ||
-			this.getAttribute("on-label") ||
-			this.getAttribute("off-label");
+			this.stateLabel("on") ||
+			this.stateLabel("off");
 		if (!hasName) {
 			console.warn(
-				"xtyle-switch: no accessible name. Provide a `label`, `labelledby`, or `on-label`/`off-label` so the toggle is announced.",
+				"xtyle-switch: no accessible name. Provide a `label`, `labelledby`, or `label-on`/`label-off` so the toggle is announced.",
 			);
 		}
 	}

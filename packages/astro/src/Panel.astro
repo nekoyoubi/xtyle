@@ -1,7 +1,7 @@
 ---
 import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
-import { PANEL_VARIANTS, resolveVocab } from "@xtyle/core";
+import { PANEL_VARIANTS, resolveVocab, iconBody } from "@xtyle/core";
 
 type PanelVariant = (typeof PANEL_VARIANTS)[number];
 
@@ -11,6 +11,8 @@ interface Props {
 	label?: string;
 	level?: 1 | 2 | 3 | 4 | 5 | 6;
 	variant?: PanelVariant;
+	/** The roster glyph drawn as the collapsible header's marker. */
+	markerIcon?: string;
 	open?: boolean;
 	scroll?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
@@ -25,6 +27,7 @@ const {
 	label,
 	level = 2,
 	variant: variantInput,
+	markerIcon,
 	open = false,
 	scroll = false,
 	static: isStatic = false,
@@ -46,6 +49,8 @@ const bindings = {
 	hasActions,
 	titleId,
 	label: label ?? null,
+	markerIcon: markerIcon ?? "chevron-right",
+	markerBody: iconBody(markerIcon ?? "chevron-right") ?? null,
 };
 const chrome = await renderFragmentLight("panel", bindings);
 const actionsHtml = hasActions ? await Astro.slots.render("actions") : "";
@@ -62,6 +67,7 @@ const composed = chrome
 	label={label}
 	level={level}
 	variant={variant}
+	marker-icon={markerIcon}
 	open={open || undefined}
 	scroll={scroll || undefined}
 	class={extra}

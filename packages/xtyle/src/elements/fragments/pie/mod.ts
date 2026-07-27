@@ -116,7 +116,7 @@ function pieHtml(b: PieBindings): string {
 			acc = end;
 			const percent = Math.round((d.value / total) * 100);
 			const fill = colors[i] ?? "currentColor";
-			// A lone full-circle slice can't be drawn as an arc (start == end); use a ring/disc.
+			// INFO: a full-circle slice can't be drawn as an arc (start == end); use a ring/disc
 			if (sweep >= 359.999) {
 				slices += donut
 					? `<circle class="xtyle-pie__slice" part="slice" cx="${CX}" cy="${CY}" r="${((R_OUT + rIn) / 2).toFixed(2)}" fill="none" stroke="${escapeAttr(fill)}" stroke-width="${(R_OUT - rIn).toFixed(2)}" data-i="${i}" tabindex="0" role="img" aria-label="${escapeAttr(`${d.label}: ${d.value} (${percent}%)`)}"></circle>`

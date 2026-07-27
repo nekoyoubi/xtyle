@@ -16,8 +16,8 @@ import { manifest } from "../src/elements/fragments/command-palette/source.gener
  */
 const listMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-command-palette-list",
 		version: "0.0.1",
 		title: "test-command-palette-list",
@@ -26,7 +26,7 @@ const listMod = {
 		entry: { script: "mod.js", format: "script" },
 		fills: {
 			"component.command-palette": [
-				{ id: "command-palette", format: "text/html+jsml", source: "command-palette.html" },
+				{ id: "command-palette", format: "application/x-xtyle+html", source: "command-palette.html" },
 			],
 		},
 	},

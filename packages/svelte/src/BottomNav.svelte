@@ -24,8 +24,7 @@
 
 	let el: HTMLElement | undefined = $state();
 
-	// `tabs` is structured data, so it rides the element's property rather than an attribute; the
-	// element re-renders its tablist off it.
+	// INFO: tabs is structured data, so it rides the element property rather than an attribute
 	$effect(() => {
 		if (!el) return;
 		(el as unknown as { tabs: BottomNavTab[] }).tabs = tabs;

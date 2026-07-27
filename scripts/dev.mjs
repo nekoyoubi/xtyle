@@ -30,8 +30,7 @@ if (!process.argv.includes("--no-build")) {
 	run("node", ["scripts/build-mods.mjs"]);
 }
 
-// Vite resolves the workspace packages once and holds them; a rebuilt `dist` behind a warm cache is
-// the same ghost by another name, so the cache goes with the rebuild.
+// INFO: Vite caches resolved workspace packages; a rebuilt dist behind a warm cache still serves stale, so clear it
 rmSync(join(root, "apps/site/node_modules/.vite"), { recursive: true, force: true });
 
 const child = spawn(npm, ["run", "dev", "--workspace=@xtyle/site"], {

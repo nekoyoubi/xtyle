@@ -104,7 +104,7 @@
   }
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
-    const body = hasIcon(name) ? ICONS[name] : MISSING;
+    const body = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
     const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
     const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
     const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
@@ -112,7 +112,10 @@
   }
 
   // packages/xtyle/src/elements/fragments/accordion/mod.ts
-  var CHEVRON = '<xtyle-icon class="xtyle-accordion__chevron" part="chevron" name="chevron-down" aria-hidden="true">' + renderIcon("chevron-down") + "</xtyle-icon>";
+  function chevron(bindings) {
+    const name = bindings.chevronIcon ?? "chevron-down";
+    return `<xtyle-icon class="xtyle-accordion__chevron" part="chevron" name="${escapeAttr(name)}" aria-hidden="true">` + renderIcon(name, { body: bindings.chevronBody }) + "</xtyle-icon>";
+  }
   function accordionClass(bindings) {
     const size = bindings.size ?? "md";
     return size === "md" ? "xtyle-accordion" : `xtyle-accordion xtyle-accordion--${size}`;
@@ -126,14 +129,19 @@
     const open = new Set(bindings.openKeys ?? []);
     const uid = bindings.uid ?? "xtyle-accordion";
     const level = headingLevel(bindings);
+    const chev = chevron(bindings);
     return sections.map((section, i) => {
       const key = section.value ?? String(i);
       const isOpen = open.has(key);
       const triggerId = `${uid}-h-${i}`;
       const panelId = `${uid}-p-${i}`;
-      const disabledAttr = section.disabled ? ' disabled aria-disabled="true"' : "";
+      const disabledAttr = section.disabled ? ' aria-disabled="true"' : "";
       const body = section.panelSlot ? `<slot name="${escapeAttr(section.panelSlot)}"></slot>` : section.panel ?? "";
-      return `<div class="xtyle-accordion__item${isOpen ? " is-open" : ""}" part="item" data-key="${key}"><h${level} class="xtyle-accordion__heading" part="heading"><button class="xtyle-accordion__trigger" part="trigger" type="button" id="${triggerId}" data-key="${key}" aria-expanded="${String(isOpen)}" aria-controls="${panelId}"${disabledAttr}><span class="xtyle-accordion__label">${escapeHtml(section.header)}</span>${CHEVRON}</button></h${level}><div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" aria-labelledby="${triggerId}"${isOpen ? "" : " hidden"}><div class="xtyle-accordion__content">${body}</div></div></div>`;
+      const bodyRegion = section.panelSlot ? ` data-slot="${escapeAttr(section.panelSlot)}"` : "";
+      const label = section.headerSlot ? `<slot name="${escapeAttr(section.headerSlot)}"></slot>` : escapeHtml(section.header);
+      const labelRegion = section.headerSlot ? ` data-slot="${escapeAttr(section.headerSlot)}"` : "";
+      const group = bindings.multiple ? "" : ` name="${escapeAttr(uid)}-group"`;
+      return `<details class="xtyle-accordion__item" part="item" data-key="${key}"${group}${isOpen ? " open" : ""}><summary class="xtyle-accordion__trigger" part="trigger" id="${triggerId}" data-key="${key}" aria-controls="${panelId}"${disabledAttr}><h${level} class="xtyle-accordion__heading" part="heading"><span class="xtyle-accordion__label"${labelRegion}>${label}</span></h${level}>${chev}</summary><div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" aria-labelledby="${triggerId}"><div class="xtyle-accordion__content"${bodyRegion}>${body}</div></div></details>`;
     }).join("");
   }
   hooks.fragment.mount("accordion", (bindings, ops) => {
@@ -144,29 +152,26 @@
     const open = new Set(bindings.openKeys ?? []);
     (bindings.sections ?? []).forEach((section, i) => {
       const key = section.value ?? String(i);
-      const isOpen = open.has(key);
-      ops.setAttr(`.xtyle-accordion__trigger[data-key="${key}"]`, "aria-expanded", String(isOpen));
-      ops.toggle(`.xtyle-accordion__panel[data-key="${key}"]`, isOpen);
-      if (isOpen) ops.addClass(`.xtyle-accordion__item[data-key="${key}"]`, "is-open");
-      else ops.removeClass(`.xtyle-accordion__item[data-key="${key}"]`, "is-open");
+      ops.setAttr(`.xtyle-accordion__item[data-key="${key}"]`, "open", open.has(key) ? "open" : "");
     });
   });
-  xript.exports.register("toggleSection", (payload, context) => {
+  xript.exports.register("guardDisabled", (payload) => {
+    const e = payload;
+    const blocked = e.disabled === true || e.ariaDisabled === "true";
+    return blocked ? { preventDefault: true } : {};
+  });
+  xript.exports.register("syncToggle", (payload, context) => {
     const e = payload;
     const ctx = context;
-    if (e.disabled || e.ariaDisabled === "true") return {};
     const key = e.dataset?.key;
     if (!key) return {};
+    const nowOpen = e.open === true;
     const open = new Set(ctx.openKeys ?? []);
-    const wasOpen = open.has(key);
-    if (ctx.multiple) {
-      if (wasOpen) open.delete(key);
-      else open.add(key);
-    } else {
-      open.clear();
-      if (!wasOpen) open.add(key);
-    }
-    return { open: [...open], toggledKey: key, isOpen: open.has(key) };
+    if (nowOpen) {
+      if (!ctx.multiple) open.clear();
+      open.add(key);
+    } else open.delete(key);
+    return { open: [...open], toggledKey: key, isOpen: nowOpen };
   });
   xript.exports.register("navKeydown", (payload, context) => {
     const e = payload;

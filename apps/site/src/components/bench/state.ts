@@ -1,5 +1,5 @@
 import type { Algorithm, Knobs, TokenRegister } from "@xtyle/core";
-import { migrateRecipe } from "@xtyle/core";
+import { migrateRecipe, contrast } from "@xtyle/core";
 
 export type SchemeKnob = "dark" | "light";
 export type ContrastBandKnob = "aa" | "aaa";
@@ -23,6 +23,7 @@ export interface BenchKnobs {
 	radiusScale?: number;
 	accentSplit?: number;
 	accentShiftStep?: number;
+	surfaceRamp?: number;
 	density?: DensityKnob;
 	hour?: number;
 	fontSans?: string;
@@ -109,8 +110,7 @@ function humanizeKnob(name: string): string {
 export function knobControls(algorithm: Algorithm, scheme: SchemeKnob): KnobControl[] {
 	const controls: KnobControl[] = [];
 	for (const spec of algorithm.knobSpecs) {
-		// A composite knob is a group the consumer assembles itself — the font stacks below, the anchor
-		// pickers in their own section — so it carries no single scalar control to render here.
+		// INFO: a composite knob is a group the consumer assembles itself (fonts, anchors), so it has no scalar control here
 		if (spec.kind === "composite") continue;
 		const cosmetic = KNOB_COSMETICS[spec.name] ?? {};
 		const control: KnobControl = {
@@ -231,13 +231,41 @@ export function anchorsToConstraints(a: BenchAnchors): TokenRegister {
 	return c;
 }
 
+/**
+ * Fold a recipe's legacy `anchors` into `overrides` so bg/fg/accent live in the one visible tier the
+ * pickers actually edit — there is no separate anchor tier anymore. An existing override wins over the
+ * folded anchor. The one heal: an anchor `fg` is a *friendly seed*, not a hard pin — if it was captured
+ * from a dark-theme default and now sits unreadably on the surface the theme actually set (a stored
+ * recipe that overrode `--bg-0` light but never touched fg), drop it so the foreground re-derives to the
+ * scheme. Only an anchor fg qualifies: an explicit `--fg-0` override is the real escape hatch and stays,
+ * and a readable fg stays as a visible override — so a neutral theme keeps its pinned surfaces rather
+ * than collapsing to an accent-washed one.
+ */
+export function foldLegacyAnchors(anchors: BenchAnchors, overrides: TokenRegister): TokenRegister {
+	const merged: TokenRegister = { ...anchorsToConstraints(anchors), ...overrides };
+	const fgFromAnchor = anchors.fg !== undefined && overrides["--fg-0"] === undefined;
+	const bg = merged["--bg-0"];
+	const fg = merged["--fg-0"];
+	if (fgFromAnchor && bg && fg && readableRatio(fg, bg) < 4.5) delete merged["--fg-0"];
+	return merged;
+}
+
+/** Contrast between two token color strings, or a safe "readable" fallback when either can't be parsed. */
+function readableRatio(fg: string, bg: string): number {
+	try {
+		const ratio = contrast(fg, bg);
+		return Number.isFinite(ratio) ? ratio : 21;
+	} catch {
+		return 21;
+	}
+}
+
 /** Build the `Knobs` payload `derive` consumes, omitting every unset knob so the engine applies its own default. */
 export function toDeriveKnobs(k: BenchKnobs): Knobs {
 	const out: Knobs = {};
 	const fonts: Record<string, string> = {};
-	// Every knob field maps to its own name on the derive payload; the three font stacks are the only
-	// ones that fold into a group. Copying by key (rather than a fixed whitelist) means a novel knob a
-	// custom algorithm declares beyond the `BenchKnobs` shape reaches `derive()` for free.
+	// INFO: copy by key (not a fixed whitelist) so a novel knob a custom algorithm declares beyond
+	// BenchKnobs still reaches derive(); the three font stacks are the only ones folded into a group
 	for (const [key, value] of Object.entries(k as Record<string, unknown>)) {
 		if (value === undefined || value === "") continue;
 		if (key === "fontSans") fonts.sans = value as string;
@@ -273,41 +301,42 @@ export function normalizeState(raw: unknown): BenchState {
 	const overrides = (r.overrides ?? r.pins ?? {}) as TokenRegister;
 	const normalized: BenchState = {
 		algorithm: retired.algorithm,
-		anchors: { ...anchors },
+		anchors: {},
 		knobs: { ...retired.knobs },
-		overrides: { ...overrides },
+		overrides: foldLegacyAnchors(anchors, { ...overrides }),
 	};
 	if (typeof r.customSpec === "string") normalized.customSpec = r.customSpec;
 	if (typeof r.customCode === "string") normalized.customCode = r.customCode;
 	return normalized;
 }
 
-/** A pasteable `derive(...)` invocation that reproduces the current state — only the layers actually set. */
-export function toInvocation(state: BenchState): string {
-	const a = state.anchors;
-	const anchorEntries = (["bg", "fg", "accent"] as const)
-		.filter((key) => a[key] !== undefined)
-		.map((key) => `${key}: ${JSON.stringify(a[key])}`);
-	const k = state.knobs;
-	const knobEntries = [
-		...(k.scheme ? [`scheme: ${JSON.stringify(k.scheme)}`] : []),
-		...(k.contrastBand ? [`contrastBand: ${JSON.stringify(k.contrastBand)}`] : []),
-		...(k.cues ? [`cues: ${JSON.stringify(k.cues)}`] : []),
-		...(k.vibrancy !== undefined ? [`vibrancy: ${k.vibrancy}`] : []),
-		...(k.typeScale !== undefined ? [`typeScale: ${k.typeScale}`] : []),
-		...(k.radiusScale !== undefined ? [`radiusScale: ${k.radiusScale}`] : []),
-		...(k.accentSplit !== undefined ? [`accentSplit: ${k.accentSplit}`] : []),
-		...(k.accentShiftStep !== undefined ? [`accentShiftStep: ${k.accentShiftStep}`] : []),
-		...(k.density ? [`density: ${JSON.stringify(k.density)}`] : []),
-		...(k.hour !== undefined ? [`hour: ${k.hour}`] : []),
-	];
+/** A knob value as a JS object-literal fragment: the `fonts` group prints with bare keys, every scalar
+ * as JSON. Fed the output of `toDeriveKnobs`, so the export lists exactly what derives — no per-knob
+ * whitelist to fall out of sync when a knob (blessed or novel) is added. */
+function knobLiteral(value: unknown): string {
+	if (value && typeof value === "object") {
+		const body = Object.entries(value as Record<string, unknown>)
+			.map(([key, v]) => `${key}: ${JSON.stringify(v)}`)
+			.join(", ");
+		return `{ ${body} }`;
+	}
+	return JSON.stringify(value);
+}
+
+/** A pasteable `derive(...)` invocation that reproduces the current state — only the layers actually set.
+ * A `name` prints as a leading comment so the snippet is self-identifying once copied out. */
+export function toInvocation(state: BenchState, name?: string): string {
+	const header = name?.trim() ? [`// ${name.trim().replace(/\r?\n/g, " ")}`, ""] : [];
+	const knobEntries = Object.entries(toDeriveKnobs(state.knobs)).map(
+		([key, value]) => `${key}: ${knobLiteral(value)}`,
+	);
 	const optionLines: string[] = [];
-	if (anchorEntries.length) optionLines.push(`  anchors: { ${anchorEntries.join(", ")} }`);
 	if (knobEntries.length) optionLines.push(`  knobs: { ${knobEntries.join(", ")} }`);
-	const overrideKeys = Object.keys(state.overrides);
+	const constraints = { ...anchorsToConstraints(state.anchors), ...state.overrides };
+	const overrideKeys = Object.keys(constraints);
 	if (overrideKeys.length) {
 		const body = overrideKeys
-			.map((key) => `    ${JSON.stringify(key)}: ${JSON.stringify(state.overrides[key])}`)
+			.map((key) => `    ${JSON.stringify(key)}: ${JSON.stringify(constraints[key])}`)
 			.join(",\n");
 		optionLines.push(`  constraints: {\n${body}\n  }`);
 	}
@@ -315,6 +344,7 @@ export function toInvocation(state: BenchState): string {
 	if (state.algorithm === CUSTOM_CODE_ALGORITHM) {
 		const codeBody = (state.customCode ?? "").trim();
 		return [
+			...header,
 			`import { derive, loadAuthoredAlgorithm } from "@xtyle/core";`,
 			``,
 			`const algorithm = await loadAuthoredAlgorithm(\``,
@@ -326,6 +356,7 @@ export function toInvocation(state: BenchState): string {
 	if (state.algorithm === CUSTOM_ALGORITHM) {
 		const specBody = (state.customSpec ?? "{}").trim();
 		return [
+			...header,
 			`import { derive } from "@xtyle/core";`,
 			`import { makeXtyleAlgorithm, toPreset } from "@xtyle/core/authoring";`,
 			``,
@@ -336,6 +367,7 @@ export function toInvocation(state: BenchState): string {
 		].join("\n");
 	}
 	return [
+		...header,
 		`import { derive } from "@xtyle/core";`,
 		`import { getAlgorithm } from "@xtyle/core/algorithms";`,
 		``,
@@ -373,8 +405,8 @@ export function encodeState(state: BenchState): string {
 		o: state.overrides,
 	};
 	if (state.customSpec !== undefined) payload.cs = state.customSpec;
-	// `customCode` is deliberately NOT serialized: a code payload must not travel to another viewer
-	// via a URL until the link schema is tier-tagged and forces the sandbox on open.
+	// SAFETY: customCode is deliberately not serialized — a code payload must not travel via URL until
+	// the link schema is tier-tagged and forces the sandbox on open
 	return base64Encode(JSON.stringify(payload));
 }
 

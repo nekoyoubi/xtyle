@@ -27,11 +27,13 @@ interface ModManifestShape {
 /**
  * What an algorithm says about itself: the tokens it produces, the knobs it reads and their domains,
  * how many invariants it evaluates, and the names of its passes. The value the `manifest` export
- * returns, and — byte for byte — the value {@link STATIC_MANIFEST_KEY} carries in the packaged mod
- * manifest.
+ * returns, and — byte for byte — the value the {@link STATIC_MANIFEST_SLOT} fill carries in the
+ * packaged mod manifest.
  */
 export interface AlgorithmManifest {
 	produces: TokenName[];
+	/** Per-token arrival versions. Absent tokens read as the {@link SINCE_FLOOR}. */
+	producedSince?: Readonly<Record<string, string>>;
 	categories: TokenCategories;
 	knobs: string[];
 	/** Present on mods built against the widened authoring surface; older/third-party mods omit it. */
@@ -41,24 +43,33 @@ export interface AlgorithmManifest {
 }
 
 /**
- * The key a packaged mod manifest carries its {@link AlgorithmManifest} under. A discovery surface —
- * an index listing an algorithm's knobs, a control rail rendering them — reads this instead of booting
- * a sandbox per algorithm, which is the difference between listing a hundred packs and running them.
+ * The host slot a packaged mod fills with its {@link AlgorithmManifest}. A discovery surface — an
+ * index listing an algorithm's knobs, a control rail rendering them — reads this instead of booting a
+ * sandbox per algorithm, which is the difference between listing a hundred packs and running them.
+ *
+ * It is a **data fill**: a slot whose `accepts` names a JSON media type rather than a markup format,
+ * so nothing renders and no fragment runtime is involved. That is xript's own answer for static
+ * mod-describing metadata, and it is why this is not a vendor key hung off the manifest root — a
+ * top-level `x-` block is rejected by `xript validate` (the mod-manifest schema is closed, in every
+ * published version), invisible to `--cross`, and reachable only by us. A slot with a `payload` schema
+ * is validated by the toolchain and is the same surface a third-party pack fills.
  *
  * The block is an *augmentation*, never a replacement: the `manifest` export stays the source of
  * truth, because an in-browser authored source loads under a synthesized manifest with no packaged
- * block to carry. A mod that ships one is checked against its own code at load time
+ * fill to carry. A mod that ships one is checked against its own code at load time
  * ({@link loadAlgorithm}), so a block that has drifted fails loudly rather than teaching a consumer to
  * render controls for knobs the algorithm no longer reads.
  */
-export const STATIC_MANIFEST_KEY = "x-xtyle";
+export const STATIC_MANIFEST_SLOT = "xtyle.pack-meta";
 
 /**
  * The {@link AlgorithmManifest} a packaged mod manifest declares, without executing the mod. `null`
  * when the mod ships no block — the manifest is then only readable by running it.
  */
 export function staticAlgorithmManifest(modManifest: unknown): AlgorithmManifest | null {
-	const block = (modManifest as Record<string, unknown> | null | undefined)?.[STATIC_MANIFEST_KEY];
+	const fills = (modManifest as { fills?: Record<string, unknown> } | null | undefined)?.fills;
+	const declared = fills?.[STATIC_MANIFEST_SLOT];
+	const block = Array.isArray(declared) ? declared[0] : declared;
 	return isAlgorithmManifest(block) ? block : null;
 }
 
@@ -101,7 +112,7 @@ function crossCheckStaticManifest(claimed: AlgorithmManifest, actual: AlgorithmM
 	const drifted = CHECKED_FIELDS.filter((field) => !sameValue(claimed[field], actual[field]));
 	if (drifted.length === 0) return;
 	throw new Error(
-		`xtyle: algorithm "${id}" declares a "${STATIC_MANIFEST_KEY}" block that does not match what its code reports ` +
+		`xtyle: algorithm "${id}" declares a "${STATIC_MANIFEST_SLOT}" fill that does not match what its code reports ` +
 			`(${drifted.join(", ")}). Rebuild the mod so the declared block matches its manifest() export.`,
 	);
 }
@@ -187,7 +198,7 @@ export interface LoadAuthoredOptions extends LoadAlgorithmOptions {
  *  authoring helpers register, gated by the same `color-math` capability the blessed mods use. */
 function authoredManifest(name: string): unknown {
 	return {
-		xript: "0.7",
+		xript: "0.8",
 		name,
 		version: "0.0.0",
 		capabilities: ["color-math"],
@@ -249,7 +260,7 @@ export async function loadAlgorithm(
 ): Promise<Algorithm> {
 	const xript = await factory();
 	const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-	// the runtime's effective rail is min(manifest limit, hard cap), so raise both in lockstep.
+	// INFO: the runtime's effective timeout is min(manifest limit, hard cap), so both must move together
 	const runtimeManifest =
 		options.timeoutMs === undefined
 			? hostManifest
@@ -257,6 +268,7 @@ export async function loadAlgorithm(
 	const rt: XriptRuntime = xript.createRuntime(runtimeManifest, {
 		hostBindings: { log: () => undefined, cuti: createCuti() as unknown as HostNamespace },
 		capabilities: ["color-math"],
+		strictBindings: true,
 		console,
 		hardLimits: { timeout_ms: timeoutMs, memory_mb: HOST_LIMITS.memory_mb ?? 16, max_stack_depth: HOST_LIMITS.max_stack_depth ?? 128 },
 	});
@@ -266,9 +278,6 @@ export async function loadAlgorithm(
 
 	const manifest = rt.invokeExport("manifest", []) as AlgorithmManifest;
 
-	// The invariant list is *sized* from this number, so an absent one yields a zero-length list: the mod
-	// would load, report no invariants at all, and sail through the gauntlet having proven nothing. A mod
-	// that cannot say how many invariants it has does not get to be silently assumed to have none.
 	if (typeof manifest.invariantCount !== "number" || !Number.isInteger(manifest.invariantCount) || manifest.invariantCount < 0) {
 		throw new Error(
 			`xtyle: algorithm mod's manifest() must report a non-negative integer invariantCount, got ${JSON.stringify(manifest.invariantCount)}`,
@@ -325,11 +334,8 @@ export async function loadAlgorithm(
 	return {
 		id,
 		produces: manifest.produces,
+		producedSince: manifest.producedSince,
 		knobs: manifest.knobs,
-		// Merged, not replaced. A mod that declares specs for *some* of its knobs — the Tier-3 case this
-		// exists for, where an author hand-writes `manifest()` and describes only the novel knob they
-		// invented — would otherwise be taken at its word for the whole list and lose the domains for
-		// every shared knob it reads. The mod's own specs win by name; the registry fills the rest.
 		knobSpecs: resolveKnobSpecs(manifest.knobs, manifest.knobSpecs ?? []),
 		categories: manifest.categories,
 		derive: (opts: DeriveOptions = {}): TokenRegister => resolveGraph(graph(opts)),

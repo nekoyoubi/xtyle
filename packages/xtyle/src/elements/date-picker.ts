@@ -516,7 +516,6 @@ export class XtyleDatePicker extends XtyleElement {
 		].join("|");
 	}
 
-	// ---- committing -------------------------------------------------------------------------
 
 	/** Promote the draft to the reflected value when the mode's parts are all present, and post it to
 	 * the form. An incomplete datetime (a date with no time yet) holds an empty value rather than
@@ -614,10 +613,8 @@ export class XtyleDatePicker extends XtyleElement {
 		}
 		const date = this.draft.date;
 		if (!date || !this.isDateUnavailable(date)) return;
-		// A clamp lands *on* a bound, and a bound is free to fall on a day the rules refuse — a `min` of
-		// Sunday under `disabled-weekdays="0,6"`. Committing it would hand back a date the grid itself greys
-		// out: a value the user could never have picked or typed. Walk to the nearest one that is really
-		// available instead.
+		// INFO: a bound can itself fall on a disabled weekday, so a clamp landing on it must walk to the
+		// nearest available date rather than commit a value the grid greys out
 		const settled = this.settleOnAvailable(date, min, max);
 		if (settled) {
 			this.draft = { ...this.draft, date: settled };
@@ -690,7 +687,6 @@ export class XtyleDatePicker extends XtyleElement {
 		this.finishCommit();
 	}
 
-	// ---- the popup --------------------------------------------------------------------------
 
 	/** Open the panel against the whole control, so the grid lines up with the field rather than with
 	 * whichever button happened to open it. Focus lands where the user is going: the grid in a date
@@ -717,8 +713,6 @@ export class XtyleDatePicker extends XtyleElement {
 	private focusPanel(): void {
 		const calendar = this.calendar;
 		if (this.mode !== "time" && calendar) {
-			// The grid takes focus in a date mode, but the time list still has to *show* its selection:
-			// left alone it opens scrolled to midnight with the chosen time far below the fold.
 			this.revealSelectedTimeOption();
 			const cell = calendar.querySelector<HTMLElement>('[tabindex="0"]');
 			(cell ?? (calendar as HTMLElement)).focus?.();
@@ -813,7 +807,6 @@ export class XtyleDatePicker extends XtyleElement {
 		return typeof performance !== "undefined" ? performance.now() : Date.now();
 	}
 
-	// ---- fragment intents -------------------------------------------------------------------
 
 	/** Which control the sandbox handler fired from. The serialized payload carries no modifier keys and
 	 * no identity, so the source is resolved from the live event — which also lets one `nudge` intent mean
@@ -840,8 +833,6 @@ export class XtyleDatePicker extends XtyleElement {
 		if (intent.stopPropagation) event.stopPropagation();
 
 		if (intent.toggleOpen) {
-			// the pointer that light-dismissed the panel a moment ago is the same one landing on the
-			// trigger; without this the panel would close and instantly reopen
 			if (!this.open && this.now() - this.dismissedAt < REOPEN_GUARD_MS) return;
 			this.toggle();
 			return;
@@ -873,7 +864,7 @@ export class XtyleDatePicker extends XtyleElement {
 				return;
 			}
 			if (!part) return;
-			// Alt+Arrow is the disclosure gesture on a field with a popup, not a value step
+			// INFO: Alt+Arrow is the ARIA disclosure gesture on a popup field, not a value step
 			if (keyboard.altKey) {
 				if (intent.nudge > 0) this.hide();
 				else this.show();
@@ -884,16 +875,13 @@ export class XtyleDatePicker extends XtyleElement {
 		}
 
 		if (intent.commit !== undefined && part) {
-			// The inner input fires its own bubbling, composed `change`, which would reach a consumer
-			// listening on the host *alongside* the one emitted below — every typed commit read as two.
-			// Swallow the native event at the boundary and let the element's own emit be the single truth
-			// (it is also the only one that fires for a grid pick, a clear, or an arrow step).
+			// INFO: the inner input fires its own bubbling composed `change`; swallow it so the host emits
+			// a single change per commit instead of two
 			if (event.type === "change") event.stopImmediatePropagation();
 			this.commitText(part, intent.commit);
 		}
 	}
 
-	// ---- rendering --------------------------------------------------------------------------
 
 	/** Push the canonical display text back onto the live inputs. The op buffer can set the `value`
 	 * *attribute*, but a user-typed input is dirty and no longer tracks it, so a programmatic change
@@ -941,8 +929,8 @@ export class XtyleDatePicker extends XtyleElement {
 			this.wiredCalendar = calendar;
 			calendar?.addEventListener("change", this.onCalendarPick);
 		}
-		// The grid takes the *same* predicate the typed field enforces, so a date that cannot be clicked
-		// cannot be typed in behind the grid's back either. The weekday list and the bounds fold into it.
+		// INFO: the grid enforces the same predicate as the typed field, so a date that cannot be
+		// clicked cannot be typed in behind the grid either
 		if (calendar) {
 			calendar.isDateDisabled = (iso: string) => {
 				const date = parseIsoValue(iso, "date")?.date;

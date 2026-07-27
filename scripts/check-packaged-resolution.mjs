@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-// Proves algorithm resolution works for someone who installed `@xtyle/core` from npm, which no test
-// running inside this repo can do: `algorithms/` sits at the repo root, so `findAlgorithmsRoot`'s
-// walk-up climbs out of `packages/xtyle/` and finds it no matter how the resolver is written. A
-// published tarball has no such directory above it — npm cannot pack files above a package dir — so
-// the failure only appears once the code is installed somewhere else. This packs, installs into a
-// scratch project outside the repo, and derives + bakes there.
-
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,12 +16,7 @@ function run(cmd, args, cwd) {
 }
 
 try {
-	// `dist/batteries.js` ships in the tarball and `build-mods.mjs` is its only producer — `tsconfig.json`
-	// excludes `src/batteries.ts`, so a plain `npm run build` never refreshes it. Packing without this
-	// lets the check install a stale copy, resolve through it, and pass: `@xtyle/core/algorithms` (the
-	// path this whole check exists to prove) *is* `dist/batteries.js`, and a stale-but-valid one derives
-	// perfectly well — it just derives the wrong values. Green for the wrong reason is the one outcome a
-	// packaging gate must not be able to produce.
+	// INFO: dist/batteries.js is produced only by build-mods.mjs; tsconfig excludes src/batteries.ts, so `npm run build` won't refresh it
 	console.log("rebuilding generated mods so the pack cannot capture a stale artifact");
 	run("node", [join(ROOT, "scripts", "build-mods.mjs")], ROOT);
 
@@ -37,9 +25,7 @@ try {
 	const tarball = readdirSync(scratch).find((f) => f.endsWith(".tgz"));
 	if (!tarball) throw new Error("npm pack produced no tarball");
 
-	// A tarball that carries `algorithms/` would mask the very thing this checks, so assert its absence
-	// rather than assuming it: the guarantee is that the bundle covers the gap, not that the gap closed.
-	// Asked of npm rather than `tar`, which on Windows reads a `C:\…` path as a remote host.
+	// INFO: npm pack --dry-run, not tar: tar on Windows reads a `C:\…` path as a remote host
 	const [{ files = [] } = {}] = JSON.parse(run("npm", ["pack", "--dry-run", "--json"], CORE));
 	if (files.some((f) => /(^|\/)algorithms\/.*mod-manifest\.json/.test(f.path))) {
 		throw new Error("the tarball now ships algorithms/ — this check assumes it does not; revisit the fallback");
@@ -52,8 +38,6 @@ try {
 	console.log("installing the tarball into a scratch project outside the repo");
 	run("npm", ["install", "--no-audit", "--no-fund", join(scratch, tarball)], project);
 
-	// The repro from the field report: a generated icon mark bakes a register at build time, which is
-	// the only SSR path that derives from disk. `name="check"` (a static icon) never touched this.
 	writeFileSync(
 		join(project, "probe.mjs"),
 		`

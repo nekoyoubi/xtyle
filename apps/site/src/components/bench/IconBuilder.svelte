@@ -5,13 +5,7 @@
 	import { ACTIVE_CHANGED_EVENT } from "../../lib/theme-active.ts";
 	import { installGoogleFonts } from "../../lib/google-fonts.ts";
 
-	// The engine ships a character-set gate, not the 1,900-name Google list — that would be ~10 KB gzipped
-	// in every consumer's bundle for a list only a human typing a family name ever needs. This is that
-	// human, so the builder hands the list back: autocomplete, real casing, and an honest "no such font".
 	installGoogleFonts();
-
-	// No `register` prop: the builder is a standalone page that inherits the site's active theme
-	// straight from the `:root` cascade, so a mark colors against whatever theme is applied.
 
 	interface MarkLayer {
 		id: number;
@@ -24,6 +18,10 @@
 		x: number;
 		y: number;
 		s: number;
+		/** Per-axis size (the grammar's `sx`/`sy`), live only while `stretch` is on; off, both axes follow `s`. */
+		sx: number;
+		sy: number;
+		stretch: boolean;
 		r: number;
 		c: number | null;
 		outline: number;
@@ -36,10 +34,6 @@
 		locks: Record<string, boolean>;
 	}
 
-	// The properties a lock can pin against Randomize, in the order the layer lock aggregates them.
-	// Locks live on the layer at runtime and serialize into the name as a trailing `---` flags section
-	// (e.g. `crest--shield-c1--star-s45-cf---l1c-l2ws`), so a template name carries its pinned style and
-	// export can trim everything from `---` on for a clean production name.
 	const LOCK_KEYS = ["keyword", "p", "s", "r", "x", "y", "a", "c", "outline", "fh", "fv", "ko", "invert"] as const;
 	const LOCK_CODE: Record<string, string> = {
 		keyword: "w",
@@ -59,11 +53,14 @@
 	const CODE_LOCK: Record<string, string> = Object.fromEntries(Object.entries(LOCK_CODE).map(([k, v]) => [v, k]));
 
 	const PRIMITIVE_GROUPS: { group: string; keywords: string[] }[] = [
-		{ group: "Shapes", keywords: ["circle", "square", "square1", "square2", "square3", "shield", "hex", "diamond", "triangle", "pentagon", "oval", "pill", "half", "quarter", "wedge", "drop"] },
+		{ group: "Shapes", keywords: ["circle", "square", "square1", "square2", "square3", "shield", "hex", "diamond", "triangle", "pentagon", "octagon", "oval", "pill", "squircle", "trapezoid", "ramp", "half", "quarter", "wedge", "arch", "gem"] },
+		{ group: "Curves", keywords: ["wave", "water", "swish", "blob", "lens", "leaf", "drop", "egg", "cloud", "mountain", "sun", "flame"] },
+		{ group: "Volume", keywords: ["disc", "cylinder", "cone"] },
+		{ group: "Markers", keywords: ["banner", "tag", "bubble", "chevron", "arrow"] },
 		{ group: "Strokes", keywords: ["line", "arc", "corner", "vee"] },
 		{ group: "Frames", keywords: ["ring", "border", "divider"] },
 		{ group: "Bars", keywords: ["top", "row", "column", "diagonal", "cross"] },
-		{ group: "Symbols", keywords: ["star", "heart", "crescent", "bolt", "dot"] },
+		{ group: "Symbols", keywords: ["star", "star4", "star6", "star8", "burst", "seal", "heart", "crescent", "bolt", "dot"] },
 		{ group: "Text", keywords: ["letter"] },
 		{ group: "Glyphs", keywords: ["check", "close", "plus", "minus", "search", "menu", "info", "warning", "error", "success", "play", "pause", "stop", "loader"] },
 		{ group: "Objects", keywords: ["gear", "folder", "pencil", "trash", "eye", "copy", "palette", "bookmark", "download"] },
@@ -92,16 +89,11 @@
 		{ value: "0", label: "clear" },
 	];
 
-	// Every palette the engine ships, so a palette added to `PALETTES` shows up in the picker (and as a
-	// valid `---ps` value) with no edit here.
 	const SCHEMES: { value: Palette; label: string }[] = PALETTES.map((value) => ({
 		value,
 		label: value.charAt(0).toUpperCase() + value.slice(1),
 	}));
 
-	// Backgrounds to preview the mark against — the engine's full surface ladder (`--body-bg` … `--bg-3`,
-	// the same tokens the palette itself uses) plus the contrasting ink, so an author can check a mark on
-	// the real page, each surface tier the app stacks onto, and an inverted surface.
 	const BG_OPTIONS: { token: string; label: string }[] = [
 		{ token: "--body-bg", label: "Page" },
 		{ token: "--bg-0", label: "Base" },
@@ -111,10 +103,6 @@
 		{ token: "--fg-0", label: "Contrast" },
 	];
 
-	// A 3x3 grid of series-colored cells: the same swatch under each palette makes the picker a live
-	// preview of what each scheme's nine series slots (`c1..c9`) resolve to under the current theme —
-	// a whole crayon box under `skittles`. The leading `--` gives it an empty label so the mark is
-	// decorative; the segment owns the option's name and tooltip.
 	const GRID =
 		"--square1-p1-s35-c1--square1-p2-s35-c2--square1-p3-s35-c3--square1-p4-s35-c4--square1-p5-s35-c5--square1-p6-s35-c6--square1-p7-s35-c7--square1-p8-s35-c8--square1-p9-s35-c9";
 
@@ -129,6 +117,9 @@
 			x: 0,
 			y: 0,
 			s: 100,
+			sx: 100,
+			sy: 100,
+			stretch: false,
 			r: 0,
 			c: null,
 			outline: 0,
@@ -143,8 +134,6 @@
 		};
 	}
 
-	// A browsable gallery of full marks, authored as icon-name strings so each is its own live preview.
-	// Clicking one loads it into the builder (label + layers), which is exactly what the name box parses.
 	const EXAMPLES: { name: string; scheme: Palette }[] = [
 		{ name: "Crest--shield-c1--star-s45-cf", scheme: "accents" },
 		{ name: "Bolt-badge--circle-c2--bolt-s52-cb", scheme: "accents" },
@@ -181,8 +170,6 @@
 		{ name: "Copy-badge--square3-c2--copy-s50-cb", scheme: "accents" },
 		{ name: "Crescent-star--circle-c4--crescent-s52-cf--star-p3-s18-cb", scheme: "skittles" },
 		{ name: "Trash-badge--circle-c2--trash-s50-cb", scheme: "statuses" },
-		// Two marks that pin their own palette: the `---ps` finish wins over the `accents` the gallery
-		// renders them under, so each shows its own scheme with no control to wire.
 		{ name: "Thermal-chip--hex-c1--dot-s30-c9---ps-thermal", scheme: "accents" },
 		{ name: "Skittle-crest--shield-c1--star-s45-c5---ps-skittles", scheme: "accents" },
 	];
@@ -217,23 +204,41 @@
 	}
 	const DEFAULT_SHADOW: DropShadow = { color: 15, pos: 8, size: 2, soft: 50 };
 
+	/** The whole-mark transform finish: `s`/`sx`/`sy` size the composite, `mx`/`my` move it, `center`
+	 * re-seats it on its own measured box. Held as one record so the panel reads as one control group. */
+	interface MarkTransform {
+		s: number;
+		/** Per-axis mark size, live only while `stretch` is on; off, both axes follow `s`. */
+		sx: number;
+		sy: number;
+		stretch: boolean;
+		mx: number;
+		my: number;
+		center: boolean;
+	}
+	const DEFAULT_TRANSFORM: MarkTransform = { s: 100, sx: 100, sy: 100, stretch: false, mx: 0, my: 0, center: false };
+	/** True when the size/move dials are all at rest, so the finish emits nothing for them (`center` is its own switch). */
+	function transformIsIdle(t: MarkTransform): boolean {
+		return t.s === 100 && !t.stretch && t.mx === 0 && t.my === 0;
+	}
+
 	let label = $state("Crest");
 	let scheme = $state<Palette>("accents");
-	// Off, the scheme is the builder's own control (the host's `colors`) and the name says nothing about it.
-	// On, the name carries a `---ps-{scheme}` finish, so the mark pins its palette and colors the same
-	// wherever it lands, whatever the host hands it.
 	let pinScheme = $state(false);
 	let previewBg = $state("--body-bg");
 	let layers = $state<MarkLayer[]>([]);
 	let selectedId = $state<number | null>(null);
 	let dropShadow = $state<DropShadow | null>(null);
-	// A `---pc` palette override map (null = off): a nibble key (`"1"`..`"9"`) repaints that slot, `"*"`
-	// silhouettes the whole mark. Values are `#rrggbb`. Serializes into the finish, resolves in the preview.
 	let paletteOverrides = $state<Record<string, string> | null>(null);
-	// A `---f` font override map (null = off): a slot index (0 sans, 1 display, 2 mono) → a family token
-	// (a theme alias `sans`/`display`/`mono`, or a literal family with `+` for spaces). Serializes into the
-	// finish; the letter layers that use the slot pick it up. The three theme slots letters can select.
 	let fontOverrides = $state<Record<number, string> | null>(null);
+	let transform = $state<MarkTransform>({ ...DEFAULT_TRANSFORM });
+	let transformOpen = $state(false);
+	let markOutline = $state<{ size: number; color: number | null } | null>(null);
+	let expand = $state<number | null>(null);
+	/** Finish flags the builder has no control for (`e…` canvas expand, `o…` whole-mark outline, anything a
+	 * later engine version adds). They are part of the mark, so they ride the round trip verbatim rather
+	 * than being silently dropped the moment the author touches any other control. */
+	let extraFinish = $state<string[]>([]);
 	const FONT_SLOTS = [
 		{ slot: 0, label: "Sans", placeholder: "sans / a family" },
 		{ slot: 1, label: "Display", placeholder: "display / sigmar" },
@@ -244,7 +249,6 @@
 	let cleanState = $state<CopyState>("idle");
 	const copyGlyph = (s: CopyState): string => (s === "done" ? "check" : s === "fail" ? "close" : "copy");
 
-	// The name box expands into a non-shifting multiline flyout for full view/edit of a long name.
 	let nameOpen = $state(false);
 	let nameBoxEl = $state<HTMLElement>();
 	$effect(() => {
@@ -266,9 +270,18 @@
 		};
 	});
 
-	// The shape picker is a popover combobox opened by the "+ Add layer" affordance, mirroring the
-	// theme switcher: click-outside and Escape close it. The inspector header opens the same picker to
-	// replace the selected layer's primitive in place.
+	/**
+	 * Enter applies the edited name and closes the flyout. An icon name is one line by construction, so a
+	 * newline in this field can only ever be a mistake the parser then has to reject; Enter means "done".
+	 * Escape leaves without applying, which the window handler already closes on.
+	 */
+	function commitName(event: KeyboardEvent): void {
+		if (event.key !== "Enter" || event.shiftKey) return;
+		event.preventDefault();
+		applyName((event.currentTarget as HTMLTextAreaElement).value);
+		nameOpen = false;
+	}
+
 	let addOpen = $state(false);
 	let addBoxEl = $state<HTMLElement>();
 	let addQuery = $state("");
@@ -312,9 +325,6 @@
 	$effect(() => dismissable(() => addOpen, () => addBoxEl, () => (addOpen = false)));
 	$effect(() => dismissable(() => replaceOpen, () => replaceBoxEl, () => (replaceOpen = false)));
 
-	// The builder remembers your work-in-progress mark across reloads by round-tripping the serialized name
-	// (which already carries layers, locks, and finish) plus the scheme through `localStorage`. First visit,
-	// or a corrupt entry, falls back to a random example so the page still opens on something.
 	const STORAGE_KEY = "xtyle:icon-builder";
 	function restoreSaved(): boolean {
 		if (typeof localStorage === "undefined") return false;
@@ -361,7 +371,7 @@
 
 	function serializeLayer(l: MarkLayer): string {
 		const parts = [l.keyword];
-		// A letter's glyph and font slot lead the flags (the grammar consumes them before the shared loop).
+		// INFO: a letter's glyph and font slot must lead the flags; the grammar consumes them before the shared token loop
 		if (l.keyword === "letter") {
 			parts.push(l.glyph || "A");
 			if (l.font) parts.push(`f${l.font}`);
@@ -370,6 +380,7 @@
 		if (l.x) parts.push(`x${l.x}`);
 		if (l.y) parts.push(`y${l.y}`);
 		if (l.s !== 100) parts.push(`s${l.s}`);
+		if (l.stretch) parts.push(`sx${l.sx}`, `sy${l.sy}`);
 		if (l.r) parts.push(`r${l.r}`);
 		if (l.c !== null) parts.push(`c${l.c.toString(16)}`);
 		if (l.outline > 0) parts.push(`o${l.outline}${l.outlineColor !== null ? `c${l.outlineColor.toString(16)}` : ""}`);
@@ -407,6 +418,22 @@
 			.map(([slot, family]) => `f${slot}-${family.trim().replace(/\s+/g, "+")}`);
 	}
 
+	/** The whole-mark transform as finish tokens, emitting only the dials that are off their default. */
+	function serializeTransform(t: MarkTransform): string[] {
+		const out: string[] = [];
+		if (t.center) out.push("center");
+		if (t.s !== 100) out.push(`s${t.s}`);
+		if (t.stretch) out.push(`sx${t.sx}`, `sy${t.sy}`);
+		if (t.mx) out.push(`mx${t.mx}`);
+		if (t.my) out.push(`my${t.my}`);
+		return out;
+	}
+
+	/** The whole-mark outline as `o{1-3}[c{nibble}]` — the finish twin of a layer's own outline. */
+	function serializeMarkOutline(o: { size: number; color: number | null }): string {
+		return `o${o.size}${o.color !== null ? `c${o.color.toString(16)}` : ""}`;
+	}
+
 	const iconName = $derived.by(() => {
 		if (layers.length === 0) return "";
 		const body = layers.map(serializeLayer).join("--");
@@ -415,12 +442,15 @@
 			...(pinScheme ? [`ps-${scheme}`] : []),
 			...(paletteOverrides ? serializePalette(paletteOverrides) : []),
 			...(fontOverrides ? serializeFonts(fontOverrides) : []),
+			...serializeTransform(transform),
+			...(markOutline ? [serializeMarkOutline(markOutline)] : []),
+			...(expand !== null ? [`e${expand}`] : []),
+			...extraFinish,
 			...layers.map(serializeLocks).filter(Boolean),
 		].join("--");
 		return `${slug(label)}--${body}${finish ? `---${finish}` : ""}`;
 	});
 
-	// Persist the current mark (name + scheme) on every change, so a reload restores where you left off.
 	$effect(() => {
 		const payload = JSON.stringify({ name: iconName, scheme });
 		if (typeof localStorage === "undefined") return;
@@ -431,9 +461,6 @@
 		}
 	});
 
-	// The saved-icon library: explicit marks you keep, persisted separately from the auto-restored session
-	// so they survive across builds. Each entry stores the full serialized name plus its scheme, so loading
-	// one is the same round-trip as loading an example.
 	interface SavedIcon {
 		id: string;
 		label: string;
@@ -446,8 +473,6 @@
 		try {
 			const parsed = JSON.parse(localStorage.getItem(LIBRARY_KEY) ?? "[]");
 			if (!Array.isArray(parsed)) return [];
-			// Normalize on load: exported JSON drops `id`, and a hand-edited entry may lack fields, so
-			// backfill a fresh id (the each-block key) and sane defaults rather than trust the stored shape.
 			return parsed
 				.filter((entry) => entry && typeof entry.name === "string" && entry.name.includes("--"))
 				.map((entry) => ({
@@ -492,9 +517,6 @@
 	}
 	const shownSaved = $derived(library.filter(savedMatches).sort(byIconName));
 
-	// Import / export the library as a plain newline-delimited list of icon names, so a set of marks can be
-	// shared, backed up, or pasted between sessions without wrestling a JSON blob. Export copies the names;
-	// import reads any text file, taking each name-shaped line and merging new marks in (duplicates skipped).
 	let exportFlash = $state<CopyState>("idle");
 	let libraryFileInput = $state<HTMLInputElement>();
 	async function exportLibrary(): Promise<void> {
@@ -560,7 +582,7 @@
 		if (!keyword) return null;
 		const over: Partial<MarkLayer> = {};
 		let rest = segment.slice(keyword.length);
-		// A letter's glyph + font slot are consumed before the shared flag loop, mirroring the engine.
+		// INFO: a letter's glyph and font slot are consumed before the shared flag loop, matching the engine grammar
 		if (keyword === "letter") {
 			const lm = /^-(.)(?:-f(\d))?/.exec(rest);
 			if (lm) {
@@ -569,14 +591,20 @@
 				rest = rest.slice(lm[0].length);
 			}
 		}
-		const token = /-(?:([pxysra])(-?\d+)|c([0-9a-f])|o(\d+)(?:c([0-9a-f]))?|(fh|fv|ko|i))/g;
+		const token = /-(?:(sx|sy|[pxysra])(-?\d+)|c([0-9a-f])|o(\d+)(?:c([0-9a-f]))?|(fh|fv|ko|i))/g;
 		let m: RegExpExecArray | null;
 		while ((m = token.exec(rest)) !== null) {
 			if (m[1] === "p") over.p = Number(m[2]);
 			else if (m[1] === "x") over.x = Number(m[2]);
 			else if (m[1] === "y") over.y = Number(m[2]);
 			else if (m[1] === "s") over.s = Number(m[2]);
-			else if (m[1] === "r") over.r = Number(m[2]);
+			else if (m[1] === "sx") {
+				over.sx = Number(m[2]);
+				over.stretch = true;
+			} else if (m[1] === "sy") {
+				over.sy = Number(m[2]);
+				over.stretch = true;
+			} else if (m[1] === "r") over.r = Number(m[2]);
 			else if (m[1] === "a") over.a = Number(m[2]);
 			else if (m[3] != null) over.c = parseInt(m[3], 16);
 			else if (m[4] != null) {
@@ -647,6 +675,57 @@
 		return Object.keys(out).length ? out : null;
 	}
 
+	/** Read the whole-mark transform tokens (`center`, `s…`, `sx…`, `sy…`, `mx…`, `my…`) from the finish. */
+	function parseTransform(flags: string): MarkTransform {
+		const out: MarkTransform = { ...DEFAULT_TRANSFORM };
+		for (const flag of flags.split("--")) {
+			if (flag === "center") {
+				out.center = true;
+				continue;
+			}
+			const m = /^(sx|sy|s|mx|my)(-?\d{1,4})$/.exec(flag);
+			if (!m) continue;
+			const value = Number(m[2]);
+			if (m[1] === "s") out.s = value;
+			else if (m[1] === "sx") {
+				out.sx = value;
+				out.stretch = true;
+			} else if (m[1] === "sy") {
+				out.sy = value;
+				out.stretch = true;
+			} else if (m[1] === "mx") out.mx = value;
+			else out.my = value;
+		}
+		return out;
+	}
+
+	/** Read the `o…` whole-mark outline from the finish (null when absent). Anchored per flag so it never
+	 * catches a layer's outline, which lives in the object segment rather than the finish. */
+	function parseMarkOutline(flags: string): { size: number; color: number | null } | null {
+		for (const flag of flags.split("--")) {
+			const m = /^o([1-3])(?:c([0-9a-f]))?$/.exec(flag);
+			if (m) return { size: Number(m[1]), color: m[2] != null ? parseInt(m[2], 16) : null };
+		}
+		return null;
+	}
+
+	/** Read the `e{n}` canvas expansion from the finish (null when absent). */
+	function parseExpand(flags: string): number | null {
+		for (const flag of flags.split("--")) {
+			const m = /^e(\d{1,3})$/.exec(flag);
+			if (m) return Math.min(100, Number(m[1]));
+		}
+		return null;
+	}
+
+	/** Every finish flag no builder control owns, kept verbatim so an author who types one into the name
+	 * field does not lose it the next time they touch a slider. Locks are excluded: they are rebuilt from
+	 * the layers' own lock maps, so passing them through too would duplicate every one. */
+	const KNOWN_FINISH = /^(?:d[0-9a-f]|ps-|pc\d?-|pc-|f\d?-|l\d|center$|o[1-3]|e\d|(?:sx|sy|s|mx|my)-?\d)/;
+	function parseExtraFinish(flags: string): string[] {
+		return flags.split("--").filter((flag) => flag && !KNOWN_FINISH.test(flag));
+	}
+
 	/** Parse an edited icon name back into the builder: the label prefix, one layer per segment, and the
 	 * optional `---` finish (a `d…` drop shadow and `l…` lock flags). Invalid input reverts on next render. */
 	function applyName(raw: string): void {
@@ -669,15 +748,17 @@
 		dropShadow = flags ? parseShadow(flags) : null;
 		paletteOverrides = flags ? parsePalette(flags) : null;
 		fontOverrides = flags ? parseFonts(flags) : null;
-		// A pinned scheme in the name is the truth: it drives the builder's own picker, so the preview shows
-		// what the mark will actually paint anywhere else. No `ps` and the picker keeps whatever it had.
+		transform = flags ? parseTransform(flags) : { ...DEFAULT_TRANSFORM };
+		transformOpen = !transformIsIdle(transform);
+		markOutline = flags ? parseMarkOutline(flags) : null;
+		expand = flags ? parseExpand(flags) : null;
+		extraFinish = flags ? parseExtraFinish(flags) : [];
 		const pinned = flags ? parseScheme(flags) : null;
 		pinScheme = pinned !== null;
 		if (pinned) scheme = pinned;
 	}
 
-	// `active` is `currentColor`, which is exactly what a layer with no `c` flag renders — so it maps to
-	// null (no slot) and drops out of the serialized name; an uncolored layer reads back as `active`.
+	// INFO: null fill renders as currentColor, the "active" slot; it drops from the serialized name and reads back as active
 	function colorValue(c: number | null): string {
 		return c === null ? "a" : c.toString(16);
 	}
@@ -698,8 +779,6 @@
 		return COLOR_SLOTS.find((s) => s.value === value)?.label ?? value;
 	}
 
-	// Resolve every color slot to a real color for the swatch picker, off the live `:root` cascade the
-	// mark itself colors against. Recomputes when the scheme changes or the active theme swaps.
 	let themeTick = $state(0);
 	$effect(() => {
 		const bump = (): void => void themeTick++;
@@ -774,6 +853,7 @@
 		if (l.c !== null) parts.push(`c${l.c.toString(16)}`);
 		if (l.p !== 5) parts.push(`p${l.p}`);
 		if (l.s !== 100) parts.push(`s${l.s}`);
+		if (l.stretch) parts.push(`sx${l.sx}`, `sy${l.sy}`);
 		if (l.r) parts.push(`r${l.r}°`);
 		if (l.x) parts.push(`x${l.x}`);
 		if (l.y) parts.push(`y${l.y}`);
@@ -786,8 +866,8 @@
 		return parts.join(" · ");
 	}
 
-	const RANDOM_FIELDS = ["circle", "square", "shield", "hex", "diamond"];
-	const RANDOM_CHARGES = ["star", "heart", "crescent", "bolt", "cross", "dot", "check"];
+	const RANDOM_FIELDS = ["circle", "square", "shield", "hex", "diamond", "octagon", "squircle", "blob", "arch", "gem", "banner", "cylinder"];
+	const RANDOM_CHARGES = ["star", "star4", "star6", "star8", "heart", "crescent", "bolt", "cross", "dot", "check", "leaf", "flame", "swish", "wave", "lens", "burst", "seal", "chevron", "arrow", "disc"];
 	function pick<T>(arr: T[]): T {
 		return arr[Math.floor(Math.random() * arr.length)];
 	}
@@ -799,9 +879,6 @@
 		return Math.random() < p;
 	}
 
-	// Re-roll the mark in place: the layer count and stacking order are the user's, and each unlocked
-	// property gets a fresh value while locked ones (and the always-deliberate knockout/invert on the
-	// base) stay put. The first layer is the field (a calm backing shape); the rest are charges.
 	function clearLayers(): void {
 		layers = [];
 		selectedId = null;
@@ -809,17 +886,24 @@
 		paletteOverrides = null;
 		fontOverrides = null;
 		pinScheme = false;
+		transform = { ...DEFAULT_TRANSFORM };
+		transformOpen = false;
+		markOutline = null;
+		expand = null;
+		extraFinish = [];
 	}
 
-	// Reset returns each layer's *unlocked* properties to their factory defaults, leaving locked props and
-	// the shapes themselves alone, so it normalizes what you have (mirroring how Randomize honors locks)
-	// rather than swapping in a different mark.
 	function resetLayers(): void {
 		layers = layers.map((l) => {
 			const n: MarkLayer = { ...l, locks: { ...l.locks } };
 			const free = (k: string): boolean => !l.locks[k];
 			if (free("p")) n.p = 5;
-			if (free("s")) n.s = 100;
+			if (free("s")) {
+				n.s = 100;
+				n.sx = 100;
+				n.sy = 100;
+				n.stretch = false;
+			}
 			if (free("r")) n.r = 0;
 			if (free("x")) n.x = 0;
 			if (free("y")) n.y = 0;
@@ -844,7 +928,10 @@
 			if (i === 0) {
 				if (free("keyword")) n.keyword = pick(RANDOM_FIELDS);
 				if (free("c")) n.c = 1 + Math.floor(Math.random() * 3);
-				if (free("s")) n.s = rint(90, 100, 2);
+				if (free("s")) {
+					n.s = rint(90, 100, 2);
+					n.stretch = false;
+				}
 				if (free("r")) n.r = chance(0.2) ? pick([-90, -45, 45, 90]) : 0;
 				if (free("p")) n.p = chance(0.15) ? rint(1, 9) : 5;
 				if (free("x")) n.x = chance(0.1) ? rint(-8, 8, 2) : 0;
@@ -859,7 +946,12 @@
 			} else {
 				if (free("keyword")) n.keyword = pick(RANDOM_CHARGES);
 				if (free("p")) n.p = rint(1, 9);
-				if (free("s")) n.s = rint(24, 70, 2);
+				if (free("s")) {
+					n.s = rint(24, 70, 2);
+					n.stretch = chance(0.12);
+					n.sx = n.stretch ? rint(30, 110, 5) : 100;
+					n.sy = n.stretch ? rint(30, 110, 5) : 100;
+				}
 				if (free("r")) n.r = chance(0.3) ? pick([-135, -90, -45, 45, 90, 135, 180]) : 0;
 				if (free("c")) n.c = pick([15, 11, 2, 3, 4, 5]);
 				if (free("x")) n.x = chance(0.2) ? rint(-16, 16, 2) : 0;
@@ -888,8 +980,17 @@
 		setTimeout(() => (copyState = "idle"), 1400);
 	}
 
+	function setMarkOutline(size: number): void {
+		markOutline = size === 0 ? null : { size, color: markOutline?.color ?? null };
+	}
 	function toggleShadow(on: boolean): void {
 		dropShadow = on ? { ...DEFAULT_SHADOW } : null;
+	}
+	/** Open or close the whole-mark size/move dials. Closing resets them to rest so the name loses the
+	 * flags rather than keeping an invisible transform the panel no longer shows; `center` is untouched. */
+	function toggleTransform(on: boolean): void {
+		transformOpen = on;
+		if (!on) transform = { ...DEFAULT_TRANSFORM, center: transform.center };
 	}
 	function togglePalette(on: boolean): void {
 		paletteOverrides = on ? {} : null;
@@ -913,8 +1014,6 @@
 		else delete next[slot];
 		fontOverrides = next;
 	}
-	// The web fonts the current mark needs loaded (a literal family in a used slot); theme-token slots
-	// (`var(--font-*)`) resolve to `[]`. Surfaced as ready-made Google Fonts loading code — the "help".
 	const fontImports = $derived.by(() => {
 		const parsed = resolveIconMark(iconName);
 		return parsed ? iconFontImports(parsed.composition) : [];
@@ -931,8 +1030,6 @@
 		setTimeout(() => (fontCopyState = "idle"), 1400);
 	}
 
-	// The typed family for a slot, before it becomes a mark: what the autocomplete and the "not a Google
-	// font" line read, so a typo reads as a typo instead of rendering in a silent fallback face.
 	function typedFamily(slot: number): string {
 		return (fontOverrides?.[slot] ?? "").replace(/\+/g, " ").trim();
 	}
@@ -940,16 +1037,13 @@
 		const typed = typedFamily(slot);
 		return typed.length >= 2 ? suggestGoogleFonts(typed, 8) : [];
 	}
-	// `fontImports` reports the *resolved* family (`resolveFontSpec` capitalizes), while `fontOverrides`
-	// holds the raw typed value — so finding the slot a miss came from is a case-insensitive match, not `===`.
+	// INFO: fontImports gives the resolved (capitalized) family, fontOverrides the raw typed one, so match case-insensitively
 	function slotForFamily(family: string): number {
 		const needle = family.toLowerCase();
 		return FONT_SLOTS.find((fs) => typedFamily(fs.slot).toLowerCase() === needle)?.slot ?? 0;
 	}
 
-	// Nothing reaches Google until this runs, and this only runs from a click. The engine's loaded-font
-	// record is a plain Set, not reactive state, so `loadedTick` is what re-derives `pendingFonts` and
-	// repaints the preview against the face that just arrived instead of the stale fallback.
+	// INFO: the engine's loaded-font record is a plain Set, not reactive, so loadedTick forces pendingFonts to re-derive after a load
 	let loadedTick = $state(0);
 	let loadingFont = $state<string | null>(null);
 	let fontError = $state<string | null>(null);
@@ -975,8 +1069,6 @@
 		loadingFont = null;
 	}
 
-	// The export copy drops the `---` lock flags: the pinned style is authoring metadata, so a production
-	// name only needs the renderable part.
 	async function copyClean(): Promise<void> {
 		try {
 			await navigator.clipboard.writeText(stripLocks(iconName));
@@ -987,9 +1079,6 @@
 		setTimeout(() => (cleanState = "idle"), 1400);
 	}
 
-	// Bakes the current mark into a self-contained SVG string at `sizePx`: series and token fills resolve
-	// to concrete values off the live theme (so the file carries no `var(--…)`), and `currentColor` is
-	// pinned to the active ink, so the exported art matches what's on screen with nothing left to inherit.
 	function buildExportSvg(sizePx: number): string | null {
 		const parsed = resolveIconMark(iconName);
 		if (!parsed) return null;
@@ -1011,9 +1100,7 @@
 		}
 		bakeToken(parsed.composition.dropShadow?.color);
 		const ink = cs.getPropertyValue("--fg-0").trim() || "#ffffff";
-		// `color` as a presentation attribute (not a `style`), so it resolves `currentColor` without
-		// colliding with the `style="overflow:visible"` that composeIcon adds when a drop shadow is present
-		// (two `style` attributes make invalid XML, which silently fails the PNG rasterizer's image load).
+		// INFO: color as a presentation attribute, not a style; a second style attribute beside composeIcon's overflow:visible makes invalid XML that silently fails the PNG rasterizer
 		return composeIcon(parsed.composition, { register, scheme })
 			.replace('width="1em" height="1em"', `width="${sizePx}" height="${sizePx}"`)
 			.replace(/^<svg /, `<svg color="${ink}" `);
@@ -1030,11 +1117,7 @@
 		setTimeout(() => URL.revokeObjectURL(url), 0);
 	}
 
-	// Bakes every Google family the mark draws into the SVG as a `data:`-URI `@font-face`, subsetted to the
-	// glyphs it actually uses. Without this a `letter` layer renders in whatever face the *viewer's* machine
-	// substitutes, so the export is only correct on the machine that made it. An external `@import` is not a
-	// fix: an SVG loaded as an image — which is how the PNG rasterizer sees it — refuses external resources
-	// outright, so the inlined face is also what makes the PNG show the right font.
+	// INFO: an SVG loaded as an image (the PNG rasterizer's view) refuses external resources, so Google fonts must be inlined as data-URI @font-face, not @import
 	async function withFonts(svg: string): Promise<string> {
 		const requests = fontImports.filter((f) => f.google).map((f) => ({ family: f.family, text: f.glyphs }));
 		if (!requests.length) return svg;
@@ -1059,9 +1142,7 @@
 		}
 	}
 
-	// Rasterizes the baked SVG through an untouched (transparent) canvas, so the PNG keeps the mark's own
-	// alpha rather than flattening onto a background. The blob URL is same-origin, so the canvas is not
-	// tainted and `toBlob` succeeds.
+	// INFO: the blob URL is same-origin so the canvas isn't tainted and toBlob succeeds; an untouched transparent canvas keeps the mark's alpha
 	async function savePng(): Promise<void> {
 		const base = buildExportSvg(512);
 		if (!base) return;
@@ -1202,11 +1283,13 @@
 										class="ib-name__area"
 										value={iconName}
 										onchange={(e) => applyName((e.currentTarget as HTMLTextAreaElement).value)}
+										onkeydown={commitName}
 										spellcheck="false"
 										autocomplete="off"
 										rows="4"
-										aria-label="Icon name (full, editable)"
+										aria-label="Icon name (full, editable). Enter applies and closes, Escape discards"
 									></textarea>
+									<p class="ib-name__hint">Enter applies · Esc discards</p>
 								</div>
 							{/if}
 						</span>
@@ -1315,6 +1398,20 @@
 						{@render propLock(l, "s")}
 						<Slider label="Size" bind:value={l.s} min={10} max={200} step={5} altStep={1} overflow showValue format={(v) => `${v}%`} />
 					</div>
+					<div class="ib__prop">
+						{@render propLock(l, "s")}
+						<Switch bind:checked={l.stretch} label="Stretch per axis" labelSide="end" />
+					</div>
+					{#if l.stretch}
+						<div class="ib__prop">
+							{@render propLock(l, "s")}
+							<Slider label="Stretch X" bind:value={l.sx} min={10} max={250} step={5} altStep={1} overflow showValue format={(v) => `${v}%`} />
+						</div>
+						<div class="ib__prop">
+							{@render propLock(l, "s")}
+							<Slider label="Stretch Y" bind:value={l.sy} min={10} max={250} step={5} altStep={1} overflow showValue format={(v) => `${v}%`} />
+						</div>
+					{/if}
 					<div class="ib__prop">
 						{@render propLock(l, "r")}
 						<Slider label="Rotate" bind:value={l.r} min={-180} max={180} step={15} altStep={1} overflow showValue format={(v) => `${v}°`} />
@@ -1474,6 +1571,50 @@
 				<p class="ib__hint">The name carries <code>---ps-{scheme}</code>, so the mark keeps this palette wherever it lands instead of taking the host's <code>colors</code>. Switch the palette above and the pin follows it.</p>
 			{:else}
 				<p class="ib__hint">The palette above is the host's <code>colors</code>: the mark takes whatever scheme it's rendered under. Pin it to bake the choice into the name.</p>
+			{/if}
+
+			<Switch checked={transform.center} onchange={(e) => (transform.center = (e.target as HTMLInputElement).checked)} label="Re-center on the art" labelSide="end" />
+			<p class="ib__hint">
+				<code>---center</code> measures what the mark actually covers and seats that box on the canvas
+				center, so a composition built off to one side needs no hand-tuning of every layer's nudge.
+			</p>
+
+			<Switch checked={transformOpen} onchange={(e) => toggleTransform((e.target as HTMLInputElement).checked)} label="Size and move the whole mark" labelSide="end" />
+			{#if transformOpen}
+				<p class="ib__hint">The finish-side twins of a layer's own size and nudge: these move the finished composite, outline and shadow with it.</p>
+				<Slider label="Mark size" bind:value={transform.s} min={10} max={200} step={5} altStep={1} overflow showValue format={(v) => `${v}%`} />
+				<Switch bind:checked={transform.stretch} label="Stretch per axis" labelSide="end" />
+				{#if transform.stretch}
+					<Slider label="Stretch X" bind:value={transform.sx} min={10} max={250} step={5} altStep={1} overflow showValue format={(v) => `${v}%`} />
+					<Slider label="Stretch Y" bind:value={transform.sy} min={10} max={250} step={5} altStep={1} overflow showValue format={(v) => `${v}%`} />
+				{/if}
+				<Slider label="Mark move X" bind:value={transform.mx} min={-50} max={50} step={2} altStep={1} overflow showValue format={(v) => `${v}%`} />
+				<Slider label="Mark move Y" bind:value={transform.my} min={-50} max={50} step={2} altStep={1} overflow showValue format={(v) => `${v}%`} />
+			{/if}
+
+			<div class="ib__field">
+				<span class="ib__field-label">Mark outline</span>
+				<Segmented
+					value={String(markOutline?.size ?? 0)}
+					options={[
+						{ value: "0", label: "None" },
+						{ value: "1", label: "Thin" },
+						{ value: "2", label: "Med" },
+						{ value: "3", label: "Thick" },
+					]}
+					onchange={(e) => setMarkOutline(Number((e.target as HTMLInputElement).value))}
+					aria-label="Whole-mark outline weight"
+				/>
+			</div>
+			{#if markOutline}
+				<p class="ib__hint">One stroke ringing the silhouette of <em>everything</em> the mark paints, knockouts included — the layer outline strokes one shape, this rings the composite.</p>
+				{@render colorField("Mark outline fill", colorValue(markOutline.color), (v) => (markOutline = { ...markOutline!, color: v === "a" ? null : parseInt(v, 16) }))}
+			{/if}
+
+			<Switch checked={expand !== null} onchange={(e) => (expand = (e.target as HTMLInputElement).checked ? 12 : null)} label="Expand canvas" labelSide="end" />
+			{#if expand !== null}
+				<p class="ib__hint">Pads the viewBox while the rendered box stays the same, so the art maps smaller inside its own footprint and gains a margin. Its reason to exist: Firefox clips a filter at the viewport edge, so a shadow cast from edge-hugging art streaks without it.</p>
+				<Slider label="Canvas margin" bind:value={expand} min={0} max={100} step={2} altStep={1} showValue format={(v) => `${v}%`} />
 			{/if}
 
 			<Switch checked={!!dropShadow} onchange={(e) => toggleShadow((e.target as HTMLInputElement).checked)} label="Drop shadow" labelSide="end" />
@@ -1828,6 +1969,11 @@
 	.ib-name__area:focus-visible {
 		outline: none;
 		border-color: var(--accent);
+	}
+	.ib-name__hint {
+		margin: var(--space-1) 0 0;
+		color: var(--fg-3);
+		font-size: var(--text-xs);
 	}
 	.ib-meta {
 		display: flex;

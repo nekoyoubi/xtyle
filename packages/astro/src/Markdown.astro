@@ -12,6 +12,17 @@ interface Props {
 	editable?: boolean;
 	/** Whether the source view starts open. Only meaningful alongside `editable`. */
 	editing?: boolean;
+	/**
+	 * Render the source's HTML instead of escaping it to text, for markdown whose origin the app
+	 * controls. Still floored by the fragment format's vocabulary — scripts, event handlers, and
+	 * undeclared elements are refused regardless; standard HTML and xtyle's own components survive.
+	 */
+	allowHtml?: boolean;
+	/**
+	 * Also process BBCode, so one document can carry both languages. `true` reaches the whole
+	 * BBCode registry; a string names a vocabulary.
+	 */
+	processBbcode?: boolean | string;
 	/** Render zero-JS: emit the pre-rendered light-DOM markup but never load the runtime. */
 	static?: boolean;
 	class?: string;
@@ -24,25 +35,24 @@ const {
 	inline = false,
 	editable = false,
 	editing = false,
+	allowHtml = false,
+	processBbcode = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
 } = Astro.props;
 await checkAuthoring("markdown", Astro.props);
 
-// The slot is markdown *text*, not markup, so take it raw rather than rendering it as HTML — a
-// slot render would hand back an escaped string and the fences and asterisks would arrive mangled.
 const slotted = source === undefined && Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 const markdown = source ?? slotted;
 
-// The body is built here, at build time, exactly as the Code binding tokenizes at build: the fill
-// receives finished HTML and composes the structure, so the static markup is the same one the
-// browser paints and the same one a mod replacing `component.markdown` gets to reshape.
+const options = { allowHtml, processBbcode };
 const bindings = {
-	html: inline ? renderMarkdownInline(markdown) : renderMarkdown(markdown),
+	html: inline ? renderMarkdownInline(markdown, options) : renderMarkdown(markdown, options),
 	inline,
 	editable,
 	editing: editable && editing,
+	allowHtml,
 };
 const light = await renderFragmentLight("markdown", bindings);
 ---
@@ -52,6 +62,8 @@ const light = await renderFragmentLight("markdown", bindings);
 	inline={inline || undefined}
 	editable={editable || undefined}
 	editing={editable && editing ? "" : undefined}
+	allow-html={allowHtml ? "" : undefined}
+	process-bbcode={processBbcode === true ? "" : processBbcode || undefined}
 	class={extra}
 	set:html={light}
 	{...rest}

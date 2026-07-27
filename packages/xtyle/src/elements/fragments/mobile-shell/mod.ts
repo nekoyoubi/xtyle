@@ -38,8 +38,7 @@ function shellHtml(b: MobileShellBindings): string {
 		`</span>` +
 		`<span class="xtyle-mshell__actions" part="actions"><slot name="actions"></slot></span>` +
 		`</header>` +
-		// `tabindex="-1"` so a skip link (or the nav) can move focus into the column without making it
-		// a tab stop of its own.
+		// INFO: tabindex="-1" makes the column a skip-link/nav focus target without adding a tab stop
 		`<main class="xtyle-mshell__content" part="content" id="${mainId}" tabindex="-1"><slot></slot></main>` +
 		`<div class="xtyle-mshell__nav" part="nav" data-slot="nav"><slot name="nav"></slot></div>` +
 		`</div>`
@@ -50,8 +49,6 @@ function mount(bindings: MobileShellBindings, ops: OpsBuilder): void {
 	ops.replaceChildren("[data-mobile-shell]", shellHtml(bindings));
 }
 
-// A non-destructive patch: it repaints the title and the main id, never the slot regions, so a live
-// re-render can't discard the consumer's bar actions, content, or nav.
 function patch(bindings: MobileShellBindings, ops: OpsBuilder): void {
 	ops.replaceChildren("[data-mshell-title]", titleText(bindings));
 	ops.setAttr('[part="content"]', "id", escapeAttr(bindings.mainId ?? "main"));

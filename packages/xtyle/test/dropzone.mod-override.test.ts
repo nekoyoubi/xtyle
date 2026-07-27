@@ -15,8 +15,8 @@ import type { XtyleDropzone } from "../src/elements/dropzone.js";
  */
 const stripReskin = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-dropzone-strip",
 		version: "0.0.1",
 		title: "test-dropzone-strip",
@@ -25,7 +25,7 @@ const stripReskin = {
 		entry: { script: "mod.js", format: "script" },
 		fills: {
 			"component.dropzone": [
-				{ id: "dropzone", format: "text/html+jsml", source: "dropzone.html" },
+				{ id: "dropzone", format: "application/x-xtyle+html", source: "dropzone.html" },
 			],
 		},
 	},
@@ -88,7 +88,6 @@ describe("a mod reshapes the dropzone", () => {
 		expect(el.querySelector(".modded-pitch")?.textContent).toBe("Toss it in");
 		expect(el.querySelector(".modded-table")).not.toBeNull();
 		expect(el.querySelectorAll(".modded-row")).toHaveLength(2);
-		// the built-in surface's own furniture is gone, not merely hidden under the reskin
 		expect(el.querySelector(".xtyle-dropzone__browse")).toBeNull();
 		expect(el.querySelector(".xtyle-dropzone__file")).toBeNull();
 	});

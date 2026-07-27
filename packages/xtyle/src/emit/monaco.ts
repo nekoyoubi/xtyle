@@ -1,9 +1,8 @@
 import { cssToHex, schemeOf } from "../color.js";
 import type { TokenRegister } from "../types.js";
 
-// Each code scope maps to the Monaco/TextMate token names it should colour. Monaco
-// matches rules by token-name prefix, so listing the common scopes folds the long
-// tail onto the canonical family the same way the Prism emitter does.
+// INFO: Monaco matches rules by token-name prefix, so listing the common scopes folds the long tail
+// onto the canonical family
 const SCOPE_RULES: Record<string, string[]> = {
 	comment: ["comment"],
 	keyword: ["keyword", "storage", "keyword.control"],

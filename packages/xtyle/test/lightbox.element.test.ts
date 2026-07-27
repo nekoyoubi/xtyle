@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines <xtyle-lightbox> and exports the imperative controller
 import { openLightbox, closeLightbox } from "../src/elements/lightbox.js";
 
 beforeAll(() => {
-	// happy-dom has no top-layer dialog; the controller only needs open/close not to throw
+	// INFO: happy-dom has no top-layer dialog; stub open/close so the controller doesn't throw
 	HTMLDialogElement.prototype.showModal = function showModal(): void {
 		this.setAttribute("open", "");
 	};

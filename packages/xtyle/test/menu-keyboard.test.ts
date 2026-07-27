@@ -9,7 +9,7 @@ type MenuEl = HTMLElement & { items: MenuItem[]; openAt(x: number, y: number, op
 
 const OPEN_FLAG = "data-test-popover-open";
 
-// happy-dom ships no Popover API; stand one in so the menu's open/focus wiring runs (mirrors menu.element.test.ts).
+// INFO: happy-dom ships no Popover API; stub it so the menu's open/focus wiring runs
 beforeAll(async () => {
 	const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
 	const nativeMatches = HTMLElement.prototype.matches;
@@ -72,11 +72,11 @@ describe("<xtyle-menu> keyboard roving (through the shared core)", () => {
 		expect(focused(el)).toBe("cut");
 		press(el, "cut", "ArrowDown");
 		expect(focused(el)).toBe("copy");
-		press(el, "copy", "ArrowDown"); // skips the disabled Paste
+		press(el, "copy", "ArrowDown");
 		expect(focused(el)).toBe("delete");
-		press(el, "delete", "ArrowDown"); // wraps to the top
+		press(el, "delete", "ArrowDown");
 		expect(focused(el)).toBe("cut");
-		press(el, "cut", "ArrowUp"); // wraps to the bottom
+		press(el, "cut", "ArrowUp");
 		expect(focused(el)).toBe("delete");
 	});
 

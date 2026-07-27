@@ -8,11 +8,10 @@ export interface Concept {
 	body: string;
 }
 
-const CONCEPT_ORDER = ["overview", "open-register", "algorithms", "consuming"];
+const CONCEPT_ORDER = ["overview", "open-register", "algorithms", "consuming", "effects", "icons"];
 
-// Concepts ship as markdown beside the package's dist/ so a published install and
-// the site build read one source. This module touches the filesystem, so it stays
-// off the environment-neutral index entry and is imported only by Node consumers.
+// INFO: touches the filesystem, so it stays off the environment-neutral index entry and is imported
+// only by Node consumers
 const conceptsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "concepts");
 
 function parse(id: string, input: string): Concept {

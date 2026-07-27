@@ -65,12 +65,14 @@
   }
 
   // packages/xtyle/src/elements/fragments/code/mod.ts
+  function langClass(b) {
+    return `language-${b.language ?? "none"}`;
+  }
   function codeClass(b) {
-    const lang = b.language ?? "none";
-    return `xtyle-code__code language-${lang}`;
+    return `xtyle-code__code ${langClass(b)}`;
   }
   function preClass(b) {
-    return `xtyle-code ${codeClass(b)}`;
+    return `xtyle-code ${langClass(b)}`;
   }
   function preLabel(b) {
     const lang = b.language ?? "none";

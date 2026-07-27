@@ -9,7 +9,7 @@ import {
 } from "../markup/spotlight.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/spotlight/source.generated.js";
-// the callout floats in a real <xtyle-popover> the fill declares, so the tag has to be defined
+// INFO: side-effect import registers <xtyle-popover>, which the fill instantiates
 import "./popover.js";
 import type { XtylePopover } from "./popover.js";
 import type { OverlayPlacement } from "./overlay-position.js";
@@ -224,9 +224,6 @@ export class XtyleSpotlight extends XtyleElement {
 		const box = el.getBoundingClientRect();
 		this.rect = { top: box.top, left: box.left, width: box.width, height: box.height };
 		this.repaint();
-		// re-anchor when the target itself changed (a Tour stepping to a new element), reposition when it
-		// only moved (scroll, resize). Routed through here because a target swap runs measure but does not
-		// change the `open` attribute, so the callout would otherwise stay where the first step opened it.
 		this.syncCallout();
 	}
 
@@ -312,10 +309,8 @@ export class XtyleSpotlight extends XtyleElement {
 			arrow: this.arrow,
 			pulse: this.pulse,
 			cutout,
-			// the dim/blur knobs ride *in the same veil style string as the cutout*: the fill sets the veil's
-			// whole `style` attribute for the clip path, so a separate write of these would be wiped on the
-			// next paint. They are values a mod would change, not structure — passed as bindings, composed by
-			// the fill, overriding the CSS default inline on the veil.
+			// INFO: dim/blur pass as bindings, not a separate style write; the fill rewrites the veil's
+			// whole style attribute each paint, which would clobber an out-of-band write
 			dim: dim,
 			blur: blur === null ? null : `${Number(blur) || 0}px`,
 			ringStyle,
@@ -394,7 +389,6 @@ export class XtyleSpotlight extends XtyleElement {
 			this.calloutTarget = null;
 			return;
 		}
-		// already anchored to this exact target — a plain reposition (from scroll/resize) handles the rest
 		if (callout.open && this.calloutTarget === target) {
 			callout.reposition();
 			return;

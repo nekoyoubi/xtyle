@@ -178,8 +178,8 @@ export class XtyleSlider extends XtyleElement {
 
 	private clamp(value: number): number {
 		if (Number.isNaN(value)) return this.min;
-		// Overflow keeps a typed value exact and uncapped; the stepping paths (drag / arrow) do their own
-		// grid snap, so a plain value set here isn't re-snapped and can't drift off a fine typed number.
+		// INFO: overflow keeps the typed value exact and uncapped; the stepping paths snap on their own,
+		// so a value set here isn't re-snapped and can't drift off a fine typed number
 		if (this.overflow) return Number(value.toFixed(6));
 		const { min, max, snapGrid } = this;
 		const snapped = Number((Math.round((value - min) / snapGrid) * snapGrid + min).toFixed(6));

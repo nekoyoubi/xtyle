@@ -34,10 +34,8 @@ function cardClass(b: CardBindings): string {
 }
 
 function cardHtml(b: CardBindings): string {
-	// The header/footer keep their `<slot>` whether filled or not, so `:empty` can never match them:
-	// a slot is a child node, and the nodes assigned to it are not. Only the host knows, so it says.
-	// `data-slot` rides alongside each native slot: under the auto-light (Astro SSR) render there is
-	// no shadow root to read host children from, so a region is only capturable by its marker.
+	// INFO: :empty never matches a region holding a <slot> (the slot is a child, assigned nodes are
+	// not), and the Astro SSR render has no shadow root, so data-slot markers make regions capturable
 	const headerHidden = b.hasHeader ? "" : " hidden";
 	const footerHidden = b.hasFooter ? "" : " hidden";
 	return (

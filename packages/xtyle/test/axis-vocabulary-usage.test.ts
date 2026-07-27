@@ -47,8 +47,8 @@ function validatedAxes(): Map<string, Map<string, readonly string[]>> {
 		for (const m of src.matchAll(/resolvePaletteName\(\s*this\.getAttribute\("([^"]+)"\),/g)) {
 			register(component, m[1], PALETTES);
 		}
-		// bar/chart/pie read `scheme` through an accessor that also accepts a JSON color array, so the
-		// call site names the local rather than the attribute
+		// INFO: bar/chart/pie read `scheme` through an accessor that also accepts a JSON color array,
+		// so the call site names the local rather than the attribute
 		if (/resolvePaletteName\(scheme,/.test(src)) register(component, "scheme", PALETTES);
 	}
 	return axes;
@@ -80,7 +80,7 @@ function offenders(dir: string, axes: Map<string, Map<string, readonly string[]>
 			for (const attr of tag[2].matchAll(/\s([a-z-]+)="([^"{}]*)"/g)) {
 				const allowed = forComponent.get(attr[1]);
 				if (!allowed || allowed.includes(attr[2])) continue;
-				// `scheme` is genuinely open: a palette name *or* a JSON array of colors
+				// INFO: `scheme` is genuinely open: a palette name or a JSON array of colors
 				if (attr[2].startsWith("[")) continue;
 				found.push({
 					file: path.slice(REPO.length + 1),
@@ -98,7 +98,7 @@ describe("axis vocabulary usage", () => {
 	const axes = validatedAxes();
 
 	it("validates every axis it claims to cover", () => {
-		// guards the scan itself: if the accessors stop matching, the sweep below silently passes
+		// INFO: guards the scan itself; if the accessors stop matching, the sweep below silently passes
 		expect(axes.size).toBeGreaterThan(40);
 		expect(axes.get("badge")?.get("size")).toContain("md");
 		expect(axes.get("button")?.get("variant")).toContain("link");

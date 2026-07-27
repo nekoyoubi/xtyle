@@ -6,8 +6,15 @@ export type TabsSize = (typeof TABS_SIZES)[number];
 export type TabsActivation = "automatic" | "manual";
 
 export interface TabItemData {
-	/** The tab trigger's label as raw HTML (an already-rendered tab's `innerHTML`). */
+	/** The tab trigger's label as plain text; it is escaped on render. Markup belongs in `labelSlot`. */
 	label: string;
+	/**
+	 * Project an authored label through a named `<slot>` instead of escaping the `label`
+	 * text, so a label carrying markup (an icon, a badge) survives. Both bindings set this:
+	 * the runtime element for live light-DOM tabs, and the Astro binding for the
+	 * already-rendered tab HTML it splices into the static render.
+	 */
+	labelSlot?: string;
 	/**
 	 * The tab's panel body as raw HTML (an already-rendered panel's `innerHTML`).
 	 * Optional: in headless `tablist` mode the element owns no panels and the consumer

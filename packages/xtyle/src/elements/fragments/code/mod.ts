@@ -18,15 +18,16 @@ declare const hooks: {
 	fragment: { [k: string]: (id: string, handler: (bindings: CodeBindings, ops: OpsBuilder) => void) => void };
 };
 
-// the `language-x` half is Prism's contract, not a name for the node — so the node carries a chrome name of
-// its own for the paint to key by, and a mod that renames it owns its own highlighting
+function langClass(b: CodeBindings): string {
+	return `language-${b.language ?? "none"}`;
+}
+
 function codeClass(b: CodeBindings): string {
-	const lang = b.language ?? "none";
-	return `xtyle-code__code language-${lang}`;
+	return `xtyle-code__code ${langClass(b)}`;
 }
 
 function preClass(b: CodeBindings): string {
-	return `xtyle-code ${codeClass(b)}`;
+	return `xtyle-code ${langClass(b)}`;
 }
 
 function preLabel(b: CodeBindings): string {

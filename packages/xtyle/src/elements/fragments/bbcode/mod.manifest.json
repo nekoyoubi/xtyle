@@ -1,0 +1,67 @@
+{
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
+	"name": "xtyle-bbcode-default",
+	"version": "0.0.1",
+	"title": "Xtyle BBCode (default)",
+	"description": "The built-in fill for the xtyle BBCode component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": [
+		"xtyle.component.bbcode"
+	],
+	"entry": {
+		"script": "mod.js",
+		"format": "script"
+	},
+	"fills": {
+		"component.bbcode": [
+			{
+				"id": "bbcode",
+				"format": "application/x-xtyle+html",
+				"source": "bbcode.html",
+				"handlers": [
+					{
+						"selector": "[data-toggle]",
+						"on": "click",
+						"handler": "toggleEdit"
+					},
+					{
+						"selector": "[data-editor]",
+						"on": "input",
+						"handler": "editInput"
+					}
+				],
+				"meta": {
+					"markers": {
+						"data-body": "Where the rendered BBCode lands. The element replaces its children wholesale on every render; anything a fill puts inside it is transient. Carries `data-vocabulary` naming the vocabulary the body was rendered under, since the same source renders differently under a narrower one.",
+						"data-chrome": "The container the edit chrome is built into, on mount, and only when `editable` — so a component that is not editable carries no source box at all. A fill owns everything inside it and may leave it empty.",
+						"data-editor": "The source Textarea, built into `data-chrome` when `editable`. Its value is BBCode and the element seeds it; a fill may restyle or relocate it but must keep it a form control that raises `input`.",
+						"data-controls": "The chrome bar around the switch.",
+						"data-toggle": "The edit/view switch, an `<xtyle-button>` rather than a bare one so it inherits the real control treatment."
+					},
+					"tokens": [
+						"--accent",
+						"--bg-1",
+						"--fg-0",
+						"--fg-1",
+						"--fg-2",
+						"--font-sans",
+						"--leading-normal",
+						"--radius-sm",
+						"--space-1",
+						"--space-2",
+						"--space-3",
+						"--space-4",
+						"--space-6",
+						"--text-body",
+						"--text-sm",
+						"--text-xs",
+						"--warn-bg",
+						"--warn-text",
+						"--weight-bold",
+						"--weight-semibold"
+					]
+				}
+			}
+		]
+	}
+}

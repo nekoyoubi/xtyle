@@ -43,7 +43,7 @@ function writeMod(root: string, dir: string, name: string | undefined, { script 
 	mkdirSync(join(path, "src"), { recursive: true });
 	writeFileSync(
 		join(path, "mod-manifest.json"),
-		JSON.stringify({ xript: "0.7", ...(name ? { name } : {}), entry: { script: "src/mod.js", format: "script" } }),
+		JSON.stringify({ xript: "0.8", ...(name ? { name } : {}), entry: { script: "src/mod.js", format: "script" } }),
 	);
 	if (script) writeFileSync(join(path, "src", "mod.js"), "");
 }
@@ -54,8 +54,6 @@ describe("the scan reads whatever is installed, not what it was told to expect",
 		expect([...discoverAlgorithmMods(root).keys()]).toEqual(["some-pack"]);
 	});
 
-	// The id is the manifest name, permanently: it is what a theme file's `algorithm` field records, so
-	// the directory a pack happens to be unpacked into can never be allowed to decide it.
 	it("takes the id from the manifest name even when the directory disagrees", () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 		const root = fixtureMod("node_modules-ish-dir", "cool-theme");
@@ -88,8 +86,6 @@ describe("the scan reads whatever is installed, not what it was told to expect",
 });
 
 describe("the registry discovers algorithms rather than listing them", () => {
-	// The bug this pins: the browser's id list was scan-derived while Node's was a hand-kept map, so a
-	// sixth algorithm dropped into `algorithms/` resolved in the browser and did not exist to the CLI.
 	it("resolves every mod on disk, with no hand-kept allow-list to fall out of date", () => {
 		expect([...availableAlgorithms()].sort()).toEqual(modDirsOnDisk().map(manifestNameOf).sort());
 	});
@@ -102,8 +98,6 @@ describe("the registry discovers algorithms rather than listing them", () => {
 		expect(availableAlgorithms()[0]).toBe(defaultAlgorithm());
 	});
 
-	// An id is the mod manifest's `name` — it is what `Algorithm.id` carries, what a theme file records
-	// forever, and what every cache keys on. The directory is a filesystem detail.
 	it("takes an algorithm's id from its manifest name, not its directory", async () => {
 		for (const dir of modDirsOnDisk()) {
 			const id = manifestNameOf(dir);
@@ -118,14 +112,7 @@ describe("the registry discovers algorithms rather than listing them", () => {
 		);
 	});
 
-	// `@xtyle/core/algorithms` exports a `resolveAlgorithm` too, and it needs no filesystem. Importing
-	// this one where that one was meant is silent in a checkout — the walk-up finds the repo's own
-	// `algorithms/` either way — and fatal in a published install, so the failure has to hand the
-	// caller the other path by name rather than naming a directory they cannot create.
 	it("points at the filesystem-free twin when there is no algorithms/ directory at all", async () => {
-		// Kept inline rather than hoisted to a helper: the published-install shape is only reachable by
-		// mocking the walk-up's `existsSync` before a *fresh* copy of the registry memoizes its root, and
-		// a setup this coupled to one assertion is a hazard sitting a hundred lines from its only caller.
 		vi.resetModules();
 		const fs = await vi.importActual<typeof import("node:fs")>("node:fs");
 		vi.doMock("node:fs", () => ({
@@ -141,25 +128,16 @@ describe("the registry discovers algorithms rather than listing them", () => {
 		await expect(fresh(defaultAlgorithm())).rejects.not.toThrow(/could not locate/);
 	});
 
-	// `resolveAlgorithm` was this module's export name for its whole published life, so the alias is a
-	// compatibility promise rather than a convenience. Pinned to the same function object: a
-	// reimplementation that drifted from the real one would be worse than no alias at all.
 	it("keeps the old name working as an alias of the same function", () => {
 		expect(resolveAlgorithm).toBe(resolveInstalledAlgorithm);
 	});
 
-	// The bundle is the only thing a published consumer can resolve against, so an algorithm added to
-	// `algorithms/` without a rebuild of the generated bundle would resolve in this repo forever while
-	// being invisible to everyone who installed the package.
 	it("embeds every algorithm that exists on disk, so none is resolvable in-repo only", () => {
 		expect([...bundledAlgorithms()].sort()).toEqual(modDirsOnDisk().map(manifestNameOf).sort());
 	});
 });
 
 describe("an algorithm's manifest is readable without running it", () => {
-	// Listing what a pack accepts is the cheapest question a consumer asks; before the static block it
-	// was the most expensive, because the only way to answer it was to boot a QuickJS runtime per
-	// algorithm — for every third-party pack in a discovery index.
 	it("reads produces / knobs / invariantCount off the packaged manifest, no sandbox", () => {
 		for (const id of availableAlgorithms()) {
 			const declared = algorithmManifest(id);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 	import type { Algorithm, DeriveOptions, TokenLineageNode, TokenRegister } from "@xtyle/core";
-	import { buildThemeFile, derive, emit, loadAuthoredAlgorithm, serializeThemeFile } from "@xtyle/core";
+	import { buildThemeFile, derive, emit, invertedOptions, loadAuthoredAlgorithm, serializeThemeFile } from "@xtyle/core";
 	import { getAlgorithm } from "@xtyle/core/algorithms";
 	import { makeXtyleAlgorithm, toPreset, type XtyleAlgorithmSpec } from "@xtyle/core/authoring";
 	import Controls from "./Controls.svelte";
@@ -17,7 +17,7 @@
 	import OrderStatus from "./mockups/OrderStatus.svelte";
 	import BrandSite from "./mockups/BrandSite.svelte";
 	import MusicPlayer from "./mockups/MusicPlayer.svelte";
-	import { AppShell, Badge, Button, Switch, Tabs, Toolbar } from "@xtyle/svelte";
+	import { AppShell, Badge, Button, Code, Switch, Tabs, Textarea, Toolbar } from "@xtyle/svelte";
 	import { loadHostedAlgorithms } from "./hosted.js";
 	import type { BenchState } from "./state.js";
 	import {
@@ -64,11 +64,8 @@
 		return $state.snapshot(created.recipe) as BenchState;
 	}
 
-	// The heavy pipeline (full OKLCH derive, the lineage graph, and the synced site reapply) reads
-	// this debounced trail of `state`, never `state` itself. A slider drag or a color-picker sweep
-	// fires a burst of input events, and recomputing the whole token register on every intermediate
-	// value is what made the rail janky. The controls stay bound to the live `state`, so thumbs and
-	// numeric readouts move instantly; only the expensive recompute waits for the burst to settle.
+	// PERF: the heavy derive/lineage/reapply pipeline reads this debounced snapshot, not live
+	// `state`, so a slider or picker sweep doesn't recompute the whole token register per value
 	const DERIVE_DEBOUNCE_MS = 120;
 	let settledState = $state<BenchState>($state.snapshot(state) as BenchState);
 	$effect(() => {
@@ -99,10 +96,6 @@
 			: (hosted?.get(settledState.algorithm) ?? getAlgorithm(settledState.algorithm)),
 	);
 
-	// The on-site authored *code* algorithm loads asynchronously through the hosted sandbox, so it
-	// can't be built inline in the sync derive. This effect (re)loads it on every code edit, debounced
-	// so a keystroke doesn't spin up a fresh QuickJS runtime, and parks the result for the derive to
-	// pick up — the last good theme stays on screen until the new build resolves or its error surfaces.
 	let authoredAlgorithm = $state<Algorithm | null>(null);
 	let authoredError = $state<string | null>(null);
 
@@ -157,7 +150,6 @@
 	 */
 	const deriveOptions = $derived<DeriveOptions>({
 		knobs: toDeriveKnobs(settledState.knobs),
-		// bg/fg/accent ride the one token channel; explicit overrides layer on top.
 		constraints: { ...anchorsToConstraints(settledState.anchors), ...settledState.overrides },
 	});
 
@@ -184,15 +176,12 @@
 				built = buildCustomAlgorithm();
 			} else if (settledState.algorithm === CUSTOM_CODE_ALGORITHM) {
 				if (!(settledState.customCode ?? "").trim()) {
-					// a custom-code theme with no source — restored from a share link (which never
-					// carries code) or a legacy doc — has nothing to drive the sandbox; fall back to
-					// the neutral default rather than erroring on every load.
+					// INFO: share links never carry custom code and legacy docs may lack it; fall
+					// back to the default instead of erroring
 					built = baseAlgorithm;
 				} else if (authoredError) {
 					throw new Error(authoredError);
 				} else if (!authoredAlgorithm) {
-					// the sandbox build is in flight on first open / right after an edit — hold the
-					// last good theme without flagging an error until the async load resolves.
 					return { algorithm: lastGoodAlgorithm, register: lastGood, error: null };
 				} else {
 					built = authoredAlgorithm;
@@ -328,6 +317,23 @@
 		savedAt = copy.updatedAt;
 	}
 
+	/**
+	 * Materialize a thematic inversion into the theme's own seeds, non-destructively: derive first so
+	 * the algorithm speaks for whatever the theme didn't pin, then flip the scheme and swap only the
+	 * pinned surfaces/inks — nothing the theme left to the derivation becomes pinned. An accent-only
+	 * theme still flips (the scheme carries it); a fully-hand-tuned one swaps every rung it set. Paired
+	 * with "Save a copy", this is a near-free starting point for the opposite mode: flip, then tweak.
+	 */
+	function invertTheme(): void {
+		const inverted = invertedOptions(algorithm, deriveOptions);
+		commitState({
+			...($state.snapshot(settledState) as BenchState),
+			anchors: {},
+			knobs: { ...settledState.knobs, scheme: inverted.knobs?.scheme },
+			overrides: (inverted.constraints ?? {}) as TokenRegister,
+		});
+	}
+
 	function deleteTheme(): void {
 		if (editingId === null) return;
 		if (typeof window !== "undefined") {
@@ -436,7 +442,6 @@
 		if (on && editingId !== null) applyActiveTheme(editingId);
 	}
 
-	// Mirror bench → site: while synced, the active site theme follows whatever theme the bench has loaded.
 	$effect(() => {
 		if (typeof window === "undefined") return;
 		if (!siteSync) return;
@@ -447,7 +452,6 @@
 		});
 	});
 
-	// Mirror site → bench: while synced, picking a theme in the outer dropdown loads it into the bench.
 	$effect(() => {
 		if (typeof window === "undefined") return;
 		const sync = siteSync;
@@ -456,8 +460,8 @@
 			if (!sync) return;
 			const id = (e as CustomEvent<{ id: string | null }>).detail?.id ?? null;
 			if (id === null) {
-				// "Default" is the shipped baseline, not a saved theme — there's nothing to mirror,
-				// so picking it in the dropdown breaks the sync link rather than loading a theme.
+				// INFO: "Default" is the shipped baseline, not a saved theme, so selecting it
+				// breaks sync rather than loading a theme
 				setSiteSync(false);
 				return;
 			}
@@ -469,7 +473,7 @@
 		return () => window.removeEventListener(ACTIVE_CHANGED_EVENT, handler);
 	});
 
-	let exportFormat = $state("css");
+	let exportFormat = $state("invocation");
 
 	function themeFileText(): string {
 		return serializeThemeFile(
@@ -491,14 +495,18 @@
 				? emit(register, "json")
 				: exportFormat === "theme"
 					? themeFileText()
-					: toInvocation(state),
+					: toInvocation(state, themeName),
+	);
+
+	const exportLang = $derived(
+		exportFormat === "css" ? "css" : exportFormat === "invocation" ? "ts" : "json",
 	);
 
 	const EXPORT_FORMATS: { value: typeof exportFormat; label: string }[] = [
+		{ value: "invocation", label: "Invocation" },
 		{ value: "css", label: "CSS" },
 		{ value: "tokens", label: "Tokens" },
 		{ value: "theme", label: "Theme" },
-		{ value: "invocation", label: "Invocation" },
 	];
 
 	let copyLabel = $state("Copy");
@@ -653,6 +661,7 @@
 						</Button>
 						<Button size="sm" variant="subtle" onclick={newTheme}>New</Button>
 						<Button size="sm" variant="subtle" onclick={duplicateTheme}>Save a copy</Button>
+						<Button size="sm" variant="subtle" onclick={invertTheme} title="Materialize a light↔dark inversion into this theme's seeds">Invert</Button>
 						<Button size="sm" variant="subtle" tone="warn" onclick={reset}>Reset</Button>
 						<Button size="sm" variant="subtle" tone="danger" onclick={deleteTheme}>Delete</Button>
 					</div>
@@ -748,21 +757,20 @@
 									</div>
 									{#if importOpen}
 										<div class="bench__import">
-											<label class="bench__import-label" for="bench-import">Paste a <code>.xtyle.json</code> theme (or a raw token map) to load it into this theme</label>
-											<textarea
-												id="bench-import"
-												class="bench__export-area"
-												spellcheck="false"
+											<Textarea
+												label="Paste a .xtyle.json theme (or a raw token map) to load it into this theme"
+												mono
+												rows={10}
 												placeholder={'{ "format": "xtyle-theme", … }'}
 												bind:value={importText}
-											></textarea>
+											/>
 											<div class="bench__import-actions">
 												<Button size="sm" variant="solid" tone="accent" onclick={loadFromText} disabled={!importText.trim()}>Load theme</Button>
 												{#if importStatus}<span class="bench__import-status" role="status">{importStatus}</span>{/if}
 											</div>
 										</div>
 									{:else}
-										<textarea class="bench__export-area" readonly spellcheck="false" aria-label={`Emitted ${fmt}`}>{exportText}</textarea>
+										<Code lang={exportLang} code={exportText} copy={false} wrap class="bench__export-code" aria-label={`Emitted ${fmt}`} />
 									{/if}
 								</div>
 							{/snippet}
@@ -1013,15 +1021,6 @@
 		gap: var(--space-2);
 	}
 
-	.bench__import-label {
-		font-size: var(--text-sm);
-		color: var(--fg-2);
-	}
-
-	.bench__import-label code {
-		font-family: var(--font-mono);
-	}
-
 	.bench__import-actions {
 		display: flex;
 		align-items: center;
@@ -1033,18 +1032,15 @@
 		color: var(--accent-text, var(--accent));
 	}
 
-	.bench__export-area {
+	/* The Code element paints its box in shadow DOM, so cap and scroll at the host: a long emit stays
+	   a scrollable panel instead of a page-long drag, while a short one sizes to its content. Lines
+	   soft-wrap, so only the vertical axis ever scrolls. */
+	.bench-export :global(.bench__export-code) {
+		display: block;
 		width: 100%;
-		min-height: 14rem;
-		background: var(--bg-0);
-		color: var(--fg-1);
-		border: var(--border-thin) solid var(--line);
-		border-radius: var(--radius-md);
-		padding: var(--space-4);
-		font-family: var(--font-mono);
-		font-size: var(--text-sm);
-		line-height: var(--leading-normal);
-		resize: vertical;
+		max-height: 32rem;
+		overflow-x: hidden;
+		overflow-y: auto;
 	}
 
 </style>

@@ -80,8 +80,7 @@ export function routeNativeDrop(
 	}
 	const live = zones.filter((zone) => !zone.disabled);
 	const { x, y } = options;
-	// Reverse document order so the innermost / latest zone under the point wins, matching how a DOM
-	// drop resolves against the topmost target.
+	// INFO: reverse doc order so the innermost zone under the point wins, matching DOM topmost-target drop resolution
 	const hit: XtyleDropzone | null =
 		x !== undefined && y !== undefined
 			? ([...live].reverse().find((zone) => zone.containsPoint(x, y)) ?? null)
@@ -264,9 +263,7 @@ export class XtyleDropzone extends XtyleElement {
 		const candidates = this.describeAll(items);
 		if (this.disabled || candidates.length === 0) return { accepted: [], rejected: [] };
 
-		// A single-file zone *replaces* rather than piles up (the native `<input type="file">` contract),
-		// so the batch is validated against an empty list — but the swap is only committed if something
-		// in the batch actually survived, or a bad drop would silently wipe a good file.
+		// INFO: single-file zone replaces rather than accumulates (native `<input type="file">` contract), so validate against an empty list; swap is committed only if something survived
 		const next = this.multiple ? [...this.state] : [];
 		const accepted: DropFile[] = [];
 		const rejected: DropRejection[] = [];
@@ -484,9 +481,7 @@ export class XtyleDropzone extends XtyleElement {
 			progress: Math.round(file.progress),
 			error: file.error,
 		}));
-		// Only a *structural* change rebuilds the rows: a file added or dropped, or an error line
-		// appearing. A status flip and a progress tick are patched in place (class, bar, ARIA, label), so
-		// a focused remove button survives an upload running at 60fps.
+		// PERF: only a structural change (add/drop/error line) rebuilds rows; status/progress ticks patch in place so a focused remove button survives a 60fps upload
 		const signature = this.state.map((f) => `${f.id}:${f.error ? 1 : 0}`).join(",");
 		const rebuildList = signature !== this.listSignature;
 		this.listSignature = signature;
@@ -560,8 +555,7 @@ export class XtyleDropzone extends XtyleElement {
 			for (const file of backing) transfer.items.add(file);
 			input.files = transfer.files;
 		} catch {
-			// A host without a constructible DataTransfer (older WebViews) keeps whatever the picker set;
-			// the accepted list and the events are still authoritative, only the raw form value goes stale.
+			// INFO: older WebViews lack a constructible DataTransfer; the accepted list and events stay authoritative, only the raw form value goes stale
 		}
 	}
 
@@ -624,13 +618,10 @@ export class XtyleDropzone extends XtyleElement {
 	};
 
 	private onPick = (event: Event): void => {
-		// The input's own `change` bubbles, and it would surface on the host as a second, detail-less
-		// `change` alongside the one `addFiles` emits. Stop it here: the zone speaks with one voice.
+		// INFO: the input's own `change` bubbles and would surface a second, detail-less `change` on the host alongside the one `addFiles` emits
 		event.stopPropagation();
 		const picked = this.fileInput?.files;
 		if (!picked || picked.length === 0) return;
-		// The picker's own list is the raw ask; ingest it through the same gate as every other source and
-		// let `syncInputFiles` write the *accepted* subset back, so a rejected pick can't post through the form.
 		this.addFiles(Array.from(picked), "picker");
 	};
 

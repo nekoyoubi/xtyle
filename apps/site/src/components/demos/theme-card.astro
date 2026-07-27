@@ -1,0 +1,88 @@
+---
+import ThemeCard from "@xtyle/astro/ThemeCard.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Grid from "@xtyle/astro/Grid.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const ALGORITHMS = [
+	{ id: "xtyle-default", name: "Default" },
+	{ id: "xtyle-quiet", name: "Quiet" },
+	{ id: "xtyle-loud", name: "Loud" },
+	{ id: "xtyle-hc", name: "High contrast" },
+	{ id: "nxi-nite", name: "nxi nite" },
+];
+
+const SEEDED = [
+	{ name: "Grape", constraints: { "--accent": "#7c5cff" } },
+	{ name: "Mint", constraints: { "--accent": "#00b894" } },
+	{ name: "Ember", constraints: { "--accent": "#e8590c" } },
+];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Every blessed algorithm, previewed</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				Each card derives its invocation and paints the result rather than applying it. The drawing
+				is a <em>fake</em>: a small simulated interface in the theme's own colors, which reads a
+				palette faster than a list of hex values.
+			</Text>
+			<Grid minColWidth="13rem" gap={4}>
+				{ALGORITHMS.map((a) => <ThemeCard algorithm={a.id} name={a.name} />)}
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Seeded invocations, and both schemes</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				A card takes the same invocation inputs as a scope, so an accent seed or a pinned
+				<code>scheme</code> previews exactly what a scope would apply.
+			</Text>
+			<Grid minColWidth="13rem" gap={4}>
+				{SEEDED.map((s) => <ThemeCard name={s.name} constraints={s.constraints} />)}
+				{SEEDED.map((s) => <ThemeCard name={`${s.name} light`} constraints={s.constraints} scheme="light" />)}
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Selectable</Heading>
+		<Stack gap={4}>
+			<Text tone="subtle" size="sm">
+				<code>interactive</code> makes each card a real button that emits <code>select</code>. This is
+				the seam a theme picker sits on.
+			</Text>
+			<Grid minColWidth="13rem" gap={4} data-theme-card-demo>
+				{ALGORITHMS.slice(0, 4).map((a, i) => (
+					<ThemeCard algorithm={a.id} name={a.name} interactive selected={i === 0} />
+				))}
+			</Grid>
+			<Text size="sm">Chosen: <strong data-theme-card-chosen>Default</strong></Text>
+		</Stack>
+	</Card>
+</Stack>
+
+<script>
+	function wire(root: HTMLElement): void {
+		const output = document.querySelector<HTMLElement>("[data-theme-card-chosen]");
+		root.addEventListener("select", (event) => {
+			const detail = (event as CustomEvent<{ name?: string | null }>).detail;
+			for (const card of root.querySelectorAll("xtyle-theme-card")) {
+				card.toggleAttribute("selected", card === event.target);
+			}
+			if (output && detail?.name) output.textContent = detail.name;
+		});
+	}
+
+	function init(): void {
+		for (const root of document.querySelectorAll<HTMLElement>("[data-theme-card-demo]")) wire(root);
+	}
+
+	document.addEventListener("astro:page-load", init);
+	init();
+</script>

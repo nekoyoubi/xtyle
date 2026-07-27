@@ -52,15 +52,6 @@ export abstract class XtyleElement extends HTMLElement {
 
 	constructor() {
 		super();
-		// `isolated` reuses a declarative shadow root the SSR binding emitted (DSD), so the
-		// element upgrades in place over its server-rendered markup instead of throwing on a
-		// second `attachShadow`, and falls back to attaching one when created client-side
-		// (the Svelte binding, `document.createElement`). `inherit` / `scoped` render into the
-		// element's own light DOM — no shadow, no boundary, the global sheet reaches in.
-		// `auto` resolves per-instance: an element upgrading over pre-rendered light-DOM structure
-		// (`[data-root]`, composed by the Astro SSR binding) stays light and adopts it; one created
-		// bare (a framework client-render, raw markup) attaches a shadow root and projects the
-		// consumer's framework-owned children via native `<slot>`. A forced mode keeps its behavior.
 		const mode = this.styleMode;
 		const light = mode === "auto" ? hasComposedScaffold(this) : mode !== "isolated";
 		this.root = light
@@ -85,23 +76,12 @@ export abstract class XtyleElement extends HTMLElement {
 	}
 
 	connectedCallback(): void {
-		// A baking element re-resolves its palette whenever a theme is applied anywhere (root or a
-		// scoped subtree): it read the cascade once at mount, so without this a later theme swap — the
-		// generator, the bench live preview, a runtime mode toggle — leaves it frozen on the palette it
-		// first saw (stale, or black if it mounted before its scope carried the tokens).
 		if (this.resolvesThemeAtRuntime && !this.themeListener && typeof document !== "undefined") {
 			this.themeListener = () => {
 				if (this.hydrated && this.root.firstChild) this.render();
 			};
 			document.addEventListener(THEME_APPLY_EVENT, this.themeListener);
 		}
-		// Render once on first connect — whether the shadow is empty (client-created,
-		// e.g. the Svelte binding) or already holds a server-rendered declarative shadow
-		// (the Astro DSD binding). For DSD this replaces the zero-JS inline shadow with
-		// an identical client render that adopts the one shared `componentStyleSheet`
-		// (the hybrid: inline CSS for the no-JS first paint, shared sheet once hydrated)
-		// and runs the element's event wiring — so an interactive control hydrated from
-		// DSD is live, not just styled.
 		if (this.hydrated) return;
 		this.hydrated = true;
 		this.render();

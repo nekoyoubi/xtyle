@@ -18,8 +18,8 @@ import { manifest as heatmapManifest } from "../src/elements/fragments/heatmap/s
 function mod(id: string, capability: string, script: string) {
 	return {
 		manifest: {
-			$schema: "https://xript.dev/schema/mod/v0.7.json",
-			xript: "0.7",
+			$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+			xript: "0.8",
 			name: `test-${id}-readout`,
 			version: "0.0.1",
 			title: `test-${id}-readout`,
@@ -27,7 +27,7 @@ function mod(id: string, capability: string, script: string) {
 			capabilities: [capability],
 			entry: { script: "mod.js", format: "script" },
 			fills: {
-				[`component.${id}`]: [{ id, format: "text/html+jsml", source: `${id}.html` }],
+				[`component.${id}`]: [{ id, format: "application/x-xtyle+html", source: `${id}.html` }],
 			},
 		},
 		fragmentSources: {

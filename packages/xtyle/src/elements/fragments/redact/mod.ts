@@ -44,7 +44,6 @@ function paint(b: RedactBindings, ops: OpsBuilder): void {
 	ops.setAttr("[data-rd-cover]", "tabindex", interactive ? "" : "-1");
 	ops.setAttr("[data-rd-cover]", "aria-hidden", interactive ? "" : "true");
 
-	// only overwrite the default eye glyph when a cue text is actually named
 	if (b.cue != null) ops.setText("[data-rd-cue]", b.cue);
 	ops.setAttr("[data-rd-cue]", "hidden", b.showCue === true ? "" : "hidden");
 }

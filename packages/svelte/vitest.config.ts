@@ -2,10 +2,8 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import { compile } from "svelte/compiler";
 
-// Compiling `.svelte` here rather than through `@sveltejs/vite-plugin-svelte` keeps the harness off
-// that plugin's vite 6 peer, which vitest 2 (on vite 5) does not satisfy. The wrappers are thin
-// enough for it: none carries a `<style>` block, and Svelte 5 strips the `lang="ts"` annotations
-// natively, so a bare `compile()` is the whole toolchain.
+// INFO: compile .svelte here rather than via @sveltejs/vite-plugin-svelte, whose vite 6 peer vitest 2
+// (on vite 5) doesn't satisfy; the wrappers carry no <style> and Svelte 5 strips lang="ts", so compile() suffices
 const sveltePlugin = {
 	name: "xtyle-svelte-compile",
 	enforce: "pre" as const,

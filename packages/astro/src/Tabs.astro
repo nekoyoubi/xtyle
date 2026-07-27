@@ -1,6 +1,7 @@
 ---
 import { type TabItemData } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { authoredPairs } from "./internal/paired-slots.js";
 import { checkAuthoring } from "./internal/diagnose.js";
 import { TABS_SIZES, resolveVocab, TABS_VARIANTS, TABS_ACTIVATIONS } from "@xtyle/core";
 
@@ -48,13 +49,27 @@ const size = resolveVocab(sizeInput, TABS_SIZES, "md", "tabs size");
 const variant = resolveVocab(variantInput, TABS_VARIANTS, "underline", "tabs variant");
 const activation = resolveVocab(activationInput, TABS_ACTIVATIONS, "automatic", "tabs activation");
 
-const tabItems = items ?? [];
 const uid = `xtyle-tabs-${Math.random().toString(36).slice(2, 9)}`;
+
+const authored = items ? [] : await authoredPairs(Astro.slots, "tab", "panel");
+
+const tabItems: TabItemData[] = items
+	? items.map((item, i) => ({ ...item, value: item.value ?? String(i) }))
+	: authored.map(({ lead }, i) => ({
+			label: "",
+			labelSlot: `label-${i}`,
+			panel: "",
+			panelSlot: `panel-${i}`,
+			value: lead.attrs["data-value"] ?? lead.attrs.value ?? String(i),
+			disabled: lead.attrs.disabled !== undefined || lead.attrs["aria-disabled"] === "true",
+		}));
 
 const bindings = {
 	tabs: tabItems.map((item, i) => ({
 		key: item.value ?? String(i),
 		label: item.label,
+		labelSlot: item.labelSlot,
+		panelSlot: item.panelSlot,
 		panel: item.panel ?? "",
 		disabled: item.disabled,
 	})),
@@ -67,42 +82,31 @@ const bindings = {
 	labelledby: labelledby ?? null,
 	uid,
 };
-// Two authoring modes. items-mode (the common case) renders the whole chrome light from `bindings`
-// and ships no children. The advanced slotted mode pairs the consumer's children by order, and
-// those must reach the element still carrying their marker — hence `data-xtyle-tab` /
-// `data-xtyle-panel`, which no framework claims.
-//
-// `slot` cannot be that marker. On a child of an Astro *component* it is a routing directive Astro
-// always consumes: with a matching `<slot name>` below the child renders there minus the attribute,
-// and with no match the child is dropped entirely. (A `slot` a component writes on its own root
-// element, as `Segment.astro` does, is ordinary HTML and survives — that is a different case, not a
-// bug to fix.) The named receivers below stay so a legacy `slot=`-marked child is passed through
-// rather than discarded.
-const useItems = tabItems.length > 0;
-const light = useItems ? await renderFragmentLight("tabs", bindings) : "";
+// INFO: `slot` on a child of an Astro component is a routing directive Astro always consumes (and
+// drops the child when nothing matches), so child markers use `data-xtyle-tab` / `data-xtyle-panel`.
+const light = tabItems.length > 0 ? await renderFragmentLight("tabs", bindings) : "";
+const composed = authored.reduce(
+	(html, pair, i) =>
+		html
+			.replace(`<slot name="label-${i}"></slot>`, () => pair.lead.html)
+			.replace(`<slot name="panel-${i}"></slot>`, () => pair.body?.html ?? ""),
+	light,
+);
 ---
 
-{useItems ? (
-	<xtyle-tabs
-		variant={variant}
-		size={size}
-		activation={activation}
-		value={value}
-		label={label}
-		labelledby={labelledby}
-		sticky={sticky}
-		tablist={tablist || undefined}
-		items={JSON.stringify(items)}
-		class={extra}
-		set:html={light}
-		{...rest}
-	/>
-) : (
-	<xtyle-tabs variant={variant} size={size} activation={activation} value={value} label={label} labelledby={labelledby} sticky={sticky} tablist={tablist || undefined} class={extra} {...rest}>
-		<slot name="tab" />
-		<slot name="panel" />
-		<slot />
-	</xtyle-tabs>
-)}
+<xtyle-tabs
+	variant={variant}
+	size={size}
+	activation={activation}
+	value={value}
+	label={label}
+	labelledby={labelledby}
+	sticky={sticky}
+	tablist={tablist || undefined}
+	items={items ? JSON.stringify(items) : undefined}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
 
 {!isStatic && <script>import "@xtyle/core/elements";</script>}

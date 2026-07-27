@@ -17,6 +17,8 @@ interface PanelBindings {
 	hasActions?: boolean;
 	titleId?: string;
 	label?: string | null;
+	markerIcon?: string;
+	markerBody?: string | null;
 }
 
 interface Intent {
@@ -28,14 +30,16 @@ declare const hooks: {
 };
 declare const xript: { exports: { register(name: string, fn: (...args: unknown[]) => unknown): void } };
 
-// The inline glyph is the zero-JS fallback: `<xtyle-icon>` only paints once the custom element
-// upgrades, and the `static` render never loads the runtime. Once it does upgrade, the icon's
-// shadow root has no `<slot>`, so this light child stops rendering and the fragment-backed glyph
-// takes over.
-const MARKER =
-	'<xtyle-icon class="xtyle-panel__marker" part="marker" name="chevron-right" aria-hidden="true">' +
-	renderIcon("chevron-right") +
-	"</xtyle-icon>";
+// INFO: the inline glyph is the zero-JS fallback before `<xtyle-icon>` upgrades; once it does, the
+// icon's shadow root has no `<slot>`, so this light child stops rendering
+function marker(b: PanelBindings): string {
+	const name = b.markerIcon ?? "chevron-right";
+	return (
+		`<xtyle-icon class="xtyle-panel__marker" part="marker" name="${escapeAttr(name)}" aria-hidden="true">` +
+		renderIcon(name, { body: b.markerBody }) +
+		"</xtyle-icon>"
+	);
+}
 
 function level(b: PanelBindings): number {
 	const raw = Number(b.level);
@@ -46,9 +50,8 @@ function isCollapsible(b: PanelBindings): boolean {
 	return (b.variant ?? "default") === "collapsible";
 }
 
-// `data-slot="actions"` rides alongside the native `<slot>`: the host reads `hasSlotted("actions")`
-// to decide header presence/naming, and under the auto-light (Astro SSR) render there is no shadow
-// root to read host children from — so the binding-composed content must stay capturable by marker.
+// INFO: under the auto-light (Astro SSR) render there is no shadow root, so `data-slot="actions"` lets
+// the host read `hasSlotted("actions")` for header presence/naming that a plain `<slot>` would not expose
 const ACTIONS_SLOT = `<span class="xtyle-slot" data-slot="actions"><slot name="actions"></slot></span>`;
 
 function hasHeader(b: PanelBindings): boolean {
@@ -79,7 +82,7 @@ function inner(b: PanelBindings): string {
 		return (
 			`<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header">` +
 			`<button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" ` +
-			`aria-controls="${escapeAttr(uid)}-region">${MARKER}` +
+			`aria-controls="${escapeAttr(uid)}-region">${marker(b)}` +
 			`<span class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title ?? "")}</span></button>` +
 			`${ACTIONS_SLOT}</div>` +
 			`<div class="xtyle-panel__collapse" part="collapse" id="${escapeAttr(uid)}-region" role="region" ` +

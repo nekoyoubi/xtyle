@@ -61,8 +61,8 @@ const light = await renderFragmentLight("rating", {
 	size: size ?? "md",
 });
 
-// The hidden input is plumbing the element appends on upgrade; a zero-JS form still has to post the
-// value, so the server writes the same one rather than leaving a `name`d rating that submits nothing.
+// INFO: a zero-JS form still has to post the value, so the server writes the hidden input the element
+// would otherwise append on upgrade
 const mirror = name && !readonly ? `<input type="hidden" name="${name}" value="${clamped}">` : "";
 const accessibleName = label ?? `${clamped} out of ${max} stars`;
 ---

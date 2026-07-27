@@ -48,12 +48,12 @@
 		host?.dockFloating(panelId, target, region);
 	}
 
-	// `layout` is a tree object, not an attribute, so set it as a property on the live element.
+	// INFO: `layout` is a tree object, not an attribute, so set it as a property on the live element
 	$effect(() => {
 		if (host && layout !== undefined) host.layout = layout;
 	});
 
-	// The callback is read through a getter so swapping the prop re-registers the listener.
+	// INFO: the callback is read through a getter so swapping the prop re-registers the listener
 	function forward<E extends Event>(type: string, callback: () => ((event: E) => void) | undefined): void {
 		$effect(() => {
 			const cb = callback();

@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-// side effect: defines the <xtyle-popover> custom element on the happy-dom registry
 import "../src/elements/popover.js";
 import { loadFill, loadedFillNames } from "../src/elements/fragment-host.js";
 import { manifest } from "../src/elements/fragments/popover/source.generated.js";
@@ -29,8 +28,8 @@ type StubDialog = HTMLDialogElement & { modalDoor?: boolean };
  */
 const beakMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-popover-beak",
 		version: "0.0.1",
 		title: "test-popover-beak",
@@ -38,7 +37,7 @@ const beakMod = {
 		capabilities: ["xtyle.component.popover"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.popover": [{ id: "popover", format: "text/html+jsml", source: "popover.html" }],
+			"component.popover": [{ id: "popover", format: "application/x-xtyle+html", source: "popover.html" }],
 		},
 	},
 	fragmentSources: {

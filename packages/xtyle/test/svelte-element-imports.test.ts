@@ -3,14 +3,6 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Every Svelte wrapper pulls its custom element in by a per-element subpath
-// (`@xtyle/core/elements/<id>.js`) rather than the whole-barrel `register.js`. That is what keeps a
-// consumer who renders one component from shipping all 87 elements — and, transitively, the ~300
-// Prism grammar chunks the code element's language table dynamic-imports. These tests guard the
-// seam: the subpath a wrapper imports must resolve to a real element module, and that module must
-// actually `define()` the tag the wrapper renders. Get either half wrong and the component silently
-// never upgrades in the browser, which no type check or render test would catch.
-
 const here = dirname(fileURLToPath(import.meta.url));
 const elementsDir = resolve(here, "../src/elements");
 const svelteDir = resolve(here, "../../svelte/src");
@@ -72,10 +64,6 @@ describe("svelte wrappers import their element by subpath", () => {
 });
 
 describe("elements that build other elements pull them in", () => {
-	// An element that hand-builds another element with `createElement("xtyle-…")` used to get away with
-	// it: the barrel had already defined every tag. Under per-element imports nothing else guarantees
-	// the tag is defined, so the dependency has to be a real import — from the element module itself,
-	// or from every wrapper that mounts it.
 	it("each createElement'd tag is imported by the module that builds it, or by its wrapper", () => {
 		const unmet: string[] = [];
 		for (const file of elementSources) {
@@ -116,8 +104,8 @@ describe("package manifests keep the tree-shaking contract", () => {
 	});
 
 	it("svelte is tree-shakeable but keeps the register escape hatch side-effectful", () => {
-		// A bare `sideEffects: false` here would let a bundler drop `import "@xtyle/svelte/register"`
-		// outright — it uses no exports — and the opt-in would silently register nothing.
+		// INFO: sideEffects:false would let a bundler drop the side-effectful register import,
+		// registering nothing
 		expect(sveltePkg.sideEffects).toEqual(["./dist/register.js"]);
 		expect(sveltePkg.exports["./register"]).toBeDefined();
 	});

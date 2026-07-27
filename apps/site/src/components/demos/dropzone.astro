@@ -143,8 +143,6 @@ import Button from "@xtyle/astro/Button.astro";
 	const zone = (id: string) => document.getElementById(id) as XtyleDropzone | null;
 	const on = (id: string, run: () => void) => document.getElementById(id)?.addEventListener("click", run);
 
-	// The native path: paths in, validated files out. This is exactly what a Tauri
-	// `onDragDropEvent` handler does with `payload.paths` — no DOM drag event exists there.
 	on("demo-native-over", () => zone("demo-native")?.setDragging(true));
 	on("demo-native-drop", () =>
 		zone("demo-native")?.addFiles(["C:/shots/hero-render.png", "C:/docs/press-kit.pdf"], "host"),
@@ -163,8 +161,6 @@ import Button from "@xtyle/astro/Button.astro";
 		),
 	);
 
-	// The transport is the host's, and `file-drop` is where it starts: every batch — dropped, pasted, picked,
-	// or handed over by a native shell — arrives here, and the bars are driven back through `setProgress`.
 	zone("demo-upload")?.addEventListener("file-drop", (event) => {
 		const target = zone("demo-upload");
 		const { accepted, source } = (event as CustomEvent).detail;

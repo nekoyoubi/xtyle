@@ -14,8 +14,8 @@ import { manifest } from "../src/elements/fragments/date-picker/source.generated
  */
 const brutalistMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-date-picker-brutalist",
 		version: "0.0.1",
 		title: "test-date-picker-brutalist",
@@ -26,7 +26,7 @@ const brutalistMod = {
 			"component.date-picker": [
 				{
 					id: "date-picker",
-					format: "text/html+jsml",
+					format: "application/x-xtyle+html",
 					source: "date-picker.html",
 					handlers: [
 						{ selector: ".xtyle-datepicker__input", on: "change", handler: "commit" },

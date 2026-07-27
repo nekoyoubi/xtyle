@@ -102,7 +102,7 @@ function inner(b: SliderBindings): string {
 	const railMax = b.max ?? 100;
 	const value = trueValue(b);
 	const rail = railValue(b);
-	// The announced range widens to include an overflow value so `aria-valuenow` stays within it.
+	// INFO: aria-valuenow must stay within min/max, so the announced range widens to include an overflow value.
 	const ariaMin = Math.min(railMin, value);
 	const ariaMax = Math.max(railMax, value);
 	const uid = b.elementId ?? "xtyle-slider";
@@ -166,16 +166,11 @@ hooks.fragment.update("slider", (bindings, ops) => {
 	ops.setAttr(".xtyle-slider__thumb", "tabindex", bindings.disabled ? "-1" : "0");
 	ops.setAttr(".xtyle-slider__thumb", "style", `inset-inline-start: ${pct}`);
 	ops.setAttr(".xtyle-slider__fill", "style", `width: ${pct}`);
-	// The readout patch lands on the text node the fill owns, never on the value span itself: a mod is free
-	// to structure that span (a unit, a richer readout), and clearing the span would tear its markup out on
-	// every value move. While the value is being edited the span holds the inline field instead, so the
-	// patch stands down until the edit ends.
+	// INFO: patch the inner text node, not the value span, so a mod's restructured span survives value moves; stand down while editing (the span holds the input).
 	if (bindings.showValue && !bindings.editing) ops.setText("[data-value-text]", readout(bindings, value));
 });
 
-// The step size and rail clamp live host-side (they read the live event's modifier keys), so the sandbox
-// handler only names the direction: an arrow nudges by one step, a page nudges by the alt step, Home/End
-// jump to the rail ends.
+// INFO: step size and rail clamp live host-side (they read the live event's modifier keys); this handler only names the direction.
 xript.exports.register("keyAdjust", (payload: unknown, context: unknown): Intent => {
 	const e = payload as EventPayload;
 	if (e.disabled || e.ariaDisabled === "true") return {};

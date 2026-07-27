@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-// side effect: defines <xtyle-toast> and <xtyle-toast-region> on the happy-dom registry
+// INFO: side-effect import; registers the <xtyle-toast> and <xtyle-toast-region> custom elements
 import "../src/elements/toast.js";
 import type { XtyleToastRegion } from "../src/elements/toast.js";
 import { loadFill } from "../src/elements/fragment-host.js";
@@ -85,7 +85,6 @@ describe("toast-region.toast() — the imperative push", () => {
 		expect(drawn?.getAttribute("aria-atomic")).toBe("true");
 		expect(item.shadowRoot?.querySelector(".xtyle-toast__icon svg")).not.toBeNull();
 		expect(item.shadowRoot?.querySelector(".xtyle-toast__close")).not.toBeNull();
-		// the message rides the fill's own <slot>, not a hardcoded body div
 		expect(item.shadowRoot?.querySelector(".xtyle-toast__message slot")).not.toBeNull();
 		expect(item.textContent).toBe("Settings saved.");
 	});
@@ -210,19 +209,18 @@ describe("toast-region.toast() — the imperative push", () => {
 	});
 });
 
-// Last: the override registers hooks on the shared runtime for the rest of the file, so it must not
-// run before the tests that assert the built-in markup.
+// INFO: must stay last — this registers hooks on the shared runtime that would break the built-in-markup assertions above
 describe("a component.toast override", () => {
 	it("reshapes an imperatively pushed toast, not just a declarative one", async () => {
 		await loadFill(
 			{
-				xript: "0.7",
+				xript: "0.8",
 				name: "test-toast-override",
 				version: "0.0.1",
 				capabilities: ["xtyle.component.toast"],
 				entry: { script: "mod.js", format: "script" },
 				fills: {
-					"component.toast": [{ id: "toast", format: "text/html+jsml", source: "toast.html" }],
+					"component.toast": [{ id: "toast", format: "application/x-xtyle+html", source: "toast.html" }],
 				},
 			},
 			{

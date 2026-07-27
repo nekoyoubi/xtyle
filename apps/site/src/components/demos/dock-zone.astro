@@ -5,8 +5,6 @@ import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import DockZone from "@xtyle/astro/DockZone.astro";
 
-// A full `DockLayout`: the docked tree plus a window already torn off, so the float chrome (the
-// titlebar with its dock and close buttons, the resize grip) is on screen without a drag first.
 const initialLayout = {
 	tree: {
 		kind: "split",
@@ -166,8 +164,8 @@ $ _</pre>
 <script>
 	import "@xtyle/core/elements";
 
-	// Listen on document, not the element: Astro's ClientRouter remounts the zone on navigation,
-	// which would detach a zone-scoped listener. The event bubbles and composes, so document catches it.
+	// INFO: Astro's ClientRouter remounts the zone on navigation, detaching a zone-scoped listener;
+	// the event bubbles and composes, so listening on document survives the remount
 	document.addEventListener("panel-action", (event) => {
 		const zone = event.target as (HTMLElement & { closePanel(id: string): void; floatPanel(id: string): void }) | null;
 		if (!zone?.classList?.contains("dock-demo")) return;

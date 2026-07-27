@@ -83,8 +83,8 @@ const anatomySnippet = `algorithms/sunrise/
    └─ mod.ts           # defineXtyleAlgorithm(spec)`;
 
 const manifestSnippet = `{
-  "$schema": "https://xript.dev/schema/mod-manifest/v0.7.json",
-  "xript": "0.7",
+  "$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+  "xript": "0.8",
   "name": "sunrise",
   "version": "0.1.0",
   "title": "Sunrise",
@@ -148,8 +148,6 @@ npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 
 const fanBg = "#0e1018";
 const fanAccent = "#6c5cff";
-// `duo` is the one strategy with a second *input*: it reads `--accent-2` as a brand anchor rather
-// than deriving it, so the preview pins one to show the mode doing its actual job.
 const fanAccent2 = "#ff8a3d";
 type FanSwatch = { label: string; hex: string; fg: string; shift: string };
 function deriveFan(strategy: AccentStrategy): FanSwatch[] {
@@ -231,7 +229,7 @@ const fanComparison = [
 			<Panel title="The built-in set" id="built-in" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
-						Six algorithms ship blessed. They are ordinary mods, the same shape yours
+						Five algorithms ship blessed. They are ordinary mods, the same shape yours
 						takes, and a good place to read taste off working examples.
 					</Text>
 					<Table aria-label="Built-in algorithms">
@@ -337,8 +335,8 @@ const fanComparison = [
 						control, its range or options, its default. Each one then self-renders in the
 						theme builder. The shared knobs (<code>scheme</code>, <code>vibrancy</code>,
 						<code>contrastBand</code>, <code>density</code>, <code>cues</code>,
-						<code>accentSplit</code>, <code>accentShiftStep</code>, <code>typeScale</code>,
-						<code>radiusScale</code>) carry their domains for free; declare a
+						<code>accentSplit</code>, <code>accentShiftStep</code>, <code>surfaceRamp</code>,
+						<code>typeScale</code>, <code>radiusScale</code>) carry their domains for free; declare a
 						<code>KnobSpec</code> only for a knob of your own.
 					</Text>
 					<Code lang="typescript" code={knobsSnippet} />

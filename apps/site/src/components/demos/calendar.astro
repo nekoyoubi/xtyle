@@ -138,6 +138,20 @@ const keys = [
 
 	<Card>
 		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">The nav arrows are roster glyphs</Heading>
+			<Text size="sm" tone="muted">
+				<Text as="span" mono size="xs">prevIcon</Text> and <Text as="span" mono size="xs">nextIcon</Text>
+				name any glyph the icon roster can draw, so a mod that fills <Text as="span" mono size="xs">xtyle.icons</Text>
+				can reshape the month steps without touching the calendar.
+			</Text>
+		</Stack>
+		<Stack gap={2} style="max-width: 20rem;">
+			<Calendar month={month} value="2026-07-14" prevIcon="arrow-left" nextIcon="arrow-right" label="Calendar with arrow nav" />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
 			<Heading level={3} size="lg">The keyboard grid</Heading>
 			<Text size="sm" tone="muted">
 				The grid is one tab stop; inside it the cursor roves. Tab into the calendar above and drive it —
@@ -244,7 +258,7 @@ const keys = [
 			"2026-07-17": { dots: ["accent", "success", "danger"], label: "3 events" },
 			"2026-07-23": { busy: true, label: "fully booked" },
 		};
-		// a wall-clock date is a calendar square, so a UTC-anchored Date reads its weekday with no DST to cross
+		// INFO: anchor the date at UTC (T00:00:00Z) so getUTCDay reads the weekday with no DST/timezone shift
 		events.isDateDisabled = (iso) => new Date(`${iso}T00:00:00Z`).getUTCDay() === 1;
 	}
 </script>

@@ -250,9 +250,8 @@ export class XtylePopover extends XtyleElement {
 
 	override disconnectedCallback(): void {
 		super.disconnectedCallback();
-		// removal takes the panel out of the top layer without either door announcing it — a `<dialog>`
-		// fires no `close` when it is detached — so the lifecycle flag is cleared here, or a popover that
-		// is moved in the DOM while open would come back believing it is still up and never re-post
+		// INFO: a detached `<dialog>` fires no `close`, so clear the up-flag here or a popover moved in
+		// the DOM while open comes back believing it is still up and never re-posts
 		this.up = false;
 		this.settling = false;
 		this.unwireDocument();
@@ -335,7 +334,7 @@ export class XtylePopover extends XtyleElement {
 		this.openOpts = opts;
 		this.captureReturnFocus();
 		this.open = true;
-		// the panel's `toggle` event is async, so a place() deferred to it paints one frame at 0,0
+		// INFO: the panel's `toggle` event is async, so a deferred place() would paint one frame at 0,0
 		this.place();
 		this.applyFocus(opts.focus ?? this.focusOnOpen);
 	}
@@ -461,10 +460,8 @@ export class XtylePopover extends XtyleElement {
 	private syncOpen(): void {
 		const panel = this.panel;
 		if (!panel || !panel.isConnected) return;
-		// `showPopover()` / `showModal()` throw if the element isn't in a stable state — which happens
-		// when a host framework sets `open` synchronously during its own mount (e.g. a Svelte
-		// `client:only` island). Swallow it; the next open/close, or the connect-time `afterApply`,
-		// settles it.
+		// INFO: `showPopover()`/`showModal()` throw when the element isn't in a stable state (a host
+		// framework setting `open` during its own mount); swallow it and let the next open/close settle
 		try {
 			if (!this.open) {
 				if (this.panelUp(panel)) this.dismissPanel(panel);
@@ -490,8 +487,7 @@ export class XtylePopover extends XtyleElement {
 			this.handleOpened();
 			return;
 		}
-		// `manual` vs `auto` is read by the platform at `showPopover()`, so the mode is set on the panel right
-		// before it opens: a manual popover skips the browser's light-dismiss, leaving dismissal to the host.
+		// INFO: the platform reads `manual` vs `auto` at `showPopover()`, so set the mode right before opening
 		panel.setAttribute("popover", this.noLightDismiss ? "manual" : "auto");
 		panel.showPopover();
 	}
@@ -538,8 +534,6 @@ export class XtylePopover extends XtyleElement {
 		if (!this.up) return;
 		this.up = false;
 		if (this.settling) return;
-		// a panel dismissed while it still holds focus (light-dismiss on a focused control, a
-		// programmatic close) would drop focus to the body; hand it back where it came from
 		const target = this.returnFocusTo ?? this.triggerElement();
 		const stranded = this.holdsFocus();
 		const reason = this.closeReason;
@@ -704,8 +698,6 @@ export class XtylePopover extends XtyleElement {
 			this.hide("api");
 			return;
 		}
-		// the pointer that light-dismissed the panel a moment ago is the same one landing here; without
-		// this the trigger would close and instantly reopen, and a click would never shut the popover
 		if (this.now() - this.dismissedAt < REOPEN_GUARD_MS) return;
 		this.show();
 	};

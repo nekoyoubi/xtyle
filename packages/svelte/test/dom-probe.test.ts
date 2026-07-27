@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-// happy-dom is not a complete DOM. It was established that `querySelectorAll(":scope > [data-x]")`
-// returns 0 there for a matching direct child while the same selector without `:scope` returns 1.
-// The forwarding sweep leans on a handful of APIs across ~90 wrappers, so each one is probed here
-// first: if happy-dom regresses one, this file names it instead of the failure surfacing as a
-// hundred confusing "attribute missing" reports in the sweep.
+// INFO: happy-dom's `querySelectorAll(":scope > [data-x]")` returns 0 for a matching direct child while the same selector without `:scope` returns 1
 describe("happy-dom capability probe", () => {
 	const build = (): HTMLElement => {
 		const host = document.createElement("div");
@@ -49,8 +45,6 @@ describe("happy-dom capability probe", () => {
 		expect(el.firstElementChild!.getAttribute("slot")).toBe("value");
 	});
 
-	// The known gap, asserted as-is so the harness documents it rather than tripping over it. The
-	// sweep uses `.children` and tag selectors instead of `:scope`.
 	it("documents the :scope selector gap", () => {
 		const host = document.createElement("div");
 		host.innerHTML = `<div data-x="1"></div>`;

@@ -78,8 +78,8 @@ function live(b: AlertBindings): string {
 	return ASSERTIVE[severityOf(b)] ? "assertive" : "polite";
 }
 
-// Title and actions wrap a `<slot>`, so `:empty` can never match them: the slot is a child node, and
-// the nodes assigned to it are not. Only the host can tell a filled slot from an unfilled one.
+// INFO: a filled `<slot>` never matches `:empty` (the slot is the child node, not the assigned nodes),
+// so only the host can tell a filled region from an empty one.
 function toggleRegions(b: AlertBindings, ops: OpsBuilder): void {
 	ops.toggle('[part="title"]', b.hasTitle === true);
 	ops.toggle('[part="actions"]', b.hasActions === true);

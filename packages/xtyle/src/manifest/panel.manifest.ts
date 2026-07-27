@@ -57,6 +57,18 @@ import { Panel } from "@xtyle/astro";
 	<p>A long stream of entries that scrolls inside the panel body…</p>
 </Panel>`;
 
+const markerHtmlExample = `<xtyle-panel variant="collapsible" title="A different marker" marker-icon="plus">
+	<p>The disclosure marker is drawn from any name the icon roster can draw.</p>
+</xtyle-panel>`;
+
+const markerAstroExample = `---
+import Panel from "@xtyle/astro/Panel.astro";
+---
+
+<Panel variant="collapsible" title="A different marker" markerIcon="plus">
+	<p>The disclosure marker is drawn from any name the icon roster can draw.</p>
+</Panel>`;
+
 export const panelManifest: ComponentManifest = {
 	id: "panel",
 	name: "Panel",
@@ -153,6 +165,13 @@ export const panelManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description: "Caps the body height and makes it a focusable, keyboard-scrollable region.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "markerIcon",
+			type: "string",
+			default: '"chevron-right"',
+			description: "The roster glyph drawn as the collapsible header's marker. Any name the icon roster can draw, including one a mod contributed through the `xtyle.icons` slot.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -263,6 +282,12 @@ export const panelManifest: ComponentManifest = {
 			title: "Header, collapsible, and scroll",
 			description: "A titled panel with actions and a footer, a collapsible disclosure, and a scrollable body.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "marker-glyph",
+			title: "A different collapse marker",
+			description: "The collapsible header's marker drawn from any name the icon roster can draw, including one a mod contributed.",
+			source: { html: markerHtmlExample, astro: markerAstroExample },
 		},
 	],
 };

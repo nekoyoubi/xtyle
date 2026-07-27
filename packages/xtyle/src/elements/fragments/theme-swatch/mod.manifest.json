@@ -1,0 +1,23 @@
+{
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
+	"name": "xtyle-theme-swatch-default",
+	"version": "0.0.1",
+	"title": "Xtyle Theme Swatch (default)",
+	"description": "The built-in fill for the xtyle Theme Swatch component: the mod-zero markup and behavior every app inherits and may override.",
+	"capabilities": ["xtyle.component.theme-swatch"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.theme-swatch": [
+			{
+				"id": "theme-swatch",
+				"format": "application/x-xtyle+html",
+				"source": "theme-swatch.html",
+				"handlers": [],
+				"meta": {
+					"tokens": ["--space-2", "--text-xs", "--fg-2", "--danger", "--leading-tight", "--font-sans"]
+				}
+			}
+		]
+	}
+}

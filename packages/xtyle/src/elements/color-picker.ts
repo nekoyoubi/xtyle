@@ -200,7 +200,7 @@ export class XtyleColorPicker extends XtyleElement {
 				this.setColor({ h, s, v }, parsed.alpha, "change");
 			}
 		} catch {
-			// the user dismissed the picker — leave the color unchanged
+			// INFO: EyeDropper.open() rejects on user cancel; leave the color unchanged
 		}
 	}
 
@@ -645,8 +645,6 @@ export class XtyleColorPicker extends XtyleElement {
 				const width = popover.offsetWidth || 256;
 				const height = popover.offsetHeight || 256;
 				const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
-				// Open below the trigger, but flip above when there isn't room (a picker near the fold),
-				// then clamp into the viewport so the popover is never cut off.
 				const below = rect.bottom + 6;
 				const above = rect.top - height - 6;
 				const top = below + height <= window.innerHeight - 8 || above < 8 ? below : above;
@@ -666,9 +664,8 @@ export class XtyleColorPicker extends XtyleElement {
 		});
 		this.el(".xtyle-color-picker__format")?.addEventListener("click", () => this.cycleFormat());
 		this.el(".xtyle-color-picker__eyedropper")?.addEventListener("click", () => void this.openEyeDropper());
-		// One delegated handler per chip row (the swatch presets and the harmony chips are both
-		// `__preset` rows), so a chip the fill reshapes still adopts its color, and a chip that is in
-		// both sets can't be handled twice.
+		// INFO: one delegated handler per chip row so a chip the fill reshapes still adopts its color
+		// and a chip in both the swatch and harmony sets isn't handled twice
 		this.root.querySelectorAll<HTMLElement>(".xtyle-color-picker__presets").forEach((row) => {
 			row.addEventListener("click", (event) => {
 				if (this.disabled) return;

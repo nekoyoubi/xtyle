@@ -112,9 +112,8 @@
 	$effect(() => {
 		const target = el;
 		if (!target) return;
-		// Defer to a microtask so an `open`-by-default palette doesn't call `showModal()` synchronously
-		// inside Svelte's mount-effect flush (which corrupts Svelte's reconciliation). Post-mount toggles
-		// settle a microtask later — imperceptible.
+		// HACK: defer to a microtask so an `open`-by-default palette doesn't call `showModal()`
+		// synchronously in Svelte's mount-effect flush, which corrupts Svelte's reconciliation
 		queueMicrotask(() => {
 			target.open = open;
 		});

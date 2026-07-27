@@ -17,15 +17,15 @@ import { manifest as dotManifest, fragmentSources as dotSources } from "../src/e
 function fill(name: string, slot: string, id: string, html: string, script: string) {
 	return {
 		manifest: {
-			$schema: "https://xript.dev/schema/mod/v0.7.json",
-			xript: "0.7",
+			$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+			xript: "0.8",
 			name,
 			version: "0.0.1",
 			title: name,
 			description: `A test mod overriding ${slot}.`,
 			capabilities: [`xtyle.${slot}`],
 			entry: { script: "mod.js", format: "script" },
-			fills: { [slot]: [{ id, format: "text/html+jsml", source: "fill.html" }] },
+			fills: { [slot]: [{ id, format: "application/x-xtyle+html", source: "fill.html" }] },
 		},
 		fragmentSources: {
 			"fill.html": html,

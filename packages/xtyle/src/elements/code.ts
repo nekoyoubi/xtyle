@@ -114,9 +114,8 @@ export class XtyleCode extends XtyleElement {
 	private get source(): string {
 		const fromAttr = this.code;
 		if (fromAttr !== null) return fromAttr;
-		// light DOM: the element's own `textContent` is now the rendered chrome, so read the raw
-		// source the host captured out of the light DOM before the scaffold painted (untrimmed, to
-		// preserve the text-content API exactly); fall back to `textContent` before the first paint.
+		// INFO: after paint the element's `textContent` is the rendered chrome; read the raw source the
+		// host captured (untrimmed) before the scaffold painted, falling back to `textContent` pre-paint.
 		const captured = this.fragment.slottedNodes("");
 		if (captured.length) return captured.map((node) => node.textContent ?? "").join("");
 		return this.textContent ?? "";
@@ -184,8 +183,8 @@ export class XtyleCode extends XtyleElement {
 	private seedScaffold(html: string, language: string | null): void {
 		const code = this.root.querySelector("[data-code]");
 		if (!(code instanceof HTMLElement) || code.firstChild) return;
-		// add the highlighter's `language-x` contract class, never assign the whole class attribute: the names
-		// on these nodes belong to whichever fill drew them, and writing them from here overwrites a mod's
+		// INFO: `classList.add` the highlighter's `language-x` class; assigning the whole class attribute
+		// would clobber class names a fill or mod drew on these nodes.
 		const languageClass = `language-${language ?? "none"}`;
 		code.classList.add(languageClass);
 		const spec = this.highlight ? parseLineSpec(this.highlight) : undefined;
@@ -230,7 +229,6 @@ export class XtyleCode extends XtyleElement {
 	}
 
 	private updateScrollAffordance(pre: HTMLElement): void {
-		// A `wrap` block soft-wraps rather than scrolls sideways, so it is never a horizontal scroll region.
 		const scrolls = !this.hasAttribute("wrap") && pre.scrollWidth > pre.clientWidth + 1;
 		if (scrolls) {
 			if (!pre.hasAttribute("tabindex")) pre.setAttribute("tabindex", "0");

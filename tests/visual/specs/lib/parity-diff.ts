@@ -13,12 +13,10 @@ export interface Tolerance {
 	sizePx: number;
 }
 
-// Both runtime, mounting the same fragment: must be near-identical (a couple
-// percent absorbs sub-pixel text AA across dense grids like a calendar).
+// INFO: both runtime mounting the same fragment; ~2% absorbs sub-pixel text AA across dense grids
 export const STRICT: Tolerance = { maxMismatchRatio: 0.02, sizePx: 2 };
-// SSR light-DOM snapshot vs a runtime mount: sub-pixel AA and rounding on small
-// high-contrast controls (a slider thumb, a radio dot) flip a few percent of a
-// tiny area without being a real divergence.
+// INFO: SSR snapshot vs runtime mount; sub-pixel AA/rounding on small high-contrast controls
+// flips a few percent of a tiny area without a real divergence
 export const LOOSE: Tolerance = { maxMismatchRatio: 0.08, sizePx: 6 };
 
 function crop(png: PNG, width: number, height: number): PNG {

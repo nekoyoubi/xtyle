@@ -44,3 +44,36 @@ describe("component css source", () => {
 		});
 	}
 });
+
+/**
+ * A variant that opts *out* of a shared treatment has to be declared after the rule it opts out of.
+ * Equal specificity is decided by source order, so a `--link` override placed before the generic
+ * `.xtyle-button:hover::after` silently loses and the variant paints a state wash it promised not to.
+ * That has happened twice — once for padding, once for the hover overlay — so the ordering is checked
+ * rather than remembered.
+ */
+describe("button variant opt-outs", () => {
+	const source = readFileSync(join(cssDir, "button.ts"), "utf8");
+
+	const firstIndexOf = (needle: string): number => {
+		const at = source.indexOf(needle);
+		expect(at, `expected to find ${needle}`).toBeGreaterThan(-1);
+		return at;
+	};
+
+	it("declares the link variant's state opt-out after the generic state rules", () => {
+		const genericHover = firstIndexOf(".xtyle-button:hover::after");
+		const genericPressed = firstIndexOf('.xtyle-button[aria-pressed="true"]:hover::after');
+		const genericSelected = firstIndexOf('.xtyle-button[aria-selected="true"]:hover::after');
+		const linkOptOut = firstIndexOf(".xtyle-button--link:hover::after");
+		expect(linkOptOut).toBeGreaterThan(genericHover);
+		expect(linkOptOut).toBeGreaterThan(genericPressed);
+		expect(linkOptOut).toBeGreaterThan(genericSelected);
+	});
+
+	it("declares the link variant's icon padding opt-out after the base icon padding", () => {
+		expect(firstIndexOf(".xtyle-button--icon.xtyle-button--link")).toBeGreaterThan(
+			firstIndexOf(".xtyle-button--icon {"),
+		);
+	});
+});

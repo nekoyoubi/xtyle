@@ -5,10 +5,6 @@ export interface Fixture {
 
 export const DEFAULT_FIXTURE: Fixture = { props: {}, childrenHtml: "Xtyle" };
 
-// One canonical instance per component: the same props + children rendered
-// through all three bindings, so the parity harness can prove they agree.
-// Props are camelCase (the wrapper API); the raw column converts to kebab
-// attributes. childrenHtml is injected identically into every column.
 export const fixtures: Record<string, Fixture> = {
 	accordion: {
 		props: {},
@@ -78,9 +74,8 @@ export const fixtures: Record<string, Fixture> = {
 		childrenHtml: "",
 	},
 	pagination: { props: { page: 1, total: 12, label: "Pages" }, childrenHtml: "" },
-	// Match the attributes the wrappers reflect by default, so the hand-authored
-	// raw column is configured identically (the host CSS keys on the `variant`
-	// attribute, which the wrappers set and a bare raw element otherwise omits).
+	// INFO: host CSS keys on the `variant` attribute, which wrappers set but a bare raw
+	// element omits, so the raw column must set it explicitly for parity
 	progress: {
 		props: { variant: "linear", tone: "accent", size: "md", value: 62, min: 0, max: 100 },
 		childrenHtml: "",

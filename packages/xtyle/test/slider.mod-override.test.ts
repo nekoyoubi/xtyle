@@ -12,8 +12,8 @@ import { manifest } from "../src/elements/fragments/slider/source.generated.js";
  */
 const unitMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-slider-units",
 		version: "0.0.1",
 		title: "test-slider-units",
@@ -21,7 +21,7 @@ const unitMod = {
 		capabilities: ["xtyle.component.slider"],
 		entry: { script: "mod.js", format: "script" },
 		fills: {
-			"component.slider": [{ id: "slider", format: "text/html+jsml", source: "slider.html" }],
+			"component.slider": [{ id: "slider", format: "application/x-xtyle+html", source: "slider.html" }],
 		},
 	},
 	fragmentSources: {

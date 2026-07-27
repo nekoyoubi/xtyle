@@ -1,0 +1,32 @@
+---
+import type { Constraints, Knobs } from "@xtyle/core";
+
+interface Props {
+	algorithm?: string;
+	target?: "self" | "root";
+	scheme?: "light" | "dark";
+	knobs?: Knobs;
+	constraints?: Constraints;
+	class?: string;
+	/** Any other attribute (`id`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { algorithm, target, scheme, knobs, constraints, class: extra, ...rest } = Astro.props;
+
+const json = (value: unknown): string | undefined => (value === undefined ? undefined : JSON.stringify(value));
+---
+
+<xtyle-theme-scope
+	class={extra}
+	algorithm={algorithm || undefined}
+	target={target || undefined}
+	scheme={scheme || undefined}
+	knobs={json(knobs)}
+	constraints={json(constraints)}
+	{...rest}
+>
+	<slot />
+</xtyle-theme-scope>
+
+<script>import "@xtyle/core/elements";</script>

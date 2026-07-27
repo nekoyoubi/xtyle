@@ -1,4 +1,3 @@
-// The direction rules apply to the sliding track only; the stacked transitions ignore the axis.
 const sliding = ':not(:is([transition="fade"], [transition="scale"], [transition="flip"]))';
 
 export const carouselCss = `

@@ -96,7 +96,7 @@
 		el?.hide();
 	}
 
-	// the predicate is a function, so it can only reach the element as a property — never an attribute
+	// INFO: the predicate is a function, so it can only reach the element as a property, never an attribute
 	$effect(() => {
 		if (el) el.isDateDisabled = isDateDisabled ?? null;
 	});

@@ -104,7 +104,7 @@
   }
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
-    const body = hasIcon(name) ? ICONS[name] : MISSING;
+    const body = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
     const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
     const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
     const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
@@ -148,14 +148,19 @@
     return playing(b) ? "Pause automatic slideshow" : "Play automatic slideshow";
   }
   function playIcon(b) {
-    return renderIcon(playing(b) ? "pause" : "play");
+    const name = playing(b) ? "pause" : "play";
+    return renderIcon(name, { body: b.iconBodies?.[name] });
+  }
+  function chevronIcon(b, kind) {
+    const name = chevron(b, kind);
+    return renderIcon(name, { body: b.iconBodies?.[name] });
   }
   function atEdge(b, edge) {
     return !b.loop && active(b) === edge;
   }
   function navButton(b, kind, label, edge) {
     const disabled = atEdge(b, edge) ? " disabled" : "";
-    return `<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--${kind}" part="nav" data-${kind}="${uid(b)}" aria-label="${escapeAttr(label)}"${disabled}>${renderIcon(chevron(b, kind))}</button>`;
+    return `<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--${kind}" part="nav" data-${kind}="${uid(b)}" aria-label="${escapeAttr(label)}"${disabled}>${chevronIcon(b, kind)}</button>`;
   }
   function playButton(b) {
     return `<button type="button" class="xtyle-carousel__nav xtyle-carousel__nav--play" part="play" data-play="${uid(b)}" aria-label="${escapeAttr(playLabel(b))}">${playIcon(b)}</button>`;

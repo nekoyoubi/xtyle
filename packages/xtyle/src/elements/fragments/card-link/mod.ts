@@ -39,10 +39,8 @@ function cardLinkHtml(b: CardLinkBindings): string {
 	const attrs = [`href="${escapeAttr(href)}"`, target ? `target="${escapeAttr(target)}"` : "", rel ? `rel="${escapeAttr(rel)}"` : ""]
 		.filter(Boolean)
 		.join(" ");
-	// Header/footer keep their `<slot>` whether filled or not, so `:empty` can never match them: a
-	// slot is a child node, and the nodes assigned to it are not. Only the host knows, so it says.
-	// `data-slot` rides alongside each native slot so the auto-light (Astro SSR) render, which has no
-	// shadow root to read host children from, can still capture the region.
+	// INFO: :empty never matches a slot (assigned nodes aren't its children), so the host toggles hidden
+	// INFO: data-slot lets the auto-light Astro SSR render (no shadow root) capture the region
 	const headerHidden = b.hasHeader ? "" : " hidden";
 	const footerHidden = b.hasFooter ? "" : " hidden";
 	return `<a part="card" class="${cardLinkClass(b)}" ${attrs}><div class="xtyle-card__header" part="header" data-slot="header"${headerHidden}><slot name="header"></slot></div><div class="xtyle-card__body" part="body" data-slot><slot></slot></div><div class="xtyle-card__footer" part="footer" data-slot="footer"${footerHidden}><slot name="footer"></slot></div></a>`;

@@ -31,8 +31,8 @@ export function validateKnobs(algorithm: Algorithm, raw: Record<string, unknown>
 		}
 
 		const spec = specs.get(name);
-		// A knob with no scalar domain is a composite group the consumer assembles itself (font stacks,
-		// anchor pickers). Its value is a structured object, so there is nothing here to coerce or bound.
+		// INFO: a composite knob is a structured group the consumer assembles (font stacks, anchor
+		// pickers); its value is an object, so there is nothing to coerce or bound.
 		if (!spec || spec.kind === "composite") {
 			out[name] = value;
 			continue;

@@ -114,7 +114,9 @@
       const tabindex = isSelected && !tab.disabled ? "0" : "-1";
       const disabledAttr = tab.disabled ? ' disabled aria-disabled="true"' : "";
       const controls = bindings.tablist ? "" : ` aria-controls="${escapeAttr(uid)}-panel-${i}"`;
-      return `<button class="xtyle-tabs__tab" part="tab" type="button" role="tab" id="${escapeAttr(uid)}-tab-${i}" data-key="${escapeAttr(key)}" aria-selected="${String(isSelected)}"${controls} tabindex="${tabindex}"${disabledAttr}>${escapeHtml(tab.label)}</button>`;
+      const label = tab.labelSlot ? `<slot name="${escapeAttr(tab.labelSlot)}"></slot>` : escapeHtml(tab.label);
+      const labelRegion = tab.labelSlot ? ` data-slot="${escapeAttr(tab.labelSlot)}"` : "";
+      return `<button class="xtyle-tabs__tab" part="tab" type="button" role="tab" id="${escapeAttr(uid)}-tab-${i}" data-key="${escapeAttr(key)}" aria-selected="${String(isSelected)}"${controls} tabindex="${tabindex}"${disabledAttr}${labelRegion}>${label}</button>`;
     }).join("");
   }
   function panels(bindings, selected) {
@@ -125,7 +127,8 @@
       const isSelected = key === selected;
       const hidden = isSelected ? "" : " hidden";
       const body = tab.panelSlot ? `<slot name="${escapeAttr(tab.panelSlot)}"></slot>` : tab.panel ?? "";
-      return `<div class="xtyle-tabs__panel" part="panel" role="tabpanel" id="${escapeAttr(uid)}-panel-${i}" data-key="${escapeAttr(key)}" aria-labelledby="${escapeAttr(uid)}-tab-${i}" tabindex="0"${hidden}>${body}</div>`;
+      const bodyRegion = tab.panelSlot ? ` data-slot="${escapeAttr(tab.panelSlot)}"` : "";
+      return `<div class="xtyle-tabs__panel" part="panel" role="tabpanel" id="${escapeAttr(uid)}-panel-${i}" data-key="${escapeAttr(key)}" aria-labelledby="${escapeAttr(uid)}-tab-${i}" tabindex="0"${hidden}${bodyRegion}>${body}</div>`;
     }).join("");
   }
   hooks.fragment.mount("tabs", (bindings, ops) => {

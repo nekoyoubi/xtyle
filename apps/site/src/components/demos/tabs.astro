@@ -6,6 +6,7 @@ import Cluster from "@xtyle/astro/Cluster.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Badge from "@xtyle/astro/Badge.astro";
+import Icon from "@xtyle/astro/Icon.astro";
 ---
 
 <Stack gap={6}>
@@ -94,6 +95,24 @@ import Badge from "@xtyle/astro/Badge.astro";
 				</Tabs>
 			</Stack>
 		</Stack>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Heading level={3} size="lg">Labels carry markup</Heading>
+			<Text size="sm" tone="muted">
+				A tab label is a render slot, not a string: an icon or a count badge sits beside the
+				text and survives into the static render.
+			</Text>
+		</Stack>
+		<Tabs variant="pill" label="Inbox views">
+			<span data-xtyle-tab="" data-value="inbox"><Icon name="folder" /> Inbox <Badge tone="info">12</Badge></span>
+			<span data-xtyle-tab="" data-value="starred"><Icon name="bookmark" /> Starred</span>
+			<span data-xtyle-tab="" data-value="trash" aria-disabled="true"><Icon name="trash" /> Trash</span>
+			<div data-xtyle-panel=""><Text size="sm" tone="muted">Twelve unread, and the badge rides in the tab itself.</Text></div>
+			<div data-xtyle-panel=""><Text size="sm" tone="muted">Nothing starred yet.</Text></div>
+			<div data-xtyle-panel=""><Text size="sm" tone="muted">Unreachable while disabled.</Text></div>
+		</Tabs>
 	</Card>
 
 	<Card>

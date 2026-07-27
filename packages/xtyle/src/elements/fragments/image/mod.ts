@@ -17,10 +17,17 @@ interface ImageBindings {
 	/** The zoom button that opens the lightbox — only when the element is live (a no-JS zoom button is dead chrome). */
 	zoom?: boolean;
 	zoomLabel?: string;
+	/** The roster glyph on the zoom button, and its body resolved by the trusted host. */
+	zoomIcon?: string;
+	zoomBody?: string | null;
 	/** The mute toggle over a hover video whose audio the author allowed. */
 	audio?: boolean;
 	audioMuted?: boolean;
 	audioLabel?: string;
+	/** Bodies for the fixed status glyphs, so a mod reskinning them through the roster still shows. */
+	volumeOffBody?: string | null;
+	volumeBody?: string | null;
+	warningBody?: string | null;
 }
 
 declare const hooks: {
@@ -60,7 +67,7 @@ function zoomHtml(b: ImageBindings): string {
 	if (!b.zoom) return "";
 	return (
 		`<button class="xtyle-image__zoom" part="zoom" type="button" aria-label="${escapeAttr(b.zoomLabel ?? "View image")}">` +
-		`${renderIcon("maximize")}</button>`
+		`${renderIcon(b.zoomIcon ?? "maximize", { body: b.zoomBody })}</button>`
 	);
 }
 
@@ -72,31 +79,25 @@ function audioHtml(b: ImageBindings): string {
 	return (
 		`<button class="xtyle-image__audio" part="audio" type="button" aria-pressed="${muted ? "false" : "true"}"` +
 		` aria-label="${escapeAttr(b.audioLabel ?? (muted ? "Unmute preview" : "Mute preview"))}">` +
-		`<span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--muted">${renderIcon("volume-off")}</span>` +
-		`<span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--live">${renderIcon("volume")}</span>` +
+		`<span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--muted">${renderIcon("volume-off", { body: b.volumeOffBody })}</span>` +
+		`<span class="xtyle-image__audio-glyph xtyle-image__audio-glyph--live">${renderIcon("volume", { body: b.volumeBody })}</span>` +
 		`</button>`
 	);
 }
 
 /** Always rendered, revealed by the frame's `data-error` state — the element marks the failure, the
  * fill draws it. */
-function errorHtml(): string {
-	return `<span class="xtyle-image__error" part="error" aria-hidden="true">${renderIcon("warning", { size: "lg" })}</span>`;
+function errorHtml(b: ImageBindings): string {
+	return `<span class="xtyle-image__error" part="error" aria-hidden="true">${renderIcon("warning", { size: "lg", body: b.warningBody })}</span>`;
 }
 
 function imageHtml(b: ImageBindings): string {
 	const ratioStyle = b.ratio ? ` style="aspect-ratio: ${escapeAttr(b.ratio)}"` : "";
 	const placeholder = `<span class="xtyle-image__placeholder" part="placeholder" aria-hidden="true"></span>`;
 	const media = `<span class="xtyle-image__media" data-image-media>${mediaHtml(b)}</span>`;
-	// The hover-preview overlay: hidden until the element reveals it. Marked `data-slot="hover"` so the
-	// host preserves its content across rebuilds. Content arrives through the named slot (a consumer's
-	// `<video>` / nested `<xtyle-carousel>` in shadow mode, or the Astro binding's slot-replace in
-	// light DOM), or is injected by the element from `hover-src`. The `update` hook below never touches
-	// this node, so a live re-render can't wipe an SSR-composed preview.
 	const hover = `<span class="xtyle-image__hover" part="hover" aria-hidden="true" data-slot="hover"><slot name="hover"></slot></span>`;
-	// The frame's controls are siblings of the hover region, never children of it: a rebuild refills
-	// that region with the consumer's slotted preview, which would take any control nested inside it.
-	const chrome = `${zoomHtml(b)}${audioHtml(b)}${errorHtml()}`;
+	// INFO: controls are siblings of the hover region, not children — a rebuild refills that region and would take any nested control
+	const chrome = `${zoomHtml(b)}${audioHtml(b)}${errorHtml(b)}`;
 	const frame = `<span class="xtyle-image__frame" part="frame"${ratioStyle}>${placeholder}${media}${hover}${chrome}</span>`;
 	return `<figure class="${imageClass(b)}" part="figure">${frame}${captionHtml(b)}</figure>`;
 }
@@ -105,11 +106,6 @@ function mount(bindings: ImageBindings, ops: OpsBuilder): void {
 	ops.replaceChildren("[data-image]", imageHtml(bindings));
 }
 
-// A non-destructive patch: it repaints only the media region and the frame/figure attributes, and
-// re-labels the live controls in place, leaving the hover overlay (and any slotted preview) and the
-// control nodes themselves alone. A full rebuild here would discard an SSR-composed hover preview on
-// the first hydration apply, and would drop focus off a control mid-interaction. Chrome that has to
-// appear or disappear (the zoom button, the audio toggle) is a shape change: the element remounts.
 function patch(bindings: ImageBindings, ops: OpsBuilder): void {
 	ops.setAttr(".xtyle-image", "class", imageClass(bindings));
 	ops.setAttr('[part="frame"]', "style", bindings.ratio ? `aspect-ratio: ${escapeAttr(bindings.ratio)}` : "");

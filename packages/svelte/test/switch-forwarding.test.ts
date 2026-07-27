@@ -2,12 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import Switch from "../src/Switch.svelte";
 import { render, type Rendered } from "./harness.js";
 
-// Svelte routes every attribute whose name begins with `on` to `addEventListener` — in the template
-// and through a spread alike (`set_attributes` keys off the first two characters) — so the template
-// form `on-label={onLabel}` registered a listener for a `-label` event and the attribute never
-// reached the element. `off-label` sat one line below it and worked, which is what made the bug so
-// quiet. Nothing in the type system or the static-analysis pass can see this: `onLabel` is declared,
-// typed, and genuinely referenced in the markup. Only a render can tell.
+// INFO: Svelte routes any attribute whose name begins with `on` to `addEventListener` (set_attributes
+// keys off the first two chars), so `on-label={onLabel}` binds a `-label` listener instead of the attr
 describe("Switch on-label forwarding", () => {
 	let rendered: Rendered | undefined;
 	afterEach(() => {
@@ -35,8 +31,6 @@ describe("Switch on-label forwarding", () => {
 		expect(mount({ label: "Wifi" }).hasAttribute("on-label")).toBe(false);
 	});
 
-	// The element falls back to `on-label` for its accessible name, so a dropped attribute cost the
-	// toggle its name as well as its state text.
 	it("leaves on-label available as the accessible name", () => {
 		expect(mount({ onLabel: "Enabled", offLabel: "Disabled" }).getAttribute("on-label")).toBe("Enabled");
 	});

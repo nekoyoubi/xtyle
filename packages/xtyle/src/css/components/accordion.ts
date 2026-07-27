@@ -20,6 +20,7 @@ export const accordionCss = `
 }
 .xtyle-accordion__trigger {
 	display: flex;
+	list-style: none;
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--space-3);
@@ -38,6 +39,8 @@ export const accordionCss = `
 	isolation: isolate;
 	transition: color var(--duration-fast) var(--ease-standard);
 }
+.xtyle-accordion__trigger::-webkit-details-marker { display: none; }
+.xtyle-accordion__trigger::marker { content: ""; }
 .xtyle-accordion__trigger::after {
 	content: "";
 	position: absolute;
@@ -69,7 +72,7 @@ export const accordionCss = `
 	color: var(--fg-2);
 	transition: transform var(--duration-fast) var(--ease-standard);
 }
-.xtyle-accordion__trigger[aria-expanded="true"] .xtyle-accordion__chevron {
+.xtyle-accordion__item[open] > .xtyle-accordion__trigger .xtyle-accordion__chevron {
 	transform: rotate(180deg);
 }
 .xtyle-accordion__panel {

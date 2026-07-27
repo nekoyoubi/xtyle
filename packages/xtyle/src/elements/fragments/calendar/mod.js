@@ -104,7 +104,7 @@
   }
   var MISSING = stroke("M5 5h14v14H5z");
   function renderIcon(name, opts = {}) {
-    const body = hasIcon(name) ? ICONS[name] : MISSING;
+    const body = opts.body ?? (hasIcon(name) ? ICONS[name] : MISSING);
     const part = opts.part ? ` part="${escapeAttr2(opts.part)}"` : "";
     const a11y = opts.label ? `role="img" aria-label="${escapeAttr2(opts.label)}"` : `aria-hidden="true"`;
     const title = opts.label ? `<title>${escapeAttr2(opts.label)}</title>` : "";
@@ -121,11 +121,11 @@
       size !== "md" ? `xtyle-calendar--${size}` : ""
     ].filter(Boolean).join(" ");
   }
-  function chevron(name) {
-    return `<xtyle-icon class="xtyle-calendar__chevron" part="chevron" name="${name}" aria-hidden="true">${renderIcon(name)}</xtyle-icon>`;
+  function chevron(name, body) {
+    return `<xtyle-icon class="xtyle-calendar__chevron" part="chevron" name="${escapeAttr(name)}" aria-hidden="true">${renderIcon(name, { body })}</xtyle-icon>`;
   }
-  function navButton(rel, label, disabled) {
-    const glyph = chevron(rel === "prev" ? "chevron-left" : "chevron-right");
+  function navButton(rel, label, disabled, bindings) {
+    const glyph = rel === "prev" ? chevron(bindings.prevIcon ?? "chevron-left", bindings.prevBody) : chevron(bindings.nextIcon ?? "chevron-right", bindings.nextBody);
     const dis = disabled ? ' aria-disabled="true"' : "";
     return `<button type="button" class="xtyle-calendar__nav xtyle-calendar__nav--${rel}" part="nav" data-nav="${rel}" aria-label="${escapeAttr(label)}"${dis}>${glyph}</button>`;
   }
@@ -133,8 +133,8 @@
     const uid = bindings.uid ?? "xtyle-calendar";
     const title = `<div class="xtyle-calendar__title" part="title" data-title id="${escapeAttr(uid)}-title" aria-live="polite">${escapeHtml(bindings.title ?? "")}</div>`;
     if (bindings.hideNav) return `<div class="xtyle-calendar__header" part="header">${title}</div>`;
-    const prev = navButton("prev", bindings.prevLabel ?? "Previous month", bindings.prevDisabled === true);
-    const next = navButton("next", bindings.nextLabel ?? "Next month", bindings.nextDisabled === true);
+    const prev = navButton("prev", bindings.prevLabel ?? "Previous month", bindings.prevDisabled === true, bindings);
+    const next = navButton("next", bindings.nextLabel ?? "Next month", bindings.nextDisabled === true, bindings);
     return `<div class="xtyle-calendar__header" part="header">${prev}${title}${next}</div>`;
   }
   function marks(day) {

@@ -115,8 +115,6 @@ import Text from "@xtyle/astro/Text.astro";
 </Stack>
 
 <script>
-	// the predicate is a function, so it reaches the element as a property — the grid and the typed
-	// field both refuse these days
 	const holidays = new Set(["2026-03-17", "2026-04-03"]);
 	const delivery = document.querySelector("#demo-delivery") as (HTMLElement & {
 		isDateDisabled?: (iso: string) => boolean;

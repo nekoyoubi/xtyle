@@ -78,7 +78,7 @@ function avatarInner(b: AvatarBindings): string {
 	const alt = b.alt ?? "";
 	const image =
 		src !== null
-			? `<img class="xtyle-avatar__image" part="image" src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" onerror="this.remove()" />`
+			? `<img class="xtyle-avatar__image" part="image" src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" />`
 			: "";
 	const initials = escapeHtml(b.initials ?? avatarInitials(b.userName));
 	const initialsSpan = initials

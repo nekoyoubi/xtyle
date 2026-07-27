@@ -66,8 +66,7 @@ function qrHtml(b: QrBindings): string {
 	const colorVars = pinned ? `;--qr-module:${safeColor(b.moduleColor as string)};--qr-bg:${safeColor(b.bgColor as string)}` : "";
 	const contrastAttr = b.lowContrast ? ' data-contrast="low"' : "";
 
-	// Square modules read cleanest with anti-aliasing off (sharp edges); dot / rounded modules are
-	// curved, so they keep the default smoothing or they look jagged.
+	// INFO: square modules render cleanest with anti-aliasing off (crispEdges); curved dot/rounded modules need smoothing or they look jagged
 	const rendering = shape === "square" ? "crispEdges" : "geometricPrecision";
 	const svg =
 		`<svg class="xtyle-qr__svg" viewBox="${escapeAttr(b.viewBox ?? "0 0 29 29")}" role="img" aria-label="${label}" shape-rendering="${rendering}">` +

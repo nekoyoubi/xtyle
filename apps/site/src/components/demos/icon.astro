@@ -71,6 +71,118 @@ import { ICON_NAMES } from "@xtyle/core";
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">The primitive library</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The library is mostly <em>filled art</em>, not line work: solids you stack into a mark rather than
+				outlines you draw with. Every one takes the layer's color, rotates to any angle, and restretches
+				per axis, so <code>cylinder</code> plus a <code>disc</code> cap is a database and one
+				<code>circle</code> covers every ellipse ratio there is.
+			</Text>
+			{
+				[
+					{ label: "Curves & nature", keywords: ["wave", "water", "swish", "blob", "lens", "leaf", "cloud", "mountain", "sun", "flame", "drop"] },
+					{ label: "Volume", keywords: ["disc", "cylinder", "cone", "half", "quarter", "wedge", "oval", "pill", "egg", "arch"] },
+					{ label: "Polygons", keywords: ["triangle", "diamond", "pentagon", "hex", "octagon", "trapezoid", "ramp", "squircle", "gem", "shield"] },
+					{ label: "Markers", keywords: ["banner", "tag", "bubble", "chevron", "arrow", "cross", "divider"] },
+					{ label: "Stars & seals", keywords: ["star", "star4", "star6", "star8", "burst", "seal", "heart", "crescent", "bolt"] },
+				].map((family) => (
+					<Stack gap={2}>
+						<Text tone="muted" size="xs" style="text-transform: uppercase; letter-spacing: 0.08em;">{family.label}</Text>
+						<Grid minColWidth="5rem" gap={3}>
+							{family.keywords.map((keyword) => (
+								<Stack gap={1} align="center" style="text-align: center; padding: 0.5rem 0;">
+									<Icon name={`--${keyword}-c1`} size="xl" colors="skittles" />
+									<Text tone="muted" size="xs" mono>{keyword}</Text>
+								</Stack>
+							))}
+						</Grid>
+					</Stack>
+				))
+			}
+			<Text tone="muted" size="sm">
+				Stacked, they build the marks the flat set can't. A drum with a platter cap is a database; a wavy
+				fill level clipped to a circle is water:
+			</Text>
+			<Cluster gap={5} align="center">
+				{
+				[
+					{ name: "database--cylinder-c1--disc-y-25-c3--disc-y-2-c2-a70", tag: "cylinder + disc" },
+					{ name: "platters--disc-y18-sy55-c1--disc-y6-sy55-c2--disc-y-6-sy55-c3--disc-y-18-sy55-c4", tag: "a stack of discs" },
+					{ name: "sea--circle-cb--water-c1--circle-i-ko", tag: "water, clipped round" },
+					{ name: "weather--sun-c4-x-18-y-16-s70--cloud-cf-s90-y8", tag: "sun behind cloud" },
+					{ name: "spark--seal-c2--star4-s45-cf", tag: "seal + star4" },
+					{ name: "hot--flame-c6--flame-s45-c3-y12", tag: "flame in flame" },
+				].map((mark) => (
+					<Stack gap={1} align="center" style="text-align: center;">
+						<Icon name={mark.name} size="xl" colors="skittles" />
+						<Text tone="muted" size="xs" mono style="word-break: break-all;">{mark.tag}</Text>
+					</Stack>
+				))
+				}
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Sizing and moving: the layer and the whole mark</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A layer sizes with <code>s</code> and moves with <code>x</code>/<code>y</code>.
+				<code>sx</code>/<code>sy</code> then stretch that result on one axis — they <em>layer</em> on
+				<code>s</code> rather than replacing it, so <code>s50-sx200</code> reads as "half size, then twice
+				as wide" and a primitive stretches out of its authored proportion without the library shipping a
+				shape per ratio.
+			</Text>
+			<Cluster gap={5} align="center">
+				{
+				[
+					{ name: "round--circle-c2", tag: "circle" },
+					{ name: "wide--circle-c2-sx150-sy60", tag: "-sx150-sy60" },
+					{ name: "tall--circle-c2-sx55", tag: "-sx55" },
+					{ name: "band--pill-c2-sx100-sy220", tag: "-sy220" },
+					{ name: "lean--hex-c2-sx60-r20", tag: "-sx60-r20" },
+					{ name: "layered--circle-c2-s50-sx200", tag: "-s50-sx200" },
+				].map((mark) => (
+					<Stack gap={1} align="center" style="text-align: center;">
+						<Icon name={mark.name} size="xl" colors="skittles" />
+						<Text tone="muted" size="xs" mono style="word-break: break-all;">{mark.tag}</Text>
+					</Stack>
+				))
+				}
+			</Cluster>
+			<Text tone="muted" size="sm">
+				The finish carries the same two dials for the <em>whole</em> composite:
+				<code>---s</code>/<code>---sx</code>/<code>---sy</code> resize it and
+				<code>---mx</code>/<code>---my</code> move it, both wrapping the outline and shadow so a finished
+				mark travels as one piece. <code>---center</code> measures the ink the mark actually leaves
+				<em>standing</em> and re-centers that, so a composition assembled off-center needs no hand-tuning of
+				every layer — and because a knockout is the tool that carves ink rather than ink itself, a carved
+				mark centers on what survives the carve, not on the shape that is no longer all there:
+			</Text>
+			<Cluster gap={5} align="center">
+				{
+				[
+					{ name: "plain--square1-c1--star-s50-cf", tag: "no finish" },
+					{ name: "inset--square1-c1--star-s50-cf---s70", tag: "---s70" },
+					{ name: "nudged--square1-c1--star-s50-cf---mx14--my-14", tag: "---mx14--my-14" },
+					{ name: "squat--square1-c1--star-s50-cf---sy70", tag: "---sy70" },
+					{ name: "corner--star-p1-s40-c1", tag: "off-center" },
+					{ name: "centered--star-p1-s40-c1---center", tag: "---center" },
+					{ name: "bitten--circle-c1--circle-x50-ko", tag: "carved, off-center" },
+					{ name: "seated--circle-c1--circle-x50-ko---center", tag: "carved + ---center" },
+				].map((mark) => (
+					<Stack gap={1} align="center" style="text-align: center;">
+						<Icon name={mark.name} size="xl" colors="skittles" />
+						<Text tone="muted" size="xs" mono style="word-break: break-all;">{mark.tag}</Text>
+					</Stack>
+				))
+				}
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">A mark that carries its own palette</Heading>
 		<Stack gap={3}>
 			<Text tone="muted" size="sm">

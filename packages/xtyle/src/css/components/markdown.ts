@@ -107,6 +107,58 @@ export const markdownCss = `
 .xtyle-markdown__body del { color: var(--fg-2); }
 .xtyle-markdown__body small { font-size: var(--text-sm); }
 
+/* Reachable only through allow-html, and unstyled they are the browser's own defaults — mark in
+   particular paints a fixed yellow that has no idea what theme it is in. Themed here rather than
+   left to the cascade, because a document is not a place where one element gets to ignore the
+   register. kbd borrows the Kbd component's shape for the same reason a fence borrows Code's:
+   two spellings of one idea should not disagree. */
+.xtyle-markdown__body mark {
+	padding: 0.1em 0.3em;
+	border-radius: var(--radius-sm);
+	background-color: var(--warn-bg);
+	color: var(--warn-text);
+}
+.xtyle-markdown__body kbd {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.6em;
+	padding: 0.15em 0.45em;
+	border: var(--border-thin) solid var(--line-2);
+	border-bottom-width: var(--border-thick);
+	border-radius: var(--radius-sm);
+	background-color: var(--bg-2);
+	color: var(--fg-1);
+	font-family: var(--font-mono);
+	font-size: var(--text-sm);
+	line-height: var(--leading-tight);
+	white-space: nowrap;
+}
+.xtyle-markdown__body abbr[title] {
+	text-decoration: underline dotted var(--fg-2);
+	cursor: help;
+}
+.xtyle-markdown__body sub,
+.xtyle-markdown__body sup {
+	font-size: var(--text-xs);
+	line-height: 0;
+}
+.xtyle-markdown__body details {
+	margin-block: 0 var(--space-4);
+	padding: var(--space-2) var(--space-3);
+	border: var(--border-thin) solid var(--field-border);
+	border-radius: var(--radius-md);
+	background-color: var(--bg-1);
+}
+.xtyle-markdown__body summary {
+	cursor: pointer;
+	color: var(--fg-1);
+	font-weight: var(--weight-semibold);
+}
+.xtyle-markdown__body details[open] > summary {
+	margin-block-end: var(--space-2);
+}
+
 .xtyle-markdown__body ul,
 .xtyle-markdown__body ol {
 	margin-block: 0 var(--space-4);
@@ -196,51 +248,15 @@ export const markdownCss = `
 	border-radius: var(--radius-sm);
 }
 
+/* The Textarea and Button own their own appearance; all that is left is where they sit. The
+   xtyle-markdown__ class names stay on the hosts so a mod keyed to those selectors still finds
+   them, and the hidden counterpart above still applies to the editor host. */
 .xtyle-markdown__editor {
 	display: block;
-	width: 100%;
-	min-height: 12rem;
-	padding: var(--space-3);
-	color: var(--fg-0);
-	background: var(--field-bg);
-	border: var(--border-thin) solid var(--field-border);
-	border-radius: var(--radius-md);
-	font-family: var(--font-mono);
-	font-size: var(--text-sm);
-	line-height: var(--leading-normal);
-	resize: vertical;
 }
-.xtyle-markdown__editor:focus-visible {
-	outline: var(--border-normal) solid var(--accent);
-	outline-offset: 2px;
-}
-
 .xtyle-markdown__controls {
 	display: flex;
 	justify-content: flex-end;
 	margin-block-start: var(--space-2);
-}
-.xtyle-markdown__toggle {
-	padding: var(--space-1) var(--space-3);
-	color: var(--neutral-text);
-	background: var(--neutral-bg);
-	border: var(--border-thin) solid var(--field-border);
-	border-radius: var(--radius-sm);
-	font-family: var(--font-sans);
-	font-size: var(--text-xs);
-	cursor: pointer;
-	transition: color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
-}
-.xtyle-markdown__toggle:hover {
-	color: var(--fg-0);
-	background: var(--bg-2);
-}
-.xtyle-markdown__toggle:focus-visible {
-	outline: var(--border-normal) solid var(--accent);
-	outline-offset: 2px;
-}
-.xtyle-markdown__toggle[aria-pressed="true"] {
-	color: var(--accent-text);
-	border-color: var(--accent);
 }
 `.trim();

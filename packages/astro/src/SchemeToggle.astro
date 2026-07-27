@@ -1,0 +1,50 @@
+---
+import Button from "./Button.astro";
+import { schemeToggleGlyphs, schemeToggleHostClass } from "@xtyle/core";
+
+interface Props {
+	scheme?: "light" | "dark";
+	label?: string;
+	lightIcon?: string;
+	darkIcon?: string;
+	iconSize?: string;
+	reverse?: boolean;
+	variant?: string;
+	size?: string;
+	class?: string;
+	/** Any other attribute (`storage-key`, `id`, `data-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	scheme,
+	label,
+	lightIcon,
+	darkIcon,
+	iconSize,
+	reverse = false,
+	variant = "ghost",
+	size,
+	class: extra,
+	...rest
+} = Astro.props;
+
+const name = label ?? "Toggle light and dark mode";
+const glyphs = schemeToggleGlyphs({ lightIcon, darkIcon, iconSize });
+const hostClass = [schemeToggleHostClass({ scheme, reverse }), extra].filter(Boolean).join(" ");
+---
+
+<xtyle-scheme-toggle
+	class={hostClass}
+	scheme={scheme || undefined}
+	label={label || undefined}
+	light-icon={lightIcon || undefined}
+	dark-icon={darkIcon || undefined}
+	icon-size={iconSize || undefined}
+	reverse={reverse || undefined}
+	{...rest}
+>
+	<Button iconOnly variant={variant} size={size} aria-label={name} title={name} set:html={glyphs} />
+</xtyle-scheme-toggle>
+
+<script>import "@xtyle/core/elements";</script>

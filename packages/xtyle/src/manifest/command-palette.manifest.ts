@@ -339,6 +339,46 @@ export const commandPaletteManifest: ComponentManifest = {
 			description: "Method: run a command by id, exactly as selecting it would — the `select` event, the recents bump, the close.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "spellcheck",
+			type: '"true" | "false"',
+			description:
+				"Forwarded to the search box, and defaulted to `\"false\"` because a spell-checker underlining command names helps nobody. Enumerated rather than boolean, so overriding needs an explicit value — a bare `spellcheck` is the HTML spelling of *on*.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "inputmode",
+			type: '"text" | "numeric" | "decimal" | "tel" | "email" | "url" | "search" | "none"',
+			description:
+				"Forwarded to the inner control: which on-screen keyboard a touch device should raise. Purely a hint — it does not validate or restrict what can be typed.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "autocomplete",
+			type: "string",
+			description:
+				"Forwarded to the search box, and defaulted to `off` — an autofill dropdown over the results list is never what you wanted.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "autocapitalize",
+			type: '"off" | "none" | "on" | "sentences" | "words" | "characters"',
+			description: "Forwarded to the inner control: whether a touch keyboard capitalizes as you type.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "autocorrect",
+			type: '"on" | "off"',
+			description:
+				"Forwarded to the inner control: the browser's own autocorrect. Non-standard but widely honored, and worth turning off wherever `spellcheck` is.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "enterkeyhint",
+			type: '"enter" | "done" | "go" | "next" | "previous" | "search" | "send"',
+			description: "Forwarded to the search box, and defaulted to `go`, since Enter runs the highlighted command rather than inserting a newline.",
+			bindings: ["html", "svelte", "astro"],
+		},
 	],
 	variants: [],
 	sizes: [],

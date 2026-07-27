@@ -76,14 +76,11 @@ describe("the font-family gate", () => {
 	});
 
 	it("rejects on the name AS WRITTEN, so a newline cannot launder into a space", () => {
-		// the bug this pins: collapse-then-validate turns `Sigmar\nEvil` into the valid `Sigmar Evil`, and
-		// `Sigmar\nOne` into a family Google genuinely serves.
 		for (const family of LAUNDERABLE) {
 			expect(safeFontFamily(family), `expected ${JSON.stringify(family)} to be gated out`).toBeNull();
 			expect(resolveFontSpec(family)).toBeNull();
 			expect(() => googleFontCssUrl(family)).toThrow();
 		}
-		// and it stays rejected with the real catalogue behind it, which knows "Sigmar One"
 		useGoogleFontCatalogue(STUB);
 		for (const family of LAUNDERABLE) {
 			expect(googleFontFamily(family)).toBeNull();
@@ -103,7 +100,7 @@ describe("the font-family gate", () => {
 		expect(safeFontFamily("  Noto   Sans  ")).toBe("Noto Sans");
 		expect(safeFontFamily("Sigmar")).toBe("Sigmar");
 		expect(safeFontFamily("Press Start 2P")).toBe("Press Start 2P");
-		// a hyphen is a family-name character, but never a Google one
+		// INFO: a hyphen is a valid family-name character but never a Google one
 		expect(safeFontFamily("my-brand-sans")).toBeNull();
 	});
 });
@@ -115,8 +112,7 @@ describe("google fonts URL construction", () => {
 	});
 
 	it("percent-encodes a hostile glyph in `&text=`, which `encodeURIComponent` would leave armed", () => {
-		// a `letter` layer's glyph is one arbitrary character straight out of the icon name, and
-		// `encodeURIComponent` leaves `'` and `)` untouched — the two that break a `url('…')`.
+		// INFO: encodeURIComponent leaves `'` and `)` untouched, the two chars that break a `url('…')`
 		const url = googleFontCssUrl("Sigmar", { text: `');<>"&` });
 		expect(url).toContain("text=%27%29%3B%3C%3E%22%26");
 		expect(url).not.toMatch(/['")(<>]/);
@@ -138,7 +134,6 @@ describe("font-family injection", () => {
 		expect(resolveFontSpec("sigmar")).toBe("Sigmar");
 		expect(resolveFontSpec("noto+sans+symbols")).toBe("Noto Sans Symbols");
 		expect(resolveFontSpec("display")).toBe("var(--font-display)");
-		// a self-hosted family the engine has never heard of is still a legal literal — it just gets no snippet
 		expect(resolveFontSpec("my+brand+sans")).toBe("My Brand Sans");
 		expect(resolveFontSpec("my-brand-sans")).toBe("My-brand-sans");
 	});
@@ -154,8 +149,6 @@ describe("font-family injection", () => {
 	});
 
 	it("escapes the snippets even for a family forced past the gate, so nothing rides a `fonts` map", () => {
-		// `resolveFontSpec` cannot produce these, but `IconComposition.fonts` is a public field a caller
-		// could populate directly — the gate must not be the only thing standing.
 		for (const family of [...HOSTILE, ...LAUNDERABLE]) {
 			const reqs = iconFontImports({ layers: [{ primitive: "letter", glyph: "N" }], fonts: { 0: family } });
 			expect(reqs[0]!.google).toBe(false);
@@ -183,8 +176,7 @@ describe("font-family injection", () => {
 
 describe("an installed catalogue sharpens the gate without loosening it", () => {
 	it("canonicalizes casing off the list rather than guessing it", () => {
-		// the guess is what the engine has on its own: `ibm plex mono` capitalizes to `Ibm Plex Mono`, which
-		// Google's case-sensitive `family=` 404s on, and the mark then renders in a silent fallback face.
+		// INFO: Google's `family=` is case-sensitive; the engine's guess `Ibm Plex Mono` 404s where `IBM Plex Mono` resolves
 		expect(resolveFontSpec("ibm+plex+mono")).toBe("Ibm Plex Mono");
 		useGoogleFontCatalogue(STUB);
 		expect(resolveFontSpec("ibm+plex+mono")).toBe("IBM Plex Mono");
@@ -193,7 +185,6 @@ describe("an installed catalogue sharpens the gate without loosening it", () => 
 	});
 
 	it("turns a family Google does not serve into an honest miss instead of a dead snippet", () => {
-		// with no catalogue the engine cannot tell an invented family from a real one, and says so
 		expect(iconFontImports({ layers: [{ primitive: "letter", glyph: "N" }], fonts: { 0: "My Brand Sans" } })[0]!.google).toBe(true);
 
 		useGoogleFontCatalogue(STUB);
@@ -234,7 +225,7 @@ describe("embedding a font into an export", () => {
 			const url = String(input);
 			calls.push(url);
 			if (url.startsWith("https://fonts.googleapis.com/")) {
-				// a subsetted face is served from `/l/font?kit=…` with no extension, so only `format()` says what it is
+				// INFO: a subsetted face serves from `/l/font?kit=…` with no extension, so only `format()` identifies it
 				return new Response(
 					`@font-face {\n  font-family: 'Sigmar';\n  font-style: normal;\n  font-weight: 400;\n  src: url(https://fonts.gstatic.com/l/font?kit=abc&skey=def) format('woff2');\n}`,
 					{ status: 200 },
@@ -255,7 +246,6 @@ describe("embedding a font into an export", () => {
 			expect(google.calls[1]).toBe("https://fonts.gstatic.com/l/font?kit=abc&skey=def");
 			expect(svg).toContain("<defs><style>@font-face{font-family:'Sigmar'");
 			expect(svg).toContain("src:url(data:font/woff2;base64,d09GMgECAwQ=) format('woff2');");
-			// the face lands inside the document, ahead of the content that uses it
 			expect(svg.indexOf("<defs>")).toBeLessThan(svg.indexOf("<text>"));
 			expect(svg).not.toContain("fonts.gstatic.com/l/font");
 		} finally {
@@ -272,7 +262,6 @@ describe("embedding a font into an export", () => {
 			expect(await embedFontsInSvg(source, requests)).toBe(source);
 			expect(google.calls).toEqual([]);
 
-			// and with the catalogue in, a family Google does not serve is skipped rather than fetched blind
 			useGoogleFontCatalogue(STUB);
 			expect(await embedFontsInSvg(source, [{ family: "My Brand Sans", text: "S" }, ...requests])).toBe(source);
 			expect(google.calls).toEqual([]);

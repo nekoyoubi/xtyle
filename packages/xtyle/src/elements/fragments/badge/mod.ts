@@ -51,9 +51,6 @@ function badgeHtml(b: BadgeBindings): string {
 	const tone = b.tone ?? "neutral";
 	const statusWord = STATUS_WORD[tone];
 	const srTone = statusWord ? `<span class="xtyle-badge__sr-only" part="status-word">${statusWord}:</span>` : "";
-	// The badge's dot IS the `Dot` primitive's dot, built by the primitive's own `dotClass` rather than
-	// re-assembled from class-name literals here. It only retints itself to the badge's ink
-	// (`--dot-color: currentColor`), and a large badge steps its dot up one rung to match.
 	const dotPulse = b.pulse === "fast" || b.pulse === "slow" ? b.pulse : undefined;
 	const dot = b.dot
 		? `<span class="${escapeAttr(dotClass({ size: (b.size ?? "md") === "lg" ? "md" : "sm", pulse: dotPulse }))} xtyle-badge__dot" part="dot" aria-hidden="true"></span>`
@@ -65,9 +62,8 @@ function badgeHtml(b: BadgeBindings): string {
 	const remove = b.removable
 		? `<button type="button" class="xtyle-badge__remove" part="remove" aria-label="${escapeAttr(removeLabel)}">${REMOVE_ICON}</button>`
 		: "";
-	// `data-slot` rides alongside the native `<slot>` so the host can read the label text
-	// (`slottedText()` → the composed remove-label) under the auto-light render, where there is no
-	// shadow root to read host children from.
+	// INFO: under the auto-light render there is no shadow root, so `data-slot` lets the host read the
+	// label text (the composed remove-label) that a plain `<slot>` alone would not expose
 	return `<span part="badge" class="${badgeClass(b)}">${srTone}${dot}<span class="xtyle-badge__label" part="label" data-slot><slot></slot></span>${count}${remove}</span>`;
 }
 
@@ -77,9 +73,7 @@ hooks.fragment.mount("badge", (bindings, ops) => {
 
 hooks.fragment.update("badge", (bindings, ops) => {
 	ops.setAttr(".xtyle-badge", "class", badgeClass(bindings));
-	// The remove label is composed by the element from its slotted text, which the SSR build
-	// can't know — so refresh it on every update. In light DOM, SSR hydration runs as an update
-	// (never a mount rebuild), so an element-computed binding that only `mount` set would stay
-	// stale otherwise.
+	// INFO: in light DOM, SSR hydration runs as an update (never a mount rebuild), so the element-composed
+	// remove label must refresh here or it stays stale
 	ops.setAttr(".xtyle-badge__remove", "aria-label", bindings.removeLabel ?? "Remove");
 });

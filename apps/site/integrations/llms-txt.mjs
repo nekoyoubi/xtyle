@@ -22,6 +22,11 @@ const GUIDES = [
 		description: "Extend a custom element, subclass a shipped component, and satisfy the coverage rule for tokens you add.",
 	},
 	{
+		slug: "effects",
+		title: "Effects",
+		description: "The effect layer: `data-fx` spec strings (glow, throb, glare, lift, tint, frost, reveal, shake, saturate) applied under conditions, deriving intensity from the algorithm and honoring reduced motion.",
+	},
+	{
 		slug: "mcp",
 		title: "MCP Server",
 		description: "Run `xtyle mcp` to hand an agent the engine over stdio: derive, coverage, components, and gauntlet tools, plus docs and manifests as resources.",
@@ -39,12 +44,14 @@ const GUIDES = [
 ];
 
 const CATEGORY_ORDER = [
+	["content", "Content"],
 	["control", "Controls"],
 	["form", "Forms"],
 	["navigation", "Navigation"],
 	["feedback", "Feedback"],
 	["overlay", "Overlays"],
-	["data-display", "Data display"],
+	["media", "Media"],
+	["metrics", "Metrics"],
 	["layout", "Layout"],
 	["shell", "Shell"],
 ];

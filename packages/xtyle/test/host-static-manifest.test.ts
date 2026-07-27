@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { loadAlgorithm, loadAuthoredAlgorithm, staticAlgorithmManifest, STATIC_MANIFEST_KEY } from "../src/host/index.js";
+import { loadAlgorithm, loadAuthoredAlgorithm, staticAlgorithmManifest, STATIC_MANIFEST_SLOT } from "../src/host/index.js";
 import { bundledAlgorithmManifest, bundledAlgorithms } from "../src/host/bundle.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -14,6 +14,18 @@ function modFiles(id: string): { manifest: Record<string, unknown>; source: stri
 		manifest: JSON.parse(readFileSync(join(dir, "mod-manifest.json"), "utf8")),
 		source: readFileSync(join(dir, "src", "mod.js"), "utf8"),
 	};
+}
+
+/** The packaged block, and a manifest carrying a replacement for it. The block rides in a data fill —
+ * a slot whose `accepts` names a JSON media type — so reaching it means indexing the fill list, not a
+ * key off the manifest root. */
+function packMeta(manifest: Record<string, unknown>): Record<string, unknown> {
+	const fills = manifest.fills as Record<string, Record<string, unknown>[]>;
+	return fills[STATIC_MANIFEST_SLOT][0];
+}
+
+function withPackMeta(manifest: Record<string, unknown>, block: unknown): Record<string, unknown> {
+	return { ...manifest, fills: { ...(manifest.fills as object), [STATIC_MANIFEST_SLOT]: [block] } };
 }
 
 /**
@@ -32,34 +44,36 @@ describe("a mod's static manifest is checked against its code", () => {
 	});
 
 	it("refuses a mod whose declared knobs are not the knobs it reads", async () => {
-		const drifted = {
-			...manifest,
-			[STATIC_MANIFEST_KEY]: { ...(manifest[STATIC_MANIFEST_KEY] as object), knobs: ["mood"] },
-		};
+		const drifted = withPackMeta(manifest, { ...packMeta(manifest), knobs: ["mood"] });
 		await expect(loadAlgorithm(drifted, source)).rejects.toThrow(/does not match what its code reports \(knobs\)/);
 	}, LOAD_TIMEOUT_MS);
 
 	it("names every field that drifted, not just the first", async () => {
-		const block = manifest[STATIC_MANIFEST_KEY] as Record<string, unknown>;
-		const drifted = {
-			...manifest,
-			[STATIC_MANIFEST_KEY]: { ...block, produces: ["--bg-0"], invariantCount: 1, passNames: ["nope"] },
-		};
+		const drifted = withPackMeta(manifest, {
+			...packMeta(manifest),
+			produces: ["--bg-0"],
+			invariantCount: 1,
+			passNames: ["nope"],
+		});
 		await expect(loadAlgorithm(drifted, source)).rejects.toThrow(/produces, invariantCount, passNames/);
 	}, LOAD_TIMEOUT_MS);
 
 	it("accepts a block that matches, whatever order its keys happen to be in", async () => {
-		const block = manifest[STATIC_MANIFEST_KEY] as Record<string, unknown>;
+		const block = packMeta(manifest);
 		const reordered = Object.fromEntries(Object.entries(block).reverse());
-		const algorithm = await loadAlgorithm({ ...manifest, [STATIC_MANIFEST_KEY]: reordered }, source);
-		expect(algorithm.knobs).toEqual((block.knobs as string[]));
+		const algorithm = await loadAlgorithm(withPackMeta(manifest, reordered), source);
+		expect(algorithm.knobs).toEqual(block.knobs as string[]);
 	}, LOAD_TIMEOUT_MS);
 
-	// The block augments `manifest()`, it never replaces it: an in-browser authored source loads under a
-	// synthesized manifest that has no packaged block to carry, and a third-party pack may ship none.
 	it("loads a mod that declares no block at all", async () => {
-		const { [STATIC_MANIFEST_KEY]: _block, ...blockless } = manifest;
-		const algorithm = await loadAlgorithm(blockless, source);
+		const { [STATIC_MANIFEST_SLOT]: _fill, ...otherFills } = manifest.fills as Record<string, unknown>;
+		const algorithm = await loadAlgorithm({ ...manifest, fills: otherFills }, source);
+		expect(algorithm.knobs.length).toBeGreaterThan(0);
+	}, LOAD_TIMEOUT_MS);
+
+	it("loads a mod that declares no fills whatsoever", async () => {
+		const { fills: _fills, ...fillless } = manifest;
+		const algorithm = await loadAlgorithm(fillless, source);
 		expect(algorithm.knobs.length).toBeGreaterThan(0);
 	}, LOAD_TIMEOUT_MS);
 
@@ -73,9 +87,17 @@ describe("a mod's static manifest is checked against its code", () => {
 	}, LOAD_TIMEOUT_MS);
 
 	it("reads a block off a manifest, and nothing off one without a usable block", () => {
-		expect(staticAlgorithmManifest(manifest)?.knobs).toEqual((manifest[STATIC_MANIFEST_KEY] as { knobs: string[] }).knobs);
+		expect(staticAlgorithmManifest(manifest)?.knobs).toEqual(packMeta(manifest).knobs);
 		expect(staticAlgorithmManifest({})).toBeNull();
 		expect(staticAlgorithmManifest(undefined)).toBeNull();
-		expect(staticAlgorithmManifest({ [STATIC_MANIFEST_KEY]: { knobs: ["vibrancy"] } })).toBeNull();
+		expect(staticAlgorithmManifest({ fills: {} })).toBeNull();
+		expect(staticAlgorithmManifest(withPackMeta(manifest, { knobs: ["vibrancy"] }))).toBeNull();
+	});
+
+	/** A slot takes a list of fills, so the packaged shape is an array — but a hand-written manifest that
+	 * put the object there directly still reads, rather than reporting an empty pack. */
+	it("reads the block whether the fill is wrapped in a list or not", () => {
+		const block = packMeta(manifest);
+		expect(staticAlgorithmManifest({ fills: { [STATIC_MANIFEST_SLOT]: block } })?.knobs).toEqual(block.knobs);
 	});
 });

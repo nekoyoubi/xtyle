@@ -24,7 +24,7 @@ describe("parse / format round-trip", () => {
 				const out = formatColor(color, format);
 				const back = parseColor(out);
 				expect(back, `${hex} via ${format} (${out})`).not.toBeNull();
-				// hsl/cmyk are integer-percent lossy; assert each channel within 1/255
+				// INFO: hsl/cmyk are integer-percent lossy, so assert each channel within ~1/255
 				expect(Math.abs((back!.r - color.r) * 255)).toBeLessThanOrEqual(1.5);
 				expect(Math.abs((back!.g - color.g) * 255)).toBeLessThanOrEqual(1.5);
 				expect(Math.abs((back!.b - color.b) * 255)).toBeLessThanOrEqual(1.5);

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-// side effect: defines <xtyle-combobox> (and, through it, <xtyle-popover>) on the happy-dom registry
+// INFO: side-effect import: registers <xtyle-combobox> (and <xtyle-popover>) on the registry
 import "../src/elements/combobox.js";
 import { parseValueList } from "../src/elements/combobox.js";
 import { filterOptions, optionLabel } from "../src/markup/combobox.js";
@@ -215,7 +215,6 @@ describe("<xtyle-combobox> the WAI-ARIA combobox pattern", () => {
 		expect(input(el).getAttribute("aria-activedescendant")).toBe(optionRows(el)[1].id);
 		key(el, "ArrowUp");
 		key(el, "ArrowUp");
-		// wrapped off the top onto the last row
 		expect(input(el).getAttribute("aria-activedescendant")).toBe(optionRows(el)[3].id);
 	});
 
@@ -351,8 +350,6 @@ describe("<xtyle-combobox> single-select", () => {
 		expect(input(el).value).toBe("Tokyo");
 	});
 
-	// the committed label sits in the input — but it is the selection echoed back, not a query, so reopening
-	// the list must still offer every option rather than the one row that happens to match the box's text
 	it("reopens onto the whole list after a commit, not just the row it matches", () => {
 		const el = make();
 		key(el, "ArrowDown");
@@ -378,8 +375,8 @@ describe("<xtyle-combobox> single-select", () => {
 	it("snaps the query back to the selection when a stray edit is abandoned", () => {
 		const el = make({ value: "Asia/Tokyo" });
 		type(el, "not a zone");
-		key(el, "Escape"); // closes
-		key(el, "Escape"); // clears the stray query
+		key(el, "Escape");
+		key(el, "Escape");
 		expect(input(el).value).toBe("Tokyo");
 		expect(el.value).toBe("Asia/Tokyo");
 	});
@@ -593,7 +590,6 @@ describe("<xtyle-combobox> form participation", () => {
 		key(el, "Enter");
 		const hidden = root(el).querySelector<HTMLInputElement>("input[data-form-value]") as HTMLInputElement;
 		expect(hidden.value).toBe("Europe/London");
-		// plumbing, not chrome: it lives outside the fill's tree entirely
 		expect(hidden.closest("[data-root]")).toBe(null);
 	});
 

@@ -151,7 +151,6 @@ xript.exports.register("itemKeydown", (payload: unknown, context: unknown): Inte
 	const enabled = ctx?.enabledValues ?? [];
 	const current = e.dataset?.value ?? "";
 	const k = e.key ?? "";
-	// Menu's own keys: activate the item, and the overlay's close / return-focus behavior.
 	switch (k) {
 		case "Enter":
 		case " ":
@@ -171,8 +170,6 @@ xript.exports.register("itemKeydown", (payload: unknown, context: unknown): Inte
 		case "Tab":
 			return { closeMenu: true, returnFocus: false };
 	}
-	// The roving axis (Up/Down/Home/End, wrapping) via the shared core, mapped to the menu's
-	// `focusValue` intent (focus is a host effect the element applies).
 	const navItems = enabled.map((value) => ({ key: value }));
 	const move = linearNav(navItems, current, k, { orientation: "vertical", wrap: true, homeEnd: true });
 	if (move.focus !== undefined) return { focusValue: move.focus, preventDefault: true };

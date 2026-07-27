@@ -44,10 +44,8 @@
 
 	let element: HTMLElement | undefined = $state();
 
-	// Svelte routes every attribute whose name starts with `on` to `addEventListener`, spread or not,
-	// so `on-label="…"` is read as a listener for a `-label` event and never reaches the element. The
-	// element observes `on-label` and also falls back to it for the accessible name, so the attribute
-	// is set directly here; `off-label` needs none of this.
+	// INFO: Svelte routes any attribute starting with `on` to `addEventListener`, so `on-label` never
+	// reaches the element as an attribute; set it directly here.
 	$effect(() => {
 		if (!element) return;
 		if (onLabel != null) element.setAttribute("on-label", onLabel);

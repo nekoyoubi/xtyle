@@ -65,8 +65,7 @@ function detailsMarkup(b: SwatchBindings): string {
 		)
 		.join("");
 	const id = b.detailsId ?? "xtyle-swatch-details";
-	// `manual`, like the tooltip's: a hover readout must not light-dismiss, and must not close a menu
-	// it might be sitting inside.
+	// INFO: `manual`, like the tooltip's, so the hover readout does not light-dismiss or close a menu it sits inside
 	return `<span class="xtyle-swatch__details" part="details" id="${escapeAttr(id)}" role="tooltip" popover="manual">${rows}</span>`;
 }
 

@@ -1,10 +1,17 @@
-import { listComponents, coverComponents, derive, ICON_PRIMITIVE_NAMES } from "@xtyle/core";
+import { listComponents, coverComponents, derive, ICON_PRIMITIVE_NAMES, listEffects, DEFAULT_ANCHORS } from "@xtyle/core";
 import { resolveAlgorithm } from "@xtyle/core/algorithms";
 import baseline from "./stats-baseline.json";
 import { BENCH_TOOLS } from "./bench-tools";
 import pkg from "../../package.json";
 
-export const SITE_ANCHORS = { bg: "#0b0d12", fg: "#e6e9ef", accent: "#6ea8fe" } as const;
+/** The site renders the engine's own default theme — there is no separate site palette. The bg/fg
+ * seeds come from `DEFAULT_ANCHORS` (so the two can never drift) and are pinned as constraints so
+ * `invert` has explicit bg/fg to exchange for the light counterpart. The accent is the algorithm's
+ * own default, so it is left unpinned and read back off the derived register. */
+export const SITE_ANCHORS = {
+	bg: DEFAULT_ANCHORS.bg,
+	fg: DEFAULT_ANCHORS.fg,
+} as const;
 export const SITE_ALGORITHM = "xtyle-default";
 export const SITE_FONTS = {
 	sans: '"Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
@@ -12,7 +19,7 @@ export const SITE_FONTS = {
 } as const;
 export const BINDINGS = ["html", "svelte", "astro"] as const;
 
-export type Countable = "components" | "tokens" | "categories" | "bindings" | "primitives" | "tools";
+export type Countable = "components" | "tokens" | "categories" | "bindings" | "primitives" | "effects" | "tools";
 
 export interface SiteStats {
 	components: number;
@@ -20,12 +27,15 @@ export interface SiteStats {
 	categories: number;
 	bindings: number;
 	primitives: number;
+	effects: number;
 	tools: number;
 	/** The in-flight release version (the current cycle), for the version readout. */
 	version: string;
 	coverage: { covered: number; total: number; ok: boolean };
 	algorithm: Awaited<ReturnType<typeof resolveAlgorithm>>;
 	register: ReturnType<typeof derive>;
+	/** The same anchors inverted (bg↔fg swapped) — the light counterpart of the site's dark theme. */
+	invertedRegister: ReturnType<typeof derive>;
 	baseline: { version: string } & Record<Countable, number>;
 	delta(key: Countable): number;
 }
@@ -38,8 +48,8 @@ export interface DisplayStat {
 }
 
 /** The core component-centric by-the-numbers list — one ordering and label set shared by the
- * components index and the homepage so the two never drift. The statusbar shows these plus the
- * bench stats; the components index stays about components, so it reads only these. */
+ * components index and the homepage so the two never drift. The components index stays about
+ * components, so it reads only these; the statusbar keeps its own {@link statusbarStats} ordering. */
 export function displayStats(s: SiteStats): DisplayStat[] {
 	return [
 		{ key: "components", label: "components", value: s.components },
@@ -49,12 +59,17 @@ export function displayStats(s: SiteStats): DisplayStat[] {
 	];
 }
 
-/** The bench-side numbers: the icon primitive library and the bench tools. Appended after
- * `displayStats` on the statusbar, kept off the components index (which shouldn't quote them). */
-export function benchStats(s: SiteStats): DisplayStat[] {
+/** The statusbar's own by-the-numbers ordering: tools and libraries lead, the component/token core
+ * sits in the middle, and the two library counts (effects, primitives) trail. Bespoke rather than
+ * `displayStats` + `benchStats` because the bar wants a different sequence and drops categories. */
+export function statusbarStats(s: SiteStats): DisplayStat[] {
 	return [
-		{ key: "primitives", label: "primitives", value: s.primitives },
 		{ key: "tools", label: "tools", value: s.tools },
+		{ key: "bindings", label: "libraries", value: s.bindings },
+		{ key: "components", label: "components", value: s.components },
+		{ key: "tokens", label: "tokens", value: s.tokens },
+		{ key: "effects", label: "effects", value: s.effects },
+		{ key: "primitives", label: "primitives", value: s.primitives },
 	];
 }
 
@@ -64,10 +79,10 @@ let cached: SiteStats | null = null;
 export async function getStats(): Promise<SiteStats> {
 	if (cached) return cached;
 	const algorithm = await resolveAlgorithm(SITE_ALGORITHM);
-	const register = derive(algorithm, {
-		constraints: { "--bg-0": SITE_ANCHORS.bg, "--fg-0": SITE_ANCHORS.fg, "--accent": SITE_ANCHORS.accent },
-		knobs: { fonts: SITE_FONTS },
-	});
+	const constraints = { "--bg-0": SITE_ANCHORS.bg, "--fg-0": SITE_ANCHORS.fg };
+	const knobs = { fonts: SITE_FONTS };
+	const register = derive(algorithm, { constraints, knobs });
+	const invertedRegister = derive(algorithm, { constraints, knobs, invert: true });
 	const components = listComponents();
 	const cov = coverComponents(register);
 	const covered = cov.filter((c) => c.covered).length;
@@ -77,6 +92,7 @@ export async function getStats(): Promise<SiteStats> {
 		categories: new Set(components.map((c) => c.category)).size,
 		bindings: BINDINGS.length,
 		primitives: ICON_PRIMITIVE_NAMES.length,
+		effects: listEffects().length,
 		tools: BENCH_TOOLS.length,
 	};
 	cached = {
@@ -85,6 +101,7 @@ export async function getStats(): Promise<SiteStats> {
 		coverage: { covered, total: cov.length, ok: covered === cov.length },
 		algorithm,
 		register,
+		invertedRegister,
 		baseline,
 		delta: (key) => live[key] - (baseline[key] ?? 0),
 	};

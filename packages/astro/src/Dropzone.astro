@@ -55,9 +55,6 @@ await checkAuthoring("dropzone", Astro.props);
 const uid = `xtyle-dropzone-${Math.random().toString(36).slice(2, 8)}`;
 const promptHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : null;
 
-// The server paints the surface, the hint, and the browse chip — never a file row: nothing has been
-// dropped yet, so the zero-JS render is the empty zone the element paints on its first frame, and
-// hydration patches it rather than rebuilding it.
 const bindings = dropzoneBindings({
 	inputId: uid,
 	accept,
@@ -72,16 +69,10 @@ const bindings = dropzoneBindings({
 });
 const light = await renderFragmentLight("dropzone", bindings);
 
-// The default slot carries a fallback (the prompt line the fill just painted): with consumer content
-// the whole slot gives way to it; without, the slot tags are stripped and the fallback stands.
 const composed = light.replace(/<slot>([\s\S]*?)<\/slot>/, (_match, fallback: string) =>
 	promptHtml === null ? fallback : promptHtml,
 );
 
-// The `<input type="file">` is the element's plumbing, not the fill's chrome, so it is emitted here
-// rather than in the fragment: without it a static (zero-JS) zone would be a `<label>` pointing at
-// nothing — no picker, no keyboard path, no form value. The element adopts this input (and its id) on
-// upgrade instead of minting a second one.
 const inputAttrs = [
 	`type="file"`,
 	`class="xtyle-dropzone__input"`,

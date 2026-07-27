@@ -61,8 +61,8 @@ const bindings = {
 	noGrabber,
 	nonModal,
 	elementId,
-	// The fill hides an unfilled footer, and it can only know from a binding: the composed markup
-	// keeps its `<slot>`, so no selector can tell a filled region from an empty one.
+	// INFO: the composed markup keeps its `<slot>`, so no selector distinguishes a filled footer
+	// from an empty one; the fill needs this binding to hide an unfilled one
 	hasFooter: Astro.slots.has("footer"),
 };
 const light = await renderFragmentLight("sheet", bindings);

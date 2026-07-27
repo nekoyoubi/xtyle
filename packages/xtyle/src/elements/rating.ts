@@ -91,14 +91,14 @@ export class XtyleRating extends XtyleElement {
 	}
 
 	connectedCallback(): void {
-		// Capture the fallback label before the base's first render replaces the light-DOM children.
+		// INFO: capture the fallback label before the base's first render replaces the light-DOM children
 		const first = !this.captured;
 		if (first) {
 			this.fallbackLabel = (this.textContent ?? "").trim();
 			this.captured = true;
 		}
 		super.connectedCallback();
-		// The base renders (and so binds) only on first connect; re-render on a reconnect to rebind.
+		// INFO: the base renders (and binds) only on first connect, so re-render on reconnect to rebind
 		if (!first) this.render();
 	}
 
@@ -152,10 +152,8 @@ export class XtyleRating extends XtyleElement {
 		const tone = this.getAttribute("tone");
 		this.style.setProperty("--rating-fill", tone ? `var(--${tone})` : "");
 
-		// The server bakes the glyphs against the default register, since no cascade exists at build
-		// time; the track's `--neutral-bg` silhouette in particular is a different color under a dark
-		// theme. The row is structural (the update hook only moves the clip), so adopting an SSR
-		// scaffold has to rebuild once against the live register or the wrong track color sticks.
+		// INFO: SSR bakes glyphs against the default register, so an adopted SSR scaffold must rebuild once
+		// against the live cascade or a dark theme keeps the wrong (light) `--neutral-bg` track color
 		const adoptedSsr = !this.painted && this.querySelector("[data-root]") !== null;
 		this.painted = true;
 
@@ -163,9 +161,7 @@ export class XtyleRating extends XtyleElement {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold("");
 		if (adoptedSsr) this.fragment.remount();
-		// The glyph count and the glyphs themselves (a new icon, a new palette, a theme swap) are a
-		// structural change the fill's patch ops can't express, so they rebuild the row; a value change
-		// only moves the clip, so it stays a patch.
+		// INFO: a changed glyph count or glyph is structural (rebuild the row); a value change only moves the clip
 		this.fragment.reshapeIfChanged(`${max}|${empty}|${filled}`);
 		this.fragment.update({
 			max,
@@ -238,7 +234,7 @@ export class XtyleRating extends XtyleElement {
 	/** Commit a value: snap to step, reflect it, and fire `input` (always) and `change` (on commit). */
 	private commit(raw: number, changed: boolean): void {
 		const value = this.snap(raw);
-		this.value = value; // reflects to the attribute → re-render
+		this.value = value;
 		this.dispatchEvent(new CustomEvent("input", { detail: { value }, bubbles: true }));
 		if (changed) this.dispatchEvent(new CustomEvent("change", { detail: { value }, bubbles: true }));
 	}

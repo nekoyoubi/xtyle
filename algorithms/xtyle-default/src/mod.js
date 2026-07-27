@@ -3713,7 +3713,7 @@
   var DIVIDER_SEPARATION = 1.8;
   var DEFAULT_SHIFT_STEP = 90;
   var DEFAULT_ACCENT_SPLIT = 45;
-  var DEFAULT_SURFACE_STEP = 0.045;
+  var DEFAULT_SURFACE_STEP = 0.02;
   function defaultSurfaceRamp(scheme) {
     return scheme === "dark" ? DEFAULT_SURFACE_STEP : -DEFAULT_SURFACE_STEP;
   }
@@ -3952,6 +3952,11 @@
       add(`--duration-${step}`, "duration");
     for (const step of EASE_STEPS)
       add(`--ease-${step}`, "easing");
+    add("--fx-intensity", "number");
+    add("--fx-color", "color");
+    add("--fx-color-alt", "color");
+    add("--fx-duration", "duration");
+    add("--fx-ease", "easing");
     for (const step of ELEVATION_STEPS)
       add(`--elevation-${step}`, "shadow");
     for (const [role] of LAYER_STEPS)
@@ -3961,6 +3966,15 @@
     return { produces, categories };
   }
   var { produces: PRODUCES, categories: CATEGORIES } = buildProduces();
+  var PRODUCED_SINCE = {
+    "--layer-chrome": "0.9.0",
+    "--layer-overlay": "0.9.0",
+    "--layer-skip": "0.9.0",
+    "--layer-sticky": "0.9.0",
+    "--layer-toast": "0.9.0",
+    "--layer-veil": "0.9.0"
+  };
+  var PACK_SINCE = "0.1.0";
   var KEYWORD_DOMAINS = {
     "--selection-cue": ["tint", "marker"]
   };
@@ -4460,7 +4474,7 @@
     lit("--accent-fg", pickReadable(accentFill, TEXT_POLES, floor), ["--accent"]);
     const accentTextColor = enforceChromaticOnPanels(accentFill);
     const accentTextCss = formatCss2(accentTextColor);
-    const accentTint = liftStopForContrast(oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04), accentFill.c * preset.accentTintChromaMul, accentFill.h), accentTextCss, AA + 0.2, accentTextColor.l < 0.5);
+    const accentTint = liftStopForContrast(oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04), accentFill.c * preset.accentTintChromaMul, accentFill.h), accentTextCss, AA + 0.2, bestTruePole(accentTextCss) === TRUE_WHITE);
     lit("--accent-bg", formatCss2(accentTint), ["--accent", ...refIfPinned("--bg-0")]);
     lit("--accent-text", accentTextCss, ["--accent", ...refIfPinned("--bg-0")]);
     lit("--accent-vivid", vividOnPanel(accentFill.h, [bg0, ...panelSurfaces], floor, accentFill.c), ["--accent", ...refIfPinned("--bg-0")]);
@@ -4770,6 +4784,12 @@
     }
     lit("--ease-standard", "cubic-bezier(0.2, 0, 0, 1)");
     lit("--ease-emphasized", "cubic-bezier(0.3, 0, 0, 1)");
+    const effectIntensity = extreme ? 0 : Math.round(Math.min(1.25, 0.42 + vibrancy * 0.62) * 100) / 100;
+    lit("--fx-intensity", String(effectIntensity));
+    lit("--fx-color", formatCss2(accentFill), ["--accent"]);
+    lit("--fx-color-alt", emitAccent(a2), ["--accent-2"]);
+    lit("--fx-duration", `${durationMs.base}ms`, ["--duration-base"]);
+    lit("--fx-ease", "cubic-bezier(0.2, 0, 0, 1)", ["--ease-standard"]);
     const elevationStrings = {};
     for (const level of ELEVATION_STEPS) {
       const value = shadowString(scheme, level, vibrancy, preset);
@@ -5795,11 +5815,8 @@
     { name: "vibrancy", kind: "range", label: "Vibrancy", min: 0, max: 1, step: 0.05, default: 0.5 },
     { name: "typeScale", kind: "range", label: "Type scale", min: 1.05, max: 1.6, step: 0.01, default: 1.2 },
     { name: "radiusScale", kind: "range", label: "Radius scale", min: 0, max: 3, step: 0.1, default: 1 },
-    // The defaults are the engine's own constants, not a second copy of them: a slider that opens on a
-    // value the derivation does not actually use is a lie the control surface tells about the engine.
-    // `surfaceRamp` is signed and its sign is scheme-derived, so it declares a default per scheme; a
-    // lone `+0.045` would open the control on an *ascending* stack under a light theme, which is the
-    // exact inversion of what that theme derives.
+    // INFO: slider defaults reference the engine's own constants; `surfaceRamp` is signed with a
+    // scheme-derived sign, so it declares a per-scheme default.
     {
       name: "surfaceRamp",
       kind: "range",
@@ -5812,10 +5829,6 @@
     },
     { name: "accentSplit", kind: "range", label: "Accent split", min: 0, max: 90, step: 1, default: DEFAULT_ACCENT_SPLIT, unit: "\xB0" },
     { name: "accentShiftStep", kind: "range", label: "Accent shift step", min: 0, max: 180, step: 5, default: DEFAULT_SHIFT_STEP, unit: "\xB0" },
-    // Groups a consumer expands into a cluster of its own, not single scalar controls. They *declare*
-    // that rather than being named in a list the engine keeps: an algorithm with its own composite knob
-    // (a palette array, a per-role font map) has to be able to say so, and a name-keyed table of knob
-    // identities held by the engine is exactly what `knobSpecs` exists to delete.
     { name: "anchors", kind: "composite", label: "Anchors" },
     { name: "fonts", kind: "composite", label: "Fonts" }
   ];
@@ -5830,8 +5843,8 @@
     return out;
   }
   var DEFAULT_ANCHORS = {
-    bg: "#0f1115",
-    fg: "#e8eaed"
+    bg: "#25272e",
+    fg: "#e2e0e0"
   };
 
   // packages/xtyle/dist/authoring.js
@@ -5855,9 +5868,8 @@
       id: spec2.id,
       knobs: spec2.knobs ?? SHARED_KNOBS,
       knobSpecs: spec2.knobSpecs,
-      // Merge over the full default so a spec that names only some anchors (e.g. just `bg` and
-      // `accent`) still yields a complete `bg`/`fg` default — derivation reads both, so a partial
-      // `defaultAnchors` would crash when invoked with no anchor overrides.
+      // INFO: merge over the full default so a spec naming only some anchors still yields complete
+      // bg/fg; derivation reads both, so a partial defaultAnchors would crash with no anchor overrides
       defaultAnchors: spec2.anchors ? { ...DEFAULT_ANCHORS, ...spec2.anchors } : DEFAULT_ANCHORS,
       contrastFloor: contrast3.floor ?? 4.7,
       declaredTextOnFillFloor: contrast3.textOnFill ?? 4.5,
@@ -5882,7 +5894,9 @@
     const singlePass = buildPasses(preset, {}).length === 1;
     const finalNodes = (input) => singlePass ? buildGraph(preset, input) : registerToNodes(runPipeline(buildPasses(preset, input), (passIndex) => buildPassContext(preset, input, passIndex)).register);
     registerExports(finalNodes, (input) => tracePreset(preset, buildPasses, input), {
+      since: PACK_SINCE,
       produces: PRODUCED_TOKENS,
+      producedSince: PRODUCED_SINCE,
       categories: TOKEN_CATEGORIES,
       knobs: preset.knobs,
       knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),
@@ -5891,7 +5905,7 @@
   }
 
   // algorithms/xtyle-default/src/preset.ts
-  var spec = { id: "xtyle-default" };
+  var spec = { id: "xtyle-default", anchors: { accent: "#3ad6f8" } };
 
   // algorithms/xtyle-default/src/mod.ts
   defineXtyleAlgorithm(spec);

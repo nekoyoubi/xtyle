@@ -15,9 +15,8 @@ export class XtyleSplitter extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "splitter", {
 		context: () => ({ axisIsX: this.axisIsX, reversed: this.reversed }),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
-		// The handle is built by the async `mount` op, not the static scaffold, so on a cold first
-		// mount it doesn't exist when `render()` runs. Wire it after every apply, once the op's DOM
-		// is live: a fresh handle (cold mount or a reshape remount) wires; an unchanged one no-ops.
+		// INFO: the handle is built by the async `mount` op, absent when `render()` runs on a cold
+		// mount; wire it after every apply once the op's DOM is live.
 		afterApply: () => this.wireHandle(),
 	});
 
@@ -159,16 +158,14 @@ export class XtyleSplitter extends XtyleElement {
 	private onPointerdown(event: PointerEvent): void {
 		if (this.disabled) return;
 		event.preventDefault();
-		// The handle focuses itself so the arrow keys can drive it after the click, but a scripted
-		// `focus()` mid-pointer trips `:focus-visible` — so flag this focus as pointer-originated and
-		// let the handle's own focus listener withhold the keyboard ring (see wireHandle).
+		// INFO: a scripted `focus()` mid-pointer trips `:focus-visible`; flag this focus as
+		// pointer-originated so the handle's focus listener withholds the keyboard ring.
 		this.focusViaPointer = true;
 		this.handle?.focus();
 		const startPos = this.axisIsX ? event.clientX : event.clientY;
 		const startValue = this.value;
-		// Capture is a complement, not the lifeline: the move/up listeners live on `window` so the
-		// drag tracks the pointer anywhere on screen even when capture doesn't hold (a thin vertical
-		// handle in WebView2 loses it the moment the pointer leaves the few-px strip).
+		// INFO: move/up listeners live on `window`, not on pointer capture, which a thin vertical
+		// handle in WebView2 loses the moment the pointer leaves the few-px strip.
 		(event.target as Element).setPointerCapture?.(event.pointerId);
 		const sign = this.reversed ? -1 : 1;
 		const move = (e: PointerEvent) => {
@@ -248,8 +245,6 @@ export class XtyleSplitter extends XtyleElement {
 		this.wiredHandle = handle;
 		handle.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
 		handle.addEventListener("dblclick", () => this.commit(this.defaultValue, "resize-end"));
-		// Paint the focus ring only on genuine keyboard entry: Tab focus (no preceding pointer) and any
-		// key press arm it; the pointer-originated focus from a drag does not, so a mouse drag never rings.
 		handle.addEventListener("focus", () => {
 			if (this.focusViaPointer) return;
 			handle.setAttribute("data-focus-ring", "");

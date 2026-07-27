@@ -88,8 +88,8 @@ function sparkHtml(b: SparkBindings): string {
 	if (variant === "occupancy") {
 		const n = values.length;
 		const innerW = VW - PAD * 2;
-		// "On" is the upper half of the range; a flat series reads as on only when its level is positive,
-		// so an all-off bool strip stays empty instead of collapsing to a solid block.
+		// INFO: "on" is the upper half of the range; a flat series reads as on only when positive, so an
+		// all-off strip stays empty instead of collapsing to a solid block
 		const on = (v: number): boolean => (hi > lo ? v >= (lo + hi) / 2 : v > 0);
 		const trackH = VH - PAD * 2;
 		const track = `<rect class="xtyle-sparkline__track" x="${PAD}" y="${PAD}" width="${innerW.toFixed(2)}" height="${trackH.toFixed(2)}" rx="1"></rect>`;

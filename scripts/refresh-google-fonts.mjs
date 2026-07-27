@@ -44,7 +44,7 @@ if (!response.ok) {
 	process.exit(1);
 }
 
-// The endpoint may prefix the JSON with an anti-hijacking guard.
+// INFO: the endpoint may prefix the JSON with an anti-hijacking guard
 const metadata = JSON.parse((await response.text()).replace(/^\)\]\}'\n?/, ""));
 const families = [...new Set(metadata.familyMetadataList.map((f) => f.family))].sort((a, b) => a.localeCompare(b, "en"));
 

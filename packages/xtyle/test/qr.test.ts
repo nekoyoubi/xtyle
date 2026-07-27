@@ -8,8 +8,8 @@ const register = derive(xtyleDefault, {
 	constraints: { "--bg-0": "#0b0d12", "--fg-0": "#e6e9ef", "--accent": "#6ea8fe" },
 });
 
-// The canonical ISO/IEC 18004 example: "01234567" at version 1, EC level M encodes to these 16
-// data codewords (numeric mode, before Reed-Solomon), a widely-published reference vector.
+// INFO: ISO/IEC 18004 reference vector — "01234567" at version 1, EC level M, 16 numeric-mode
+// data codewords before Reed-Solomon
 const ISO_DATA = [0x10, 0x20, 0x0c, 0x56, 0x61, 0x80, 0xec, 0x11, 0xec, 0x11, 0xec, 0x11, 0xec, 0x11, 0xec, 0x11];
 
 describe("qr encoder", () => {
@@ -27,7 +27,7 @@ describe("qr encoder", () => {
 
 	it("produces Reed-Solomon parity with zero syndromes (self-consistent GF math)", () => {
 		const data = __qrInternals.dataCodewordsFor("01234567", "M");
-		const ecLen = 10; // version 1, level M
+		const ecLen = 10; // INFO: EC codeword count for version 1, level M
 		const parity = __qrInternals.blockEcCodewords(data, ecLen);
 		const codeword = [...data, ...parity];
 		const n = codeword.length;
@@ -76,11 +76,7 @@ describe("qr encoder", () => {
 		expect(a.modules).toEqual(b.modules);
 	});
 
-	// An independent decoder that shares none of the encoder's internal maps: it reads the mask back
-	// from where the spec puts the format bits, then re-reads the data through a from-scratch standard
-	// reserved map. A wrong function-pattern reservation or a nonstandard placement shows up here as a
-	// codeword mismatch, even though the encoder's own round-trip would miss it. Version 1 only (no
-	// alignment patterns), which is where the reserved map is simple enough to hand-write.
+	// INFO: independent standard decoder, version 1 only (no alignment patterns)
 	const MASK_FN: ((x: number, y: number) => boolean)[] = [
 		(x, y) => (x + y) % 2 === 0,
 		(_x, y) => y % 2 === 0,
@@ -94,7 +90,6 @@ describe("qr encoder", () => {
 
 	function readV1(modules: boolean[][]): { mask: number; data: number[] } {
 		const size = 21;
-		// Read the 15 format bits from copy 1 and recover the applied mask.
 		const fmt: number[] = [];
 		for (let i = 0; i <= 5; i++) fmt[i] = modules[i]![8] ? 1 : 0;
 		fmt[6] = modules[7]![8] ? 1 : 0;
@@ -134,7 +129,6 @@ describe("qr encoder", () => {
 		const m = encodeQr("01234567", { ecLevel: "M", mask: 2 });
 		const read = readV1(m.modules);
 		expect(read.mask, "format bits must report the applied mask").toBe(2);
-		// The first 16 codewords are the data block; they must equal the ISO reference exactly.
 		expect(read.data.slice(0, 16)).toEqual(ISO_DATA);
 	});
 });
@@ -154,7 +148,6 @@ describe("qr path", () => {
 		const sizes = scales.map((s) => qrLogoModules(m.size, s));
 		for (let i = 1; i < sizes.length; i++) expect(sizes[i]!).toBeGreaterThanOrEqual(sizes[i - 1]!);
 		expect(sizes[3]!).toBeGreaterThan(sizes[0]!);
-		// the patch is the ceil of the scaled width (no extra padding), so the glyph fills it
 		for (const s of scales) expect(qrLogoModules(m.size, s)).toBe(Math.max(3, Math.ceil(m.size * s)));
 	});
 
@@ -164,7 +157,6 @@ describe("qr path", () => {
 		const without = qrPath(m, { quietZone: 4 });
 		expect(withClear.clear).toBeDefined();
 		expect(withClear.clear!.size).toBe(7);
-		// Clearing the center drops modules, so the path is shorter.
 		expect(withClear.d.length).toBeLessThan(without.d.length);
 	});
 });
@@ -186,8 +178,6 @@ describe("qr scannability", () => {
 		expect(qrScannability({}).scannable).toBe(false);
 	});
 
-	// The invariant, wired across the blessed set: every algorithm's default derive must yield a
-	// scannable themed QR, so a themed code is never the one un-audited patch of a page.
 	it("holds for every blessed algorithm's default theme", () => {
 		for (const [id, algorithm] of Object.entries(bakedAlgorithms)) {
 			const reg = derive(algorithm, {});

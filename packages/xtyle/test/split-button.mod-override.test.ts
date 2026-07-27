@@ -18,8 +18,8 @@ import type { MenuItem } from "../src/markup/index.js";
  */
 const invertedMod = {
 	manifest: {
-		$schema: "https://xript.dev/schema/mod/v0.7.json",
-		xript: "0.7",
+		$schema: "https://xript.dev/schema/mod-manifest/v0.8.json",
+		xript: "0.8",
 		name: "test-split-button-inverted",
 		version: "0.0.1",
 		title: "test-split-button-inverted",
@@ -28,7 +28,7 @@ const invertedMod = {
 		entry: { script: "mod.js", format: "script" },
 		fills: {
 			"component.split-button": [
-				{ id: "split-button", format: "text/html+jsml", source: "split-button.html" },
+				{ id: "split-button", format: "application/x-xtyle+html", source: "split-button.html" },
 			],
 		},
 	},

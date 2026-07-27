@@ -1,6 +1,6 @@
 {
-	"$schema": "https://xript.dev/schema/mod/v0.7.json",
-	"xript": "0.7",
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
 	"name": "xtyle-color-picker-default",
 	"version": "0.0.1",
 	"title": "Xtyle Color Picker (default)",
@@ -11,7 +11,7 @@
 		"component.color-picker": [
 			{
 				"id": "color-picker",
-				"format": "text/html+jsml",
+				"format": "application/x-xtyle+html",
 				"source": "color-picker.html",
 				"meta": {
 					"tokens": [

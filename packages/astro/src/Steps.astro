@@ -15,10 +15,6 @@ interface Props {
 const { current = 0, static: isStatic = false, class: extra, ...rest } = Astro.props;
 await checkAuthoring("steps", Astro.props);
 
-// The marker and the connector track are the fill's, and the browser path draws them only once the
-// runtime lands. Splitting the authored `<li>`s against `current` here lets the server render the
-// same indicator, so the steps arrive already marked done / current / upcoming; the element then
-// finds a composed `[data-root]` and adopts it rather than rebuilding.
 const authored = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
 const items = listItems(authored);
 const light = await renderFragmentLight("steps", {

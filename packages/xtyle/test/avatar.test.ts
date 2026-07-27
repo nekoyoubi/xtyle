@@ -21,16 +21,13 @@ describe("avatar initials", () => {
 	});
 
 	it("keeps an astral first character whole instead of splitting a surrogate pair", () => {
-		// A char-code split would emit half a surrogate pair here and render a replacement glyph.
 		expect(avatarInitials("🚀 Apollo")).toBe("🚀A");
 		expect(avatarInitials("Ædifice")).toBe("Æ");
 	});
 
 	it("paints the initials as real content, never as the default slot's fallback", () => {
-		// Slot fallback is a trap here: every framework binding emits a whitespace text node between
-		// the element's tags, shadow DOM assigns it to the default slot, and an assigned node — even
-		// one made of nothing but a space — suppresses the fallback. The initials would silently
-		// vanish in every Svelte/Astro caller while still reading back correctly from `textContent`.
+		// INFO: shadow DOM assigns the whitespace text node between the element's tags to the default
+		// slot, and any assigned node suppresses the slot fallback, so initials must be real content
 		const html = avatarMarkup({ userName: "Ada Lovelace" });
 		expect(html).toContain('<span class="xtyle-avatar__initials" part="initials">AL</span>');
 		expect(html).not.toContain("<slot>AL</slot>");
@@ -75,10 +72,8 @@ describe("avatar accessible name", () => {
 	});
 
 	it("names the avatar only when it has a name, never with an empty one", () => {
-		// An unnamed `role="img"` fails WCAG on its own — and `role="img"` makes the subtree
-		// presentational, so an avatar carrying only a slotted icon would announce as a nameless
-		// image rather than exposing what it holds. The SSR path used to emit it unconditionally
-		// while the client fragment guarded it, so identical props rendered different a11y semantics.
+		// INFO: an unnamed role="img" fails WCAG, and role="img" makes the subtree presentational, so
+		// a bare aria-label would announce an avatar with only a slotted icon as a nameless image
 		const unnamed = avatarMarkup({});
 		expect(unnamed).not.toContain('role="img"');
 		expect(unnamed).not.toContain('aria-label=""');

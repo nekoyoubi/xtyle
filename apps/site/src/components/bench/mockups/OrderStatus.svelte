@@ -45,9 +45,6 @@
 		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" fill="#1f2430"/><rect x="18" y="18" width="60" height="60" rx="10" fill="#9aa7c7"/><rect x="30" y="30" width="36" height="36" rx="4" fill="none" stroke="#5c6786" stroke-width="4"/><circle cx="48" cy="48" r="6" fill="#5c6786"/></svg>',
 	);
 
-	// The one categorical axis on this page: one parcel is not better or worse than another, it is merely
-	// a different one, so the accent family is the honest palette for it. Progression and health stay
-	// semantic (success / info / warn). Every parcel also carries its letter, so hue is never the signal.
 	const parcels = [
 		{
 			id: "A",

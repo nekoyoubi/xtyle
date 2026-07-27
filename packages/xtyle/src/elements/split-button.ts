@@ -3,7 +3,7 @@ import type { FullTone } from "../index.js";
 import { splitButtonHostCss, type SplitButtonSize, type SplitButtonVariant, type MenuItem } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/split-button/source.generated.js";
-// the dropdown is a real <xtyle-menu> the fill declares, so the tag has to be defined
+// INFO: the dropdown is a real <xtyle-menu> the fill declares, so its tag must be registered here
 import "./menu.js";
 import type { XtyleMenu } from "./menu.js";
 import { resolveTone, resolveVocab, SPLIT_BUTTON_VARIANTS, BUTTON_SIZES } from "../vocab.js";

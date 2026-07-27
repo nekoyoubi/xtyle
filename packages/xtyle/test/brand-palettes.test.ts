@@ -2,11 +2,6 @@ import { describe, expect, it } from "vitest";
 import { contrast, derive, FULL_TONES } from "../src/index.js";
 import { bakedAlgorithms } from "../src/batteries.js";
 
-// The gauntlet fires random and extreme constraint sets, but never these specific
-// real-world brand colors. This pins a handful of them across every shipped
-// algorithm so a regression that breaks AA on, say, a hot-pink brand or a
-// navy-on-light corporate theme fails loudly instead of waiting for a random
-// draw to happen to land nearby.
 const PALETTES: Array<{ name: string; constraints: Record<string, string> }> = [
 	{ name: "hot-pink brand (dark)", constraints: { "--accent": "#e0218a" } },
 	{ name: "navy on light corporate", constraints: { "--bg-0": "#f7f8fa", "--accent": "#2d5a9e" } },
@@ -37,9 +32,8 @@ for (const [id, algorithm] of Object.entries(bakedAlgorithms)) {
 				}
 			});
 
-			// Colored typography (Heading / Text / Eyebrow with a non-emphasis tone) paints
-			// the text with `--{tone}-vivid` directly on the page surface, so every tone in
-			// the full roster must clear AA against `--bg-0`.
+			// INFO: colored typography paints `--{tone}-vivid` directly on the page surface,
+			// so every tone in the full roster must clear AA against `--bg-0`
 			it(`${name}: every tone's vivid ink clears AA on the surface`, () => {
 				for (const tone of FULL_TONES) {
 					const ratio = contrast(register[`--${tone}-vivid`]!, register["--bg-0"]!);

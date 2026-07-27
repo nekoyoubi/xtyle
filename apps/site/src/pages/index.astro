@@ -34,7 +34,7 @@ const coverageOk = site.coverage.ok;
 const anchorChips = [
 	{ label: "bg", value: anchors.bg, swatch: "var(--bg-0)", ink: "var(--fg-1)" },
 	{ label: "fg", value: anchors.fg, swatch: "var(--fg-0)", ink: "var(--bg-0)" },
-	{ label: "accent", value: anchors.accent, swatch: "var(--accent)", ink: "var(--accent-fg)" },
+	{ label: "accent", value: site.register["--accent"], swatch: "var(--accent)", ink: "var(--accent-fg)" },
 ] as const;
 
 const toneRow = ["accent", "success", "warn", "danger"] as const;

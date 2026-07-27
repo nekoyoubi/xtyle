@@ -40,7 +40,6 @@ function slotWrappingClasses(): Map<string, string[]> {
 		const sources = [join(dir, "mod.ts"), join(dir, `${id}.html`)].filter((p) => existsSync(p));
 		for (const path of sources) {
 			const text = readFileSync(path, "utf8");
-			// an element that opens, carries a class, and contains a <slot> before it closes
 			for (const m of text.matchAll(/<(\w+)[^>]*\bclass=["'`]([^"'`]+)["'`][^>]*>\s*<slot\b/g)) {
 				for (const cls of m[2].split(/\s+/).filter((c) => c.startsWith("xtyle-"))) {
 					const seen = found.get(cls) ?? [];
@@ -58,7 +57,7 @@ function emptyGatedClasses(): Map<string, string[]> {
 	const found = new Map<string, string[]>();
 	for (const file of readdirSync(CSS).filter((f) => f.endsWith(".ts"))) {
 		const text = readFileSync(join(CSS, file), "utf8")
-			// comments discuss `:empty` freely; only real selectors count
+			// INFO: strip comments first so their mentions of `:empty` are not matched as real selectors
 			.replace(/\/\*[\s\S]*?\*\//g, "");
 		for (const m of text.matchAll(/\.(xtyle-[\w-]+):empty/g)) {
 			const seen = found.get(m[1]) ?? [];

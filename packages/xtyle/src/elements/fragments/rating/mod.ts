@@ -60,8 +60,6 @@ hooks.fragment.mount("rating", (bindings, ops) => {
 	ops.replaceChildren("[data-rating]", rowsHtml(bindings));
 });
 
-// A value change only moves the clip, so the glyphs are never rebuilt — the element remounts (and the
-// rows redraw) only when the glyph count or the glyphs themselves change.
 hooks.fragment.update("rating", (bindings, ops) => {
 	ops.setAttr('[part="fill"]', "style", fillWidth(bindings));
 });

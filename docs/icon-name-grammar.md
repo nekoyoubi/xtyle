@@ -51,7 +51,7 @@ A primitive keyword followed by any number of flags, **in any order** (only the 
 positional):
 
 ```
-{primitive}  p{1-9}  x{±%}  y{±%}  s{%}  r{±deg}  c{0-f}  o{1-3}[c{0-f}]  a{%}  fh  fv  ko  i
+{primitive}  p{1-9}  x{±%}  y{±%}  s{%}  sx{%}  sy{%}  r{±deg}  c{0-f}  o{1-3}[c{0-f}]  a{%}  fh  fv  ko  i
 ```
 
 | flag | meaning | default |
@@ -59,6 +59,7 @@ positional):
 | `p{1-9}` | grid cell on a phone-keypad 3×3 (`1`=top-left, `3`=top-right, `5`=center, `7`=bottom-left, `9`=bottom-right) | `p5` |
 | `x{±%}` `y{±%}` | fine offset from the cell anchor, % of the grid | `0` |
 | `s{%}` | size, % of the full 24-unit grid | `100` |
+| `sx{%}` `sy{%}` | stretch on one axis, **multiplied onto `s`** rather than replacing it, so `s50-sx200` is "half size, then twice as wide". A squashed `circle` is a disc, a stretched `pill` a wide capsule, so a ratio needs no second primitive | `100` |
 | `r{±deg}` | rotation about the object's own center | `0` |
 | `c{0-f}` | fill color (see the palette) | `currentColor` |
 | `o{1-3}[c{0-f}]` | outline: `1`/`2`/`3` = thin/medium/thick stroke, optional trailing `c{0-f}` stroke color | no outline; stroke `currentColor` |
@@ -71,12 +72,25 @@ Primitive keywords are single tokens (`square`, `circle`, `triangle`, `hex`, `di
 `ring`, `divider`, `star`, `bolt`, `dot`, …) mapping to the primitive library (`square` →
 `shape-square`, `star` → `symbol-star`, `divider` → `divider-rule`, which rotates to vertical with
 `r90`). Beyond the stamped shapes and symbols, the library carries **draw-with primitives** you compose
-marks *from*: filled curves (`half` a semicircle, `quarter` a quarter-disc, `wedge` a pie sector,
-`oval`, `pill` a capsule, `drop` a teardrop, `pentagon`) and open pen-strokes (`line`, `arc` a
-semicircle curve, `corner` an L-bracket, `vee` a chevron) that take the layer's `c` color like any
-shape and rotate to any angle (a `wedge` spun around builds a pie; a `line-r45` is a diagonal rule).
+marks *from*, and the bulk of them are **filled art rather than line work** — a mark is built by
+stacking solids, not by drawing outlines:
+
+| family | keywords |
+|--------|----------|
+| curves & nature | `wave` a water band, `water` a wavy fill level, `swish` a tapered swoosh, `blob`, `lens` a vesica petal, `leaf`, `cloud`, `mountain`, `sun`, `flame`, `drop` |
+| volume | `disc` a flat cap, `cylinder` (alias `drum`) a square-edged oval, `cone`, `half`, `quarter`, `wedge` a pie sector, `oval`, `pill`, `egg`, `arch` |
+| polygons | `pentagon`, `octagon`, `trapezoid`, `ramp` a right triangle, `squircle`, `gem` |
+| markers | `banner`, `tag`, `bubble` a speech balloon, `chevron` a solid band, `arrow` a solid arrow |
+| stars & seals | `star`, `star4` (alias `sparkle`), `star6`, `star8`, `burst` a spiky seal, `seal` a scalloped rosette |
+| pen-strokes | `line`, `arc` a semicircle curve, `corner` an L-bracket, `vee` a chevron |
+
+`cylinder` is the shape a database icon is made of: stack a `disc` on top of one and you have the
+classic drum. They all take the layer's `c` color like any shape and rotate to any angle (a `wedge`
+spun around builds a pie; a `line-r45` is a diagonal rule), and `sx`/`sy` restretch any of them, so
+one `oval` covers every ellipse ratio rather than the library shipping a shape per proportion.
 A trailing index selects a variant where the library ships one: `square` is a sharp square,
-`square1` / `square2` / `square3` its small / medium / large rounded corners. The single-token
+`square1` / `square2` / `square3` its small / medium / large rounded corners, and `star4` / `star6` /
+`star8` are the 4-, 6-, and 8-point stars beside the 5-point `star`. The single-token
 functional glyphs are reachable as symbols by their bare name too (`check`, `close`, `search`,
 `warning`, … → `symbol-check`, …), so a check badge is `badge--circle-c2--check-s55-cf`. Multi-token
 glyph names (`chevron-right`) have no keyword, since a keyword is one token by rule; they stay
@@ -140,6 +154,9 @@ composite:
 | `f{n}-{name}` | **font slot**: bind slot `n` (`0`+) for this mark's `letter` layers to a font; `f-{name}` sets the default slot `0`. `{name}` is a theme alias (`sans` / `display` / `mono` → a `--font-*` token, portable), or a literal family with `+` for spaces (`f1-noto+sans+symbols` → `Noto Sans Symbols`). | slots `0`–`2` = sans / display / mono |
 | `ps-{palette}` | **series palette**: pin the palette this mark's `c1`–`c9` slots draw from — one of `ps-accents`, `ps-skittles`, `ps-statuses`, `ps-thermal`, `ps-severity`, `ps-intensity` — so the *name* carries its palette instead of taking whatever the host hands it. | the host's `colors` |
 | `e{n}` | **expand canvas**: pad the viewBox by `n`% of the grid on every side (capped at 100) while the rendered box stays `1em`, so the art maps a little smaller inside the same footprint and gains a margin. The art is unmoved, just given room; bump the icon's size to keep it visually the same. Its purpose is edge-hugging art under a drop shadow: Firefox clips a filter at the SVG viewport edge, so a shadow cast from art flush against the box streaks — the margin moves the art off the edge. | no padding |
+| `s{%}` `sx{%}` `sy{%}` | **whole-mark size**: scale the finished composite about the canvas center. `s` sets the overall size and `sx`/`sy` then stretch that result on one axis — they layer, exactly as they do on an object. A negative value flips it. Wraps the outline and shadow, so a resized mark keeps its finish rather than sliding around inside its own rim. | `100` |
+| `mx{±%}` `my{±%}` | **whole-mark move**: shift the finished composite by a signed percentage of the grid. The finish-side twin of a layer's `x`/`y`, so nudging a whole mark for optical alignment needs no edit to every layer. | `0` |
+| `center` | **re-center**: measure the ink the mark actually leaves standing and translate it so that box sits centered on the canvas. Applied before `mx`/`my`, so the two compose (`---center--my-5` is "centered, then lifted"). Measured statically off the primitive geometry — no DOM, so it works in the CLI, in SSR, and in the sandbox alike. | off |
 | `o{1-3}[c{0-f}]` | **whole-mark outline**: one stroke ringing the union silhouette of *everything the mark paints* — glyphs, shapes, through knockouts — drawn behind the art and *before* any drop shadow (so the shadow wraps the outlined shape). Same size steps (`1`/`2`/`3` = thin/medium/thick) and optional color nibble as a layer's `o`, but this rings the composite instead of one shape. Rendered by dilating the composite's alpha, so it needs no vector union and works across text and masks alike. | no outline |
 
 A `pc` value stays **theme-reactive** when it's a nibble or a token — it resolves off the live register
@@ -258,6 +275,15 @@ Objects paint **back-to-front**. Two ways to make emptiness:
   safe because the label is peeled off on `--` first.
 - **`r{±deg}` is always numeric rotation** on an object; there is no alpha `r` finish anymore
   (whole-icon rounding moved to indexed primitives like `square1` and the `-i-ko` silhouette clip).
+- **`sx`/`sy` are matched before `s`.** Both the object tokenizer and the finish reader try the
+  two-letter axis flags first, so `sx160` is one axis scale rather than an `s` followed by a stray `x`.
+- **`center` measures coverage, not a union of boxes.** A knockout is not ink — it is the tool that
+  *carves* ink — so a mark's real extent is what survives the carve. `--circle--circle-x50-ko` bites a
+  bite out of a disc, and centering seats the mark on what is left rather than on the disc that is no
+  longer all there. The composite is walked the way it paints (a knockout clears coverage, an inverted
+  knockout keeps only what it covers, a plain `i` invert floods the canvas), sampled to a quarter unit.
+  Filters and the whole-mark outline sit outside the measurement; a pen-stroke primitive counts its
+  stroke width, so a `ring` measures its rim rather than the hole in the middle.
 - **`o{1-3}c{N}` is one compound token:** the outline's color glues to `o` with no dash, so it
   never reads as the standalone fill `c{N}`.
 
@@ -290,6 +316,18 @@ mono--letter-x-x-12-c8--letter-r-x18-cf---d8p8s1t20--e12           a shadowed mo
                                                                     canvas so it doesn't
 seal--letter-x-c8--letter-r-x18-cf---o3cb                          a two-glyph mark ringed by one bg-colored
                                                                     outline around the whole silhouette
+database--cylinder-c1--disc-y-25-c3--disc-y-2-c2-a70               a drum with two platter bands: the
+                                                                    square-edged oval plus flat `disc` caps
+sea--circle-cb--water-c1--circle-i-ko                              a water disc: a wavy fill level
+                                                                    clipped to a circle
+lozenge--circle-c2-sx160-sy70                                      one `circle` stretched into an ellipse,
+                                                                    no second primitive needed
+nub--circle-c2-s50-sx200                                           `s` sizes, then `sx` stretches that:
+                                                                    half-height, full-width
+crest--star-p1-s40-c1---center                                     a mark built off-center, then measured
+                                                                    and re-centered by the finish
+inset--square1-c1--star-s50-cf---s70--my-6                        the whole mark shrunk and lifted inside
+                                                                    its own box
 ```
 
 ## Extensibility
