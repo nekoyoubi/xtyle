@@ -55,8 +55,10 @@ export interface EffectDefinition {
 	name: string;
 	/** A one-line summary of what the effect does, surfaced by authoring tools and the MCP catalog. */
 	description?: string;
-	/** Declarations applied while the effect is active. */
-	active: string;
+	/** Declarations applied while the effect is active. Optional, because an effect that works entirely
+	 * through {@link activeAfter} — an overlay wash the target itself never carries — has nothing to put
+	 * on the element, and filler written to satisfy a type is a declaration nobody meant. */
+	active?: string;
 	/** Declarations applied to the target whenever it carries the effect at all — transition setup, a
 	 * positioning context, the resting state of a sweep. Emitted with no condition. */
 	base?: string;
@@ -76,6 +78,14 @@ export interface EffectDefinition {
 	 * is the whole reason this belongs in a library: the policy is decided once, correctly, rather than
 	 * by every adopter who happens to remember. */
 	animated?: boolean;
+	/** True when the effect must be armed before it can play — it hides its target until something says
+	 * the moment has come. `armInView` drives every effect declaring this, so a mod's own enter effect is
+	 * observed on the same terms `reveal` is instead of being a name the runtime hardcodes. */
+	arms?: boolean;
+	/** True when the effect fires once and is over, rather than lasting as long as a state does. Marks
+	 * the set `fireEffect` is for, so a catalog, a doc, or an authoring surface can name the transients
+	 * without each one keeping its own copy of the list. */
+	transient?: boolean;
 	/** The version the effect first shipped in; drives a "new" marker in authoring surfaces. */
 	since?: string;
 	/** Plain-language taxonomy for search and filter. */
@@ -91,6 +101,11 @@ export interface ConditionDefinition {
 	/** Appended to the attribute selector. A comma splits into multiple selectors, each of which gets
 	 * its own copy of the attribute prefix, so `:disabled, [aria-disabled="true"]` works as written. */
 	selector: string;
+	/** The attribute a runtime sets to satisfy this condition, when one can. `fired` and `armed` are
+	 * driven by `@xtyle/core/fx` rather than by the browser, so the runtime has to know what to write —
+	 * and reading it from here rather than hardcoding it is what lets a mod re-point either condition at
+	 * an attribute of its own and still have the runtime drive it. */
+	attribute?: string;
 	since?: string;
 }
 
@@ -188,16 +203,44 @@ function parseEffectArgs(tail: string): Record<string, string> {
 	return out;
 }
 
-/** The entries of a spec naming an effect or condition no registry knows — a typo, or an addon that
- * has not loaded. Returns the offending entries, so a caller can name what is missing. */
-export function unknownEffects(value: string): EffectSpec[] {
-	return parseEffectSpec(value).filter(({ effect, condition, args }) => {
-		const definition = effects.get(effect);
-		if (!definition || (condition !== null && !conditions.has(condition))) return true;
-		const known = new Set((definition.params ?? []).map((param) => param.name));
-		return Object.keys(args).some((key) => !known.has(key));
-	});
+/** An entry of a spec that names something no registry knows, and which half of it was unknown. */
+export interface UnknownSpec extends EffectSpec {
+	/** Which parts did not resolve — any combination of the effect name, the condition name, and one or
+	 * more parameter keys. Named rather than inferred, so a caller reporting the gap does not have to
+	 * re-derive it with {@link getEffect} / {@link getCondition} per entry. */
+	missing: ("effect" | "condition" | "param")[];
+	/** The parameter keys the effect does not declare, when `missing` includes `param`. */
+	unknownParams: string[];
 }
+
+/**
+ * The entries of a spec naming an effect, a **condition**, or a parameter no registry knows — a typo,
+ * or an addon that has not loaded.
+ *
+ * The condition half is the one that bites: `armed` is a built-in reading `[data-fx-armed]`, which makes
+ * a data-attribute trigger look like part of the vocabulary rather than something
+ * {@link registerCondition} has to declare, so `glow@dragging` reads as though it should just work. It
+ * does not — the layer is a static cross product of *registered* names, so an unregistered one emits no
+ * rule at all and is visually identical to an effect that ran and did nothing.
+ */
+export function unknownSpecs(value: string): UnknownSpec[] {
+	const out: UnknownSpec[] = [];
+	for (const spec of parseEffectSpec(value)) {
+		const definition = effects.get(spec.effect);
+		const known = new Set((definition?.params ?? []).map((param) => param.name));
+		const unknownParams = definition ? Object.keys(spec.args).filter((key) => !known.has(key)) : [];
+		const missing: ("effect" | "condition" | "param")[] = [];
+		if (!definition) missing.push("effect");
+		if (spec.condition !== null && !conditions.has(spec.condition)) missing.push("condition");
+		if (unknownParams.length) missing.push("param");
+		if (missing.length) out.push({ ...spec, missing, unknownParams });
+	}
+	return out;
+}
+
+/** {@link unknownSpecs} under its original name. Kept because the name says "effects" while the check
+ * has always covered conditions and parameters too, which hid it from everyone looking for it. */
+export const unknownEffects = unknownSpecs;
 
 /** Serializes entries back to a `data-fx` value. */
 export function formatEffectSpec(specs: EffectSpec[]): string {
@@ -331,7 +374,6 @@ const BUILT_INS: EffectDefinition[] = [
 		animated: true,
 		params: [{ name: "angle", unit: "deg" }, { name: "rate", property: "--fx-glare-duration", unit: "ms" }, { name: "color" }],
 		base: `position:relative;overflow:hidden;isolation:isolate`,
-		active: ``,
 		baseAfter: `content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;background:linear-gradient(${own("glare", "angle", "105deg")},transparent 35%,${wash(55, own("glare", "color", COLOR))} 50%,transparent 65%);transform:translateX(-120%)`,
 		activeAfter: `opacity:1;animation:xtyle-fx-glare ${own("glare", "duration", `calc(${DURATION} * 4)`)} ${EASE}`,
 		extra: `@keyframes xtyle-fx-glare{to{transform:translateX(120%)}}`,
@@ -366,6 +408,7 @@ const BUILT_INS: EffectDefinition[] = [
 		tags: ["reveal", "enter", "in-view", "scroll", "fade"],
 		animated: true,
 		ambient: false,
+		arms: true,
 		params: [{ name: "distance", unit: "px" }, { name: "rate", property: "--fx-reveal-duration", unit: "ms" }],
 		base: `transition:opacity ${own("reveal", "duration", DURATION)} ${EASE},transform ${own("reveal", "duration", DURATION)} ${EASE}`,
 		active: `opacity:0;transform:translateY(calc(${own("reveal", "distance", "8px")} * ${INTENSITY}))`,
@@ -373,12 +416,59 @@ const BUILT_INS: EffectDefinition[] = [
 	},
 	{
 		name: "shake",
+		transient: true,
 		description: "A short nudge, for an error.",
 		tags: ["shake", "nudge", "error", "invalid", "attention"],
 		animated: true,
 		params: [{ name: "distance", unit: "px" }, { name: "rate", property: "--fx-shake-duration", unit: "ms" }],
 		active: `animation:xtyle-fx-shake ${own("shake", "duration", `calc(${DURATION} * 2)`)} ${EASE}`,
-		extra: `@keyframes xtyle-fx-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(calc(-1 * ${own("shake", "distance", "3px")} * ${INTENSITY}))}40%,80%{transform:translateX(calc(${own("shake", "distance", "3px")} * ${INTENSITY}))}}`,
+		extra: `@keyframes xtyle-fx-shake{0%,100%{translate:0}20%,60%{translate:calc(-1 * ${own("shake", "distance", "3px")} * ${INTENSITY})}40%,80%{translate:calc(${own("shake", "distance", "3px")} * ${INTENSITY})}}`,
+	},
+	{
+		name: "flash",
+		transient: true,
+		since: "0.11.0",
+		description: "A hard blink of color across the surface.",
+		tags: ["flash", "blink", "impact", "transient", "attention"],
+		animated: true,
+		params: [{ name: "color" }, { name: "amount", unit: "%" }, { name: "rate", property: "--fx-flash-duration", unit: "ms" }],
+		base: `position:relative;isolation:isolate`,
+		baseAfter: `content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;border-radius:inherit;background:color-mix(in oklab, ${own("flash", "color", COLOR)} calc(${own("flash", "amount", "70%")} * ${INTENSITY}), transparent)`,
+		activeAfter: `animation:xtyle-fx-flash ${own("flash", "duration", `calc(${DURATION} * 1.6)`)} ${EASE}`,
+		extra: `@keyframes xtyle-fx-flash{0%{opacity:0}14%{opacity:1}100%{opacity:0}}`,
+	},
+	{
+		name: "float",
+		transient: true,
+		since: "0.11.0",
+		description: "A rise and fade out; a readout that appears, travels, and dies.",
+		tags: ["float", "rise", "drift", "transient", "readout"],
+		animated: true,
+		params: [{ name: "distance", unit: "px" }, { name: "rate", property: "--fx-float-duration", unit: "ms" }],
+		active: `animation:xtyle-fx-float ${own("float", "duration", `calc(${DURATION} * 5)`)} ${EASE} forwards`,
+		extra: `@keyframes xtyle-fx-float{from{opacity:1;translate:0 0}to{opacity:calc(1 - ${INTENSITY});translate:0 calc(-1 * ${own("float", "distance", "28px")} * ${INTENSITY})}}`,
+	},
+	{
+		name: "pop",
+		transient: true,
+		since: "0.11.0",
+		description: "A scale in past the resting size and back; something arriving.",
+		tags: ["pop", "scale", "enter", "transient", "bounce"],
+		animated: true,
+		params: [{ name: "scale" }, { name: "rate", property: "--fx-pop-duration", unit: "ms" }],
+		active: `animation:xtyle-fx-pop ${own("pop", "duration", `calc(${DURATION} * 1.8)`)} ${EASE}`,
+		extra: `@keyframes xtyle-fx-pop{from{scale:calc(1 - ${own("pop", "scale", "0.18")} * ${INTENSITY})}55%{scale:calc(1 + ${own("pop", "scale", "0.18")} * 0.45 * ${INTENSITY})}to{scale:1}}`,
+	},
+	{
+		name: "wobble",
+		transient: true,
+		since: "0.11.0",
+		description: "A rotational jitter, where `shake` is a translational one.",
+		tags: ["wobble", "rotate", "jitter", "transient", "attention"],
+		animated: true,
+		params: [{ name: "angle", unit: "deg" }, { name: "rate", property: "--fx-wobble-duration", unit: "ms" }],
+		active: `animation:xtyle-fx-wobble ${own("wobble", "duration", `calc(${DURATION} * 2.5)`)} ${EASE}`,
+		extra: `@keyframes xtyle-fx-wobble{0%,100%{rotate:0deg}20%,60%{rotate:calc(-1 * ${own("wobble", "angle", "4deg")} * ${INTENSITY})}40%,80%{rotate:calc(${own("wobble", "angle", "4deg")} * ${INTENSITY})}}`,
 	},
 	{
 		name: "saturate",
@@ -398,7 +488,11 @@ const BUILT_IN_CONDITIONS: ConditionDefinition[] = [
 	{ name: "disabled", selector: ':disabled,[aria-disabled="true"]' },
 	{ name: "open", selector: '[open],[aria-expanded="true"]' },
 	{ name: "invalid", selector: ':invalid,[aria-invalid="true"]' },
-	{ name: "armed", selector: "[data-fx-armed]" },
+	{ name: "armed", selector: "[data-fx-armed]", attribute: "data-fx-armed" },
+	{ name: "selected", selector: '[aria-selected="true"],[data-selected]', since: "0.11.0" },
+	{ name: "current", selector: "[aria-current],[data-current]", since: "0.11.0" },
+	{ name: "busy", selector: '[aria-busy="true"],[data-busy]', since: "0.11.0" },
+	{ name: "fired", selector: "[data-fx-fired]", attribute: "data-fx-fired", since: "0.11.0" },
 ];
 
 for (const effect of BUILT_INS) registerEffect({ since: "0.10.0", ...effect });
@@ -470,7 +564,7 @@ export function effectsCss(options: EffectsCssOptions = {}): string {
 		if (effect.extra) atRules.push(effect.extra);
 	}
 	const reduced = animatedSelectors.length
-		? `@media (prefers-reduced-motion:reduce){${animatedSelectors.join(",")}{animation:none;transition:none;transform:none}}`
+		? `@media (prefers-reduced-motion:reduce){${animatedSelectors.join(",")}{animation:none;transition:none;transform:none;translate:none;rotate:none;scale:none}}`
 		: "";
 	return [...rules, ...atRules, reduced].filter(Boolean).join("\n");
 }

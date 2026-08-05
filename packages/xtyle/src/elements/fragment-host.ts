@@ -75,6 +75,9 @@ export interface FragmentIntent {
 	removeLast?: boolean;
 	/** Tour: which way a nav button moves the sequence. */
 	tourNav?: "back" | "next" | "skip";
+	/** Reveal: slide the lid to expose one direction's belly, or close whichever is open. */
+	reveal?: string;
+	conceal?: boolean;
 	/** Markdown: flip between the rendered body and the source editor. */
 	toggleEditing?: boolean;
 	/** Collection: how a selection gesture transitions the selection model. */

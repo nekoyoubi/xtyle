@@ -9,7 +9,7 @@ import {
 	type ChartXScale,
 	type ChartPlot,
 } from "../markup/chart.js";
-import { seriesPalette, seriesColorsFor, resolvePaletteName, PALETTE_TOKENS, type Palette } from "../series.js";
+import { seriesPalette, seriesColorsFor, resolvePaletteName, paletteRegisterTokens, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/chart/source.generated.js";
@@ -155,7 +155,7 @@ export class XtyleChart extends XtyleElement {
 
 	/** Reads the palette's tokens off the live cascade, so the series colors track the applied theme. */
 	private paletteRegister(): Record<string, string> {
-		return readLiveRegister(this, PALETTE_TOKENS, () => {
+		return readLiveRegister(this, paletteRegisterTokens(this.scheme), () => {
 			if (this.root.firstChild) this.render();
 		});
 	}

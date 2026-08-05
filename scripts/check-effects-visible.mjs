@@ -38,8 +38,11 @@ for (const tile of tiles) {
 	const rest = await shot.screenshot({ animations: "allow" });
 
 	const toggle = tile.locator("[data-fx-sat]");
+	const fire = await tile.getAttribute("data-fire");
 	if (spec.startsWith("reveal")) {
 		await page.locator(`#${await tile.getAttribute("data-arm")}`).click().catch(() => {});
+	} else if (fire) {
+		await page.locator(`#${fire}`).click().catch(() => {});
 	} else if (await toggle.count()) {
 		await toggle.click();
 	} else if (spec.includes("@")) {

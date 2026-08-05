@@ -162,7 +162,7 @@ export const carouselManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "pause-on-hover",
+			name: "pauseOnHover",
 			type: "boolean",
 			default: "true",
 			description: "Whether hovering or focusing the carousel pauses autoplay. Set `pause-on-hover=\"false\"` when the rotation is the point and should keep running under the pointer: a decorative marquee, an ambient gallery, or a preview revealed inside an `Image`'s `hover` slot (which only shows while hovered, so a hover-pause would freeze it on its first slide). The explicit play/pause toggle and `prefers-reduced-motion` still stop it, so the content stays pausable.",

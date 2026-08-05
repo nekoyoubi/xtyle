@@ -85,6 +85,8 @@ export { default as Popover } from "./Popover.svelte";
 export { default as Combobox } from "./Combobox.svelte";
 export { default as CommandPalette } from "./CommandPalette.svelte";
 export type { CommandItem, CommandMatch, CommandScorer, CommandCloseReason } from "@xtyle/core/elements";
+export { default as Reveal } from "./Reveal.svelte";
+export { default as RevealGroup } from "./RevealGroup.svelte";
 export { default as Splitter } from "./Splitter.svelte";
 export { default as Code } from "./Code.svelte";
 export { default as Markdown } from "./Markdown.svelte";
@@ -185,6 +187,8 @@ export {
 	XtylePopover,
 	XtyleCombobox,
 	XtyleCommandPalette,
+	XtyleReveal,
+	XtyleRevealGroup,
 	XtyleSplitter,
 	XtyleCode,
 	XtyleMarkdown,

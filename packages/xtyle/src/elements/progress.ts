@@ -1,7 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { FullTone } from "../index.js";
 import { progressHostCss } from "../markup/index.js";
-import { rampColor, rampGradientStops, resolvePalette, PALETTE_TOKENS, type Palette } from "../series.js";
+import { rampColor, rampGradientStops, resolvePalette, paletteRegisterTokens, type Palette } from "../series.js";
 import { readLiveRegister } from "./live-register.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/progress/source.generated.js";
@@ -202,9 +202,10 @@ export class XtyleProgress extends XtyleElement {
 		return (clamped - this.min) / span;
 	}
 
-	/** Reads the palette stop tokens off the live cascade so a solid fill's color tracks the theme. */
-	private paletteRegister(): Record<string, string> {
-		return readLiveRegister(this, PALETTE_TOKENS, () => {
+	/** Reads the palette stop tokens off the live cascade so a solid fill's color tracks the theme. An
+	 * authored stop list can name tokens no built-in palette does, so its own are read alongside them. */
+	private paletteRegister(scheme: Palette | string[]): Record<string, string> {
+		return readLiveRegister(this, paletteRegisterTokens(scheme), () => {
 			if (this.root.firstChild) this.render();
 		});
 	}
@@ -219,7 +220,8 @@ export class XtyleProgress extends XtyleElement {
 		if (this.effectiveRampMode() === "gradient") {
 			return { ramp: true, rampMode: "gradient", rampStops: rampGradientStops(scheme, { reverse }) };
 		}
-		const color = rampColor(scheme, this.fraction(), this.paletteRegister(), { reverse });
+		const color = rampColor(scheme, this.fraction(), this.paletteRegister(scheme), { reverse });
+		if (color === "currentColor") return {};
 		return { ramp: true, rampMode: "solid", rampColor: color };
 	}
 

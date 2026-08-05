@@ -1,5 +1,75 @@
 # Changelog
 
+## v0.11.0
+
+A release about gestures and the things they set off. `reveal`, the swipe-to-act row, is the one component that lands, but the more useful half is underneath it: a shared pointer-drag core that every dragger in the library now sits on, and a set of transient effects so the thing a gesture *does* has somewhere to be said. The icon grammar learned arbitrary polygons, and six reports from consumers building against earlier versions are closed. The surfaces a mod contributes through got a pass of their own: two registries that could only be reached by running code answer a slot now, and a new gate over the component vocabulary found 22 attributes a fill had been silently losing.
+
+### Reveal
+
+- **`<xtyle-reveal>` layers a lid over as many as four bellies and slides it off.** Which directions are live is inferred from the bellies you fill (a `[slot="end"]` makes the end direction live and nothing else does), so there is no second list of directions to keep in sync with the first
+- **Each direction decides what its own slide means.** `latch` opens and stays, `commit` fires and springs back, `both` gives the short pull a latch and the full pull the action; `behavior` sets the default and `endBehavior` and friends override one direction. Every knob is a host attribute, so the same markup configures identically from HTML, Svelte, and Astro
+- **Travel locks to one axis per gesture**, so a reveal offering `start` and `bottom` still only ever moves one way at a time, and the lid rocks back through center to the other side without letting go
+- **`name` groups reveals the way it groups radios.** Share one and opening a reveal closes the last; leave it off and each is independent, like a checkbox. A concealed belly is `inert`, so its buttons never sit in the tab order waiting to be tabbed into by accident
+- **`shape` is a definition, not an enum.** `registerRevealShapes()` takes a clip-path and a grip inset under a name, so a heart, a tag, or a torn edge is a registration rather than a fork; `bleed` drops the inset and runs artwork to the edges, and `contained` opts into clipping the whole box
+- **Per-direction `tone`, `grip`, `gripStyle`, and `travel`**, because the belly under a *delete* and the belly under a *save* are not the same promise and should not read the same
+
+### Gestures
+
+- **`startDrag` is the one pointer-drag loop.** Axis lock, signed travel along the locked axis, and a velocity read averaged over the last 100 ms, so a short fast flick counts as intent the way a long slow drag does. `settle` animates an element to its resting transform off the theme's own duration and easing tokens, and hands back stillness under reduced motion
+- **All nine hand-rolled draggers moved onto it**: `slider`, `splitter`, `dock-zone` (both loops), `color-picker` (all three), `app-shell`, `rating`, `redact`, and `sheet`. That is a bug fix as much as a consolidation: `slider`, `color-picker`, and `rating` each listened for `pointerup` and not `pointercancel`, so a cancelled pointer left a live drag and its listeners behind
+- **`sheet` gained the flick it was missing.** A fast short throw toward the closing edge dismisses now, instead of reading as an abandoned drag and springing back
+
+### Transient effects
+
+The nine shipped effects were all persistent-state verbs: something is hovered, or open, and *while it is*, it glows. Nothing covered the effect that fires once and is over, which is the shape a gesture needs.
+
+- **Four transients**: `flash` (a hard blink of color), `float` (a rise and fade out), `pop` (a scale in past the resting size and back), and `wobble` (a rotational jitter, where `shake` is a translational one; they read very differently and neither substitutes)
+- **They belong in the library rather than in each adopter's stylesheet** for the reason every effect does: each has a magnitude, and a hand-written `@keyframes` gets a fixed `-28px` that outlives a theme which zeroed the layer to protect somebody. At `--fx-intensity: 0` a transient is a genuine no-op, not a quieter animation
+- **All five drive `translate` / `rotate` / `scale` rather than `transform`**, so they compose with each other and leave a component's own transform (a dragged sheet, a reveal's lid) alone
+- **Four conditions**: `selected`, `current`, and `busy` cover the ARIA states `checked` never did, and `fired` is what a transient waits on
+- **`active` is optional on an effect definition.** One that works entirely through its overlay had been writing a filler declaration to satisfy the type
+
+### The optional runtime
+
+- **`@xtyle/core/fx` closes the parameter gap.** A parameter cannot live in a selector, so setting `data-fx` by hand gets the effect and the *defaults*; the `?…` tail is parsed, understood, and dropped. `applyEffect(el, spec)` writes both halves, and clears only the properties it wrote, so swapping specs leaves no stale parameter retuning the next effect and a deliberate `--fx-color` on the same element survives
+  - `applyEffects(root)` does one pass over markup that already carries the attribute
+  - the catalog had been shipping parameterised examples straight into that silence
+- **`fireEffect(el, spec?)` fires a transient** and resolves when it lands, setting the `fired` condition and clearing it after. A call arriving mid-flight restarts the animation rather than being swallowed; under reduced motion or a flattened layer it resolves immediately, which is the correct nothing
+- **`armInView(root)` is the observer `reveal` always needed** and never shipped. It arms nothing where there is no `IntersectionObserver`, so the absence of the runtime still cannot hide content from a reader
+- **An unregistered name says so now.** The layer is a cross product of *registered* effects and conditions, so a spec naming something absent emits no rule and looks exactly like an effect that ran and did nothing; `applyEffect` warns, the way the component layer warns about its vocabularies
+- **`unknownSpecs` is `unknownEffects` under a name that can be found.** The check always covered conditions and parameters while the name argued otherwise; it now also reports which half was missing, instead of every caller re-deriving that with `getEffect` / `getCondition`
+
+### Icons
+
+- **`poly` and `polyline` take arbitrary points.** `pts` is a comma-separated coordinate list in a 0–100 space, so a shape the primitive set never had is a name rather than a fork, and every existing flag composes with it
+- **`registerIconShapes()` opens the primitive roster** the same way effects and fills open theirs, and the bench's icon builder carries polygons: a Custom palette entry, point presets, and a name that round-trips through the inspector
+
+### Mod surfaces
+
+- **Both shape registries answer a slot now, not only a function call.** `registerIconShapes()` and `registerRevealShapes()` still take values directly, and `registerIconShapeFills()` / `registerRevealShapeFills()` read the same values out of a mod manifest, so a contribution can be declared, validated by the toolchain, and gated by the capability its slot names. A registry reachable only by running code is one nothing can check before it runs
+- **`xtyle.icon-primitives` was already declared, and nothing read it.** The slot had a description, a capability, the lot, so a mod could declare a fill against it, be granted the capability, and watch nothing happen; `iconShapeFillsFrom` and `registerIconShapeFills` wire it to the registry it was always naming. `xtyle.reveal-shapes` is the symmetric slot for silhouettes, with a capability of its own
+- **`resetIconShapes()` and `resetRevealShapes()` drop back to the built-in set**, matching the `resetIcons()` that was already there, so a host can tear a mod down and one registration cannot leak into the next test
+- **The effect runtime drives what the registries declare rather than a fixed pair of names.** `ConditionDefinition` carries an `attribute`, so `fireEffect` sets whatever the `fired` condition names, and a mod re-pointing that condition at an attribute of its own is driven on the same terms. `EffectDefinition` carries `arms` and `transient` for the same reason: `armInView` observes every effect declaring `arms` instead of the single name `reveal`, so a mod's own enter effect arms like the built-in one, and `transient` names the set `fireEffect` is for, so a catalog or an authoring surface reads it off the definition instead of keeping its own copy of the list
+- **A component's vocabulary node had nothing checking it, and a check found 22 gaps.** The node lists which attributes survive the sanitize floor when a *fill* emits that element, and a node declaring only some of them fails nothing: the author's own markup never passes through the floor, so the demo works and the suite stays green while a mod composing the component watches half its configuration quietly not arrive. `component-vocabulary.test.ts` compares every registered element's `observedAttributes` against its node, and turned up 22 undeclared attributes across 13 shipped components on its first run
+  - the sharp ones are `accordion`'s `chevron-icon`, `calendar`'s `prev-icon` / `next-icon`, `image`'s `zoom-icon`, and `panel`'s `marker-icon`: precisely the props whose own docs say they take a glyph a mod contributed through `xtyle.icons`, so a mod could add the glyph and then not set the prop that uses it
+  - the rest are `markdown`'s `allow-html` / `process-bbcode`, `theme-picker`'s `layout` / `open`, `switch`'s `on-label`, and the ARIA and input attributes across `button`, `list`, `progress`, `segmented`, `spinner`, and `command-palette`
+
+### Fixes
+
+- **A `Progress` ramp written as CSS tokens no longer takes the element down.** `ramp="var(--success),var(--warn),var(--danger)"` is one of the three forms the prop documents, and it threw during `connectedCallback` and rendered no indicator at all: a meter that vanishes rather than degrades. Both spellings resolve now (`--success` and `var(--success)`, with the `var()` fallback honored), an unreadable stop is dropped with a warning instead of thrown, and a ramp where nothing resolves leaves the flat `tone` in charge
+  - the same resolution now backs `bar`, `chart`, `pie`, and `heatmap`, each of which reads only the built-in palettes' tokens off the live cascade and so could not sample a stop list naming its own
+- **BBCode's registration seam is reachable.** `registerBbcodeTags` and `defineBbcodeVocabulary` were documented at length as *the* way to extend the format and exported from neither barrel, so the vocabulary system was observable and not extensible. Both are public now, from `@xtyle/core` and `@xtyle/core/markup`, alongside `renderBbcode` and `onBbcodeRegistryChanged`
+- **A Vite dev server rendered every component as an empty box.** Importing `@xtyle/core/elements` registered every element and painted nothing: pre-bundling rewrites the fragment runtime's JavaScript into `.vite/deps/` without carrying its wasm along, so the fetch 404s, the dev server answers with `index.html`, and instantiation dies on the HTML's first bytes. Tokens still applied, so it read as a styling problem, and it was dev-only, so it disappeared in the build you would have checked it against
+  - excluding `@xtyle/core` alone does not fix it, because the runtime is reached transitively and stays pre-bundled; the whole chain has to be named, which is a consumer transcribing xtyle's dependency graph to render a button
+  - so the chain ships as `viteExcludes` / `xtyleViteConfig()` from a new `@xtyle/core/vite` entry point, and moves when the graph does
+  - a "Bundlers" section on the start page carries the diagnosis, since the symptom (an element that registers, paints nothing, and reports a wasm module whose first bytes are HTML) names no cause on its own
+
+| package | tests |
+|---|---|
+| `@xtyle/core` | 2846 |
+| `@xtyle/svelte` | 26 |
+| visual regression | 545 |
+
 ## v0.10.0
 
 Most of this release is new kinds rather than new instances, though seven components land too, taking the set from 84 to 91. Effects are a third primitive beside tokens and components, because a token is a value and a component is a thing and neither one can hold a verb. The theme components put the engine on the page, so an app picks, previews, and applies a theme in markup instead of the glue the docs site had been carrying on its behalf. Every surface that lists something can now be asked what existed at a given version, since an agent building against 0.8 should not be told about a component that arrived in 0.10. And a nine-patch surface takes artwork a token cannot describe (a carved frame, a torn edge, a game panel) and scales it to any box without smearing the corners.

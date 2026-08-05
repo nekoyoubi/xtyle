@@ -1,6 +1,6 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { pieHostCss, type PieDatum, type PieScheme, type PieVariant } from "../markup/index.js";
-import { seriesPalette, seriesColorsFor, resolvePaletteName, PALETTE_TOKENS, type Palette } from "../series.js";
+import { seriesPalette, seriesColorsFor, resolvePaletteName, paletteRegisterTokens, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/pie/source.generated.js";
@@ -77,7 +77,7 @@ export class XtylePie extends XtyleElement {
 	}
 
 	private paletteRegister(): Record<string, string> {
-		return readLiveRegister(this, PALETTE_TOKENS, () => {
+		return readLiveRegister(this, paletteRegisterTokens(this.scheme), () => {
 			if (this.root.firstChild) this.render();
 		});
 	}

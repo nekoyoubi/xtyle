@@ -133,6 +133,8 @@ export { XtyleSegmented } from "./segmented.js";
 export { XtyleList } from "./list.js";
 export { XtyleAccordion } from "./accordion.js";
 export { XtyleTree } from "./tree.js";
+export { XtyleReveal } from "./reveal.js";
+export { XtyleRevealGroup } from "./reveal-group.js";
 export { XtyleSplitter } from "./splitter.js";
 export type { TreeNode } from "./tree.js";
 export { XtyleStat } from "./stat.js";

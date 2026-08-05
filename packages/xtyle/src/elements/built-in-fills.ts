@@ -64,6 +64,7 @@ const builtInFills: Record<string, BuiltInFill> = {
 	"component.qr": { name: "xtyle-qr-default", load: () => import("./fragments/qr/source.generated.js") },
 	"component.radio": { name: "xtyle-radio-default", load: () => import("./fragments/radio/source.generated.js") },
 	"component.rating": { name: "xtyle-rating-default", load: () => import("./fragments/rating/source.generated.js") },
+	"component.reveal": { name: "xtyle-reveal-default", load: () => import("./fragments/reveal/source.generated.js") },
 	"component.ribbon": { name: "xtyle-ribbon-default", load: () => import("./fragments/ribbon/source.generated.js") },
 	"component.section": { name: "xtyle-section-default", load: () => import("./fragments/section/source.generated.js") },
 	"component.segmented": { name: "xtyle-segmented-default", load: () => import("./fragments/segmented/source.generated.js") },

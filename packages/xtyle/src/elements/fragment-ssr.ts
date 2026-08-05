@@ -15,6 +15,7 @@ import { manifest as avatarManifest, fragmentSources as avatarSources } from "./
 import { manifest as avatarGroupManifest, fragmentSources as avatarGroupSources } from "./fragments/avatar-group/source.generated.js";
 import { manifest as badgeManifest, fragmentSources as badgeSources } from "./fragments/badge/source.generated.js";
 import { manifest as dotManifest, fragmentSources as dotSources } from "./fragments/dot/source.generated.js";
+import { manifest as revealManifest, fragmentSources as revealSources } from "./fragments/reveal/source.generated.js";
 import { manifest as ribbonManifest, fragmentSources as ribbonSources } from "./fragments/ribbon/source.generated.js";
 import { manifest as breadcrumbManifest, fragmentSources as breadcrumbSources } from "./fragments/breadcrumb/source.generated.js";
 import { manifest as cardManifest, fragmentSources as cardSources } from "./fragments/card/source.generated.js";
@@ -121,6 +122,7 @@ const fragments: Record<string, FragmentEntry> = {
 	"avatar-group": { manifest: avatarGroupManifest, fragmentSources: avatarGroupSources },
 	badge: { manifest: badgeManifest, fragmentSources: badgeSources },
 	dot: { manifest: dotManifest, fragmentSources: dotSources },
+	reveal: { manifest: revealManifest, fragmentSources: revealSources },
 	ribbon: { manifest: ribbonManifest, fragmentSources: ribbonSources },
 	breadcrumb: { manifest: breadcrumbManifest, fragmentSources: breadcrumbSources },
 	card: { manifest: cardManifest, fragmentSources: cardSources },

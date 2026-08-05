@@ -168,11 +168,14 @@ export function deriveTraced(algorithm: Algorithm, opts: DeriveOptions = {}): De
 
 export * from "./types.js";
 export * from "./vocab.js";
+export * from "./reveal-shapes.js";
+export * from "./icon-shapes.js";
 export * from "./icons.js";
 export * from "./icon-registry.js";
 export * from "./icon-builder.js";
 export * from "./icon-measure.js";
 export * from "./effects.js";
+export * from "./fx.js";
 export * from "./fonts/google.js";
 export * from "./fonts/embed.js";
 export * from "./token-meta.js";
@@ -194,6 +197,17 @@ export type { TablePart } from "./markup/table.js";
 export { resolveSparklineBounds, formatSparklineValue } from "./markup/sparkline.js";
 export { resolveChartPlot, CHART_VARIANTS, CHART_CURVES, CHART_X_SCALES } from "./markup/chart.js";
 export { hoverMediaHtml } from "./markup/image.js";
+export {
+	renderBbcode,
+	registerBbcodeTags,
+	defineBbcodeVocabulary,
+	onBbcodeRegistryChanged,
+	bbcodeVocabulary,
+	bbcodeVocabularies,
+	bbcodeTags,
+	DEFAULT_VOCABULARY,
+} from "./markup/bbcode.js";
+export type { BbcodeTag, BbcodeTagContext, BbcodeOptions } from "./markup/bbcode.js";
 export type {
 	BarSeries,
 	BarScheme,

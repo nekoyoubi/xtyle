@@ -3,6 +3,7 @@ import { splitterHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/splitter/source.generated.js";
 import { ORIENTATIONS, SPLITTER_SIZES, resolveVocab } from "../vocab.js";
+import { startDrag } from "./gesture.js";
 
 export type SplitterOrientation = (typeof ORIENTATIONS)[number];
 export type SplitterSize = (typeof SPLITTER_SIZES)[number];
@@ -162,27 +163,16 @@ export class XtyleSplitter extends XtyleElement {
 		// pointer-originated so the handle's focus listener withholds the keyboard ring.
 		this.focusViaPointer = true;
 		this.handle?.focus();
-		const startPos = this.axisIsX ? event.clientX : event.clientY;
 		const startValue = this.value;
-		// INFO: move/up listeners live on `window`, not on pointer capture, which a thin vertical
-		// handle in WebView2 loses the moment the pointer leaves the few-px strip.
-		(event.target as Element).setPointerCapture?.(event.pointerId);
 		const sign = this.reversed ? -1 : 1;
-		const move = (e: PointerEvent) => {
-			const delta = (this.axisIsX ? e.clientX : e.clientY) - startPos;
-			this.commit(startValue + sign * delta, "resize");
-		};
-		const end = (e: PointerEvent) => {
-			window.removeEventListener("pointermove", move);
-			window.removeEventListener("pointerup", end);
-			window.removeEventListener("pointercancel", end);
-			this.focusViaPointer = false;
-			const delta = (this.axisIsX ? e.clientX : e.clientY) - startPos;
-			this.commit(startValue + sign * delta, "resize-end");
-		};
-		window.addEventListener("pointermove", move);
-		window.addEventListener("pointerup", end);
-		window.addEventListener("pointercancel", end);
+		startDrag(event, {
+			axes: this.axisIsX ? "x" : "y",
+			onMove: ({ distance }) => this.commit(startValue + sign * distance, "resize"),
+			onEnd: ({ distance }) => {
+				this.focusViaPointer = false;
+				this.commit(startValue + sign * distance, "resize-end");
+			},
+		});
 	}
 
 	private applyIntent(intent: FragmentIntent, event: Event): void {

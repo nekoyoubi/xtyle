@@ -179,6 +179,7 @@ export { tocHostCss, tocTargetFallbackCss, tocCurrentDeclarations, TOC_SPY_ATTR 
 export type { TocItem } from "./toc.js";
 export { treeMarkup, treeClass, treeHostCss, firstSelectedValue, treeBadges } from "./tree.js";
 export type { TreeMarkupProps, TreeNode, TreeAction, TreeBadge } from "./tree.js";
+export { revealHostCss } from "./reveal.js";
 export { splitterHostCss } from "./splitter.js";
 export { codeMarkup, codeClass, codeHostCss, plainCodeHtml, splitCodeLines, codeGutterWidth, parseLineSpec } from "./code.js";
 export type { CodeMarkupProps } from "./code.js";
@@ -186,6 +187,9 @@ export { renderMarkdown, renderMarkdownInline, markdownHostCss } from "./markdow
 export { parseSchemeList } from "./uri.js";
 export {
 	renderBbcode,
+	registerBbcodeTags,
+	defineBbcodeVocabulary,
+	onBbcodeRegistryChanged,
 	bbcodeVocabulary,
 	bbcodeVocabularies,
 	bbcodeTags,

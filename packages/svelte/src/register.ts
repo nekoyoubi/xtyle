@@ -88,6 +88,8 @@ export {
 	XtylePopover,
 	XtyleCombobox,
 	XtyleCommandPalette,
+	XtyleReveal,
+	XtyleRevealGroup,
 	XtyleSplitter,
 	XtyleCode,
 	XtyleMarkdown,

@@ -4,6 +4,7 @@ import { readLiveRegister } from "./live-register.js";
 import { PALETTE_TOKENS, resolvePaletteName, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/rating/source.generated.js";
+import { startDrag } from "./gesture.js";
 
 /** The neutral track/surface color (the `e` "empty" nibble, shared with the Progress groove); also every
  * register token the icon marks read, so a browser-only consumer can reconstruct the minimal register the
@@ -250,19 +251,19 @@ export class XtyleRating extends XtyleElement {
 	private onPointerDown = (e: PointerEvent): void => {
 		if (this.readonly) return;
 		this.dragging = true;
-		this.setPointerCapture(e.pointerId);
 		this.commit(this.valueAt(e.clientX), true);
+		startDrag(e, {
+			axes: "x",
+			onMove: (_, moved) => this.commit(this.valueAt(moved.clientX), false),
+			onEnd: () => {
+				this.dragging = false;
+				this.dispatchEvent(new CustomEvent("change", { detail: { value: this.value }, bubbles: true }));
+			},
+		});
 	};
 	private onPointerMove = (e: PointerEvent): void => {
-		if (this.readonly) return;
-		if (this.dragging) this.commit(this.valueAt(e.clientX), false);
-		else this.preview(this.snap(this.valueAt(e.clientX)));
-	};
-	private onPointerUp = (e: PointerEvent): void => {
-		if (!this.dragging) return;
-		this.dragging = false;
-		this.releasePointerCapture(e.pointerId);
-		this.dispatchEvent(new CustomEvent("change", { detail: { value: this.value }, bubbles: true }));
+		if (this.readonly || this.dragging) return;
+		this.preview(this.snap(this.valueAt(e.clientX)));
 	};
 	private onPointerLeave = (): void => {
 		if (!this.dragging) this.preview(null);
@@ -285,7 +286,6 @@ export class XtyleRating extends XtyleElement {
 		this.bound = true;
 		this.addEventListener("pointerdown", this.onPointerDown);
 		this.addEventListener("pointermove", this.onPointerMove);
-		this.addEventListener("pointerup", this.onPointerUp);
 		this.addEventListener("pointerleave", this.onPointerLeave);
 		this.addEventListener("keydown", this.onKeyDown);
 	}
@@ -294,7 +294,6 @@ export class XtyleRating extends XtyleElement {
 		this.bound = false;
 		this.removeEventListener("pointerdown", this.onPointerDown);
 		this.removeEventListener("pointermove", this.onPointerMove);
-		this.removeEventListener("pointerup", this.onPointerUp);
 		this.removeEventListener("pointerleave", this.onPointerLeave);
 		this.removeEventListener("keydown", this.onKeyDown);
 	}

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
 	EFFECT_TOKENS,
 	derive,
@@ -14,17 +14,12 @@ import {
 	registerCondition,
 	registerEffect,
 	unknownEffects,
+	unknownSpecs,
 } from "../src/index.js";
 import { bakedAlgorithm } from "../src/baked.js";
 
 const BUILT_IN_NAMES = ["glow", "throb", "glare", "lift", "tint", "frost", "reveal", "shake", "saturate"];
-
-function restore(name: string): void {
-	const original = getEffect(name);
-	afterEach(() => {
-		if (original) registerEffect(original);
-	});
-}
+const TRANSIENT_NAMES = ["flash", "float", "pop", "wobble", "shake"];
 
 describe("the effect layer", () => {
 	it("ships the blessed set, each declaring what it does under reduced motion", () => {
@@ -162,20 +157,71 @@ describe("the effect layer", () => {
 
 	it("lets an addon's own effect be parameterised on the same terms", () => {
 		registerEffect({
-			name: "wobble",
-			active: "transform:rotate(var(--fx-wobble-angle, 2deg))",
+			name: "swirl",
+			active: "transform:rotate(var(--fx-swirl-angle, 2deg))",
 			params: [{ name: "angle", unit: "deg" }],
 		});
-		expect(fxStyle("wobble@hover?angle:7")).toEqual({ "--fx-wobble-angle": "7deg" });
+		expect(fxStyle("swirl@hover?angle:7")).toEqual({ "--fx-swirl-angle": "7deg" });
 	});
 
 	it("is last-wins on the name, so an addon replaces one effect without restating the rest", () => {
-		restore("glow");
+		const original = getEffect("glow")!;
 		const before = listEffects().length;
-		registerEffect({ name: "glow", active: "filter:blur(1px)" });
-		expect(listEffects().length, "replacing must not grow the set").toBe(before);
-		expect(effectsCss()).toContain('[data-fx*=" glow?"]{filter:blur(1px)}');
-		expect(effectsCss()).toContain('[data-fx~="throb"]');
+		try {
+			registerEffect({ name: "glow", active: "filter:blur(1px)" });
+			expect(listEffects().length, "replacing must not grow the set").toBe(before);
+			expect(effectsCss()).toContain('[data-fx*=" glow?"]{filter:blur(1px)}');
+			expect(effectsCss()).toContain('[data-fx~="throb"]');
+		} finally {
+			registerEffect(original);
+		}
+	});
+
+	it("ships transient verbs, not only persistent-state ones", () => {
+		for (const name of TRANSIENT_NAMES) {
+			const effect = getEffect(name);
+			expect(effect, name).toBeTruthy();
+			expect(effect?.animated, `${name} moves, so reduced motion has to reach it`).toBe(true);
+			expect(effect?.params?.some((param) => param.name === "rate"), `${name} rate`).toBe(true);
+		}
+		expect(listConditions().map((c) => c.name)).toEqual(expect.arrayContaining(["selected", "current", "busy", "fired"]));
+		expect(effectsCss()).toContain('[data-fx~="flash@fired"][data-fx-fired]');
+		expect(effectsCss()).toContain('[data-fx~="glow@selected"][aria-selected="true"]');
+	});
+
+	it("scales every transient by the theme's intensity, so a flattened layer really is flat", () => {
+		const css = effectsCss().split("\n");
+		for (const name of TRANSIENT_NAMES) {
+			const own = css.filter((line) => line.includes(`--fx-${name}-`));
+			expect(own.length, name).toBeGreaterThan(0);
+			expect(own.some((line) => line.includes("--fx-intensity")), `${name} must read the theme's intensity`).toBe(true);
+		}
+	});
+
+	it("moves a transient with the independent properties, so it composes instead of clobbering a transform", () => {
+		const css = effectsCss();
+		const frames = (name: string): string => css.split("\n").find((line) => line.startsWith(`@keyframes xtyle-fx-${name}`))!;
+		expect(frames("float")).toContain("translate:");
+		expect(frames("pop")).toContain("scale:");
+		expect(frames("wobble")).toContain("rotate:");
+		expect(frames("shake")).toContain("translate:");
+		for (const name of ["float", "pop", "wobble", "shake"]) expect(frames(name), name).not.toContain("transform:");
+	});
+
+	it("lets an effect live entirely on its overlay, with nothing filler on the element itself", () => {
+		expect(getEffect("flash")?.active).toBeUndefined();
+		const css = effectsCss();
+		expect(css).toContain('[data-fx~="flash@fired"][data-fx-fired]::after');
+		expect(css).not.toContain('[data-fx~="flash@fired"][data-fx-fired]{}');
+	});
+
+	it("says which half of a spec was unknown, so a caller does not re-derive it", () => {
+		expect(unknownSpecs("glow@hover")).toEqual([]);
+		expect(unknownSpecs("glow@dragging")[0]).toMatchObject({ effect: "glow", condition: "dragging", missing: ["condition"] });
+		expect(unknownSpecs("sparkle@hover")[0]).toMatchObject({ missing: ["effect"] });
+		expect(unknownSpecs("sparkle@dragging")[0]?.missing).toEqual(["effect", "condition"]);
+		expect(unknownSpecs("glow?nope:2,spread:4")[0]).toMatchObject({ missing: ["param"], unknownParams: ["nope"] });
+		expect(unknownEffects, "the old name has to keep working").toBe(unknownSpecs);
 	});
 
 	it("lets an addon add a name the library never had, condition cross-product included", () => {

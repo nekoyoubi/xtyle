@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { appShellHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/app-shell/source.generated.js";
+import { startDrag } from "./gesture.js";
 
 type Side = "left" | "right";
 
@@ -152,22 +153,17 @@ export class XtyleAppShell extends XtyleElement {
 		this.focusViaPointer = true;
 		handle.focus();
 		handle.setAttribute("data-active", "");
-		const startX = event.clientX;
 		const startSize = this.sizePx(side);
 		const sign = side === "right" ? -1 : 1;
-		(event.target as Element).setPointerCapture?.(event.pointerId);
-		const move = (e: PointerEvent): void => this.setSize(side, startSize + sign * (e.clientX - startX), "resize");
-		const end = (e: PointerEvent): void => {
-			window.removeEventListener("pointermove", move);
-			window.removeEventListener("pointerup", end);
-			window.removeEventListener("pointercancel", end);
-			handle.removeAttribute("data-active");
-			this.focusViaPointer = false;
-			this.setSize(side, startSize + sign * (e.clientX - startX), "resize-end");
-		};
-		window.addEventListener("pointermove", move);
-		window.addEventListener("pointerup", end);
-		window.addEventListener("pointercancel", end);
+		startDrag(event, {
+			axes: "x",
+			onMove: ({ distance }) => this.setSize(side, startSize + sign * distance, "resize"),
+			onEnd: ({ distance }) => {
+				handle.removeAttribute("data-active");
+				this.focusViaPointer = false;
+				this.setSize(side, startSize + sign * distance, "resize-end");
+			},
+		});
 	}
 
 	private onHandleKeydown(side: Side, event: KeyboardEvent): void {

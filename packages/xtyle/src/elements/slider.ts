@@ -4,6 +4,7 @@ import { sliderHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/slider/source.generated.js";
 import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
+import { startDrag } from "./gesture.js";
 
 export class XtyleSlider extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -302,16 +303,12 @@ export class XtyleSlider extends XtyleElement {
 	private onPointerdown(event: PointerEvent): void {
 		if (this.disabled) return;
 		this.thumb?.focus();
-		(event.target as Element).setPointerCapture?.(event.pointerId);
 		this.commit(this.snapTo(this.valueAtPointer(event.clientX), this.stepFor(event)), "input");
-		const move = (e: PointerEvent) => this.commit(this.snapTo(this.valueAtPointer(e.clientX), this.stepFor(e)), "input");
-		const up = (e: PointerEvent) => {
-			this.rail?.removeEventListener("pointermove", move);
-			this.rail?.removeEventListener("pointerup", up);
-			this.commit(this.snapTo(this.valueAtPointer(e.clientX), this.stepFor(e)), "change");
-		};
-		this.rail?.addEventListener("pointermove", move);
-		this.rail?.addEventListener("pointerup", up);
+		startDrag(event, {
+			axes: "x",
+			onMove: (_, moved) => this.commit(this.snapTo(this.valueAtPointer(moved.clientX), this.stepFor(moved)), "input"),
+			onEnd: (_, ended) => this.commit(this.snapTo(this.valueAtPointer(ended.clientX), this.stepFor(ended)), "change"),
+		});
 	}
 
 	/** The paths the sandbox can't take stay host-side: the pointer reads the rail's bounding rect, and the

@@ -20,6 +20,7 @@ import { cardManifest } from "./card.manifest.js";
 import { fieldManifest } from "./field.manifest.js";
 import { badgeManifest } from "./badge.manifest.js";
 import { dotManifest } from "./dot.manifest.js";
+import { revealManifest } from "./reveal.manifest.js";
 import { ribbonManifest } from "./ribbon.manifest.js";
 import { switchManifest } from "./switch.manifest.js";
 import { schemeToggleManifest } from "./scheme-toggle.manifest.js";
@@ -113,6 +114,7 @@ export const components: ComponentRegistry = {
 	field: fieldManifest,
 	badge: badgeManifest,
 	dot: dotManifest,
+	reveal: revealManifest,
 	ribbon: ribbonManifest,
 	switch: switchManifest,
 	"scheme-toggle": schemeToggleManifest,

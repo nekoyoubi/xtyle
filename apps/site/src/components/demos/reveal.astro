@@ -1,0 +1,471 @@
+---
+import Reveal from "@xtyle/astro/Reveal.astro";
+import RevealGroup from "@xtyle/astro/RevealGroup.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+import Icon from "@xtyle/astro/Icon.astro";
+import Avatar from "@xtyle/astro/Avatar.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+
+const inbox = [
+	{ from: "Katherine Johnson", subject: "Re: return trajectory", when: "09:12", unread: true },
+	{ from: "Grace Hopper", subject: "the nanosecond wire", when: "08:40", unread: false },
+	{ from: "Ada Lovelace", subject: "Note G", when: "Yesterday", unread: false },
+];
+
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={2} size="sm">An incoming call</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				The whole point of the component in one box. Slide the lid right to answer, left to decline. The belly
+				under each edge is already the color of its answer, so the box says what will happen before you commit to
+				it. Both are <code>behavior="commit"</code>, so a full pull acts and springs back rather than staying open.
+			</Text>
+			<Reveal
+				label="Incoming call from Katherine Johnson"
+				class="reveal-call"
+				startTone="success"
+				endTone="danger"
+				startGrip="check"
+				endGrip="close"
+				behavior="commit"
+				travel="0.45"
+				commitAt="0.45"
+				gripSize="1.5rem"
+			>
+				<div class="reveal-call__lid">
+					<Avatar name="Katherine Johnson" size="lg" />
+					<div>
+						<Text as="span" weight="semibold" size="lg">Katherine Johnson</Text>
+						<Text size="sm" tone="muted">mobile · calling…</Text>
+					</div>
+				</div>
+				<div slot="start" class="reveal-call__action">
+					<Icon name="check" />
+					<Text as="span" size="sm" weight="semibold">Answer</Text>
+				</div>
+				<div slot="end" class="reveal-call__action">
+					<Text as="span" size="sm" weight="semibold">Decline</Text>
+					<Icon name="close" />
+				</div>
+			</Reveal>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">A mail row, the way you would actually ship it</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				Grouped by <code>name</code>, so opening one closes the last. Sliding right latches a detail belly open to
+				read; sliding left is <code>endBehavior="both"</code>, so a short pull shows the action and a full pull
+				just takes it.
+			</Text>
+			<RevealGroup label="Inbox">
+				<Stack gap={2}>
+					{
+						inbox.map((mail) => (
+							<Reveal
+								name="inbox"
+								label={`${mail.from}: ${mail.subject}`}
+								class="reveal-row"
+								startTone="info"
+								endTone="warn"
+								startGrip="info"
+								endGrip="folder"
+								endBehavior="both"
+								travel="0.35"
+								latchAt="30%"
+								endCommitAt="0.75"
+							>
+								<div class="reveal-row__lid">
+									<span class:list={["reveal-row__pip", mail.unread && "is-unread"]} />
+									<div class="reveal-row__who">
+										<Text as="span" weight={mail.unread ? "semibold" : "normal"}>{mail.from}</Text>
+										<Text size="sm" tone="muted">{mail.subject}</Text>
+									</div>
+									<Text size="xs" tone="muted">{mail.when}</Text>
+								</div>
+								<div slot="start" class="reveal-row__belly">
+									<Icon name="info" />
+									<Text as="span" size="sm">Received {mail.when} · 2 attachments</Text>
+								</div>
+								<div slot="end" class="reveal-row__belly">
+									<Icon name="folder" />
+									<Text as="span" size="sm" weight="semibold">Archive</Text>
+								</div>
+							</Reveal>
+						))
+					}
+				</Stack>
+			</RevealGroup>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">Box shapes</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				A shaped box is a sliding-top box: belly and lid are the same silhouette, and the lid moves as one whole
+				shape rather than being cut as it goes. A shaped box drops its corner radius, and a toned belly drops its
+				frame, since a straight edge cannot survive a cut one. Add <code>contained</code> to hold the lid inside
+				the box's bounds instead of letting it travel clear; the last one here shows it.
+			</Text>
+			<Cluster gap={3} align="start">
+					<Stack gap={3}>
+						<Reveal shape="parallelogram" label="parallelogram" class="reveal-shape reveal-shape--half" endTone="accent" endGrip="chevron-left">
+							<div class="reveal-shape__lid"><Text as="span" size="sm" weight="semibold">parallelogram</Text></div>
+							<div slot="end" class="reveal-shape__belly"><Text as="span" size="sm">underneath</Text></div>
+						</Reveal>
+						<Reveal shape="chevron" label="chevron" class="reveal-shape reveal-shape--half" endTone="accent" endGrip="chevron-left">
+							<div class="reveal-shape__lid"><Text as="span" size="sm" weight="semibold">chevron</Text></div>
+							<div slot="end" class="reveal-shape__belly"><Text as="span" size="sm">underneath</Text></div>
+						</Reveal>
+					</Stack>
+					<Reveal shape="ticket" label="ticket" class="reveal-shape reveal-shape--wide" endTone="accent" endGrip="chevron-left">
+							<div class="reveal-shape__lid"><Text as="span" size="sm" weight="semibold">ticket</Text></div>
+							<div slot="end" class="reveal-shape__belly"><Text as="span" size="sm">underneath</Text></div>
+						</Reveal>
+					<Reveal shape="heart" label="heart" class="reveal-shape " endTone="accent" endGrip="chevron-left">
+							<div class="reveal-shape__lid"><Text as="span" size="sm" weight="semibold">heart</Text></div>
+							<div slot="end" class="reveal-shape__belly"><Text as="span" size="sm">underneath</Text></div>
+						</Reveal>
+					<Reveal shape="heart" contained label="heart contained" class="reveal-shape " endTone="warn" endGrip="chevron-left">
+							<div class="reveal-shape__lid"><Text as="span" size="sm" weight="semibold">contained</Text></div>
+							<div slot="end" class="reveal-shape__belly"><Text as="span" size="sm">underneath</Text></div>
+						</Reveal>
+				</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">Any silhouette, not just the named ones</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				<code>shape</code> takes a registered name or a <code>clip-path</code> value outright, so a box can be
+				built from a shape the library has never heard of. Register more names with
+				<code>registerRevealShapes()</code>, last-wins, the way the effect library takes verbs.
+			</Text>
+			<Cluster gap={3} align="start">
+				<Reveal
+					shape="polygon(0 12%, 50% 0, 100% 12%, 100% 88%, 50% 100%, 0 88%)"
+					label="custom hex"
+					class="reveal-shape"
+					endTone="accent"
+					endGrip="chevron-left"
+				>
+					<div class="reveal-shape__lid"><Text as="span" size="sm" weight="semibold">inline</Text></div>
+					<div slot="end" class="reveal-shape__belly"><Text as="span" size="sm">underneath</Text></div>
+				</Reveal>
+				<Reveal
+					shape="circle(50% at 50% 50%)"
+					label="circle"
+					class="reveal-shape"
+					endTone="success"
+					endGrip="chevron-left"
+				>
+					<div class="reveal-shape__lid"><Text as="span" size="sm" weight="semibold">circle()</Text></div>
+					<div slot="end" class="reveal-shape__belly"><Text as="span" size="sm">underneath</Text></div>
+				</Reveal>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">A lid carrying artwork</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				<code>bleed</code> lets the lid's content run to the edges with the grips floating over it, which is what
+				a picture wants and text does not. These take <code>gripStyle="dots"</code>, since a glyph reads as
+				clutter over a picture; <code>bar</code> and <code>none</code> are the other two. The art is inline <code>&lt;svg&gt;</code> whose gradients read the
+				named hue tokens, so these scenes recolor with the theme rather than being pinned to dead hex. Each option
+				carries its own art, belly tones, and grip glyphs; sliding right latches the detail open, sliding left commits.
+			</Text>
+			<RevealGroup label="Where to go">
+				<Stack gap={3}>
+				<Reveal
+					name="journey"
+					bleed
+					label="abbey"
+					class="reveal-cyoa"
+					startBehavior="latch"
+					endBehavior="commit"
+					startTone="info"
+					endTone="success"
+					gripStyle="dots"
+					endTravel="1"
+				>
+					<svg viewBox="0 0 200 60" class="reveal-cyoa__art" aria-hidden="true" preserveAspectRatio="none">
+						<defs>
+						<linearGradient id="cyoa-sky-abbey" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="var(--blue)" />
+							<stop offset="1" stop-color="var(--blue-bg)" />
+						</linearGradient>
+						<linearGradient id="cyoa-field-abbey" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="var(--green)" />
+							<stop offset="1" stop-color="var(--green-bg)" />
+						</linearGradient>
+						</defs>
+						<rect width="200" height="60" fill="url(#cyoa-sky-abbey)" />
+						<path d="M0 34 Q50 27 100 32 T200 30 L200 60 L0 60 Z" fill="url(#cyoa-field-abbey)" />
+					</svg>
+					<div slot="start" class="reveal-cyoa__belly"><Text as="span" size="sm">Restores 12 HP · costs 3 hours</Text></div>
+					<div slot="end" class="reveal-cyoa__belly"><Text as="span" size="sm" weight="semibold">Travel to the abbey</Text></div>
+				</Reveal>
+				<Reveal
+					name="journey"
+					bleed
+					label="market"
+					class="reveal-cyoa"
+					startBehavior="latch"
+					endBehavior="commit"
+					startTone="warn"
+					endTone="success"
+					gripStyle="dots"
+					endTravel="1"
+				>
+					<svg viewBox="0 0 200 60" class="reveal-cyoa__art" aria-hidden="true" preserveAspectRatio="none">
+						<defs>
+						<linearGradient id="cyoa-sky-market" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="var(--blue)" />
+							<stop offset="1" stop-color="var(--blue-bg)" />
+						</linearGradient>
+						</defs>
+						<rect width="200" height="60" fill="url(#cyoa-sky-market)" />
+						<g fill="var(--red)">
+							<rect x="8" y="30" width="54" height="11" rx="2" />
+							<rect x="73" y="25" width="54" height="11" rx="2" />
+							<rect x="138" y="31" width="54" height="11" rx="2" />
+						</g>
+						<rect y="47" width="200" height="13" fill="var(--brown-bg)" />
+					</svg>
+					<div slot="start" class="reveal-cyoa__belly"><Text as="span" size="sm">Trade goods · prices shift daily</Text></div>
+					<div slot="end" class="reveal-cyoa__belly"><Text as="span" size="sm" weight="semibold">Travel to the market</Text></div>
+				</Reveal>
+				<Reveal
+					name="journey"
+					bleed
+					label="river"
+					class="reveal-cyoa"
+					startBehavior="latch"
+					endBehavior="commit"
+					startTone="accent"
+					endTone="success"
+					gripStyle="dots"
+					endTravel="1"
+				>
+					<svg viewBox="0 0 200 60" class="reveal-cyoa__art" aria-hidden="true" preserveAspectRatio="none">
+						<defs>
+						<linearGradient id="cyoa-field-river" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0" stop-color="var(--green)" />
+							<stop offset="1" stop-color="var(--green-bg)" />
+						</linearGradient>
+							<linearGradient id="cyoa-water-river" x1="0" y1="0" x2="1" y2="0">
+								<stop offset="0" stop-color="var(--blue-bg)" />
+								<stop offset="0.5" stop-color="var(--blue)" />
+								<stop offset="1" stop-color="var(--cyan)" />
+							</linearGradient>
+						</defs>
+						<rect width="200" height="60" fill="url(#cyoa-field-river)" />
+						<path
+							d="M-6 18 C38 14 48 40 94 34 C140 28 150 54 206 46"
+							fill="none"
+							stroke="url(#cyoa-water-river)"
+							stroke-width="15"
+							stroke-linecap="round"
+						/>
+					</svg>
+					<div slot="start" class="reveal-cyoa__belly"><Text as="span" size="sm">Catch supper · costs 2 hours</Text></div>
+					<div slot="end" class="reveal-cyoa__belly"><Text as="span" size="sm" weight="semibold">Travel to the river</Text></div>
+				</Reveal>
+				</Stack>
+			</RevealGroup>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">Every direction, each saying what it does</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				All four bellies filled, each with its own tone and its own grip glyph, so every edge announces itself.
+				Travel still locks to one axis, so it only ever goes one way at a time.
+			</Text>
+			<Reveal
+				label="Gooseneck kettle"
+				class="reveal-product"
+				startTone="success"
+				endTone="danger"
+				topTone="info"
+				bottomTone="accent"
+				startGrip="plus"
+				endGrip="trash"
+				topGrip="info"
+				bottomGrip="bookmark"
+			>
+				<div class="reveal-product__lid">
+					<Text as="span" weight="semibold" size="lg">Gooseneck kettle</Text>
+					<Cluster gap={2}><Badge tone="accent">£49</Badge><Badge tone="success">In stock</Badge></Cluster>
+					<Text size="sm" tone="muted">Drag any direction</Text>
+				</div>
+				<div slot="start" class="reveal-product__belly"><Icon name="plus" /><Text as="span" size="sm">Add to basket</Text></div>
+				<div slot="end" class="reveal-product__belly"><Text as="span" size="sm">Remove</Text><Icon name="trash" /></div>
+				<div slot="top" class="reveal-product__belly"><Icon name="info" /><Text as="span" size="sm">1.0L · variable temperature</Text></div>
+				<div slot="bottom" class="reveal-product__belly"><Icon name="bookmark" /><Text as="span" size="sm">Save for later</Text></div>
+			</Reveal>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">Disabled</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">The lid is locked in place and the bellies are hidden entirely.</Text>
+			<Reveal label="Locked" disabled class="reveal-row">
+				<div class="reveal-row__lid">
+					<span class="reveal-row__pip" />
+					<div class="reveal-row__who">
+						<Text as="span">Archived record</Text>
+						<Text size="sm" tone="muted">Nothing to reveal</Text>
+					</div>
+				</div>
+				<div slot="end" class="reveal-row__belly"><Text as="span" size="sm">You should not see this</Text></div>
+			</Reveal>
+		</Stack>
+	</Card>
+</Stack>
+
+<script>
+	import { fireEffect } from "@xtyle/core/fx";
+
+	function flash(box: Element, direction: string) {
+		const tone = box.getAttribute(`${direction}-tone`) ?? box.getAttribute("tone");
+		const lid = box.querySelector<HTMLElement>(".xtyle-reveal__lid");
+		if (!lid) return;
+		if (tone) lid.style.setProperty("--fx-color", `var(--${tone})`);
+		void fireEffect(lid, "flash@fired").then(() => lid.style.removeProperty("--fx-color"));
+	}
+
+	function ghost(row: HTMLElement) {
+		void fireEffect(row, "float@fired?distance:36,rate:900ms");
+	}
+
+	document.querySelectorAll("xtyle-reveal").forEach((box) => {
+		box.addEventListener("xtyle:reveal-commit", (event) => {
+			const direction = (event as CustomEvent).detail.direction as string;
+			flash(box, direction);
+			if (box.classList.contains("reveal-row") && direction === "end") ghost(box as HTMLElement);
+		});
+	});
+</script>
+
+<style>
+	.reveal-call {
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-lg);
+		max-width: 26rem;
+	}
+	.reveal-call :global(.xtyle-reveal__lid) {
+		background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+	}
+	.reveal-call__lid {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		padding-block: var(--space-4);
+	}
+	.reveal-call__action {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding-inline: var(--space-5);
+	}
+
+	.reveal-row {
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+	}
+	.reveal-row__lid {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		padding: var(--space-3) var(--space-5);
+	}
+	.reveal-row__pip {
+		flex: none;
+		width: var(--space-2);
+		height: var(--space-2);
+		border-radius: var(--radius-full);
+		background: transparent;
+	}
+	.reveal-row__pip.is-unread { background: var(--accent); }
+	.reveal-row__who { flex: 1; min-width: 0; }
+	.reveal-row__belly {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding-inline: var(--space-5);
+	}
+
+	.reveal-shape { width: 9.5rem; border: 0; }
+	.reveal-shape__lid { aspect-ratio: 1; }
+	.reveal-shape--half { width: 9.5rem; }
+	.reveal-shape--half .reveal-shape__lid { aspect-ratio: 2 / 1; }
+	.reveal-shape--wide { width: 19rem; }
+	.reveal-shape--wide .reveal-shape__lid { aspect-ratio: 2 / 1; }
+	.reveal-shape :global(.xtyle-reveal__lid) {
+		background: linear-gradient(135deg, var(--accent-bg), var(--bg-2));
+	}
+	.reveal-shape__lid {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+	}
+	.reveal-shape__belly { padding-inline: var(--space-4); }
+
+	.reveal-cyoa {
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+		max-width: 22rem;
+	}
+	.reveal-cyoa__art {
+		display: block;
+		width: 100%;
+		height: 5.5rem;
+	}
+	.reveal-cyoa :global(.xtyle-reveal__lid) {
+		background: linear-gradient(120deg, var(--bg-1), var(--bg-2));
+		color: var(--fg-2);
+	}
+	.reveal-cyoa__belly {
+		display: flex;
+		align-items: center;
+		padding-inline: var(--space-6);
+	}
+
+	.reveal-product {
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+		max-width: 24rem;
+	}
+	.reveal-product :global(.xtyle-reveal__lid) {
+		background: radial-gradient(circle at 85% 15%, var(--accent-bg), transparent 60%), var(--bg-1);
+	}
+	.reveal-product__lid {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		align-items: flex-start;
+		padding-block: var(--space-4);
+	}
+	.reveal-product__belly {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-5);
+	}
+</style>

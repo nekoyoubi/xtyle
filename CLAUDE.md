@@ -11,7 +11,7 @@ Monorepo managed via npm workspaces. TypeScript throughout.
 ```
 xtyle/
 ├── packages/
-│   ├── xtyle/         # the engine + raw custom elements, published as `@xtyle/core` (CLI `xtyle`, browser API, `@xtyle/core/elements`)
+│   ├── xtyle/         # the engine + raw custom elements, published as `@xtyle/core` (CLI `xtyle`, browser API, `@xtyle/core/elements`, `@xtyle/core/fx`, `@xtyle/core/vite`)
 │   ├── svelte/       # @xtyle/svelte: thin Svelte wrapper
 │   └── astro/        # @xtyle/astro: Astro components (the site's binding)
 ├── algorithms/       # the built-in blessed set, each its own xript plugin
@@ -203,10 +203,14 @@ Pre-alpha. The architecture is settled and recorded in `docs/`. The engine (`pac
 - **Manifest-as-source-of-truth.** Packs declare their own contents; discovery is an index over npm, not a hosted registry.
 - **Effects are a third kind.** A token is a value, a component is a thing, an **effect** is a verb: a
   behavior applied to any element under a condition, addressed by a spec string (`data-fx="glow@hover"`, with named params after a `?`: `throb?rate:3s,colors:[accent,accent-2]`)
-  in the same name-is-its-spec shape as an icon name. It emits plain attribute-selector CSS, so it needs
-  no runtime; its values derive from five shared `--fx-*` tokens, so intensity is the algorithm's policy
+  in the same name-is-its-spec shape as an icon name. A bare spec is plain attribute-selector CSS and
+  needs no runtime, but a `?params` tail has nowhere in a selector to live, so `data-fx` alone silently
+  yields the effect with its defaults; `@xtyle/core/fx` is the optional runtime that closes that gap
+  (`applyEffect` delivers a spec's parameters, `fireEffect` drives a transient, `armInView` arms
+  `reveal`). Its values derive from five shared `--fx-*` tokens, so intensity is the algorithm's policy
   (`xtyle-hc` flattens the layer to zero because a halo spends the edge contrast it protects); and its
   library is **last-wins on the name**, so an addon replaces one effect or adds a new one without
   restating the rest. Reduced-motion suppression is the library's job, decided once. Do not hand-roll a
   hover glow, a pulse, or a sweep in a component's own CSS — see [`docs/effects.md`](docs/effects.md).
 - **The collection substrate.** The components that rope off items and move a cursor across them (`menu`, `tree`, `combobox`, `command-palette`, `tabs`, `segmented`, plus `<xtyle-list>` as the reference skin) share one keyboard reducer, roving tab stop, and selection model rather than each hand-rolling arrow wrapping, `Home`/`End`, typeahead, and the selection-cue contract. `table` consumes the selection core but keeps its own 2-D column identity; `pagination` stays out on purpose, because a page cursor is not a selection. Do not add a bespoke roving-tabindex handler to a new component — see [`docs/collection-substrate.md`](docs/collection-substrate.md).
+- **The gesture core.** Every component that drags (`slider`, `splitter`, `sheet`, `reveal`, `rating`, `redact`, `color-picker`, `dock-zone`, `app-shell`) sits on one pointer-drag core, `packages/xtyle/src/elements/gesture.ts`: `startDrag` owns axis lock, signed travel, and the velocity read a flick needs, and `settle` animates a release off the theme's own motion tokens rather than a hardcoded duration. The core is what makes the edge cases uniform — hand-rolled draggers listened for `pointerup` but not `pointercancel`, so a cancelled pointer left a live drag behind. Do not write a bespoke `pointerdown`/`pointermove` handler for a new component; extend the core.

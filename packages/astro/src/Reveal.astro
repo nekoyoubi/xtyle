@@ -1,0 +1,224 @@
+---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { REVEAL_DIRECTIONS, iconBody, resolveRevealShape } from "@xtyle/core";
+
+type RevealDirection = (typeof REVEAL_DIRECTIONS)[number];
+
+interface Props {
+	name?: string;
+	open?: RevealDirection;
+	behavior?: string;
+	shape?: string;
+	contained?: boolean;
+	bleed?: boolean;
+	tone?: string;
+	flickVelocity?: number;
+	travel?: number | string;
+	gripSize?: string;
+	gripPad?: string;
+	gripStyle?: "glyph" | "bar" | "dots" | "none";
+	latchAt?: number | string;
+	commitAt?: number | string;
+	lockThreshold?: number;
+	startBehavior?: string;
+	startTone?: string;
+	startGrip?: string;
+	startGripStyle?: "glyph" | "bar" | "dots" | "none";
+	endBehavior?: string;
+	endTone?: string;
+	endGrip?: string;
+	endGripStyle?: "glyph" | "bar" | "dots" | "none";
+	topBehavior?: string;
+	topTone?: string;
+	topGrip?: string;
+	topGripStyle?: "glyph" | "bar" | "dots" | "none";
+	bottomBehavior?: string;
+	bottomTone?: string;
+	bottomGrip?: string;
+	bottomGripStyle?: "glyph" | "bar" | "dots" | "none";
+	startLatchAt?: number | string;
+	endLatchAt?: number | string;
+	topLatchAt?: number | string;
+	bottomLatchAt?: number | string;
+	startTravel?: number | string;
+	endTravel?: number | string;
+	topTravel?: number | string;
+	bottomTravel?: number | string;
+	startCommitAt?: number | string;
+	endCommitAt?: number | string;
+	topCommitAt?: number | string;
+	bottomCommitAt?: number | string;
+	disabled?: boolean;
+	label?: string;
+	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	name,
+	open,
+	behavior,
+	shape,
+	contained = false,
+	bleed = false,
+	tone,
+	flickVelocity,
+	travel,
+	gripSize,
+	gripPad,
+	gripStyle,
+	latchAt,
+	commitAt,
+	lockThreshold,
+	startBehavior,
+	startTone,
+	startGrip,
+	startGripStyle,
+	endBehavior,
+	endTone,
+	endGrip,
+	endGripStyle,
+	topBehavior,
+	topTone,
+	topGrip,
+	topGripStyle,
+	bottomBehavior,
+	bottomTone,
+	bottomGrip,
+	bottomGripStyle,
+	startLatchAt,
+	endLatchAt,
+	topLatchAt,
+	bottomLatchAt,
+	startTravel,
+	endTravel,
+	topTravel,
+	bottomTravel,
+	startCommitAt,
+	endCommitAt,
+	topCommitAt,
+	bottomCommitAt,
+	disabled = false,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+await checkAuthoring("reveal", Astro.props);
+
+const directions = REVEAL_DIRECTIONS.filter((direction) => Astro.slots.has(direction));
+
+const perDirection = {
+	start: { tone: startTone, grip: startGrip, style: startGripStyle },
+	end: { tone: endTone, grip: endGrip, style: endGripStyle },
+	top: { tone: topTone, grip: topGrip, style: topGripStyle },
+	bottom: { tone: bottomTone, grip: bottomGrip, style: bottomGripStyle },
+} as Record<string, { tone?: string; grip?: string; style?: string }>;
+const DEFAULT_GRIP: Record<string, string> = {
+	start: "chevron-right",
+	end: "chevron-left",
+	top: "chevron-down",
+	bottom: "chevron-up",
+};
+const gripName = (d: string) => perDirection[d]?.grip || DEFAULT_GRIP[d];
+const tones = Object.fromEntries(REVEAL_DIRECTIONS.map((d) => [d, perDirection[d]?.tone ?? tone ?? null]));
+const grips = Object.fromEntries(REVEAL_DIRECTIONS.map((d) => [d, gripName(d)]));
+const gripStyles = Object.fromEntries(REVEAL_DIRECTIONS.map((d) => [d, (perDirection[d] as { style?: string })?.style ?? gripStyle ?? "glyph"]));
+const gripBodies = Object.fromEntries(REVEAL_DIRECTIONS.map((d) => [d, iconBody(gripName(d)) ?? null]));
+
+const bindings = {
+	open: open ?? null,
+	disabled,
+	grouped: name != null,
+	directions,
+	hasStart: Astro.slots.has("start"),
+	hasEnd: Astro.slots.has("end"),
+	hasTop: Astro.slots.has("top"),
+	hasBottom: Astro.slots.has("bottom"),
+	shaped: resolveRevealShape(shape) !== null,
+	contained,
+	bleed,
+	tones,
+	grips,
+	gripStyles,
+	gripBodies,
+	label: label ?? null,
+};
+
+const shapeDef = resolveRevealShape(shape);
+const styleProps = [
+	shapeDef ? `--xtyle-reveal-shape:${shapeDef.clip}` : "",
+	shapeDef?.gripInset ? `--xtyle-reveal-grip-inset:${shapeDef.gripInset}` : "",
+	gripSize ? `--xtyle-reveal-grip-size:${gripSize}` : "",
+	gripPad ? `--xtyle-reveal-grip-pad:${gripPad}` : "",
+].filter(Boolean).join(";");
+
+const chrome = await renderFragmentLight("reveal", bindings);
+const faceHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const bellyHtml = await Promise.all(
+	REVEAL_DIRECTIONS.map(async (direction) => (Astro.slots.has(direction) ? await Astro.slots.render(direction) : "")),
+);
+
+let composed = chrome.replace("<slot></slot>", () => faceHtml);
+REVEAL_DIRECTIONS.forEach((direction, index) => {
+	composed = composed.replace(`<slot name="${direction}"></slot>`, () => bellyHtml[index]);
+});
+---
+
+<xtyle-reveal
+	name={name}
+	open={open}
+	behavior={behavior}
+	shape={shape}
+	contained={contained || undefined}
+	bleed={bleed || undefined}
+	tone={tone}
+	flick-velocity={flickVelocity ?? undefined}
+	travel={travel ?? undefined}
+	grip-size={gripSize}
+	grip-pad={gripPad}
+	grip-style={gripStyle}
+	latch-at={latchAt ?? undefined}
+	commit-at={commitAt ?? undefined}
+	lock-threshold={lockThreshold ?? undefined}
+	start-behavior={startBehavior}
+	start-tone={startTone}
+	start-grip={startGrip}
+	start-grip-style={startGripStyle}
+	end-behavior={endBehavior}
+	end-tone={endTone}
+	end-grip={endGrip}
+	end-grip-style={endGripStyle}
+	top-behavior={topBehavior}
+	top-tone={topTone}
+	top-grip={topGrip}
+	top-grip-style={topGripStyle}
+	bottom-behavior={bottomBehavior}
+	bottom-tone={bottomTone}
+	bottom-grip={bottomGrip}
+	bottom-grip-style={bottomGripStyle}
+	start-latch-at={startLatchAt ?? undefined}
+	end-latch-at={endLatchAt ?? undefined}
+	top-latch-at={topLatchAt ?? undefined}
+	bottom-latch-at={bottomLatchAt ?? undefined}
+	start-travel={startTravel ?? undefined}
+	end-travel={endTravel ?? undefined}
+	top-travel={topTravel ?? undefined}
+	bottom-travel={bottomTravel ?? undefined}
+	start-commit-at={startCommitAt ?? undefined}
+	end-commit-at={endCommitAt ?? undefined}
+	top-commit-at={topCommitAt ?? undefined}
+	bottom-commit-at={bottomCommitAt ?? undefined}
+	disabled={disabled || undefined}
+	label={label}
+	class={extra}
+	style={styleProps || undefined}
+	{...rest}
+	set:html={composed}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type Palette, composeIcon, embedFontsInSvg, iconFontImports, isFontLoaded, loadGoogleFont, primitiveSince, primitiveTags, resolveIconMark, resolvePalette, seriesPalette, suggestGoogleFonts, PALETTES, PALETTE_TOKENS } from "@xtyle/core";
-	import { AppShell, Button, ColorPicker, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xtyle/svelte";
+	import { AppShell, Button, Cluster, ColorPicker, Dock, Icon, Segment, Segmented, Slider, Swatch, Switch, Toolbar } from "@xtyle/svelte";
 	import { isNewComponent } from "../../data/newness.ts";
 	import { ACTIVE_CHANGED_EVENT } from "../../lib/theme-active.ts";
 	import { installGoogleFonts } from "../../lib/google-fonts.ts";
@@ -14,6 +14,8 @@
 		glyph: string;
 		/** For a `letter`: the font slot (0 sans, 1 display, 2 mono). */
 		font: number;
+		/** For a `poly` / `polyline`: the `pts` run, a registered name or `x,y` pairs in a 0–100 space. */
+		pts: string;
 		p: number;
 		x: number;
 		y: number;
@@ -62,8 +64,18 @@
 		{ group: "Bars", keywords: ["top", "row", "column", "diagonal", "cross"] },
 		{ group: "Symbols", keywords: ["star", "star4", "star6", "star8", "burst", "seal", "heart", "crescent", "bolt", "dot"] },
 		{ group: "Text", keywords: ["letter"] },
+		{ group: "Custom", keywords: ["poly", "polyline"] },
 		{ group: "Glyphs", keywords: ["check", "close", "plus", "minus", "search", "menu", "info", "warning", "error", "success", "play", "pause", "stop", "loader"] },
 		{ group: "Objects", keywords: ["gear", "folder", "pencil", "trash", "eye", "copy", "palette", "bookmark", "download"] },
+	];
+
+	/** Starting runs for a `poly` / `polyline`, so the field is never a blank prompt. */
+	const POINT_PRESETS: { label: string; pts: string }[] = [
+		{ label: "Triangle", pts: "50,0,100,100,0,100" },
+		{ label: "Arrow", pts: "arrow" },
+		{ label: "Pennant", pts: "pennant" },
+		{ label: "Chevron", pts: "0,0,60,50,0,100,25,50" },
+		{ label: "Zigzag", pts: "0,80,25,20,50,80,75,20,100,80" },
 	];
 
 	/** Match a palette keyword against a search string: its own name or any of its tags. */
@@ -113,6 +125,7 @@
 			keyword,
 			glyph: "A",
 			font: 0,
+			pts: "0,0,100,50,0,100",
 			p: 5,
 			x: 0,
 			y: 0,
@@ -376,6 +389,7 @@
 			parts.push(l.glyph || "A");
 			if (l.font) parts.push(`f${l.font}`);
 		}
+		if (l.keyword === "poly" || l.keyword === "polyline") parts.push(`pts${(l.pts || "").replace(/\s+/g, ",")}`);
 		if (l.p !== 5) parts.push(`p${l.p}`);
 		if (l.x) parts.push(`x${l.x}`);
 		if (l.y) parts.push(`y${l.y}`);
@@ -589,6 +603,13 @@
 				over.glyph = lm[1];
 				if (lm[2] != null) over.font = Number(lm[2]);
 				rest = rest.slice(lm[0].length);
+			}
+		}
+		if (keyword === "poly" || keyword === "polyline") {
+			const pm = /^-pts([a-z0-9.,]+)/.exec(rest);
+			if (pm) {
+				over.pts = pm[1];
+				rest = rest.slice(pm[0].length);
 			}
 		}
 		const token = /-(?:(sx|sy|[pxysra])(-?\d+)|c([0-9a-f])|o(\d+)(?:c([0-9a-f]))?|(fh|fv|ko|i))/g;
@@ -850,6 +871,10 @@
 	function layerSummary(l: MarkLayer): string {
 		const parts: string[] = [];
 		if (l.keyword === "letter") parts.push(`"${l.glyph}"${l.font ? ` f${l.font}` : ""}`);
+		if (l.keyword === "poly" || l.keyword === "polyline") {
+			const pairs = ((l.pts || "").match(/[\d.]+/g)?.length ?? 0) >> 1;
+			parts.push(pairs > 0 ? `${pairs} pts` : l.pts || "no pts");
+		}
 		if (l.c !== null) parts.push(`c${l.c.toString(16)}`);
 		if (l.p !== 5) parts.push(`p${l.p}`);
 		if (l.s !== 100) parts.push(`s${l.s}`);
@@ -1349,6 +1374,38 @@
 							{/if}
 						</div>
 					</div>
+
+					{#if l.keyword === "poly" || l.keyword === "polyline"}
+						<div class="ib__prop ib__prop--stack">
+							<div class="ib__prop-body">
+								<div class="ib__field ib__field--wide">
+									<span class="ib__field-label">Points</span>
+									<input
+										class="ib__pts"
+										type="text"
+										value={l.pts}
+										oninput={(e) => (l.pts = (e.currentTarget as HTMLInputElement).value)}
+										aria-label="Polygon points, x,y pairs in a 0-100 space or a registered name"
+										placeholder="0,0 100,50 0,100"
+										spellcheck="false"
+										autocomplete="off"
+									/>
+								</div>
+								<p class="ib__hint">
+									<code>x,y</code> pairs in a 0–100 space, or a registered name. Three pairs minimum;
+									anything shorter draws the placeholder.
+								</p>
+								<div class="ib__field ib__field--wide">
+									<span class="ib__field-label">Presets</span>
+									<Cluster gap={1}>
+										{#each POINT_PRESETS as preset (preset.label)}
+											<Button size="sm" variant="subtle" onclick={() => (l.pts = preset.pts)}>{preset.label}</Button>
+										{/each}
+									</Cluster>
+								</div>
+							</div>
+						</div>
+					{/if}
 
 					{#if l.keyword === "letter"}
 						<div class="ib__prop ib__prop--stack">
@@ -2634,6 +2691,25 @@
 		margin: 0;
 		color: var(--fg-3);
 		font-size: var(--text-sm);
+	}
+
+	.ib__field--wide {
+		flex: 1 1 100%;
+		align-items: stretch;
+	}
+	.ib__pts {
+		width: 100%;
+		padding: var(--space-1) var(--space-2);
+		background: var(--bg-1);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-sm);
+		color: var(--fg-0);
+		font-family: var(--font-mono);
+		font-size: var(--text-sm);
+	}
+	.ib__pts:focus-visible {
+		outline: none;
+		border-color: var(--accent);
 	}
 
 	.ib__glyph {

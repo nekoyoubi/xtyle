@@ -73,6 +73,7 @@ import { segmentedCss } from "./components/segmented.js";
 import { listCss } from "./components/list.js";
 import { accordionCss } from "./components/accordion.js";
 import { treeCss } from "./components/tree.js";
+import { revealCss } from "./components/reveal.js";
 import { splitterCss } from "./components/splitter.js";
 import { statCss } from "./components/stat.js";
 import { sectionCss } from "./components/section.js";
@@ -247,6 +248,7 @@ export const componentsCss: string = [
 	listCss,
 	accordionCss,
 	treeCss,
+	revealCss,
 	splitterCss,
 	statCss,
 	sectionCss,

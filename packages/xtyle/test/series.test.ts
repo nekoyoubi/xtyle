@@ -8,6 +8,7 @@ import {
 	rampGradientStops,
 	resolvePalette,
 	paletteStops,
+	paletteTokens,
 	STATUS_TONES,
 	STATUS_TONE_KEYS,
 	PALETTES,
@@ -306,5 +307,34 @@ describe("seriesColorsFor", () => {
 		expect(seriesColorsFor("accents", items, register)).toEqual(seriesPalette("accents", 2, register));
 		expect(seriesColorsFor("skittles", items, register)).toEqual(seriesPalette("skittles", 2, register));
 		expect(seriesColorsFor(["#f00", "#0f0"], items, register)).toEqual(["#f00", "#0f0"]);
+	});
+});
+
+describe("an authored stop list", () => {
+	it("follows the theme through either spelling a stop can be written in", () => {
+		const bare = rampColor(["--success", "--danger"], 0, register);
+		const wrapped = rampColor(["var(--success)", "var(--danger)"], 0, register);
+		expect(wrapped, "a CSS author writes var(--x); the built-ins write --x").toBe(bare);
+		expect(rampColor([" var( --success , #000 ) ", "--danger"], 0, register)).toBe(bare);
+	});
+
+	it("takes a var() fallback when the register has no such token", () => {
+		expect(rampColor(["var(--nope, #ff0000)", "var(--nope, #ff0000)"], 0.5, register)).toBe("#ff0000");
+	});
+
+	it("drops a stop no color parser can read instead of taking the whole ramp down with it", () => {
+		expect(() => rampColor(["var(--nope)", "#00ff00"], 1, register)).not.toThrow();
+		expect(rampColor(["var(--nope)", "#00ff00"], 1, register)).toBe("#00ff00");
+		expect(rampColor(["var(--nope)", "--also-nope"], 1, register)).toBe("currentColor");
+	});
+
+	it("names the register tokens a stop list reads, so a browser consumer knows what to sample", () => {
+		expect(paletteTokens(["var(--success)", "--danger", "#fff"])).toEqual(["--success", "--danger"]);
+		expect(paletteTokens("severity")).toEqual(["--success", "--warn", "--danger"]);
+		expect(paletteTokens(["#fff", "#000"])).toEqual([]);
+	});
+
+	it("keeps the gradient path a pure-CSS sweep in both spellings", () => {
+		expect(rampGradientStops(["--success", "var(--danger)"])).toEqual(["var(--success)", "var(--danger)"]);
 	});
 });
