@@ -16,6 +16,7 @@
  * The full name grammar is documented in `docs/icon-name-grammar.md`.
  */
 
+import { resolveIconPoints } from "./icon-shapes.js";
 import { escapeAttr, escapeCssUrl } from "./markup/escape.js";
 import { flattenBody, regionCovers, type IconBox, type IconRegion } from "./icon-measure.js";
 import { MAX_FONT_FAMILY_LENGTH, googleFontCatalogue, googleFontCssUrl, googleFontFamily, suggestGoogleFonts } from "./fonts/google.js";
@@ -54,6 +55,11 @@ export interface IconLayer {
 	/** For a `letter`: the font slot (`0`+) whose family typesets the glyph; default `0`. Slots 0–2 are
 	 * the theme's sans / display / mono; a `---f{n}` finish overrides any slot. */
 	font?: number;
+	/** For a `poly` / `polyline`: a flat run of `x,y` pairs in a 0–100 space, mapped onto the grid.
+	 * Set, it draws that shape instead of a library path, riding the same fill / outline / transform. */
+	points?: number[];
+	/** For a `polyline`: leave the run open and stroke it rather than closing and filling it. */
+	openPath?: boolean;
 	/** A literal color, `currentColor`, `transparent`, a token (`--accent`), or a series slot (`series:2`). Omit to inherit `currentColor`. */
 	fill?: string;
 	/** Uniform scale about the center (default 1). The grammar's `s{%}` maps here as a fraction of the full grid. */
@@ -164,6 +170,17 @@ export interface ComposeIconOptions {
 }
 
 const bare = (body: string, tags: string[] = [], since = "0.4.0"): IconPrimitive => ({ body, since, tags });
+
+/** A point run mapped from its 0–100 space onto the 24-unit grid, closed and filled or left open and stroked. */
+function polyBody(points: number[], open = false): string {
+	const coords: string[] = [];
+	for (let i = 0; i + 1 < points.length; i += 2) {
+		coords.push(`${n(((points[i] as number) / 100) * GRID)},${n(((points[i + 1] as number) / 100) * GRID)}`);
+	}
+	const list = coords.join(" ");
+	if (open) return `<polyline points="${list}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+	return `<polygon points="${list}" fill="currentColor"/>`;
+}
 
 /** Plain-language tags for the functional glyphs (reachable as `symbol-<name>` primitives), so the
  * palette can search and filter them by meaning rather than by glyph name alone. */
@@ -733,7 +750,12 @@ function layerTransform(layer: IconLayer): string {
 
 /** A layer's flattened regions, pushed through its own transform so a coverage test runs in grid space. */
 function layerRegions(layer: IconLayer): IconRegion[] {
-	const source = layer.glyph != null ? flattenBody(letterBody(layer.glyph, "sans-serif")) : flattenBody((ICON_PRIMITIVES[layer.primitive] ?? MISSING).body);
+	const source =
+		layer.points != null
+			? flattenBody(polyBody(layer.points, layer.openPath))
+			: layer.glyph != null
+				? flattenBody(letterBody(layer.glyph, "sans-serif"))
+				: flattenBody((ICON_PRIMITIVES[layer.primitive] ?? MISSING).body);
 	const scale = layerScale(layer);
 	const sx = scale.x * (layer.flipH ? -1 : 1);
 	const sy = scale.y * (layer.flipV ? -1 : 1);
@@ -904,9 +926,11 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 
 	for (const layer of composition.layers) {
 		const primitive =
-			layer.glyph != null
-				? { body: letterBody(layer.glyph, fontForSlot(layer.font, composition)) }
-				: (ICON_PRIMITIVES[layer.primitive] ?? MISSING);
+			layer.points != null
+				? { body: polyBody(layer.points, layer.openPath) }
+				: layer.glyph != null
+					? { body: letterBody(layer.glyph, fontForSlot(layer.font, composition)) }
+					: (ICON_PRIMITIVES[layer.primitive] ?? MISSING);
 		const transform = layerTransform(layer);
 		if (layer.knockout) {
 			const maskId = `xk-${id}-${holes++}`;
@@ -1096,6 +1120,17 @@ function parseObject(segment: string): IconLayer | null {
 	let offX = 0;
 	let offY = 0;
 	let rest = segment.slice(keyword.length);
+	if (keyword === "poly" || keyword === "polyline") {
+		const m = /^-pts([a-z0-9.,]+)/.exec(rest);
+		if (m) {
+			const points = resolveIconPoints(m[1]);
+			if (points) {
+				layer.points = points;
+				if (keyword === "polyline") layer.openPath = true;
+			}
+			rest = rest.slice(m[0].length);
+		}
+	}
 	if (keyword === "letter") {
 		const m = /^-(.)(?:-f(\d))?/.exec(rest);
 		if (m) {

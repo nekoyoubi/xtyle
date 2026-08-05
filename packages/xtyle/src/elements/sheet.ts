@@ -3,23 +3,17 @@ import { sheetHostCss, type SheetSide, type SheetSize } from "../markup/sheet.js
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/sheet/source.generated.js";
 import { resolveVocab, SHEET_SIDES, SHEET_SIZES } from "../vocab.js";
+import { startDrag } from "./gesture.js";
 
 /** How far along its own extent a sheet must be dragged before release dismisses it. */
 const DISMISS_FRACTION = 0.35;
 /** The absolute travel that dismisses regardless of the panel's extent — the flick a tall sheet would otherwise swallow. */
 const DISMISS_DISTANCE = 96;
+const DISMISS_VELOCITY = 0.4;
 
 const HANDLE_SELECTOR = "[data-handle]";
 const HEADER_SELECTOR = "[data-handle-region]";
 const INTERACTIVE_SELECTOR = 'button, a[href], input, select, textarea, [role="button"], [tabindex]';
-
-interface Drag {
-	pointerId: number;
-	origin: number;
-	extent: number;
-	offset: number;
-	horizontal: boolean;
-}
 
 /**
  * An edge-anchored overlay — the drawer / bottom-sheet half of the overlay family, and the touch-app
@@ -42,7 +36,6 @@ export class XtyleSheet extends XtyleElement {
 	private rootWired = false;
 	private wiredDialog: HTMLDialogElement | null = null;
 	private portalMarker: Comment | null = null;
-	private drag: Drag | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "sheet", {
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => {
@@ -244,7 +237,7 @@ export class XtyleSheet extends XtyleElement {
 	 * the accessible dismissal paths, so a pointer-only gesture can never be the sole way out.
 	 */
 	private onPointerDown(event: PointerEvent): void {
-		if (this.noSwipe || !this.open || this.drag) return;
+		if (this.noSwipe || !this.open) return;
 		if (event.pointerType === "mouse" && event.button !== 0) return;
 		if (this.matchInPath(event, INTERACTIVE_SELECTOR)) return;
 		const handle = this.matchInPath(event, HANDLE_SELECTOR) ?? this.matchInPath(event, HEADER_SELECTOR);
@@ -253,33 +246,23 @@ export class XtyleSheet extends XtyleElement {
 
 		const rect = dialog.getBoundingClientRect();
 		const horizontal = this.horizontal;
-		this.drag = {
-			pointerId: event.pointerId,
-			origin: horizontal ? event.clientX : event.clientY,
-			extent: Math.max(1, horizontal ? rect.width : rect.height),
-			offset: 0,
-			horizontal,
-		};
-		handle.setPointerCapture?.(event.pointerId);
+		const extent = Math.max(1, horizontal ? rect.width : rect.height);
+		const closing = this.side === "bottom" || this.side === "right" ? 1 : -1;
+		let offset = 0;
 		dialog.setAttribute("data-dragging", "");
-	}
-
-	private onPointerMove(event: PointerEvent): void {
-		const drag = this.drag;
-		const dialog = this.dialogEl;
-		if (!drag || !dialog || event.pointerId !== drag.pointerId) return;
-		const raw = (drag.horizontal ? event.clientX : event.clientY) - drag.origin;
-		drag.offset = this.dismissTravel(raw);
-		dialog.style.transform = drag.horizontal ? `translateX(${drag.offset}px)` : `translateY(${drag.offset}px)`;
-	}
-
-	private onPointerEnd(event: PointerEvent): void {
-		const drag = this.drag;
-		if (!drag || event.pointerId !== drag.pointerId) return;
-		this.drag = null;
-		const travel = Math.abs(drag.offset);
-		this.clearDrag();
-		if (travel >= drag.extent * DISMISS_FRACTION || travel >= DISMISS_DISTANCE) this.close();
+		startDrag(event, {
+			axes: horizontal ? "x" : "y",
+			onMove: ({ distance }) => {
+				offset = this.dismissTravel(distance);
+				dialog.style.transform = horizontal ? `translateX(${offset}px)` : `translateY(${offset}px)`;
+			},
+			onEnd: ({ velocity }) => {
+				const travel = Math.abs(offset);
+				this.clearDrag();
+				const flicked = velocity * closing >= DISMISS_VELOCITY && travel > 0;
+				if (flicked || travel >= extent * DISMISS_FRACTION || travel >= DISMISS_DISTANCE) this.close();
+			},
+		});
 	}
 
 	private clearDrag(): void {
@@ -303,9 +286,6 @@ export class XtyleSheet extends XtyleElement {
 				if (event.target === this.dialogEl) this.close();
 			});
 			this.root.addEventListener("pointerdown", (event) => this.onPointerDown(event as PointerEvent));
-			this.root.addEventListener("pointermove", (event) => this.onPointerMove(event as PointerEvent));
-			this.root.addEventListener("pointerup", (event) => this.onPointerEnd(event as PointerEvent));
-			this.root.addEventListener("pointercancel", (event) => this.onPointerEnd(event as PointerEvent));
 		}
 		const dialog = this.dialogEl;
 		if (!dialog || dialog === this.wiredDialog) return;
@@ -318,7 +298,6 @@ export class XtyleSheet extends XtyleElement {
 		});
 		dialog.addEventListener("close", () => {
 			if (this.open) this.open = false;
-			this.drag = null;
 			this.clearDrag();
 			this.restoreFromPortal();
 			this.dispatchEvent(new Event("close", { bubbles: true, composed: true }));

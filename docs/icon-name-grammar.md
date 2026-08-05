@@ -75,6 +75,39 @@ Primitive keywords are single tokens (`square`, `circle`, `triangle`, `hex`, `di
 marks *from*, and the bulk of them are **filled art rather than line work** — a mark is built by
 stacking solids, not by drawing outlines:
 
+### Arbitrary polygons
+
+`poly` and `polyline` take a point run instead of a library path, so a mark the library has never
+heard of is still writable as a name:
+
+```
+flag--poly-pts0,0,100,18,0,36,0,100
+zig--polyline-pts0,80,25,20,50,80,75,20,100,80
+```
+
+`pts` carries a flat run of `x,y` pairs in a **0–100 space**, mapped onto the 24-unit grid. The
+separator is a **comma**, and this is the one place the grammar can spend one: `---`, `--` and `-`
+are all structural, and `-` doubles as a sign inside a flag value, so a coordinate list written with
+hyphens could not be told from the flags around it. The 0–100 space keeps every number non-negative
+by construction, so no sign is ever needed.
+
+`poly` closes the run and fills it; `polyline` leaves it open and strokes it. Either rides every
+other flag: `poly-pts0,0,100,50,0,100-c3-s60-r90` is scaled, colored, and rotated like any primitive,
+and a `poly` works as a `ko` knockout the same way a `circle` does.
+
+A run shorter than three pairs, an odd number of coordinates, or a name nobody registered draws the
+missing-primitive placeholder, so a typo shows on screen rather than emitting a malformed shape.
+
+`pts` also takes a **registered name**, for a shape worth reusing:
+
+```
+arrowmark--poly-ptsarrow
+```
+
+`registerIconShapes({ blade: "0,0 100,40 40,100" })` adds or replaces names, last-wins, the way the
+effect library takes verbs. Names are lowercase alphanumeric with no hyphen, since a hyphen is how
+the grammar separates flags. `arrow` and `pennant` ship built in.
+
 | family | keywords |
 |--------|----------|
 | curves & nature | `wave` a water band, `water` a wavy fill level, `swish` a tapered swoosh, `blob`, `lens` a vesica petal, `leaf`, `cloud`, `mountain`, `sun`, `flame`, `drop` |

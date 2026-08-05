@@ -250,9 +250,39 @@ A node also declares the props the tag accepts, and any prop carrying a URL need
 (`uri` for a link, `image-uri` for a source, `css` for `style`). Miss the sink and the
 element survives while that one attribute vanishes — the same silence, one level down.
 
-`component-host.test.ts` holds all three: every slot names a capability, every markup slot
-has a built-in fill that holds it, every `component.*` slot has a matching node, and every
-`src`/`href`/`poster` prop carries a sink.
+**And a node that declares only *some* of its props is the commoner miss.** Nothing about it
+looks wrong: the tag paints, the demo works, the suite is green, because the author's own
+markup never passes through the sanitize floor. It is only a *mod* composing the component
+that watches half its configuration quietly not arrive. `reveal` shipped 7 of its 45
+attributes this way. So the obligation is every attribute the element observes, not the
+handful the first draft happened to need.
+
+`component-host.test.ts` holds the three gates: every slot names a capability, every markup
+slot has a built-in fill that holds it, every `component.*` slot has a matching node, and
+every `src`/`href`/`poster` prop carries a sink. `component-vocabulary.test.ts` holds the
+fourth obligation, comparing each registered element's `observedAttributes` against the props
+its node declares — the check that turns the silent gate into a failing one.
+
+### The data slots — contributing values rather than markup
+
+Not every contribution is a fill of markup. Four slots take a JSON payload instead, and each
+is backed by a registry with the same last-wins-on-the-name contract fills have:
+
+| slot | contributes | registry |
+|---|---|---|
+| `xtyle.icons` | glyph bodies on the 24×24 grid | `registerIcons` / `registerIconFills` |
+| `xtyle.icon-primitives` | named point lists for `poly` / `polyline` | `registerIconShapes` / `registerIconShapeFills` |
+| `xtyle.reveal-shapes` | `clip-path` silhouettes with an optional grip inset | `registerRevealShapes` / `registerRevealShapeFills` |
+| `xtyle.pack-meta` | pack metadata | — |
+
+Each pair is deliberate. The bare `register*` takes values directly, which is what a page or a
+test wants; the `register*Fills` reads them out of a mod manifest's `fills` block, which is
+what a *host* calls when it loads a mod — so a contribution can be **declared** rather than
+executed, validated by the toolchain, and gated by the capability the slot names. A registry
+reachable only by running code is half a surface: nothing can check it before it runs.
+
+Each also has a `reset*()` that returns the registry to its built-ins, for a host teardown and
+so one test's registration cannot leak into the next.
 
 ## The capability model — what it actually grants
 

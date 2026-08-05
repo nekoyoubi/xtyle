@@ -35,6 +35,10 @@ const shapeOf = (prop: PropDef): Shape | null => {
 	if (type === "boolean") return "boolean";
 	if (type === "number") return "number";
 	if (type === "string") return "string";
+	const members = type.split("|").map((member) => member.trim()).filter((member) => member !== "null" && member !== "undefined");
+	if (members.length > 1 && members.every((member) => member === "number" || member === "string")) {
+		return members.includes("number") ? "number" : "string";
+	}
 	return null;
 };
 
@@ -76,6 +80,11 @@ const UNREACHABLE_IN_ISOLATION: Record<string, string> = {
  */
 const ATTRIBUTE_NAME_EXCEPTIONS: Record<string, string> = {
 	"rating.allowHalf": "the element observes `allowhalf`; wrapper and element agree, and the name is public API",
+};
+
+const DELEGATED_TO_CHILD: Record<string, string> = {
+	"scheme-toggle.variant": "xtyle-button",
+	"scheme-toggle.size": "xtyle-button",
 };
 
 const casesFor = (manifest: ComponentManifest): Case[] => {
@@ -121,9 +130,10 @@ const attempt = async (c: Case, sentAs: string): Promise<Finding | null> => {
 	const entry = byKey.get(key(c.component))!;
 	let rendered: ReturnType<typeof render> | undefined;
 	try {
-		rendered = render(entry.component, { [sentAs]: c.value });
+		const tag = DELEGATED_TO_CHILD[`${c.component}.${c.prop}`];
+		rendered = render(entry.component, { [sentAs]: c.value }, tag ? { tag } : {});
 		const el = rendered.element;
-		if (!el) return { ...c, sentAs, group: "not-rendered", detail: "wrapper produced no <xtyle-*> element" };
+		if (!el) return { ...c, sentAs, group: "not-rendered", detail: `wrapper produced no <${tag ?? "xtyle-*"}> element` };
 
 		// INFO: some wrappers assign the host property on a microtask, so wait a tick before reading it back
 		await Promise.resolve();
@@ -174,7 +184,11 @@ describe("manifest-driven prop forwarding", () => {
 		const real = new Set(
 			components.flatMap((c) => c.props.filter((p) => p.bindings.includes("svelte")).map((p) => `${c.id}.${p.name}`)),
 		);
-		const declared = [...Object.keys(UNREACHABLE_IN_ISOLATION), ...Object.keys(ATTRIBUTE_NAME_EXCEPTIONS)];
+		const declared = [
+			...Object.keys(UNREACHABLE_IN_ISOLATION),
+			...Object.keys(ATTRIBUTE_NAME_EXCEPTIONS),
+			...Object.keys(DELEGATED_TO_CHILD),
+		];
 		expect(declared.filter((k) => !real.has(k))).toEqual([]);
 	});
 

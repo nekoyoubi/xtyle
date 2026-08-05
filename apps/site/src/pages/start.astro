@@ -19,11 +19,19 @@ import { getStats } from "../data/stats";
 
 const { tokens } = await getStats();
 
+const viteSnippet = `// vite.config.ts
+import { viteExcludes } from "@xtyle/core/vite";
+
+export default defineConfig({
+	optimizeDeps: { exclude: [...viteExcludes] },
+});`;
+
 const sections = [
 	{ id: "install", label: "Install" },
 	{ id: "derive", label: "Derive a theme" },
 	{ id: "use", label: "Use the theme" },
 	{ id: "components", label: "Components" },
+	{ id: "bundlers", label: "Bundlers" },
 	{ id: "algorithm", label: "Write an algorithm" },
 	{ id: "bench", label: "See it run" },
 ];
@@ -222,6 +230,33 @@ defineXtyleAlgorithm({
 					<Text tone="muted">
 						<code>@xtyle/svelte</code> and <code>@xtyle/astro</code> wrap the same elements;
 						each depends only on <code>@xtyle/core</code>.
+					</Text>
+				</Stack>
+			</Panel>
+
+			<Panel title="Bundlers" id="bundlers" class="docs-anchor">
+				<Stack gap={4}>
+					<Text tone="muted">
+						Components render their chrome through a sandboxed fragment runtime, and that runtime
+						loads a WebAssembly module of its own. Vite's dependency pre-bundling rewrites the
+						runtime's JavaScript into <code>node_modules/.vite/deps/</code> without carrying the
+						wasm along, so the fetch 404s and every element mounts as an empty box. Tokens still
+						apply, which makes it read as a styling problem rather than a loading one.
+					</Text>
+					<Alert tone="warn">
+						It happens in <strong>dev only</strong> — <code>vite build</code> and
+						<code>vite preview</code> render correctly. That is the awkward part: the failure
+						appears exactly where you author and disappears in the artifact you would check it
+						against.
+					</Alert>
+					<Code lang="typescript" code={viteSnippet} />
+					<Text tone="muted">
+						Excluding <code>@xtyle/core</code> alone is not enough: the runtime is reached
+						transitively and stays pre-bundled, so the whole chain has to be named. That is xtyle's
+						dependency graph, not yours, which is why the list ships from
+						<code>@xtyle/core/vite</code> and moves when the graph does. Other bundlers that rewrite
+						module locations can need the same treatment; the symptom is always an element that
+						registers, paints nothing, and reports a wasm module whose first bytes are HTML.
 					</Text>
 				</Stack>
 			</Panel>

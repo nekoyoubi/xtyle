@@ -182,8 +182,57 @@ export function statusToneColor(tone: string, register: TokenRegister): string |
 	return token ? register[token] : undefined;
 }
 
+const VAR_REFERENCE = /^var\(\s*(--[a-z0-9_-]+)\s*(?:,([\s\S]*))?\)$/i;
+
+function stopToken(stop: string): { name: string; fallback: string | null } | null {
+	const trimmed = stop.trim();
+	if (trimmed.startsWith("--")) return { name: trimmed, fallback: null };
+	const match = VAR_REFERENCE.exec(trimmed);
+	return match ? { name: match[1] as string, fallback: match[2]?.trim() || null } : null;
+}
+
+/**
+ * Every register token a palette's stops name. A browser consumer sampling a ramp off the live cascade
+ * has to read these before it can interpolate, and an authored stop list can name tokens no built-in
+ * palette does — so the set is per-palette rather than the fixed {@link PALETTE_TOKENS} roster.
+ */
+export function paletteTokens(palette: Palette | string | string[]): string[] {
+	return [...new Set(paletteStops(palette).map(stopToken).filter((token): token is { name: string; fallback: string | null } => token !== null).map((token) => token.name))];
+}
+
+/** {@link PALETTE_TOKENS} plus whatever `palette`'s own stops name, deduplicated — the token list a
+ * live-register read needs so an authored palette's tokens track the theme alongside the built-ins. */
+export function paletteRegisterTokens(palette: Palette | string | string[]): string[] {
+	return [...new Set([...PALETTE_TOKENS, ...paletteTokens(palette)])];
+}
+
+function parseable(color: string): boolean {
+	try {
+		toOklchColor(color);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+const unparseable = new Set<string>();
+
 function resolve(tokens: string[], register: TokenRegister): string[] {
-	return tokens.map((name) => register[name] ?? (name.startsWith("--") ? undefined : name)).filter((value): value is string => Boolean(value));
+	const resolved = tokens
+		.map((stop) => {
+			const token = stopToken(stop);
+			if (!token) return stop;
+			return register[token.name] ?? token.fallback ?? undefined;
+		})
+		.filter((value): value is string => Boolean(value));
+	return resolved.filter((color) => {
+		if (parseable(color)) return true;
+		if (typeof console !== "undefined" && !unparseable.has(color)) {
+			unparseable.add(color);
+			console.warn(`xtyle: "${color}" is not a color a ramp can interpolate; dropping it from the palette.`);
+		}
+		return false;
+	});
 }
 
 /** Evenly spaced indices into a `length`-long array, endpoints included, for `count` picks. */

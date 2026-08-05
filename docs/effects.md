@@ -65,8 +65,25 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 | `tint` | a color wash over the surface |
 | `frost` | a backdrop blur and saturation bump |
 | `reveal` | fades and slides in when armed (see below) |
-| `shake` | a short nudge, for an error |
 | `saturate` | a vividness bump |
+
+And the **transients**, which are verbs about an *event* rather than a state: they fire once and are
+over. They exist as library content for the same reason everything else does: each has a magnitude, and
+a hand-written `@keyframes` gets a fixed `-28px` that survives a theme which zeroed the layer to protect
+somebody. `animated: true` and the reduced-motion suppression riding on it are the other half, and a
+transient is exactly the kind of thing an adopter would otherwise hand-roll and forget to guard.
+
+| effect | what it does |
+|---|---|
+| `flash` | a hard blink of color across the surface: impact, rejection, *that one* |
+| `float` | a rise and fade out; a readout that appears, travels, and dies |
+| `pop` | a scale in past the resting size and back; something arriving |
+| `wobble` | a rotational jitter, where `shake` is a translational one |
+| `shake` | a short nudge, for an error |
+
+`shake` and `wobble` read very differently and neither substitutes for the other. All five drive
+`translate` / `rotate` / `scale` rather than `transform`, so they compose with each other *and* leave a
+component's own `transform` (a dragged sheet, a reveal's lid) untouched.
 
 ## Conditions
 
@@ -81,6 +98,15 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 | `open` | `[open]`, `[aria-expanded="true"]` |
 | `invalid` | `:invalid`, `[aria-invalid="true"]` |
 | `armed` | `[data-fx-armed]` |
+| `selected` | `[aria-selected="true"]`, `[data-selected]` |
+| `current` | `[aria-current]`, `[data-current]` |
+| `busy` | `[aria-busy="true"]`, `[data-busy]` |
+| `fired` | `[data-fx-fired]`, which `fireEffect` sets for the length of a transient |
+
+The table is the **registered** set, not the available one. `armed` reading a plain data attribute makes
+`@dragging` look like it should just work; it does not, because the layer is a cross product of
+registered names and an unregistered one emits no rule at all. `registerCondition` is one line, and
+`unknownSpecs` names what a spec asked for and did not get.
 
 ## Tokens
 
@@ -128,6 +154,10 @@ spec anyone has already written.
 | `frost` | `blur` (px), `saturation` (%) |
 | `reveal` | `distance` (px), `rate` (ms) |
 | `shake` | `distance` (px), `rate` (ms) |
+| `flash` | `color`, `amount` (%), `rate` (ms) |
+| `float` | `distance` (px), `rate` (ms) |
+| `pop` | `scale` (a unitless overshoot), `rate` (ms) |
+| `wobble` | `angle` (deg), `rate` (ms) |
 | `saturate` | `amount` (%) — `0` grayscale, `100` unchanged, `200` double |
 
 A **bracketed list** fans out to a related group, so a pair that is nearly always set together can be
@@ -200,6 +230,49 @@ optional**:
 An effect an addon registers declares its own `params`, so a third-party effect is parameterised on
 exactly the same terms as a built-in one.
 
+### The trap, and the runtime that closes it
+
+Setting the attribute alone gets the effect and the *defaults*. The `?…` tail is parsed, understood,
+and dropped, because there is nowhere in a selector for it to go. That reads as the grammar being
+broken rather than undelivered, and the catalog ships parameterised examples an adopter can copy
+straight into that silence.
+
+`@xtyle/core/fx` is the optional runtime that pairs the two halves:
+
+```ts
+import { applyEffect, applyEffects, fireEffect, armInView } from "@xtyle/core/fx";
+
+applyEffect(el, "glow@hover?spread:20,color:danger");  // spec + its properties, together
+applyEffects(document);                                 // the same, for markup that already carries one
+await fireEffect(toast, "pop@fired");                   // fire a transient and wait for it to land
+const stop = armInView(document.body);                  // arm every `reveal`, disarm each as it arrives
+```
+
+`applyEffect` clears **only the properties it wrote**, so swapping specs cannot leave a stale parameter
+retuning the next effect, and a deliberate `--fx-color` the page set on the same element survives.
+
+`fireEffect` sets the `fired` condition and clears it once the animation has landed; a call that arrives
+mid-flight restarts the animation rather than being swallowed. Under reduced motion, or on a theme whose
+`--fx-intensity` is zero, nothing runs and it resolves immediately: the correct nothing.
+
+None of this is required. A page that writes the properties itself, or only uses unparameterised specs,
+never loads the module.
+
+### An unregistered name is silent, and `unknownSpecs` says so
+
+The layer is a cross product of *registered* effects and *registered* conditions, so a spec naming
+something absent emits no rule, indistinguishable from an effect that ran and did nothing. `applyEffect`
+warns, the way the component layer warns about its vocabularies, and `unknownSpecs(spec)` is the same
+check as a value, returning which half was missing:
+
+```ts
+unknownSpecs("glow@dragging");
+// → [{ effect: "glow", condition: "dragging", missing: ["condition"], unknownParams: [], args: {} }]
+```
+
+It is exported as `unknownEffects` too, under which name nobody found it; the check has always covered
+conditions and parameters, and the old name argued otherwise.
+
 ## Proving an effect is visible
 
 An effect whose CSS is correct and whose pixels never change is broken, and reading the stylesheet
@@ -223,10 +296,14 @@ correctly, instead of by every adopter who happens to remember.
 ## `reveal` is the one effect that needs a runtime
 
 Everything else is pure CSS. `reveal` needs to know when an element enters the viewport, so it is the
-only member of the set that depends on an observer — and it is built so that **the absence of the
-runtime can never hide content**. The bare name does nothing; the hidden state is reachable only
-through `data-fx-armed`, which nothing but the observer sets. With no JavaScript, nothing is ever armed,
-and a reader sees the content rather than an empty page waiting for a script that will not arrive.
+only member of the set that depends on an observer (`armInView` above), and it is built so that **the
+absence of the runtime can never hide content**. The bare name does nothing; the hidden state is
+reachable only through `data-fx-armed`, which nothing but the observer sets. With no JavaScript, nothing
+is ever armed, and a reader sees the content rather than an empty page waiting for a script that will
+not arrive.
+
+A transient is the near neighbour and the opposite trade: `fireEffect` is a *convenience*, not a
+dependency, because the `fired` condition is an ordinary attribute anything can set.
 
 ## Where it sits in the sheet
 

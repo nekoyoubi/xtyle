@@ -14,6 +14,7 @@ import {
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/color-picker/source.generated.js";
+import { startDrag } from "./gesture.js";
 
 const SNAP_TARGETS = ["web-safe", "named"] as const;
 type SnapTarget = (typeof SNAP_TARGETS)[number];
@@ -326,23 +327,22 @@ export class XtyleColorPicker extends XtyleElement {
 		this.setColor({ h, s, v }, rgb.alpha, kind);
 	}
 
+	private paintWhileDragging(event: PointerEvent, apply: (moved: PointerEvent, kind: "input" | "change") => void): void {
+		apply(event, "input");
+		startDrag(event, {
+			onMove: (_, moved) => apply(moved, "input"),
+			onEnd: (_, ended) => apply(ended, "change"),
+		});
+	}
+
 	private dragPlane(event: PointerEvent): void {
 		const canvas = this.el(".xtyle-color-picker__plane");
 		if (!canvas) return;
 		this.el(".xtyle-color-picker__plane-handle")?.focus();
-		(event.target as Element).setPointerCapture?.(event.pointerId);
 		const hue = this.oklchChannels()[2];
-		const apply = (e: PointerEvent, kind: "input" | "change") =>
-			this.setFromPlane(1 - this.fractionFrom(e, canvas, "y"), this.fractionFrom(e, canvas, "x") * this.planeMaxC, hue, kind);
-		apply(event, "input");
-		const move = (e: PointerEvent) => apply(e, "input");
-		const up = (e: PointerEvent) => {
-			canvas.removeEventListener("pointermove", move);
-			canvas.removeEventListener("pointerup", up);
-			apply(e, "change");
-		};
-		canvas.addEventListener("pointermove", move);
-		canvas.addEventListener("pointerup", up);
+		this.paintWhileDragging(event, (moved, kind) =>
+			this.setFromPlane(1 - this.fractionFrom(moved, canvas, "y"), this.fractionFrom(moved, canvas, "x") * this.planeMaxC, hue, kind),
+		);
 	}
 
 	private onPlaneKeydown(event: KeyboardEvent): void {
@@ -516,36 +516,16 @@ export class XtyleColorPicker extends XtyleElement {
 		const track = this.el(trackSelector);
 		if (!track) return;
 		this.el(handleSelector)?.focus();
-		(event.target as Element).setPointerCapture?.(event.pointerId);
-		const run = (e: PointerEvent, kind: "input" | "change") =>
-			apply(this.fractionFrom(e, track, "x"), kind);
-		run(event, "input");
-		const move = (e: PointerEvent) => run(e, "input");
-		const up = (e: PointerEvent) => {
-			track.removeEventListener("pointermove", move);
-			track.removeEventListener("pointerup", up);
-			run(e, "change");
-		};
-		track.addEventListener("pointermove", move);
-		track.addEventListener("pointerup", up);
+		this.paintWhileDragging(event, (moved, kind) => apply(this.fractionFrom(moved, track, "x"), kind));
 	}
 
 	private dragArea(event: PointerEvent): void {
 		const area = this.el(".xtyle-color-picker__area");
 		if (!area) return;
 		this.el(".xtyle-color-picker__sv-handle")?.focus();
-		(event.target as Element).setPointerCapture?.(event.pointerId);
-		const apply = (e: PointerEvent, kind: "input" | "change") =>
-			this.patchHsv({ s: this.fractionFrom(e, area, "x"), v: 1 - this.fractionFrom(e, area, "y") }, kind);
-		apply(event, "input");
-		const move = (e: PointerEvent) => apply(e, "input");
-		const up = (e: PointerEvent) => {
-			area.removeEventListener("pointermove", move);
-			area.removeEventListener("pointerup", up);
-			apply(e, "change");
-		};
-		area.addEventListener("pointermove", move);
-		area.addEventListener("pointerup", up);
+		this.paintWhileDragging(event, (moved, kind) =>
+			this.patchHsv({ s: this.fractionFrom(moved, area, "x"), v: 1 - this.fractionFrom(moved, area, "y") }, kind),
+		);
 	}
 
 	private onSvKeydown(event: KeyboardEvent): void {

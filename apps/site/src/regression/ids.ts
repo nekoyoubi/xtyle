@@ -56,6 +56,7 @@ export const REGRESSION_IDS = [
 	"radio",
 	"rating",
 	"redact",
+	"reveal",
 	"ribbon",
 	"scheme-toggle",
 	"section",

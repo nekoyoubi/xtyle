@@ -85,19 +85,19 @@ export const schemeToggleManifest: ComponentManifest = {
 			options: ["light", "dark"],
 		},
 		{
-			name: "light-icon",
+			name: "lightIcon",
 			type: "string",
 			description: "A named xtyle icon for the light face, replacing the built-in sun.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "dark-icon",
+			name: "darkIcon",
 			type: "string",
 			description: "A named xtyle icon for the dark face, replacing the built-in moon.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "icon-size",
+			name: "iconSize",
 			type: "IconSize",
 			default: "md",
 			description: "The glyph's size, independent of the control's. A chrome-free toolbar button often wants a large glyph in a small box, which the button's own `size` cannot express.",

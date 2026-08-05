@@ -56,6 +56,7 @@ export const elementRegistry: Record<string, () => Promise<unknown>> = {
 	"radio": () => import("@xtyle/core/elements/radio.js"),
 	"rating": () => import("@xtyle/core/elements/rating.js"),
 	"redact": () => import("@xtyle/core/elements/redact.js"),
+	"reveal": () => import("@xtyle/core/elements/reveal.js"),
 	"ribbon": () => import("@xtyle/core/elements/ribbon.js"),
 	"scheme-toggle": () => import("@xtyle/core/elements/scheme-toggle.js"),
 	"section": () => import("@xtyle/core/elements/section.js"),

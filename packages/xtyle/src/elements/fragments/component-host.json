@@ -507,6 +507,16 @@
 			"style": "inherit"
 		},
 		{
+			"id": "component.reveal",
+			"description": "The built-in fill for the xtyle Reveal component: the mod-zero markup and behavior every app inherits and may override.",
+			"accepts": [
+				"application/x-xtyle+html"
+			],
+			"capability": "xtyle.component.reveal",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
 			"id": "component.ribbon",
 			"description": "The built-in fill for the xtyle Ribbon component: the mod-zero markup every app inherits and may override.",
 			"accepts": [
@@ -867,6 +877,16 @@
 			"style": "inherit"
 		},
 		{
+			"id": "xtyle.reveal-shapes",
+			"description": "Silhouettes for the reveal component: a data fill of `clip-path` definitions with an optional grip inset, keyed by name. A shape is a part a box is cut to rather than an icon, so it is its own vocabulary.",
+			"accepts": [
+				"application/json"
+			],
+			"capability": "xtyle.reveal-shapes",
+			"multiple": true,
+			"style": "inherit"
+		},
+		{
 			"id": "xtyle.icon-primitives",
 			"description": "Primitives for the icon builder: a data fill of composable shape and symbol parts, keyed by name. A separate vocabulary from the finished glyphs in xtyle.icons, because a primitive is a part an icon is built from rather than an icon.",
 			"accepts": [
@@ -927,7 +947,8 @@
 						"multiple": {},
 						"size": {},
 						"heading-level": {},
-						"items": {}
+						"items": {},
+						"chevron-icon": {}
 					}
 				},
 				"xtyle-alert": {
@@ -1177,7 +1198,9 @@
 						"block": {},
 						"icon-only": {},
 						"pressed": {},
-						"selected": {}
+						"selected": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-calendar": {
@@ -1218,7 +1241,9 @@
 						"next-label": {},
 						"week-label": {},
 						"disabled-dates": {},
-						"decorations": {}
+						"decorations": {},
+						"next-icon": {},
+						"prev-icon": {}
 					}
 				},
 				"xtyle-card": {
@@ -1527,7 +1552,13 @@
 						"no-footer": {},
 						"no-close-on-select": {},
 						"hotkey": {},
-						"storage-key": {}
+						"storage-key": {},
+						"autocapitalize": {},
+						"autocomplete": {},
+						"autocorrect": {},
+						"enterkeyhint": {},
+						"inputmode": {},
+						"spellcheck": {}
 					}
 				},
 				"xtyle-date-picker": {
@@ -1952,7 +1983,8 @@
 							"type": "string",
 							"sink": "image-uri"
 						},
-						"hover-audio": {}
+						"hover-audio": {},
+						"zoom-icon": {}
 					}
 				},
 				"xtyle-kbd": {
@@ -2039,7 +2071,8 @@
 						"orientation": {},
 						"size": {},
 						"label": {},
-						"labelledby": {}
+						"labelledby": {},
+						"aria-label": {}
 					}
 				},
 				"xtyle-markdown": {
@@ -2060,7 +2093,9 @@
 						"source": {},
 						"inline": {},
 						"editable": {},
-						"editing": {}
+						"editing": {},
+						"allow-html": {},
+						"process-bbcode": {}
 					}
 				},
 				"xtyle-menu": {
@@ -2212,7 +2247,8 @@
 						"variant": {},
 						"open": {},
 						"scroll": {},
-						"label": {}
+						"label": {},
+						"marker-icon": {}
 					}
 				},
 				"xtyle-parallax": {
@@ -2326,7 +2362,8 @@
 						"track": {},
 						"thickness": {},
 						"below": {},
-						"pulse": {}
+						"pulse": {},
+						"aria-label": {}
 					}
 				},
 				"xtyle-qr": {
@@ -2464,6 +2501,87 @@
 						"revealed": {}
 					}
 				},
+				"xtyle-reveal": {
+					"props": {
+						"class": {},
+						"part": {},
+						"slot": {},
+						"style": {
+							"type": "string",
+							"sink": "css"
+						},
+						"title": {},
+						"hidden": {},
+						"tabindex": {},
+						"role": {},
+						"lang": {},
+						"dir": {},
+						"name": {},
+						"open": {},
+						"disabled": {},
+						"lock-threshold": {},
+						"latch-at": {},
+						"commit-at": {},
+						"label": {},
+						"flick-velocity": {},
+						"shape": {},
+						"contained": {},
+						"bleed": {},
+						"grip-style": {},
+						"tone": {},
+						"behavior": {},
+						"travel": {},
+						"grip-size": {},
+						"grip-pad": {},
+						"start-behavior": {},
+						"start-latch-at": {},
+						"start-commit-at": {},
+						"start-travel": {},
+						"start-tone": {},
+						"start-grip": {},
+						"start-grip-style": {},
+						"end-behavior": {},
+						"end-latch-at": {},
+						"end-commit-at": {},
+						"end-travel": {},
+						"end-tone": {},
+						"end-grip": {},
+						"end-grip-style": {},
+						"top-behavior": {},
+						"top-latch-at": {},
+						"top-commit-at": {},
+						"top-travel": {},
+						"top-tone": {},
+						"top-grip": {},
+						"top-grip-style": {},
+						"bottom-behavior": {},
+						"bottom-latch-at": {},
+						"bottom-commit-at": {},
+						"bottom-travel": {},
+						"bottom-tone": {},
+						"bottom-grip": {},
+						"bottom-grip-style": {}
+					}
+				},
+				"xtyle-reveal-group": {
+					"props": {
+						"class": {},
+						"part": {},
+						"slot": {},
+						"style": {
+							"type": "string",
+							"sink": "css"
+						},
+						"title": {},
+						"hidden": {},
+						"tabindex": {},
+						"role": {},
+						"lang": {},
+						"dir": {},
+						"label": {},
+						"labelledby": {}
+					}
+				},
 				"xtyle-ribbon": {
 					"props": {
 						"class": {},
@@ -2558,7 +2676,8 @@
 						"tone": {},
 						"label": {},
 						"labelledby": {},
-						"name": {}
+						"name": {},
+						"aria-label": {}
 					}
 				},
 				"xtyle-select": {
@@ -2734,7 +2853,8 @@
 						"lang": {},
 						"dir": {},
 						"tone": {},
-						"size": {}
+						"size": {},
+						"aria-label": {}
 					}
 				},
 				"xtyle-split-button": {
@@ -2967,7 +3087,8 @@
 						"label-off": {},
 						"off-label": {},
 						"name": {},
-						"value": {}
+						"value": {},
+						"on-label": {}
 					}
 				},
 				"xtyle-table": {
@@ -3123,7 +3244,9 @@
 						"label": {},
 						"swatches": {},
 						"min-col-width": {},
-						"empty": {}
+						"empty": {},
+						"layout": {},
+						"open": {}
 					}
 				},
 				"xtyle-theme-scope": {
@@ -3645,6 +3768,10 @@
 			"description": "Permits a mod to provide the markup and behavior of the xtyle SplitButton component.",
 			"risk": "low"
 		},
+		"xtyle.component.reveal": {
+			"description": "Permits a mod to provide the markup and behavior of the xtyle Reveal component.",
+			"risk": "low"
+		},
 		"xtyle.component.splitter": {
 			"description": "Permits a mod to provide the markup and behavior of the xtyle Splitter component.",
 			"risk": "low"
@@ -3747,6 +3874,10 @@
 		},
 		"xtyle.icon-primitives": {
 			"description": "Permits a mod to add primitives to the xtyle icon builder, or replace built-in ones.",
+			"risk": "low"
+		},
+		"xtyle.reveal-shapes": {
+			"description": "Permits a mod to add silhouettes to the xtyle reveal component, or replace built-in ones.",
 			"risk": "low"
 		}
 	},

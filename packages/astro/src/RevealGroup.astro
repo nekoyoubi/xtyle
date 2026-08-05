@@ -1,0 +1,27 @@
+---
+interface Props {
+	label?: string;
+	labelledby?: string;
+	/** Render zero-JS: emit the markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const { label, labelledby, static: isStatic = false, class: extra, ...rest } = Astro.props;
+---
+
+<xtyle-reveal-group
+	role="group"
+	aria-label={labelledby ? undefined : label}
+	aria-labelledby={labelledby}
+	label={label}
+	labelledby={labelledby}
+	class={extra}
+	{...rest}
+>
+	<slot />
+</xtyle-reveal-group>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

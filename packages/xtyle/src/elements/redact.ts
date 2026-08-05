@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { redactHostCss, type RedactMode, type RedactReveal } from "../markup/redact.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/redact/source.generated.js";
+import { startDrag } from "./gesture.js";
 
 export type { RedactMode, RedactReveal } from "../markup/redact.js";
 
@@ -231,9 +232,7 @@ export class XtyleRedact extends XtyleElement {
 	private onHoldStart = (event: PointerEvent): void => {
 		event.preventDefault();
 		this.holding = true;
-		// INFO: pointer release can land outside the cover once the pointer is down, so listen on the window
-		window.addEventListener("pointerup", this.onHoldEnd);
-		window.addEventListener("pointercancel", this.onHoldEnd);
+		startDrag(event, { onEnd: () => this.endHold() });
 		this.syncRevealed();
 	};
 
@@ -250,13 +249,7 @@ export class XtyleRedact extends XtyleElement {
 		this.endHold();
 	};
 
-	private onHoldEnd = (): void => {
-		this.endHold();
-	};
-
 	private endHold(): void {
-		window.removeEventListener("pointerup", this.onHoldEnd);
-		window.removeEventListener("pointercancel", this.onHoldEnd);
 		if (!this.holding) return;
 		this.holding = false;
 		this.syncRevealed();

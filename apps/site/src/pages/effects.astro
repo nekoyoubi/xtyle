@@ -20,6 +20,7 @@ const sections = [
 	{ id: "library", label: "The library" },
 	{ id: "params", label: "Parameters" },
 	{ id: "conditions", label: "Conditions" },
+	{ id: "runtime", label: "The optional runtime" },
 	{ id: "tokens", label: "Tokens" },
 	{ id: "extending", label: "Adding your own" },
 	{ id: "motion", label: "Reduced motion" },
@@ -37,6 +38,10 @@ const BLURB: Record<string, string> = {
 	frost: "a backdrop blur and saturation bump",
 	reveal: "fades and slides in once armed",
 	shake: "a short nudge, for an error",
+	flash: "a hard blink of color: impact, rejection, that one",
+	float: "a rise and fade out; a readout that appears, travels, and dies",
+	pop: "a scale in past the resting size and back; something arriving",
+	wobble: "a rotational jitter, where shake is a translational one",
 	saturate: "hover boosts to 200; the switch overrides to grayscale, hover and all",
 };
 
@@ -46,6 +51,7 @@ interface Demo {
 	body: "mark" | "panel" | "swatches" | "glass";
 	clip?: boolean;
 	arm?: boolean;
+	fire?: boolean;
 	toggle?: boolean;
 }
 
@@ -58,6 +64,10 @@ const DEMOS: Record<string, Demo> = {
 	frost: { spec: "frost@hover?blur:7,saturation:90", stage: "stripes", body: "glass" },
 	reveal: { spec: "reveal?distance:14,rate:400ms", stage: "plain", body: "panel", arm: true },
 	shake: { spec: "shake@hover?distance:6", stage: "plain", body: "panel" },
+	flash: { spec: "flash@fired?amount:80", stage: "plain", body: "panel", fire: true },
+	float: { spec: "float@fired?distance:34,rate:900ms", stage: "plain", body: "panel", fire: true },
+	pop: { spec: "pop@fired?scale:0.3", stage: "plain", body: "panel", fire: true },
+	wobble: { spec: "wobble@fired?angle:9", stage: "plain", body: "panel", fire: true },
 	saturate: { spec: "saturate@hover?amount:200  ·  switch → saturate@armed?amount:0", stage: "plain", body: "swatches", toggle: true },
 };
 
@@ -90,6 +100,23 @@ const specSnippet = `<span   data-fx="throb">                      <!-- no condi
 <!-- named parameters, any subset, any order -->
 <span data-fx="throb?rate:3s,colors:[accent,accent-2]">
 <div  data-fx="glow@hover?spread:18">`;
+
+const runtimeSnippet = `import { applyEffect, fireEffect, armInView } from "@xtyle/core/fx";
+
+// set the spec AND write the properties its parameters resolve to
+applyEffect(el, "glow@hover?spread:20,color:danger");
+
+// fire a transient: sets \`data-fx-fired\`, clears it when the animation lands
+await fireEffect(toast, "pop@fired");
+
+// arm every \`reveal\` under a root, disarming each as it scrolls in
+const stop = armInView(document.body);`;
+
+const paramTrapSnippet = `// the effect fires, and its parameters are silently dropped
+el.dataset.fx = "throb?rate:1.4s";
+
+// both halves, together
+applyEffect(el, "throb?rate:1.4s");`;
 
 const addonSnippet = `import { registerEffect, registerCondition } from "@xtyle/core";
 
@@ -148,7 +175,11 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 							const demo = DEMOS[effect.name];
 							if (!demo) return null;
 							return (
-								<figure class="x-fx-tile" data-arm={demo.arm ? `x-arm-${effect.name}` : undefined}>
+								<figure
+									class="x-fx-tile"
+									data-arm={demo.arm ? `x-arm-${effect.name}` : undefined}
+									data-fire={demo.fire ? `x-fire-${effect.name}` : undefined}
+								>
 									<div class={`x-fx-stage x-fx-stage--${demo.stage}${demo.clip ? " x-fx-stage--clip" : ""}`}>
 										{demo.body === "swatches" ? (
 											<div class="x-fx-target x-fx-target--swatches" data-fx="saturate@hover?amount:200" style={fxStyleAttr("saturate@hover?amount:200")}>
@@ -167,6 +198,7 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 										<Text mono size="xs">{demo.spec}</Text>
 										<Text tone="muted" size="xs">{BLURB[effect.name] ?? ""}</Text>
 										{demo.arm && <Button id={`x-arm-${effect.name}`} size="sm" variant="subtle">Arm it</Button>}
+										{demo.fire && <Button id={`x-fire-${effect.name}`} size="sm" variant="subtle">Fire it</Button>}
 									</figcaption>
 								</figure>
 							);
@@ -259,6 +291,33 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 					<Button variant="subtle" data-fx="shake@active">shake@active</Button>
 					<Button disabled data-fx="tint@disabled">tint@disabled</Button>
 				</Cluster>
+			</Stack>
+		</section>
+
+		<section id="runtime">
+			<Stack gap={3}>
+				<Heading level={2} size="md">The optional runtime</Heading>
+				<Text tone="muted">
+					The layer is a stylesheet and needs nothing running. But a <em>parameter</em> cannot live in a
+					selector, so writing the attribute by hand gets you the effect and the defaults; the
+					<code>?…</code> tail is understood and then dropped. <code>applyEffect</code> is the pairing done
+					correctly, and it clears only the properties it wrote, so swapping specs can't leave a stale
+					parameter retuning the next one.
+				</Text>
+				<Code lang="ts" code={paramTrapSnippet} />
+				<Text tone="muted">
+					A <strong>transient</strong> (<code>flash</code>, <code>float</code>, <code>pop</code>,
+					<code>wobble</code>, <code>shake</code>) is a verb about an event rather than a state, so it needs
+					a trigger. <code>fireEffect</code> sets the <code>fired</code> condition and clears it once the
+					animation lands; a call that arrives mid-flight restarts it rather than being swallowed.
+				</Text>
+				<Code lang="ts" code={runtimeSnippet} />
+				<Alert tone="info">
+					<code>applyEffects(root)</code> does the same in one pass for markup that already carries the
+					attribute, like an SSR page or a template. And a spec naming an effect, condition, or parameter
+					nothing has registered <strong>warns</strong> rather than sitting there inert;
+					<code>unknownSpecs(spec)</code> is the same check as a value, and it says which half was missing.
+				</Alert>
 			</Stack>
 		</section>
 
@@ -431,6 +490,15 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 </style>
 
 <script>
+	import { fireEffect } from "@xtyle/core/fx";
+
+	document.addEventListener("click", (event) => {
+		const fire = (event.target as HTMLElement | null)?.closest("[id^='x-fire-']");
+		if (!fire) return;
+		const target = fire.closest(".x-fx-tile")?.querySelector<HTMLElement>("[data-fx]");
+		if (target) void fireEffect(target);
+	});
+
 	document.addEventListener("click", (event) => {
 		const arm = (event.target as HTMLElement | null)?.closest("[id^='x-arm-']");
 		if (!arm) return;

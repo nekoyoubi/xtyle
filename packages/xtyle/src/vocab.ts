@@ -223,6 +223,11 @@ export type HeadingTone = "default" | "muted" | "subtle" | FullTone;
 
 export const ORIENTATIONS = ["horizontal", "vertical"] as const;
 
+export const REVEAL_DIRECTIONS = ["start", "end", "top", "bottom"] as const;
+export const REVEAL_BEHAVIORS = ["latch", "commit", "both"] as const;
+export const REVEAL_GRIP_STYLES = ["glyph", "bar", "dots", "none"] as const;
+export const REVEAL_SHAPES = ["rect", "parallelogram", "chevron", "ticket", "heart"] as const;
+
 export const ALERT_SEVERITIES = ["success", "warn", "danger", "info"] as const;
 export const ALERT_VARIANTS = ["soft", "solid"] as const;
 

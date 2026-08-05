@@ -132,7 +132,7 @@ export const themePickerManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "min-col-width",
+			name: "minColWidth",
 			type: "string",
 			default: "13rem",
 			description: "The grid's column floor; the gallery fits as many columns as that allows.",

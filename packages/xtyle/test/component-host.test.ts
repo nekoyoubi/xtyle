@@ -85,3 +85,4 @@ describe("component host manifest slots", () => {
 		expect(unsunk).toEqual([]);
 	});
 });
+

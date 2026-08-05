@@ -22,6 +22,7 @@ import { manifest, fragmentSources } from "./fragments/dock-zone/source.generate
 // INFO: importing (not `import type`) registers <xtyle-menu>, which the fill opens as the kebab popup
 import { XtyleMenu } from "./menu.js";
 import type { MenuItem } from "../markup/index.js";
+import { startDrag } from "./gesture.js";
 
 /** A direct control button in a panel's header: a glyph and the accessible name that fires a `panel-action`. */
 interface PanelAction {
@@ -578,18 +579,11 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		return toBoundary <= this.dockBand() ? res : null;
 	}
 
-	/** Wire a pointer-drag loop (`onMove` per pointermove, `onCommit` on release), tearing the listeners
-	 * down on release or cancel. The callers own their own pending state through closures. */
-	private trackPointerDrag(onMove: (event: PointerEvent) => void, onCommit: () => void): void {
-		const up = () => {
-			window.removeEventListener("pointermove", onMove);
-			window.removeEventListener("pointerup", up);
-			window.removeEventListener("pointercancel", up);
-			onCommit();
-		};
-		window.addEventListener("pointermove", onMove);
-		window.addEventListener("pointerup", up);
-		window.addEventListener("pointercancel", up);
+	/** Wire a pointer-drag loop (`onMove` per pointermove, `onCommit` on release). The callers own their
+	 * own pending state through closures, and read the pointer's position rather than its travel, so the
+	 * gesture core's axis lock stays out of the way. */
+	private trackPointerDrag(event: PointerEvent, onMove: (moved: PointerEvent) => void, onCommit: () => void): void {
+		startDrag(event, { onMove: (_, moved) => onMove(moved), onEnd: () => onCommit() });
 	}
 
 	private floatWindow(panelId: string): HTMLElement | null {
@@ -618,6 +612,7 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		let next: FloatRect = { x: start.x, y: start.y, w: start.w, h: start.h };
 		let redock: DropResolution | null = null;
 		this.trackPointerDrag(
+			event,
 			(e) => {
 				const x = Math.max(0, Math.min(maxX, Math.round(e.clientX - offsetX)));
 				const y = Math.max(0, Math.min(maxY, Math.round(e.clientY - offsetY)));
@@ -654,6 +649,7 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		const maxH = Math.max(XtyleDockZone.FLOAT_MIN_H, host.height - start.y);
 		let next: FloatRect = { x: start.x, y: start.y, w: start.w, h: start.h };
 		this.trackPointerDrag(
+			event,
 			(e) => {
 				const w = Math.max(XtyleDockZone.FLOAT_MIN_W, Math.min(maxW, Math.round(start.w + (e.clientX - event.clientX))));
 				const h = Math.max(XtyleDockZone.FLOAT_MIN_H, Math.min(maxH, Math.round(start.h + (e.clientY - event.clientY))));
@@ -720,16 +716,10 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	private onTabPointerdown(event: PointerEvent, panelId: string, zoneId: string, index: number): void {
 		if (event.button !== 0) return;
 		this.drag = { panelId, zoneId, index, startX: event.clientX, startY: event.clientY, active: false };
-		const move = (e: PointerEvent) => this.onDragMove(e);
-		const up = (e: PointerEvent) => {
-			window.removeEventListener("pointermove", move);
-			window.removeEventListener("pointerup", up);
-			window.removeEventListener("pointercancel", up);
-			this.onDrop(e);
-		};
-		window.addEventListener("pointermove", move);
-		window.addEventListener("pointerup", up);
-		window.addEventListener("pointercancel", up);
+		startDrag(event, {
+			onMove: (_, moved) => this.onDragMove(moved),
+			onEnd: (_, ended) => this.onDrop(ended),
+		});
 	}
 
 	/** Promote the gesture to a drag once the pointer has traveled past the threshold. */

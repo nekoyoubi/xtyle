@@ -7,7 +7,7 @@ import {
 	categoricalLegend,
 	matrixCeiling,
 	GLOW_MAX_BLUR,
-	PALETTE_TOKENS,
+	paletteRegisterTokens,
 	type Palette,
 } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
@@ -159,7 +159,7 @@ export class XtyleHeatmap extends XtyleElement {
 
 	/** Reads the palette stop tokens off the live cascade, so the scale tracks the theme. */
 	private paletteRegister(): Record<string, string> {
-		return readLiveRegister(this, PALETTE_TOKENS, () => {
+		return readLiveRegister(this, paletteRegisterTokens(this.scheme), () => {
 			if (this.root.firstChild) this.render();
 		});
 	}

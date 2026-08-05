@@ -55,6 +55,7 @@ import Qr from "@xtyle/astro/Qr.astro";
 import Radio from "@xtyle/astro/Radio.astro";
 import Rating from "@xtyle/astro/Rating.astro";
 import Redact from "@xtyle/astro/Redact.astro";
+import Reveal from "@xtyle/astro/Reveal.astro";
 import Ribbon from "@xtyle/astro/Ribbon.astro";
 import SchemeToggle from "@xtyle/astro/SchemeToggle.astro";
 import Section from "@xtyle/astro/Section.astro";
@@ -148,6 +149,7 @@ export const astroRegistry: Record<string, unknown> = {
 	"radio": Radio,
 	"rating": Rating,
 	"redact": Redact,
+	"reveal": Reveal,
 	"ribbon": Ribbon,
 	"scheme-toggle": SchemeToggle,
 	"section": Section,
