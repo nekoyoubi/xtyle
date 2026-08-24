@@ -44,7 +44,17 @@
 		...rest
 	}: Props = $props();
 
-	let el: HTMLElement | undefined = $state();
+	let el: (HTMLElement & { showMenu(focus?: "first" | "last"): void; closeMenu(): void }) | undefined = $state();
+
+	/** Drop the menu open, focusing its first row or its last. */
+	export function showMenu(focus: "first" | "last" = "first"): void {
+		el?.showMenu(focus);
+	}
+
+	/** Close the menu and hand focus back to the trigger. */
+	export function closeMenu(): void {
+		el?.closeMenu();
+	}
 
 	$effect(() => {
 		const node = el;

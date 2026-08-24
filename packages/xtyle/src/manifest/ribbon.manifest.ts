@@ -61,6 +61,7 @@ export const ribbonManifest: ComponentManifest = {
 	description:
 		"Ribbon is the diagonal corner banner for a short call-out on a card, a tile, or an image: `New`, `Beta`, `Sale`, `Featured`. `tone` skins it across the six semantic roles (plus the accent variants and named hues), `variant` picks a `solid` fill or a `soft` tint, `corner` chooses which of the four corners it hugs, and `size` steps the band from `sm` to `lg`. A `color` / `textColor` pair is the escape hatch for a band background and text past the tone set. It fills its container as a clipping overlay, so the band's overhang is trimmed to the container's edges and the ribbon reads as a real folded banner rather than a floating strip; the container just needs `position: relative` (the ribbon clips itself to the container's box, rounded corners included). It ships as a first-class element that self-styles in its own shadow root, so a shadow-DOM consumer with no global stylesheet gets it for free, and the `.xtyle-ribbon` utility class stays available for global-CSS pages. Ribbon is decoration, not a control: the overlay is `pointer-events: none`, and its short label is rendered as visible text, so it reads to assistive tech in the container's reading order. Keep the label short; the band is a fixed width per size and a longer label clips.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["band", "ribbon"],
 	anatomy: [
 		{
 			name: "ribbon",

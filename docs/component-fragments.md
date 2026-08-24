@@ -49,6 +49,37 @@ State lives in the host (the reducer loop is host-side, not a mod export). The h
 calls the runtime's internal `processFragment`; it drives the runtime and applies the
 inert output.
 
+### Two appliers, one op vocabulary
+
+An op is applied twice over a component's life, by two different pieces of code against two
+different substrates: `FragmentHost` drives a live DOM in the browser, and `applyOpsToHtml`
+(`elements/fragment-ssr.ts`) rewrites scaffold **text** at build time for the light-DOM
+`@xtyle/astro` path. A fill emits one buffer; both must honor all of it.
+
+The build-time applier is a string rewriter, not a query engine, so the selector vocabulary
+is deliberately small and is the contract a fill writes against:
+
+- a tag (`slot`), a class (`.xtyle-alert__title`), an attribute with (`[part="title"]`) or
+  without (`[data-root]`) a value
+- any combination of those as a compound (`.xtyle-datepicker__time-option[aria-selected="true"]`)
+- a selector list (`[role="listbox"], [role="list"]`), first alternative that matches winning
+
+Anything outside it — a descendant combinator, a pseudo-class — matches nothing, and the op
+is dropped rather than aimed at the wrong node.
+
+An op applies to **every** node its selector matches, not the first, on both sides. Two tests
+hold the pair honest: `ssr-op-targets.test.ts` fails a fill whose selector reaches nothing it
+can paint, and `ssr-client-parity.test.ts` applies each fill's own buffer both ways and diffs
+the result, so a divergence fails at the seam rather than on somebody's page.
+
+**Divergence between the two appliers is invisible in the ordinary case and total in the one
+that matters.** A hydrating page corrects a bad first paint on the next frame, so a demo, a
+screenshot, and a pixel-diffing suite all agree while the served HTML is wrong. The reader
+who never gets that frame — `static` mode, which ships no runtime at all by design, and
+every reader before hydration — sees the scaffold's default and nothing else. Zero-JS is a
+promise `@xtyle/astro` makes, so an op the build-time applier silently ignores is not a
+degraded render; it is the render.
+
 ### Iteration → a `replaceChildren` hook
 
 The template can't loop. A list component (Tabs, Tree, Menu, Select, Calendar, …) ships a
@@ -59,6 +90,40 @@ component does, because the ops are the only paint path — but theirs is a one-
 
 `<xtyle-table>` is **not** in this list. It decorates the author's own `<table>` in place
 rather than rendering one, so there is nothing for a fill to draw.
+
+### The slotted capture, and what "own paint" means
+
+Light DOM has no `<slot>`, so the host **captures** the consumer's children at scaffold
+time — the scaffold paint would otherwise wipe them — and relocates each group into its
+matching `[data-slot]` region after every mount. Shadow hosts never capture; their children
+stay in the host's light tree and are read live.
+
+That capture is a snapshot, and two things follow from it.
+
+**A child that arrives after the scaffold is invisible until something folds it in.** A
+framework rendering a list as an effect (`{#each}` gaining an entry) appends after mount, so
+the element re-reads a frozen list and the new node is never seen. `recaptureSlotted()`
+folds root-level arrivals into the map and reports whether any landed; remount when it
+returns `true`. It is **additions-only** on purpose — a removal can't be told from the
+relocation's own detach without the element naming every node it moves.
+
+**"The fill's paint" is not a marker walk.** The obvious predicate — anything under
+`[data-root]` — is wrong for a fill that renders more than one root-level element, and two
+do (`carousel` draws a viewport *and* a control bar; `code` three). Under that predicate the
+control bar reads as consumer content: a recapture adopts it as a slide, and a child
+observer treats every repaint of it as a consumer edit and re-renders on its own output.
+So the authority is what the scaffold *actually produced*, recorded when it painted, plus
+whatever the element declares:
+
+- `ownNode(node)` — the element naming a node it created for itself. An `aria-live`
+  announcer, a hidden mirror input, a measurement sentinel: invented, rendered among the
+  consumer's children, and indistinguishable from them by inspection.
+- `ownsPaint(node)` — the predicate. An element whose fill paints root-level siblings
+  overrides `XtyleElement`'s `isOwnPaint` and defers to it.
+
+A childList mutation names the *parent* as its target, so an element appending to itself
+reports the host, which is never own paint. `isOwnMutation` asks the added and removed nodes
+when the target can't answer.
 
 ## Writing a fill
 
@@ -265,15 +330,29 @@ its node declares — the check that turns the silent gate into a failing one.
 
 ### The data slots — contributing values rather than markup
 
-Not every contribution is a fill of markup. Four slots take a JSON payload instead, and each
+Not every contribution is a fill of markup. Five slots take a JSON payload instead, and each
 is backed by a registry with the same last-wins-on-the-name contract fills have:
 
 | slot | contributes | registry |
 |---|---|---|
 | `xtyle.icons` | glyph bodies on the 24×24 grid | `registerIcons` / `registerIconFills` |
-| `xtyle.icon-primitives` | named point lists for `poly` / `polyline` | `registerIconShapes` / `registerIconShapeFills` |
+| `xtyle.icon-points` | named point lists for `poly` / `polyline` | `registerIconShapes` / `registerIconShapeFills` |
+| `xtyle.icon-primitives` | primitives for the builder library, minted from a point run or an SVG body | `registerIconPrimitives` / `registerIconPrimitiveFills` |
 | `xtyle.reveal-shapes` | `clip-path` silhouettes with an optional grip inset | `registerRevealShapes` / `registerRevealShapeFills` |
+| `xtyle.palettes` | stop lists with a sampling policy | `registerPalettes` / `registerPaletteFills` |
 | `xtyle.pack-meta` | pack metadata | — |
+
+`xtyle.palettes` is the one whose stops decide whether the contribution tracks the theme. A stop
+naming a register token (`--accent`) resolves against the live theme, which is what a `thermal`
+ramp wants; a literal color (`#ff004d`) does not, which is what a named indexed palette *means* —
+a retro ramp that shifted with the theme would not be that ramp any more. Both spellings sit in
+one `stops` array, so a palette can mix them.
+
+A registered name works everywhere a blessed one does, including inside a mark: `---ps-pico8`
+pins a generated icon to a contributed palette, because the grammar validates through the same
+registry rather than a literal list. What a single mark can *address* is still nine slots
+(`c1`–`c9`), so a palette longer than nine is sampled across them by its own `sampling` policy —
+the palette and the window onto it are different sizes, and `---pc{n}` pins any one slot outright.
 
 Each pair is deliberate. The bare `register*` takes values directly, which is what a page or a
 test wants; the `register*Fills` reads them out of a mod manifest's `fills` block, which is

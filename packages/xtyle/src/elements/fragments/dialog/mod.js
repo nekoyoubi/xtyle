@@ -32,7 +32,8 @@
     const closeButton = showCloseButton ? `<button type="button" class="xtyle-dialog__close" part="close" aria-label="${escapeAttr(closeLabel)}">${CLOSE_ICON}</button>` : "";
     const titleMarkup = heading ? `<h2 class="xtyle-dialog__title" id="${titleId(b)}">${escapeHtml(heading)}</h2>` : "";
     const header = `<header class="xtyle-dialog__header" part="header"><slot name="header">${titleMarkup}</slot>${closeButton}</header>`;
-    return `<dialog class="${dialogClass(b)}" part="dialog"${labelAttr}>` + header + `<div class="xtyle-dialog__body" part="body"><slot></slot></div><footer class="xtyle-dialog__footer" part="footer"><slot name="footer"></slot></footer></dialog>`;
+    const footer = b.hasFooter ? `<footer class="xtyle-dialog__footer" part="footer"><slot name="footer"></slot></footer>` : "";
+    return `<dialog class="${dialogClass(b)}" part="dialog"${labelAttr}>` + header + `<div class="xtyle-dialog__body" part="body"><slot></slot></div>` + footer + `</dialog>`;
   }
   hooks.fragment.mount("dialog", (bindings, ops) => {
     ops.replaceChildren("[data-dialog]", inner(bindings));
@@ -40,6 +41,9 @@
   hooks.fragment.update("dialog", (bindings, ops) => {
     ops.setAttr(".xtyle-dialog", "class", dialogClass(bindings));
     if (bindings.heading) ops.setText(".xtyle-dialog__title", bindings.heading);
+    if (bindings.labelledby) ops.setAttr(".xtyle-dialog", "aria-labelledby", bindings.labelledby);
+    else if (!bindings.heading && bindings.label) ops.setAttr(".xtyle-dialog", "aria-label", bindings.label);
+    if (bindings.closeLabel) ops.setAttr(".xtyle-dialog__close", "aria-label", bindings.closeLabel);
   });
   xript.exports.register("requestClose", (payload) => {
     const e = payload;

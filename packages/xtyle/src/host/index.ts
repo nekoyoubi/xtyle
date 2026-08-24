@@ -2,6 +2,7 @@ import { initXript, type HardLimits, type HostNamespace, type XriptFactory, type
 import hostManifest from "../../manifest.json" with { type: "json" };
 import { authoringPrelude } from "./authoring-prelude.generated.js";
 import { createCuti } from "../cuti.js";
+import { sandboxInitOptions } from "../sandbox.js";
 import { resolveKnobSpecs } from "../algorithms/factory.js";
 import { resolveGraph, type TokenNode } from "../graph.js";
 import type {
@@ -13,6 +14,7 @@ import type {
 	InvariantResult,
 	KnobSpec,
 	Pass,
+	Scheme,
 	TokenCategories,
 	TokenLineageNode,
 	TokenName,
@@ -40,6 +42,10 @@ export interface AlgorithmManifest {
 	knobSpecs?: KnobSpec[];
 	invariantCount: number;
 	passNames?: string[];
+	/** The contrast this algorithm promises `--ring` reads at. Absent leaves a grader on the standard. */
+	focusRingFloor?: number;
+	/** The schemes this algorithm states an anchor pair for. */
+	schemes?: Scheme[];
 }
 
 /**
@@ -85,7 +91,16 @@ function isAlgorithmManifest(value: unknown): value is AlgorithmManifest {
 	);
 }
 
-const CHECKED_FIELDS = ["produces", "categories", "knobs", "knobSpecs", "invariantCount", "passNames"] as const;
+const CHECKED_FIELDS = [
+	"produces",
+	"categories",
+	"knobs",
+	"knobSpecs",
+	"invariantCount",
+	"passNames",
+	"focusRingFloor",
+	"schemes",
+] as const;
 
 /** Structural equality, insensitive to object key order and treating an absent key as `undefined`. */
 function sameValue(a: unknown, b: unknown): boolean {
@@ -234,7 +249,7 @@ export function loadAuthoredAlgorithm(
 let factoryPromise: Promise<XriptFactory> | undefined;
 
 function factory(): Promise<XriptFactory> {
-	if (!factoryPromise) factoryPromise = initXript();
+	if (!factoryPromise) factoryPromise = initXript(sandboxInitOptions());
 	return factoryPromise;
 }
 
@@ -333,6 +348,14 @@ export async function loadAlgorithm(
 
 	return {
 		id,
+		...(manifest.focusRingFloor !== undefined || manifest.schemes !== undefined
+			? {
+					declares: {
+						...(manifest.focusRingFloor !== undefined ? { focusRingFloor: manifest.focusRingFloor } : {}),
+						...(manifest.schemes !== undefined ? { schemes: manifest.schemes } : {}),
+					},
+				}
+			: {}),
 		produces: manifest.produces,
 		producedSince: manifest.producedSince,
 		knobs: manifest.knobs,

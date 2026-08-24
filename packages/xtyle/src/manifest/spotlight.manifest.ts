@@ -61,6 +61,7 @@ export const spotlightManifest: ComponentManifest = {
 	description:
 		"Spotlight is the coachmark: the way to say *this one, here* about something the user is looking at. Everything but the target dims (and optionally blurs), a hole is cut over it, a ring traces it, and a callout floats beside it carrying whatever you want to say — rich markup, actions, the lot. A Tour is a Spotlight with more than one step. The isolation is a single clipped veil rather than four boxes packed around the target, and that choice is what makes the component honest: the hole can take real corner radii (it traces the target's own by default) or be a circle, and the element underneath stays **live** — the veil takes the pointer, the hole does not, so the thing you are pointing at is still the thing the user can press. A spotlight that greys out the button it is telling you to click is a screenshot with a circle drawn on it. The hole follows the target through scrolls, resizes, and layouts settling in, because a hole that drifts off its target is the single most obvious way this can look broken. The callout is a real `<xtyle-popover>`, so the placement, the edge-flipping, the arrow and the focus handling come from there rather than from a second implementation; what the element adds is the veil, the ring, the pointer, and the geometry that keeps them glued to whatever they are pointing at.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["actions", "body", "callout", "close", "heading", "panel", "pointer", "ring", "spotlight", "veil"],
 	anatomy: [
 		{
 			name: "spotlight",
@@ -217,6 +218,25 @@ export const spotlightManifest: ComponentManifest = {
 			default: "false",
 			description: "Suppresses the built-in dismiss button, for a callout whose actions slot carries its own.",
 			bindings: ["html", "svelte", "astro"],
+		},
+	],
+	events: [
+		{ name: "open", description: "The spotlight was raised over its target.", bindings: ["html", "svelte", "astro"] },
+		{ name: "close", description: "The spotlight was taken down.", bindings: ["html", "svelte", "astro"] },
+		{ name: "dismiss", description: "The user dismissed it, rather than it being closed programmatically.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "show",
+			description:
+				"Raise the spotlight over its target, dimming everything else.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "close",
+			description:
+				"Drop the spotlight and return the page to normal.",
+			bindings: ["html", "svelte"],
 		},
 	],
 	variants: [],

@@ -12,12 +12,14 @@ import Text from "@xtyle/astro/Text.astro";
 		<Stack gap={3}>
 			<Text size="sm" tone="muted">
 				Drag the divider, or focus it and use the arrow keys (Home and End jump to the bounds). The rail
-				clamps to 160–420px and snaps in steps of 8.
+				clamps to 160–420px and snaps in steps of 8. <code>resize</code> tracks a drag continuously;
+				<code>resize-end</code> reports where it landed, and is the only one a keyboard route sends.
 			</Text>
 			<div class="split-demo" style="--rail: 240px;">
 				<div class="split-demo__rail">
 					<Text as="span" size="sm" weight="semibold">Rail</Text>
-					<Text size="xs" tone="muted" mono class="split-demo__readout">240px</Text>
+					<Text size="xs" tone="muted" mono class="split-demo__readout">live 240px</Text>
+					<Text size="xs" tone="muted" mono class="split-demo__settled">settled 240px</Text>
 				</div>
 				<Splitter var="--rail" value={240} min={160} max={420} step={8} label="Resize rail" class="split-demo__handle" />
 				<div class="split-demo__main">
@@ -91,9 +93,16 @@ import Text from "@xtyle/astro/Text.astro";
 <script>
 	for (const demo of document.querySelectorAll(".split-demo")) {
 		const readout = demo.querySelector(".split-demo__readout");
-		demo.addEventListener("resize", (event) => {
+		const settled = demo.querySelector(".split-demo__settled");
+		const show = (event: Event) => {
 			const value = (event as CustomEvent<{ value: number }>).detail.value;
-			if (readout) readout.textContent = `${value}px`;
+			if (readout) readout.textContent = `live ${value}px`;
+			return value;
+		};
+		demo.addEventListener("resize", show);
+		demo.addEventListener("resize-end", (event) => {
+			const value = show(event);
+			if (settled) settled.textContent = `settled ${value}px`;
 		});
 	}
 </script>

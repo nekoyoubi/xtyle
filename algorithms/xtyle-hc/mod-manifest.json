@@ -872,7 +872,12 @@
 				"passNames": [
 					"settle"
 				],
-				"invariantCount": 30
+				"focusRingFloor": 4.5,
+				"schemes": [
+					"dark",
+					"light"
+				],
+				"invariantCount": 33
 			}
 		]
 	}

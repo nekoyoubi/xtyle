@@ -7,8 +7,12 @@
  * commas and no signs, and the 0–100 space keeps every number non-negative by construction.
  */
 
-/** The slot a mod fills to contribute point lists, declared in its own manifest rather than run as code. */
-export const ICON_SHAPE_SLOT = "xtyle.icon-primitives";
+import { announceIconRegistry } from "./icon-registry.js";
+
+/** The slot a mod fills to contribute point lists, declared in its own manifest rather than run as code.
+ * A point list is what `pts` takes, not a primitive in its own right; `xtyle.icon-primitives` is the
+ * separate slot that mints one. */
+export const ICON_SHAPE_SLOT = "xtyle.icon-points";
 
 /** One mod's contribution: coordinate runs (or flat number lists) keyed by name. */
 export interface IconShapeFill {
@@ -65,6 +69,7 @@ export function registerIconShapes(shapes: Record<string, string | number[]>): v
 		}
 		registry.set(name, points);
 	}
+	announceIconRegistry();
 }
 
 /** Drop every contributed list, leaving the built-in set. For tests and for a host teardown. */
@@ -74,6 +79,7 @@ export function resetIconShapes(): void {
 		const parsed = parsePoints(points);
 		if (parsed) registry.set(name, parsed);
 	}
+	announceIconRegistry();
 }
 
 /** Every named point list currently registered, built-in and contributed alike. */
@@ -81,7 +87,7 @@ export function iconShapeNames(): string[] {
 	return [...registry.keys()].sort();
 }
 
-/** Pull the shape blocks out of a mod manifest's `xtyle.icon-primitives` fills, if it declares any. */
+/** Pull the shape blocks out of a mod manifest's `xtyle.icon-points` fills, if it declares any. */
 export function iconShapeFillsFrom(modManifest: unknown): IconShapeFill[] {
 	const fills = (modManifest as { fills?: Record<string, unknown> } | null | undefined)?.fills;
 	const declared = fills?.[ICON_SHAPE_SLOT];

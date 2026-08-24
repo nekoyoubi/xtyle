@@ -191,6 +191,7 @@ export const popoverManifest: ComponentManifest = {
 	description:
 		"Popover is the substrate the rest of the anchored family is built from. Tooltip describes; Menu commands; Dialog interrupts. Popover holds *anything* — a filter form, a profile card, a color picker, a date grid, a list of results — and answers the one question all of them share: where does the panel go, and how does it leave. It owns no content. The trigger is yours (slot it, or point `for` at an element anywhere in the document) and the body is yours (the default slot). What Popover owns is the surface around them: the panel, the arrow, the placement, the dismissal, and the focus.\n\nThe panel renders in the top layer — no z-index war, no clipping by an ancestor's `overflow` — and it gets there through whichever platform door the posture actually needs. A non-modal panel is a native Popover, so light-dismiss and Escape come from the platform rather than a document listener, and the page stays live behind it. Placement flips: it prefers the side you name and takes the opposite one when the panel does not fit, and it flips the cross-axis alignment `start` ↔ `end` before it ever slides the panel off its anchor, so a panel near the right edge right-aligns the way a native menu does. The optional `arrow` is a real node in the fragment (not a CSS pseudo-element, so a mod can reshape it), and it tracks the anchor's *center* whatever the alignment and the viewport clamp did — a `start`-aligned panel still points at the middle of its trigger.\n\nThere are three ways to open it, one API. `show()` opens against the declared anchor — the slotted trigger, or the `for` element. `openAt(x, y)` opens at a bare viewport point (a click, a right-click, a caret position), exactly as Menu's context mode does. `openFrom(element, opts)` opens against any element you hand it, which is the hook a component that owns its own trigger reaches for. All three take the same options, and all three place the panel *synchronously*, so it never paints a frame at the origin before it lands.\n\nFocus has two postures. Non-modal (the default) is an ordinary disclosure: Tab walks out of the panel, and a click anywhere else dismisses it. Add `modal` and the *same panel* opens as a modal `<dialog>` instead — so the background is made inert by the platform, exactly as it is for Dialog and Sheet, and the panel's `aria-modal` is a fact rather than a decoration. That distinction is the whole reason the modal posture is not just a scrim: the Popover API alone never makes the background inert, so a scrim and a JavaScript focus trap would still leave a screen reader free to browse straight out of a panel insisting it cannot be left. On top of the platform's inertness the modal posture adds what a dialog does not give for free — a pointer landing outside dismisses *and* is swallowed, so the button it happened to hit does not also fire.\n\n`focus-on-open` decides where focus lands — `first` (the default), `panel`, or `none` for a surface whose caret must stay in an input it doesn't own. Closing hands focus back to wherever it came from, and the `close` event says why (`escape`, `dismiss`, `select`, `api`). A `select` event bubbling out of the panel closes it, so an option list, a menu, or a command list dismisses the surface it was chosen from with nothing wired.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["arrow", "content", "panel", "popover", "trigger"],
 	anatomy: [
 		{
 			name: "popover",
@@ -387,6 +388,59 @@ export const popoverManifest: ComponentManifest = {
 			description:
 				"Method: re-place the panel against its current anchor. Call it after the panel's content changes size — a list filtering down, an async body arriving — so the surface stays tethered. Scroll and resize already re-place on their own.",
 			bindings: ["html", "svelte", "astro"],
+		},
+	],
+	events: [
+		{ name: "open", description: "The popover opened.", bindings: ["html", "svelte", "astro"] },
+		{ name: "close", description: "The popover closed.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "show",
+			params: "opts?: { placement?: string; returnFocus?: boolean }",
+			description:
+				"Open the popover against its own trigger.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "openAt",
+			params: "x: number, y: number, opts?: { placement?: string }",
+			description:
+				"Open at a point in viewport coordinates — what a context menu or a canvas hit needs, where the anchor is a position rather than an element.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "openFrom",
+			params: "anchor: HTMLElement, opts?: { placement?: string }",
+			description:
+				"Open anchored to an element other than the trigger, so one popover can serve a whole list of rows.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "reanchor",
+			params: "anchor: HTMLElement, opts?: { placement?: string }",
+			description:
+				"Move an already-open popover to a new anchor without closing it, so moving along a row of triggers reads as one surface rather than a flicker.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "hide",
+			params: "reason?: \"api\" | \"escape\" | \"dismiss\", returnFocus?: boolean",
+			description:
+				"Close it. The reason rides along on the `close` event, and `returnFocus` is how a consumer opts out of handing focus back when the trigger is gone.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "toggle",
+			description:
+				"Open if closed, close if open.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "reposition",
+			description:
+				"Re-run the placement solve against the current layout — for an anchor that moved without the popover knowing, inside a scroll container the observer cannot see.",
+			bindings: ["html", "svelte"],
 		},
 	],
 	variants: [

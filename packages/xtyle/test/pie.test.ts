@@ -62,7 +62,7 @@ describe("pie chart", () => {
 
 	it("mirrors slices into a visually-hidden table with shares", async () => {
 		const html = await renderFragmentLight("pie", bindings);
-		expect(html).toContain('class="xtyle-pie__a11y"');
+		expect(html).toContain('class="xtyle-pie__a11y"><table>');
 		expect(html).toContain("<caption>Traffic</caption>");
 		expect(html).toContain("42%");
 	});

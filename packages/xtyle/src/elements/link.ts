@@ -70,6 +70,7 @@ export class XtyleLink extends XtyleElement {
 			target: this.target,
 			rel: this.getAttribute("rel"),
 			showExternalIcon: this.showExternalIcon,
+			ariaLabel: this.getAttribute("aria-label") ?? this.slottedName(),
 		};
 	}
 

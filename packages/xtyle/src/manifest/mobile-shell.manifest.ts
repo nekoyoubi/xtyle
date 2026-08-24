@@ -70,6 +70,7 @@ export const mobileShellManifest: ComponentManifest = {
 	description:
 		"MobileShell is the phone counterpart to `AppShell`, and deliberately a *separate* frame rather than `AppShell` made responsive. `AppShell` is desktop chrome by construction: a three-row grid whose body is a left/main/right split with px-width resizable rails. On a phone that model doesn't degrade so much as stop being the right shape, and bending one frame into both would make each worse. Desktop-IDE chrome and touch-app chrome are different interaction models, not one layout at two widths — so they are two components, and an app picks one at its entry.\n\nThe frame is three regions and nothing else: a sticky app bar (a `heading`, an optional `brand`, and an `actions` slot), a single scrollable `<main>` column, and a `nav` slot for the bottom nav, pinned within thumb reach. The shell renders that chrome itself through its fragment, exactly as `AppShell` does, so a mod can reshape the frame the same way it can reshape any other component.\n\nThe bar and the nav absorb the safe-area insets (`env(safe-area-inset-*)`), so on a notched phone the chrome takes the hardware and the content column between them is never the thing sliding underneath it. The column scrolls itself rather than the page, so the bar and the nav stay put while it moves.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["actions", "bar", "content", "lead", "nav", "shell", "title"],
 	anatomy: [
 		{
 			name: "bar",

@@ -16,6 +16,7 @@ xtyle/
 │   └── astro/        # @xtyle/astro: Astro components (the site's binding)
 ├── algorithms/       # the built-in blessed set, each its own xript plugin
 │   └── xtyle-default/ #   the neutral default; xtyle-hc / xtyle-quiet / xtyle-loud / nxi-nite follow
+├── packs/            # worked example packs, built + staged into the site's `public/` (npm run build:packs)
 ├── apps/
 │   └── site/         # xtyle.dev: Astro (docs, examples, marketplace, generator)
 ├── docs/             # design record (derivation-model, dimensional-contract, collection-substrate, component-fragments, code-component, icon-name-grammar, effects, repo-layout, roadmap, open-questions)
@@ -54,8 +55,15 @@ npx xtyle gauntlet -a all --depth quick                # fast baked spot-check a
 npx xtyle gauntlet -a all --mode hosted --depth full   # prove invariants against the shipped sandboxed mods
 npx xtyle coverage --consumed a,b,c                    # check a component's consumed tokens
 npx xtyle audit -a <algorithm> [--level AA|AAA]        # grade a theme's contrast against the canonical WCAG text/fill pairs
+npx xtyle audit --accent <c> --separation 0.02          #   …and report how far the solid fills read from each other
+npx xtyle audit --set --fg-0=#8a8a8a --ramp-separation 0.01  #   …and how far each step of an ordered ramp reads from the last
+npx xtyle audit -a xtyle-hc --format text                # the four dimensions as a summary, each naming its weakest pair
 npx xtyle mcp                                          # start the MCP server (the CLI + engine, for agents) over stdio
-# planned (next build): `xtyle add <pack>` / `xtyle search <query>`, the discovery surface
+
+npx xtyle search [<query>|@handle|@scope/]             # query the npm-derived pack index
+npx xtyle add <pack>[#<entry>] [--dev] [--dry-run]     # install a pack and report what it declares
+npx xtyle packs                                        # what this project declares, per pack
+npx xtyle derive --theme <name>                        # re-derive a theme an installed pack declares
 ```
 
 ## ⛔ NO AGENT-WRITTEN CODE COMMENTS — EVER, WITHOUT AN EXPLICIT REQUEST
@@ -99,7 +107,8 @@ The failure this rule exists to prevent: reaching for a raw `<div>`, a literal c
 
 When a capability could be built more than one way, browser support is part of choosing, ranked alongside fidelity and simplicity. Check it at the moment of the choice. "It works" means it works in all three; a local render proves one engine and nothing else.
 
-- **Verify in more than one engine before calling a visual feature done.** Playwright defaults to Chromium and `tests/visual` runs Chromium only, so a green suite and a clean local screenshot are both single-engine evidence. Anything that leans on a newer CSS property gets a second engine opened against it, deliberately.
+- **Verify in more than one engine before calling a visual feature done.** `tests/visual` runs three projects — `firefox`, `webkit`, and `no-js` — over every component through `render.spec.ts`, so "it renders, in every engine, with and without JavaScript" is checked, and `firefox` / `webkit` also drive `events.spec.ts`, so the interactions are exercised outside Chromium rather than assumed from it. Know what that does *not* buy you: it is structural, never pixel, because glyph rasterisation differs per engine and a cross-engine baseline diffs fonts rather than markup. A layout that is subtly wrong in Firefox still passes, and the engine-only suites (`demos`, `parity`, `narrow`, `rtl`) remain Chromium alone. Anything that leans on a newer CSS property gets a second engine opened against it, deliberately, and looked at.
+- **A property one engine lacks is caught before it ships.** `css-engine-support.test.ts` fails on a known-not-universal property (`mask-border`, `field-sizing`, `anchor-name`, scroll-driven animations, `@scope`, …) unless it sits inside an `@supports` block. Branching on the capability is the escape hatch and the point; the list grows as the web does.
 - **Prefer the broadly-implemented property over the elegant one.** `mask-image` and `border-image` are universal; `mask-border` / `-webkit-mask-box-image` are not implemented in Firefox at all. When a property is unevenly supported, the alternative that reaches every engine wins even when it costs more machinery.
 - **Degrade toward the shape, never away from it.** The worst failure is silent and inverted: an unsupported property drops out of the cascade and leaves whatever was underneath, so a masked frame becomes a solid rectangle and the feature reads as a *bug in the artwork* rather than a missing capability. If a path can't be made universal, it must fail into something recognisably the same thing — and be feature-detected, not assumed.
 - **`@supports` and `CSS.supports()` are the tools.** Branch on the capability, not on a browser.
@@ -188,7 +197,7 @@ Top-level `CHANGELOG.md`:
 
 ## Current State
 
-Pre-alpha. The architecture is settled and recorded in `docs/`. The engine (`packages/xtyle`) was the first build (OKLCH derivation over the open token graph, the blessed algorithms, css/json emit, the per-algorithm gauntlet, and the `xtyle` CLI) and on top of it now sit the raw custom elements (`@xtyle/core/elements`), the `@xtyle/svelte` / `@xtyle/astro` bindings, the component set, and the site (`apps/site`). The `xtyle add` discovery path is the main surface still ahead.
+Pre-alpha. The architecture is settled and recorded in `docs/`. The engine (`packages/xtyle`) was the first build (OKLCH derivation over the open token graph, the blessed algorithms, css/json emit, the per-algorithm gauntlet, and the `xtyle` CLI) and on top of it now sit the raw custom elements (`@xtyle/core/elements`), the `@xtyle/svelte` / `@xtyle/astro` bindings, the component set, and the site (`apps/site`). The discovery path (packs, `search` / `add` / `packs`, pack-declared algorithms and themes) is built against npm as the index, and it now reaches the browser: `@xtyle/core/host/remote` fetches a published pack over a CDN and loads its algorithm through the same zero-authority sandbox, so the generator derives with any published algorithm rather than only the bundled five.
 
 ## Key Design Decisions
 

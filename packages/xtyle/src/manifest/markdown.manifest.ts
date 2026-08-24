@@ -133,6 +133,7 @@ export const markdownManifest: ComponentManifest = {
 	description:
 		"Markdown renders GitHub-Flavored Markdown into HTML that themes entirely from the token register: headings ride the type scale, rules and quotes ride the border and surface ramps, and fenced code borrows the same `--code-*` family the Code component owns, so a fence inside a document and an `<xtyle-code>` beside it agree in any theme. GFM is on — tables, task lists, strikethrough, and autolinks all render. `inline` switches to a label render: emphasis, code, links and strikethrough, but no blocks and no paragraph wrapper, so it drops into a tab title or a chip and inherits its type — a generated label that opens with `# ` stays text instead of erupting a heading into a tab strip. `editable` adds a source view the reader can switch to, emitting `input` as it is typed. **It ships no sanitizer, by design.** Raw HTML in the source is escaped to text rather than rendered, and link and image URLs are written from a scheme allowlist, so everything that reaches the DOM is markup the renderer generated itself from a closed token set — the arbitrary-HTML problem never arises rather than being solved. `allowHtml` lifts the escaping for a source the app controls, and it is not the hole it sounds like: the body reaches the DOM through the component's fragment, so the format declared in `component-host.json` still has the last word and refuses `<script>`, event handlers, and elements outside xtyle's vocabulary no matter what the renderer emits. What survives is standard HTML **and xtyle's own components**, so a document can carry an `<xtyle-badge>` or an `<xtyle-alert>` inline. URL schemes are separate and app-wide rather than per-element: `allowUriSchemes()` from `@xtyle/core/elements` widens the renderer and the fragment format together, which is the only way to widen either — and xtyle adds no scheme on an app's behalf, because a hole nobody asked for is the worst kind.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["body", "controls", "editor", "markdown", "toggle"],
 	anatomy: [
 		{
 			name: "body",
@@ -232,6 +233,9 @@ export const markdownManifest: ComponentManifest = {
 				"Also process BBCode, so one document can carry both languages. `true` reaches the whole BBCode registry; a string names a vocabulary, which is how one surface accepts a tag another refuses. The two renderers never read each other's output: BBCode's balanced constructs are lifted out before markdown parses and dropped back in afterward, so markdown never sees a `[quote]` and a tag inside a code fence stays literal. Prose *inside* a construct still gets markdown's inline render, so `[quote]some **bold** text[/quote]` gets the quote from one language and the emphasis from the other. Unlike `allowHtml` this widens what renders without widening what is reachable — BBCode has no raw-HTML passthrough, and every tag it emits came from a closed registry.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "input", detail: "{ source }", description: "The editable source changed. The payload is the author's markdown, not rendered HTML.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

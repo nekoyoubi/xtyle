@@ -164,7 +164,47 @@
 			],
 			"capability": "xtyle.component.checkbox",
 			"multiple": false,
-			"style": "inherit"
+			"style": "inherit",
+			"payload": {
+				"type": "object",
+				"required": [],
+				"properties": {
+					"checked": {
+						"type": "boolean",
+						"description": "Whether the box is checked."
+					},
+					"indeterminate": {
+						"type": "boolean",
+						"description": "Whether the box renders the mixed state."
+					},
+					"disabled": {
+						"type": "boolean",
+						"description": "Whether the control is disabled."
+					},
+					"label": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Visible label text. This component's host reports its value through `ElementInternals`; the fill is handed no `name` and must not invent one, or the value submits twice under one key."
+					},
+					"labelledby": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Id of an external element naming the control."
+					},
+					"size": {
+						"type": "string",
+						"description": "Control density: `sm`, `md`, or `lg`."
+					},
+					"tone": {
+						"type": "string",
+						"description": "The tone the checked indicator takes."
+					}
+				}
+			}
 		},
 		{
 			"id": "component.cluster",
@@ -204,7 +244,131 @@
 			],
 			"capability": "xtyle.component.combobox",
 			"multiple": false,
-			"style": "inherit"
+			"style": "inherit",
+			"payload": {
+				"type": "object",
+				"required": [
+					"inputId",
+					"listId",
+					"errorId",
+					"descriptionId"
+				],
+				"properties": {
+					"options": {
+						"type": "array",
+						"description": "The filtered option rows to render."
+					},
+					"chips": {
+						"type": "array",
+						"description": "The selected values rendered as removable chips in multi-select."
+					},
+					"query": {
+						"type": "string",
+						"description": "The live text in the input."
+					},
+					"activeId": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Id of the option the cursor is on, for `aria-activedescendant`."
+					},
+					"open": {
+						"type": "boolean",
+						"description": "Whether the listbox is open."
+					},
+					"multiple": {
+						"type": "boolean",
+						"description": "Whether the control accepts several values."
+					},
+					"clearable": {
+						"type": "boolean",
+						"description": "Whether a clear affordance is offered."
+					},
+					"showClear": {
+						"type": "boolean",
+						"description": "Whether the clear affordance renders right now."
+					},
+					"disabled": {
+						"type": "boolean",
+						"description": "Whether the control is disabled."
+					},
+					"readonly": {
+						"type": "boolean",
+						"description": "Whether the control refuses edits."
+					},
+					"invalid": {
+						"type": "boolean",
+						"description": "Whether the control renders its error state."
+					},
+					"required": {
+						"type": "boolean",
+						"description": "Whether the control is required."
+					},
+					"label": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Visible label text. This component's host reports its value through `ElementInternals`; the fill is handed no `name` and must not invent one, or the value submits twice under one key."
+					},
+					"ariaLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name when no visible label is set."
+					},
+					"placeholder": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Placeholder text for the input."
+					},
+					"emptyText": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "What renders when the filter matches nothing."
+					},
+					"description": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Persistent help text beneath the control."
+					},
+					"error": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Validation message shown while `invalid`."
+					},
+					"size": {
+						"type": "string",
+						"description": "Control density: `sm`, `md`, or `lg`."
+					},
+					"inputId": {
+						"type": "string",
+						"description": "Generated id for the text input."
+					},
+					"listId": {
+						"type": "string",
+						"description": "Generated id for the listbox."
+					},
+					"errorId": {
+						"type": "string",
+						"description": "Generated id for the error region."
+					},
+					"descriptionId": {
+						"type": "string",
+						"description": "Generated id for the description region."
+					}
+				}
+			}
 		},
 		{
 			"id": "component.command-palette",
@@ -224,7 +388,151 @@
 			],
 			"capability": "xtyle.component.date-picker",
 			"multiple": false,
-			"style": "inherit"
+			"style": "inherit",
+			"payload": {
+				"type": "object",
+				"required": [
+					"uid",
+					"labelId",
+					"panelId"
+				],
+				"properties": {
+					"mode": {
+						"type": "string",
+						"description": "Which value the control edits: `date`, `time`, or `datetime`."
+					},
+					"dateText": {
+						"type": "string",
+						"description": "The date half as the field displays it."
+					},
+					"timeText": {
+						"type": "string",
+						"description": "The time half as the field displays it."
+					},
+					"datePlaceholder": {
+						"type": "string",
+						"description": "Placeholder for the date half."
+					},
+					"timePlaceholder": {
+						"type": "string",
+						"description": "Placeholder for the time half."
+					},
+					"timeOptions": {
+						"type": "array",
+						"description": "The step-quantized clock rows the popup lists."
+					},
+					"calendar": {
+						"description": "The month grid the popup hosts, built by Calendar."
+					},
+					"hasValue": {
+						"type": "boolean",
+						"description": "Whether the control currently holds a value."
+					},
+					"clearable": {
+						"type": "boolean",
+						"description": "Whether the clear affordance is offered."
+					},
+					"open": {
+						"type": "boolean",
+						"description": "Whether the popup is open."
+					},
+					"disabled": {
+						"type": "boolean",
+						"description": "Whether the control is disabled."
+					},
+					"readonly": {
+						"type": "boolean",
+						"description": "Whether the control refuses edits."
+					},
+					"invalid": {
+						"type": "boolean",
+						"description": "Whether the control renders its error state."
+					},
+					"required": {
+						"type": "boolean",
+						"description": "Whether the control is required."
+					},
+					"label": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Visible label text. This component's host reports its value through `ElementInternals`; the fill is handed no `name` and must not invent one, or the value submits twice under one key."
+					},
+					"labelledby": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Id of an external element naming the control."
+					},
+					"ariaLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name when no visible label is set."
+					},
+					"dateLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name for the date input."
+					},
+					"timeLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name for the time input."
+					},
+					"timeListLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name for the clock listbox."
+					},
+					"clearLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name for the clear button."
+					},
+					"openLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name for the button that opens the popup."
+					},
+					"panelLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name for the popup panel."
+					},
+					"size": {
+						"type": "string",
+						"description": "Control density: `sm`, `md`, or `lg`."
+					},
+					"uid": {
+						"type": "string",
+						"description": "Per-instance id prefix the generated ids derive from."
+					},
+					"labelId": {
+						"type": "string",
+						"description": "Generated id for the label."
+					},
+					"panelId": {
+						"type": "string",
+						"description": "Generated id for the popup panel."
+					}
+				}
+			}
 		},
 		{
 			"id": "component.dialog",
@@ -294,7 +602,121 @@
 			],
 			"capability": "xtyle.component.field",
 			"multiple": false,
-			"style": "inherit"
+			"style": "inherit",
+			"payload": {
+				"type": "object",
+				"required": [
+					"inputId",
+					"descriptionId",
+					"errorId"
+				],
+				"properties": {
+					"label": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Visible label text; absent or empty falls back to `ariaLabel`."
+					},
+					"name": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "The form field name. The fill MUST write it onto the control node: in light DOM that control is inside the form and is the only thing that posts, because the host deliberately does not also report through `ElementInternals` there. Omit it and the value submits nowhere, silently."
+					},
+					"placeholder": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Placeholder text for the input."
+					},
+					"value": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "The input's value as an attribute; live typing is not routed through here."
+					},
+					"type": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "The native input `type`."
+					},
+					"size": {
+						"type": "string",
+						"description": "Control density: `sm`, `md`, or `lg`."
+					},
+					"disabled": {
+						"type": "boolean",
+						"description": "Whether the control is disabled."
+					},
+					"readonly": {
+						"type": "boolean",
+						"description": "Whether the control refuses edits."
+					},
+					"invalid": {
+						"type": "boolean",
+						"description": "Whether the control renders its error state."
+					},
+					"required": {
+						"type": "boolean",
+						"description": "Whether the control is required."
+					},
+					"clearable": {
+						"type": "boolean",
+						"description": "Whether the clear action renders."
+					},
+					"mono": {
+						"type": "boolean",
+						"description": "Whether the control uses the monospace stack."
+					},
+					"description": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Persistent help text beneath the control."
+					},
+					"error": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Validation message shown while `invalid`."
+					},
+					"ariaLabel": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Accessible name when no visible `label` is set."
+					},
+					"inputId": {
+						"type": "string",
+						"description": "Generated id for the input; the label's `for` target."
+					},
+					"descriptionId": {
+						"type": "string",
+						"description": "Generated id for the description region."
+					},
+					"errorId": {
+						"type": "string",
+						"description": "Generated id for the error region."
+					},
+					"hasPrefix": {
+						"type": "boolean",
+						"description": "Whether a consumer filled the `prefix` slot."
+					},
+					"hasSuffix": {
+						"type": "boolean",
+						"description": "Whether a consumer filled the `suffix` slot."
+					}
+				}
+			}
 		},
 		{
 			"id": "component.form-group",
@@ -494,7 +916,75 @@
 			],
 			"capability": "xtyle.component.radio",
 			"multiple": false,
-			"style": "inherit"
+			"style": "inherit",
+			"payload": {
+				"type": "object",
+				"required": [
+					"descriptionId"
+				],
+				"properties": {
+					"tone": {
+						"type": "string",
+						"description": "The tone the selected indicator takes."
+					},
+					"size": {
+						"type": "string",
+						"description": "Control density: `sm`, `md`, or `lg`."
+					},
+					"name": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "The form field name. The fill MUST write it onto the control node: in light DOM that control is inside the form and is the only thing that posts, because the host deliberately does not also report through `ElementInternals` there. Omit it and the value submits nowhere, silently. Radios sharing a name form one group."
+					},
+					"value": {
+						"type": "string",
+						"description": "The value this radio submits while checked."
+					},
+					"checked": {
+						"type": "boolean",
+						"description": "Whether this radio is selected."
+					},
+					"disabled": {
+						"type": "boolean",
+						"description": "Whether the control is disabled."
+					},
+					"invalid": {
+						"type": "boolean",
+						"description": "Whether the control renders its error state."
+					},
+					"label": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Visible label text."
+					},
+					"labelledby": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Id of an external element naming the control."
+					},
+					"description": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Help text beneath the label."
+					},
+					"card": {
+						"type": "boolean",
+						"description": "Whether the radio renders as a selectable card."
+					},
+					"descriptionId": {
+						"type": "string",
+						"description": "Generated id for the description region."
+					}
+				}
+			}
 		},
 		{
 			"id": "component.rating",
@@ -564,7 +1054,71 @@
 			],
 			"capability": "xtyle.component.select",
 			"multiple": false,
-			"style": "inherit"
+			"style": "inherit",
+			"payload": {
+				"type": "object",
+				"required": [
+					"fieldId",
+					"errorId",
+					"optionsHtml"
+				],
+				"properties": {
+					"label": {
+						"type": "string",
+						"description": "Visible label text; empty falls back to `aria-label`."
+					},
+					"value": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "The selected option's value."
+					},
+					"size": {
+						"type": "string",
+						"description": "Control density: `sm`, `md`, or `lg`."
+					},
+					"disabled": {
+						"type": "boolean",
+						"description": "Whether the control is disabled."
+					},
+					"focusable": {
+						"type": "boolean",
+						"description": "Whether the control takes a tab stop."
+					},
+					"invalid": {
+						"type": "boolean",
+						"description": "Whether the control renders its error state."
+					},
+					"required": {
+						"type": "boolean",
+						"description": "Whether the control is required."
+					},
+					"error": {
+						"type": "string",
+						"description": "Validation message shown while `invalid`."
+					},
+					"name": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "The form field name. The fill MUST write it onto the control node: in light DOM that control is inside the form and is the only thing that posts, because the host deliberately does not also report through `ElementInternals` there. Omit it and the value submits nowhere, silently."
+					},
+					"fieldId": {
+						"type": "string",
+						"description": "Generated id for the native `<select>`."
+					},
+					"errorId": {
+						"type": "string",
+						"description": "Generated id for the error region."
+					},
+					"optionsHtml": {
+						"type": "string",
+						"description": "The consumer's `<option>` / `<optgroup>` markup, projected verbatim."
+					}
+				}
+			}
 		},
 		{
 			"id": "component.separator",
@@ -804,7 +1358,54 @@
 			],
 			"capability": "xtyle.component.textarea",
 			"multiple": false,
-			"style": "inherit"
+			"style": "inherit",
+			"payload": {
+				"type": "object",
+				"required": [
+					"fieldId",
+					"errorId"
+				],
+				"properties": {
+					"label": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Visible label text."
+					},
+					"size": {
+						"type": "string",
+						"description": "Control density: `sm`, `md`, or `lg`."
+					},
+					"resize": {
+						"type": "string",
+						"description": "Which axes the user may drag to resize."
+					},
+					"invalid": {
+						"type": "boolean",
+						"description": "Whether the control renders its error state."
+					},
+					"mono": {
+						"type": "boolean",
+						"description": "Whether the control uses the monospace stack."
+					},
+					"error": {
+						"type": [
+							"string",
+							"null"
+						],
+						"description": "Validation message shown while `invalid`."
+					},
+					"fieldId": {
+						"type": "string",
+						"description": "Generated id for the native `<textarea>`."
+					},
+					"errorId": {
+						"type": "string",
+						"description": "Generated id for the error region."
+					}
+				}
+			}
 		},
 		{
 			"id": "component.timeline",
@@ -868,7 +1469,7 @@
 		},
 		{
 			"id": "xtyle.icons",
-			"description": "Glyphs for the icon roster: a data fill of inner SVG bodies on a 24x24 grid, keyed by name. Adds new names and replaces built-in ones; later fills win, so a mod loaded after another reskins it.",
+			"description": "Glyphs for the icon roster: a data fill keyed by name, each entry an inner SVG body on a 24x24 grid or a {body, viewBox, strokeWidth} glyph that states the grid it was drawn on. Adds new names and replaces built-in ones; later fills win, so a mod loaded after another reskins it.",
 			"accepts": [
 				"application/json"
 			],
@@ -887,8 +1488,28 @@
 			"style": "inherit"
 		},
 		{
+			"id": "xtyle.palettes",
+			"description": "Palettes for every surface that colors by series or by ramp: a data fill of stop lists with a sampling policy, keyed by name. Stops may be register tokens, which track the theme, or literal colors, which do not — a named indexed palette is fixed by definition.",
+			"accepts": [
+				"application/json"
+			],
+			"capability": "xtyle.palettes",
+			"multiple": true,
+			"style": "inherit"
+		},
+		{
+			"id": "xtyle.icon-points",
+			"description": "Named point lists for the grammar's poly / polyline primitives: a data fill of x,y runs in a 0-100 space, keyed by name. A name registered here is what pts takes; it is not itself a primitive, which is what xtyle.icon-primitives mints.",
+			"accepts": [
+				"application/json"
+			],
+			"capability": "xtyle.icon-points",
+			"multiple": true,
+			"style": "inherit"
+		},
+		{
 			"id": "xtyle.icon-primitives",
-			"description": "Primitives for the icon builder: a data fill of composable shape and symbol parts, keyed by name. A separate vocabulary from the finished glyphs in xtyle.icons, because a primitive is a part an icon is built from rather than an icon.",
+			"description": "Primitives for the icon builder: a data fill of composable shape and symbol parts, keyed by name. Each is a point run (its own, or a name from xtyle.icon-points) or a raw SVG body, and lands in the library beside the built-ins, reachable by name anywhere a built-in primitive is. A separate vocabulary from the finished glyphs in xtyle.icons, because a primitive is a part an icon is built from rather than an icon.",
 			"accepts": [
 				"application/json"
 			],
@@ -1199,6 +1820,7 @@
 						"icon-only": {},
 						"pressed": {},
 						"selected": {},
+						"focusable": {},
 						"aria-label": {},
 						"aria-labelledby": {}
 					}
@@ -1514,6 +2136,7 @@
 						"readonly": {},
 						"invalid": {},
 						"required": {},
+						"required-message": {},
 						"description": {},
 						"error": {},
 						"empty-text": {},
@@ -1551,6 +2174,7 @@
 						"no-recent": {},
 						"no-footer": {},
 						"no-close-on-select": {},
+						"complete-first": {},
 						"hotkey": {},
 						"storage-key": {},
 						"autocapitalize": {},
@@ -1590,6 +2214,7 @@
 						"disabled": {},
 						"readonly": {},
 						"required": {},
+						"required-message": {},
 						"invalid": {},
 						"no-clear": {},
 						"size": {},
@@ -1788,6 +2413,7 @@
 						"readonly": {},
 						"invalid": {},
 						"required": {},
+						"required-message": {},
 						"clearable": {},
 						"description": {},
 						"error": {},
@@ -1844,6 +2470,8 @@
 						"gap": {},
 						"columns": {},
 						"min-col-width": {},
+						"sidebar": {},
+						"side": {},
 						"align": {},
 						"justify": {},
 						"inline": {}
@@ -2243,10 +2871,12 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
+						"heading": {},
 						"level": {},
 						"variant": {},
 						"open": {},
 						"scroll": {},
+						"fill": {},
 						"label": {},
 						"marker-icon": {}
 					}
@@ -2324,6 +2954,7 @@
 						"panel-role": {},
 						"focus-on-open": {},
 						"no-close-on-select": {},
+						"complete-first": {},
 						"no-light-dismiss": {},
 						"popover": {}
 					}
@@ -2355,6 +2986,10 @@
 						"unit": {},
 						"colorize-value": {},
 						"value-position": {},
+						"orient": {},
+						"label": {},
+						"reading": {},
+						"note": {},
 						"meter": {},
 						"ramp": {},
 						"ramp-mode": {},
@@ -2474,6 +3109,7 @@
 						"tone": {},
 						"readonly": {},
 						"allowhalf": {},
+						"allow-half": {},
 						"name": {},
 						"label": {}
 					}
@@ -2503,6 +3139,7 @@
 				},
 				"xtyle-reveal": {
 					"props": {
+						"control": {},
 						"class": {},
 						"part": {},
 						"slot": {},
@@ -2672,6 +3309,7 @@
 						"value": {},
 						"options": {},
 						"disabled": {},
+						"focusable": {},
 						"size": {},
 						"tone": {},
 						"label": {},
@@ -2699,8 +3337,10 @@
 						"value": {},
 						"size": {},
 						"disabled": {},
+						"focusable": {},
 						"invalid": {},
 						"required": {},
+						"required-message": {},
 						"error": {},
 						"name": {}
 					}
@@ -3075,6 +3715,7 @@
 						"dir": {},
 						"checked": {},
 						"disabled": {},
+						"focusable": {},
 						"size": {},
 						"tone": {},
 						"shape": {},
@@ -3112,6 +3753,7 @@
 						"sticky": {},
 						"max-height": {},
 						"selection": {},
+						"aria-label": {},
 						"name": {}
 					}
 				},
@@ -3138,7 +3780,9 @@
 						"labelledby": {},
 						"items": {},
 						"sticky": {},
-						"tablist": {}
+						"tablist": {},
+						"fill": {},
+						"overflow": {}
 					}
 				},
 				"xtyle-text": {
@@ -3188,6 +3832,7 @@
 						"disabled": {},
 						"invalid": {},
 						"required": {},
+						"required-message": {},
 						"error": {},
 						"name": {},
 						"mono": {},
@@ -3435,6 +4080,8 @@
 				},
 				"xtyle-tour": {
 					"props": {
+						"taken": {},
+						"spec": {},
 						"class": {},
 						"part": {},
 						"slot": {},
@@ -3465,6 +4112,7 @@
 						"arrow": {},
 						"scroll-into-view": {},
 						"no-dismiss": {},
+						"target-timeout": {},
 						"heading": {},
 						"radius": {},
 						"target": {}
@@ -3872,12 +4520,20 @@
 			"description": "Permits a mod to add glyphs to the xtyle icon roster, or replace built-in ones.",
 			"risk": "low"
 		},
+		"xtyle.icon-points": {
+			"description": "Permits a mod to add named point lists for the icon grammar's poly / polyline primitives, or replace built-in ones.",
+			"risk": "low"
+		},
 		"xtyle.icon-primitives": {
 			"description": "Permits a mod to add primitives to the xtyle icon builder, or replace built-in ones.",
 			"risk": "low"
 		},
 		"xtyle.reveal-shapes": {
 			"description": "Permits a mod to add silhouettes to the xtyle reveal component, or replace built-in ones.",
+			"risk": "low"
+		},
+		"xtyle.palettes": {
+			"description": "Permits a mod to add palettes to the xtyle series and ramp register, or replace built-in ones.",
 			"risk": "low"
 		}
 	},

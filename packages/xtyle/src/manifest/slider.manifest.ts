@@ -95,6 +95,7 @@ export const sliderManifest: ComponentManifest = {
 	description:
 		"Slider picks one number across a range. It renders a rail with a fill showing the chosen portion and a `role=\"slider\"` thumb carrying `aria-valuemin`/`aria-valuemax`/`aria-valuenow`, so pointer drag, click-to-position, and the full arrow/Page/Home/End keyboard set all move it. Values snap to `step` and clamp to `[min, max]`. Holding the `modifier` (Shift by default) while stepping or dragging swaps in `alt-step` for a coarser or finer jump, the same fine-tune contract the number field carries. With `show-value`, the readout is a click-to-edit numeric field that steps on the same keys; add `overflow` and a typed value may pass the rail while the thumb pins at the edge. It is form-associated: give it a `name` and it contributes its current value to form data. Three sizes (`sm`, the default `md`, and `lg`) vary the thumb and rail thickness. It is the primitive the hue and alpha tracks of a color picker compose from.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["fill", "groove", "header", "label", "rail", "slider", "thumb", "value", "value-input", "value-text"],
 	anatomy: [
 		{
 			name: "slider",
@@ -270,6 +271,20 @@ export const sliderManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "default",
+			type: "number",
+			description:
+				"The value a double-click on the thumb restores. Omit it and the reset target is whatever value the slider first rendered with, which is right for a control seeded from saved state and wrong for one whose neutral position is not where it opened.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "staticValue",
+			type: "boolean",
+			default: "false",
+			description: "Drops the click-to-edit affordance on the `showValue` readout, leaving it as plain text. Only meaningful alongside `showValue`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "hideLabel",
 			type: "boolean",
 			default: "false",
@@ -281,7 +296,12 @@ export const sliderManifest: ComponentManifest = {
 			type: "(value: number) => string",
 			description: "A JS property (not an attribute) on the element: a function that formats the `show-value` readout. Defaults to the raw number. Settable in the HTML binding and via `bind:format` in Svelte; not available in the static Astro binding.",
 			bindings: ["html", "svelte"],
+			propertyOnly: true,
 		},
+	],
+	events: [
+		{ name: "input", detail: "{ value }", description: "The value changed as the thumb moves — continuous.", bindings: ["html", "svelte", "astro"] },
+		{ name: "change", detail: "{ value }", description: "The value settled: the drag ended or a key committed it.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [

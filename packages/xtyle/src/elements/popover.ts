@@ -76,6 +76,7 @@ export class XtylePopover extends XtyleElement {
 	private hostWired = false;
 	private docWired = false;
 	private viewportWired = false;
+	private anchorWatch: ResizeObserver | null = null;
 	/** Whether the panel is currently up in the top layer, whichever door put it there. The two doors
 	 * announce themselves differently (`toggle` for a popover, `close` for a dialog — and some engines
 	 * now fire both), so the lifecycle is driven off this rather than off any one platform event. */
@@ -333,10 +334,13 @@ export class XtylePopover extends XtyleElement {
 	private openWith(opts: PopoverOpenOptions): void {
 		this.openOpts = opts;
 		this.captureReturnFocus();
+		const keeper = this.returnFocusTo;
 		this.open = true;
 		// INFO: the panel's `toggle` event is async, so a deferred place() would paint one frame at 0,0
 		this.place();
-		this.applyFocus(opts.focus ?? this.focusOnOpen);
+		const focus = opts.focus ?? this.focusOnOpen;
+		this.applyFocus(focus);
+		if (focus === "none" && keeper?.isConnected && document.activeElement !== keeper) keeper.focus();
 	}
 
 	private get panel(): HTMLElement | null {
@@ -519,6 +523,7 @@ export class XtylePopover extends XtyleElement {
 	private handleOpened(): void {
 		if (this.up) return;
 		this.up = true;
+		this.warnIfUnnamed();
 		this.place();
 		this.wireViewport();
 		this.syncTriggerAria();
@@ -535,7 +540,7 @@ export class XtylePopover extends XtyleElement {
 		this.up = false;
 		if (this.settling) return;
 		const target = this.returnFocusTo ?? this.triggerElement();
-		const stranded = this.holdsFocus();
+		const stranded = this.holdsFocus() || this.focusIsHomeless();
 		const reason = this.closeReason;
 		if (reason === "dismiss") this.dismissedAt = this.now();
 		this.pointAnchor = null;
@@ -576,6 +581,12 @@ export class XtylePopover extends XtyleElement {
 		if (typeof document === "undefined") return false;
 		const active = document.activeElement;
 		return active instanceof Node && active !== this && this.contains(active);
+	}
+
+	private focusIsHomeless(): boolean {
+		if (typeof document === "undefined") return false;
+		const active = document.activeElement;
+		return !active || active === document.body || active === document.documentElement;
 	}
 
 	private captureReturnFocus(): void {
@@ -722,6 +733,7 @@ export class XtylePopover extends XtyleElement {
 		this.viewportWired = true;
 		window.addEventListener("scroll", this.onViewportChange, { capture: true, passive: true });
 		window.addEventListener("resize", this.onViewportChange);
+		this.watchAnchor();
 	}
 
 	private unwireViewport(): void {
@@ -729,6 +741,17 @@ export class XtylePopover extends XtyleElement {
 		this.viewportWired = false;
 		window.removeEventListener("scroll", this.onViewportChange, { capture: true });
 		window.removeEventListener("resize", this.onViewportChange);
+		this.anchorWatch?.disconnect();
+		this.anchorWatch = null;
+	}
+
+	private watchAnchor(): void {
+		if (typeof ResizeObserver === "undefined") return;
+		const anchor = this.elementAnchor ?? this.forElement() ?? (this.hasTrigger() ? this.triggerRegion : null);
+		if (!anchor) return;
+		this.anchorWatch?.disconnect();
+		this.anchorWatch = new ResizeObserver(() => this.place());
+		this.anchorWatch.observe(anchor);
 	}
 
 	private wireDocument(): void {
@@ -789,7 +812,6 @@ export class XtylePopover extends XtyleElement {
 	private afterApply(): void {
 		this.wire();
 		this.syncTriggerAria();
-		this.warnIfUnnamed();
 		this.syncOpen();
 	}
 

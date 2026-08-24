@@ -3,8 +3,9 @@ export const panelCss = `
 	display: flex;
 	flex-direction: column;
 	background: var(--bg-0);
-	border: var(--border-thin) solid var(--line);
-	border-radius: var(--radius-lg);
+	border: var(--xtyle-panel-border, var(--border-thin) solid var(--line));
+	border-bottom: var(--xtyle-panel-border-bottom, var(--xtyle-panel-border, var(--border-thin) solid var(--line)));
+	border-radius: var(--xtyle-panel-radius, var(--radius-lg));
 	overflow: hidden;
 }
 .xtyle-panel__header {
@@ -12,7 +13,7 @@ export const panelCss = `
 	align-items: center;
 	gap: var(--space-2);
 	padding: var(--space-3) var(--space-4);
-	background: var(--bg-1);
+	background: var(--xtyle-panel-header-bg, var(--bg-1));
 	border-bottom: var(--border-thin) solid var(--line);
 }
 .xtyle-panel__title {
@@ -25,6 +26,7 @@ export const panelCss = `
 .xtyle-panel__spacer { flex: 1; }
 .xtyle-panel__header--toggle { padding: 0 var(--space-4) 0 0; }
 .xtyle-panel__header--toggle .xtyle-panel__toggle {
+	box-sizing: border-box;
 	flex: 1;
 	background: transparent;
 	border-bottom: none;
@@ -44,6 +46,23 @@ export const panelCss = `
 	border-top: var(--border-thin) solid var(--line);
 	color: var(--fg-2);
 	font-size: var(--text-sm);
+}
+.xtyle-panel--fill {
+	flex: 1 1 auto;
+	min-height: 0;
+	height: 100%;
+}
+.xtyle-panel--fill .xtyle-panel__collapse {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+.xtyle-panel--fill .xtyle-panel__body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 .xtyle-panel--scroll .xtyle-panel__body {
 	overflow-y: auto;
@@ -110,6 +129,10 @@ export const panelCss = `
 .xtyle-panel__toggle[aria-expanded="true"] .xtyle-panel__marker {
 	transform: rotate(90deg);
 }
-.xtyle-dock .xtyle-panel { border: none; border-radius: 0; border-bottom: var(--border-thin) solid var(--line); }
-.xtyle-dock .xtyle-panel__header { background: transparent; }
+xtyle-dock xtyle-panel {
+	--xtyle-panel-border: none;
+	--xtyle-panel-border-bottom: var(--border-thin) solid var(--line);
+	--xtyle-panel-radius: 0;
+	--xtyle-panel-header-bg: transparent;
+}
 `.trim();

@@ -2,17 +2,22 @@
 	import "@xtyle/core/elements/tabs.js";
 	import type { Snippet } from "svelte";
 	import { TABS_SIZES } from "@xtyle/core";
-	import type { TabItemData, TabsVariant, TabsActivation } from "@xtyle/core/markup";
+	import type { TabItemData, TabsVariant, TabsActivation, TabsOverflow } from "@xtyle/core/markup";
 
 	interface Props {
 		items?: TabItemData[];
 		variant?: TabsVariant;
 		size?: (typeof TABS_SIZES)[number];
 		activation?: TabsActivation;
+		/** How a strip wider than its container behaves: `wrap` onto more rows (default), or `scroll`
+		 * on one row. */
+		overflow?: TabsOverflow;
 		value?: string;
 		label?: string;
 		labelledby?: string;
 		sticky?: boolean;
+		/** Take the remaining height of a bounded parent and scroll the active panel. */
+		fill?: boolean;
 		/** Mount a panel's content only once its tab is first shown, then keep it mounted. Off by default
 		 * (every panel renders up front). Reach for it when panels are heavy (an editor, a chart) or must
 		 * lay out only while visible; the tab strip, roving focus, and a11y are unchanged either way. */
@@ -31,10 +36,12 @@
 		variant = "underline",
 		size = "md",
 		activation = "automatic",
+		overflow = "wrap",
 		value = $bindable(),
 		label,
 		labelledby,
 		sticky = false,
+		fill = false,
 		lazy = false,
 		onchange,
 		panel,
@@ -66,16 +73,18 @@
 	{variant}
 	{size}
 	{activation}
+	{overflow}
 	{value}
 	{label}
 	sticky={sticky || undefined}
+	fill={fill || undefined}
 	tablist={headless || undefined}
 	labelledby={labelledby || undefined}
 	onchange={handleChange}
 >
 	{#each items as tab, i (tab.value ?? i)}
 		{@const key = tab.value ?? String(i)}
-		<span slot="tab" value={key} disabled={tab.disabled || undefined}>{tab.label}</span>
+		<span slot="tab" data-value={key} disabled={tab.disabled || undefined}>{tab.label}</span>
 		{#if !headless}
 			<div slot="panel">{#if !lazy || shownKeys.includes(key)}{@render panel?.(key)}{/if}</div>
 		{/if}

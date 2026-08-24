@@ -17,7 +17,7 @@ const TONE_GROUPS = [
 	<section class="demo__group">
 		<Heading level={2} size="sm" tone="muted">A settings panel</Heading>
 		<Stack gap={5} class="demo__rows">
-			<Slider label="Volume" value={60} />
+			<Slider name="volume" label="Volume" value={60} />
 			<Slider label="Brightness" min={0} max={100} step={5} value={40} />
 			<Slider label="Locked" value={50} disabled />
 		</Stack>
@@ -28,6 +28,15 @@ const TONE_GROUPS = [
 		<Stack gap={5} class="demo__rows">
 			<Slider label="Volume" value={60} showValue />
 			<Slider id="demo-slider-pct" label="Opacity" value={80} showValue />
+		</Stack>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Reset target &amp; a read-only readout</Heading>
+		<Text size="xs" tone="subtle">Double-click a thumb to reset it. <code>default</code> names where it lands, which is the neutral position rather than wherever the control opened; without it the reset target is the value it first rendered with. <code>staticValue</code> leaves the readout as plain text instead of a click-to-edit field.</Text>
+		<Stack gap={5} class="demo__rows">
+			<Slider label="Exposure" min={-3} max={3} step={0.5} value={1.5} default={0} showValue />
+			<Slider label="Playback speed" min={0.5} max={2} step={0.25} value={1.5} default={1} showValue staticValue />
 		</Stack>
 	</section>
 

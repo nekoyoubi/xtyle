@@ -134,6 +134,9 @@ export const schemeToggleManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
+	events: [
+		{ name: "xtyle:scheme-change", detail: "{ scheme }", description: "The colour scheme was switched.", bindings: ["html", "astro"] },
+	],
 	variants: [],
 	sizes: [],
 	states: [

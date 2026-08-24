@@ -20,14 +20,32 @@ export class XtylePanel extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["title", "level", "variant", "open", "scroll", "label", "marker-icon"];
+		return ["heading", "title", "level", "variant", "open", "scroll", "fill", "label", "marker-icon"];
 	}
 
+	/** The visible heading. `title` is the HTML global attribute on every element and renders a
+	 * browser tooltip, so a panel's own heading is `heading`; a `title` still migrates for
+	 * compatibility and is lifted off the host so it stops painting a tooltip over the whole panel. */
+	get heading(): string {
+		return this.getAttribute("heading") ?? "";
+	}
+	set heading(value: string | null | undefined) {
+		this.reflectString("heading", value);
+	}
+
+	/** @deprecated Use {@link heading}. */
 	get title(): string {
-		return this.getAttribute("title") ?? "";
+		return this.heading;
 	}
 	set title(value: string | null | undefined) {
-		this.reflectString("title", value);
+		this.heading = value;
+	}
+
+	private migrateTitle(): void {
+		const legacy = this.getAttribute("title");
+		if (legacy === null) return;
+		this.removeAttribute("title");
+		if (this.getAttribute("heading") === null) this.setAttribute("heading", legacy);
 	}
 
 	/** The roster glyph drawn as the collapse marker, on the `collapsible` variant. Any name the icon
@@ -68,6 +86,15 @@ export class XtylePanel extends XtyleElement {
 		this.reflectBoolean("scroll", value);
 	}
 
+	/** Take the remaining height of a bounded parent and scroll the body, leaving header and footer at their
+	 * natural height. `scroll` caps the body at a fixed height; `fill` sizes it from what the column has left. */
+	get fill(): boolean {
+		return this.hasAttribute("fill");
+	}
+	set fill(value: boolean) {
+		this.reflectBoolean("fill", value);
+	}
+
 	/** Accessible name for a panel that carries no visible `title` — names the region without a heading. */
 	get label(): string {
 		return this.getAttribute("label") ?? "";
@@ -76,7 +103,8 @@ export class XtylePanel extends XtyleElement {
 		this.reflectString("label", value);
 	}
 
-	attributeChangedCallback(): void {
+	attributeChangedCallback(name: string): void {
+		if (name === "title") this.migrateTitle();
 		if (this.root.firstChild) this.render();
 	}
 
@@ -84,8 +112,12 @@ export class XtylePanel extends XtyleElement {
 		return this.fragment.hasSlotted("actions");
 	}
 
+	private get hasFooter(): boolean {
+		return this.fragment.hasSlotted("footer");
+	}
+
 	private get hasHeader(): boolean {
-		return this.title !== "" || this.hasActions;
+		return this.heading !== "" || this.hasActions;
 	}
 
 	private get hasName(): boolean {
@@ -94,12 +126,14 @@ export class XtylePanel extends XtyleElement {
 
 	private get bindings(): Record<string, unknown> {
 		return {
-			title: this.title || null,
+			heading: this.heading || null,
 			level: this.level,
 			variant: this.variant,
 			open: this.open,
 			scrollable: this.scrollable,
+			fill: this.fill,
 			hasActions: this.hasActions,
+			hasFooter: this.hasFooter,
 			titleId: this.titleId,
 			label: this.label || null,
 			markerIcon: this.markerIcon,
@@ -111,13 +145,13 @@ export class XtylePanel extends XtyleElement {
 	 * header presence, and scrollable body wiring. A change here rebuilds; an `open` toggle on
 	 * a collapsible panel is a cheap patch (aria-expanded + region visibility). */
 	private shapeSignature(): string {
-		return `${this.variant}|${this.level}|${this.hasHeader}|${this.title}|${this.scrollable}|${this.label}|${this.markerIcon}`;
+		return `${this.variant}|${this.level}|${this.hasHeader}|${this.hasFooter}|${this.heading}|${this.scrollable}|${this.label}|${this.markerIcon}`;
 	}
 
 	private warnIfUnnamed(): void {
 		if (!this.hasName) {
 			console.warn(
-				"xtyle-panel: no title, actions, or label — the panel has no accessible name. Provide a `title` (visible heading) or `label` (name only) so the region is announced.",
+				"xtyle-panel: no heading, actions, or label — the panel has no accessible name. Provide a `heading` (visible) or `label` (name only) so the region is announced.",
 			);
 		}
 	}
@@ -125,7 +159,7 @@ export class XtylePanel extends XtyleElement {
 	private applyIntent(intent: FragmentIntent, _event: Event): void {
 		if (!intent.toggleOpen) return;
 		this.open = !this.open;
-		this.dispatchEvent(new Event("toggle", { bubbles: true, composed: true }));
+		this.emitOwn("toggle", null, { open: this.open });
 	}
 
 	protected template(): string {

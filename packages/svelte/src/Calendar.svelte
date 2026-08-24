@@ -42,6 +42,12 @@
 		/** Drop the previous / next month steps. */
 		hideNav?: boolean;
 		/** The roster glyph for the previous-month nav arrow. */
+		/** The accessible name of the previous-month step. */
+		prevLabel?: string;
+		/** The accessible name of the next-month step. */
+		nextLabel?: string;
+		/** The week-of-year column header, and what each week number is announced as. */
+		weekLabel?: string;
 		prevIcon?: string;
 		/** The roster glyph for the next-month nav arrow. */
 		nextIcon?: string;
@@ -82,6 +88,9 @@
 		fixedWeeks,
 		hideOutsideDays,
 		hideNav,
+		prevLabel,
+		nextLabel,
+		weekLabel,
 		prevIcon,
 		nextIcon,
 		disabledDates,
@@ -147,6 +156,9 @@
 	fixed-weeks={fixedWeeks || undefined}
 	hide-outside-days={hideOutsideDays || undefined}
 	hide-nav={hideNav || undefined}
+	prev-label={prevLabel}
+	next-label={nextLabel}
+	week-label={weekLabel}
 	prev-icon={prevIcon}
 	next-icon={nextIcon}
 	readonly={readonly || undefined}

@@ -64,7 +64,7 @@ describe("button variant opt-outs", () => {
 	it("declares the link variant's state opt-out after the generic state rules", () => {
 		const genericHover = firstIndexOf(".xtyle-button:hover::after");
 		const genericPressed = firstIndexOf('.xtyle-button[aria-pressed="true"]:hover::after');
-		const genericSelected = firstIndexOf('.xtyle-button[aria-selected="true"]:hover::after');
+		const genericSelected = firstIndexOf('.xtyle-button[aria-current="true"]:hover::after');
 		const linkOptOut = firstIndexOf(".xtyle-button--link:hover::after");
 		expect(linkOptOut).toBeGreaterThan(genericHover);
 		expect(linkOptOut).toBeGreaterThan(genericPressed);
@@ -75,5 +75,76 @@ describe("button variant opt-outs", () => {
 		expect(firstIndexOf(".xtyle-button--icon.xtyle-button--link")).toBeGreaterThan(
 			firstIndexOf(".xtyle-button--icon {"),
 		);
+	});
+});
+
+/**
+ * A fill writes a state attribute and the component's stylesheet keys the state's rules on it. They are
+ * two files that must agree on one attribute name, nothing links them, and a disagreement fails
+ * silently: the state applies, the ARIA is announced, and no rule matches, so the state is simply
+ * invisible. `selected` shipped that way — the fill wrote `aria-current`, the sheet read
+ * `aria-selected`.
+ */
+const stateAttrs: { component: string; fill: string; attr: string }[] = [
+	{ component: "button", fill: "button", attr: "aria-current" },
+	{ component: "button", fill: "button", attr: "aria-pressed" },
+];
+
+describe("fill and stylesheet agree on state attributes", () => {
+	for (const { component, fill, attr } of stateAttrs) {
+		it(`${component}: the sheet keys on the \`${attr}\` its fill writes`, () => {
+			const fillSource = readFileSync(
+				join(import.meta.dirname, "..", "src", "elements", "fragments", fill, "mod.ts"),
+				"utf8",
+			);
+			const css = readFileSync(join(cssDir, `${component}.ts`), "utf8");
+			expect(fillSource, `${fill}/mod.ts never writes ${attr}`).toContain(attr);
+			expect(css, `${component}.ts has no rule keyed on ${attr}`).toContain(`[${attr}="true"]`);
+		});
+	}
+
+	it("the button sheet keys no state on an attribute its fill never writes", () => {
+		const fillSource = readFileSync(
+			join(import.meta.dirname, "..", "src", "elements", "fragments", "button", "mod.ts"),
+			"utf8",
+		);
+		const css = readFileSync(join(cssDir, "button.ts"), "utf8");
+		const keyed = new Set(Array.from(css.matchAll(/\.xtyle-button[^\s,{]*\[(aria-[a-z]+)=/g), (m) => m[1] as string));
+		for (const attr of keyed) {
+			expect(fillSource, `button.ts styles [${attr}] but the fill never writes it`).toContain(attr);
+		}
+	});
+});
+
+/**
+ * A component that documents BEM classes on light-DOM children needs those rules to survive the shadow
+ * boundary. Inherited properties cross it and non-inherited ones do not, so the bar renders in the right
+ * font and colour while its layout silently does nothing — which reads as correct markup wired up wrong.
+ * `::slotted()` is the only selector that reaches an assigned node from inside the shadow sheet.
+ */
+describe("slotted layout survives the shadow boundary", () => {
+	const slottedLayout: { component: string; selectors: string[] }[] = [
+		{
+			component: "statusbar",
+			selectors: ["::slotted(.xtyle-statusbar__item)", "::slotted(.xtyle-statusbar__spacer)"],
+		},
+	];
+
+	for (const { component, selectors } of slottedLayout) {
+		for (const selector of selectors) {
+			it(`${component} styles ${selector}`, () => {
+				const css = readFileSync(join(cssDir, `${component}.ts`), "utf8");
+				expect(
+					css,
+					`${component} documents this class on a light-DOM child, so a bare class rule in the shadow sheet never reaches it`,
+				).toContain(selector);
+			});
+		}
+	}
+
+	it("the statusbar spacer actually grows through the slot", () => {
+		const css = readFileSync(join(cssDir, "statusbar.ts"), "utf8");
+		const rule = css.slice(css.indexOf("::slotted(.xtyle-statusbar__spacer)"));
+		expect(rule.slice(0, rule.indexOf("}"))).toContain("flex: 1");
 	});
 });

@@ -11,6 +11,7 @@ interface LinkBindings {
 	target?: string | null;
 	rel?: string | null;
 	showExternalIcon?: boolean;
+	ariaLabel?: string | null;
 }
 
 declare const hooks: {
@@ -43,7 +44,8 @@ function linkHtml(b: LinkBindings): string {
 	const rel = explicitRel ?? (external ? "noopener noreferrer" : null);
 	const relAttr = rel ? ` rel="${escapeAttr(rel)}"` : "";
 
-	return `<a part="link" class="${linkClass(b)}" href="${escapeAttr(href)}"${targetAttr}${relAttr}><span class="xtyle-slot"><slot></slot></span>${newTabHint}${icon}</a>`;
+	const nameAttr = b.ariaLabel ? ` aria-label="${escapeAttr(b.ariaLabel)}"` : "";
+	return `<a part="link" class="${linkClass(b)}" href="${escapeAttr(href)}"${targetAttr}${relAttr}${nameAttr}><span class="xtyle-slot"><slot></slot></span>${newTabHint}${icon}</a>`;
 }
 
 hooks.fragment.mount("link", (bindings, ops) => {

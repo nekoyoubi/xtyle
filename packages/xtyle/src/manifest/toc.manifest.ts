@@ -39,6 +39,7 @@ export const tocManifest: ComponentManifest = {
 	description:
 		"Toc lists the sections of a page as in-page links and tracks which one the reader is looking at. Give it `items`: each is an `id` matching a section's element id, a `label`, and an optional 1-based `level`, and it renders a labelled `nav` of anchor links. Entries deeper than the one before them nest inside it as a real sublist, so a two-level outline is structural rather than an indent an assistive reader can't see; a `level` that skips a depth is treated as one step down, which is what heading sources actually emit. An `IntersectionObserver` then marks the active link as you scroll, setting `aria-current` and the accent rail. The links work as plain anchor jumps with no script, and a clicked section still lights its entry without one, so the scrollspy is pure progressive enhancement. It reads as a vertical rail beside the content and folds into a wrapped row of chips on narrow screens. Pass `sticky` to keep it in view as the page scrolls.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["label", "link", "list", "toc"],
 	anatomy: [
 		{
 			name: "toc",

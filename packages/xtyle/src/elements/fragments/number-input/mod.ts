@@ -32,6 +32,7 @@ interface Intent {
 	forceAlt?: boolean;
 	commit?: string;
 	preventDefault?: boolean;
+	emit?: { type: string; detail?: unknown };
 }
 
 declare const hooks: {
@@ -100,6 +101,12 @@ xript.exports.register("inc", (payload: unknown): Intent => {
 	const e = payload as EventPayload;
 	if (e.disabled) return {};
 	return { nudge: 1 };
+});
+
+xript.exports.register("onInput", (payload: unknown): Intent => {
+	const e = payload as EventPayload;
+	if (e.disabled) return {};
+	return { emit: { type: "input", detail: { value: e.value ?? "" } } };
 });
 
 xript.exports.register("commit", (payload: unknown): Intent => {

@@ -69,6 +69,10 @@ export class XtyleDatePicker extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 	private uid = `xtyle-datepicker-${++pickerSeq}`;
 	/** The value the fields currently show. Only promoted to `value` once the mode's parts are all present. */
 	private draft: CivilValue = { date: null, time: null };
@@ -83,8 +87,11 @@ export class XtyleDatePicker extends XtyleElement {
 	private wiredCalendar: HTMLElement | null = null;
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "date-picker", {
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
-		afterApply: () => this.afterApply(),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
+		afterApply: () => {
+			this.afterApply();
+			this.verifyFormName();
+		},
 	});
 
 	constructor() {
@@ -114,6 +121,7 @@ export class XtyleDatePicker extends XtyleElement {
 			"disabled",
 			"readonly",
 			"required",
+			"required-message",
 			"invalid",
 			"no-clear",
 			"size",
@@ -544,7 +552,7 @@ export class XtyleDatePicker extends XtyleElement {
 		} else if (this.hasAttribute("invalid")) {
 			this.internals.setValidity({ customError: true }, "Invalid value.", anchor);
 		} else if (this.required && this.value === "") {
-			this.internals.setValidity({ valueMissing: true }, "Please fill out this field.", anchor);
+			this.internals.setValidity({ valueMissing: true }, this.validityMessage("required-message", "Please fill out this field."), anchor);
 		} else {
 			this.internals.setValidity({});
 		}
@@ -555,7 +563,7 @@ export class XtyleDatePicker extends XtyleElement {
 	}
 
 	private emit(type: "input" | "change"): void {
-		this.dispatchEvent(new Event(type, { bubbles: true, composed: true }));
+		this.emitOwn(type, null, type === "change" ? { value: this.value, valid: !this.invalid } : { value: this.value });
 	}
 
 	/** Take a part's typed text: parse it, bound it, and either commit it or leave it flagged for repair. */
@@ -875,9 +883,6 @@ export class XtyleDatePicker extends XtyleElement {
 		}
 
 		if (intent.commit !== undefined && part) {
-			// INFO: the inner input fires its own bubbling composed `change`; swallow it so the host emits
-			// a single change per commit instead of two
-			if (event.type === "change") event.stopImmediatePropagation();
 			this.commitText(part, intent.commit);
 		}
 	}

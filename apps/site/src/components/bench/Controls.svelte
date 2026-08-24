@@ -8,9 +8,10 @@
 		CUSTOM_CODE_ALGORITHM,
 		CUSTOM_CODE_SEED,
 		CUSTOM_SPEC_SEED,
+		PACK_ALGORITHM,
 		knobControls,
 	} from "./state.js";
-	import { Accordion, ColorPicker } from "@xtyle/svelte";
+	import { Accordion, ColorPicker, Field } from "@xtyle/svelte";
 	import { isColorToken, allGroups, contrastRefFor, tokenSearchTerms, tokenMeta } from "./tokens.js";
 
 	interface Props {
@@ -18,10 +19,14 @@
 		algorithm: Algorithm;
 		register: TokenRegister;
 		influence: Record<string, number>;
+		packStatus: { loading: boolean; error: string | null; id: string | null };
+		/** The theme names the resolved pack declares, if any. */
+		packThemes: string[];
 		onchange: (next: BenchState) => void;
+		ontheme: (name: string) => void;
 	}
 
-	let { bench, algorithm, register, influence, onchange }: Props = $props();
+	let { bench, algorithm, register, influence, packStatus, packThemes, onchange, ontheme }: Props = $props();
 
 	/** The scheme the theme *actually* derives under, read off the resolved register rather than
 	 * reconstructed from the inputs — so it holds whether the scheme came from the knob, a `--bg-0`
@@ -42,6 +47,9 @@
 			anchors: { ...bench.anchors },
 			knobs: { ...bench.knobs },
 			overrides: { ...bench.overrides },
+			...(bench.customSpec !== undefined ? { customSpec: bench.customSpec } : {}),
+			...(bench.customCode !== undefined ? { customCode: bench.customCode } : {}),
+			...(bench.packRef !== undefined ? { packRef: bench.packRef } : {}),
 		};
 		mut(next);
 		onchange(next);
@@ -56,8 +64,26 @@
 			s.algorithm = id;
 			if (id === CUSTOM_ALGORITHM && s.customSpec === undefined) s.customSpec = CUSTOM_SPEC_SEED;
 			if (id === CUSTOM_CODE_ALGORITHM && s.customCode === undefined) s.customCode = CUSTOM_CODE_SEED;
+			if (id === PACK_ALGORITHM && s.packRef === undefined) s.packRef = examplePackRef();
 		});
 	}
+
+	function examplePackRef(): string {
+		const origin = typeof location === "undefined" ? "https://xtyle.dev" : location.origin;
+		return `${origin}/packs/xtyle-pack-example`;
+	}
+
+	function setPackRef(text: string): void {
+		patch((s) => (s.packRef = text));
+	}
+
+	const packDescription = $derived(
+		packStatus.loading
+			? "Fetching…"
+			: packStatus.id
+				? `Deriving with ${packStatus.id}, sandboxed`
+				: "",
+	);
 
 	function setCustomSpec(text: string): void {
 		patch((s) => (s.customSpec = text));
@@ -241,6 +267,28 @@
 					value={bench.customCode ?? CUSTOM_CODE_SEED}
 					oninput={(e) => setCustomCode((e.currentTarget as HTMLTextAreaElement).value)}
 				></textarea>
+			</div>
+		{/if}
+		{#if bench.algorithm === PACK_ALGORITHM}
+			<div class="bench-spec">
+				<p class="bench-layer__note x-caption">A published pack, by npm name (<code>@scope/pack</code>), <code>owner/repo</code>, or the URL it is served from; <code>#name</code> picks one of several. The algorithm is fetched and run in the xript sandbox, which can reach nothing but your tokens.</p>
+				<Field
+					label="Pack"
+					mono
+					value={bench.packRef ?? ""}
+					placeholder="@scope/pack#algorithm"
+					invalid={packStatus.error !== null}
+					description={packDescription}
+					error={packStatus.error ?? ""}
+					oninput={(e) => setPackRef((e.target as HTMLInputElement).value)} />
+				{#if packThemes.length > 0}
+					<p class="bench-layer__note x-caption">A pack can ship finished themes as well as the algorithm behind them. Loading one replaces the layers below with the recipe it declares.</p>
+					<div class="bench-chips" role="group" aria-label="Themes this pack declares">
+						{#each packThemes as name (name)}
+							<button type="button" class="bench-chip" onclick={() => ontheme(name)}>{name}</button>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{/if}
 		<p class="bench-layer__note x-caption">Everything below is optional — leave a layer untouched and the algorithm's own default fills in.</p>

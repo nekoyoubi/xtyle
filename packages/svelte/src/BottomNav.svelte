@@ -16,11 +16,13 @@
 		value?: string;
 		/** The accessible name of the tablist. */
 		label?: string;
+		/** Fires when a destination is chosen. `event.detail` carries `{ value }`. */
+		onchange?: (event: CustomEvent<{ value: string }>) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
 
-	let { tabs = [], value = $bindable(""), label = "Sections", ...rest }: Props = $props();
+	let { tabs = [], value = $bindable(""), label = "Sections", onchange, ...rest }: Props = $props();
 
 	let el: HTMLElement | undefined = $state();
 
@@ -29,6 +31,10 @@
 		if (!el) return;
 		(el as unknown as { tabs: BottomNavTab[] }).tabs = tabs;
 	});
+	function handleChange(event: Event): void {
+		value = (event.target as unknown as { value: string }).value;
+		onchange?.(event as CustomEvent<{ value: string }>);
+	}
 </script>
 
 <xtyle-bottom-nav
@@ -36,5 +42,5 @@
 	bind:this={el}
 	{value}
 	{label}
-	onchange={(e: Event) => (value = (e.target as unknown as { value: string }).value)}
+	onchange={handleChange}
 ></xtyle-bottom-nav>

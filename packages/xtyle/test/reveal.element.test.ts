@@ -408,7 +408,242 @@ describe("reveal clipping", () => {
 	});
 
 	it("lays the host out as a block in the light-DOM path too, not just the shadow one", () => {
-		expect(revealHostCss).toContain(":host { display: block; position: relative; }");
-		expect(revealCss).toContain("xtyle-reveal { display: block; position: relative; }");
+		expect(revealHostCss).toContain(":host { display: block; position: relative;");
+		expect(revealCss).toContain("xtyle-reveal { display: block; position: relative;");
+	});
+});
+
+function box(el: XtyleReveal): HTMLElement {
+	return chrome(el).querySelector(".xtyle-reveal") as HTMLElement;
+}
+
+function grip(el: XtyleReveal, direction: string): HTMLElement | null {
+	return chrome(el).querySelector(`[data-grip="${direction}"]`);
+}
+
+/** A press and release with no travel between them, so the drag core never locks an axis. */
+function tap(target: HTMLElement, at: { x: number; y: number } = { x: 0, y: 0 }): void {
+	target.dispatchEvent(
+		new PointerEvent("pointerdown", { bubbles: true, composed: true, cancelable: true, clientX: at.x, clientY: at.y }),
+	);
+	window.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, composed: true, clientX: at.x, clientY: at.y }));
+}
+
+describe("reveal opens by pointer without painted furniture", () => {
+	it("opens the only live direction on a tap", () => {
+		const el = make({}, { end: true });
+		tap(box(el));
+		expect(el.open).toBe("end");
+	});
+
+	it("opens by tap with gripStyle none, so no mark is the cost of a pointer route", () => {
+		const el = make({ "grip-style": "none" }, { end: true });
+		expect(grip(el, "end"), "no mark is painted").toBeNull();
+		tap(box(el));
+		expect(el.open).toBe("end");
+	});
+
+	it("closes an open reveal on the next tap", () => {
+		const el = make({}, { end: true });
+		el.reveal("end");
+		expect(el.open).toBe("end");
+		tap(box(el));
+		expect(el.open).toBeNull();
+	});
+
+	it("takes the direction from the grip the press landed on when several are live", () => {
+		const el = make({}, { start: true, end: true });
+		const target = grip(el, "start") as HTMLElement;
+		expect(target, "a grip is painted by default").toBeTruthy();
+		tap(target);
+		expect(el.open).toBe("start");
+	});
+
+	it("stays shut on a tap when nothing is live", () => {
+		const el = make({}, {});
+		tap(box(el));
+		expect(el.open).toBeNull();
+	});
+
+	it("does not open while disabled", () => {
+		const el = make({ disabled: "" }, { end: true });
+		tap(box(el));
+		expect(el.open).toBeNull();
+	});
+});
+
+describe("reveal open attribute", () => {
+	function pair(): XtyleReveal[] {
+		const wrap = document.createElement("xtyle-reveal-group");
+		document.body.append(wrap);
+		return Array.from({ length: 2 }, () => {
+			const el = make({ name: "row" }, { start: true });
+			wrap.append(el);
+			return el;
+		});
+	}
+
+	it("drives the open, closing a group peer the way reveal() does", () => {
+		const [a, b] = pair();
+		(a as XtyleReveal).reveal("start");
+		expect((a as XtyleReveal).open).toBe("start");
+		(b as XtyleReveal).setAttribute("open", "start");
+		expect((b as XtyleReveal).open).toBe("start");
+		expect((a as XtyleReveal).open, "the peer yielded, so the attribute drove a real open").toBeNull();
+	});
+
+	it("drives an open that ships in the markup", () => {
+		const [a] = pair();
+		(a as XtyleReveal).reveal("start");
+		const wrap = document.querySelector("xtyle-reveal-group") as HTMLElement;
+		const late = make({ name: "row", open: "start" }, { start: true });
+		wrap.append(late);
+		expect(late.open).toBe("start");
+		expect((a as XtyleReveal).open, "a markup-shipped open closed the peer").toBeNull();
+	});
+
+	it("settles shut when open is cleared", () => {
+		const el = make({}, { end: true });
+		el.setAttribute("open", "end");
+		el.removeAttribute("open");
+		expect(el.open).toBeNull();
+	});
+
+	it("leaves a peer alone for an open naming a direction with no belly", () => {
+		const [a, b] = pair();
+		(a as XtyleReveal).reveal("start");
+		(b as XtyleReveal).setAttribute("open", "top");
+		expect((a as XtyleReveal).open, "an unlive direction drove nothing").toBe("start");
+	});
+});
+
+describe("reveal leaves the belly's own controls alone", () => {
+	it("does not swallow a press on a revealed belly, so its actions still fire", () => {
+		const el = make({}, { end: true });
+		el.reveal("end");
+		const action = el.querySelector('[slot="end"] button') as HTMLElement;
+		expect(action, "the belly carries a control").toBeTruthy();
+		let fired = 0;
+		action.addEventListener("click", () => fired++);
+		const down = new PointerEvent("pointerdown", { bubbles: true, composed: true, cancelable: true });
+		action.dispatchEvent(down);
+		expect(down.defaultPrevented, "the drag core never claimed the press").toBe(false);
+		action.click();
+		expect(fired).toBe(1);
+		expect(el.open, "and the reveal did not close under its own control").toBe("end");
+	});
+
+	it("still claims a press on the lid", () => {
+		const el = make({}, { end: true });
+		const lid = chrome(el).querySelector(".xtyle-reveal__lid") as HTMLElement;
+		const down = new PointerEvent("pointerdown", { bubbles: true, composed: true, cancelable: true });
+		lid.dispatchEvent(down);
+		expect(down.defaultPrevented).toBe(true);
+	});
+});
+
+/**
+ * A lid that takes a tabstop and answers no key is worse than one that takes none: it is a stop on the
+ * tab order that leads nowhere. Arrows open a belly, which is the whole interaction for `latch` — but a
+ * `commit` direction's action was unreachable from a keyboard entirely.
+ */
+describe("the keyboard can take the action, not just open the belly", () => {
+	const key = (el: XtyleReveal, k: string): void => {
+		const lid = chrome(el).querySelector(".xtyle-reveal__lid");
+		lid?.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, composed: true, cancelable: true }));
+	};
+
+	const commits = (el: XtyleReveal): string[] => {
+		const seen: string[] = [];
+		el.addEventListener("xtyle:reveal-commit", (e) => seen.push((e as CustomEvent).detail?.direction));
+		return seen;
+	};
+
+	it("fires the same commit a full pull does, from Enter and from Space", () => {
+		for (const k of ["Enter", " "]) {
+			const el = make({}, { end: { behavior: "commit" } });
+			const seen = commits(el);
+			key(el, k);
+			expect(seen, k).toEqual(["end"]);
+		}
+	});
+
+	it("commits the open direction when one is open", () => {
+		const el = make({}, { start: { behavior: "commit" }, end: { behavior: "commit" } });
+		const seen = commits(el);
+		key(el, "ArrowLeft");
+		key(el, "Enter");
+		expect(seen).toEqual(["end"]);
+	});
+
+	it("does nothing on Enter when two directions are live and neither is open", () => {
+		const el = make({}, { start: { behavior: "commit" }, end: { behavior: "commit" } });
+		const seen = commits(el);
+		key(el, "Enter");
+		expect(seen, "guessing which of two actions to fire would be worse than answering nothing").toEqual([]);
+	});
+
+	it("opens rather than fires for a latch direction, which has no action behind it", () => {
+		const el = make({}, { end: { behavior: "latch" } });
+		const seen = commits(el);
+		key(el, "Enter");
+		expect(seen).toEqual([]);
+		expect(el.open).toBe("end");
+		key(el, "Enter");
+		expect(el.open).toBeNull();
+	});
+
+	it("exposes commit() so a host drives the documented API instead of forging the event", () => {
+		const el = make({}, { end: { behavior: "commit" } });
+		const seen = commits(el);
+		el.commit("end");
+		expect(seen).toEqual(["end"]);
+	});
+
+	it("refuses a direction that is not live, and refuses everything when disabled", () => {
+		const live = make({}, { end: { behavior: "commit" } });
+		const seenLive = commits(live);
+		live.commit("start");
+		expect(seenLive).toEqual([]);
+
+		const off = make({ disabled: "" }, { end: { behavior: "commit" } });
+		const seenOff = commits(off);
+		off.commit("end");
+		key(off, "Enter");
+		expect(seenOff).toEqual([]);
+	});
+});
+
+/**
+ * A reveal whose lid carries a picture and a name, and whose pull is the only way to act, is a button by
+ * every test a screen reader applies; a group describes the furniture instead of the affordance. Opt-in,
+ * because a lid holding its own controls genuinely is a container and a button role would swallow them.
+ */
+describe("a lid that is the control can say so", () => {
+	const lidRole = (el: XtyleReveal): string | null =>
+		chrome(el).querySelector(".xtyle-reveal__lid")?.getAttribute("role") ?? null;
+
+	it("is a group by default, since the lid usually wraps content", () => {
+		expect(lidRole(make({}, { end: true }))).toBe("group");
+	});
+
+	it("becomes a button when the reveal is declared a control", () => {
+		expect(lidRole(make({ control: "", label: "Go to the abbey" }, { end: { behavior: "commit" } }))).toBe("button");
+	});
+
+	it("follows the flag after mount rather than freezing at first render", () => {
+		const el = make({}, { end: { behavior: "commit" } });
+		expect(lidRole(el)).toBe("group");
+		el.control = true;
+		expect(lidRole(el)).toBe("button");
+		el.control = false;
+		expect(lidRole(el)).toBe("group");
+	});
+
+	it("keeps its name and its state either way", () => {
+		const el = make({ control: "", label: "Go to the abbey" }, { end: { behavior: "commit" } });
+		const lid = chrome(el).querySelector(".xtyle-reveal__lid");
+		expect(lid?.getAttribute("aria-label")).toBe("Go to the abbey");
+		expect(lid?.getAttribute("aria-expanded")).toBe("false");
 	});
 });

@@ -56,6 +56,48 @@ const stats = [
 	<Card>
 		<Stack gap={4}>
 			<div>
+				<Heading level={3} size="md">Content beside a rail</Heading>
+				<Text tone="muted" size="sm">
+					<code>sidebar="16rem"</code> fixes the last child at that width and gives
+					the rest to the first; <code>minColWidth="20rem"</code> is the floor the
+					content will not go under, so the pair stacks instead of squeezing.
+				</Text>
+			</div>
+			<Grid sidebar="16rem" minColWidth="20rem" gap={4}>
+				<div class="demo-grid__main">
+					<Text size="sm">
+						The document. It takes whatever the rail leaves, and keeps taking it
+						until it would drop under its floor — narrow the page and watch the
+						outline drop below instead of crushing this column.
+					</Text>
+				</div>
+				<div class="demo-grid__rail">
+					<Text size="xs" tone="subtle" mono>outline</Text>
+					<Stack gap={1}>
+						{["Anchors", "Knobs", "Derivation", "Emit"].map((entry) => (
+							<Text size="sm" tone="muted">{entry}</Text>
+						))}
+					</Stack>
+				</div>
+			</Grid>
+			<Grid sidebar="12rem" side="start" minColWidth="20rem" gap={4}>
+				<div class="demo-grid__rail">
+					<Text size="xs" tone="subtle" mono>side="start"</Text>
+					<Text size="sm" tone="muted">The rail first in source order.</Text>
+				</div>
+				<div class="demo-grid__main">
+					<Text size="sm">
+						Same shell, rail on the leading edge. Source order still matches
+						reading order, so nothing has to be re-tabbed to make it look right.
+					</Text>
+				</div>
+			</Grid>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack gap={4}>
+			<div>
 				<Heading level={3} size="md">Real content grid</Heading>
 				<Text tone="muted" size="sm">
 					The same primitive composes cards into a gallery — every cell shares
@@ -109,5 +151,20 @@ const stats = [
 	}
 	.demo-grid__stat :global(.xtyle-heading) {
 		margin: var(--space-1) 0 0;
+	}
+	.demo-grid__main,
+	.demo-grid__rail {
+		padding: var(--space-4);
+		border-radius: var(--radius-md);
+		border: var(--border-thin) solid var(--line);
+	}
+	.demo-grid__main {
+		background: var(--bg-1);
+	}
+	.demo-grid__rail {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		background: var(--bg-2);
 	}
 </style>

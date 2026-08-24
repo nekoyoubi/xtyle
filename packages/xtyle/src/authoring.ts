@@ -14,15 +14,18 @@ import {
 	PACK_SINCE,
 	registerToNodes,
 	resolveKnobSpecs,
+	ringForContrast,
 	runPipeline,
 	settlePass,
 	SHARED_KNOBS,
+	statedSchemes,
 	SURFACE_SEPARATION,
 	TOKEN_CATEGORIES,
 	type PresetAnchors,
 	type PresetDefaults,
 } from "./algorithms/factory.js";
-import type { AccentStrategy } from "./types.js";
+import type { AccentStrategy, Scheme } from "./types.js";
+import { SURFACE_ROLES } from "./vocab.js";
 import {
 	contrast,
 	formatCss,
@@ -38,6 +41,7 @@ export {
 	makeXtyleAlgorithm,
 	makeXtylePipelineAlgorithm,
 	borderForContrast,
+	ringForContrast,
 	BORDER_SEPARATION,
 	DIVIDER_SEPARATION,
 	SURFACE_SEPARATION,
@@ -47,8 +51,10 @@ export {
 	registerToNodes,
 	buildPassContext,
 	TOKEN_CATEGORIES,
+	PRODUCED_TOKENS,
 	DEFAULT_ANCHORS,
 	SHARED_KNOBS,
+	SURFACE_ROLES,
 	contrast,
 	formatCss,
 	oklch,
@@ -58,7 +64,17 @@ export {
 	type PresetDefaults,
 	type PresetAnchors,
 };
+export type {
+	DeriveOptions,
+	KnobSpec,
+	Pass,
+	PassContext,
+	TokenCategories,
+	TokenName,
+	TokenRegister,
+} from "./types.js";
 import type {
+	AlgorithmDeclarations,
 	DeriveOptions,
 	Invariant,
 	InvariantContext,
@@ -89,6 +105,8 @@ declare const cuti: Cuti;
 
 type Lineage = { name: TokenName; value?: string; refs?: TokenName[] };
 
+const WCAG_FOCUS_RING = 3;
+
 function toLineage(nodes: TokenNode[]): Lineage[] {
 	return nodes.map(({ name, value, refs }) =>
 		refs && refs.length ? { name, value, refs } : { name, value },
@@ -106,6 +124,8 @@ function registerExports(
 		knobs: string[];
 		knobSpecs: KnobSpec[];
 		passNames: string[];
+		focusRingFloor?: number;
+		schemes?: Scheme[];
 	},
 	invariants: Invariant[],
 ): void {
@@ -138,11 +158,33 @@ function tracePreset(
 
 export interface XtyleAlgorithmSpec {
 	id: string;
-	anchors?: PresetAnchors;
+	/**
+	 * The anchors this algorithm starts from. Partial on purpose: whatever is named here merges over
+	 * the standard pair, so an algorithm that only has an opinion about the accent says only that.
+	 */
+	anchors?: Partial<PresetAnchors>;
+	/**
+	 * An anchor pair for a scheme other than the one {@link anchors} lands in, so an algorithm can
+	 * answer for both halves of a theme rather than only the half its default pair describes.
+	 *
+	 * Optional. Absent, asking for the other scheme flips the default pair's lightness and lands on a
+	 * mid-gray page.
+	 */
+	anchorsByScheme?: Partial<Record<Scheme, Partial<PresetAnchors>>>;
 	knobs?: string[];
 	/** Domain specs for any knob not in the shared registry — a novel knob this algorithm introduces. */
 	knobSpecs?: KnobSpec[];
-	contrast?: { floor?: number; textOnFill?: number };
+	/**
+	 * Tokens this algorithm emits *beyond* the standard register, and the value kind each carries.
+	 * The open register in its ordinary form: an extra pass that produces something new declares it
+	 * here, which is how discovery lists the token and a consumer's coverage check finds it.
+	 *
+	 * Additive by construction: the standard set is always produced, because the components consume
+	 * it. An algorithm that replaces the register rather than extending it is a `defineAlgorithm`
+	 * (tier 2), which declares `produces` outright.
+	 */
+	adds?: { tokens: TokenName[]; categories: TokenCategories };
+	contrast?: { floor?: number; textOnFill?: number; focusRing?: number };
 	vibrancy?: number;
 	chroma?: {
 		accent?: number;
@@ -178,6 +220,7 @@ export function toPreset(spec: XtyleAlgorithmSpec): PresetDefaults {
 		defaultAnchors: spec.anchors ? { ...DEFAULT_ANCHORS, ...spec.anchors } : DEFAULT_ANCHORS,
 		contrastFloor: contrast.floor ?? 4.7,
 		declaredTextOnFillFloor: contrast.textOnFill ?? 4.5,
+		declaredFocusRingFloor: contrast.focusRing ?? WCAG_FOCUS_RING,
 		defaultVibrancy: spec.vibrancy ?? 0.5,
 		accentChromaMul: chroma.accent ?? 1,
 		statusChromaMul: chroma.status ?? 1,
@@ -187,6 +230,13 @@ export function toPreset(spec: XtyleAlgorithmSpec): PresetDefaults {
 		elevationAlphaBoost: elevation.alphaBoost ?? 0,
 		accentTintChromaMul: chroma.accentTint ?? 0.3,
 	};
+	if (spec.anchorsByScheme) {
+		const byScheme: Partial<Record<Scheme, PresetAnchors>> = {};
+		for (const [scheme, stated] of Object.entries(spec.anchorsByScheme)) {
+			if (stated) byScheme[scheme as Scheme] = { ...preset.defaultAnchors, ...stated };
+		}
+		preset.anchorsByScheme = byScheme;
+	}
 	if (spec.accentStrategy) preset.accentStrategy = spec.accentStrategy;
 	if (spec.extreme) preset.extreme = true;
 	return preset;
@@ -210,12 +260,14 @@ export function defineXtyleAlgorithm(spec: XtyleAlgorithmSpec): void {
 		(input) => tracePreset(preset, buildPasses, input),
 		{
 			since: PACK_SINCE,
-			produces: PRODUCED_TOKENS,
+			produces: spec.adds ? [...new Set([...PRODUCED_TOKENS, ...spec.adds.tokens])] : PRODUCED_TOKENS,
 			producedSince: PRODUCED_SINCE,
-			categories: TOKEN_CATEGORIES,
+			categories: spec.adds ? { ...TOKEN_CATEGORIES, ...spec.adds.categories } : TOKEN_CATEGORIES,
 			knobs: preset.knobs,
 			knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),
 			passNames: buildPasses(preset, {}).map((pass) => pass.name),
+			focusRingFloor: preset.declaredFocusRingFloor,
+			schemes: statedSchemes(preset),
 		},
 		makeInvariants(preset),
 	);
@@ -242,6 +294,8 @@ export interface AlgorithmSpec {
 	/** The ordered pipeline. The author lists every pass; the first receives an empty register. */
 	passes?: Pass[];
 	invariants?: Invariant[];
+	/** What this algorithm promises about its own output, for `auditRegister` to grade against. */
+	declares?: AlgorithmDeclarations;
 }
 
 function tier2Context(input: DeriveOptions, passIndex: number): PassContext {
@@ -279,6 +333,9 @@ export function defineAlgorithm(spec: AlgorithmSpec): void {
 			knobs: spec.knobs,
 			knobSpecs: resolveKnobSpecs(spec.knobs, spec.knobSpecs),
 			passNames: passes ? passes.map((pass) => pass.name) : ["derive"],
+			...(spec.declares?.focusRingFloor !== undefined
+				? { focusRingFloor: spec.declares.focusRingFloor }
+				: {}),
 		},
 		spec.invariants ?? [],
 	);

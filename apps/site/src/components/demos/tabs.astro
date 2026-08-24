@@ -7,6 +7,17 @@ import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Badge from "@xtyle/astro/Badge.astro";
 import Icon from "@xtyle/astro/Icon.astro";
+
+const overflowTabs = [
+	"Overview", "Activity", "Members", "Billing", "Integrations", "Webhooks",
+	"API keys", "Audit log", "Domains", "Environments", "Secrets", "Usage",
+	"Alerts", "Backups", "Regions", "Compliance", "Support", "Danger zone",
+].map((label, i) => ({ value: `s${i}`, label }));
+
+const buildLog = Array.from(
+	{ length: 24 },
+	(_, i) => `12:04:${String(i).padStart(2, "0")}  build  resolving manifest ${i + 1} of 24`,
+);
 ---
 
 <Stack gap={6}>
@@ -172,9 +183,98 @@ import Icon from "@xtyle/astro/Icon.astro";
 			<div data-xtyle-panel=""><Text size="sm" tone="muted">Billing is disabled on this plan.</Text></div>
 		</Tabs>
 	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Cluster gap={2} align="center" justify="between">
+				<Heading level={3} size="lg">More tabs than room</Heading>
+				<Badge tone="info">overflow</Badge>
+			</Cluster>
+			<Text size="sm" tone="muted">
+				Both strips hold the same eighteen tabs in the same narrow box. <code>wrap</code> is the
+				default: the tabs flow onto as many rows as they need and every one stays visible.
+				<code>scroll</code> keeps them on a single row behind a scrollbar.
+			</Text>
+		</Stack>
+		<Stack gap={5}>
+			<Stack gap={2}>
+				<Text as="span" size="xs" tone="subtle" mono>overflow="wrap"</Text>
+				<div class="overflow-demo">
+					<Tabs variant="pill" value="s0" label="Wrapping tabs">
+						{overflowTabs.map((tab) => (
+							<span data-xtyle-tab="" data-value={tab.value}>{tab.label}</span>
+						))}
+						{overflowTabs.map((tab) => (
+							<div data-xtyle-panel=""><Text size="sm" tone="muted">{tab.label} panel.</Text></div>
+						))}
+					</Tabs>
+				</div>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text as="span" size="xs" tone="subtle" mono>overflow="scroll"</Text>
+				<div class="overflow-demo">
+					<Tabs variant="pill" overflow="scroll" value="s0" label="Scrolling tabs">
+						{overflowTabs.map((tab) => (
+							<span data-xtyle-tab="" data-value={tab.value}>{tab.label}</span>
+						))}
+						{overflowTabs.map((tab) => (
+							<div data-xtyle-panel=""><Text size="sm" tone="muted">{tab.label} panel.</Text></div>
+						))}
+					</Tabs>
+				</div>
+			</Stack>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Stack gap={3} slot="header">
+			<Cluster gap={2} align="center">
+				<Heading level={3} size="lg">Filling a bounded box</Heading>
+				<Badge tone="info">fill</Badge>
+			</Cluster>
+			<Text size="sm" tone="muted">
+				The strip stays put and the panel scrolls. Without <code>fill</code> a panel taller than the box grows past it
+				and the overflow escapes to whatever ancestor clips, with no scrollbar to say so.
+			</Text>
+		</Stack>
+		<div class="fill-demo">
+			<Tabs variant="enclosed" value="log" label="Build output" fill>
+				<span data-xtyle-tab="" data-value="log">Log</span>
+				<span data-xtyle-tab="" data-value="summary">Summary</span>
+				<div data-xtyle-panel="">
+					<Stack gap={1}>
+						{buildLog.map((line) => (
+							<Text size="sm" mono tone="muted">{line}</Text>
+						))}
+					</Stack>
+				</div>
+				<div data-xtyle-panel="">
+					<Stack gap={2}>
+						<Text size="sm" tone="muted">24 manifests resolved, 0 coverage gaps.</Text>
+					</Stack>
+				</div>
+			</Tabs>
+		</div>
+	</Card>
 </Stack>
 
 <style>
+	.overflow-demo {
+		max-width: 26rem;
+		padding: var(--space-3);
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+	}
+	.fill-demo {
+		display: flex;
+		height: 16rem;
+		min-height: 0;
+		overflow: hidden;
+		border: var(--border-thin) solid var(--line);
+		border-radius: var(--radius-md);
+		padding: var(--space-3);
+	}
 	.headless-demo {
 		display: flex;
 		flex-direction: column;

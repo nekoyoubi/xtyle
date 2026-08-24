@@ -1,5 +1,6 @@
 export const themeCardCss = `
 .xtyle-theme-card {
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	border: var(--border-thin) solid var(--line);

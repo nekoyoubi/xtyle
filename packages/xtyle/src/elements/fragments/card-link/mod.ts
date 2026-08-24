@@ -14,6 +14,7 @@ interface CardLinkBindings {
 	compact?: boolean;
 	hasHeader?: boolean;
 	hasFooter?: boolean;
+	ariaLabel?: string | null;
 }
 
 declare const hooks: {
@@ -43,7 +44,8 @@ function cardLinkHtml(b: CardLinkBindings): string {
 	// INFO: data-slot lets the auto-light Astro SSR render (no shadow root) capture the region
 	const headerHidden = b.hasHeader ? "" : " hidden";
 	const footerHidden = b.hasFooter ? "" : " hidden";
-	return `<a part="card" class="${cardLinkClass(b)}" ${attrs}><div class="xtyle-card__header" part="header" data-slot="header"${headerHidden}><slot name="header"></slot></div><div class="xtyle-card__body" part="body" data-slot><slot></slot></div><div class="xtyle-card__footer" part="footer" data-slot="footer"${footerHidden}><slot name="footer"></slot></div></a>`;
+	const nameAttr = b.ariaLabel ? ` aria-label="${escapeAttr(b.ariaLabel)}"` : "";
+	return `<a part="card" class="${cardLinkClass(b)}" ${attrs}${nameAttr}><div class="xtyle-card__header" part="header" data-slot="header"${headerHidden}><slot name="header"></slot></div><div class="xtyle-card__body" part="body" data-slot><slot></slot></div><div class="xtyle-card__footer" part="footer" data-slot="footer"${footerHidden}><slot name="footer"></slot></div></a>`;
 }
 
 hooks.fragment.mount("card-link", (bindings, ops) => {

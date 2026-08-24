@@ -93,7 +93,7 @@ function tableHtml(data: { label: string; value: number }[], total: number, capt
 		)
 		.join("");
 	const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
-	return `<table class="xtyle-pie__a11y">${cap}<thead><tr><th scope="col">Slice</th><th scope="col">Value</th><th scope="col">Share</th></tr></thead><tbody>${rows}</tbody></table>`;
+	return `<div class="xtyle-pie__a11y"><table>${cap}<thead><tr><th scope="col">Slice</th><th scope="col">Value</th><th scope="col">Share</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function pieHtml(b: PieBindings): string {

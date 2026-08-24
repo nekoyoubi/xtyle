@@ -68,6 +68,7 @@ export const themePickerManifest: ComponentManifest = {
 	description:
 		"Theme Picker is the choosing surface for a set of invocations. Every option is an `<xtyle-theme-card>`, so the preview, the button semantics, the accessible name, and the selected state all come from that component; the picker owns the grid, which card is current, and reporting the choice. Turn on `swatches` and each card gets an `<xtyle-theme-swatch>` beneath it, pairing the picture with the parts list. It adds **no cursor of its own** — every card is already a real button, so focus moves through them the way it moves through any group of controls, and there is no bespoke roving tab stop to get wrong. Picking one fires `xtyle:theme-pick` carrying the *whole invocation*, not just a name, which is exactly what an `<xtyle-theme-scope>` needs to apply it: the two compose into a working theme switcher with no glue in between. With no `themes` it says so rather than rendering an empty grid.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["card", "empty", "grid", "item", "menu", "panel", "swatch", "trigger", "trigger-label"],
 	anatomy: [
 		{
 			name: "grid",
@@ -145,6 +146,9 @@ export const themePickerManifest: ComponentManifest = {
 			description: "What to say when `themes` is empty.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "xtyle:theme-pick", detail: "{ theme }", description: "A theme was picked, carrying the whole invocation.", bindings: ["html", "svelte", "astro"], handler: "onpick" },
 	],
 	variants: [],
 	sizes: [],

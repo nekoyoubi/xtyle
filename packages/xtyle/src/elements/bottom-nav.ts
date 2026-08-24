@@ -106,7 +106,7 @@ export class XtyleBottomNav extends XtyleElement {
 	private select(value: string): void {
 		if (!value || value === this.value) return;
 		this.value = value;
-		this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+		this.emitOwn("change", null, { value });
 	}
 }
 

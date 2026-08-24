@@ -135,6 +135,7 @@ export const datePickerCss = `
 	display: none;
 }
 .xtyle-datepicker__panel {
+	box-sizing: border-box;
 	display: flex;
 	align-items: stretch;
 	gap: var(--space-3);

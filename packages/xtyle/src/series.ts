@@ -21,7 +21,14 @@ import { toOklchColor, oklch, formatCss, clampToGamut, hueDelta } from "./color.
  * per-datum `tone`: positional sampling pins by index, so a filtered-out category shifts every
  * survivor's tone.
  */
-export type Palette = "accents" | "skittles" | "statuses" | "thermal" | "severity" | "intensity";
+export type BuiltInPalette = "accents" | "skittles" | "statuses" | "thermal" | "severity" | "intensity";
+
+/**
+ * A palette name: one of the blessed set, or any name a mod registered through {@link registerPalettes}.
+ * The union keeps the built-ins in autocomplete while leaving the register open, the way the icon and
+ * silhouette rosters are open.
+ */
+export type Palette = BuiltInPalette | (string & {});
 
 /**
  * How N discrete colors come off a palette's stops.
@@ -62,7 +69,7 @@ export const STATUS_TONE_KEYS: readonly StatusTone[] = Object.keys(STATUS_TONES)
 
 /** Every built-in palette, as its stop list plus the policy for sampling N discrete colors off it. The
  * single table both the discrete and the continuous paths resolve through. */
-export const PALETTE_SPECS: Record<Palette, PaletteSpec> = {
+export const PALETTE_SPECS: Record<BuiltInPalette, PaletteSpec> = {
 	accents: { stops: ["--accent", "--accent-2", "--accent-3", "--accent-4", "--neutral"], sampling: "ordered" },
 	skittles: {
 		stops: ["--red", "--orange", "--yellow", "--green", "--blue", "--purple", "--brown", "--pink", "--cyan"],
@@ -76,13 +83,13 @@ export const PALETTE_SPECS: Record<Palette, PaletteSpec> = {
 
 /** The built-in palette names, in presentation order. The one list every picker, manifest `options`
  * array, and name validator reads, so a palette added here needs no edit anywhere else. */
-export const PALETTES: readonly Palette[] = ["accents", "skittles", "statuses", "thermal", "severity", "intensity"];
+export const PALETTES: readonly BuiltInPalette[] = ["accents", "skittles", "statuses", "thermal", "severity", "intensity"];
 
 /** The palette every unknown name falls back to for a discrete ask. */
-const DEFAULT_PALETTE: Palette = "accents";
+const DEFAULT_PALETTE: BuiltInPalette = "accents";
 
 /** The palette every unknown name falls back to for a continuous ask. */
-const DEFAULT_RAMP: Palette = "intensity";
+const DEFAULT_RAMP: BuiltInPalette = "intensity";
 
 /**
  * Retired palette names, each mapped to its current one. These are *renames*, not merges: `status` was
@@ -90,14 +97,14 @@ const DEFAULT_RAMP: Palette = "intensity";
  * `intensity`). Neither is an alias of the similarly-named `statuses` or `accents` palette, which are
  * different sets of stops entirely.
  */
-const PALETTE_ALIASES: Record<string, Palette> = {
+const PALETTE_ALIASES: Record<string, BuiltInPalette> = {
 	status: "severity",
 	accent: "intensity",
 };
 
 const warnedAliases = new Set<string>();
 
-function warnAlias(from: string, to: Palette): void {
+function warnAlias(from: string, to: BuiltInPalette): void {
 	if (warnedAliases.has(from)) return;
 	warnedAliases.add(from);
 	globalThis.console?.warn?.(`xtyle: the "${from}" palette was renamed to "${to}"; update the value.`);
@@ -109,7 +116,7 @@ function warnAlias(from: string, to: Palette): void {
  * The single validator every consumer shares.
  */
 export function resolvePalette(name: string): Palette | null {
-	if (name in PALETTE_SPECS) return name as Palette;
+	if (registry.has(name)) return name;
 	const alias = PALETTE_ALIASES[name];
 	if (!alias) return null;
 	warnAlias(name, alias);
@@ -140,7 +147,7 @@ export function resolvePaletteName(value: string | null | undefined, fallback: P
 	if (!warnedPalettes.has(value)) {
 		warnedPalettes.add(value);
 		globalThis.console?.warn?.(
-			`xtyle: "${value}" is not a valid ${label}. Valid palettes are ${PALETTES.join(", ")}. Falling back to "${fallback}".`,
+			`xtyle: "${value}" is not a valid ${label}. Valid palettes are ${paletteNames().join(", ")}. Falling back to "${fallback}".`,
 		);
 	}
 	return fallback;
@@ -150,7 +157,7 @@ export function resolvePaletteName(value: string | null | undefined, fallback: P
 export function paletteStops(palette: Palette | string | string[], fallback: Palette = DEFAULT_PALETTE): string[] {
 	if (Array.isArray(palette)) return [...palette];
 	const resolved = resolvePalette(palette) ?? fallback;
-	return [...(PALETTE_SPECS[resolved] as PaletteSpec).stops];
+	return [...(paletteSpec(resolved) ?? (PALETTE_SPECS[DEFAULT_PALETTE] as PaletteSpec)).stops];
 }
 
 /**
@@ -161,6 +168,68 @@ export function paletteStops(palette: Palette | string | string[], fallback: Pal
 export const PALETTE_TOKENS: readonly string[] = [
 	...new Set(Object.values(PALETTE_SPECS).flatMap((spec) => spec.stops.filter((stop) => stop.startsWith("--")))),
 ];
+
+/** The slot a mod fills to contribute palettes, declared in its own manifest rather than run as code. */
+export const PALETTE_SLOT = "xtyle.palettes";
+
+/** One mod's contribution: palette specs keyed by name. */
+export interface PaletteFill {
+	palettes: Record<string, PaletteSpec>;
+}
+
+const registry = new Map<string, PaletteSpec>(Object.entries(PALETTE_SPECS));
+
+/**
+ * Add or replace named palettes, last-wins on the name, the way the effect library takes verbs. A name
+ * registered here is usable anywhere a palette name is, including a mark's `---ps-` finish.
+ *
+ * Stops may be register tokens (`--accent`), `var()` references, or literal colors. A token stop tracks
+ * the theme, which is what a `thermal` ramp wants; a literal is fixed, which is what a named indexed
+ * palette means — a retro ramp is not supposed to move when the theme does.
+ */
+export function registerPalettes(palettes: Record<string, PaletteSpec>): void {
+	for (const [name, spec] of Object.entries(palettes)) registry.set(name, spec);
+}
+
+/** Drop every contributed palette, leaving the blessed set. For tests and for a host teardown. */
+export function resetPalettes(): void {
+	registry.clear();
+	for (const [name, spec] of Object.entries(PALETTE_SPECS)) registry.set(name, spec);
+}
+
+/** Every palette currently registered, blessed and contributed alike. */
+export function paletteNames(): string[] {
+	return [...registry.keys()].sort();
+}
+
+/** The spec behind a palette name, or `undefined` for a name nobody registered. */
+export function paletteSpec(name: string): PaletteSpec | undefined {
+	return registry.get(name);
+}
+
+/** Pull the palette blocks out of a mod manifest's `xtyle.palettes` fills, if it declares any. */
+export function paletteFillsFrom(modManifest: unknown): PaletteFill[] {
+	const fills = (modManifest as { fills?: Record<string, unknown> } | null | undefined)?.fills;
+	const declared = fills?.[PALETTE_SLOT];
+	if (!declared) return [];
+	return (Array.isArray(declared) ? declared : [declared]).filter(isPaletteFill);
+}
+
+function isPaletteFill(value: unknown): value is PaletteFill {
+	const palettes = (value as Partial<PaletteFill> | null | undefined)?.palettes;
+	if (!palettes || typeof palettes !== "object") return false;
+	return Object.values(palettes).every((spec) => Array.isArray((spec as PaletteSpec | null)?.stops));
+}
+
+/** Register every palette a mod manifest contributes, in declaration order. */
+export function registerPaletteFills(modManifest: unknown): number {
+	let added = 0;
+	for (const fill of paletteFillsFrom(modManifest)) {
+		registerPalettes(fill.palettes);
+		added += Object.keys(fill.palettes).length;
+	}
+	return added;
+}
 
 /** @deprecated Use {@link Palette}. */
 export type SeriesScheme = Palette;
@@ -360,7 +429,7 @@ export function seriesPalette(
 	if (Array.isArray(palette)) {
 		colors = picked(palette, count, true);
 	} else {
-		const spec = PALETTE_SPECS[resolvePalette(palette) ?? DEFAULT_PALETTE] as PaletteSpec;
+		const spec = paletteSpec(resolvePalette(palette) ?? DEFAULT_PALETTE) ?? (PALETTE_SPECS[DEFAULT_PALETTE] as PaletteSpec);
 		const stops = resolve(spec.stops, register);
 		colors = spec.sampling === "interpolate" ? interpolated(stops, count) : picked(stops, count, spec.sampling === "ordered");
 	}

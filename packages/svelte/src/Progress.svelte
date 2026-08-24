@@ -2,11 +2,12 @@
 	import "@xtyle/core/elements/progress.js";
 	import type { Snippet } from "svelte";
 	import type { FullTone as Tone, Palette } from "@xtyle/core";
-	import { PROGRESS_VARIANTS, PROGRESS_SIZES, PROGRESS_RAMP_MODES } from "@xtyle/core";
+	import { PROGRESS_VARIANTS, PROGRESS_SIZES, PROGRESS_RAMP_MODES, PROGRESS_ORIENTS } from "@xtyle/core";
 
 	type ProgressVariant = (typeof PROGRESS_VARIANTS)[number];
 	type ProgressSize = (typeof PROGRESS_SIZES)[number];
 	type ProgressRampMode = (typeof PROGRESS_RAMP_MODES)[number];
+	type ProgressOrient = (typeof PROGRESS_ORIENTS)[number];
 
 	interface Props {
 		variant?: ProgressVariant;
@@ -40,10 +41,26 @@
 		/** How heavy a `circular` ring reads, independent of its diameter: a unitless number in ring units
 		 * (scales with the ring) or a CSS length (`6px`) that holds its weight at any size. */
 		thickness?: string | number;
+		/** The visible caption above the bar, distinct from `ariaLabel`, which renders nothing. Setting it
+		 * alone also names the control, so the string is written once. */
+		label?: string;
+		/** A free-form reading on the caption line, independent of `valueFormat` (`8/20`, `even`, `46 left`). */
+		reading?: string;
+		/** A line of prose under the bar, explaining what the reading means. */
+		note?: string;
+		/** Which axis the bar fills along. `vertical` grows the indicator up the block axis natively, so a
+		 * standing gauge needs no rotation. Linear only. */
+		orient?: ProgressOrient;
 		ariaLabel?: string;
 		/** Custom content for the readout, filling the element's `value` slot in place of the built-in
 		 * `showValue` text. Named `readout` because `value` is already the numeric prop. */
 		readout?: Snippet;
+		/** Markup for the caption's name, in place of the plain `label` string. */
+		labelContent?: Snippet;
+		/** Markup for the caption's reading, in place of the plain `reading` string. */
+		readingContent?: Snippet;
+		/** Markup for the note under the bar, in place of the plain `note` string. */
+		noteContent?: Snippet;
 		children?: Snippet;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
@@ -68,8 +85,15 @@
 		reverse = false,
 		track = true,
 		thickness,
+		label,
+		reading,
+		note,
+		orient = "horizontal",
 		ariaLabel,
 		readout,
+		labelContent,
+		readingContent,
+		noteContent,
 		children,
 		...rest
 	}: Props = $props();
@@ -95,8 +119,15 @@
 	reverse={reverse || undefined}
 	track={track === true ? undefined : track === false ? "none" : track}
 	thickness={thickness ?? undefined}
+	label={label ?? undefined}
+	reading={reading ?? undefined}
+	note={note ?? undefined}
+	orient={orient !== "horizontal" ? orient : undefined}
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 >
 	{#if readout}<span slot="value">{@render readout()}</span>{/if}
+	{#if labelContent}<span slot="label">{@render labelContent()}</span>{/if}
+	{#if readingContent}<span slot="reading">{@render readingContent()}</span>{/if}
+	{#if noteContent}<span slot="note">{@render noteContent()}</span>{/if}
 	{@render children?.()}
 </xtyle-progress>

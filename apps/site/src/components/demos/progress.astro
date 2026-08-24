@@ -42,6 +42,70 @@ const TONE_GROUPS = [
 	</Card>
 
 	<Card compact>
+		<Heading slot="header" level={3} size="sm">Caption, reading, and note</Heading>
+		<Stack gap={5}>
+			<Text size="sm" tone="subtle">
+				Two bars stacked in a panel are told apart by a screen reader and not by eye unless one of them says what it
+				is. <code>label</code> renders the name and announces it; <code>reading</code> is free-form, so it can say
+				things no value format could compute; <code>note</code> explains what the reading means.
+			</Text>
+			<Stack gap={4}>
+				<Progress
+					label="The haggle"
+					reading="8 of 20 coins"
+					note="They will come down another two, and no further."
+					value={40}
+					tone="accent"
+				/>
+				<Progress
+					label="The stallkeep's patience"
+					reading="thinning"
+					note="Push once more and the price goes back up."
+					value={22}
+					tone="warn"
+					ramp="thermal"
+					reverse
+				/>
+				<Progress label="Standing in the market" reading="even" value={50} tone="info" />
+			</Stack>
+		</Stack>
+	</Card>
+
+	<Card compact>
+		<Heading slot="header" level={3} size="sm">Standing upright</Heading>
+		<Stack gap={5}>
+			<Text size="sm" tone="subtle">
+				<code>orient="vertical"</code> grows the indicator up the block axis natively. Rotating a horizontal bar
+				cannot be made correct from outside: a rotated element keeps its pre-rotation layout box, so its visible
+				height is its pre-rotation width and no percentage resolves against the side you can see. The rail takes its
+				length from <code>--xtyle-progress-length</code>, the way a ring takes its diameter from
+				<code>--xtyle-progress-size</code>.
+			</Text>
+			<Cluster gap={5} align="end">
+				{
+					[
+						{ label: "Hold", value: 82, tone: "success" as const },
+						{ label: "Heat", value: 61, tone: "warn" as const },
+						{ label: "Fuel", value: 34, tone: "info" as const },
+						{ label: "Hull", value: 12, tone: "danger" as const },
+					].map((gauge) => (
+						<Progress
+							orient="vertical"
+							label={gauge.label}
+							reading={`${gauge.value}%`}
+							value={gauge.value}
+							tone={gauge.tone}
+							class="demo-progress-standing"
+						/>
+					))
+				}
+				<Progress orient="vertical" label="Mixed" reading="ramped" value={70} ramp="thermal" class="demo-progress-standing" />
+				<Progress orient="vertical" label="Working" indeterminate aria-label="Working" class="demo-progress-standing" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card compact>
 		<Heading slot="header" level={3} size="sm">Every tone</Heading>
 		<Stack gap={4}>
 			{TONE_GROUPS.map((group) => (
@@ -292,6 +356,29 @@ const TONE_GROUPS = [
 			</Stack>
 		</Grid>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">In a container that sizes to its content</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				A linear bar carries its own width, so it fills a table cell or a content-sized grid track
+				rather than collapsing. Nothing here sets a width, and no <code>variant</code> is written:
+				<code>linear</code> is the default and needs no attribute to be true.
+			</Text>
+			<table class="demo-progress-table">
+				<tbody>
+					<tr>
+						<th scope="row"><Text as="span" size="sm">Charge</Text></th>
+						<td><Progress meter size="sm" value={4.6} max={10} tone="success" aria-label="Charge" /></td>
+					</tr>
+					<tr>
+						<th scope="row"><Text as="span" size="sm">Wear</Text></th>
+						<td><Progress meter size="sm" value={8.2} max={10} tone="warn" aria-label="Wear" /></td>
+					</tr>
+				</tbody>
+			</table>
+		</Stack>
+	</Card>
 </Stack>
 
 <style>
@@ -302,10 +389,27 @@ const TONE_GROUPS = [
 	.demo-progress-bar {
 		flex: 1;
 	}
+	.demo-progress-standing {
+		--xtyle-progress-length: 9rem;
+	}
 	.demo-portrait {
 		position: relative;
 		display: inline-flex;
 		padding: 0.375rem;
+	}
+	.demo-progress-table {
+		border-collapse: collapse;
+		width: 100%;
+	}
+	.demo-progress-table th {
+		width: 1%;
+		white-space: nowrap;
+		text-align: start;
+		font-weight: var(--weight-regular);
+		padding-inline-end: var(--space-4);
+	}
+	.demo-progress-table td {
+		padding-block: var(--space-1);
 	}
 	.demo-portrait :global(xtyle-progress) {
 		display: block;

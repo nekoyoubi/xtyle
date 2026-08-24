@@ -22,7 +22,9 @@ interface TabsBindings {
 	activeId?: string | null;
 	variant?: string;
 	size?: string;
+	overflow?: string;
 	sticky?: boolean;
+	fill?: boolean;
 	tablist?: boolean;
 	label?: string | null;
 	labelledby?: string | null;
@@ -70,7 +72,9 @@ function rootClass(bindings: TabsBindings): string {
 	const size = bindings.size ?? "md";
 	const parts = ["xtyle-tabs", `xtyle-tabs--${variant}`];
 	if (size !== "md") parts.push(`xtyle-tabs--${size}`);
+	if ((bindings.overflow ?? "wrap") === "scroll") parts.push("xtyle-tabs--scroll");
 	if (bindings.sticky) parts.push("xtyle-tabs--sticky");
+	if (bindings.fill) parts.push("xtyle-tabs--fill");
 	return parts.join(" ");
 }
 

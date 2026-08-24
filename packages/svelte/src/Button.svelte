@@ -18,6 +18,8 @@
 		iconOnly?: boolean;
 		pressed?: boolean;
 		selected?: boolean;
+		/** Set false to keep the control out of sequential focus navigation. */
+		focusable?: boolean;
 		ariaLabel?: string;
 		onclick?: (event: MouseEvent) => void;
 		iconStart?: Snippet;
@@ -40,6 +42,7 @@
 		iconOnly = false,
 		pressed,
 		selected,
+		focusable,
 		ariaLabel,
 		onclick,
 		iconStart,
@@ -65,6 +68,7 @@
 	icon-only={iconOnly || undefined}
 	pressed={pressed === undefined ? undefined : String(pressed)}
 	selected={selected === undefined ? undefined : String(selected)}
+	focusable={focusable === false ? "false" : undefined}
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	{onclick}
 >

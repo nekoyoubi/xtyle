@@ -1,10 +1,14 @@
 <script lang="ts">
-	import type { TokenLineageNode, TokenRegister } from "@xtyle/core";
+	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xtyle/core";
 	import { auditRegister, clampToGamut, coverComponents, toOklchColor } from "@xtyle/core";
 	import { isColorToken } from "./tokens.js";
 
 	interface Props {
 		register: TokenRegister;
+		/** The algorithm that produced `register` — the focus ring grades against the floor it declares. */
+		algorithm: Algorithm;
+		/** Which derivation path produced `register`: the sandboxed mod, the baked oracle, or still resolving. */
+		derivePath: "hosted" | "baked" | "pending";
 		/** The edges of the derivation that produced `register` — resolved once by the bench and passed
 		 * down, so opening this tab reads the graph rather than deriving a second one to read it from. */
 		lineage: TokenLineageNode[];
@@ -12,9 +16,12 @@
 		panel: string;
 	}
 
-	let { register, lineage, panel }: Props = $props();
+	let { register, algorithm, derivePath, lineage, panel }: Props = $props();
 
-	const audit = $derived(auditRegister(register));
+	const ringFloor = $derived(algorithm.declares?.focusRingFloor);
+	const audit = $derived(
+		auditRegister(register, ringFloor === undefined ? {} : { focusRingFloor: ringFloor }),
+	);
 	const contrastRows = $derived(
 		audit.entries.map((e) => ({
 			label: `${e.fg.replace(/^--/, "")} on ${e.bg.replace(/^--/, "")}`,
@@ -78,6 +85,26 @@
 					</li>
 				{/each}
 			</ul>
+			<p class="bench-insp__lead x-caption">
+				The focus ring is graded apart, because it's a shape rather than text and it's drawn on
+				whatever sits behind a control. Floor
+				<strong>{audit.focusRingFloor}</strong>{#if ringFloor !== undefined}{" "}declared by <code>{algorithm.id}</code>{/if}{#if audit.focusRingFloor !== audit.focusRingStandard}; WCAG 2.2 asks {audit.focusRingStandard}:1{/if}.
+			</p>
+			<ul class="bench-contrast">
+				{#each audit.focusRing as row (row.pair)}
+					<li class="bench-contrast__row">
+						<span
+							class="bench-contrast__chip"
+							style={`background:${row.againstValue};box-shadow:inset 0 0 0 3px ${row.ringValue};`}
+						></span>
+						<span class="bench-contrast__label">ring on {row.against.replace(/^--/, "")}</span>
+						<span class="bench-contrast__ratio">{row.ratio.toFixed(2)}</span>
+						<span class="bench-tag" class:bench-tag--ok={row.clears} class:bench-tag--bad={!row.clears}>
+							{audit.focusRingFloor}:1
+						</span>
+					</li>
+				{/each}
+			</ul>
 		{:else if panel === "coverage"}
 			<p class="bench-insp__lead x-caption">
 				<strong class:xtyle-text-success-text={coveredCount === coverage.length} class:xtyle-text-warn-text={coveredCount !== coverage.length}>{coveredCount}/{coverage.length}</strong>
@@ -114,7 +141,17 @@
 				</ul>
 			{/if}
 		{:else}
-			<p class="bench-insp__lead x-caption">The honest derivation graph — each token names what it derives from.</p>
+			<p class="bench-insp__lead x-caption">
+				The honest derivation graph — each token names what it derives from. Produced by the
+				{#if derivePath === "hosted"}
+					<strong>sandboxed mod</strong>.
+				{:else if derivePath === "pending"}
+					<strong>baked oracle</strong> while the sandboxed mod is still loading.
+				{:else}
+					<strong>baked oracle</strong>. The two are proven byte-identical, so nothing in the
+					register distinguishes them.
+				{/if}
+			</p>
 			<input
 				class="bench-graph__filter"
 				type="search"

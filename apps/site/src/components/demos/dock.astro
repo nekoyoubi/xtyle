@@ -4,6 +4,7 @@ import Button from "@xtyle/astro/Button.astro";
 import Badge from "@xtyle/astro/Badge.astro";
 import Avatar from "@xtyle/astro/Avatar.astro";
 import Separator from "@xtyle/astro/Separator.astro";
+import Panel from "@xtyle/astro/Panel.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Heading from "@xtyle/astro/Heading.astro";
@@ -50,6 +51,27 @@ const TONE_GROUPS = [
 						<Text as="span" size="xs" tone="muted">Free plan</Text>
 					</Stack>
 				</Cluster>
+			</Dock>
+			<div class="dock-demo__filler">
+				<Text size="sm" tone="muted">main content</Text>
+			</div>
+		</div>
+	</Stack>
+
+	<Stack gap={2}>
+		<Heading level={2} size="sm" tone="muted">Panels in a rail</Heading>
+		<Text size="xs" tone="subtle">A <code>Panel</code> inside a dock drops its own border and corners and reads as a stacked section instead, so a rail of them looks like one surface rather than a column of cards. The dock hands that down as inherited custom properties, so it holds whether the pair renders light or shadow.</Text>
+		<div class="dock-demo__stage">
+			<Dock side="right" size="md" label="Inspector panels">
+				<Panel heading="Anchors" open>
+					<Stack gap={1}>
+						<Text as="span" size="sm" mono>--bg-0 #0b0d12</Text>
+						<Text as="span" size="sm" mono>--fg-0 #e6e9ef</Text>
+					</Stack>
+				</Panel>
+				<Panel heading="Coverage">
+					<Text size="sm" tone="muted">All 310 covered.</Text>
+				</Panel>
 			</Dock>
 			<div class="dock-demo__filler">
 				<Text size="sm" tone="muted">main content</Text>

@@ -4,6 +4,10 @@ import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/dialog/source.generated.js";
 import { resolveVocab, DIALOG_SIZES } from "../vocab.js";
 
+/** Why a dialog closed, so a consumer can tell an abandoned task from a finished one: `escape` for the
+ * key, `backdrop` for a press outside, `dismiss` for the header's own close control, `api` for a script. */
+export type DialogCloseReason = "escape" | "backdrop" | "dismiss" | "api";
+
 export class XtyleDialog extends XtyleElement {
 	protected override get styleMode(): StyleMode {
 		return "auto";
@@ -39,6 +43,8 @@ export class XtyleDialog extends XtyleElement {
 		this.setAttribute("size", value);
 	}
 
+	private closeReason: DialogCloseReason = "api";
+
 	private get dialogEl(): HTMLDialogElement | null {
 		return this.root.querySelector("dialog");
 	}
@@ -49,7 +55,8 @@ export class XtyleDialog extends XtyleElement {
 	}
 
 	/** Closes the dialog and restores focus to the previously focused element. */
-	close(): void {
+	close(reason: DialogCloseReason = "api"): void {
+		this.closeReason = reason;
 		this.open = false;
 	}
 
@@ -70,8 +77,13 @@ export class XtyleDialog extends XtyleElement {
 			labelledby: this.getAttribute("labelledby"),
 			closeLabel: this.getAttribute("close-label"),
 			noCloseButton: this.hasAttribute("no-close-button"),
+			hasFooter: this.hasFooter,
 			elementId: this.elementId,
 		};
+	}
+
+	private get hasFooter(): boolean {
+		return this.fragment.hasSlotted("footer");
 	}
 
 	/** Structural state ops can't patch incrementally: whether the close button and title exist, and
@@ -80,7 +92,7 @@ export class XtyleDialog extends XtyleElement {
 		const heading = this.getAttribute("heading") != null;
 		const label = this.getAttribute("label") != null;
 		const labelledby = this.getAttribute("labelledby") != null;
-		return `${!this.hasAttribute("no-close-button")}|${heading}|${label}|${labelledby}`;
+		return `${!this.hasAttribute("no-close-button")}|${heading}|${label}|${labelledby}|${this.hasFooter}`;
 	}
 
 	private syncOpen(): void {
@@ -128,7 +140,7 @@ export class XtyleDialog extends XtyleElement {
 
 	private applyIntent(intent: FragmentIntent, event: Event): void {
 		if (intent.preventDefault) event.preventDefault();
-		if (intent.requestClose) this.close();
+		if (intent.requestClose) this.close("dismiss");
 	}
 
 	/** Wire the native `<dialog>` events the fragment scaffold can't express as handlers. Backdrop
@@ -138,7 +150,7 @@ export class XtyleDialog extends XtyleElement {
 		if (!this.rootWired) {
 			this.rootWired = true;
 			this.root.addEventListener("click", (event) => {
-				if (event.target === this.dialogEl) this.close();
+				if (event.target === this.dialogEl) this.close("backdrop");
 			});
 		}
 		const dialog = this.dialogEl;
@@ -147,9 +159,11 @@ export class XtyleDialog extends XtyleElement {
 		dialog.addEventListener("close", () => {
 			if (this.open) this.open = false;
 			this.restoreFromPortal();
-			this.dispatchEvent(new Event("close", { bubbles: true, composed: true }));
+			this.emitOwn("close", null, { reason: this.closeReason });
+			this.closeReason = "api";
 		});
 		dialog.addEventListener("cancel", () => {
+			this.closeReason = "escape";
 			this.dispatchEvent(new Event("cancel", { bubbles: true, composed: true }));
 		});
 	}

@@ -30,7 +30,8 @@
     const attrs = [`href="${escapeAttr(href)}"`, target ? `target="${escapeAttr(target)}"` : "", rel ? `rel="${escapeAttr(rel)}"` : ""].filter(Boolean).join(" ");
     const headerHidden = b.hasHeader ? "" : " hidden";
     const footerHidden = b.hasFooter ? "" : " hidden";
-    return `<a part="card" class="${cardLinkClass(b)}" ${attrs}><div class="xtyle-card__header" part="header" data-slot="header"${headerHidden}><slot name="header"></slot></div><div class="xtyle-card__body" part="body" data-slot><slot></slot></div><div class="xtyle-card__footer" part="footer" data-slot="footer"${footerHidden}><slot name="footer"></slot></div></a>`;
+    const nameAttr = b.ariaLabel ? ` aria-label="${escapeAttr(b.ariaLabel)}"` : "";
+    return `<a part="card" class="${cardLinkClass(b)}" ${attrs}${nameAttr}><div class="xtyle-card__header" part="header" data-slot="header"${headerHidden}><slot name="header"></slot></div><div class="xtyle-card__body" part="body" data-slot><slot></slot></div><div class="xtyle-card__footer" part="footer" data-slot="footer"${footerHidden}><slot name="footer"></slot></div></a>`;
   }
   hooks.fragment.mount("card-link", (bindings, ops) => {
     ops.replaceChildren("[data-card-link]", cardLinkHtml(bindings));

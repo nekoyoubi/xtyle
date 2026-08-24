@@ -11,6 +11,8 @@ interface Props {
 	behavior?: string;
 	shape?: string;
 	contained?: boolean;
+	/** Declare the lid a control rather than a container: `role="button"` in place of `role="group"`. Pair with `label`. */
+	control?: boolean;
 	bleed?: boolean;
 	tone?: string;
 	flickVelocity?: number;
@@ -64,6 +66,7 @@ const {
 	behavior,
 	shape,
 	contained = false,
+	control = false,
 	bleed = false,
 	tone,
 	flickVelocity,
@@ -141,6 +144,7 @@ const bindings = {
 	hasBottom: Astro.slots.has("bottom"),
 	shaped: resolveRevealShape(shape) !== null,
 	contained,
+	control,
 	bleed,
 	tones,
 	grips,
@@ -175,6 +179,7 @@ REVEAL_DIRECTIONS.forEach((direction, index) => {
 	behavior={behavior}
 	shape={shape}
 	contained={contained || undefined}
+	control={control || undefined}
 	bleed={bleed || undefined}
 	tone={tone}
 	flick-velocity={flickVelocity ?? undefined}

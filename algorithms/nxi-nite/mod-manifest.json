@@ -885,7 +885,12 @@
 					"dim",
 					"contrast-restore"
 				],
-				"invariantCount": 30
+				"focusRingFloor": 3,
+				"schemes": [
+					"dark",
+					"light"
+				],
+				"invariantCount": 33
 			}
 		]
 	}

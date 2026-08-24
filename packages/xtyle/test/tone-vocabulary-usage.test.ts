@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { FULL_TONES, EMPHASIS_TONES, EYEBROW_EMPHASIS, SECTION_SURFACES } from "../src/vocab.js";
+import { components } from "../src/manifest/index.js";
 
 const REPO = join(import.meta.dirname, "..", "..", "..");
 
@@ -46,5 +47,18 @@ describe("tone vocabulary usage", () => {
 			.concat(toneLiterals(join(REPO, "packages")))
 			.filter(({ tone }) => !ALLOWED.has(tone));
 		expect(offenders).toEqual([]);
+	});
+
+	it("never offers a shorter roster than the component accepts", () => {
+		const short: string[] = [];
+		for (const manifest of Object.values(components)) {
+			for (const prop of manifest.props) {
+				if (prop.name !== "tone") continue;
+				const offered = new Set(prop.options ?? []);
+				const missing = FULL_TONES.filter((tone) => !offered.has(tone));
+				if (missing.length) short.push(`${manifest.id} offers ${offered.size} of ${FULL_TONES.length}, missing ${missing.join(", ")}`);
+			}
+		}
+		expect(short).toEqual([]);
 	});
 });

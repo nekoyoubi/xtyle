@@ -1,17 +1,17 @@
 import type { ComponentManifest } from "./types.js";
 
-const htmlExample = `<xtyle-panel title="Connections" level="2">
+const htmlExample = `<xtyle-panel heading="Connections" level="2">
 	<button slot="actions" class="xtyle-button xtyle-button--ghost xtyle-button--neutral xtyle-button--sm">Refresh</button>
 	<p>Two services are connected.</p>
 	<p slot="footer">Last synced a moment ago.</p>
 </xtyle-panel>
 
-<xtyle-panel title="Advanced options" variant="collapsible">
+<xtyle-panel heading="Advanced options" variant="collapsible">
 	<label><input type="checkbox" /> Verbose logging</label>
 	<label><input type="checkbox" /> Telemetry</label>
 </xtyle-panel>
 
-<xtyle-panel title="Activity log" scroll>
+<xtyle-panel heading="Activity log" scroll>
 	<p>A long stream of entries that scrolls inside the panel body…</p>
 </xtyle-panel>`;
 
@@ -19,7 +19,7 @@ const svelteExample = `<script lang="ts">
 	import { Panel } from "@xtyle/svelte";
 </script>
 
-<Panel title="Connections" level={2}>
+<Panel heading="Connections" level={2}>
 	{#snippet actions()}
 		<button class="xtyle-button xtyle-button--ghost xtyle-button--neutral xtyle-button--sm">Refresh</button>
 	{/snippet}
@@ -29,12 +29,12 @@ const svelteExample = `<script lang="ts">
 	{/snippet}
 </Panel>
 
-<Panel title="Advanced options" variant="collapsible">
+<Panel heading="Advanced options" variant="collapsible">
 	<label><input type="checkbox" /> Verbose logging</label>
 	<label><input type="checkbox" /> Telemetry</label>
 </Panel>
 
-<Panel title="Activity log" scroll>
+<Panel heading="Activity log" scroll>
 	<p>A long stream of entries that scrolls inside the panel body…</p>
 </Panel>`;
 
@@ -42,22 +42,22 @@ const astroExample = `---
 import { Panel } from "@xtyle/astro";
 ---
 
-<Panel title="Connections" level={2}>
+<Panel heading="Connections" level={2}>
 	<button slot="actions" class="xtyle-button xtyle-button--ghost xtyle-button--neutral xtyle-button--sm">Refresh</button>
 	<p>Two services are connected.</p>
 	<p slot="footer">Last synced a moment ago.</p>
 </Panel>
 
-<Panel title="Advanced options" variant="collapsible">
+<Panel heading="Advanced options" variant="collapsible">
 	<label><input type="checkbox" /> Verbose logging</label>
 	<label><input type="checkbox" /> Telemetry</label>
 </Panel>
 
-<Panel title="Activity log" scroll>
+<Panel heading="Activity log" scroll>
 	<p>A long stream of entries that scrolls inside the panel body…</p>
 </Panel>`;
 
-const markerHtmlExample = `<xtyle-panel variant="collapsible" title="A different marker" marker-icon="plus">
+const markerHtmlExample = `<xtyle-panel variant="collapsible" heading="A different marker" marker-icon="plus">
 	<p>The disclosure marker is drawn from any name the icon roster can draw.</p>
 </xtyle-panel>`;
 
@@ -65,7 +65,7 @@ const markerAstroExample = `---
 import Panel from "@xtyle/astro/Panel.astro";
 ---
 
-<Panel variant="collapsible" title="A different marker" markerIcon="plus">
+<Panel variant="collapsible" heading="A different marker" markerIcon="plus">
 	<p>The disclosure marker is drawn from any name the icon roster can draw.</p>
 </Panel>`;
 
@@ -78,8 +78,9 @@ export const panelManifest: ComponentManifest = {
 	seeAlso: ["card", "accordion", "dock"],
 	summary: "A titled content region: a header with a configurable heading and actions, a body, an optional footer, and an optional collapsible or scrollable form.",
 	description:
-		"Panel frames a labelled section of content. Its header carries a title (rendered at a configurable heading `level` for a correct document outline), an actions slot pushed to the trailing edge by a spacer, and the body it labels via `aria-labelledby`. The `default` variant is a static `<section>`; the `collapsible` variant is a native `<details>`/`<summary>` disclosure that needs no JavaScript in markup. The custom element drives it with `aria-expanded`. A `footer` slot adds a quiet trailing row, and the `scroll` flag turns the body into a focusable, keyboard-scrollable region capped at a fixed height.",
+		"Panel frames a labelled section of content. Its header carries a heading (rendered at a configurable heading `level` for a correct document outline), an actions slot pushed to the trailing edge by a spacer, and the body it labels via `aria-labelledby`. The `default` variant is a static `<section>`; the `collapsible` variant is a native `<details>`/`<summary>` disclosure that needs no JavaScript in markup. The custom element drives it with `aria-expanded`. A `footer` slot adds a quiet trailing row, and the `scroll` flag turns the body into a focusable, keyboard-scrollable region capped at a fixed height.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["body", "collapse", "footer", "header", "marker", "panel", "spacer", "title", "toggle"],
 	anatomy: [
 		{
 			name: "panel",
@@ -128,20 +129,21 @@ export const panelManifest: ComponentManifest = {
 		{
 			name: "label",
 			type: "string",
-			description: "Accessible name for a panel with no visible `title` — names the region without rendering a heading.",
+			description: "Accessible name for a panel with no visible `heading` — names the region without rendering a heading.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
-			name: "title",
+			name: "heading",
 			type: "string",
-			description: "The panel heading text. When set (or an actions slot is filled) the header renders.",
+			aliases: ["title"],
+			description: "The panel heading text. When set (or an actions slot is filled) the header renders. Named `heading` rather than `title` because `title` is the HTML global attribute and paints a browser tooltip over the whole panel; a `title` still works and is migrated to `heading`.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
 			name: "level",
 			type: "1 | 2 | 3 | 4 | 5 | 6",
 			default: "2",
-			description: "The heading level for the title, so the panel slots into the document outline correctly.",
+			description: "The heading level, so the panel slots into the document outline correctly.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["1", "2", "3", "4", "5", "6"],
 		},
@@ -168,12 +170,23 @@ export const panelManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "fill",
+			type: "boolean",
+			default: "false",
+			description:
+				"Takes the remaining height of a bounded parent and gives it to the body, which scrolls; the header and footer keep their natural height. This is the panel-in-a-column case — a stack of panels where one absorbs the slack — and it cannot be expressed from outside, because bounding the body means bounding the host and the section above it too. `scroll` caps the body at a fixed height; `fill` sizes it from what the column has left.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "markerIcon",
 			type: "string",
 			default: '"chevron-right"',
 			description: "The roster glyph drawn as the collapsible header's marker. Any name the icon roster can draw, including one a mod contributed through the `xtyle.icons` slot.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "toggle", detail: "{ open }", description: "A collapsible panel opened or closed.", bindings: ["html", "svelte", "astro"], handler: "onToggle" },
 	],
 	variants: [
 		{
@@ -270,8 +283,8 @@ export const panelManifest: ComponentManifest = {
 		"Set `level` so nested panels keep a valid heading hierarchy: a top-level panel at 2, sub-panels at 3, and so on.",
 	],
 	a11y: [
-		"The default variant is a native `<section>` labelled by its title via `aria-labelledby`, so it is announced as a named region.",
-		"The title renders at a configurable heading `level` so the panel participates correctly in the document outline; the binding warns when neither a title nor an actions slot supplies a heading.",
+		"The default variant is a native `<section>` labelled by its heading via `aria-labelledby`, so it is announced as a named region.",
+		"The heading renders at a configurable `level` so the panel participates correctly in the document outline; the binding warns when neither a heading nor an actions slot supplies one.",
 		"The collapsible variant uses native `<details>`/`<summary>` (or a `<button>` with `aria-expanded` in the custom element), giving keyboard toggling and screen-reader disclosure semantics for free.",
 		"The disclosure marker is decorative (`aria-hidden`); expanded state lives in `[open]` / `aria-expanded`, not the rotation.",
 		"Under `scroll` the body is a focusable region (`tabindex=\"0\"`, `role=\"region\"`) so keyboard users can scroll it, with the standard inset focus ring.",

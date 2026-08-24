@@ -46,6 +46,8 @@ interface PanelMeta {
 	menu: MenuItem[] | null;
 }
 
+let dockZoneSeq = 0;
+
 /**
  * A drag-and-drop dockable-panel workspace. Its direct children are the panels (any element
  * carrying `data-panel-id`, and a `data-title` or `title` for its tab); the zone reads them,
@@ -77,6 +79,7 @@ interface PanelMeta {
  * on every panel's own tab or stacked-section header, not just the active one.
  */
 export class XtyleDockZone extends XtyleDecoratorElement {
+	private uid = `xtyle-dock-zone-${dockZoneSeq++}`;
 	private _layout: DockNode | null = null;
 	private _floating: FloatingPanel[] = [];
 	private panels = new Map<string, PanelMeta>();
@@ -286,17 +289,21 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	 * title, badge, and controls resolved, the floating windows with their rects, one spare film per
 	 * other zone, and whether any panel carries an overflow menu at all. */
 	private bindings(): Record<string, unknown> {
-		if (!this._layout) return { tree: null, floats: [], restFilms: 0, hasMenu: false };
+		if (!this._layout) return { uid: this.uid, tree: null, floats: [], restFilms: 0, hasMenu: false };
 		return {
+			uid: this.uid,
 			tree: this.nodeBinding(this._layout, 1),
-			floats: this._floating.map((f) => ({
-				panelId: f.panelId,
-				title: this.panels.get(f.panelId)?.title ?? f.panelId,
-				x: f.x,
-				y: f.y,
-				w: f.w,
-				h: f.h,
-			})),
+			floats: this._floating.map((f) => {
+				const fit = this.fitFloat(f);
+				return {
+					panelId: f.panelId,
+					title: this.panels.get(f.panelId)?.title ?? f.panelId,
+					x: fit.x,
+					y: fit.y,
+					w: fit.w,
+					h: fit.h,
+				};
+			}),
 			restFilms: Math.max(0, allLeaves(this._layout).length - 1),
 			hasMenu: [...this.panels.values()].some((p) => p.menu !== null),
 		};
@@ -459,6 +466,7 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		this.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
 		this.addEventListener("click", (e) => this.onClick(e as MouseEvent));
 		this.addEventListener("select", (e) => this.onOverflowSelect(e as CustomEvent<{ value?: string }>));
+		this.addEventListener("keydown", (e) => this.onKeydown(e as KeyboardEvent));
 	}
 
 	private onPointerdown(event: PointerEvent): void {
@@ -515,6 +523,28 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 		}
 		const toggle = target.closest<HTMLElement>("[data-section-toggle]");
 		if (toggle?.dataset.panelId) this.toggleCollapse(toggle.dataset.panelId);
+	}
+
+	private onKeydown(event: KeyboardEvent): void {
+		const target = event.target as HTMLElement | null;
+		const tab = target?.closest<HTMLElement>("[data-tab]");
+		if (!tab) return;
+		const zoneId = tab.dataset.zoneId ?? "";
+		const strip = [...this.querySelectorAll<HTMLElement>(`[data-tab][data-zone-id="${CSS.escape(zoneId)}"]`)];
+		const here = strip.indexOf(tab);
+		if (here < 0) return;
+		const step =
+			event.key === "ArrowRight" ? here + 1
+			: event.key === "ArrowLeft" ? here - 1
+			: event.key === "Home" ? 0
+			: event.key === "End" ? strip.length - 1
+			: null;
+		if (step === null) return;
+		event.preventDefault();
+		const next = strip[(step + strip.length) % strip.length];
+		if (!next) return;
+		this.activate(zoneId, Number(next.dataset.index ?? "0"));
+		this.querySelector<HTMLElement>(`[data-tab][data-zone-id="${CSS.escape(zoneId)}"][tabindex="0"]`)?.focus();
 	}
 
 	/** Open the shared overflow menu at a panel's kebab, loaded with that panel's rows. */
@@ -597,6 +627,27 @@ export class XtyleDockZone extends XtyleDecoratorElement {
 	 * It becomes a re-dock only where one is actually on offer — {@link floatDockOffer}, the band along a
 	 * zone's boundary. There, the drop films light up to promise the split, and releasing takes it.
 	 */
+	/**
+	 * Bring a float's rect inside the workspace for rendering, the way dragging and tearing out already
+	 * keep one there. A rect restored from a wider session — a persisted desktop layout reopened on a
+	 * phone — would otherwise render past the edge with no way to reach its titlebar. The stored rect is
+	 * left alone, so the window returns to where its owner put it once there is room again. Before first
+	 * layout the host measures zero and the rect passes through untouched, because clamping to nothing
+	 * would stack every window at the origin.
+	 */
+	private fitFloat(rect: FloatRect): FloatRect {
+		const host = this.getBoundingClientRect();
+		if (host.width === 0 || host.height === 0) return rect;
+		const w = Math.max(XtyleDockZone.FLOAT_MIN_W, Math.min(rect.w, Math.round(host.width)));
+		const h = Math.min(rect.h, Math.round(host.height));
+		return {
+			x: Math.max(0, Math.min(Math.max(0, Math.round(host.width) - w), rect.x)),
+			y: Math.max(0, Math.min(Math.max(0, Math.round(host.height) - h), rect.y)),
+			w,
+			h,
+		};
+	}
+
 	private onFloatPointerdown(event: PointerEvent, panelId: string): void {
 		if (event.button !== 0) return;
 		const start = this._floating.find((f) => f.panelId === panelId);

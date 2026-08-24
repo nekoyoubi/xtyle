@@ -83,6 +83,7 @@ export const switchManifest: ComponentManifest = {
 	description:
 		"Switch is a `role=\"switch\"` toggle for a setting that takes effect immediately, distinct from a checkbox that stages a value until a form submit. It renders a native `<button>` track with a sliding thumb, so pointer, Space, and Enter all flip it and the state lives in `aria-checked`. An optional leading label and optional `on-label`/`off-label` state text make the toggle self-describing, and it is form-associated: give it a `name` (and optional `value`) and it contributes to form data only while on. Two sizes: the default `md` and a compact `sm`.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["label", "state", "switch", "thumb", "track"],
 	anatomy: [
 		{
 			name: "switch",
@@ -138,6 +139,14 @@ export const switchManifest: ComponentManifest = {
 			type: "boolean",
 			default: "false",
 			description: "The on/off state. Two-way bindable in Svelte; reflected to `aria-checked` and the element's `.checked`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "focusable",
+			type: "boolean",
+			default: "true",
+			description:
+				"Set `false` to keep the control out of sequential focus navigation, for an app driving selection from its own keyboard cursor. The host's own `tabindex` cannot express this, because focus lands on the inner control rather than the host, and setting it there from outside does not survive the next render.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -211,12 +220,16 @@ export const switchManifest: ComponentManifest = {
 			type: "string",
 			description: "State text shown (and announced as the name, absent `label`) when on.",
 			bindings: ["html", "svelte", "astro"],
+		
+			aliases: ["label-on"],
 		},
 		{
 			name: "offLabel",
 			type: "string",
 			description: "State text shown (and announced as the name, absent `label`) when off.",
 			bindings: ["html", "svelte", "astro"],
+		
+			aliases: ["label-off"],
 		},
 		{
 			name: "name",
@@ -231,6 +244,9 @@ export const switchManifest: ComponentManifest = {
 			description: "The value submitted with the form when the toggle is on.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "change", detail: "{ checked, value }", description: "The switch was toggled.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{ name: "square", description: "Squared track and thumb corners.", className: "xtyle-switch--square" },

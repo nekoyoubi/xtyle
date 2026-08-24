@@ -161,7 +161,7 @@ const pillars = [
 
 							<Progress value={coverageOk ? 100 : Math.round((coveredCount / totalCount) * 100)} showValue aria-label="Coverage" />
 
-							<Alert tone={coverageOk ? "success" : "warn"}>
+							<Alert severity={coverageOk ? "success" : "warn"} variant="soft">
 								<strong slot="title">
 									{coverageOk ? "All components covered" : `${coveredCount} of ${totalCount} components covered`}
 								</strong>

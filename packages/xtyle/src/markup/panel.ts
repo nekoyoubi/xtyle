@@ -11,7 +11,8 @@ export interface PanelMarkupProps {
 }
 
 /** The host-layout rule for a panel — the one `:host` rule, shared by the element's `styles()` and the SSR declarative shadow root. */
-export const panelHostCss = ":host { display: block; }";
+export const panelHostCss =
+	":host { display: block; } :host([fill]) { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }";
 
 function level(props: PanelMarkupProps): number {
 	const raw = props.level ?? 2;

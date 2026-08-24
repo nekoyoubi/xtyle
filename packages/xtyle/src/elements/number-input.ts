@@ -13,10 +13,17 @@ export class XtyleNumberInput extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 	private elementId = `xtyle-number-${Math.random().toString(36).slice(2, 8)}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "number-input", {
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
-		afterApply: () => this.syncStepButtons(),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
+		afterApply: () => {
+			this.syncStepButtons();
+			this.verifyFormName();
+		},
 	});
 
 	static get observedAttributes(): string[] {
@@ -138,6 +145,7 @@ export class XtyleNumberInput extends XtyleElement {
 
 	private commit(raw: string, kind: "input" | "change"): void {
 		if (this.disabled) return;
+		const before = this.value;
 		const trimmed = raw.trim();
 		if (trimmed === "") {
 			this.value = "";
@@ -152,7 +160,11 @@ export class XtyleNumberInput extends XtyleElement {
 		}
 		this.fragment.update(this.bindings);
 		this.syncDisplay();
-		this.dispatchEvent(new Event(kind, { bubbles: true, composed: true }));
+		if (kind === "change" && this.value === before) {
+			this.silenceEcho(kind);
+			return;
+		}
+		this.emitOwn(kind, null, { value: this.value });
 	}
 
 	private modifierPressed(event: MouseEvent | KeyboardEvent): boolean {
@@ -191,6 +203,10 @@ export class XtyleNumberInput extends XtyleElement {
 		if (intent.nudge) {
 			const step = intent.forceAlt ? this.altStep : this.stepFor(event as MouseEvent | KeyboardEvent);
 			this.nudge(intent.nudge > 0 ? 1 : -1, step);
+			return;
+		}
+		if (intent.emit) {
+			this.emitOwn(intent.emit.type, null, intent.emit.detail);
 			return;
 		}
 		if (intent.commit !== undefined) this.commit(intent.commit, "change");

@@ -63,6 +63,7 @@ export const numberInputManifest: ComponentManifest = {
 	description:
 		"Number Input edits a single number. A `role=\"spinbutton\"` text field sits between decrease and increase buttons; the buttons, the up/down arrow keys, and direct typing all change the value, which snaps to `step` and clamps to `[min, max]` on commit. It is form-associated; give it a `name` and its value submits with the form. It accepts decimals (e.g. a `0.01` step for currency). Set `step=\"any\"` for a free-form field: typed values commit verbatim with no grid snap and no precision cap (a graph literal, a coordinate, a scientific value), while the steppers fall back to a whole-number nudge; with no `min`/`max` the value is unbounded, exactly the native `<input type=\"number\" step=\"any\">` contract. A second granularity rides alongside `step`: holding the `modifier` (Shift by default) on a click or arrow applies `altStep`, ten times `step` out of the box, while `PageUp`/`PageDown` always jump by it, and `altDefault` flips which one is primary. Out-of-range typing reverts on commit, and the stepper buttons disable at the bounds. Three sizes: `sm`, the default `md`, and `lg`.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["control", "input", "label", "number", "step-down", "step-up"],
 	anatomy: [
 		{
 			name: "number",
@@ -109,6 +110,10 @@ export const numberInputManifest: ComponentManifest = {
 		{ name: "labelledby", type: "string", description: "ID of an external element that names the field. Takes precedence over `label`.", bindings: ["html", "svelte", "astro"] },
 		{ name: "name", type: "string", description: "Form field name; the value submits with the form.", bindings: ["html", "svelte", "astro"] },
 		{ name: "placeholder", type: "string", description: "Placeholder shown when the field is empty.", bindings: ["html", "svelte", "astro"] },
+	],
+	events: [
+		{ name: "input", detail: "{ value }", description: "The value changed as it was typed or stepped.", bindings: ["html", "svelte", "astro"] },
+		{ name: "change", detail: "{ value }", description: "The value settled and was clamped to the range.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [

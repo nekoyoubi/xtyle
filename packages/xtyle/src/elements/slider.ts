@@ -14,6 +14,10 @@ export class XtyleSlider extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 	private elementId = `xtyle-slider-${Math.random().toString(36).slice(2, 8)}`;
 	private formatFn: ((value: number) => string) | null = null;
 	private lastShape = "";
@@ -276,7 +280,7 @@ export class XtyleSlider extends XtyleElement {
 		if (clamped === this.value && emit === "input") return;
 		this.value = clamped;
 		this.render();
-		this.dispatchEvent(new Event(emit, { bubbles: true, composed: true }));
+		this.emitOwn(emit, null, { value: this.value });
 		this.syncForm();
 	}
 
@@ -434,6 +438,7 @@ export class XtyleSlider extends XtyleElement {
 		if (firstPaint || named !== this.lastNamed) this.warnIfUnnamed();
 		this.lastNamed = named;
 		this.syncForm();
+		this.verifyFormName();
 	}
 }
 

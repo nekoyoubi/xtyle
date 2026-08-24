@@ -52,6 +52,15 @@ An algorithm:
   inputs; `xtyle-default` may honor a garish accent verbatim. There is **no
   engine-level "can't look bad" gospel**: whether themes can look bad is a choice
   each algorithm makes.
+- **Declares the floors it is graded against.** `Algorithm.declares` carries the
+  numbers the algorithm states as its own promise — today `focusRingFloor`, the
+  contrast `--ring` is walked to against every surface it can be painted over.
+  The derivation honors it, the gauntlet holds the algorithm to it, and
+  `auditRegister` grades against it rather than a number the engine chose.
+  Declaring below a WCAG floor is allowed and is a real position for a posture to
+  take, so the audit reports the standard next to the floor it used: the engine
+  carries the declaration and never overrules it, but it will not let a lower
+  floor read as conformance.
 - **Owns its refit policy**: how a pinned member of a generated family reshapes
   the rest of that family (see Resolution, below).
 
@@ -134,6 +143,52 @@ top.
 the algorithm takes it from there: `--accent-l1..4`, `--state-*` over accent,
 `--link`, `--accent-fg` all re-derive from the pink-sourced accent. And
 `--color-pink` now simply *exists* for anything else that wants raw pink.
+
+### Both halves of a theme
+
+An algorithm's anchors describe one scheme. The `scheme` knob flips the *derivation*, not the anchor,
+so asking a dark-anchored algorithm for its light half used to flip the anchor's lightness and land on
+a mid-gray page: every invariant holding, nothing anyone would ship.
+
+`anchorsByScheme` closes that: an algorithm states the pair for the half its default does not describe,
+optionally including an accent tuned for it.
+
+```ts
+anchors: { accent: "#3ad6f8" },
+anchorsByScheme: { light: { bg: "#e6e9ef", fg: "#1b1d22", accent: "#0096b1" } },
+```
+
+Optional, like `KnobSpec.defaultByScheme` and the declared focus-ring floor: absent, the flip still
+happens. It is a *default*, not a pin, so a caller's own `--bg-0` seed still wins.
+
+The pair is chosen by the scheme the derivation **actually lands in**, never by the `scheme` knob
+alone. A theme that reached light through a `--bg-0` seed gets the same stated anchors as one that
+reached it through the knob. That ordering is safe because resolving the scheme consults only the
+seeds and the *base* pair, neither of which the choice can move. A light-by-seed theme that names no accent then picks up the
+light-half accent, the algorithm's taste for that half rather than a leftover from the other one.
+
+### How an algorithm says so
+
+The standard register is what the components consume, so an algorithm extends it
+rather than replacing it. `defineXtyleAlgorithm` takes an `adds` block naming the
+tokens its own passes emit and the value kind each carries:
+
+```ts
+adds: { tokens: ["--band-quiet", "--band-alarm"], categories: { "--band-quiet": "color", "--band-alarm": "color" } },
+passes: (preset, input) => [settlePass(preset, input), bandPass(preset)],
+```
+
+That lands in the algorithm's `produces` and `categories`, which is how discovery
+lists the new tokens and how the coverage check below finds them. `defineAlgorithm`
+(tier 2) declares `produces` outright instead, for an algorithm that owns its whole
+register rather than adding to one.
+
+Two things follow from `adds` being additive: an algorithm can never drop a token
+a component consumes, and a pack's novel token is a real declaration rather than
+something a consumer has to discover by deriving. `packs/xtyle-pack-example`'s
+`example-banded` is the worked case, and it is a *third-party* pack: the open
+register is reachable from the same authoring surface a stranger uses, not only
+from inside this repo.
 
 ---
 

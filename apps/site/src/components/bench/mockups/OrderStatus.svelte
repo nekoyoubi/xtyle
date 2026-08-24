@@ -155,7 +155,7 @@
 					<Heading level={3} size="sm">Parcels</Heading>
 					<Text size="xs" tone="muted">This order shipped in three</Text>
 				</div>
-				<Grid minColWidth="11rem" gap={3}>
+				<Grid minColWidth="8rem" gap={3}>
 					{#each parcels as p (p.id)}
 						<Card tone={p.tone} compact>
 							{#snippet header()}

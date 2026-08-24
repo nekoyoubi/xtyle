@@ -33,6 +33,26 @@ export const gridCss = `
 .xtyle-grid--inline {
 	display: inline-grid;
 }
+
+.xtyle-grid--sidebar {
+	display: flex;
+	flex-wrap: wrap;
+}
+.xtyle-grid--sidebar.xtyle-grid--inline {
+	display: inline-flex;
+}
+.xtyle-grid--sidebar ::slotted(*),
+.xtyle-grid--sidebar > * {
+	flex: 999 1 0;
+	min-inline-size: min(var(--xtyle-grid-main, 0px), 100%);
+}
+.xtyle-grid--sidebar-end ::slotted(*:last-child),
+.xtyle-grid--sidebar-end > *:last-child,
+.xtyle-grid--sidebar-start ::slotted(*:first-child),
+.xtyle-grid--sidebar-start > *:first-child {
+	flex: 1 1 var(--xtyle-grid-rail, 16rem);
+	min-inline-size: 0;
+}
 ${gapRules}
 ${columnRules}
 ${alignRules}

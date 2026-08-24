@@ -125,31 +125,37 @@
   }
   var ACTIONS_SLOT = `<span class="xtyle-slot" data-slot="actions"><slot name="actions"></slot></span>`;
   function hasHeader(b) {
-    return (b.title ?? "") !== "" || b.hasActions === true;
+    return (b.heading ?? "") !== "" || b.hasActions === true;
   }
   function panelClass(b) {
     const variant = b.variant ?? "default";
-    return ["xtyle-panel", variant !== "default" && `xtyle-panel--${variant}`, b.scrollable && "xtyle-panel--scroll"].filter(Boolean).join(" ");
+    return [
+      "xtyle-panel",
+      variant !== "default" && `xtyle-panel--${variant}`,
+      b.scrollable && "xtyle-panel--scroll",
+      b.fill && "xtyle-panel--fill"
+    ].filter(Boolean).join(" ");
   }
   function body(b) {
-    const bodyAttrs = b.scrollable ? ` tabindex="0" role="region" aria-label="${escapeAttr(b.title || b.label || "Scrollable content")}"` : "";
-    return `<div class="xtyle-panel__body" part="body"${bodyAttrs}><slot></slot></div><div class="xtyle-panel__footer" part="footer"><slot name="footer"></slot></div>`;
+    const bodyAttrs = b.scrollable ? ` tabindex="0" role="region" aria-label="${escapeAttr(b.heading || b.label || "Scrollable content")}"` : "";
+    const footer = b.hasFooter ? `<div class="xtyle-panel__footer" part="footer"><slot name="footer"></slot></div>` : "";
+    return `<div class="xtyle-panel__body" part="body"${bodyAttrs}><slot></slot></div>` + footer;
   }
   function inner(b) {
     const uid = b.titleId ?? "xtyle-panel";
     if (isCollapsible(b)) {
       const expanded = b.open ? "true" : "false";
-      return `<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header"><button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" aria-controls="${escapeAttr(uid)}-region">${marker(b)}<span class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title ?? "")}</span></button>${ACTIONS_SLOT}</div><div class="xtyle-panel__collapse" part="collapse" id="${escapeAttr(uid)}-region" role="region" aria-labelledby="${escapeAttr(uid)}"${b.open ? "" : " hidden"}>${body(b)}</div>`;
+      return `<div class="xtyle-panel__header xtyle-panel__header--toggle" part="header"><button class="xtyle-panel__toggle" part="toggle" type="button" aria-expanded="${expanded}" aria-controls="${escapeAttr(uid)}-region">${marker(b)}<span class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.heading ?? "")}</span></button>${ACTIONS_SLOT}</div><div class="xtyle-panel__collapse" part="collapse" id="${escapeAttr(uid)}-region" role="region" aria-labelledby="${escapeAttr(uid)}"${b.open ? "" : " hidden"}>${body(b)}</div>`;
     }
     const tag = `h${level(b)}`;
-    const heading = b.title ? `<${tag} class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.title)}</${tag}>` : "";
-    const header = hasHeader(b) ? `<header class="xtyle-panel__header" part="header">${heading}<span class="xtyle-panel__spacer" part="spacer"></span>${ACTIONS_SLOT}</header>` : "";
+    const headingHtml = b.heading ? `<${tag} class="xtyle-panel__title" part="title" id="${escapeAttr(uid)}">${escapeHtml(b.heading)}</${tag}>` : "";
+    const header = hasHeader(b) ? `<header class="xtyle-panel__header" part="header">${headingHtml}<span class="xtyle-panel__spacer" part="spacer"></span>${ACTIONS_SLOT}</header>` : "";
     return `${header}${body(b)}`;
   }
   function applyName(bindings, ops) {
     const uid = bindings.titleId ?? "xtyle-panel";
-    const named = !isCollapsible(bindings) && !!bindings.title;
-    const labelled = !isCollapsible(bindings) && !bindings.title && !!bindings.label;
+    const named = !isCollapsible(bindings) && !!bindings.heading;
+    const labelled = !isCollapsible(bindings) && !bindings.heading && !!bindings.label;
     ops.setAttr("[data-root]", "aria-labelledby", named ? uid : "");
     ops.setAttr("[data-root]", "aria-label", labelled ? bindings.label ?? "" : "");
   }

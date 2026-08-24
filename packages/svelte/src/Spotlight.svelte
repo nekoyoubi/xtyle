@@ -61,9 +61,22 @@
 		open = false;
 		ondismiss?.(event);
 	}
+
+	let el: (HTMLElement & { show(): void; close(): void }) | undefined = $state();
+
+	/** Raise the spotlight over its target. */
+	export function show(): void {
+		el?.show();
+	}
+
+	/** Drop it, without reporting a dismiss. */
+	export function close(): void {
+		el?.close();
+	}
 </script>
 
 <xtyle-spotlight
+	bind:this={el}
 	{...rest}
 	{target}
 	open={open || undefined}

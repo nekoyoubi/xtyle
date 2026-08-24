@@ -18,7 +18,7 @@ import {
 } from "../src/index.js";
 import { bakedAlgorithm } from "../src/baked.js";
 
-const BUILT_IN_NAMES = ["glow", "throb", "glare", "lift", "tint", "frost", "reveal", "shake", "saturate"];
+const BUILT_IN_NAMES = ["glow", "throb", "glare", "lift", "tint", "frost", "reveal", "shake", "spin", "saturate"];
 const TRANSIENT_NAMES = ["flash", "float", "pop", "wobble", "shake"];
 
 describe("the effect layer", () => {
@@ -29,6 +29,28 @@ describe("the effect layer", () => {
 			expect(effect.tags?.length, effect.name).toBeGreaterThan(0);
 		}
 		expect(listConditions().map((c) => c.name)).toEqual(expect.arrayContaining(["hover", "focus", "active", "disabled"]));
+	});
+
+	it("turns for as long as the condition holds, rather than firing once like `wobble`", () => {
+		const spin = getEffect("spin");
+		expect(spin?.transient).toBeFalsy();
+		expect(spin?.animated).toBe(true);
+		expect(spin?.active).toContain("infinite");
+		expect(getEffect("wobble")?.transient).toBe(true);
+	});
+
+	it("spends no intensity on a full turn, because a partial one snaps back instead of slowing", () => {
+		expect(getEffect("spin")?.active).not.toContain("--fx-intensity");
+		expect(effectsCss()).toContain("@keyframes xtyle-fx-spin");
+	});
+
+	it("takes a rate and a direction off the spec", () => {
+		expect(parseEffectSpec("spin?rate:1.2s,direction:reverse")).toEqual([
+			{ effect: "spin", condition: null, args: { rate: "1.2s", direction: "reverse" } },
+		]);
+		const style = fxStyle("spin?rate:1.2s,direction:reverse");
+		expect(style["--fx-spin-duration"]).toBe("1.2s");
+		expect(style["--fx-spin-direction"]).toBe("reverse");
 	});
 
 	it("reads a spec as effect and condition, keeping an entry no registry knows", () => {

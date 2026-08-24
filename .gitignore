@@ -13,6 +13,9 @@ dist/
 .astro/
 .svelte-kit/
 
+# example packs staged for the site to serve; built from packs/ by scripts/build-packs.mjs
+apps/site/public/packs/
+
 # playwright mcp local snapshots
 .playwright-mcp/
 

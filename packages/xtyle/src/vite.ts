@@ -16,6 +16,10 @@
  * pre-bundled. The whole chain has to be named, which is a consumer having to know xtyle's
  * dependency graph to render a button. Spreading {@link viteExcludes} instead keeps that knowledge
  * here, where it changes when the graph does.
+ *
+ * The other answer needs no bundler configuration at all and covers every bundler rather than this
+ * one: `setSandboxVariant` from `@xtyle/core` takes a `singlefile-*` QuickJS build, which carries
+ * the wasm inline and leaves no asset to lose.
  */
 
 /**

@@ -41,6 +41,7 @@ export const redactManifest: ComponentManifest = {
 	description:
 		"Redact wraps a piece of content you don't want on screen by default — an account number, an API key, a plot spoiler — and hides it in one of three ways: `blur` softens it, `block` lays a solid bar over it, and `mask` covers it with a dotted fill. What brings it back is a separate choice: `hover` reveals while the pointer is over it or it holds focus, `click` toggles it, `hold` shows it only while a key or the pointer is held down, and `never` leaves the reveal entirely to the page-level switch. That switch — `revealAllRedactions()` — is the toolbar toggle that shows or re-hides every redaction on the page at once, so a form full of masked fields flips open together. While a redaction is concealed its content can't be selected, so an obscured value can't be dragged out with a mouse, and it is hidden from assistive tech until revealed. The cover and its reveal hint render through a fragment, so a mod can reshape the affordance; the reveal *behavior* lives in the element, because which trigger brings the content back is logic a token can't carry.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["content", "cover", "cue", "redact"],
 	anatomy: [
 		{
 			name: "redact",
@@ -111,6 +112,10 @@ export const redactManifest: ComponentManifest = {
 			description: "Whether the content is showing. Reading it reports the live state from any source; setting it is the explicit, sticky programmatic reveal.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "reveal", description: "The covered content was uncovered.", bindings: ["html", "svelte", "astro"] },
+		{ name: "conceal", description: "The content was covered again.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

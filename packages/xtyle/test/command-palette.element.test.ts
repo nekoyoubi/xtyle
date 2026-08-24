@@ -482,3 +482,93 @@ describe("<xtyle-command-palette> SSR", () => {
 		expect(html).not.toContain("<style>");
 	});
 });
+
+describe("complete-first makes Enter commit the name before it runs", () => {
+	it("completes a half-typed command instead of running it", () => {
+		const el = make({ "complete-first": "" });
+		el.show();
+		type(el, "fi");
+		expect(activeId(el)).toBe("file.new");
+		const fired: string[] = [];
+		el.addEventListener("select", (event) => fired.push((event as CustomEvent).detail.id));
+		press(el, "Enter");
+		expect(fired).toEqual([]);
+		expect(el.query).toBe("file.new ");
+		expect(el.open).toBe(true);
+	});
+
+	it("runs once the query's first word names the command", () => {
+		const el = make({ "complete-first": "" });
+		el.show();
+		type(el, "fi");
+		press(el, "Enter");
+		const fired: string[] = [];
+		el.addEventListener("select", (event) => fired.push((event as CustomEvent).detail.id));
+		press(el, "Enter");
+		expect(fired).toEqual(["file.new"]);
+	});
+
+	it("runs a named command that carries arguments after it", () => {
+		const el = make({ "complete-first": "" }, [{ id: "goto", label: "Go to line" }]);
+		el.show();
+		const fired: { id: string; query: string }[] = [];
+		el.addEventListener("select", (event) => {
+			const detail = (event as CustomEvent).detail;
+			fired.push({ id: detail.id, query: detail.query });
+		});
+		type(el, "goto 214");
+		press(el, "Enter");
+		expect(fired).toEqual([{ id: "goto", query: "goto 214" }]);
+	});
+
+	it("leaves Enter alone when the palette is an index, which is the default", () => {
+		const el = make();
+		el.show();
+		type(el, "fi");
+		const fired: string[] = [];
+		el.addEventListener("select", (event) => fired.push((event as CustomEvent).detail.id));
+		press(el, "Enter");
+		expect(fired).toEqual(["file.new"]);
+	});
+});
+
+describe("a recent that names no command is a line", () => {
+	it("renders the line itself rather than dropping it", () => {
+		const el = make();
+		el.recent = ["rect 10,10 40,40 azul", "file.save"];
+		el.show();
+		expect(headings(el)[0]).toBe("Recent");
+		expect(labels(el).slice(0, 2)).toEqual(["rect 10,10 40,40 azul", "Save"]);
+	});
+
+	it("reports the whole line on select, so a consumer can run it", () => {
+		const el = make();
+		el.recent = ["rect 10,10 40,40 azul"];
+		el.show();
+		const fired: string[] = [];
+		el.addEventListener("select", (event) => fired.push((event as CustomEvent).detail.id));
+		press(el, "Enter");
+		expect(fired).toEqual(["rect 10,10 40,40 azul"]);
+	});
+
+	it("still renders a recent that does name a command as that command", () => {
+		const el = make();
+		el.recent = ["file.save"];
+		el.show();
+		expect(labels(el)[0]).toBe("Save");
+	});
+});
+
+describe("the input's own select event never reaches a consumer", () => {
+	it("keeps a text-selection notification from arriving as a command run", () => {
+		const el = make();
+		el.show();
+		const seen: unknown[] = [];
+		el.addEventListener("select", (event) => seen.push((event as CustomEvent).detail));
+		input(el).dispatchEvent(new Event("select", { bubbles: true }));
+		expect(seen).toEqual([]);
+		press(el, "Enter");
+		expect(seen).toHaveLength(1);
+		expect((seen[0] as { id: string }).id).toBe("file.new");
+	});
+});

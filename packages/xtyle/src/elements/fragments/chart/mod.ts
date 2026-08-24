@@ -231,7 +231,7 @@ function tableHtml(
 		})
 		.join("");
 	const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
-	return `<table class="xtyle-chart__a11y">${cap}<thead>${head}</thead><tbody>${rows}</tbody></table>`;
+	return `<div class="xtyle-chart__a11y"><table>${cap}<thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function emptyHtml(b: ChartBindings, height: number): string {

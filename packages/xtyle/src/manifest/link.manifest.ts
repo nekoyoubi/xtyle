@@ -46,6 +46,7 @@ export const linkManifest: ComponentManifest = {
 	description:
 		"Link is the styled `<a>` primitive: inline text that navigates, drawn in the link color with an offset underline and a token-colored focus ring. Three variants tune emphasis: `default` is the full-strength link, `muted` recedes into body text (underline only on hover) for in-prose and secondary nav, and `quiet` is the lowest-key treatment for dense footers and utility nav. When `target=\"_blank\"`, Link automatically appends an external-link glyph, adds a screen-reader-only \"(opens in a new tab)\" hint, and sets `rel=\"noopener noreferrer\"`, handling security and accessibility without ceremony. Given no `href`, it degrades to inert text rather than rendering a broken anchor.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["external-icon", "link", "sr-hint"],
 	anatomy: [
 		{
 			name: "link",

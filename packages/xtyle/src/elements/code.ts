@@ -36,7 +36,7 @@ export class XtyleCode extends XtyleElement {
 	private overflowObserver: ResizeObserver | null = null;
 
 	static get observedAttributes(): string[] {
-		return ["language", "code", "preload", "copy", "line-numbers", "highlight", "caption"];
+		return ["language", "code", "preload", "copy", "line-numbers", "highlight", "caption", "wrap"];
 	}
 
 	private renderToken = 0;

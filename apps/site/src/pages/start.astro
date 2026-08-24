@@ -26,6 +26,13 @@ export default defineConfig({
 	optimizeDeps: { exclude: [...viteExcludes] },
 });`;
 
+const variantSnippet = `// main.ts — no bundler config at all
+import { setSandboxVariant } from "@xtyle/core";
+import variant from "@jitl/quickjs-singlefile-browser-release-sync";
+import "@xtyle/core/elements";
+
+setSandboxVariant(variant);`;
+
 const sections = [
 	{ id: "install", label: "Install" },
 	{ id: "derive", label: "Derive a theme" },
@@ -114,7 +121,7 @@ defineXtyleAlgorithm({
 				</Text>
 			</Stack>
 
-			<Panel title="Install" id="install" class="docs-anchor">
+			<Panel heading="Install" id="install" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						xtyle is three packages. <code>@xtyle/core</code> is the engine: the
@@ -133,7 +140,7 @@ defineXtyleAlgorithm({
 				</Stack>
 			</Panel>
 
-			<Panel title="Derive a theme" id="derive" class="docs-anchor">
+			<Panel heading="Derive a theme" id="derive" class="docs-anchor">
 				<Stack gap={5}>
 					<Stack gap={4}>
 						<Text tone="muted">
@@ -200,7 +207,7 @@ defineXtyleAlgorithm({
 				</Stack>
 			</Panel>
 
-			<Panel title="Use the theme" id="use" class="docs-anchor">
+			<Panel heading="Use the theme" id="use" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						A derived theme is plain CSS custom properties. Write the emitted CSS into
@@ -217,7 +224,7 @@ defineXtyleAlgorithm({
 				</Stack>
 			</Panel>
 
-			<Panel title="Components" id="components" class="docs-anchor">
+			<Panel heading="Components" id="components" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						The token register is the contract: components read it with
@@ -234,7 +241,7 @@ defineXtyleAlgorithm({
 				</Stack>
 			</Panel>
 
-			<Panel title="Bundlers" id="bundlers" class="docs-anchor">
+			<Panel heading="Bundlers" id="bundlers" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						Components render their chrome through a sandboxed fragment runtime, and that runtime
@@ -243,7 +250,7 @@ defineXtyleAlgorithm({
 						wasm along, so the fetch 404s and every element mounts as an empty box. Tokens still
 						apply, which makes it read as a styling problem rather than a loading one.
 					</Text>
-					<Alert tone="warn">
+					<Alert severity="warn" variant="soft">
 						It happens in <strong>dev only</strong> — <code>vite build</code> and
 						<code>vite preview</code> render correctly. That is the awkward part: the failure
 						appears exactly where you author and disappears in the artifact you would check it
@@ -258,10 +265,24 @@ defineXtyleAlgorithm({
 						module locations can need the same treatment; the symptom is always an element that
 						registers, paints nothing, and reports a wasm module whose first bytes are HTML.
 					</Text>
+					<Text tone="muted">
+						The other route needs no bundler config at all, and it covers every bundler rather
+						than one: hand xtyle a QuickJS build that carries the wasm inline, and there is no
+						separate asset left to lose.
+					</Text>
+					<Code lang="typescript" code={variantSnippet} />
+					<Text tone="muted">
+						Install the variant at the version <code>quickjs-emscripten-core</code> resolves to.
+						A mismatched one loads and then answers every sandbox call with
+						<code>QuickJSContext had no callback with id 0</code>, which reads as an element that
+						renders nothing. The trade is the ordinary one and it is yours: inline costs every
+						visitor the bytes up front and cannot be cached on its own, while a separate asset is
+						smaller but has to survive what your bundler does to module locations.
+					</Text>
 				</Stack>
 			</Panel>
 
-			<Panel title="Write an algorithm" id="algorithm" class="docs-anchor">
+			<Panel heading="Write an algorithm" id="algorithm" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						An algorithm is a xript mod: a directory with a <code>mod-manifest.json</code>
@@ -282,7 +303,7 @@ defineXtyleAlgorithm({
 				</Stack>
 			</Panel>
 
-			<Panel title="See it run" id="bench" class="docs-anchor">
+			<Panel heading="See it run" id="bench" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						The Bench derives a full register from your anchors and knobs in the browser,

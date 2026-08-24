@@ -73,6 +73,7 @@ export const avatarManifest: ComponentManifest = {
 	description:
 		"Avatar presents a person or entity as a compact square or circle. Given a `src`, it shows the image, cover-cropped to fill; if the image is absent or fails to load, it falls back to initials derived from `userName` (`\"Ada Lovelace\"` → `AL`) on a soft, hue-tinted background. Slot your own content to override those initials, or use the `icon` slot for a glyph instead. The prop is `userName`, not `name`, because `name` carries form-participation meaning on an element and an avatar is not a form control. The fallback tint follows `tone`, which accepts any of the six semantic roles or the twelve named hues, so a deterministic per-user color is a one-attribute choice. Four sizes (sm, md, lg, xl), two shapes (circle, square), and an optional corner status dot in any semantic tone round out the surface. `alt` names the image; `userName` names the avatar when there is no image, so it is announced either way.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["avatar", "fallback", "image", "initials", "status-dot"],
 	anatomy: [
 		{
 			name: "avatar",

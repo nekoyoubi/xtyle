@@ -32,4 +32,5 @@ export const spec = {
 	 * declaration, with nothing about `hour` hardcoded anywhere downstream.
 	 */
 	knobSpecs: [{ name: "hour", kind: "range" as const, label: "Hour", min: 0, max: 24, step: 1, default: DEFAULT_HOUR }],
+	anchorsByScheme: { light: { bg: "#f2f0ea", fg: "#1c1a17" } },
 };

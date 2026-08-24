@@ -168,6 +168,7 @@ export function deriveTraced(algorithm: Algorithm, opts: DeriveOptions = {}): De
 
 export * from "./types.js";
 export * from "./vocab.js";
+export * from "./sandbox.js";
 export * from "./reveal-shapes.js";
 export * from "./icon-shapes.js";
 export * from "./icons.js";
@@ -194,6 +195,8 @@ export { avatarInitials } from "./markup/avatar.js";
 export { schemeToggleGlyphs, schemeToggleHostClass } from "./markup/scheme-toggle.js";
 export type { SchemeToggleGlyphOptions, SchemeToggleClassOptions } from "./markup/scheme-toggle.js";
 export type { TablePart } from "./markup/table.js";
+export type { TourSpec, TourStepSpec, TourProgress } from "./markup/tour.js";
+export type { MethodDef } from "./manifest/types.js";
 export { resolveSparklineBounds, formatSparklineValue } from "./markup/sparkline.js";
 export { resolveChartPlot, CHART_VARIANTS, CHART_CURVES, CHART_X_SCALES } from "./markup/chart.js";
 export { hoverMediaHtml } from "./markup/image.js";
@@ -267,10 +270,28 @@ export {
 	type XtyleThemeFile,
 } from "./theme-file.js";
 export {
+	PACK_KEYWORD,
+	PACK_MANIFEST_FILE,
+	PACK_MANIFEST_FIELD,
+	parsePackManifest,
+	parsePackRef,
+	packEntries,
+	packInstallSpec,
+	selectPackEntry,
+	type PackEntry,
+	type PackEntryKind,
+	type PackManifest,
+	type PackManifestResult,
+	type PackRef,
+	type PackRefKind,
+} from "./pack.js";
+export { NPM_REGISTRY, packSearchQuery, searchPacks, type PackSearchHit, type SearchPacksOptions } from "./discovery.js";
+export {
 	type Binding,
 	type ComponentCategory,
 	type AnatomyPart,
 	type PropDef,
+	type EventDef,
 	type VariantDef,
 	type SizeDef,
 	type StateDef,
@@ -292,7 +313,16 @@ export {
 	lintStyleQueryDomains,
 	lintHostControls,
 } from "./manifest/index.js";
-export { gauntlet } from "./gauntlet.js";
+/**
+ * The battery, wired to the real {@link invertedOptions} so every seeded run is judged in both
+ * schemes. Injected here rather than imported inside `gauntlet.ts`, which would close a cycle.
+ */
+import { gauntlet as runGauntlet } from "./gauntlet.js";
+import type { GauntletOptions, GauntletReport } from "./gauntlet.js";
+
+export function gauntlet(algorithm: Algorithm, opts: GauntletOptions = {}): GauntletReport {
+	return runGauntlet(algorithm, { invertedOptions, ...opts });
+}
 export type {
 	GauntletOptions,
 	GauntletReport,

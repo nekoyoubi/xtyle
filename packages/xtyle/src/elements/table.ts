@@ -11,7 +11,7 @@ const SORT_ICON = "chevron-down";
 
 export class XtyleTable extends XtyleDecoratorElement {
 	static get observedAttributes(): string[] {
-		return ["variant", "size", "hover", "sticky", "max-height", "selection"];
+		return ["variant", "size", "hover", "sticky", "max-height", "selection", "aria-label"];
 	}
 
 	/** Row selection — the table's consumption of the shared collection core (host-side, no fragment).

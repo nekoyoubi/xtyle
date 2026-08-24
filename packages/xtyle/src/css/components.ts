@@ -122,7 +122,7 @@ const hostDisplayCss = [
 	"xtyle-eyebrow { display: block; } xtyle-eyebrow[as=\"span\"] { display: inline; }",
 	"xtyle-stat { display: block; }",
 	'xtyle-separator { display: block; } xtyle-separator[orientation="vertical"] { display: inline-flex; height: 100%; }',
-	"xtyle-panel { display: block; }",
+	"xtyle-panel { display: block; } xtyle-panel[fill] { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }",
 	"xtyle-section { display: block; }",
 	"xtyle-kbd { display: inline-block; }",
 	"xtyle-icon { display: inline-flex; }",
@@ -142,7 +142,7 @@ const hostDisplayCss = [
 	"xtyle-button { display: inline-flex; } xtyle-button[block] { display: flex; }",
 	"xtyle-alert { display: block; }",
 	'xtyle-text { display: block; } xtyle-text[as="span"] { display: inline; }',
-	'xtyle-progress { display: inline-flex; vertical-align: middle; } xtyle-progress[variant="linear"] { display: flex; width: 100%; } xtyle-progress threshold { display: none; }',
+	'xtyle-progress { display: flex; width: 100%; } xtyle-progress[variant="circular"] { display: inline-flex; width: auto; vertical-align: middle; } xtyle-progress[orient="vertical"] { display: inline-flex; width: auto; vertical-align: middle; } xtyle-progress threshold { display: none; }',
 	"xtyle-toast { display: block; }",
 	"xtyle-breadcrumb { display: block; }",
 	"xtyle-code { display: block; position: relative; }",
@@ -176,11 +176,13 @@ const hostDisplayCss = [
 	"xtyle-splitter { display: block; flex: none; } xtyle-splitter[line] { position: relative; z-index: 1; }",
 	"xtyle-color-picker { display: inline-block; }",
 	"xtyle-dropzone { display: block; }",
-	"xtyle-tabs { display: block; }",
+	"xtyle-tabs { display: block; } xtyle-tabs[fill] { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }",
 	"xtyle-accordion { display: block; }",
 	'xtyle-toolbar { display: block; } xtyle-toolbar[sticky] { position: sticky; top: 0; z-index: var(--layer-sticky); }',
 	"xtyle-app-shell { display: contents; }",
 	".xtyle-slot { display: contents; }",
+	":host([align]), xtyle-button[align], xtyle-stack[align], xtyle-cluster[align], xtyle-grid[align], " +
+		"xtyle-stat[align], xtyle-hero[align], xtyle-popover[align] { text-align: inherit; }",
 ].join("\n");
 
 /** The full component class layer, concatenated. */

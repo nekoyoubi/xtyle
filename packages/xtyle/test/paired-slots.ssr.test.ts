@@ -68,6 +68,20 @@ describe("markedPairs", () => {
 		expect(pairs[0]?.body).toBeNull();
 	});
 
+	it("pairs by index when every lead precedes every body, the grouped authoring order", () => {
+		const pairs = markedPairs(
+			`<span data-xtyle-header>One</span><span data-xtyle-header>Two</span><span data-xtyle-header>Three</span>` +
+				`<div data-xtyle-panel>A</div><div data-xtyle-panel>B</div><div data-xtyle-panel>C</div>`,
+			"header",
+			"panel",
+		);
+		expect(pairs.map((p) => [p.lead.html, p.body?.html])).toEqual([
+			["One", "A"],
+			["Two", "B"],
+			["Three", "C"],
+		]);
+	});
+
 	it("does not let a second panel steal the next lead's slot", () => {
 		const pairs = markedPairs(
 			`<span data-xtyle-header>One</span><div data-xtyle-panel>A</div><div data-xtyle-panel>orphan</div>` +

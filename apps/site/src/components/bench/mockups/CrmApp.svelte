@@ -363,6 +363,7 @@
 	.crm__main {
 		display: flex;
 		flex-direction: column;
+		container-type: inline-size;
 		gap: var(--space-5);
 		padding: var(--space-5);
 		min-width: 0;
@@ -384,7 +385,7 @@
 
 	.crm__stats {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: var(--space-4);
 		padding: var(--space-4);
 		background: var(--bg-1);
@@ -394,8 +395,22 @@
 
 	.crm__board {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: var(--space-3);
+	}
+
+	@container (max-width: 34rem) {
+		.crm__stats,
+		.crm__board {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@container (max-width: 17rem) {
+		.crm__stats,
+		.crm__board {
+			grid-template-columns: minmax(0, 1fr);
+		}
 	}
 
 	.crm__stage-head {

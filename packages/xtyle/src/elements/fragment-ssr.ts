@@ -1,5 +1,5 @@
 import type { FragmentOp } from "@xriptjs/runtime";
-import { loadFill, fillSource, type FillManifest } from "./fragment-host.js";
+import { loadFill, fillScaffold, type FillManifest } from "./fragment-host.js";
 import { manifest as tabsManifest, fragmentSources as tabsSources } from "./fragments/tabs/source.generated.js";
 import {
 	manifest as accordionManifest,
@@ -218,22 +218,80 @@ function escapeAttr(value: string): string {
  *   the shared `data-*` hook instead, the built-in's classes get stamped onto the mod's markup on the way
  *   to the screen and the reskin is dead on arrival.
  */
-function nodeMatcher(selector: string): RegExp | null {
-	const attr = selector.match(/^\[([a-z-]+)\]$/i)?.[1];
-	if (attr) return new RegExp(`<(\\w+)([^>]*\\s${attr}(?=[\\s=>/])[^>]*)>`);
+const COMPOUND = /^(\*|[a-z][\w-]*)?((?:\.[\w-]+)*)((?:\[[a-z-]+(?:=(?:"[^"]*"|'[^']*'))?\])*)$/i;
+const CONDITION = /\[([a-z-]+)(?:=(?:"([^"]*)"|'([^']*)'))?\]/gi;
+
+function classLookahead(name: string): string {
 	// INFO: `\b` cannot bound these names: a hyphen is a non-word character, so `\bxtyle-code\b`
 	// matches `class="xtyle-code-caption"`. Bound on the quotes and spaces instead.
-	const className = selector.match(/^\.([\w-]+)$/)?.[1];
-	if (className) return new RegExp(`<(\\w+)([^>]*\\sclass="(?:[^"]*\\s)?${className}(?:\\s[^"]*)?"[^>]*)>`);
-	return null;
+	return `(?=[^>]*\\sclass="(?:[^"]*\\s)?${escapeRegExp(name)}(?:\\s[^"]*)?")`;
+}
+
+function compoundMatcher(selector: string): RegExp | null {
+	const parts = selector.trim().match(COMPOUND);
+	if (!parts) return null;
+	const [, tag, classes = "", conditions = ""] = parts;
+
+	const lookaheads = (classes.match(/\.[\w-]+/g) ?? []).map((name) => classLookahead(name.slice(1)));
+	for (const condition of conditions.matchAll(CONDITION)) {
+		const [, attr, quoted, single] = condition;
+		const value = quoted ?? single;
+		lookaheads.push(
+			value === undefined
+				? `(?=[^>]*\\s${escapeRegExp(attr as string)}(?=[\\s=>/]))`
+				: `(?=[^>]*\\s${escapeRegExp(attr as string)}="${escapeRegExp(value)}")`,
+		);
+	}
+	if (!lookaheads.length) return null;
+
+	const name = !tag || tag === "*" ? "\\w+" : `${escapeRegExp(tag)}(?=[\\s/>])`;
+	return new RegExp(`<(${name})(${lookaheads.join("")}[^>]*)>`);
+}
+
+/**
+ * The selectors a fill may address a scaffold node by, compiled against the scaffold's HTML text
+ * rather than a live DOM. A selector list is tried in order, first match winning, the way the
+ * browser's own resolution would.
+ *
+ * The vocabulary is a tag, any number of classes, and any number of attribute conditions with or
+ * without a value, in any combination — which is everything the shipped fills use, and the point at
+ * which a fill can stop knowing that the build-time applier is not a real query engine. Anything
+ * outside it matches nothing, and an op against it is dropped rather than mis-targeted.
+ */
+function nodeMatchers(selector: string): RegExp[] {
+	return selector
+		.split(",")
+		.map((alternative) => compoundMatcher(alternative))
+		.filter((matcher): matcher is RegExp => matcher !== null);
+}
+
+function attrInTag(attr: string): RegExp {
+	return new RegExp(`\\s${escapeRegExp(attr)}(="[^"]*")?(?=[\\s/>])`);
 }
 
 function setAttrInTag(openTag: string, attr: string, value: string): string {
-	const existing = new RegExp(`\\s${attr}="[^"]*"`);
+	const existing = attrInTag(attr);
 	if (value === "") return openTag.replace(existing, "");
 	const attrStr = ` ${attr}="${escapeAttr(value)}"`;
 	if (existing.test(openTag)) return openTag.replace(existing, () => attrStr);
 	return openTag.replace(/\s*\/?>$/, (close) => `${attrStr}${close}`);
+}
+
+function addBareAttrToTag(openTag: string, attr: string): string {
+	if (attrInTag(attr).test(openTag)) return openTag;
+	return openTag.replace(/\s*\/?>$/, (close) => ` ${attr}${close}`);
+}
+
+function removeAttrFromTag(openTag: string, attr: string): string {
+	return openTag.replace(attrInTag(attr), "");
+}
+
+function editClassList(openTag: string, op: "addClass" | "removeClass", value: string): string {
+	const current = openTag.match(/\sclass="([^"]*)"/)?.[1] ?? "";
+	const names = current.split(/\s+/).filter(Boolean);
+	const wanted = value.split(/\s+/).filter(Boolean);
+	const next = op === "addClass" ? [...names, ...wanted.filter((name) => !names.includes(name))] : names.filter((name) => !wanted.includes(name));
+	return next.join(" ");
 }
 
 function escapeRegExp(value: string): string {
@@ -250,37 +308,44 @@ function escapeRegExp(value: string): string {
 export function applyOpsToHtml(html: string, ops: FragmentOp[]): string {
 	let out = html;
 	for (const op of ops) {
-		const openRe = nodeMatcher(op.selector);
-		if (!openRe) continue;
-		const match = out.match(openRe);
-		const openTag = match?.[0];
-		const tag = match?.[1];
-		if (!openTag || !tag) continue;
-		const empty = new RegExp(`(${escapeRegExp(openTag)})(</${tag}>)`);
-		switch (op.op) {
-			case "setProp":
-			case "setAttr": {
-				const prop = op.prop ?? op.attr;
-				if (prop) {
-					const next = setAttrInTag(openTag, prop, String(op.value ?? ""));
-					out = out.replace(openTag, () => next);
+		let hits: RegExpMatchArray[] = [];
+		for (const openRe of nodeMatchers(op.selector)) {
+			hits = [...out.matchAll(new RegExp(openRe.source, "g"))];
+			if (hits.length) break;
+		}
+		const targets = [...new Set(hits.map((hit) => hit[0]))];
+		for (const openTag of targets) {
+			const tag = openTag.match(/^<(\w+)/)?.[1];
+			if (!tag) continue;
+			const empty = new RegExp(`(${escapeRegExp(openTag)})(</${tag}>)`, "g");
+			const rewriteTag = (next: string) => {
+				out = out.split(openTag).join(next);
+			};
+			switch (op.op) {
+				case "setProp":
+				case "setAttr": {
+					const prop = op.prop ?? op.attr;
+					if (prop) rewriteTag(setAttrInTag(openTag, prop, String(op.value ?? "")));
+					break;
 				}
-				break;
+				case "replaceChildren": {
+					const value = String(op.value ?? "");
+					out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
+					break;
+				}
+				case "setText": {
+					const value = escapeAttr(String(op.value ?? ""));
+					out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
+					break;
+				}
+				case "toggle":
+					rewriteTag(op.value ? removeAttrFromTag(openTag, "hidden") : addBareAttrToTag(openTag, "hidden"));
+					break;
+				case "addClass":
+				case "removeClass":
+					rewriteTag(setAttrInTag(openTag, "class", editClassList(openTag, op.op, String(op.value ?? ""))));
+					break;
 			}
-			case "replaceChildren": {
-				const value = String(op.value ?? "");
-				out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
-				break;
-			}
-			case "setText": {
-				const value = escapeAttr(String(op.value ?? ""));
-				out = out.replace(empty, (_m, open, close) => `${open}${value}${close}`);
-				break;
-			}
-			case "addClass":
-			case "removeClass":
-			case "toggle":
-				break;
 		}
 	}
 	return out;
@@ -300,9 +365,45 @@ export async function renderFragment(
 	const entry = fragments[component];
 	if (!entry) throw new Error(`xtyle: no SSR fragment registered for "${component}"`);
 	const { runtime } = await loadFill(entry.manifest, entry.fragmentSources);
-	const scaffold = entry.fragmentSources[fillSource(entry.manifest, component)] ?? "";
+	const scaffold = fillScaffold(entry.manifest, entry.fragmentSources, component);
 	const ops = runtime.fireFragmentHook(component, "mount", bindings);
 	return `<style>${styles}</style>${applyOpsToHtml(scaffold, ops)}`;
+}
+
+/**
+ * The selectors a fill's op buffer aims at nodes its own scaffold does not have, in the order the
+ * applier would meet them — empty when every op lands.
+ *
+ * The applier drops what it cannot match, which is right (better than aiming an op at the wrong
+ * node) and silent, which is not. A fill has no other way to find out that a selector it wrote is
+ * outside the vocabulary or names a node it renamed, because the failure looks exactly like a
+ * component that was always going to render that way.
+ */
+export async function fragmentOps(
+	component: string,
+	bindings: Record<string, unknown> = {},
+	hook: "mount" | "update" = "mount",
+): Promise<{ scaffold: string; ops: FragmentOp[] }> {
+	const entry = fragments[component];
+	if (!entry) throw new Error(`xtyle: no SSR fragment registered for "${component}"`);
+	const { runtime } = await loadFill(entry.manifest, entry.fragmentSources);
+	return {
+		scaffold: fillScaffold(entry.manifest, entry.fragmentSources, component),
+		ops: runtime.fireFragmentHook(component, hook, bindings) as FragmentOp[],
+	};
+}
+
+export async function unmatchedOpSelectors(component: string, bindings: Record<string, unknown> = {}): Promise<string[]> {
+	const { scaffold, ops } = await fragmentOps(component, bindings);
+
+	let out = scaffold;
+	const missed: string[] = [];
+	for (const op of ops) {
+		const matched = nodeMatchers(op.selector).some((matcher) => matcher.test(out));
+		if (matched) out = applyOpsToHtml(out, [op]);
+		else missed.push(op.selector);
+	}
+	return missed;
 }
 
 /**
@@ -336,7 +437,7 @@ export async function renderFragmentLight(
 	const entry = fragments[component];
 	if (!entry) throw new Error(`xtyle: no SSR fragment registered for "${component}"`);
 	const { runtime } = await loadFill(entry.manifest, entry.fragmentSources);
-	const scaffold = entry.fragmentSources[fillSource(entry.manifest, component)] ?? "";
+	const scaffold = fillScaffold(entry.manifest, entry.fragmentSources, component);
 	const ops = runtime.fireFragmentHook(component, "mount", bindings);
 	return applyOpsToHtml(scaffold, ops);
 }

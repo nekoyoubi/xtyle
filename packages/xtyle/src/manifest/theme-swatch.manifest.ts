@@ -48,6 +48,7 @@ export const themeSwatchManifest: ComponentManifest = {
 	description:
 		"Theme Swatch derives an invocation the way `<xtyle-theme-scope>` does and paints the palette instead of applying it, so the colors a theme produced can be read without the page having to wear it. It **composes `<xtyle-swatch>`** for every chip rather than reinventing one — the dot, the label, the value readout, and the colour-model details all come from that component, so a Swatch mod restyles these along with every other chip in the app. `tokens` picks which of the derived tokens to show and takes any token name, so a row can be the default palette read, just the accents, or the four status hues; a token the algorithm never produced is skipped rather than drawn as a hole. Where `<xtyle-theme-card>` shows a theme as a *fake* of an interface, this shows it as its literal values — the two are the picture and the parts list, and a picker often wants both. The row itself renders through this component's own fill, so a mod can restructure it without touching the element.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["chip", "error", "row"],
 	anatomy: [
 		{
 			name: "row",
@@ -116,6 +117,9 @@ export const themeSwatchManifest: ComponentManifest = {
 			description: "Direct token overrides applied over the derivation.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "xtyle:theme-swatch", detail: "{ theme }", description: "The swatch's theme was chosen.", bindings: ["html", "astro"] },
 	],
 	variants: [],
 	sizes: [],

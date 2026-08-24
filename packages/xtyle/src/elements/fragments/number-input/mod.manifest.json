@@ -16,6 +16,7 @@
 				"handlers": [
 					{ "selector": ".xtyle-number__step--dec", "on": "click", "handler": "dec" },
 					{ "selector": ".xtyle-number__step--inc", "on": "click", "handler": "inc" },
+					{ "selector": ".xtyle-number__input", "on": "input", "handler": "onInput" },
 					{ "selector": ".xtyle-number__input", "on": "change", "handler": "commit" },
 					{ "selector": ".xtyle-number__input", "on": "keydown", "handler": "keydown" }
 				],

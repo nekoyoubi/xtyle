@@ -19,7 +19,7 @@ export class XtyleButton extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "align", "type", "href", "disabled", "loading", "block", "icon-only", "pressed", "selected", "aria-label", "aria-labelledby"];
+		return ["variant", "tone", "size", "align", "type", "href", "disabled", "loading", "block", "icon-only", "pressed", "selected", "focusable", "aria-label", "aria-labelledby"];
 	}
 
 	get variant(): ButtonVariant {
@@ -131,7 +131,8 @@ export class XtyleButton extends XtyleElement {
 			iconOnly: this.iconOnly,
 			pressed: this.pressed,
 			selected: this.selected,
-			ariaLabel: this.ariaLabelValue,
+			focusable: this.focusable,
+			ariaLabel: this.ariaLabelValue ?? (this.ariaLabelledbyValue ? null : this.slottedName()),
 			ariaLabelledby: this.ariaLabelledbyValue,
 		};
 	}
@@ -167,7 +168,16 @@ export class XtyleButton extends XtyleElement {
 		this.fragment.ensureScaffold(buttonHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
+		this.wireLabelSlot();
 		this.warnIfUnnamed();
+	}
+
+	private wiredLabelSlot: HTMLSlotElement | null = null;
+	private wireLabelSlot(): void {
+		const slot = this.root.querySelector<HTMLSlotElement>("slot:not([name])");
+		if (!slot || slot === this.wiredLabelSlot) return;
+		this.wiredLabelSlot = slot;
+		slot.addEventListener("slotchange", () => this.fragment.update(this.bindings));
 	}
 }
 

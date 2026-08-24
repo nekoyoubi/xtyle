@@ -118,7 +118,7 @@
     return segments.map((seg) => {
       const segDisabled = groupDisabled || !!seg.disabled;
       const isOn = seg.value === selected;
-      const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
+      const tabindex = bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1";
       const disabledAttr = segDisabled ? " disabled" : "";
       const badge = seg.badge ? `<span class="xtyle-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
       const ariaLabel = seg.slot ? ` aria-label="${escapeAttr(seg.label)}"` : "";
@@ -152,7 +152,7 @@
       const isOn = seg.value === selected;
       const sel = `[role="radio"][data-value="${escapeSelectorValue(seg.value)}"]`;
       ops.setAttr(sel, "aria-checked", String(isOn));
-      ops.setAttr(sel, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
+      ops.setAttr(sel, "tabindex", bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1");
     }
   });
   xript.exports.register("selectOption", (payload) => {

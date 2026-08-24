@@ -149,18 +149,21 @@ const EXPLICIT_GROUPS: TokenGroup[] = [
 	},
 ];
 
-/** Color tokens, grouped for swatch display. The Palette group collects every
- * `--color-*` ramp under "Named colors"; everything left over lands in a catch-all so nothing hides. */
+const PALETTE_TOKEN = /^--(color-|(red|orange|yellow|green|blue|purple|brown|pink|cyan|gray|white|black)(-(bg|fg|text|vivid))?$)/;
+
+/** Color tokens, grouped for swatch display. "Named colors" collects the whole palette: every
+ * `--color-*` ramp and every hue's own four-token family, so the tokens a consumer actually writes
+ * (`tone="brown"` reads `--brown`) sit beside the ramp they came from instead of falling through to
+ * the leftover bin `allGroups` adds. */
 export function colorGroups(register: TokenRegister): TokenGroup[] {
-	const claimed = new Set<string>();
 	const groups: TokenGroup[] = [];
+	const claimed = new Set<string>();
 	for (const group of EXPLICIT_GROUPS) {
 		const present = group.tokens.filter((t) => t in register);
 		for (const t of present) claimed.add(t);
 		if (present.length) groups.push({ title: group.title, tokens: present });
 	}
-	const palette = Object.keys(register).filter((k) => /^--color-/.test(k));
-	for (const t of palette) claimed.add(t);
+	const palette = Object.keys(register).filter((k) => !claimed.has(k) && PALETTE_TOKEN.test(k));
 	if (palette.length) groups.push({ title: "Named colors", tokens: palette });
 	return groups;
 }

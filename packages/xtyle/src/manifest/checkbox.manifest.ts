@@ -72,6 +72,7 @@ export const checkboxManifest: ComponentManifest = {
 	description:
 		"Checkbox stages a single boolean value: unlike a switch it doesn't apply on toggle, contributing its `value` to an enclosing form only on submit. It styles a native `<input type=\"checkbox\">` with `appearance: none` and overlays a custom indicator, so it keeps every native affordance (keyboard activation, form participation, label association) while looking the part. Beyond the on/off pair it carries a third visual state, `indeterminate`, for the classic select-all / partial-selection pattern; the indicator switches from a check mark to a dash, and any user interaction clears it. Two sizes, `sm` and `md`, cover compact and default density.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["box", "checkbox", "control", "indicator", "label"],
 	anatomy: [
 		{
 			name: "checkbox",
@@ -168,6 +169,9 @@ export const checkboxManifest: ComponentManifest = {
 			description: "ID of an external element naming the checkbox (sets `aria-labelledby`).",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "change", detail: "{ checked, indeterminate, value }", description: "The checked state changed, including into and out of indeterminate.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [

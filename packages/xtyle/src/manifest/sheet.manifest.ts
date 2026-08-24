@@ -74,6 +74,7 @@ export const sheetManifest: ComponentManifest = {
 	description:
 		"Sheet is the drawer half of the overlay family, and the touch-app counterpart to Dialog. It wraps the same platform `<dialog>` element, so the top-layer scrim, the focus trap, focus restore on close, `Escape`-to-dismiss, and the `role`/`aria-modal` semantics all come from the browser rather than re-implemented JavaScript; what it adds is the axis Dialog has no answer for. A `side` (top, right, bottom, left) anchors the panel to a viewport edge and sets the direction it slides and swipes along; a `size` (sm, md, lg, full) sets its extent across that edge — a height for a top or bottom sheet, a width for a left or right one. It is safe-area aware the way MobileShell is: the panel grows by its edge's `env(safe-area-inset-*)` and pads that inset back out of its content, so it meets the hardware edge without any content sliding under a notch or a home indicator. `non-modal` opens it beside a live page — no scrim, no focus trap, the rest of the app still interactive — which is what a persistent side drawer or an inspector panel wants; the keyboard `Escape` path is wired explicitly there, since the platform only honors it for a modal dialog. A pointer swipe from the grabber or the header dismisses it, layered strictly on top of the keyboard paths (never in place of them). Its chrome — the panel, the drag handle and grabber, the header, the close button — renders through the `component.sheet` fragment, so a mod can reshape the whole drawer.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["body", "close", "footer", "grabber", "handle", "header", "panel", "sheet"],
 	anatomy: [
 		{
 			name: "sheet",
@@ -235,6 +236,31 @@ export const sheetManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
+	events: [
+		{ name: "cancel", description: "Escape or a scrim press asked the sheet to close. Cancelable.", bindings: ["html", "svelte", "astro"] },
+		{ name: "close", detail: "{ reason }", description: "The sheet closed.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "showModal",
+			description:
+				"Open the sheet as a modal, with a scrim and the page behind it inert — the shape for a task that must be finished or abandoned.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "show",
+			description:
+				"Open the sheet without a scrim, leaving the page behind it live. The shape for an inspector or a filter panel you work alongside.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "close",
+			params: "reason?: DialogCloseReason",
+			description:
+				"Slide the sheet back to its edge and return focus. The same ending a flick or an Escape reaches, and it reports which as `detail.reason` on the `close` event.",
+			bindings: ["html", "svelte"],
+		},
+	],
 	variants: [
 		{
 			name: "bottom",
@@ -343,6 +369,8 @@ export const sheetManifest: ComponentManifest = {
 		"--weight-semibold",
 	],
 	composition: [
+		"While open, the host relocates to `document.body` — a modal `<dialog>` anchors to the nearest ancestor that establishes a containing block, so one declared inside a transformed or filtered panel would center on that panel rather than the viewport. The consequence is that it stops being a descendant of whatever declared it, precisely while it is visible: a `bind:this` container query and a framework-scoped selector both go dead on open and come back on close. Reach it by `id` (`document.getElementById`, `:global(#that-id)`), which survives the move.",
+		"An inherited property an app sets document-wide (`cursor`, `font-family`) reaches this component's internals only through its light-DOM host, so set it on the host rather than on the rendered `dialog`. A document-level rule cannot cross the shadow boundary, which is why an app that hides the OS cursor gets a cursorless overlay until the declaration moves onto the element itself.",
 		"Reach for Sheet over Dialog whenever the overlay belongs to an edge rather than the center: a phone filter tray (`side=\"bottom\"`), a navigation drawer (`side=\"left\"`), an inspector (`side=\"right\"`), a notification shade (`side=\"top\"`).",
 		"Pair it with MobileShell and BottomNav for the full touch-app frame: the shell holds the bar and the nav, and a bottom Sheet rises over both.",
 		"Set `non-modal` for a drawer that sits alongside a still-usable page (an inspector, a persistent filter rail). Leave it modal for anything that demands an answer before the app continues.",

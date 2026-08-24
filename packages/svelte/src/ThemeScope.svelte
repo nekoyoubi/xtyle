@@ -17,9 +17,17 @@
 	let { algorithm, target, scheme, knobs, constraints, children, ...rest }: Props = $props();
 
 	const json = (value: unknown): string | undefined => (value === undefined ? undefined : JSON.stringify(value));
+
+	let el: (HTMLElement & { toggleScheme(): void }) | undefined = $state();
+
+	/** Flip this scope between light and dark, re-deriving against the same algorithm and knobs. */
+	export function toggleScheme(): void {
+		el?.toggleScheme();
+	}
 </script>
 
 <xtyle-theme-scope
+	bind:this={el}
 	{...rest}
 	algorithm={algorithm || undefined}
 	target={target || undefined}

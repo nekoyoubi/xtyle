@@ -57,7 +57,7 @@ export type IconName =
 export type IconSize = (typeof ICON_SIZES)[number];
 
 export interface RenderIconOptions {
-	/** The rendered size, stepping in `em` off the surrounding text: `sm`, `md`, `lg`, `xl`. */
+	/** The rendered size, stepping in `em` off the surrounding text: `xs`, `sm`, `md`, `lg`, `xl`. */
 	size?: IconSize | null;
 	/**
 	 * An accessible name. When set the icon is exposed as `role="img"` with the

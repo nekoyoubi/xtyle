@@ -295,7 +295,9 @@ export function renderBbcode(input: string, options?: BbcodeOptions): string {
  * newline the author typed to *separate* blocks rather than to break a line inside one, and keeping
  * it stacks a blank line on top of the margin the block already has.
  */
-const BLOCKS = "blockquote|ul|ol|li|table|thead|tbody|tr|td|th|details|summary|div|hr|h[1-6]|xtyle-code";
+const BLOCKS =
+	"blockquote|ul|ol|li|table|thead|tbody|tr|td|th|details|summary|div|hr|h[1-6]" +
+	"|xtyle-code|xtyle-accordion|xtyle-separator|xtyle-table|xtyle-heading";
 
 const BREAK_BEFORE_BLOCK = new RegExp(`(?:<br>\\s*)+(?=<(?:${BLOCKS})[\\s>])`, "g");
 const BREAK_AFTER_BLOCK = new RegExp(`(?<=</(?:${BLOCKS})>|<hr[^>]*>)(?:\\s*<br>)+`, "g");

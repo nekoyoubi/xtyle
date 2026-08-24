@@ -101,21 +101,16 @@ export class XtyleAccordion extends XtyleElement {
 	 * Slotted mode maps children by marker, so a framework that claims `slot` before the element sees it
 	 * (Astro's `<slot name>` consumes the attribute) leaves nothing to match and the sections fall to the
 	 * positional fallback, which pairs plausibly but wrongly. Name the cause rather than let it drift.
-	 *
-	 * Must run before `assignPanelSlots`, which stamps `slot="panel-N"` onto whatever it paired — after
-	 * that every child looks marked and the check can no longer tell an author's markup from its own.
 	 */
 	private warnIfUnmapped(): void {
 		if (this.warnedUnmapped || this.items.length > 0) return;
 		const authored = Array.from(this.children).filter((el) => !el.hasAttribute("data-root"));
 		if (authored.length === 0) return;
-		const marked = authored.some(
-			(el) =>
-				el.hasAttribute("data-xtyle-header") ||
-				el.hasAttribute("data-xtyle-panel") ||
-				el.getAttribute("slot") === "header" ||
-				el.getAttribute("slot") === "panel",
-		);
+		const marked = authored.some((el) => {
+			if (el.hasAttribute("data-xtyle-header") || el.hasAttribute("data-xtyle-panel")) return true;
+			const slot = el.getAttribute("slot") ?? "";
+			return /^(header|panel)(-\d+)?$/.test(slot);
+		});
 		if (marked) return;
 		this.warnedUnmapped = true;
 		console.warn(
@@ -244,8 +239,19 @@ export class XtyleAccordion extends XtyleElement {
 		}
 	}
 
+	override connectedCallback(): void {
+		super.connectedCallback();
+		this.observeChildren();
+	}
+
 	protected template(): string {
 		return "";
+	}
+
+	private shapeSignature(): string {
+		return JSON.stringify(
+			this.sections.map((section, i) => [section.value ?? String(i), section.headerSlot, section.panelSlot]),
+		);
 	}
 
 	protected override render(): void {
@@ -253,6 +259,7 @@ export class XtyleAccordion extends XtyleElement {
 		this.assignPanelSlots();
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(accordionHostCss);
+		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
 	}
 }

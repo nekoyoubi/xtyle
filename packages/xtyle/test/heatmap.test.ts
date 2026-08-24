@@ -50,7 +50,7 @@ describe("heatmap", () => {
 
 	it("mirrors the matrix into a visually-hidden table for assistive tech", async () => {
 		const html = await renderFragmentLight("heatmap", bindings);
-		expect(html).toContain('class="xtyle-heatmap__a11y"');
+		expect(html).toContain('class="xtyle-heatmap__a11y"><table>');
 		expect(html).toContain("<caption>Grid</caption>");
 		expect(html).toContain('<th scope="row">A</th>');
 	});

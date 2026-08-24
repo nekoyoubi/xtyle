@@ -10,6 +10,40 @@ import type {
 	TokenRegister,
 } from "./types.js";
 
+/**
+ * Derive a run's inverted counterpart and the context its invariants are judged in. A theme's other
+ * half is a derive like any other, so it answers to the same invariants — but nothing exercised it
+ * until now, which left every `invert: true` consumer riding on a path the battery had never run.
+ * Both the flipped knobs and the flipped constraints go into the context: judging an inverted
+ * register against the constraints it was *not* derived from reports failures that are not there.
+ */
+function invertRun(
+	algorithm: Algorithm,
+	invertedOptions: GauntletOptions["invertedOptions"],
+	knobs: Knobs,
+	constraints: TokenRegister,
+): { ctx: InvariantContext; constraints: TokenRegister } | null {
+	if (!invertedOptions) return null;
+	try {
+		const flipped = invertedOptions(algorithm, { knobs, constraints });
+		const register = algorithm.derive(flipped);
+		const scheme: Scheme = (flipped.knobs?.scheme ?? (register["--scheme"] as Scheme)) ?? "dark";
+		const flippedConstraints = flipped.constraints ?? {};
+		return {
+			constraints: flippedConstraints,
+			ctx: {
+				register,
+				knobs: flipped.knobs ?? {},
+				scheme,
+				categories: algorithm.categories,
+				constraints: flippedConstraints,
+			},
+		};
+	} catch {
+		return null;
+	}
+}
+
 /** The three common seed colors expressed as the token constraints they actually are. */
 function seedsToConstraints(seeds: Seeds): TokenRegister {
 	const out: TokenRegister = {};
@@ -23,12 +57,28 @@ export interface GauntletOptions {
 	runs?: number;
 	seed?: number;
 	knobs?: Knobs;
+	/**
+	 * How to build the inverted counterpart of a run, so the battery holds an algorithm's invariants
+	 * against the *other* scheme as well as the one it seeded. `index.ts` injects the real
+	 * `invertedOptions` here rather than the gauntlet importing it, which would close an import cycle;
+	 * omitted, the inverted half is simply not exercised.
+	 */
+	invertedOptions?: (algorithm: Algorithm, opts: { knobs?: Knobs; constraints?: TokenRegister }) => {
+		knobs?: Knobs;
+		constraints?: TokenRegister;
+	};
 }
 
 export interface GauntletFailure {
 	run: number;
 	seeds: Seeds;
 	knobs: Knobs;
+	/**
+	 * Every token the run pinned, not only the three it seeded from. A run adds pins of its own — a
+	 * headroom target, a mid-lightness background, a second brand for `duo` — and a failure that
+	 * reports the seeds without them cannot be reproduced from its own record.
+	 */
+	constraints: TokenRegister;
 	invariant: string;
 	detail?: string;
 }
@@ -75,6 +125,11 @@ const EXTREMES: Seeds[] = [
 	{ bg: "#010101", fg: "#020202", accent: "#ff00ff" },
 	{ bg: "#fefefe", fg: "#fdfdfd", accent: "#00ffff" },
 	{ bg: "#123456", fg: "#abcdef", accent: "#fedcba" },
+	{ bg: "#1a1a1a", accent: "#2b2b2b" },
+	{ bg: "#f7f9fc", accent: "#0b5fff" },
+	{ bg: "#fffbe6", accent: "#ffe100" },
+	{ bg: "#3d3a2f", accent: "#6b6350" },
+	{ bg: "#ffffff", accent: "#39ff14" },
 ];
 
 function randomSeeds(rand: () => number): Seeds {
@@ -92,7 +147,18 @@ const ACCENT_STRATEGY_DRAWS: Array<AccentStrategy | undefined> = [
 	"shade",
 	"duo",
 ];
-const CONSTRAINT_TARGETS = ["--accent", "--bg-0"];
+/**
+ * The tokens a run may pin. The two anchors, plus the scoped surfaces — each of those ships a
+ * companion set (syntax colours, the ANSI palette, a field border) whose contract is to stay readable
+ * *on that surface*, so a pin has to re-thread them rather than only replace the published value.
+ * Pinning them was untested until it turned out not to, and a light code block pinned onto a dark page
+ * kept syntax colours computed for the dark scheme.
+ *
+ * Deliberately not every derived token: most pins are a consumer overriding policy outright (an opaque
+ * `--state-hover`, an unreadable `--code-keyword`), and the invariants correctly report those. Only
+ * tokens the algorithm still owes something *downstream of* belong here.
+ */
+const CONSTRAINT_TARGETS = ["--accent", "--bg-0", "--code-bg", "--terminal-bg", "--field-bg"];
 const CONTRAST_DRAWS: Array<"aa" | "aaa" | number | undefined> = [undefined, "aa", "aaa", 5];
 const VIBRANCY_DRAWS: Array<number | undefined> = [undefined, 0, 0.5, 1];
 const TYPE_SCALE_DRAWS: Array<number | undefined> = [undefined, 1.125, 1.25, 1.414];
@@ -200,6 +266,11 @@ export function gauntlet(
 		if (knobs.accentStrategy === "duo" && run % 3 !== 0) {
 			constraints["--accent-2"] = run % 3 === 1 ? headroomColor(rand) : midLightnessColor(rand);
 		}
+		// INFO: a pinned flank is where the fan's geometry stops being symmetric — the other flank mirrors
+		// the pin, and the fourth member has to move out of its way. Unpinned runs never reach that shape.
+		if (knobs.accentStrategy === "fan" && run % 4 === 1) {
+			constraints[run % 8 === 1 ? "--accent-2" : "--accent-3"] = headroomColor(rand);
+		}
 		const register = algorithm.derive({ knobs, constraints });
 		const scheme: Scheme =
 			(knobs.scheme ?? (register["--scheme"] as Scheme)) ?? "dark";
@@ -220,6 +291,7 @@ export function gauntlet(
 						run,
 						seeds,
 						knobs,
+						constraints,
 						invariant: "pinned token honored verbatim",
 						detail: `${name}=${register[name]} expected ${value}`,
 					});
@@ -234,9 +306,28 @@ export function gauntlet(
 					run,
 					seeds,
 					knobs,
+					constraints,
 					invariant: result.name,
 					detail: result.detail,
 				});
+			}
+		}
+
+		const inverted = invertRun(algorithm, opts.invertedOptions, knobs, constraints);
+		if (inverted) {
+			for (const invariant of algorithm.invariants) {
+				const result: InvariantResult = invariant(inverted.ctx);
+				if (!result.ok) {
+					runOk = false;
+					failures.push({
+						run,
+						seeds,
+						knobs,
+						constraints: inverted.constraints,
+						invariant: `${result.name} (inverted)`,
+						detail: result.detail,
+					});
+				}
 			}
 		}
 		if (runOk) passed++;

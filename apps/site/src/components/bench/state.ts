@@ -1,5 +1,6 @@
 import type { Algorithm, Knobs, TokenRegister } from "@xtyle/core";
 import { migrateRecipe, contrast } from "@xtyle/core";
+import type { ThemeRecipe } from "@xtyle/core";
 
 export type SchemeKnob = "dark" | "light";
 export type ContrastBandKnob = "aa" | "aaa";
@@ -166,12 +167,28 @@ export interface BenchState {
 	 * is tier-tagged and forces the sandbox on open. It persists only in the local theme store.
 	 */
 	customCode?: string;
+	/**
+	 * A reference to a published pack whose algorithm derives this theme — an npm name, an
+	 * `owner/repo`, or the URL a pack is served from, with `#name` picking one of several. Only
+	 * consulted when `algorithm === PACK_ALGORITHM`; the Bench fetches it and loads it through the
+	 * xript sandbox (`fetchPackAlgorithm`).
+	 *
+	 * Serialized into the share-link, unlike `customCode`, because it is a *pointer* rather than a
+	 * payload: nothing resolves it but the sandbox, so a link cannot arrive carrying code some other
+	 * tier might run in-process. The cost it does carry, stated rather than buried: the *fetch* runs
+	 * in the page, so opening a shared link reaches out to whatever origin the link names before any
+	 * sandbox exists. That is a beacon, not execution, and it is the price of a pack theme being
+	 * shareable at all.
+	 */
+	packRef?: string;
 }
 
 /** The sentinel `algorithm` id for an on-site authored *taste-vector* (Tier-1, in-process). */
 export const CUSTOM_ALGORITHM = "custom";
 /** The sentinel `algorithm` id for an on-site authored *code* algorithm (Tier-2, sandboxed). */
 export const CUSTOM_CODE_ALGORITHM = "custom-code";
+/** The sentinel `algorithm` id for an algorithm fetched from a published pack (sandboxed). */
+export const PACK_ALGORITHM = "pack";
 
 export const ALGORITHMS: { id: string; label: string; blurb: string }[] = [
 	{ id: "xtyle-default", label: "Default", blurb: "Balanced neutral baseline" },
@@ -181,7 +198,22 @@ export const ALGORITHMS: { id: string; label: string; blurb: string }[] = [
 	{ id: "nxi-nite", label: "Day/Night", blurb: "Shifts warm + dim toward night, cool + bright toward day" },
 	{ id: CUSTOM_ALGORITHM, label: "Custom", blurb: "Author a taste-vector algorithm inline" },
 	{ id: CUSTOM_CODE_ALGORITHM, label: "Custom code", blurb: "Author an algorithm in code, run it sandboxed" },
+	{ id: PACK_ALGORITHM, label: "From a pack", blurb: "Derive with a published algorithm, fetched and sandboxed" },
 ];
+
+/**
+ * The bench state a pack-declared theme becomes. A theme names its algorithm by id, and that id is
+ * very often one the *same pack* ships, which no blessed registry can resolve. When it is not blessed,
+ * the recipe is rewired onto the pack tier and pointed back at the pack it came from, so the algorithm
+ * resolves through the sandbox the same way choosing it by hand would.
+ */
+export function statePackTheme(recipe: ThemeRecipe, ref: string): BenchState {
+	const blessed = ALGORITHMS.some((entry) => entry.id === recipe.algorithm);
+	const base = normalizeState(recipe as unknown as Record<string, unknown>);
+	if (blessed) return base;
+	const bare = ref.split("#")[0] ?? ref;
+	return { ...base, algorithm: PACK_ALGORITHM, packRef: `${bare}#${recipe.algorithm}` };
+}
 
 /** The display label for an algorithm id, falling back to the raw id when unknown. */
 export function algorithmLabel(id: string): string {
@@ -307,6 +339,7 @@ export function normalizeState(raw: unknown): BenchState {
 	};
 	if (typeof r.customSpec === "string") normalized.customSpec = r.customSpec;
 	if (typeof r.customCode === "string") normalized.customCode = r.customCode;
+	if (typeof r.packRef === "string") normalized.packRef = r.packRef;
 	return normalized;
 }
 
@@ -341,6 +374,16 @@ export function toInvocation(state: BenchState, name?: string): string {
 		optionLines.push(`  constraints: {\n${body}\n  }`);
 	}
 	const options = optionLines.length ? `, {\n${optionLines.join(",\n")}\n}` : "";
+	if (state.algorithm === PACK_ALGORITHM) {
+		return [
+			...header,
+			`import { derive } from "@xtyle/core";`,
+			`import { fetchPackAlgorithm } from "@xtyle/core/host/remote";`,
+			``,
+			`const algorithm = await fetchPackAlgorithm(${JSON.stringify(state.packRef ?? "")});`,
+			`const register = derive(algorithm${options});`,
+		].join("\n");
+	}
 	if (state.algorithm === CUSTOM_CODE_ALGORITHM) {
 		const codeBody = (state.customCode ?? "").trim();
 		return [
@@ -381,6 +424,7 @@ interface Serialized {
 	k: BenchKnobs;
 	o: TokenRegister;
 	cs?: string;
+	pr?: string;
 }
 
 function base64Encode(json: string): string {
@@ -405,6 +449,7 @@ export function encodeState(state: BenchState): string {
 		o: state.overrides,
 	};
 	if (state.customSpec !== undefined) payload.cs = state.customSpec;
+	if (state.packRef !== undefined) payload.pr = state.packRef;
 	// SAFETY: customCode is deliberately not serialized — a code payload must not travel via URL until
 	// the link schema is tier-tagged and forces the sandbox on open
 	return base64Encode(JSON.stringify(payload));
@@ -419,6 +464,7 @@ export function decodeState(hash: string): BenchState | null {
 			knobs: parsed.k,
 			overrides: parsed.o ?? parsed.p,
 			customSpec: parsed.cs,
+			packRef: parsed.pr,
 		});
 	} catch {
 		return null;

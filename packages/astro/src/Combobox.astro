@@ -29,6 +29,7 @@ interface Props {
 	readonly?: boolean;
 	invalid?: boolean;
 	required?: boolean;
+	requiredMessage?: string;
 	description?: string;
 	error?: string;
 	emptyText?: string;
@@ -58,6 +59,7 @@ const {
 	readonly = false,
 	invalid = false,
 	required = false,
+	requiredMessage,
 	description,
 	error,
 	emptyText,
@@ -124,6 +126,7 @@ const light = await renderFragmentLight("combobox", bindings);
 	readonly={readonly || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	description={description}
 	error={error}
 	empty-text={emptyText}

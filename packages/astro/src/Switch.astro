@@ -9,6 +9,8 @@ type Size = (typeof SWITCH_SIZES)[number];
 interface Props {
 	checked?: boolean;
 	disabled?: boolean;
+	/** Set false to keep the control out of sequential focus navigation. */
+	focusable?: boolean;
 	size?: Size;
 	tone?: Tone;
 	shape?: "pill" | "square";
@@ -31,6 +33,7 @@ interface Props {
 const {
 	checked = false,
 	disabled = false,
+	focusable,
 	size: sizeInput,
 	tone: toneInput,
 	shape = "pill",
@@ -56,6 +59,7 @@ const elementId = `xtyle-switch-${Math.random().toString(36).slice(2, 8)}`;
 const bindings = {
 	checked,
 	disabled,
+	focusable: focusable ?? true,
 	size,
 	tone,
 	shape,
@@ -74,6 +78,7 @@ const light = await renderFragmentLight("switch", bindings);
 <xtyle-switch
 	checked={checked || undefined}
 	disabled={disabled || undefined}
+	focusable={focusable === false ? "false" : undefined}
 	size={size}
 	tone={tone}
 	shape={shape !== "pill" ? shape : undefined}

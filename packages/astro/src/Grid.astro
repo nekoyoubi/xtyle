@@ -1,14 +1,17 @@
 ---
 import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
-import { GRID_ALIGNS, resolveOptionalVocab } from "@xtyle/core";
+import { GRID_ALIGNS, GRID_SIDES, resolveOptionalVocab } from "@xtyle/core";
 
 type GridAlign = (typeof GRID_ALIGNS)[number];
+type GridSide = (typeof GRID_SIDES)[number];
 
 interface Props {
 	gap?: number;
 	columns?: number;
 	minColWidth?: string;
+	sidebar?: string;
+	side?: GridSide;
 	align?: GridAlign;
 	justify?: GridAlign;
 	inline?: boolean;
@@ -23,6 +26,8 @@ const {
 	gap = 4,
 	columns,
 	minColWidth,
+	sidebar,
+	side: sideInput,
 	align: alignInput,
 	justify: justifyInput,
 	inline = false,
@@ -33,11 +38,14 @@ const {
 await checkAuthoring("grid", Astro.props);
 const align = resolveOptionalVocab(alignInput, GRID_ALIGNS, "grid align");
 const justify = resolveOptionalVocab(justifyInput, GRID_ALIGNS, "grid justify");
+const side = resolveOptionalVocab(sideInput, GRID_SIDES, "grid side");
 
 const bindings = {
 	gap,
 	columns: columns ?? null,
 	minColWidth: minColWidth ?? null,
+	sidebar: sidebar ?? null,
+	side: side ?? null,
 	align: align ?? null,
 	justify: justify ?? null,
 	inline,
@@ -51,6 +59,8 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 	gap={gap}
 	columns={columns ?? undefined}
 	min-col-width={minColWidth ?? undefined}
+	sidebar={sidebar ?? undefined}
+	side={side ?? undefined}
 	align={align ?? undefined}
 	justify={justify ?? undefined}
 	inline={inline || undefined}

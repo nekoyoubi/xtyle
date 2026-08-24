@@ -528,3 +528,72 @@ describe("<xtyle-carousel> lifecycle", () => {
 		expect(dots(el)).toHaveLength(2);
 	});
 });
+
+const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+function appendSlide(el: CarouselEl, id: string): HTMLElement {
+	const slide = document.createElement("div");
+	slide.id = id;
+	slide.textContent = id;
+	el.appendChild(slide);
+	return slide;
+}
+
+describe("<xtyle-carousel> slides that arrive after the mount", () => {
+	it("grows the track and the dot row for a slide appended later", async () => {
+		const el = make({}, 2);
+		expect(dots(el)).toHaveLength(2);
+		appendSlide(el, "late");
+		await flush();
+		expect(slides(el)).toHaveLength(3);
+		expect(dots(el)).toHaveLength(3);
+		expect(slides(el)[2]?.id).toBe("late");
+	});
+
+	it("keeps the slides it already had, in order", async () => {
+		const el = make({}, 3);
+		appendSlide(el, "late");
+		await flush();
+		expect(slides(el).map((slide) => slide.id)).toEqual(["slide-0", "slide-1", "slide-2", "late"]);
+	});
+
+	it("settles instead of re-rendering on its own chrome", async () => {
+		const el = make({}, 2);
+		appendSlide(el, "late");
+		await flush();
+		const settled = el.innerHTML;
+		await flush();
+		await flush();
+		expect(el.innerHTML).toBe(settled);
+		expect(slides(el)).toHaveLength(3);
+	});
+
+	it("never counts its own live region as a slide", async () => {
+		const el = make({}, 2);
+		await flush();
+		expect(el.querySelector(".xtyle-carousel__live")).not.toBeNull();
+		appendSlide(el, "late");
+		await flush();
+		expect(slides(el)).toHaveLength(3);
+		expect(dots(el)).toHaveLength(3);
+		expect(el.querySelectorAll(".xtyle-carousel__live")).toHaveLength(1);
+	});
+
+	it("rebuilds the seam clones around a late slide", async () => {
+		const el = make({ loop: "" }, 2);
+		expect(clones(el)).toHaveLength(2);
+		appendSlide(el, "late");
+		await flush();
+		expect(slides(el)).toHaveLength(3);
+		expect(clones(el)).toHaveLength(2);
+	});
+
+	it("renumbers the slide labels it had already written", async () => {
+		const el = make({}, 2);
+		expect(slides(el)[0]?.getAttribute("aria-label")).toBe("1 of 2");
+		appendSlide(el, "late");
+		await flush();
+		expect(slides(el)[0]?.getAttribute("aria-label")).toBe("1 of 3");
+		expect(slides(el)[2]?.getAttribute("aria-label")).toBe("3 of 3");
+	});
+});

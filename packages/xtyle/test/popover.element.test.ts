@@ -580,18 +580,81 @@ describe("<xtyle-popover> SSR (the pre-hydration paint)", () => {
 });
 
 describe("<xtyle-popover> naming", () => {
-	it("warns when a dialog-role panel has no accessible name", () => {
-		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const el = document.createElement("xtyle-popover");
+	function unnamed(attrs: Record<string, string> = {}): PopoverEl {
+		const el = document.createElement("xtyle-popover") as PopoverEl;
+		for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value);
+		el.innerHTML = "<button slot='trigger' id='trig'>Open</button><button id='act'>Act</button>";
 		document.body.appendChild(el);
+		return el;
+	}
+
+	it("says nothing while the panel is down, because a closed panel announces nothing", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		unnamed();
+		expect(warn).not.toHaveBeenCalled();
+	});
+
+	it("warns when a dialog-role panel goes up with no accessible name", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		unnamed().show();
 		expect(warn).toHaveBeenCalled();
+	});
+
+	it("takes a name that arrives after mount, which is how a host names a panel it composes", () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const el = unnamed();
+		el.setAttribute("labelledby", "some-heading");
+		el.show();
+		expect(warn).not.toHaveBeenCalled();
 	});
 
 	it("stays quiet when the panel's content brings its own semantics", () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-		const el = document.createElement("xtyle-popover");
-		el.setAttribute("panel-role", "listbox");
-		document.body.appendChild(el);
+		unnamed({ "panel-role": "listbox" }).show();
 		expect(warn).not.toHaveBeenCalled();
+	});
+});
+
+describe("reanchor", () => {
+	function anchorAt(id: string, left: number): HTMLElement {
+		const node = document.createElement("button");
+		node.id = id;
+		document.body.appendChild(node);
+		stubRect(node, { top: 100, left, width: 40, height: 20 });
+		return node;
+	}
+
+	it("opens against the anchor when the panel is closed", () => {
+		const el = make();
+		const first = anchorAt("first", 10);
+
+		el.reanchor(first);
+
+		expect(isShown(el)).toBe(true);
+	});
+
+	it("moves an already-open panel to the new anchor without closing it", () => {
+		const el = make();
+		const first = anchorAt("first", 10);
+		const second = anchorAt("second", 400);
+
+		el.reanchor(first);
+		const wasShown = isShown(el);
+		el.reanchor(second);
+
+		expect(wasShown, "the first call should have opened it").toBe(true);
+		expect(isShown(el), "reanchoring an open panel must not close it").toBe(true);
+	});
+
+	it("keeps the panel open across repeated moves", () => {
+		const el = make();
+		const a = anchorAt("a", 10);
+		const b = anchorAt("b", 200);
+
+		el.reanchor(a);
+		el.reanchor(b);
+		el.reanchor(a);
+
+		expect(isShown(el)).toBe(true);
 	});
 });

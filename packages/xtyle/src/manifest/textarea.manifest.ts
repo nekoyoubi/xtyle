@@ -42,8 +42,9 @@ export const textareaManifest: ComponentManifest = {
 	seeAlso: ["field", "form-group"],
 	summary: "A multi-line text input: styled, labelled, and resizable, in three sizes with an invalid state.",
 	description:
-		"Textarea is a styled multi-line text control. It renders a native `<textarea>` that inherits the shared `.xtyle-control` chrome, wrapped with an optional label and an error message slot. The `rows` attribute sets the initial visible height and `resize` controls the user's drag handle (vertical by default, or none / horizontal / both). It exposes the same `invalid` / `disabled` / `required` and `sm` / `md` / `lg` size surface as the rest of the form family, and the custom element is form-associated so its value participates in native form submission and reset.",
+		"Textarea is a styled multi-line text control. It renders a native `<textarea>` that inherits the shared `.xtyle-control` chrome, wrapped with an optional label and an error message slot. The `rows` attribute sets the initial visible height and `resize` controls the user's drag handle (vertical by default, or none / horizontal / both). It exposes the same `invalid` / `disabled` / `required` and `sm` / `md` / `lg` size surface as the rest of the form family. The custom element is form-associated, so its value participates in native form submission, reset, and constraint validation; `required` and `invalid` reach the form itself, and an empty required textarea blocks the submit rather than only looking wrong.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["control", "error", "label", "root", "textarea"],
 	anatomy: [
 		{
 			name: "root",
@@ -149,6 +150,13 @@ export const textareaManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "requiredMessage",
+			type: "string",
+			default: "Please fill out this field.",
+			description: "The message the browser shows when `required` is unmet. The platform localizes its own constraint messages and this one is xtyle's, so an app that is not in English should set it.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "error",
 			type: "string",
 			description: "Validation message rendered beneath the control and wired up via `aria-describedby` while invalid.",
@@ -194,6 +202,10 @@ export const textareaManifest: ComponentManifest = {
 			description: "Forwarded to the inner control: what a touch keyboard's action key should read.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "input", detail: "{ value }", description: "The text changed as it was typed.", bindings: ["html", "svelte", "astro"] },
+		{ name: "change", description: "The text settled.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{

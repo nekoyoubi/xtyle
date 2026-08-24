@@ -17,15 +17,25 @@ export class XtyleCheckbox extends XtyleElement {
 
 	static formAssociated = true;
 
-	private internals: ElementInternals;
+	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 	private indeterminateValue = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "checkbox", {
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 	});
 
 	constructor() {
 		super();
-		this.internals = this.attachInternals();
+		if ("attachInternals" in this) {
+			try {
+				this.internals = this.attachInternals();
+			} catch {
+				this.internals = null;
+			}
+		}
 	}
 
 	static get observedAttributes(): string[] {
@@ -120,7 +130,7 @@ export class XtyleCheckbox extends XtyleElement {
 	}
 
 	private syncForm(): void {
-		this.internals.setFormValue(this.checked ? this.value : null);
+		this.internals?.setFormValue(this.checked ? this.value : null);
 	}
 
 	/** Name the shadow `<input>` from the visible slotted text when present — the light-DOM
@@ -147,7 +157,11 @@ export class XtyleCheckbox extends XtyleElement {
 		this.indeterminate = false;
 		this.checked = intent.setChecked;
 		this.syncForm();
-		this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+		this.emitOwn("change", null, {
+			checked: this.checked,
+			indeterminate: this.indeterminate,
+			value: this.value,
+		});
 	}
 
 	protected template(): string {
@@ -286,7 +300,11 @@ export class XtyleCheckboxGroup extends XtyleElement {
 			input.indeterminate = false;
 			this.headingLabel?.classList.remove("xtyle-checkbox--indeterminate");
 		}
-		this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+		this.emitOwn("change", null, {
+			checked: input.checked,
+			indeterminate: input.indeterminate,
+			value: this.getAttribute("value") ?? "",
+		});
 	};
 
 	private warnIfUnnamed(): void {
@@ -331,6 +349,7 @@ export class XtyleCheckboxGroup extends XtyleElement {
 			});
 		if (!this.manual) this.sync();
 		this.warnIfUnnamed();
+		this.verifyFormName();
 	}
 }
 

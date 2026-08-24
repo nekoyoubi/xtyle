@@ -118,7 +118,7 @@ function tableHtml(series: { name: string; values: number[] }[], categories: str
 		)
 		.join("");
 	const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
-	return `<table class="xtyle-bar__a11y">${cap}<thead>${head}</thead><tbody>${rows}</tbody></table>`;
+	return `<div class="xtyle-bar__a11y"><table>${cap}<thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function verticalPlot(b: BarBindings, series: { name: string; values: number[] }[], colors: string[], height: number): string {

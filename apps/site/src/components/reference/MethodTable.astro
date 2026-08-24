@@ -1,0 +1,71 @@
+---
+import type { MethodDef } from "@xtyle/core";
+import { renderMarkdownInline } from "@xtyle/core/markup";
+import Table from "@xtyle/astro/Table.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+interface Props {
+	methods: MethodDef[];
+}
+
+const { methods } = Astro.props;
+const bindingOrder = ["html", "svelte", "astro"] as const;
+const signature = (m: MethodDef) => `${m.name}(${m.params ?? ""})`;
+---
+
+{methods.length > 0 && (
+	<Table variant="striped" ariaLabel="Component methods">
+		<table>
+			<thead>
+				<tr>
+					<th scope="col">Method</th>
+					<th scope="col">Returns</th>
+					<th scope="col">Bindings</th>
+					<th scope="col">Description</th>
+				</tr>
+			</thead>
+			<tbody>
+				{methods.map((m) => (
+					<tr>
+						<td>
+							<Text as="span" size="sm" mono class="method-signature">{signature(m)}</Text>
+						</td>
+						<td>
+							<Text as="span" size="sm" tone="muted" mono>{m.returns ?? "void"}</Text>
+						</td>
+						<td>
+							<Cluster gap={1}>
+								{bindingOrder
+									.filter((b) => m.bindings.includes(b))
+									.map((b) => (
+										<Badge variant="outline" size="sm">{b}</Badge>
+									))}
+							</Cluster>
+						</td>
+						<td>
+							<Text as="span" size="sm" class="method-desc" set:html={renderMarkdownInline(m.description)} />
+						</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</Table>
+)}
+
+<style>
+	.method-signature {
+		display: inline-block;
+		min-width: 12rem;
+		font-weight: var(--weight-semibold);
+		color: var(--fg-0);
+		white-space: normal;
+		overflow-wrap: normal;
+		word-break: normal;
+	}
+	.method-desc {
+		display: inline-block;
+		min-width: 16rem;
+	}
+</style>

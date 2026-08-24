@@ -9,6 +9,8 @@
 		value?: string;
 		options?: string | ReadonlyArray<string | SegmentOption>;
 		disabled?: boolean;
+		/** Set false to keep the control out of sequential focus navigation. */
+		focusable?: boolean;
 		size?: Size;
 		tone?: Tone;
 		label?: string;
@@ -26,6 +28,7 @@
 		value = $bindable(""),
 		options,
 		disabled = false,
+		focusable,
 		size = "md",
 		tone = "accent",
 		label,
@@ -55,6 +58,7 @@
 	value={value || undefined}
 	options={typeof options === "string" ? options : undefined}
 	disabled={disabled || undefined}
+	focusable={focusable === false ? "false" : undefined}
 	{size}
 	{tone}
 	{label}

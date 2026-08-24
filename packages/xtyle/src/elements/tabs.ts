@@ -1,9 +1,9 @@
 import { XtyleElement, define, readAttrOrProp, readBoolAttrOrProp, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
-import { tabsHostCss, type TabItemData, type TabsVariant, type TabsActivation } from "../markup/index.js";
+import { tabsHostCss, type TabItemData, type TabsVariant, type TabsActivation, type TabsOverflow } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/tabs/source.generated.js";
-import { resolveVocab, TABS_VARIANTS, TABS_SIZES } from "../vocab.js";
+import { resolveVocab, TABS_VARIANTS, TABS_SIZES, TABS_OVERFLOWS } from "../vocab.js";
 
 let tabsSeq = 0;
 
@@ -31,7 +31,7 @@ export class XtyleTabs extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "size", "activation", "value", "label", "labelledby", "items", "sticky", "tablist"];
+		return ["variant", "size", "activation", "value", "label", "labelledby", "items", "sticky", "tablist", "fill", "overflow"];
 	}
 
 	get variant(): TabsVariant {
@@ -46,6 +46,13 @@ export class XtyleTabs extends XtyleElement {
 	}
 	set size(value: Size) {
 		this.setAttribute("size", value);
+	}
+
+	get overflow(): TabsOverflow {
+		return resolveVocab(this.getAttribute("overflow"), TABS_OVERFLOWS, "wrap", "tabs overflow");
+	}
+	set overflow(value: TabsOverflow) {
+		this.setAttribute("overflow", value);
 	}
 
 	get activation(): TabsActivation {
@@ -67,6 +74,14 @@ export class XtyleTabs extends XtyleElement {
 	}
 	set sticky(value: boolean) {
 		this.reflectBoolean("sticky", value);
+	}
+
+	/** Take the remaining height of a bounded parent and scroll the active panel rather than overflowing it. */
+	get fill(): boolean {
+		return this.hasAttribute("fill");
+	}
+	set fill(value: boolean) {
+		this.reflectBoolean("fill", value);
 	}
 
 	get tablist(): boolean {
@@ -92,6 +107,7 @@ export class XtyleTabs extends XtyleElement {
 
 	override connectedCallback(): void {
 		super.connectedCallback();
+		this.observeChildren();
 		this.scheduleSettle();
 	}
 
@@ -208,7 +224,9 @@ export class XtyleTabs extends XtyleElement {
 			activeId: this.value,
 			variant: this.variant,
 			size: this.size,
+			overflow: this.overflow,
 			sticky: this.sticky,
+			fill: this.fill,
 			tablist: this.tablist,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
@@ -267,10 +285,16 @@ export class XtyleTabs extends XtyleElement {
 		return "";
 	}
 
+	private shapeSignature(): string {
+		const items = this.markupItems.map((item, i) => `${item.value ?? String(i)}:${item.disabled ? 1 : 0}`);
+		return `${this.tablist}|${items.join(" ")}`;
+	}
+
 	protected override render(): void {
 		this.assignPanelSlots();
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(tabsHostCss);
+		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
 		this.warnIfUnnamed();
 		this.warnIfUnmapped();

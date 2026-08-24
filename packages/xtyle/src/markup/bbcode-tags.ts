@@ -239,8 +239,13 @@ const EXTENSIONS: BbcodeTag[] = [
 	{
 		name: "table",
 		block: true,
-		description: "A table. Rows are `[tr]`, cells `[td]`, headers `[th]`.",
-		render: (c) => `<xtyle-table><table>${c.content}</table></xtyle-table>`,
+		description: "A table. Rows are `[tr]`, cells `[td]`, headers `[th]`. `[table=Sales by region]` captions it, which is also how it is announced; a table opened bare is named `Table`.",
+		render(c) {
+			const caption = c.value ?? c.attrs.caption ?? null;
+			return caption
+				? `<xtyle-table><table><caption>${escapeHtml(caption)}</caption>${c.content}</table></xtyle-table>`
+				: `<xtyle-table><table aria-label="Table">${c.content}</table></xtyle-table>`;
+		},
 	},
 	{ name: "tr", render: (c) => `<tr>${c.content}</tr>`, description: "A table row." },
 	{ name: "td", render: (c) => `<td>${c.content}</td>`, description: "A table cell." },

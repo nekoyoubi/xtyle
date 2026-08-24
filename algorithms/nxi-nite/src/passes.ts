@@ -13,7 +13,9 @@ import {
 	DIVIDER_SEPARATION,
 	SURFACE_SEPARATION,
 	enforceContrastFloor,
+	ringForContrast,
 	settlePass,
+	SURFACE_ROLES,
 	TOKEN_CATEGORIES,
 	type PresetDefaults,
 } from "@xtyle/core/authoring";
@@ -296,6 +298,8 @@ const BORDER_RESTORE: Array<{ border: TokenName; surface: TokenName; floor: numb
  * floored text inks, so the fills (and everything derived from them) stay put. */
 const FILL_TOKENS: TokenName[] = ["--accent", "--neutral", "--success", "--warn", "--danger", "--info"];
 
+const RING_BG_ALPHA = 0.18;
+
 /**
  * Raises an ink to clear its floor against `bgValue` *only if that move doesn't cost it
  * contrast against its primary surface* `bg0`. enforceContrastFloor can flip a dark ink to
@@ -330,7 +334,11 @@ function clearBounded(
  * ink's readability on that surface. Pinned foregrounds are skipped: pinning a token is an
  * explicit opt-out of its invariant, same as in the base derivation.
  */
-function contrastRestoreRun(register: TokenRegister, ctx: PassContext): TokenRegister {
+function contrastRestoreRun(
+	register: TokenRegister,
+	ctx: PassContext,
+	ringFloor: number,
+): TokenRegister {
 	const out: TokenRegister = { ...register };
 	const bg0Value = out["--bg-0"];
 	if (bg0Value === undefined) return out;
@@ -354,6 +362,22 @@ function contrastRestoreRun(register: TokenRegister, ctx: PassContext): TokenReg
 		out[border] = formatCss(borderForContrast(seed, surf, floor));
 	}
 
+	if (ctx.pinned["--ring"] === undefined) {
+		const ringValue = out["--ring"];
+		const ringSeed = ringValue === undefined ? null : asColor(ringValue);
+		const ringSurfaces = SURFACE_ROLES.map((name) => out[name])
+			.filter((value): value is string => value !== undefined)
+			.map(asColor)
+			.filter((color): color is OklchColor => color !== null);
+		if (ringSeed && ringSurfaces.length > 0) {
+			const restored = formatCss(ringForContrast(ringSeed, ringSurfaces, ringFloor));
+			out["--ring"] = restored;
+			if (ctx.pinned["--ring-bg"] === undefined && out["--ring-bg"] !== undefined) {
+				out["--ring-bg"] = formatCss({ ...asColor(restored) as OklchColor, alpha: RING_BG_ALPHA });
+			}
+		}
+	}
+
 	return out;
 }
 
@@ -365,8 +389,11 @@ export function dimPass(): Pass {
 	return { name: "dim", run: dimRun };
 }
 
-export function contrastRestorePass(): Pass {
-	return { name: "contrast-restore", run: contrastRestoreRun };
+export function contrastRestorePass(ringFloor: number): Pass {
+	return {
+		name: "contrast-restore",
+		run: (register, ctx) => contrastRestoreRun(register, ctx, ringFloor),
+	};
 }
 
 /**
@@ -377,5 +404,10 @@ export function contrastRestorePass(): Pass {
  * this same module, the two derive byte-identically.
  */
 export function nxiNitePasses(preset: PresetDefaults, opts: DeriveOptions): Pass[] {
-	return [settlePass(preset, opts), warmthPass(), dimPass(), contrastRestorePass()];
+	return [
+		settlePass(preset, opts),
+		warmthPass(),
+		dimPass(),
+		contrastRestorePass(preset.declaredFocusRingFloor),
+	];
 }

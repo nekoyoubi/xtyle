@@ -65,6 +65,7 @@ export const colorPickerManifest: ComponentManifest = {
 	description:
 		"Color Picker chooses a color by hue, saturation, brightness, and opacity. A saturation/brightness field (the hue painted under white→transparent and transparent→black gradients) carries a draggable `role=\"slider\"` handle moved by pointer or arrow keys; a rainbow hue track sets the field's hue; an opt-in alpha track (off by default) sets opacity over a checkerboard; and a value field reflects the color in a switchable format (`hex`, `rgb`, `hsl`, `oklch`, `lab`, `lch`, `oklab`, or `cmyk`) while accepting any CSS Color 4 string (named, `#rrggbb`/`#rrggbbaa`, `rgb()`, `hsl()`, `oklch()`, …) plus profile-free `cmyk()`, and reformatting on commit. A `format` button cycles the readout, and a `modes` knob narrows which spaces it offers. Set `channels` to a model (`rgb`, `hsl`, `hsv`, `oklch`, `lab`, `lch`, `oklab`, or `cmyk`) and a stack of native range sliders appears, one per channel of that model, each with a live numeric readout and editable directly; every edit round-trips through the same engine math and re-threads the rest of the picker. Set `plane` and an OKLCH perceptual plane appears: a lightness × chroma `<canvas>` field at the current hue (its chroma axis sized to the hue's reach), with colors outside the sRGB gamut desaturated and edged with a contour so the boundary reads rather than clamping flat, a draggable handle, and a live `L · C` readout. The color math lives in `@xtyle/core` (culori-backed), so parsing, formatting, and channel decomposition belong to the engine, not the component. Where the browser supports it, an eyedropper button samples a color from anywhere on screen, a `swatches` list adds a row of preset chips below the picker, a `harmony` scheme generates a live row of related colors (complementary, triadic, analogous, and more) each clickable to adopt, `contrastAgainst` adds a live WCAG panel grading the current color against a reference, and a `snap` set adds palette-snap buttons: quantize to the 216-color web-safe cube, or jump to the perceptually nearest CSS named color (shown live on the button). It is form-associated. Give it a `name` and it submits the current value. It renders inline by default, or set `trigger` to collapse it to a swatch button that opens the full UI in an anchored, light-dismissable popover. It composes the same rail-and-handle mechanics as Slider.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["alpha", "alpha-handle", "area", "channel", "channel-input", "channel-value", "channels", "contrast", "controls", "eyedropper", "field", "format", "harmony", "harmony-chip", "hue", "hue-handle", "label", "picker", "plane", "plane-field", "plane-handle", "plane-readout", "plane-wrap", "popover", "preset", "presets", "snap", "snaps", "sv-handle", "swatch", "trigger", "value"],
 	anatomy: [
 		{
 			name: "picker",
@@ -293,6 +294,10 @@ export const colorPickerManifest: ComponentManifest = {
 			description: "Form field name; the picker contributes its hex value to submitted form data.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "input", detail: "{ value }", description: "The colour changed as the user drags — continuous, one per pointer move.", bindings: ["html", "svelte", "astro"] },
+		{ name: "change", detail: "{ value }", description: "The colour settled: a drag ended or a value was committed. One per gesture.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

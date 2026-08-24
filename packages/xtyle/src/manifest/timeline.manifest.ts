@@ -51,6 +51,7 @@ export const timelineManifest: ComponentManifest = {
 	description:
 		"Timeline turns a semantic ordered list into a vertical activity feed. Author an `<ol>` of `<li>` events and each one takes a themed dot on a connector rail that runs from one event to the next and stops at the last. The dot and the rail are real nodes rendered by the component's fill, not lines painted onto the author's markup, so a mod can swap the dot for a per-event icon or draw the rail dashed — while each event's content is relocated into its content region untouched, and the rendered list stays a semantic `<ol>` screen readers hear in order. Inside an event, a `<strong>` reads as the title, a `<time>` as its timestamp, and a `<p>` as the body; the same styling is available through `xtyle-timeline__title` / `__meta` / `__body` classes if the markup can't use those elements.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["content", "dot", "item", "list", "rail"],
 	anatomy: [
 		{
 			name: "list",

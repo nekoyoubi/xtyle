@@ -53,7 +53,7 @@ export class XtyleBbcode extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "bbcode", {
-		applyIntent: (intent) => this.applyIntent(intent),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent)),
 		afterApply: () => this.syncEditor(),
 	});
 
@@ -174,7 +174,7 @@ export class XtyleBbcode extends XtyleElement {
 			this.draft = intent.value;
 			if (this.hasAttribute("source")) this.setAttribute("source", intent.value);
 			else this.render();
-			this.dispatchEvent(new CustomEvent("input", { bubbles: true, detail: { source: intent.value } }));
+			this.emitOwn("input", null, { source: intent.value });
 		}
 	}
 

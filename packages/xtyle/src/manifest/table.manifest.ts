@@ -231,6 +231,13 @@ export const tableManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "maxHeight",
+			type: "string",
+			description:
+				"Caps the wrapper's height so it scrolls internally, as any CSS length. `sticky` needs this: a header can only stick inside a scrollport, and without a cap the page scrolls instead of the table.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "selection",
 			type: '"none" | "single" | "multi" | "range"',
 			default: "none",
@@ -253,6 +260,9 @@ export const tableManifest: ComponentManifest = {
 				"Astro only: emit the decorated table but never load the runtime to hydrate it. The part classes the element writes onto the authored `<table>` at upgrade are applied at build time, so a static table is fully styled; sorting, the scroll affordance, and row `selection` are what hydration adds. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
 			bindings: ["astro"],
 		},
+	],
+	events: [
+		{ name: "change", detail: "{ value, selected }", description: "The selection changed: `value` is the row just acted on, `selected` the full set of selected keys.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{

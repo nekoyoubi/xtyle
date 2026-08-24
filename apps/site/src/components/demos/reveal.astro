@@ -9,6 +9,7 @@ import Text from "@xtyle/astro/Text.astro";
 import Icon from "@xtyle/astro/Icon.astro";
 import Avatar from "@xtyle/astro/Avatar.astro";
 import Badge from "@xtyle/astro/Badge.astro";
+import Kbd from "@xtyle/astro/Kbd.astro";
 
 const inbox = [
 	{ from: "Katherine Johnson", subject: "Re: return trajectory", when: "09:12", unread: true },
@@ -19,6 +20,45 @@ const inbox = [
 ---
 
 <Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={2} size="sm">Reachable without a pointer</Heading>
+		<Stack gap={4}>
+			<Text size="sm" tone="muted">
+				Tab to a lid and press <Kbd>Enter</Kbd> or <Kbd>Space</Kbd>: that takes the action, firing the same
+				<code>xtyle:reveal-commit</code> a full pull fires. Arrow keys open a belly and <Kbd>Esc</Kbd> closes it, but
+				opening a belly is not the same as reaching what is inside one — a <code>commit</code> direction's action has
+				no other keyboard route. <code>commit(direction)</code> is the imperative equivalent, for a host or a harness.
+			</Text>
+			<Text size="sm" tone="muted">
+				<code>control</code> declares the lid a control rather than a container, so it announces as a button instead
+				of a group. Opt in when the lid <em>is</em> the affordance; leave it off when the lid wraps controls of its
+				own, since a button role would fold them into itself.
+			</Text>
+			<Stack gap={3}>
+				<Reveal control label="Travel to the abbey" endBehavior="commit" endCommitAt="0.5" endTone="success" class="reveal-row">
+					<div class="reveal-row__lid">
+						<Icon name="arrow-right" tone="accent" />
+						<Stack gap={0}>
+							<Text as="span" weight="semibold">The abbey on the hill</Text>
+							<Text as="span" size="sm" tone="muted">a control &middot; announces as a button</Text>
+						</Stack>
+					</div>
+					<div slot="end" class="reveal-row__action"><Text as="span" size="sm">Travelling…</Text></div>
+				</Reveal>
+				<Reveal label="Message from Ada" latchAt="40%" class="reveal-row">
+					<div class="reveal-row__lid">
+						<Avatar userName="Ada Lovelace" size="sm" />
+						<Stack gap={0}>
+							<Text as="span" weight="semibold">A container, not a control</Text>
+							<Text as="span" size="sm" tone="muted">its belly holds buttons of its own</Text>
+						</Stack>
+					</div>
+					<div slot="end" class="reveal-row__action"><Badge tone="info">reply</Badge></div>
+				</Reveal>
+			</Stack>
+		</Stack>
+	</Card>
+
 	<Card>
 		<Heading slot="header" level={2} size="sm">An incoming call</Heading>
 		<Stack gap={3}>
@@ -40,7 +80,7 @@ const inbox = [
 				gripSize="1.5rem"
 			>
 				<div class="reveal-call__lid">
-					<Avatar name="Katherine Johnson" size="lg" />
+					<Avatar userName="Katherine Johnson" size="lg" />
 					<div>
 						<Text as="span" weight="semibold" size="lg">Katherine Johnson</Text>
 						<Text size="sm" tone="muted">mobile · calling…</Text>
@@ -316,6 +356,38 @@ const inbox = [
 				<div slot="end" class="reveal-product__belly"><Text as="span" size="sm">Remove</Text><Icon name="trash" /></div>
 				<div slot="top" class="reveal-product__belly"><Icon name="info" /><Text as="span" size="sm">1.0L · variable temperature</Text></div>
 				<div slot="bottom" class="reveal-product__belly"><Icon name="bookmark" /><Text as="span" size="sm">Save for later</Text></div>
+			</Reveal>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">Opening without a grip</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				A tap opens a reveal, so <code>gripStyle="none"</code> costs the mark and not the pointer. With one belly
+				a tap takes it; with several, the tap goes to whichever edge it landed nearest, and a tap on an open
+				reveal closes it. <code>open</code> works the same way from markup, so a row can ship revealed or be
+				driven by a consumer holding no handle on the element.
+			</Text>
+			<Reveal label="No grip" gripStyle="none" class="reveal-row">
+				<div class="reveal-row__lid">
+					<span class="reveal-row__pip" />
+					<div class="reveal-row__who">
+						<Text as="span">Tap anywhere on this row</Text>
+						<Text size="sm" tone="muted">Nothing is painted at the edge</Text>
+					</div>
+				</div>
+				<div slot="end" class="reveal-row__belly"><Text as="span" size="sm">Opened by tap</Text></div>
+			</Reveal>
+			<Reveal label="Ships open" open="end" gripStyle="none" class="reveal-row">
+				<div class="reveal-row__lid">
+					<span class="reveal-row__pip" />
+					<div class="reveal-row__who">
+						<Text as="span">This one shipped open</Text>
+						<Text size="sm" tone="muted">open="end" in the markup</Text>
+					</div>
+				</div>
+				<div slot="end" class="reveal-row__belly"><Text as="span" size="sm">Already revealed</Text></div>
 			</Reveal>
 		</Stack>
 	</Card>

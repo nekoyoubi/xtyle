@@ -103,6 +103,7 @@ export const codeManifest: ComponentManifest = {
 	description:
 		"Code is a turnkey, read-only code block with the tokenizer built in; it's the first component to read the `--code-*` family. It tokenizes with Prism, whose output is class-based, so the block re-themes live the moment the theme changes: the colors are just cascading CSS variables, never baked inline. The `lang` prop names the language with aliases resolved (`ts` → `typescript`), and the source is the element's text content (or, for Astro, a `code` prop). Grammar loading is fully lazy and per-language. A page with no code block loads nothing; a page with a few languages loads Prism core once plus only those grammar chunks, walking each grammar's dependencies first. At runtime the block paints immediately as plain-but-themed text and recolors in place once the grammar resolves, so there is no flash and no layout shift; the Astro binding tokenizes at build and ships pre-colored with zero browser JS. `preload` warms a block's grammar eagerly to kill even the minor recolor flash, sharing one warm path with the page-level `XtyleCode.warm()` static. An unknown language falls back to plain-but-themed text rather than erroring.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["caption", "code", "copy", "pre"],
 	anatomy: [
 		{
 			name: "pre",
@@ -154,7 +155,8 @@ export const codeManifest: ComponentManifest = {
 		{
 			name: "lang",
 			type: "string",
-			description: "The language id, with aliases resolved (`ts` → `typescript`). An unknown id falls back to plain-but-themed text.",
+			attr: "language",
+			description: "The language id, with aliases resolved (`ts` → `typescript`). An unknown id falls back to plain-but-themed text. In markup the attribute is `language`; `lang` is the HTML global and means a natural language, not a programming one.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{

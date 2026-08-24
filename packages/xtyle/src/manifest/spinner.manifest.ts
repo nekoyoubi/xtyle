@@ -38,6 +38,7 @@ export const spinnerManifest: ComponentManifest = {
 	description:
 		"Spinner signals that work is in progress without a known endpoint. It draws a rotating ring with a single transparent gap, sized in `em` so it scales with the surrounding type, and carries `role=\"status\"` so assistive tech announces the busy state. `tone` colors the ring across the six semantic roles (accent, neutral, danger, success, warn, info), and `size` picks sm, md, or lg. The spin runs on `--duration-slow`; the reduced-motion base rule freezes it for users who ask for less motion. It is presentational and standalone; Button carries its own inline spinner for the loading state.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["spinner"],
 	anatomy: [
 		{
 			name: "spinner",

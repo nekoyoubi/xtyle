@@ -1,0 +1,31 @@
+{
+	"name": "xtyle-pack-example",
+	"version": "0.1.0",
+	"private": true,
+	"description": "A worked xtyle pack: two algorithms and a theme, declared the way a published pack declares them",
+	"keywords": [
+		"xtyle-pack"
+	],
+	"xtyle": {
+		"description": "Derive with example-tinted or example-banded, or re-derive the dusk theme the pack seeds; nothing here is discovered, all of it is declared",
+		"algorithms": [
+			{
+				"name": "example-tinted",
+				"entry": "example-tinted",
+				"description": "Pushes the accent's hue deep into every tinted fill, so accent and status surfaces read as one family"
+			},
+			{
+				"name": "example-banded",
+				"entry": "example-banded",
+				"description": "Adds a derived threshold ramp to the standard register, so a reading bands into safe, watch, or over"
+			}
+		],
+		"themes": [
+			{
+				"name": "dusk",
+				"entry": "themes/dusk.json",
+				"description": "example-tinted seeded with a deep indigo page and a warm accent"
+			}
+		]
+	}
+}

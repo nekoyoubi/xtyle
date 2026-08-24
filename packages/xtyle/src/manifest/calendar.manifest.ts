@@ -71,6 +71,7 @@ export const calendarManifest: ComponentManifest = {
 	description:
 		'Calendar is the month grid itself: a controlled `role="grid"` of day cells with no opinion about being inside a popup (that is `DatePicker`\'s job, and it consumes this). Three modes: `single` picks one day, `multiple` toggles a set, and `range` opens on the first pick and closes on the second, previewing the pending half as the pointer — or the keyboard cursor — sweeps across the grid. **Every date is a wall-clock date**, an ISO `YYYY-MM-DD` civil day rather than an instant, so nothing here can shift a selection across a DST boundary; `today` is read in the host\'s timezone, or whichever IANA zone `timezone` names. The locale drives the month and weekday names, the numbering system, and the first day of the week, all through `Intl` (`Intl.Locale`\'s `weekInfo` where the engine has it, ISO-8601 otherwise) — no bundled locale table and no date library — and `firstDayOfWeek` overrides it outright. `min` / `max`, a `disabledDates` list, and an `isDateDisabled` predicate compose into which days are refused, and `decorations` hangs event dots, a busy bar, and extra announced text on any day. The keyboard is the full WAI-ARIA date grid: arrows walk days and weeks straight across month boundaries, `Home` / `End` snap to the week\'s edges, `PageUp` / `PageDown` step months (`Shift` for years), and `Escape` cancels a half-drawn range.',
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["busy", "calendar", "cell", "chevron", "cue", "day", "dot", "grid", "header", "marks", "nav", "num", "title", "week", "weekday", "weeknum"],
 	anatomy: [
 		{
 			name: "calendar",
@@ -246,6 +247,27 @@ export const calendarManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "prevLabel",
+			type: "string",
+			default: '"Previous month"',
+			description: "The accessible name of the previous-month step, for a calendar in another language or one that steps something other than months.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "nextLabel",
+			type: "string",
+			default: '"Next month"',
+			description: "The accessible name of the next-month step.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "weekLabel",
+			type: "string",
+			default: '"Week"',
+			description: "The header of the week-of-year column, and what each week number is announced as. Only rendered when `weekNumbers` is set.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "disabledDates",
 			type: "string[]",
 			description:
@@ -258,6 +280,7 @@ export const calendarManifest: ComponentManifest = {
 			description:
 				"A predicate, set as a property, run once per rendered day. The seam for a rule a list can't express (no Mondays, no past weekends, no blackout window).",
 			bindings: ["html", "svelte"],
+			propertyOnly: true,
 		},
 		{
 			name: "decorations",
@@ -308,6 +331,10 @@ export const calendarManifest: ComponentManifest = {
 			description: "The id of an existing element naming the calendar, instead of `label`.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "change", detail: "{ mode, value, dates, start, end, complete }", description: "The selection changed.", bindings: ["html", "svelte", "astro"] },
+		{ name: "month-change", detail: "{ month }", description: "The displayed month stepped.", bindings: ["html", "svelte", "astro"], handler: "onmonthchange" },
 	],
 	variants: [
 		{

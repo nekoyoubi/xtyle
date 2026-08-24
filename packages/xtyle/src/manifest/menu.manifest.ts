@@ -134,6 +134,7 @@ export const menuManifest: ComponentManifest = {
 	description:
 		"Menu is the app-menu shape: a labeled trigger (a File button, a kebab, a profile name) that opens a floating list of actions under it. It builds the WAI-ARIA menu button pattern: the trigger carries `aria-haspopup=\"menu\"` and `aria-expanded`, and the popup is a `role=\"menu\"` of `role=\"menuitem\"` actions with a single roving focus, so the keyboard walks it like a native menu. Like Tree, it is data-driven: an `items` array drives the markup. An action carries a `label` plus optional `value`, `disabled`, and a `hint` (a trailing muted/mono accelerator like `Ctrl+S`); a `{ separator: true }` entry renders a `role=\"separator\"` divider; and a `{ heading: string }` entry opens a labeled `role=\"group\"` the following actions sit under, so a real app menu can group its commands under \"File\" and \"Help\" headers. The popup uses the native Popover API, so it renders in the top layer and escapes any clipping or stacking context an ancestor would otherwise impose, positioned under the trigger (and flipped up when there is no room below). Choosing an action fires a `select` event with the item's `value`, `label`, and `index` and closes the menu; the engine never navigates, the consumer decides what an action does. Its chrome (the overlay surface, the elevation, the accent-tinted active row) is derived, so a menu frames its actions in the theme's own voice.\n\nThe **right-click menu is the same component**, not a second one. Add `context` and the trigger is not rendered (the host collapses to `display: contents`, so it takes no layout wherever it sits); call `menu.openAt(x, y)` from a `contextmenu` handler and the popup opens at the pointer instead of under a button. Same `items`, same chrome, same roving keyboard focus, same `select` event, same theming: a kebab menu becomes a right-click menu by adding one attribute and one call, without touching the item list. Near a viewport edge the popup right-aligns on the cursor rather than sliding sideways off it, the way a native OS menu does, and flips above the point when there is no room below. `openAt(x, y, opts)` takes an optional `focus` (`\"first\"` | `\"last\"` | `\"none\"`), `placement`, and `align`; Escape and a click outside close it and return focus to wherever it was when the menu opened.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["item", "item-hint", "menu", "popup", "trigger"],
 	anatomy: [
 		{
 			name: "menu",
@@ -251,6 +252,25 @@ export const menuManifest: ComponentManifest = {
 			description:
 				"Method (not an attribute): opens the menu at a point in viewport coordinates — `menu.openAt(event.clientX, event.clientY)` inside a `contextmenu` handler, after `preventDefault()`. Defaults to dropping from the point with the first action focused, flipping above it and right-aligning on it near a viewport edge. Works on a trigger-anchored menu too; the trigger anchoring returns once the menu closes.",
 			bindings: ["html", "svelte", "astro"],
+		},
+	],
+	events: [
+		{ name: "select", detail: "{ value, label }", description: "A menu item was chosen.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "openAt",
+			params: "x: number, y: number, opts?: { focus?: \"first\" | \"last\" }",
+			description:
+				"Open at a point in viewport coordinates, which is what a right-click menu wants: the anchor is where the pointer was, not an element.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "openFrom",
+			params: "anchor: HTMLElement, opts?: { focus?: \"first\" | \"last\" }",
+			description:
+				"Open anchored to an element, placed and flipped against the viewport the way a trigger-owned menu is.",
+			bindings: ["html", "svelte"],
 		},
 	],
 	variants: [],

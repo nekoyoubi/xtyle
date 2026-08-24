@@ -18,6 +18,14 @@ export class XtyleRadio extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
+
+	protected override get fillOwnsFormName(): boolean {
+		return true;
+	}
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "radio", {
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
@@ -151,7 +159,20 @@ export class XtyleRadio extends XtyleElement {
 	}
 
 	private syncForm(): void {
-		this.internals?.setFormValue(this.checked ? this.value : null);
+		if (this.reportsFormValue()) this.internals?.setFormValue(this.checked ? this.value : null);
+		this.syncValidity();
+	}
+
+	private syncValidity(): void {
+		if (!this.internals) return;
+		const input = this.control ?? undefined;
+		try {
+			if (this.invalid) {
+				this.internals.setValidity({ customError: true }, this.validityMessage("error", "Invalid value"), input);
+			} else {
+				this.internals.setValidity({});
+			}
+		} catch {}
 	}
 
 	private warnIfUnnamed(): void {
@@ -168,7 +189,7 @@ export class XtyleRadio extends XtyleElement {
 		if (intent.preventDefault) event.preventDefault();
 		if (!intent.selectRadio || this.disabled) return;
 		this.checked = true;
-		this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+		this.emitOwn("change", event, { value: this.value });
 		this.syncForm();
 	}
 
@@ -188,6 +209,7 @@ export class XtyleRadio extends XtyleElement {
 		}
 		this.warnIfUnnamed();
 		this.syncForm();
+		this.verifyFormName();
 	}
 
 	/** Name the shadow `<input>` from the visible slotted text when present — the light-DOM
@@ -275,7 +297,9 @@ export class XtyleRadioGroup extends XtyleElement {
 		event.preventDefault();
 		for (const r of radios) r.checked = r === next;
 		next.focus();
-		next.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+		next.dispatchEvent(
+			new CustomEvent("change", { bubbles: true, composed: true, detail: { value: next.value } }),
+		);
 	};
 
 	private warnIfUnnamed(): void {

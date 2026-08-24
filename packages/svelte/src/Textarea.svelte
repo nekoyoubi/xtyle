@@ -16,6 +16,7 @@
 		disabled?: boolean;
 		invalid?: boolean;
 		required?: boolean;
+		requiredMessage?: string;
 		error?: string;
 		ariaLabel?: string;
 		mono?: boolean;
@@ -36,6 +37,7 @@
 		disabled = false,
 		invalid = false,
 		required = false,
+		requiredMessage,
 		error = "",
 		ariaLabel,
 		mono = false,
@@ -67,6 +69,7 @@
 	disabled={disabled || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	mono={mono || undefined}
 	{error}
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}

@@ -1,10 +1,10 @@
 {
-	"version": "0.10.0",
-	"components": 91,
+	"version": "0.11.0",
+	"components": 92,
 	"tokens": 310,
 	"categories": 10,
 	"bindings": 3,
 	"primitives": 104,
-	"effects": 9,
+	"effects": 13,
 	"tools": 2
 }

@@ -39,8 +39,14 @@ which makes intensity the *algorithm's* policy rather than a per-component guess
 | `xtyle-hc` | **0** |
 
 `xtyle-hc` sits at zero on purpose. A halo, a lift, and a wash all spend edge contrast, which is the one
-thing a high-contrast taste exists to protect, so it flattens the whole layer rather than toning each
-effect down one at a time. No hand-picked per-component glow stays coherent across a theme set that way.
+thing a high-contrast taste exists to protect, so it flattens them all rather than toning each effect
+down one at a time. No hand-picked per-component glow stays coherent across a theme set that way.
+
+The exception is an effect that declares `scalesWithIntensity: false`, because it has no magnitude to
+give back. `spin` is the one that ships: a rotation spends no edge contrast, so the premise above never
+applies to it, and suppressing it would hide "this is still working" from exactly the readers least able
+to afford a frozen-looking interface. Motion safety is `prefers-reduced-motion`'s job, which every
+animated effect already honors.
 
 **Its library is opinion, not law.** `registerEffect` and `registerCondition` are **last-wins on the
 name**, and the built-ins register first. An addon that names `glow` replaces it; an addon that names
@@ -65,6 +71,7 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 | `tint` | a color wash over the surface |
 | `frost` | a backdrop blur and saturation bump |
 | `reveal` | fades and slides in when armed (see below) |
+| `spin` | a continuous rotation: the ambient "still working" verb |
 | `saturate` | a vividness bump |
 
 And the **transients**, which are verbs about an *event* rather than a state: they fire once and are
@@ -84,6 +91,24 @@ transient is exactly the kind of thing an adopter would otherwise hand-roll and 
 `shake` and `wobble` read very differently and neither substitutes for the other. All five drive
 `translate` / `rotate` / `scale` rather than `transform`, so they compose with each other *and* leave a
 component's own `transform` (a dragged sheet, a reveal's lid) untouched.
+
+`spin` is the persistent counterpart to `wobble`: where the transient jitters and settles, `spin` turns
+for as long as the condition holds, which is what a *state* like "this is still running" actually is.
+It takes a `rate` and a `direction` (`spin?rate:1.2s,direction:reverse`), and unlike the magnitude-bearing
+effects its rotation is not scaled by `--fx-intensity` — a quarter-turn that snaps back to zero every
+cycle is not a slower spinner, it is a broken one. Reduced motion still suppresses it, so pair it with a
+text or `aria-live` reading wherever the rotation is the only thing carrying the status.
+
+**`spin` is not a replacement for `<Spinner>`, and the split follows the same line every other kind
+does.** A component is a *thing* you place; an effect is a *verb* you apply to something already there.
+So `<Spinner>` is what you reach for when the busy indicator is its own element — a pending panel, a
+button's loading slot, a placeholder where content will arrive. `spin` is what you reach for when the
+thing already exists and the rotation is a state it is *in*: a sync glyph in a status bar, an icon in a
+toolbar button, a decoration on a card saying the job behind it is still running.
+
+The tell is what would be left if you removed the motion. Remove a `<Spinner>` and there is a hole;
+remove `spin` and the glyph is still there, just still. When it is the second, the effect is right and
+placing a second element beside the first one is not.
 
 ## Conditions
 

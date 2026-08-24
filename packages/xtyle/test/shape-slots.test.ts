@@ -17,6 +17,13 @@ import {
 	resolveRevealShape,
 	revealShapeNames,
 } from "../src/reveal-shapes.js";
+import {
+	ICON_PRIMITIVE_SLOT,
+	hasPrimitive,
+	iconPrimitiveFillsFrom,
+	registerIconPrimitiveFills,
+	resetIconPrimitives,
+} from "../src/icon-builder.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const host = JSON.parse(readFileSync(resolve(here, "../src/elements/fragments/component-host.json"), "utf8")) as {
@@ -27,6 +34,7 @@ const host = JSON.parse(readFileSync(resolve(here, "../src/elements/fragments/co
 afterEach(() => {
 	resetIconShapes();
 	resetRevealShapes();
+	resetIconPrimitives();
 });
 
 /**
@@ -36,7 +44,7 @@ afterEach(() => {
  */
 describe("shapes arrive by declaration, not only by running code", () => {
 	it("answers a slot the host manifest actually declares, with a capability behind it", () => {
-		for (const slot of [ICON_SHAPE_SLOT, REVEAL_SHAPE_SLOT]) {
+		for (const slot of [ICON_SHAPE_SLOT, REVEAL_SHAPE_SLOT, ICON_PRIMITIVE_SLOT]) {
 			const declared = host.slots.find((s) => s.id === slot);
 			expect(declared, `${slot} has to exist for a mod to declare it`).toBeTruthy();
 			expect(declared?.accepts, slot).toContain("application/json");
@@ -44,7 +52,22 @@ describe("shapes arrive by declaration, not only by running code", () => {
 		}
 	});
 
+	it("keeps the point-list slot and the primitive slot apart", () => {
+		expect(ICON_SHAPE_SLOT).not.toBe(ICON_PRIMITIVE_SLOT);
+		expect(registerIconShapeFills({ fills: { [ICON_PRIMITIVE_SLOT]: [{ shapes: { blade: "0,0 100,40 20,100" } }] } })).toBe(0);
+		expect(registerIconPrimitiveFills({ fills: { [ICON_SHAPE_SLOT]: [{ primitives: { blade: { pts: "0,0 100,40 20,100" } } }] } })).toBe(0);
+	});
+
 	it("registers icon primitives a mod declares in its own manifest", () => {
+		const added = registerIconPrimitiveFills({
+			fills: { [ICON_PRIMITIVE_SLOT]: [{ primitives: { blade: { pts: "0,0 100,40 20,100", tags: ["blade"] } } }] },
+		});
+		expect(added).toBe(1);
+		expect(hasPrimitive("blade")).toBe(true);
+		expect(iconPrimitiveFillsFrom({})).toEqual([]);
+	});
+
+	it("registers icon point lists a mod declares in its own manifest", () => {
 		const added = registerIconShapeFills({ fills: { [ICON_SHAPE_SLOT]: [{ shapes: { blade: "0,0 100,40 20,100" } }] } });
 		expect(added).toBe(1);
 		expect(iconShapeNames()).toContain("blade");
@@ -70,8 +93,12 @@ describe("shapes arrive by declaration, not only by running code", () => {
 	it("resets to the built-in set, so one consumer's registration cannot leak into the next test", () => {
 		registerIconShapeFills({ fills: { [ICON_SHAPE_SLOT]: [{ shapes: { blade: "0,0 100,40 20,100" } }] } });
 		registerRevealShapeFills({ fills: { [REVEAL_SHAPE_SLOT]: [{ shapes: { notch: { clip: "circle(50%)" } } }] } });
+		registerIconPrimitiveFills({ fills: { [ICON_PRIMITIVE_SLOT]: [{ primitives: { blade: { pts: "0,0 100,40 20,100" } } }] } });
 		resetIconShapes();
 		resetRevealShapes();
+		resetIconPrimitives();
+		expect(hasPrimitive("blade")).toBe(false);
+		expect(hasPrimitive("shape-circle"), "the built-ins survive a reset").toBe(true);
 		expect(iconShapeNames()).toEqual(["arrow", "pennant"]);
 		expect(revealShapeNames()).not.toContain("notch");
 		expect(revealShapeNames(), "the built-ins survive a reset").toContain("heart");

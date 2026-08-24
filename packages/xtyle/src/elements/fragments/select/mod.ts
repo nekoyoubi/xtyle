@@ -10,6 +10,7 @@ interface SelectBindings {
 	value?: string | null;
 	size?: string;
 	disabled?: boolean;
+	focusable?: boolean;
 	invalid?: boolean;
 	required?: boolean;
 	error?: string | null;
@@ -64,6 +65,7 @@ hooks.fragment.mount("select", (bindings, ops) => {
 		ops.setAttr("[data-control]", "aria-required", "true");
 	}
 	ops.setAttr("[data-control]", "aria-invalid", String(invalid));
+	ops.setAttr("[data-control]", "tabindex", bindings.focusable === false ? "-1" : "");
 	if (bindings.value != null) ops.setAttr("[data-control]", "value", bindings.value);
 	if (invalid && error.length > 0) ops.setAttr("[data-control]", "aria-describedby", errorId);
 	ops.replaceChildren("[data-control]", bindings.optionsHtml ?? "");

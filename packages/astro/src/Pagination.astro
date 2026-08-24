@@ -13,6 +13,10 @@ interface Props {
 	tone?: FullTone;
 	size?: Size;
 	label?: string;
+	/** The accessible name of the previous-page step. */
+	prevLabel?: string;
+	/** The accessible name of the next-page step. */
+	nextLabel?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -29,6 +33,8 @@ const {
 	tone: toneInput,
 	size = "md",
 	label = "Pagination",
+	prevLabel,
+	nextLabel,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -36,7 +42,7 @@ const {
 await checkAuthoring("pagination", Astro.props);
 const tone = resolveTone(toneInput, "accent");
 
-const bindings = { page, total, siblings, boundaries, href, tone, size, label };
+const bindings = { page, total, siblings, boundaries, href, tone, size, label, prevLabel, nextLabel };
 const light = await renderFragmentLight("pagination", bindings);
 ---
 
@@ -49,6 +55,8 @@ const light = await renderFragmentLight("pagination", bindings);
 	tone={tone}
 	size={size}
 	label={label}
+	prev-label={prevLabel}
+	next-label={nextLabel}
 	class={extra}
 	set:html={light}
 	{...rest}

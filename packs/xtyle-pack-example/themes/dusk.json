@@ -1,0 +1,18 @@
+{
+	"$schema": "https://xtyle.dev/schema/theme.v1.json",
+	"format": "xtyle-theme",
+	"version": 1,
+	"meta": {
+		"name": "Dusk",
+		"description": "example-tinted seeded with a deep indigo page and a warm accent",
+		"generator": "xtyle-pack-example"
+	},
+	"recipe": {
+		"algorithm": "example-tinted",
+		"knobs": { "scheme": "dark" },
+		"overrides": {
+			"--bg-0": "#14131f",
+			"--accent": "#e0a06a"
+		}
+	}
+}

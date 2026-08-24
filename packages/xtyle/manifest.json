@@ -671,6 +671,19 @@
 							"type": "string"
 						},
 						"description": "When a token arrived, keyed by token name — and deliberately sparse. Only tokens introduced after the floor appear; an absent key means the token has been produced for as long as the record goes back, so a consumer on any supported version can rely on it. Listing every token at the floor would bury the handful of facts this map exists to carry."
+					},
+					"schemes": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"enum": ["dark", "light"]
+						},
+						"description": "The schemes this algorithm states an anchor pair for. A grader reads it to know whether the other half is a theme the algorithm answers for or just a lightness flip of the one it does."
+					},
+					"focusRingFloor": {
+						"type": "number",
+						"exclusiveMinimum": 0,
+						"description": "The contrast the algorithm promises `--ring` reads at against the surfaces it can land on. Absent leaves a grader on the standard, so an algorithm holding itself to a higher bar has to say so here to be graded against it."
 					}
 				},
 				"additionalProperties": false

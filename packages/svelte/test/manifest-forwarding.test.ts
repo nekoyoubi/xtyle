@@ -78,9 +78,7 @@ const UNREACHABLE_IN_ISOLATION: Record<string, string> = {
  * the element's observed name is public API that a raw-element consumer already depends on, so
  * renaming it would be a breaking change to fix a wart.
  */
-const ATTRIBUTE_NAME_EXCEPTIONS: Record<string, string> = {
-	"rating.allowHalf": "the element observes `allowhalf`; wrapper and element agree, and the name is public API",
-};
+const ATTRIBUTE_NAME_EXCEPTIONS: Record<string, string> = {};
 
 const DELEGATED_TO_CHILD: Record<string, string> = {
 	"scheme-toggle.variant": "xtyle-button",
@@ -104,7 +102,7 @@ const casesFor = (manifest: ComponentManifest): Case[] => {
 			prop: prop.name,
 			shape,
 			value,
-			attribute: kebab(prop.name),
+			attribute: prop.attr ?? kebab(prop.name),
 			expected: shape === "boolean" ? true : String(value),
 		});
 	}

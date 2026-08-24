@@ -28,11 +28,16 @@
 		...rest
 	}: Props = $props();
 
-	let el: (HTMLElement & { items?: TreeNode[] }) | undefined = $state();
+	let el: (HTMLElement & { items?: TreeNode[]; resetState(): void }) | undefined = $state();
 
 	$effect(() => {
 		if (el) el.items = items;
 	});
+
+	/** Drop every remembered expand and selection, so a re-seeded tree opens from its `items` again. */
+	export function resetState(): void {
+		el?.resetState();
+	}
 
 	// INFO: Svelte's on… prop can't bind a hyphenated custom event, so tree-action is attached directly
 	$effect(() => {

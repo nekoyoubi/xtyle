@@ -22,6 +22,10 @@
 		labelledby?: string;
 		name?: string;
 		showValue?: boolean;
+		/** The value a double-click on the thumb restores; defaults to whatever the slider first rendered with. */
+		default?: number;
+		/** Disable click-to-edit on the shown value (it is on by default when `showValue` is set). */
+		staticValue?: boolean;
 		hideLabel?: boolean;
 		format?: ((value: number) => string) | null;
 		oninput?: (event: Event) => void;
@@ -46,6 +50,8 @@
 		labelledby,
 		name,
 		showValue = false,
+		default: defaultValue,
+		staticValue = false,
 		hideLabel = false,
 		format = null,
 		oninput,
@@ -106,6 +112,8 @@
 	labelledby={labelledby || undefined}
 	{name}
 	show-value={showValue || undefined}
+	default={defaultValue}
+	static-value={staticValue || undefined}
 	hide-label={hideLabel || undefined}
 	oninput={handleInput}
 	onchange={handleChange}

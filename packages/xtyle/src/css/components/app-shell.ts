@@ -3,6 +3,7 @@ export const appShellCss = `
 	display: grid;
 	grid-template-rows: auto 1fr auto;
 	grid-template-columns: minmax(0, 1fr);
+	position: relative;
 	height: 100dvh;
 	background: var(--body-bg);
 	color: var(--fg-0);
@@ -34,6 +35,17 @@ export const appShellCss = `
    fill the shell-sized track instead, or its edge border overhangs the rail and bleeds into main. */
 .xtyle-app .xtyle-app__rail xtyle-dock,
 .xtyle-app .xtyle-app__rail xtyle-dock-zone {
+	width: 100%;
+	box-sizing: border-box;
+}
+xtyle-app-shell > [slot="left"] xtyle-dock,
+xtyle-app-shell > [slot="right"] xtyle-dock,
+xtyle-app-shell > [slot="left"] xtyle-dock-zone,
+xtyle-app-shell > [slot="right"] xtyle-dock-zone,
+xtyle-app-shell > xtyle-dock[slot="left"],
+xtyle-app-shell > xtyle-dock[slot="right"],
+xtyle-app-shell > xtyle-dock-zone[slot="left"],
+xtyle-app-shell > xtyle-dock-zone[slot="right"] {
 	width: 100%;
 	box-sizing: border-box;
 }

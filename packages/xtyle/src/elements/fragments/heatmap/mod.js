@@ -51,7 +51,7 @@
       (row, r) => `<tr><th scope="row">${escapeAttr(rows[r] ?? String(r))}</th>${row.map((v) => `<td>${escapeAttr(formatValue(v))}</td>`).join("")}</tr>`
     ).join("");
     const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
-    return `<table class="xtyle-heatmap__a11y">${cap}<thead>${head}</thead><tbody>${body}</tbody></table>`;
+    return `<div class="xtyle-heatmap__a11y"><table>${cap}<thead>${head}</thead><tbody>${body}</tbody></table></div>`;
   }
   function heatmapHtml(b) {
     const values = matrix(b);

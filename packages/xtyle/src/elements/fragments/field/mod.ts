@@ -155,7 +155,7 @@ function inner(b: FieldBindings): string {
 		`<slot name="reveal-icon"><span aria-hidden="true">&#128065;</span></slot>` +
 		`</button>` +
 		`<button type="button" class="xtyle-field__action" part="action-clear" data-action="clear"${clearHidden} aria-label="Clear">` +
-		`<slot name="clear-icon"><span aria-hidden="true">&times;</span></slot>` +
+		`<slot name="clear-icon"><span aria-hidden="true">&#215;</span></slot>` +
 		`</button>` +
 		`<span class="xtyle-field__adornment" part="adornment" data-slot="suffix"${suffixHidden}><slot name="suffix"></slot></span>` +
 		`</div>` +

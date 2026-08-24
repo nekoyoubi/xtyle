@@ -42,7 +42,7 @@ export class XtyleFormGroup extends XtyleElement {
 	}
 
 	get error(): string {
-		return this.getAttribute("error") ?? "";
+		return this.validityMessage("error", "");
 	}
 	set error(value: string | null | undefined) {
 		this.reflectString("error", value);

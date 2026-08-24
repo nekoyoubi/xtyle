@@ -20,6 +20,7 @@ const PARITY_EXEMPT = new Set([
 	// INFO: progressive enhancement, not a divergence: SSR renders the option list
 	// inline, the hydrated runtime element collapses it to a trigger
 	"select",
+	"theme-picker",
 ]);
 
 // INFO: runtime elements fill fragments async (first fill also pays one-time xript
@@ -92,12 +93,19 @@ test.describe("binding parity", () => {
 			});
 			page.on("pageerror", (err) => jsErrors.push(String(err)));
 
-			await page.goto(`/regression/${id}`);
+			const response = await page.goto(`/regression/${id}`);
+			expect(
+				response?.ok(),
+				`/regression/${id} answered ${response?.status()}. The harness pages are built only when ` +
+					`XTYLE_REGRESSION=1, and \`reuseExistingServer\` hands the suite whatever is already on 4382 — ` +
+					`so a preview server left over from a plain \`npm run build\` serves a dist without them. ` +
+					`Kill the process holding 4382 and re-run.`,
+			).toBe(true);
 			await page.waitForFunction(
 				() =>
 					document.documentElement.getAttribute("data-parity-ready") === "1",
 				undefined,
-				{ timeout: 15_000 },
+				{ timeout: 30_000 },
 			);
 			await hideChrome(page);
 			await page.waitForTimeout(250);

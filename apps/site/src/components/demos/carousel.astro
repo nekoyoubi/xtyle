@@ -5,6 +5,7 @@ import Card from "@xtyle/astro/Card.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
 
 const hues = ["#6ea8fe", "#7c5cff", "#ff7ac6", "#4ade80", "#fbbf24"];
 
@@ -156,6 +157,27 @@ const driftSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" 
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Slides that arrive later</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				The slides are the consumer's own nodes, so a framework can keep rendering them after the
+				carousel has mounted. Append one and the track, the dots rail, and the slide labels all follow
+				it — including the seam clones <code>loop</code> rides on.
+			</Text>
+			<Carousel label="Growing gallery" loop id="carousel-growing">
+				{
+					hues.slice(0, 2).map((hue, i) => (
+						<div style={`display:flex;align-items:center;justify-content:center;min-height:7rem;border-radius:var(--radius-md);background:${hue};color:#0b0d12;font-size:var(--text-lg);font-weight:var(--weight-bold);`}>
+							{i + 1}
+						</div>
+					))
+				}
+			</Carousel>
+			<Button data-grow-carousel variant="subtle" size="sm">Add a slide</Button>
+		</Stack>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Bare track</Heading>
 		<Stack gap={3}>
 			<Text tone="muted" size="sm">
@@ -177,3 +199,19 @@ const driftSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" 
 		</Stack>
 	</Card>
 </Stack>
+
+<script>
+	const hues = ["#6ea8fe", "#7c5cff", "#ff7ac6", "#4ade80", "#fbbf24"];
+
+	let count = 2;
+
+	document.querySelector("[data-grow-carousel]")?.addEventListener("click", () => {
+		const carousel = document.getElementById("carousel-growing");
+		if (!carousel) return;
+		const next = ++count;
+		const slide = document.createElement("div");
+		slide.style.cssText = `display:flex;align-items:center;justify-content:center;min-height:7rem;border-radius:var(--radius-md);background:${hues[(next - 1) % hues.length]};color:#0b0d12;font-size:var(--text-lg);font-weight:var(--weight-bold);`;
+		slide.textContent = String(next);
+		carousel.appendChild(slide);
+	});
+</script>

@@ -49,9 +49,27 @@
 		open = false;
 		onclose?.(event);
 	}
+
+	let el: (HTMLElement & { showModal(): void; show(): void; close(reason?: string): void }) | undefined = $state();
+
+	/** Open it modally, so the page behind is inert until it closes. */
+	export function showModal(): void {
+		el?.showModal();
+	}
+
+	/** Open it non-modally, leaving the page behind reachable. */
+	export function show(): void {
+		el?.show();
+	}
+
+	/** Close it, optionally naming why — the reason rides the `close` event's detail. */
+	export function close(reason?: string): void {
+		el?.close(reason);
+	}
 </script>
 
 <xtyle-sheet
+	bind:this={el}
 	{...rest}
 	open={open || undefined}
 	{side}

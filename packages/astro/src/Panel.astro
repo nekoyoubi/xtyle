@@ -6,6 +6,9 @@ import { PANEL_VARIANTS, resolveVocab, iconBody } from "@xtyle/core";
 type PanelVariant = (typeof PANEL_VARIANTS)[number];
 
 interface Props {
+	/** The visible heading. */
+	heading?: string;
+	/** @deprecated Use `heading` — `title` is the HTML global and paints a browser tooltip. */
 	title?: string;
 	/** Accessible name for a panel with no visible `title` — names the region without rendering a heading. */
 	label?: string;
@@ -15,14 +18,17 @@ interface Props {
 	markerIcon?: string;
 	open?: boolean;
 	scroll?: boolean;
+	/** Take the remaining height of a bounded parent and scroll the body. */
+	fill?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
-	/** Any other attribute (`id`, `title`, `data-*`, `aria-*`, …) passes through to the element. */
+	/** Any other attribute (`id`, `data-*`, `aria-*`, …) passes through to the element. */
 	[key: string]: unknown;
 }
 
 const {
+	heading,
 	title,
 	label,
 	level = 2,
@@ -30,6 +36,7 @@ const {
 	markerIcon,
 	open = false,
 	scroll = false,
+	fill = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -38,15 +45,20 @@ await checkAuthoring("panel", Astro.props);
 const variant = resolveVocab(variantInput, PANEL_VARIANTS, "default", "panel variant");
 
 const hasActions = Astro.slots.has("actions");
+const hasFooter = Astro.slots.has("footer");
 const titleId = `xtyle-panel-${Math.random().toString(36).slice(2, 9)}`;
 
+const resolvedHeading = heading ?? title ?? null;
+
 const bindings = {
-	title: title ?? null,
+	heading: resolvedHeading,
 	level,
 	variant,
 	open,
 	scrollable: scroll,
+	fill,
 	hasActions,
+	hasFooter,
 	titleId,
 	label: label ?? null,
 	markerIcon: markerIcon ?? "chevron-right",
@@ -55,7 +67,7 @@ const bindings = {
 const chrome = await renderFragmentLight("panel", bindings);
 const actionsHtml = hasActions ? await Astro.slots.render("actions") : "";
 const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
-const footerHtml = Astro.slots.has("footer") ? await Astro.slots.render("footer") : "";
+const footerHtml = hasFooter ? await Astro.slots.render("footer") : "";
 const composed = chrome
 	.replace('<slot name="actions"></slot>', () => actionsHtml)
 	.replace('<slot name="footer"></slot>', () => footerHtml)
@@ -63,13 +75,14 @@ const composed = chrome
 ---
 
 <xtyle-panel
-	title={title}
+	heading={resolvedHeading}
 	label={label}
 	level={level}
 	variant={variant}
 	marker-icon={markerIcon}
 	open={open || undefined}
 	scroll={scroll || undefined}
+	fill={fill || undefined}
 	class={extra}
 	set:html={composed}
 	{...rest}

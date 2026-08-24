@@ -202,6 +202,22 @@ describe("bbcode: vocabularies", () => {
 		expect(told).toBe(2);
 	});
 
+	it("names a table, so a rendered post never ships an unannounced one", () => {
+		const bare = renderBbcode("[table][tr][td]a[/td][/tr][/table]");
+		expect(bare).toContain('<table aria-label="Table">');
+		expect(bare).not.toContain("<caption>");
+
+		const captioned = renderBbcode("[table=Sales by region][tr][td]a[/td][/tr][/table]");
+		expect(captioned).toContain("<caption>Sales by region</caption>");
+		expect(captioned).not.toContain("aria-label");
+	});
+
+	it("escapes a caption rather than trusting it", () => {
+		expect(renderBbcode("[table=<script>x</script>][tr][td]a[/td][/tr][/table]")).toContain(
+			"<caption>&lt;script&gt;x&lt;/script&gt;</caption>",
+		);
+	});
+
 	it("lets an app register a tag of its own", () => {
 		registerBbcodeTags([
 			{ name: "choice", block: true, render: (c) => `<button type="button">${c.content}</button>` },

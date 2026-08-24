@@ -57,6 +57,64 @@ export function discoverAlgorithms(root) {
 }
 
 /**
+ * Every pack under `packs/`, read from the `xtyle` block each one declares. Unlike `algorithms/`,
+ * nothing here is discovered by scanning subdirectories: a pack is authoritative about its own
+ * contents, so reading it any other way would exercise a path no consumer takes.
+ */
+export function discoverPacks(root) {
+	const packsDir = join(root, "packs");
+	if (!existsSync(packsDir)) return [];
+	const found = [];
+	for (const dirent of readdirSync(packsDir, { withFileTypes: true })) {
+		if (!dirent.isDirectory()) continue;
+		const dir = join(packsDir, dirent.name);
+		const manifestPath = join(dir, "package.json");
+		if (!existsSync(manifestPath)) continue;
+		const pkg = JSON.parse(readFileSync(manifestPath, "utf8"));
+		if (!pkg.xtyle) continue;
+		found.push({ name: pkg.name ?? dirent.name, dir, pkg });
+	}
+	return found.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** The algorithm mods a pack declares, each with the manifest and built script the pack ships. */
+export function packAlgorithmMods(pack) {
+	return (pack.pkg.xtyle.algorithms ?? []).map((entry) => {
+		const modDir = join(pack.dir, entry.entry);
+		const manifestPath = join(modDir, "mod-manifest.json");
+		const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+		return {
+			id: entry.name,
+			pack: pack.name,
+			manifest,
+			manifestPath,
+			sourcePath: join(modDir, "src", "mod.ts"),
+			scriptPath: join(modDir, entryScript(manifest)),
+		};
+	});
+}
+
+/**
+ * Bundle one mod's TypeScript entry into the self-contained script its manifest names, and stamp what
+ * the built code says about itself back into that manifest. The blessed set and a pack are built by
+ * exactly the same call, because a pack that were built differently would prove nothing about the
+ * on-ramp a stranger takes. Returns whether the static block changed.
+ */
+export async function buildMod(mod, build) {
+	await build({
+		entryPoints: [mod.sourcePath],
+		outfile: mod.scriptPath,
+		bundle: true,
+		format: "iife",
+		platform: "neutral",
+		target: "es2020",
+		legalComments: "none",
+		logLevel: "warning",
+	});
+	return writeStaticManifest(mod, readAlgorithmManifest(readFileSync(mod.scriptPath, "utf8"), mod.id));
+}
+
+/**
  * What a built mod says about itself, read by running its registration in a bare context and calling
  * the `manifest` export it registers. The same artifact the sandbox executes, so the answer is the
  * algorithm's own, not a second derivation of it from the engine's source.

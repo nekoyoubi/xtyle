@@ -102,6 +102,80 @@ export function contrast(a: string | OklchColor, b: string | OklchColor): number
 	return value ?? 1;
 }
 
+/**
+ * The opaque color a translucent one actually paints when it sits over a backdrop.
+ *
+ * WCAG contrast is defined between two opaque colors, and `contrast()` reads a translucent input as
+ * though it were solid — which overstates it, sometimes by a lot. A focus ring at `alpha: 0.7` over a
+ * dark page is not the ring's own color; it is the blend. Grade the blend.
+ */
+export function flatten(over: string | OklchColor, under: string | OklchColor): OklchColor {
+	const top = toOklchColor(over);
+	if (top.alpha >= 1) return { ...top, alpha: 1 };
+	const base = toOklchColor(under);
+	const a = clamp01(top.alpha);
+	const mixHue = (from: number, to: number, t: number): number => from + hueDelta(from, to) * t;
+	return {
+		l: base.l + (top.l - base.l) * a,
+		c: base.c + (top.c - base.c) * a,
+		h: mixHue(base.h, top.h, a),
+		alpha: 1,
+	};
+}
+
+/**
+ * Perceptual OKLab distance between two colors — the separation luminance contrast cannot see.
+ *
+ * Two fills at the same lightness and chroma but different hues have a WCAG contrast ratio of ~1
+ * against each other and are still obviously different colors; two at the same hue are the same color
+ * however far apart their contrast against the *page* is. Contrast answers "can text sit on this";
+ * this answers "would anyone tell these two apart".
+ */
+export function oklabDistance(a: string | OklchColor, b: string | OklchColor): number {
+	const x = toOklchColor(a);
+	const y = toOklchColor(b);
+	const rad = Math.PI / 180;
+	const ax = x.c * Math.cos(x.h * rad);
+	const ay = x.c * Math.sin(x.h * rad);
+	const bx = y.c * Math.cos(y.h * rad);
+	const by = y.c * Math.sin(y.h * rad);
+	return Math.hypot(x.l - y.l, ax - bx, ay - by);
+}
+
+/** The three orthogonal axes an {@link oklabDistance} is made of. */
+export interface SeparationAxes {
+	/** How much of the distance is a step in lightness. */
+	lightness: number;
+	/** How much of it is a step in saturation at a shared hue. */
+	chroma: number;
+	/** How much of it is a rotation around the hue wheel. */
+	hue: number;
+	/** That rotation in degrees, which `hue` alone cannot express — it scales with chroma. */
+	hueAngle: number;
+}
+
+/**
+ * Splits an {@link oklabDistance} into the lightness, chroma and hue steps it is composed of.
+ *
+ * The three combine in quadrature back to exactly the distance, so this reveals nothing new about
+ * *how far* two colors are — it answers *in which direction*, which a single number cannot. That
+ * matters because a fixed distance means different things on different axes: a hue rotation's
+ * contribution scales with the chroma it happens at, so 8° between two saturated reds outscores a
+ * plainly visible step between two grays while reading as no difference at all.
+ */
+export function separationAxes(a: string | OklchColor, b: string | OklchColor): SeparationAxes {
+	const x = toOklchColor(a);
+	const y = toOklchColor(b);
+	const hueAngle = Math.abs(hueDelta(x.h, y.h));
+	const paired = Math.sqrt(Math.max(0, x.c * y.c));
+	return {
+		lightness: Math.abs(x.l - y.l),
+		chroma: Math.abs(x.c - y.c),
+		hue: 2 * paired * Math.sin((hueAngle * Math.PI) / 360),
+		hueAngle,
+	};
+}
+
 export function clampToGamut(color: OklchColor): OklchColor {
 	const mapped = clampChroma(
 		{ mode: "oklch", l: color.l, c: color.c, h: color.h, alpha: color.alpha },

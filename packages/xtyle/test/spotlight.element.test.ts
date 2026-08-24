@@ -241,14 +241,22 @@ describe("<xtyle-spotlight> leaving", () => {
 });
 
 describe("<xtyle-spotlight> the callout", () => {
-	it("names the panel from the heading", () => {
+	it("names the panel from the heading, through the prop the popover reads", () => {
 		makeTarget();
 		const el = make({ target: "#save", heading: "Save as you go", open: "" });
 		const heading = root(el).querySelector("[data-sl-title]") as HTMLElement;
 		const callout = root(el).querySelector("[data-callout]") as HTMLElement;
 		expect(heading.textContent).toBe("Save as you go");
-		expect(callout.getAttribute("aria-labelledby")).toBe(heading.id);
 		expect(heading.id).not.toBe("");
+		expect(callout.getAttribute("labelledby")).toBe(heading.id);
+	});
+
+	it("falls back to a name of its own when there is no heading to point at", () => {
+		makeTarget();
+		const el = make({ target: "#save", open: "" });
+		const callout = root(el).querySelector("[data-callout]") as HTMLElement;
+		expect(callout.getAttribute("labelledby") ?? "").toBe("");
+		expect(callout.getAttribute("label")).toBeTruthy();
 	});
 
 	it("draws no pointer under arrow=none", () => {
@@ -287,5 +295,22 @@ describe("<xtyle-spotlight> SSR (the pre-hydration paint)", () => {
 		expect(html).toContain("<slot></slot>");
 		expect(html).toContain('<slot name="actions"></slot>');
 		expect(html).toContain("Save as you go");
+	});
+});
+
+describe("<xtyle-spotlight> never opens an unnamed callout", () => {
+	it("holds the callout closed until the paint carries the heading it will be named by", async () => {
+		const el = document.createElement("xtyle-spotlight");
+		el.setAttribute("heading", "Start here");
+		el.setAttribute("open", "");
+		document.body.append(el);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		const callout = el.shadowRoot?.querySelector("[data-callout]") ?? el.querySelector("[data-callout]");
+		const title = el.shadowRoot?.querySelector("[data-sl-title]") ?? el.querySelector("[data-sl-title]");
+		if (!callout) return;
+		const named = Boolean(callout.getAttribute("labelledby") || callout.getAttribute("label"));
+		const painted = (title?.textContent ?? "") === "Start here";
+		expect(callout.hasAttribute("open") ? named && painted : true).toBe(true);
 	});
 });

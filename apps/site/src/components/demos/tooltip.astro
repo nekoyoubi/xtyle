@@ -181,10 +181,11 @@ import Progress from "@xtyle/astro/Progress.astro";
 			". top ."
 			"left center right"
 			". bottom .";
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		justify-items: center;
 		align-items: center;
-		gap: var(--space-7, 1.75rem) var(--space-8, 2rem);
-		padding: var(--space-8, 2rem) var(--space-4, 1rem);
+		gap: var(--space-7, 1.75rem) var(--space-4, 1rem);
+		padding: var(--space-8, 2rem) var(--space-2, 0.5rem);
 	}
 	.tooltip-demo__cell--top {
 		grid-area: top;

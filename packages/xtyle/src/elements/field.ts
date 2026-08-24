@@ -20,6 +20,14 @@ export class XtyleField extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
+
+	protected override get fillOwnsFormName(): boolean {
+		return true;
+	}
 	private fieldNumber = ++fieldCounter;
 	private inputId = `xtyle-field-${this.fieldNumber}`;
 	private descriptionId = `xtyle-field-desc-${this.fieldNumber}`;
@@ -28,10 +36,11 @@ export class XtyleField extends XtyleElement {
 	private optionsProp: FieldOption[] | null = null;
 	private lastShape = "";
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "field", {
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
 			this.syncDatalist();
 			this.forwardNativeAttrs();
+			this.verifyFormName();
 		},
 	});
 
@@ -58,6 +67,7 @@ export class XtyleField extends XtyleElement {
 			"readonly",
 			"invalid",
 			"required",
+			"required-message",
 			"clearable",
 			"description",
 			"error",
@@ -184,13 +194,13 @@ export class XtyleField extends XtyleElement {
 			this.disabled,
 			this.readonly,
 			this.required,
-			this.getAttribute("name") != null,
+			this.getAttribute("name") ?? "",
 			this.getAttribute("label") != null && this.getAttribute("label") !== "",
 			this.getAttribute("placeholder") ?? "",
 			this.getAttribute("type") ?? "text",
 			this.getAttribute("aria-label") != null,
 			(this.getAttribute("description") ?? "").length > 0,
-			this.invalid && (this.getAttribute("error") ?? "").length > 0,
+			this.invalid && (this.validityMessage("error", "")).length > 0,
 		].join("|");
 	}
 
@@ -208,12 +218,12 @@ export class XtyleField extends XtyleElement {
 
 	private syncFormValue(): void {
 		if (!this.internals) return;
-		this.internals.setFormValue(this.value);
+		if (this.reportsFormValue()) this.internals.setFormValue(this.value);
 		const input = this.input;
 		if (this.invalid) {
-			this.internals.setValidity({ customError: true }, this.getAttribute("error") ?? "Invalid value", input ?? undefined);
+			this.internals.setValidity({ customError: true }, this.validityMessage("error", "Invalid value"), input ?? undefined);
 		} else if (this.required && this.value.length === 0) {
-			this.internals.setValidity({ valueMissing: true }, "Please fill out this field.", input ?? undefined);
+			this.internals.setValidity({ valueMissing: true }, this.validityMessage("required-message", "Please fill out this field."), input ?? undefined);
 		} else {
 			this.internals.setValidity({});
 		}
@@ -285,7 +295,7 @@ export class XtyleField extends XtyleElement {
 			this.setAttribute("value", intent.inputValue);
 		}
 		if (intent.emit) {
-			this.dispatchEvent(new Event(intent.emit.type, { bubbles: true, composed: true }));
+			this.emitOwn(intent.emit.type, null, { value: this.value });
 			this.syncFormValue();
 		}
 	}

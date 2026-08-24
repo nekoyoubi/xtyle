@@ -102,8 +102,8 @@ describe("byte-identical to the pre-unification engine", () => {
 		skittles: {
 			1: ["#ff6963"],
 			3: ["#ff6963", "#46a5ff", "#00b7be"],
-			5: ["#ff6963", "#bd9e00", "#46a5ff", "#cb9272", "#00b7be"],
-			9: ["#ff6963", "#f17d00", "#bd9e00", "#44bd50", "#46a5ff", "#b382ff", "#cb9272", "#e971af", "#00b7be"],
+			5: ["#ff6963", "#bd9e00", "#46a5ff", "#aa7455", "#00b7be"],
+			9: ["#ff6963", "#f17d00", "#bd9e00", "#44bd50", "#46a5ff", "#b382ff", "#aa7455", "#e971af", "#00b7be"],
 		},
 		statuses: {
 			1: ["#4c9b51"],

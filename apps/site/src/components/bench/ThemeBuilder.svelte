@@ -3,6 +3,7 @@
 	import type { Algorithm, DeriveOptions, TokenLineageNode, TokenRegister } from "@xtyle/core";
 	import { buildThemeFile, derive, emit, invertedOptions, loadAuthoredAlgorithm, serializeThemeFile } from "@xtyle/core";
 	import { getAlgorithm } from "@xtyle/core/algorithms";
+	import { fetchPack, fetchPackAlgorithm, fetchPackTheme } from "@xtyle/core/host/remote";
 	import { makeXtyleAlgorithm, toPreset, type XtyleAlgorithmSpec } from "@xtyle/core/authoring";
 	import Controls from "./Controls.svelte";
 	import BenchGallery from "./BenchGallery.svelte";
@@ -17,13 +18,27 @@
 	import OrderStatus from "./mockups/OrderStatus.svelte";
 	import BrandSite from "./mockups/BrandSite.svelte";
 	import MusicPlayer from "./mockups/MusicPlayer.svelte";
+	import DocsReader from "./mockups/DocsReader.svelte";
+	import Composer from "./mockups/Composer.svelte";
+	import SupportInbox from "./mockups/SupportInbox.svelte";
+	import ThemeShare from "./mockups/ThemeShare.svelte";
+	import Workspace from "./mockups/Workspace.svelte";
+	import FieldLog from "./mockups/FieldLog.svelte";
+	import ForumThread from "./mockups/ForumThread.svelte";
+	import OpsConsole from "./mockups/OpsConsole.svelte";
+	import DesignReview from "./mockups/DesignReview.svelte";
+	import FirstRun from "./mockups/FirstRun.svelte";
+	import LaunchPage from "./mockups/LaunchPage.svelte";
 	import { AppShell, Badge, Button, Code, Switch, Tabs, Textarea, Toolbar } from "@xtyle/svelte";
-	import { loadHostedAlgorithms } from "./hosted.js";
+	import { derivePathOf, loadHostedAlgorithms } from "./hosted.js";
+	import { SandboxedAlgorithm } from "./sandboxed-algorithm.svelte.js";
 	import type { BenchState } from "./state.js";
 	import {
 		CUSTOM_ALGORITHM,
 		CUSTOM_CODE_ALGORITHM,
+		PACK_ALGORITHM,
 		algorithmLabel,
+		statePackTheme,
 		anchorsToConstraints,
 		decodeState,
 		defaultState,
@@ -36,8 +51,23 @@
 	import { exportDoc, parseImport } from "../../lib/theme-store/io.js";
 	import type { ThemeDoc } from "../../lib/theme-store/types.js";
 	import { reapplyActiveTheme, broadcastActiveTheme, ACTIVE_CHANGED_EVENT } from "../../lib/theme-active.js";
+	import {
+		COMPONENT_TABS,
+		EXPORT_TABS,
+		HELP_TABS,
+		MAIN_TABS,
+		MOCKUP_TABS,
+		REPORT_TABS,
+		applyView,
+		defaultScene,
+		readView,
+	} from "./view.js";
 
 	let editingId = $state<string | null>(null);
+
+	const initialSearch = typeof window === "undefined" ? "" : window.location.search;
+	const address = readView(initialSearch);
+	const sceneFor = (view: string) => (address.view === view ? address.scene : defaultScene(view));
 
 	let state: BenchState = $state(readInitialState());
 
@@ -50,7 +80,7 @@
 					recipe: decoded,
 				});
 				editingId = imported.id;
-				window.history.replaceState(null, "", window.location.pathname);
+				window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
 				return decoded;
 			}
 		}
@@ -75,6 +105,7 @@
 	});
 
 	let hosted = $state<Map<string, Algorithm> | null>(null);
+	let hostedError = $state<string | null>(null);
 
 	$effect(() => {
 		let live = true;
@@ -82,51 +113,63 @@
 			.then((map) => {
 				if (live) hosted = map;
 			})
-			.catch(() => {
-				/* baked algorithms remain the fallback */
+			.catch((e: unknown) => {
+				if (live) hostedError = e instanceof Error ? e.message : String(e);
 			});
 		return () => {
 			live = false;
 		};
 	});
 
+	const AUTHORED_IDS = [CUSTOM_ALGORITHM, CUSTOM_CODE_ALGORITHM, PACK_ALGORITHM];
+
 	const baseAlgorithm = $derived<Algorithm>(
-		settledState.algorithm === CUSTOM_ALGORITHM || settledState.algorithm === CUSTOM_CODE_ALGORITHM
+		AUTHORED_IDS.includes(settledState.algorithm)
 			? getAlgorithm("xtyle-default")
 			: (hosted?.get(settledState.algorithm) ?? getAlgorithm(settledState.algorithm)),
 	);
 
-	let authoredAlgorithm = $state<Algorithm | null>(null);
-	let authoredError = $state<string | null>(null);
+	const authored = new SandboxedAlgorithm((code) => loadAuthoredAlgorithm(code, { name: "custom-code" }), 400);
+	const pack = new SandboxedAlgorithm((ref) => fetchPackAlgorithm(ref), 600);
+
+	$effect(() =>
+		authored.watch(settledState.algorithm === CUSTOM_CODE_ALGORITHM, settledState.customCode ?? ""),
+	);
+	$effect(() => pack.watch(settledState.algorithm === PACK_ALGORITHM, settledState.packRef ?? ""));
+
+	let packThemes = $state<string[]>([]);
 
 	$effect(() => {
-		if (settledState.algorithm !== CUSTOM_CODE_ALGORITHM) {
-			authoredError = null;
-			return;
-		}
-		const code = settledState.customCode ?? "";
-		if (!code.trim()) {
-			authoredError = null;
-			authoredAlgorithm = null;
+		if (settledState.algorithm !== PACK_ALGORITHM) return;
+		const ref = (settledState.packRef ?? "").trim();
+		if (!ref) {
+			packThemes = [];
 			return;
 		}
 		let cancelled = false;
-		const handle = setTimeout(() => {
-			loadAuthoredAlgorithm(code, { name: "custom-code" })
-				.then((algo) => {
-					if (cancelled) return;
-					authoredAlgorithm = algo;
-					authoredError = null;
-				})
-				.catch((e) => {
-					if (!cancelled) authoredError = (e as Error).message;
-				});
-		}, 400);
+		fetchPack(ref)
+			.then((remote) => {
+				if (!cancelled) packThemes = remote.pack.themes.map((entry) => entry.name);
+			})
+			.catch(() => {
+				if (!cancelled) packThemes = [];
+			});
 		return () => {
 			cancelled = true;
-			clearTimeout(handle);
 		};
 	});
+
+	async function loadPackTheme(name: string): Promise<void> {
+		const ref = (settledState.packRef ?? "").trim();
+		if (!ref) return;
+		try {
+			const found = await fetchPackTheme(ref, { name });
+			commitState(statePackTheme(found.theme.recipe, ref));
+			importStatus = `Loaded "${found.theme.meta.name}" from ${found.pack}.`;
+		} catch (thrown: unknown) {
+			importStatus = thrown instanceof Error ? thrown.message : String(thrown);
+		}
+	}
 
 	/**
 	 * Build the on-site authored algorithm from its taste-vector spec (throws on invalid JSON).
@@ -179,12 +222,22 @@
 					// INFO: share links never carry custom code and legacy docs may lack it; fall
 					// back to the default instead of erroring
 					built = baseAlgorithm;
-				} else if (authoredError) {
-					throw new Error(authoredError);
-				} else if (!authoredAlgorithm) {
+				} else if (authored.error) {
+					throw new Error(authored.error);
+				} else if (!authored.value) {
 					return { algorithm: lastGoodAlgorithm, register: lastGood, error: null };
 				} else {
-					built = authoredAlgorithm;
+					built = authored.value;
+				}
+			} else if (settledState.algorithm === PACK_ALGORITHM) {
+				if (!(settledState.packRef ?? "").trim()) {
+					built = baseAlgorithm;
+				} else if (pack.error) {
+					throw new Error(pack.error);
+				} else if (!pack.value) {
+					return { algorithm: lastGoodAlgorithm, register: lastGood, error: null };
+				} else {
+					built = pack.value;
 				}
 			} else {
 				built = baseAlgorithm;
@@ -199,8 +252,22 @@
 		}
 	}
 
+	const packStatus = $derived({
+		loading: pack.loading,
+		error: pack.error,
+		id: pack.value && result.algorithm === pack.value ? pack.value.id : null,
+	});
+
 	const algorithm = $derived<Algorithm>(result.algorithm);
 	const register = $derived<TokenRegister>(result.register);
+	const derivePath = $derived(
+		derivePathOf(
+			result.algorithm,
+			hosted,
+			{ loaded: hosted !== null, failed: hostedError !== null },
+			[authored.value, pack.value],
+		),
+	);
 	const error = $derived<string | null>(result.error);
 
 	/** For each token, how many other tokens transitively derive from it — the blast radius of editing
@@ -473,7 +540,7 @@
 		return () => window.removeEventListener(ACTIVE_CHANGED_EVENT, handler);
 	});
 
-	let exportFormat = $state("invocation");
+	let exportFormat = $state(sceneFor("export"));
 
 	function themeFileText(): string {
 		return serializeThemeFile(
@@ -502,13 +569,6 @@
 		exportFormat === "css" ? "css" : exportFormat === "invocation" ? "ts" : "json",
 	);
 
-	const EXPORT_FORMATS: { value: typeof exportFormat; label: string }[] = [
-		{ value: "invocation", label: "Invocation" },
-		{ value: "css", label: "CSS" },
-		{ value: "tokens", label: "Tokens" },
-		{ value: "theme", label: "Theme" },
-	];
-
 	let copyLabel = $state("Copy");
 
 	async function copyExport(): Promise<void> {
@@ -525,7 +585,7 @@
 
 	async function copyShare(): Promise<void> {
 		if (typeof window === "undefined") return;
-		const url = `${window.location.origin}${window.location.pathname}#${encodeState(state)}`;
+		const url = `${window.location.origin}${window.location.pathname}${viewSearch}#${encodeState(state)}`;
 		try {
 			await navigator.clipboard.writeText(url);
 			shareLabel = "Link copied";
@@ -558,53 +618,34 @@
 
 	const tokenCount = $derived(Object.keys(register).length);
 
-	const MAIN_TABS = [
-		{ value: "mockups", label: "Mockups" },
-		{ value: "components", label: "Components" },
-		{ value: "report", label: "Report" },
-		{ value: "export", label: "Export" },
-		{ value: "help", label: "Help" },
-	];
-	let mainTab = $state("mockups");
+	let mainTab = $state(address.view);
+	let mockupTab = $state(sceneFor("mockups"));
+	let componentTab = $state(sceneFor("components"));
+	let reportTab = $state(sceneFor("report"));
+	let helpTab = $state(sceneFor("help"));
 
-	const MOCKUP_TABS = [
-		{ value: "email", label: "Email Client" },
-		{ value: "news", label: "News Site" },
-		{ value: "crm", label: "CRM App" },
-		{ value: "settings", label: "Settings" },
-		{ value: "dashboard", label: "Dashboard" },
-		{ value: "editor", label: "Editor" },
-		{ value: "order", label: "Order Status" },
-		{ value: "brand", label: "Brand Site" },
-		{ value: "music", label: "Music Player" },
-	];
-	let mockupTab = $state("email");
+	const activeScene = $derived(
+		mainTab === "mockups"
+			? mockupTab
+			: mainTab === "components"
+				? componentTab
+				: mainTab === "report"
+					? reportTab
+					: mainTab === "export"
+						? exportFormat
+						: helpTab,
+	);
 
-	const COMPONENT_TABS = [
-		{ value: "buttons", label: "Buttons" },
-		{ value: "form", label: "Form" },
-		{ value: "feedback", label: "Feedback" },
-		{ value: "navigation", label: "Navigation" },
-		{ value: "data", label: "Data" },
-		{ value: "typography", label: "Type" },
-		{ value: "overlays", label: "Overlays" },
-	];
-	let componentTab = $state("buttons");
+	const viewSearch = $derived(applyView(initialSearch, { view: mainTab, scene: activeScene }));
 
-	const REPORT_TABS = [
-		{ value: "contrast", label: "Contrast" },
-		{ value: "coverage", label: "Coverage" },
-		{ value: "gamut", label: "Gamut" },
-		{ value: "graph", label: "Graph" },
-	];
-	let reportTab = $state("contrast");
-
-	const HELP_TABS = [
-		{ value: "overview", label: "Overview" },
-		{ value: "tiers", label: "Input tiers" },
-		{ value: "authoring", label: "Authoring" },
-	];
-	let helpTab = $state("overview");
+	$effect(() => {
+		if (viewSearch === window.location.search) return;
+		window.history.replaceState(
+			null,
+			"",
+			`${window.location.pathname}${viewSearch}${window.location.hash}`,
+		);
+	});
 
 	/**
 	 * Keep a nested sub-tab's activation from leaking to the outer Tabs. The Tabs element
@@ -680,7 +721,7 @@
 
 		{#snippet right()}
 			<aside class="bench__rail x-surface-section">
-				<Controls bench={state} {algorithm} {register} {influence} onchange={(next) => (state = next)} />
+				<Controls bench={state} {algorithm} {register} {influence} {packStatus} {packThemes} onchange={(next) => (state = next)} ontheme={loadPackTheme} />
 			</aside>
 		{/snippet}
 
@@ -695,13 +736,13 @@
 		{/if}
 
 		<div class="bench__tabs">
-		<Tabs items={MAIN_TABS} bind:value={mainTab} variant="enclosed" sticky label="Bench view">
+		<Tabs items={MAIN_TABS} bind:value={mainTab} lazy variant="enclosed" sticky label="Bench view">
 			{#snippet panel(value)}
 				{#if value === "mockups"}
 					<div class="bench-subtabs-wrap" onchange={containSubTabChange}>
-						<Tabs items={MOCKUP_TABS} bind:value={mockupTab} variant="underline" class="bench-subtabs" label="Mockup scene">
+						<Tabs items={MOCKUP_TABS} bind:value={mockupTab} lazy variant="underline" class="bench-subtabs" label="Mockup scene">
 							{#snippet panel(scene)}
-								<div class="bench-scene">
+								<div class="bench-scene" data-scene={scene}>
 									{#if scene === "email"}
 										<EmailClient {register} />
 									{:else if scene === "news"}
@@ -718,6 +759,28 @@
 										<BrandSite {register} />
 									{:else if scene === "music"}
 										<MusicPlayer {register} />
+									{:else if scene === "docs"}
+										<DocsReader {register} />
+									{:else if scene === "composer"}
+										<Composer {register} />
+									{:else if scene === "support"}
+										<SupportInbox {register} />
+									{:else if scene === "share"}
+										<ThemeShare {register} />
+									{:else if scene === "workspace"}
+										<Workspace {register} />
+									{:else if scene === "field"}
+										<FieldLog {register} />
+									{:else if scene === "forum"}
+										<ForumThread {register} />
+									{:else if scene === "ops"}
+										<OpsConsole {register} />
+									{:else if scene === "review"}
+										<DesignReview {register} />
+									{:else if scene === "firstrun"}
+										<FirstRun {register} />
+									{:else if scene === "launch"}
+										<LaunchPage {register} />
 									{:else}
 										<OrderStatus {register} />
 									{/if}
@@ -727,9 +790,9 @@
 					</div>
 				{:else if value === "components"}
 					<div class="bench-subtabs-wrap" onchange={containSubTabChange}>
-						<Tabs items={COMPONENT_TABS} bind:value={componentTab} variant="underline" class="bench-subtabs" label="Component family">
+						<Tabs items={COMPONENT_TABS} bind:value={componentTab} lazy variant="underline" class="bench-subtabs" label="Component family">
 							{#snippet panel(fam)}
-								<div class="bench-scene">
+								<div class="bench-scene" data-scene={fam}>
 									<BenchGallery {register} family={fam} />
 								</div>
 							{/snippet}
@@ -737,19 +800,19 @@
 					</div>
 				{:else if value === "report"}
 					<div class="bench-subtabs-wrap" onchange={containSubTabChange}>
-						<Tabs items={REPORT_TABS} bind:value={reportTab} variant="underline" class="bench-subtabs" label="Report view">
+						<Tabs items={REPORT_TABS} bind:value={reportTab} lazy variant="underline" class="bench-subtabs" label="Report view">
 							{#snippet panel(p)}
-								<div class="bench-scene">
-									<Inspectors {register} {lineage} panel={p} />
+								<div class="bench-scene" data-scene={p}>
+									<Inspectors {register} {algorithm} {derivePath} {lineage} panel={p} />
 								</div>
 							{/snippet}
 						</Tabs>
 					</div>
 				{:else if value === "export"}
 					<div class="bench-subtabs-wrap" onchange={containSubTabChange}>
-						<Tabs items={EXPORT_FORMATS} bind:value={exportFormat} variant="underline" class="bench-subtabs" label="Export format">
+						<Tabs items={EXPORT_TABS} bind:value={exportFormat} lazy variant="underline" class="bench-subtabs" label="Export format">
 							{#snippet panel(fmt)}
-								<div class="bench-scene bench-export">
+								<div class="bench-scene bench-export" data-scene={fmt}>
 									<div class="bench__export-actions">
 										<Button size="sm" variant="subtle" onclick={() => (importOpen = !importOpen)}>{importOpen ? "Close import" : "Import JSON"}</Button>
 										<Button size="sm" variant="subtle" onclick={copyShare}>{shareLabel}</Button>
@@ -778,16 +841,18 @@
 					</div>
 				{:else}
 					<div class="bench-subtabs-wrap" onchange={containSubTabChange}>
-						<Tabs items={HELP_TABS} bind:value={helpTab} variant="underline" class="bench-subtabs" label="Help topic">
+						<Tabs items={HELP_TABS} bind:value={helpTab} lazy variant="underline" class="bench-subtabs" label="Help topic">
 							{#snippet panel(topic)}
-								<div class="bench-scene">
+								<div class="bench-scene" data-scene={topic}>
 									{#if topic === "overview"}
 										<p class="bench__help-text">
 											Pick an algorithm and you have a working theme. From there set as little
 											or as much as you want: a few anchor colors, the knobs, or any of the
 											{tokenCount} derived tokens directly. <code>@xtyle/core</code> re-derives the
 											whole register in your browser on every change; the mockups, the report,
-											and the export all read straight from it.
+											and the export all read straight from it. The address bar follows whichever
+											view you are on, so a link lands someone on the scene you meant, and
+											<strong>Copy share link</strong> carries the theme along with it.
 										</p>
 									{:else if topic === "tiers"}
 										<p class="bench__help-text">
@@ -800,11 +865,15 @@
 										</p>
 									{:else}
 										<p class="bench__help-text">
-											Beyond the blessed algorithms, you can author your own.
-											<strong>Custom</strong> takes a taste-vector spec — pure JSON that builds an
-											algorithm in-process. <strong>Custom code</strong> runs an import-free
-											<code>defineAlgorithm</code> source in xript's zero-authority sandbox. Both
-											feed the same derivation, and anchors, knobs, and overrides still layer on top.
+											Beyond the blessed algorithms, you can author your own or run someone
+											else's. <strong>Custom</strong> takes a taste-vector spec: pure JSON that
+											builds an algorithm in-process. <strong>Custom code</strong> runs an
+											import-free <code>defineAlgorithm</code> source in xript's zero-authority
+											sandbox. <strong>From a pack</strong> fetches a published algorithm by npm
+											name, <code>owner/repo</code>, or URL and runs it in that same sandbox, so a
+											stranger's algorithm derives your tokens and can reach nothing else. All
+											three feed the same derivation, and anchors, knobs, and overrides still
+											layer on top.
 										</p>
 									{/if}
 								</div>
@@ -922,6 +991,8 @@
 
 	.bench-actions {
 		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
 		align-items: center;
 		gap: var(--space-2);
 	}

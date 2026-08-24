@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, parse } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Algorithm } from "../types.js";
+import { discoverInstalledPacks, packEntryPath } from "./packs.js";
 import {
 	entryScriptKey,
 	HARNESS_TIMEOUT_MS,
@@ -28,6 +29,8 @@ export interface AlgorithmMod {
 	dir: string;
 	manifest: unknown;
 	sourcePath: string;
+	/** The pack that declared it, absent for the blessed set shipped in this repo. */
+	origin?: string;
 }
 
 /**
@@ -76,21 +79,29 @@ function algorithmsDir(): string | null {
  * cache is keyed on. The directory is a filesystem detail; the manifest name is the identity, and a
  * mod whose two disagree is resolved (and warned about) under its name.
  */
+export function readAlgorithmMod(dir: string, label = dir): AlgorithmMod | null {
+	const manifestPath = join(dir, "mod-manifest.json");
+	if (!existsSync(manifestPath)) return null;
+
+	const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { name?: string };
+	const id = manifest.name;
+	if (!id) {
+		throw new Error(`xtyle: ${label}/mod-manifest.json declares no name, so the mod has no id`);
+	}
+
+	const sourcePath = join(dir, entryScriptKey(manifest));
+	if (!existsSync(sourcePath)) return null;
+
+	return { id, dir: label, manifest, sourcePath };
+}
+
 export function discoverAlgorithmMods(root: string): Map<string, AlgorithmMod> {
 	const found = new Map<string, AlgorithmMod>();
 	for (const dirent of readdirSync(root, { withFileTypes: true })) {
 		if (!dirent.isDirectory()) continue;
-		const manifestPath = join(root, dirent.name, "mod-manifest.json");
-		if (!existsSync(manifestPath)) continue;
-
-		const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { name?: string };
-		const id = manifest.name;
-		if (!id) {
-			throw new Error(`xtyle: ${dirent.name}/mod-manifest.json declares no name, so the mod has no id`);
-		}
-
-		const sourcePath = join(root, dirent.name, entryScriptKey(manifest));
-		if (!existsSync(sourcePath)) continue;
+		const mod = readAlgorithmMod(join(root, dirent.name), dirent.name);
+		if (!mod) continue;
+		const { id } = mod;
 
 		const clash = found.get(id);
 		if (clash) {
@@ -104,9 +115,47 @@ export function discoverAlgorithmMods(root: string): Map<string, AlgorithmMod> {
 				`xtyle: algorithm "${id}" lives in ${dirent.name}/; the manifest name is the id, and the directory is ignored`,
 			);
 		}
-		found.set(id, { id, dir: dirent.name, manifest, sourcePath });
+		found.set(id, mod);
 	}
 	return found;
+}
+
+function packMods(into: Map<string, AlgorithmMod>): Map<string, AlgorithmMod> {
+	for (const installed of discoverInstalledPacks()) {
+		for (const problem of installed.problems) {
+			console.warn(`xtyle: pack "${installed.pack.name}" — ${problem}`);
+		}
+		for (const entry of installed.pack.algorithms) {
+			const dir = packEntryPath(installed, entry);
+			let mod: AlgorithmMod | null = null;
+			try {
+				mod = readAlgorithmMod(dir, `${installed.pack.name}/${entry.name}`);
+			} catch (error) {
+				console.warn(`xtyle: pack "${installed.pack.name}" declares algorithm "${entry.name}", which did not load: ${String(error)}`);
+				continue;
+			}
+			if (!mod) {
+				console.warn(
+					`xtyle: pack "${installed.pack.name}" declares algorithm "${entry.name}" at ${entry.entry}, which holds no loadable mod`,
+				);
+				continue;
+			}
+			if (mod.id !== entry.name) {
+				console.warn(
+					`xtyle: pack "${installed.pack.name}" declares algorithm "${entry.name}", whose mod calls itself "${mod.id}"; the mod name is the id`,
+				);
+			}
+			const clash = into.get(mod.id);
+			if (clash) {
+				console.warn(
+					`xtyle: pack "${installed.pack.name}" declares algorithm "${mod.id}", which ${clash.origin ? `pack "${clash.origin}"` : "this install"} already provides; keeping the first`,
+				);
+				continue;
+			}
+			into.set(mod.id, { ...mod, origin: installed.pack.name });
+		}
+	}
+	return into;
 }
 
 let entries: Map<string, AlgorithmMod> | undefined;
@@ -114,9 +163,14 @@ let entries: Map<string, AlgorithmMod> | undefined;
 function mods(): Map<string, AlgorithmMod> {
 	if (!entries) {
 		const root = algorithmsDir();
-		entries = root ? discoverAlgorithmMods(root) : new Map();
+		entries = packMods(root ? discoverAlgorithmMods(root) : new Map());
 	}
 	return entries;
+}
+
+/** Drop the cached scan, so a freshly-added pack is visible without a new process. */
+export function refreshInstalledAlgorithms(): void {
+	entries = undefined;
 }
 
 /**
@@ -179,13 +233,16 @@ export function resolveInstalledAlgorithm(id: string, options: ResolveAlgorithmO
 	const entry = mods().get(id);
 	if (!entry) {
 		const root = algorithmsDir();
+		const installed = availableAlgorithms();
 		return Promise.reject(
 			new Error(
-				root
-					? `xtyle: no algorithm "${id}" in ${root} (installed: ${availableAlgorithms().join(", ") || "none"})`
+				root || installed.length
+					? `xtyle: no algorithm "${id}" (installed: ${installed.join(", ") || "none"}). ` +
+						"`xtyle search` finds published packs, and `xtyle add <pack>` installs one."
 					: `xtyle: no algorithm "${id}" — \`@xtyle/core/host\` resolves mods from an \`algorithms/\` ` +
-						"directory and there is none here, which is what a published install looks like. For the " +
-						`blessed set with no filesystem, use ${FILESYSTEM_FREE_PATH}.`,
+						"directory or an installed pack, and there is neither here, which is what a bare published " +
+						`install looks like. For the blessed set with no filesystem, use ${FILESYSTEM_FREE_PATH}. ` +
+						"`xtyle add <pack>` installs a pack into this project.",
 			),
 		);
 	}

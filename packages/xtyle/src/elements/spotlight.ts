@@ -342,7 +342,6 @@ export class XtyleSpotlight extends XtyleElement {
 				this.targetEl?.scrollIntoView?.({ block: "center", behavior: "smooth" });
 			}
 			this.repaint();
-			this.syncCallout();
 		} else {
 			this.stopTracking();
 			this.callout?.hide("api", false);
@@ -380,10 +379,21 @@ export class XtyleSpotlight extends XtyleElement {
 
 	/** Open the callout against the target — never against the spotlight host, which is `display: contents`
 	 * and has no box to anchor to. */
+	/**
+	 * Whether the fill's last paint carries the heading the element is currently showing. The callout takes
+	 * its accessible name from that paint, so opening ahead of it puts up a dialog with no name at all.
+	 */
+	private paintIsCurrent(): boolean {
+		const title = this.root.querySelector<HTMLElement>("[data-sl-title]");
+		if (!title) return true;
+		return (title.textContent ?? "") === (this.getAttribute("heading") ?? "");
+	}
+
 	private syncCallout(): void {
 		const callout = this.callout;
 		const target = this.targetEl;
 		if (!callout) return;
+		if (!callout.open && !this.paintIsCurrent()) return;
 		if (!this.open || !target) {
 			if (callout.open) callout.hide("api", false);
 			this.calloutTarget = null;

@@ -196,6 +196,24 @@ const TONE_GROUPS = [
 			</Stack>
 		</Stack>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">Out of the tab order</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				A button renders a native control, so the browser makes it tab-reachable and activates it on
+				Enter. An app driving selection from its own keyboard cursor gets two focus rings that diverge
+				and one keypress that fires twice. <code>{"focusable={false}"}</code> opts the control out; the
+				host's own <code>tabindex</code> cannot, because focus lands on the inner control. Tab through
+				these: the middle one is skipped.
+			</Text>
+			<Cluster gap={2}>
+				<Button variant="outline" tone="neutral">Reachable</Button>
+				<Button variant="outline" tone="neutral" focusable={false}>Skipped by Tab</Button>
+				<Button variant="outline" tone="neutral">Reachable</Button>
+			</Cluster>
+		</Stack>
+	</Card>
 </Stack>
 
 <style>

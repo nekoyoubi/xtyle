@@ -32,8 +32,8 @@ export class XtyleToc extends XtyleElement {
 			return [];
 		}
 	}
-	set items(value: TocItem[]) {
-		this.setAttribute("items", JSON.stringify(value));
+	set items(value: TocItem[] | string) {
+		this.setAttribute("items", typeof value === "string" ? value : JSON.stringify(value));
 	}
 
 	get label(): string {
@@ -111,8 +111,9 @@ export class XtyleToc extends XtyleElement {
 					if (entry.isIntersecting) this.visible.add(entry.target.id);
 					else this.visible.delete(entry.target.id);
 				}
-				const first = targets.find((t) => this.visible.has(t.id));
-				if (first) this.setActive(first.id);
+				let entered: HTMLElement | undefined;
+				for (const t of targets) if (this.visible.has(t.id)) entered = t;
+				if (entered) this.setActive(entered.id);
 			},
 			{ rootMargin: "-15% 0px -70% 0px", threshold: 0 },
 		);

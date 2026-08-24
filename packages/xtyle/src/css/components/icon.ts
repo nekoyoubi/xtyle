@@ -6,14 +6,16 @@ export const iconCss = `
 [data-root][data-icon] { display: contents; }
 .xtyle-icon {
 	display: inline-block;
+	font-size: var(--xtyle-icon-size, 1em);
 	width: 1em;
 	height: 1em;
 	vertical-align: -0.125em;
 	flex: none;
 }
-.xtyle-icon--sm { font-size: 0.85em; }
-.xtyle-icon--lg { font-size: 1.5em; }
-.xtyle-icon--xl { font-size: 2em; }
+.xtyle-icon--xs { font-size: var(--xtyle-icon-size, 0.7em); }
+.xtyle-icon--sm { font-size: var(--xtyle-icon-size, 0.85em); }
+.xtyle-icon--lg { font-size: var(--xtyle-icon-size, 1.5em); }
+.xtyle-icon--xl { font-size: var(--xtyle-icon-size, 2em); }
 .xtyle-icon--spin { animation: xtyle-icon-spin 1s linear infinite; transform-origin: center; }
 @keyframes xtyle-icon-spin {
 	to { transform: rotate(360deg); }

@@ -17,6 +17,7 @@
  */
 
 import { resolveIconPoints } from "./icon-shapes.js";
+import { announceIconRegistry, hasRosterIcon } from "./icon-registry.js";
 import { escapeAttr, escapeCssUrl } from "./markup/escape.js";
 import { flattenBody, regionCovers, type IconBox, type IconRegion } from "./icon-measure.js";
 import { MAX_FONT_FAMILY_LENGTH, googleFontCatalogue, googleFontCssUrl, googleFontFamily, suggestGoogleFonts } from "./fonts/google.js";
@@ -460,28 +461,158 @@ export const PRIMITIVE_KEYWORDS: Record<string, string> = {
 	bolt: "symbol-bolt",
 };
 
+/**
+ * Whether `name` will draw something, answering the whole resolution cascade in one call: a roster glyph
+ * (built-in or contributed) or a composable mark spec.
+ *
+ * The element already knows this, because it owns the cascade — but knowing it required a consumer to
+ * import from two modules and restate the order, and a restatement is one release from disagreeing with
+ * what the element does. The false-negative direction is the expensive one: a guard that says no about a
+ * name that would have rendered silently degrades a working icon.
+ */
+export function canRenderIcon(name: string | null | undefined): boolean {
+	if (!name) return false;
+	return hasRosterIcon(name) || resolveIconMark(name) !== null;
+}
+
+/** The slot a mod fills to contribute primitives, declared in its own manifest rather than run as code. */
+export const ICON_PRIMITIVE_SLOT = "xtyle.icon-primitives";
+
+/**
+ * One contributed primitive. `pts` is the ordinary route — a coordinate run, or the name of a list
+ * registered through `xtyle.icon-points`, so a point list worth reusing becomes a primitive by naming it
+ * rather than by restating it. `body` takes raw SVG for a shape no point run can describe (a curve, an
+ * arc, an ellipse), which is how the built-in library is written.
+ */
+export interface IconPrimitiveDef {
+	pts?: string | number[];
+	/** Leave a `pts` run open and stroke it, the way `polyline` does, rather than closing and filling it. */
+	open?: boolean;
+	body?: string;
+	tags?: string[];
+	description?: string;
+	since?: string;
+}
+
+/** One mod's contribution: primitive definitions keyed by the name the grammar reaches them under. */
+export interface IconPrimitiveFill {
+	primitives: Record<string, IconPrimitiveDef>;
+}
+
+const contributedPrimitives = new Map<string, IconPrimitive>();
+
+const PRIMITIVE_NAME = /^[a-z][a-z0-9]*$/;
+
+function warnPrimitive(message: string): void {
+	if (typeof console !== "undefined") console.warn(`xtyle: ${message}`);
+}
+
+/**
+ * Add or replace primitives, last-wins on the name, the way the icon roster takes glyphs.
+ *
+ * A contributed name is reachable everywhere a built-in is — in a composition segment, in the roster, in
+ * the tag search — and it outranks a grammar keyword, so registering `heart` overrides the built-in
+ * `symbol-heart` the keyword used to reach. Names are lowercase alphanumeric with no hyphen, because a
+ * hyphen is how the grammar separates flags; that also means a contribution can never collide with a
+ * built-in *library* key (`shape-circle`), only shadow the keyword that reaches it.
+ */
+export function registerIconPrimitives(defs: Record<string, IconPrimitiveDef>): void {
+	for (const [name, def] of Object.entries(defs)) {
+		if (!PRIMITIVE_NAME.test(name)) {
+			warnPrimitive(`"${name}" is not a usable primitive name. Use lowercase letters and digits, with no hyphen.`);
+			continue;
+		}
+		const body = primitiveBodyFrom(name, def);
+		if (body === null) continue;
+		const primitive: IconPrimitive = { body };
+		if (def.since !== undefined) primitive.since = def.since;
+		if (def.tags !== undefined) primitive.tags = def.tags;
+		if (def.description !== undefined) primitive.description = def.description;
+		contributedPrimitives.set(name, primitive);
+	}
+	announceIconRegistry();
+}
+
+/** Resolve a definition to an SVG body, or null (having said why) when it describes nothing drawable. */
+function primitiveBodyFrom(name: string, def: IconPrimitiveDef): string | null {
+	if (def.pts !== undefined) {
+		const points = resolveIconPoints(typeof def.pts === "string" ? def.pts : def.pts.join(","));
+		if (!points) {
+			warnPrimitive(`"${name}" needs at least three x,y pairs of finite numbers, or the name of a registered point list. Ignoring it.`);
+			return null;
+		}
+		return polyBody(points, def.open === true);
+	}
+	if (typeof def.body === "string" && def.body.trim() !== "") return def.body;
+	warnPrimitive(`"${name}" carries neither a "pts" run nor an SVG "body". Ignoring it.`);
+	return null;
+}
+
+/** Drop every contributed primitive, leaving the built-in library. For tests and for a host teardown. */
+export function resetIconPrimitives(): void {
+	contributedPrimitives.clear();
+	announceIconRegistry();
+}
+
+/** The primitive `name` addresses, contributed or built-in, or undefined when nothing claims it. */
+export function iconPrimitive(name: string): IconPrimitive | undefined {
+	return contributedPrimitives.get(name) ?? ICON_PRIMITIVES[name];
+}
+
 /** Resolve a grammar keyword (`star`) or a bare library name (`symbol-star`) to its library name. */
 export function resolvePrimitiveName(nameOrKeyword: string): string {
+	if (contributedPrimitives.has(nameOrKeyword)) return nameOrKeyword;
 	return PRIMITIVE_KEYWORDS[nameOrKeyword] ?? nameOrKeyword;
 }
 
 /** The version a primitive first shipped in, addressed by keyword or library name (undefined if unknown). */
 export function primitiveSince(nameOrKeyword: string): string | undefined {
-	return ICON_PRIMITIVES[resolvePrimitiveName(nameOrKeyword)]?.since;
+	return iconPrimitive(resolvePrimitiveName(nameOrKeyword))?.since;
 }
 
 /** A primitive's plain-language tags, addressed by keyword or library name (empty when unknown). */
 export function primitiveTags(nameOrKeyword: string): string[] {
-	return ICON_PRIMITIVES[resolvePrimitiveName(nameOrKeyword)]?.tags ?? [];
+	return iconPrimitive(resolvePrimitiveName(nameOrKeyword))?.tags ?? [];
 }
 
-/** True when `name` resolves to a primitive in the library. */
+/** True when `name` resolves to a primitive, contributed or built-in. */
 export function hasPrimitive(name: string): boolean {
-	return Object.prototype.hasOwnProperty.call(ICON_PRIMITIVES, name);
+	return contributedPrimitives.has(name) || Object.prototype.hasOwnProperty.call(ICON_PRIMITIVES, name);
 }
 
-/** Every primitive name in the library. */
+/** Every primitive name that ships in the library. A snapshot of the built-in set, so a figure measured
+ * against it (the site's primitive count) means "what xtyle ships" rather than "what this page happened
+ * to register"; {@link iconPrimitiveNames} is the live roster. */
 export const ICON_PRIMITIVE_NAMES: string[] = Object.keys(ICON_PRIMITIVES);
+
+/** Every primitive name currently reachable, built-in and contributed alike. */
+export function iconPrimitiveNames(): string[] {
+	return [...ICON_PRIMITIVE_NAMES, ...contributedPrimitives.keys()];
+}
+
+/** Pull the primitive blocks out of a mod manifest's `xtyle.icon-primitives` fills, if it declares any. */
+export function iconPrimitiveFillsFrom(modManifest: unknown): IconPrimitiveFill[] {
+	const fills = (modManifest as { fills?: Record<string, unknown> } | null | undefined)?.fills;
+	const declared = fills?.[ICON_PRIMITIVE_SLOT];
+	if (!declared) return [];
+	return (Array.isArray(declared) ? declared : [declared]).filter(isIconPrimitiveFill);
+}
+
+function isIconPrimitiveFill(value: unknown): value is IconPrimitiveFill {
+	const primitives = (value as Partial<IconPrimitiveFill> | null | undefined)?.primitives;
+	if (!primitives || typeof primitives !== "object") return false;
+	return Object.values(primitives).every((def) => def !== null && typeof def === "object");
+}
+
+/** Register every primitive a mod manifest contributes, in declaration order. */
+export function registerIconPrimitiveFills(modManifest: unknown): number {
+	let added = 0;
+	for (const fill of iconPrimitiveFillsFrom(modManifest)) {
+		registerIconPrimitives(fill.primitives);
+		added += Object.keys(fill.primitives).length;
+	}
+	return added;
+}
 
 /**
  * One-line summaries for the compositional draw-with primitives — the ones an author stacks a mark out
@@ -564,7 +695,7 @@ for (const [name, description] of Object.entries(PRIMITIVE_DESCRIPTIONS)) {
  * else a humanized fall-back for the functional glyphs (`symbol-check` → "a check glyph"). */
 export function primitiveDescription(nameOrKeyword: string): string | undefined {
 	const library = resolvePrimitiveName(nameOrKeyword);
-	const primitive = ICON_PRIMITIVES[library];
+	const primitive = iconPrimitive(library);
 	if (!primitive) return undefined;
 	if (primitive.description) return primitive.description;
 	if (library.startsWith("symbol-")) return `a ${library.slice("symbol-".length).replace(/-/g, " ")} glyph`;
@@ -591,8 +722,8 @@ export function iconPrimitiveRoster(): IconPrimitiveEntry[] {
 		list.push(keyword);
 		keywordsByLibrary.set(library, list);
 	}
-	return ICON_PRIMITIVE_NAMES.map((library) => {
-		const primitive = ICON_PRIMITIVES[library];
+	return iconPrimitiveNames().map((library) => {
+		const primitive = iconPrimitive(library);
 		return {
 			library,
 			family: library.includes("-") ? library.slice(0, library.indexOf("-")) : library,
@@ -755,7 +886,7 @@ function layerRegions(layer: IconLayer): IconRegion[] {
 			? flattenBody(polyBody(layer.points, layer.openPath))
 			: layer.glyph != null
 				? flattenBody(letterBody(layer.glyph, "sans-serif"))
-				: flattenBody((ICON_PRIMITIVES[layer.primitive] ?? MISSING).body);
+				: flattenBody((iconPrimitive(layer.primitive) ?? MISSING).body);
 	const scale = layerScale(layer);
 	const sx = scale.x * (layer.flipH ? -1 : 1);
 	const sy = scale.y * (layer.flipV ? -1 : 1);
@@ -930,7 +1061,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 				? { body: polyBody(layer.points, layer.openPath) }
 				: layer.glyph != null
 					? { body: letterBody(layer.glyph, fontForSlot(layer.font, composition)) }
-					: (ICON_PRIMITIVES[layer.primitive] ?? MISSING);
+					: (iconPrimitive(layer.primitive) ?? MISSING);
 		const transform = layerTransform(layer);
 		if (layer.knockout) {
 			const maskId = `xk-${id}-${holes++}`;
@@ -1115,7 +1246,7 @@ const OBJECT_TOKEN = /-(?:(sx|sy|p|s|x|y|r|a)(-?\d+)|c([0-9a-f])|(o)([1-3])(?:c(
 function parseObject(segment: string): IconLayer | null {
 	const keyword = /^[a-z]+[0-9]*/.exec(segment)?.[0];
 	if (!keyword) return null;
-	const layer: IconLayer = { primitive: PRIMITIVE_KEYWORDS[keyword] ?? keyword };
+	const layer: IconLayer = { primitive: resolvePrimitiveName(keyword) };
 	let position = 5;
 	let offX = 0;
 	let offY = 0;

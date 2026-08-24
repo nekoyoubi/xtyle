@@ -72,6 +72,61 @@ const rampAstroExample = `<Progress ramp="thermal" value={30} aria-label="Load, 
 
 <Progress ramp="thermal" rampMode="gradient" value={80} aria-label="Capacity sweep" />`;
 
+const captionHtmlExample = `<xtyle-progress
+	label="The haggle"
+	reading="8 of 20 coins"
+	note="They will come down another two, and no further."
+	value="40"
+></xtyle-progress>
+
+<xtyle-progress label="Standing" reading="even" value="50" tone="info"></xtyle-progress>
+
+<div style="--xtyle-progress-length: 9rem">
+	<xtyle-progress orient="vertical" label="Fuel" reading="34%" value="34" tone="info"></xtyle-progress>
+</div>`;
+
+const captionSvelteExample = `<script lang="ts">
+	import { Progress } from "@xtyle/svelte";
+</script>
+
+<Progress
+	label="The haggle"
+	reading="8 of 20 coins"
+	note="They will come down another two, and no further."
+	value={40}
+/>
+
+<Progress label="Standing" reading="even" value={50} tone="info" />
+
+<div style="--xtyle-progress-length: 9rem">
+	<Progress orient="vertical" label="Fuel" reading="34%" value={34} tone="info" />
+</div>
+
+<Progress label="Shipment" value={62}>
+	{#snippet readingContent()}<strong>62</strong> of 100 crates{/snippet}
+</Progress>`;
+
+const captionAstroExample = `---
+import { Progress } from "@xtyle/astro";
+---
+
+<Progress
+	label="The haggle"
+	reading="8 of 20 coins"
+	note="They will come down another two, and no further."
+	value={40}
+/>
+
+<Progress label="Standing" reading="even" value={50} tone="info" />
+
+<div style="--xtyle-progress-length: 9rem">
+	<Progress orient="vertical" label="Fuel" reading="34%" value={34} tone="info" />
+</div>
+
+<Progress label="Shipment" value={62}>
+	<Fragment slot="reading"><strong>62</strong> of 100 crates</Fragment>
+</Progress>`;
+
 const frameHtmlExample = `<style>
 	.portrait { position: relative; width: 96px; height: 96px; }
 	.portrait xtyle-progress { display: block; position: absolute; inset: 0; --xtyle-progress-size: 100%; }
@@ -135,12 +190,43 @@ export const progressManifest: ComponentManifest = {
 		"Progress shows how far along a task is, or how full a capacity is. The `variant` axis picks the shape (a horizontal `linear` bar or a circular `svg` ring) and the `tone` axis picks the color from the full roster (the six semantic roles, the accent variants, the twelve named hues). A determinate bar fills to `value` between `min` and `max`; an `indeterminate` mode animates a moving sweep when the amount of work is unknown. Declarative `<threshold below tone pulse>` children turn it into a self-coloring meter: each band names a percentage ceiling, and the active band (the first the current value falls under) overrides the tone and can `pulse` the fill (`slow` or `fast`) to flag a critical level, the pulse routed through motion tokens so the reduced-motion base rule stills it. Set `meter` to report `role=\"meter\"` (a measurement against a capacity, like disk used) instead of the default `role=\"progressbar\"` (a task advancing); either way it carries `aria-valuenow`/`aria-valuemin`/`aria-valuemax`. An optional inline readout (`show-value`) shows the percentage, the raw value, or `value/max` (`value-format`), sits at the end or inset over the bar (`value-position`), and can take the active tone (`colorize-value`).",
 	keywords: ["meter", "gauge", "capacity", "threshold", "disk", "battery", "usage", "quota", "score"],
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["bar", "caption", "indicator", "label", "note", "progress", "reading", "track", "value"],
 	anatomy: [
 		{
 			name: "progress",
-			description: "The root element carrying the variant, tone, and size classes and the progressbar (or meter) role.",
+			description: "The root element carrying the variant, tone, and size classes. It stacks the caption, the bar, and the note; the role lives on the bar rather than here, so a caption is prose beside the measurement rather than content inside it.",
 			selector: ".xtyle-progress",
-			tokens: ["--font-sans", "--fg-1", "--space-2"],
+			tokens: ["--font-sans", "--fg-1", "--space-1"],
+		},
+		{
+			name: "bar",
+			description: "The measuring element, carrying the progressbar (or meter) role and the ARIA value state, and holding the track, the indicator, and the readout.",
+			selector: ".xtyle-progress__bar",
+			tokens: ["--space-2"],
+		},
+		{
+			name: "caption",
+			description: "The line above the bar: the visible `label` on one side, the free-form `reading` on the other. Rendered only when one of them is set or slotted.",
+			selector: ".xtyle-progress__caption",
+			tokens: ["--text-sm", "--text-xs", "--text-body", "--space-3", "--leading-tight"],
+		},
+		{
+			name: "label",
+			description: "The visible name of the measurement, on the caption line.",
+			selector: ".xtyle-progress__label",
+			tokens: ["--fg-1"],
+		},
+		{
+			name: "reading",
+			description: "The free-form reading opposite the label, tabular so a column of them lines up.",
+			selector: ".xtyle-progress__reading",
+			tokens: ["--fg-2"],
+		},
+		{
+			name: "note",
+			description: "A line of prose under the bar, explaining what the reading means. Rendered only when set or slotted.",
+			selector: ".xtyle-progress__note",
+			tokens: ["--text-xs", "--fg-2", "--leading-normal"],
 		},
 		{
 			name: "track",
@@ -284,6 +370,7 @@ export const progressManifest: ComponentManifest = {
 			type: "<threshold below tone pulse>",
 			description: "Declarative config children, not a prop: each `<threshold below=\"<pct>\" tone=\"<tone>\" pulse=\"slow|fast\">` names a percentage ceiling; the active band (the first the current value falls under, bands sorted ascending) overrides `tone` and may `pulse` the fill; place them as direct children of the element.",
 			bindings: ["html", "svelte", "astro"],
+			attrOn: "<threshold> children",
 		},
 		{
 			name: "track",
@@ -300,9 +387,35 @@ export const progressManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "label",
+			type: "string",
+			description: "The visible caption above the bar. Distinct from `ariaLabel`, which names the meter for a screen reader and renders nothing: two bars stacked in a panel are told apart by AT and not by eye unless one of them says what it is. Setting `label` alone also names the meter, so the string is written once; an explicit `ariaLabel` still wins.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "reading",
+			type: "string",
+			description: "A free-form reading on the caption line, opposite the label. Independent of `valueFormat`, because a meter's most useful reading is often not a number the component could have computed (`8/20`, `even`, `yours`, `46 left`). The built-in `showValue` readout is a different thing in a different place: it sits on the bar and speaks the number.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "note",
+			type: "string",
+			description: "A line of prose under the bar, explaining what the reading means.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "orient",
+			type: "ProgressOrient",
+			default: "horizontal",
+			description: "Which axis the bar fills along. `vertical` grows the indicator up the block axis natively, so a standing gauge needs no rotation: a rotated element keeps its pre-rotation layout box, so its visible height is its pre-rotation width and no percentage resolves against the side you can see. The rail takes its length from `--xtyle-progress-length`, the way a ring takes its diameter from `--xtyle-progress-size`. Linear only; a ring has no axis to stand up.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["horizontal", "vertical"],
+		},
+		{
 			name: "ariaLabel",
 			type: "string",
-			description: "Accessible name for the meter. Required. A progressbar with no name is not announced.",
+			description: "Accessible name for the meter, when `label` is absent or the announced name should differ from the visible one. One of the two is required: a progressbar with no name is not announced.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -351,6 +464,21 @@ export const progressManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "label",
+			description: "Markup for the caption's name, in place of the plain `label` string. The Svelte binding fills it with the `labelContent` snippet.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "reading",
+			description: "Markup for the caption's reading, in place of the plain `reading` string. The Svelte binding fills it with the `readingContent` snippet.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "note",
+			description: "Markup for the note under the bar, in place of the plain `note` string. The Svelte binding fills it with the `noteContent` snippet.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "default",
 			description: "The `<threshold below tone pulse>` config children (hidden from view); the bar reads them to recolor and pulse by value.",
 			bindings: ["html", "svelte", "astro"],
@@ -365,6 +493,8 @@ export const progressManifest: ComponentManifest = {
 		"--text-body",
 		"--text-sm",
 		"--text-xs",
+		"--leading-tight",
+		"--leading-normal",
 		"--space-1",
 		"--space-2",
 		"--space-3",
@@ -410,6 +540,12 @@ export const progressManifest: ComponentManifest = {
 			title: "A capacity meter with thresholds",
 			description: "Set `meter` for the measurement role and add `<threshold below tone pulse>` children: the bar greens under 75%, ambers past it, and reds and pulses once it crosses 90% full, the `value/max` readout carrying its `unit`. This is the gauge use once served by a separate Meter.",
 			source: { html: meterHtmlExample, svelte: meterSvelteExample, astro: meterAstroExample },
+		},
+		{
+			id: "caption-and-orientation",
+			title: "Saying what it is, and standing it up",
+			description: "`aria-label` names a meter for a screen reader and renders nothing, so two bars stacked in a panel are told apart by AT and not by eye. `label` renders the name *and* announces it, `reading` is free-form so it can say what no value format could compute (`even`, `46 left`), and `note` explains the reading. `orient=\"vertical\"` grows the fill up the block axis natively; give the host a height and the rail fills it.",
+			source: { html: captionHtmlExample, svelte: captionSvelteExample, astro: captionAstroExample },
 		},
 		{
 			id: "value-ramp",

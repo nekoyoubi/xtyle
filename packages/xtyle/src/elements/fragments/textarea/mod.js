@@ -60,7 +60,7 @@
   });
   xript.exports.register("onInput", (payload) => {
     const e = payload;
-    return { value: e.value ?? "" };
+    return { value: e.value ?? "", emit: { type: "input" } };
   });
   xript.exports.register("onChange", (payload) => {
     const e = payload;

@@ -6,6 +6,8 @@
 	interface Props {
 		checked?: boolean;
 		disabled?: boolean;
+		/** Set false to keep the control out of sequential focus navigation. */
+		focusable?: boolean;
 		size?: (typeof SWITCH_SIZES)[number];
 		tone?: Tone;
 		shape?: "pill" | "square";
@@ -26,6 +28,7 @@
 	let {
 		checked = $bindable(false),
 		disabled = false,
+		focusable,
 		size = "md",
 		tone = "accent",
 		shape = "pill",
@@ -65,6 +68,7 @@
 	{...rest}
 	checked={checked || undefined}
 	disabled={disabled || undefined}
+	focusable={focusable === false ? "false" : undefined}
 	{size}
 	{tone}
 	shape={shape !== "pill" ? shape : undefined}
