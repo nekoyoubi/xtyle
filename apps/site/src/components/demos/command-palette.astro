@@ -34,6 +34,15 @@ const pinned = [
 	{ id: "cmd.settings", label: "Settings" },
 	{ id: "cmd.shortcuts", label: "Keyboard shortcuts" },
 ];
+
+const verbs = [
+	{ id: "rect", label: "rect <x,y> <w,h> [color]", group: "Draw", hint: "draw a rectangle" },
+	{ id: "circle", label: "circle <x,y> <r> [color]", group: "Draw", hint: "draw a circle" },
+	{ id: "fill", label: "fill [color]", group: "Draw", hint: "flood with the active pigment" },
+	{ id: "goto", label: "goto <line>", group: "Move", hint: "jump to a line" },
+	{ id: "clear", label: "clear", group: "Canvas", hint: "wipe the layer" },
+	{ id: "undo", label: "undo", group: "Canvas", hint: "step back" },
+];
 ---
 
 <Stack gap={6}>
@@ -85,6 +94,37 @@ const pinned = [
 			noFooter
 		/>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">A command line, where the query carries the arguments</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				With <code>completeFirst</code>, Enter commits a name before it runs anything. Type <code>cl</code> — you land
+				on <code>clear</code>, and Enter fills the name in rather than wiping the layer; a second Enter runs it. Once
+				the first word names a command, Enter runs it with whatever follows, so <code>goto 214</code> goes straight
+				through. That is the whole safeguard, and it needs no per-command flag: a name you have not finished typing
+				completes, a name you have finished runs.
+			</Text>
+			<Text tone="muted" size="sm">
+				Its <code>recent</code> entries are <em>lines</em>, not ids. An id can only ever remember that you once ran
+				<code>rect</code>; the rectangle was the part worth keeping. Open it on an empty query and the three under
+				<em>Recent</em> are whole lines — selecting one reports it as the <code>select</code> event's <code>id</code>.
+			</Text>
+			<Cluster gap={3} align="center">
+				<Button id="cp-line-launch" tone="accent">Open the command line</Button>
+				<Text size="sm"><span id="cp-line-echo">Nothing run yet.</span></Text>
+			</Cluster>
+		</Stack>
+		<CommandPalette
+			id="cp-line"
+			items={verbs}
+			label="Command line"
+			placeholder="rect 10,10 40,40 azul"
+			emptyText="No command by that name"
+			completeFirst
+			noCloseOnSelect
+		/>
+	</Card>
 </Stack>
 
 <script>
@@ -94,6 +134,7 @@ const pinned = [
 	type PaletteEl = HTMLElement & {
 		show(): void;
 		scorer: (query: string, item: CommandItem) => CommandMatch | null;
+		recent: string[];
 	};
 
 	const main = document.querySelector<PaletteEl>("#cp-main");
@@ -118,5 +159,21 @@ const pinned = [
 	ranked?.addEventListener("select", (event) => {
 		const detail = (event as CustomEvent).detail;
 		if (rankedEcho) rankedEcho.textContent = `Ran ${detail.label}.`;
+	});
+
+	const line = document.querySelector<PaletteEl>("#cp-line");
+	const lineEcho = document.querySelector<HTMLElement>("#cp-line-echo");
+	const history = ["rect 10,10 40,40 azul", "goto 214", "circle 60,60 18"];
+	if (line) line.recent = history;
+	document.querySelector<HTMLElement>("#cp-line-launch")?.addEventListener("click", () => line?.show());
+	line?.addEventListener("select", (event) => {
+		const detail = (event as CustomEvent).detail;
+		const typed = String(detail.query ?? "").trim();
+		const ran = typed.split(/\s+/)[0] === detail.id && typed !== detail.id ? typed : detail.id;
+		if (lineEcho) lineEcho.textContent = `Ran ${ran}.`;
+		if (!history.includes(ran) && ran !== detail.id) {
+			history.unshift(ran);
+			if (line) line.recent = history.slice(0, 8);
+		}
 	});
 </script>

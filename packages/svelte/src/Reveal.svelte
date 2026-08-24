@@ -15,6 +15,8 @@
 		behavior?: RevealBehavior;
 		shape?: string;
 		contained?: boolean;
+		/** Declare the lid a control rather than a container: `role="button"` in place of `role="group"`. Pair with `label`. */
+		control?: boolean;
 		bleed?: boolean;
 		tone?: string;
 		flickVelocity?: number;
@@ -73,6 +75,7 @@
 		behavior,
 		shape,
 		contained = false,
+		control = false,
 		bleed = false,
 		tone,
 		flickVelocity,
@@ -124,6 +127,34 @@
 		...rest
 	}: Props = $props();
 
+	type RevealElement = HTMLElement & {
+		open: RevealDirection | null;
+		reveal(direction: RevealDirection): void;
+		conceal(): void;
+		commit(direction: RevealDirection): void;
+	};
+
+	let el: RevealElement | undefined = $state();
+
+	/** Slide the lid open on a direction, exactly as a pull past `latchAt` does. */
+	export function reveal(direction: RevealDirection): void {
+		el?.reveal(direction);
+	}
+
+	/** Slide the lid back, exactly as letting go short of the threshold does. */
+	export function conceal(): void {
+		el?.conceal();
+	}
+
+	/**
+	 * Take a direction's action and close, exactly as a full pull past `commitAt` does — the digital door
+	 * for a control whose only other input is an analogue gesture, so a test harness drives the documented
+	 * API instead of synthesising pointer events against internal geometry.
+	 */
+	export function commit(direction: RevealDirection): void {
+		el?.commit(direction);
+	}
+
 	function sync(event: Event) {
 		const target = event.currentTarget as HTMLElement & { open: RevealDirection | null };
 		open = target.open;
@@ -143,12 +174,14 @@
 </script>
 
 <xtyle-reveal
+	bind:this={el}
 	{...rest}
 	{name}
 	open={open ?? undefined}
 	{behavior}
 	{shape}
 	contained={contained || undefined}
+	control={control || undefined}
 	bleed={bleed || undefined}
 	{tone}
 	flick-velocity={flickVelocity ?? undefined}

@@ -25,13 +25,12 @@ import Alert from "@xtyle/astro/Alert.astro";
 import Breadcrumb from "@xtyle/astro/Breadcrumb.astro";
 import CodeTabs from "../../components/reference/CodeTabs.astro";
 import PropTable from "../../components/reference/PropTable.astro";
+import EventTable from "../../components/reference/EventTable.astro";
+import MethodTable from "../../components/reference/MethodTable.astro";
 import CoveragePanel from "../../components/reference/CoveragePanel.astro";
 import CoverageMeter from "../../components/reference/CoverageMeter.astro";
 import { categoryMeta } from "../../components/reference/categories.ts";
-import {
-	renderMarkdown,
-	renderMarkdownInline,
-} from "../../components/reference/inline-markdown.ts";
+import { renderMarkdown, renderMarkdownInline } from "@xtyle/core/markup";
 
 export function getStaticPaths() {
 	return listComponents().map((component) => ({
@@ -89,6 +88,8 @@ const sections = [
 	{ id: "demo", label: "Live demo" },
 	composition.length > 0 && { id: "composition", label: "When to use" },
 	component.props.length > 0 && { id: "props", label: "Props" },
+	(component.events?.length ?? 0) > 0 && { id: "events", label: "Events" },
+	(component.methods?.length ?? 0) > 0 && { id: "methods", label: "Methods" },
 	(component.variants.length > 0 ||
 		component.sizes.length > 0 ||
 		component.states.length > 0) && { id: "appearance", label: "Appearance" },
@@ -100,6 +101,11 @@ const sections = [
 	languages && { id: "languages", label: "Languages" },
 	related.length > 0 && { id: "related", label: "Related" },
 ].filter(Boolean) as { id: string; label: string }[];
+
+const events = component.events ?? [];
+const methods = component.methods ?? [];
+const exposedParts = component.exposedParts ?? [];
+const hasExposedParts = exposedParts.length > 0;
 
 const trimmedDescription = component.description.trim();
 const firstParagraph = trimmedDescription.split(/\n{2,}/)[0];
@@ -141,9 +147,12 @@ const crumbs = [
 						consumed={component.consumedTokens.length}
 					/>
 				</Cluster>
-				<Text size="lg" tone="muted" class="ref-summary">
-					{component.summary}
-				</Text>
+				<Text
+					size="lg"
+					tone="muted"
+					class="ref-summary"
+					set:html={renderMarkdownInline(component.summary)}
+				/>
 				{keywords.length > 0 && (
 					<Cluster gap={1} class="ref-keywords" aria-label="Also known as">
 						{keywords.map((kw) => (
@@ -229,6 +238,37 @@ const crumbs = [
 						</Text>
 					</Stack>
 					<PropTable props={component.props} />
+				</Stack>
+			</section>
+		)}
+
+		{events.length > 0 && (
+			<section id="events" class="ref-anchor">
+				<Stack gap={3}>
+					<Stack gap={1}>
+						<Heading level={2} size="lg">Events</Heading>
+						<Text tone="muted" size="sm">
+							What the component emits, and what rides along on <code>event.detail</code>. The name in the
+							first column is the one <code>addEventListener</code> takes.
+						</Text>
+					</Stack>
+					<EventTable events={events} />
+				</Stack>
+			</section>
+		)}
+
+		{methods.length > 0 && (
+			<section id="methods" class="ref-anchor">
+				<Stack gap={3}>
+					<Stack gap={1}>
+						<Heading level={2} size="lg">Methods</Heading>
+						<Text tone="muted" size="sm">
+							What you can call on the element itself — the half of the surface a prop or an event cannot
+							express. A control driven by a gesture, or one whose state the platform owns, opens here.
+							Astro renders on the server and hands back no instance, so no method is reachable from it.
+						</Text>
+					</Stack>
+					<MethodTable methods={methods} />
 				</Stack>
 			</section>
 		)}
@@ -320,7 +360,9 @@ const crumbs = [
 					<Stack gap={1}>
 						<Heading level={2} size="lg">Anatomy</Heading>
 						<Text tone="muted" size="sm">
-							The named parts that make up the component, with their selectors.
+							{hasExposedParts
+								? "The named parts that make up the component. A ::part() handle is reachable from your own stylesheet; the class beside it is the component's internal selector, which a shadow boundary keeps to itself."
+								: "The named parts that make up the component, with their selectors. This one renders light DOM, so the selector is the handle."}
 						</Text>
 					</Stack>
 					<Stack gap={3}>
@@ -329,7 +371,14 @@ const crumbs = [
 								<Stack gap={2}>
 									<Cluster justify="between" align="center" gap={2} class="ref-def-row">
 										<Text weight="semibold" class="ref-def__name">{part.name}</Text>
-										<Badge tone="neutral" size="sm" class="ref-selector">{part.selector}</Badge>
+										<Cluster gap={1} align="center">
+											{exposedParts.includes(part.name) ? (
+												<Badge tone="success" size="sm" class="ref-selector">{`::part(${part.name})`}</Badge>
+											) : (
+												hasExposedParts && <Badge tone="neutral" size="sm">internal</Badge>
+											)}
+											<Badge tone="neutral" size="sm" class="ref-selector">{part.selector}</Badge>
+										</Cluster>
 									</Cluster>
 									<Text
 										size="sm"
@@ -422,7 +471,7 @@ const crumbs = [
 					<Stack gap={6}>
 						{component.examples.map((example) => (
 							<Stack gap={2}>
-								<Heading level={3} size="body">{example.title}</Heading>
+								<Heading level={3} size="body" set:html={renderMarkdownInline(example.title)} />
 								<Text
 									size="sm"
 									tone="muted"
@@ -585,12 +634,9 @@ const crumbs = [
 		min-width: 0;
 		overflow-wrap: anywhere;
 	}
-	.ref-lede :global(code) {
-		font-family: var(--font-mono);
+	.ref-lede :global(code),
+	.ref-summary :global(code) {
 		font-size: 0.9em;
-		background: var(--bg-2);
-		padding: 0.1em 0.35em;
-		border-radius: var(--radius-sm);
 	}
 
 	.ref-sections {
@@ -634,11 +680,7 @@ const crumbs = [
 		line-height: var(--leading-normal);
 	}
 	.ref-description :global(code) {
-		font-family: var(--font-mono);
 		font-size: 0.9em;
-		background: var(--bg-2);
-		padding: 0.1em 0.35em;
-		border-radius: var(--radius-sm);
 	}
 
 	.ref-pager__rule {

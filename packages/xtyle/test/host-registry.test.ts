@@ -106,10 +106,11 @@ describe("the registry discovers algorithms rather than listing them", () => {
 		}
 	}, 60_000);
 
-	it("names the algorithms it does have when asked for one it does not", async () => {
+	it("names the algorithms it does have when asked for one it does not, and where more come from", async () => {
 		await expect(resolveInstalledAlgorithm("not-a-mod")).rejects.toThrow(
-			new RegExp(`no algorithm "not-a-mod" in .*installed:.*${defaultAlgorithm()}`),
+			new RegExp(`no algorithm "not-a-mod" \\(installed: .*${defaultAlgorithm()}`),
 		);
+		await expect(resolveInstalledAlgorithm("not-a-mod")).rejects.toThrow(/xtyle add <pack>/);
 	});
 
 	it("points at the filesystem-free twin when there is no algorithms/ directory at all", async () => {

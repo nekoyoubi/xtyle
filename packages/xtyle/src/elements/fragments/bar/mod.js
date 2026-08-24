@@ -69,7 +69,7 @@
       (cat, ci) => `<tr><th scope="row">${escapeAttr(cat)}</th>${series.map((s) => `<td>${escapeAttr(String(s.values[ci] ?? 0))}</td>`).join("")}</tr>`
     ).join("");
     const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
-    return `<table class="xtyle-bar__a11y">${cap}<thead>${head}</thead><tbody>${rows}</tbody></table>`;
+    return `<div class="xtyle-bar__a11y"><table>${cap}<thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
   }
   function verticalPlot(b, series, colors, height) {
     const categories = b.categories ?? [];

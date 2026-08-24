@@ -2,8 +2,15 @@
 	import "@xtyle/core/elements/app-shell.js";
 	import type { Snippet } from "svelte";
 
+	interface AppShellResizeDetail {
+		side: "left" | "right";
+		size: number;
+	}
+
 	interface Props {
 		skipLink?: string | boolean;
+		/** The `id` given to the `<main>` region and targeted by the skip link. */
+		mainId?: string;
 		leftSize?: number | string;
 		rightSize?: number | string;
 		/** Make the left / right rail user-resizable: a drag handle on its inner edge, arrow-key nudges
@@ -16,6 +23,8 @@
 		leftMax?: number;
 		rightMin?: number;
 		rightMax?: number;
+		onresize?: (event: CustomEvent<AppShellResizeDetail>) => void;
+		onresizeend?: (event: CustomEvent<AppShellResizeDetail>) => void;
 		toolbar?: Snippet;
 		left?: Snippet;
 		right?: Snippet;
@@ -27,6 +36,7 @@
 
 	let {
 		skipLink,
+		mainId,
 		leftSize,
 		rightSize,
 		leftResizable,
@@ -35,6 +45,8 @@
 		leftMax,
 		rightMin,
 		rightMax,
+		onresize,
+		onresizeend,
 		toolbar,
 		left,
 		right,
@@ -42,6 +54,22 @@
 		children,
 		...rest
 	}: Props = $props();
+
+	let host: HTMLElement | undefined = $state();
+
+	$effect(() => {
+		if (!host) return;
+		const live = onresize;
+		const settled = onresizeend;
+		const onLive = (event: Event) => live?.(event as CustomEvent<AppShellResizeDetail>);
+		const onSettled = (event: Event) => settled?.(event as CustomEvent<AppShellResizeDetail>);
+		host.addEventListener("resize", onLive);
+		host.addEventListener("resize-end", onSettled);
+		return () => {
+			host?.removeEventListener("resize", onLive);
+			host?.removeEventListener("resize-end", onSettled);
+		};
+	});
 
 	const skipAttr = $derived(skipLink === true ? "" : skipLink || undefined);
 	const railAttr = (v: number | string | undefined) =>
@@ -51,7 +79,9 @@
 
 <xtyle-app-shell
 	{...rest}
+	bind:this={host}
 	skip-link={skipAttr}
+	main-id={mainId}
 	left-size={railAttr(leftSize)}
 	right-size={railAttr(rightSize)}
 	left-resizable={flag(leftResizable)}

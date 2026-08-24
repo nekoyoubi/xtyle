@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { TABS_SIZES } from "../vocab.js";
+import { TABS_SIZES, TABS_OVERFLOWS } from "../vocab.js";
 
 const htmlExample = `<xtyle-tabs variant="underline" label="Account settings" value="profile">
 	<button slot="tab" value="profile">Profile</button>
@@ -55,6 +55,50 @@ import { Tabs } from "@xtyle/astro";
 	</div>
 </Tabs>`;
 
+const overflowHtml = `<!-- The default: eighteen tabs flow onto as many rows as they need. -->
+<xtyle-tabs variant="pill" label="Project settings" value="overview">
+	<span slot="tab" data-value="overview">Overview</span>
+	<span slot="tab" data-value="members">Members</span>
+	<span slot="tab" data-value="webhooks">Webhooks</span>
+	<!-- …fifteen more -->
+	<div slot="panel">Overview panel</div>
+	<div slot="panel">Members panel</div>
+	<div slot="panel">Webhooks panel</div>
+</xtyle-tabs>
+
+<!-- One row, scrolled, for a strip whose order carries meaning. -->
+<xtyle-tabs variant="pill" overflow="scroll" label="Release timeline" value="v1">
+	<span slot="tab" data-value="v1">v1.0</span>
+	<span slot="tab" data-value="v2">v1.1</span>
+	<div slot="panel">v1.0 notes</div>
+	<div slot="panel">v1.1 notes</div>
+</xtyle-tabs>`;
+
+const overflowSvelte = `<script lang="ts">
+	import { Tabs } from "@xtyle/svelte";
+
+	// A data-driven tab count is exactly the case \`wrap\` exists for: nothing
+	// off screen, no gesture required to reach a tab.
+	const tabs = $derived(project.sections.map((s) => ({ value: s.id, label: s.name })));
+	let section = $state("overview");
+</script>
+
+<Tabs {tabs} bind:value={section} label="Project settings" variant="pill">
+	{#snippet panel(value)}
+		<SectionBody id={value} />
+	{/snippet}
+</Tabs>`;
+
+const overflowAstro = `---
+import Tabs from "@xtyle/astro/Tabs.astro";
+const sections = await getSections();
+---
+
+<Tabs variant="pill" label="Project settings" value={sections[0].id}>
+	{sections.map((s) => <span data-xtyle-tab="" data-value={s.id}>{s.name}</span>)}
+	{sections.map((s) => <div data-xtyle-panel=""><SectionBody id={s.id} /></div>)}
+</Tabs>`;
+
 const headlessSvelte = `<script lang="ts">
 	import { Tabs } from "@xtyle/svelte";
 
@@ -106,6 +150,7 @@ export const tabsManifest: ComponentManifest = {
 	description:
 		"Tabs presents one panel of content at a time, switched by a row of tab triggers. It implements the complete WAI-ARIA tabs pattern: a `role=\"tablist\"` of `role=\"tab\"` buttons paired with `role=\"tabpanel\"` regions, roving tabindex (only the selected tab is in the tab order), arrow-key navigation with Home/End jumps, and `aria-selected` / `aria-controls` / `aria-labelledby` wiring done for you. The `activation` knob chooses automatic activation (arrowing selects as you move) or manual (arrow to move focus, Enter/Space to select). Three visual treatments (underline, pill, and enclosed) change the chrome without touching the semantics. Authors declare each tab as a `slot=\"tab\"` (or `data-xtyle-tab`) element and its content as the matching `slot=\"panel\"` (or `data-xtyle-panel`) element; the element pairs them by order, assigns ids, and owns the selection state. Astro consumes a child's `slot` attribute to route it, so the `data-` markers are the ones that survive there.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["panel", "panels", "tab", "tablist", "tabs"],
 	anatomy: [
 		{
 			name: "tabs",
@@ -137,6 +182,12 @@ export const tabsManifest: ComponentManifest = {
 			],
 		},
 		{
+			name: "panels",
+			description:
+				"The region the panels are stacked in — one grid cell they all share, so the strip never reflows as the taller panel takes over. It is the node that has to be bounded for a panel to scroll rather than overflow, which is what `fill` does.",
+			selector: ".xtyle-tabs__panels",
+		},
+		{
 			name: "panel",
 			description: "A content region (role=tabpanel) shown only when its tab is selected; focusable so keyboard users can scroll it.",
 			selector: ".xtyle-tabs__panel",
@@ -165,6 +216,15 @@ export const tabsManifest: ComponentManifest = {
 			description: "Tab trigger size.",
 			bindings: ["html", "svelte", "astro"],
 			options: [...TABS_SIZES],
+		},
+		{
+			name: "overflow",
+			type: "TabsOverflow",
+			default: "wrap",
+			description:
+				"What a strip too wide for its container does. `wrap` (the default) flows the tabs onto as many rows as they need, so every tab stays visible and nothing is hidden behind a gesture. `scroll` keeps them on one row and scrolls, which suits a strip whose tab order carries meaning (a timeline, a wizard) and can afford a scrollbar. Prefer `wrap` when the tab count is data-driven and unbounded.",
+			bindings: ["html", "svelte", "astro"],
+			options: [...TABS_OVERFLOWS],
 		},
 		{
 			name: "activation",
@@ -203,6 +263,14 @@ export const tabsManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "fill",
+			type: "boolean",
+			default: "false",
+			description:
+				"Takes the remaining height of a bounded parent and gives it to the panel region, which scrolls; the tab strip stays put. Without it a panel taller than the host grows the panels area past the host and the overflow escapes to whatever ancestor clips — silently, with no scrollbar. Setting `overflow` on the panel from outside cannot fix that, because the panel is a grid item of an area that is itself unbounded.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "tablist",
 			type: "boolean",
 			default: "false",
@@ -214,8 +282,15 @@ export const tabsManifest: ComponentManifest = {
 			name: "tabs",
 			type: "TabItem[]",
 			description:
-				"Svelte only: an array of `{ value, label, disabled? }` declaring the tabs; panel content comes from the `panel` snippet keyed by value.",
+				"Svelte only: an array of `{ value, label, disabled? }` declaring the tabs; panel content comes from the `panel` snippet keyed by value. The same list is `items` on every other binding.",
 			bindings: ["svelte"],
+		},
+		{
+			name: "items",
+			type: "TabItem[]",
+			description:
+				"The tabs as data instead of authored `[slot=\"tab\"]` / `[slot=\"panel\"]` pairs: an array of `{ value, label, disabled? }`, serialized to JSON on the attribute. The Svelte binding spells the same list `tabs`.",
+			bindings: ["html", "astro"],
 		},
 		{
 			name: "lazy",
@@ -225,6 +300,9 @@ export const tabsManifest: ComponentManifest = {
 				"Svelte only: mount a panel's `panel` snippet only once its tab is first shown, then keep it mounted (keep-alive). Off by default (every panel renders up front). Reach for it when panels are heavy (an editor, a chart, a data grid) or must lay out only while visible; the tab strip, roving focus, and a11y are unchanged. The active panel mounts on the client after hydration, so an SSR page shows it a beat later.",
 			bindings: ["svelte"],
 		},
+	],
+	events: [
+		{ name: "change", detail: "{ value, index }", description: "The selected tab changed.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{
@@ -320,6 +398,8 @@ export const tabsManifest: ComponentManifest = {
 		"--radius-none",
 		"--radius-sm",
 		"--ring",
+		"--scrollbar-thumb",
+		"--scrollbar-track",
 		"--selection-cue",
 		"--space-0",
 		"--space-1",
@@ -333,6 +413,7 @@ export const tabsManifest: ComponentManifest = {
 		"--weight-medium",
 	],
 	composition: [
+		"Tabs re-keys the children it adopts (`tab` becomes `label-N`, `panel` becomes `panel-N`) so its shadow can address each pair, which means a child's `slot` attribute belongs to the component after first adoption. A framework that reconciles attributes must leave `slot` alone; re-asserting the authored value un-matches the shadow's named slot and every child falls out of the component - right on the first paint, wrong on every repaint after, and silent either way.",
 		"Pair each panel's content with any other component: a Field-laden form, a Card grid, a table.",
 		"Use `activation=\"manual\"` when switching tabs is expensive (each panel fetches data), so arrowing previews focus without triggering loads.",
 		"Drive `value` from app state and listen for the `change` event (CustomEvent with `detail.value`) to keep tabs and routing in sync.",
@@ -355,6 +436,13 @@ export const tabsManifest: ComponentManifest = {
 			description:
 				"The same tablist semantics across the three treatments; declare tabs and panels as paired slotted elements (or, in Svelte, a `tabs` array plus a `panel` snippet).",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "overflowing-strip",
+			title: "More tabs than room",
+			description:
+				"A strip too wide for its container wraps onto more rows by default, so every tab stays visible and reachable without a gesture. Set `overflow=\"scroll\"` to keep them on one row instead, which suits a strip whose left-to-right order is part of the meaning.",
+			source: { html: overflowHtml, svelte: overflowSvelte, astro: overflowAstro },
 		},
 		{
 			id: "headless-tablist",

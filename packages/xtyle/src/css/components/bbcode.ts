@@ -46,6 +46,14 @@ export const bbcodeCss = `
 	display: none;
 }
 
+.xtyle-bbcode__body > xtyle-code,
+.xtyle-bbcode__body > xtyle-accordion,
+.xtyle-bbcode__body > xtyle-table,
+.xtyle-bbcode__body > xtyle-separator,
+.xtyle-bbcode__body > xtyle-heading {
+	margin: var(--space-4) 0;
+}
+
 .xtyle-bbcode__body > :first-child { margin-top: 0; }
 .xtyle-bbcode__body > :last-child { margin-bottom: 0; }
 

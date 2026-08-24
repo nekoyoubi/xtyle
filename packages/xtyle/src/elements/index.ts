@@ -105,7 +105,7 @@ export { XtyleTooltip } from "./tooltip.js";
 export { XtyleTabs } from "./tabs.js";
 export { XtyleBreadcrumb } from "./breadcrumb.js";
 export { XtyleSkeleton } from "./skeleton.js";
-export { XtyleDialog } from "./dialog.js";
+export { XtyleDialog, type DialogCloseReason } from "./dialog.js";
 export { XtyleSheet } from "./sheet.js";
 export { XtyleSplitButton } from "./split-button.js";
 export { XtyleSpotlight } from "./spotlight.js";

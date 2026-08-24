@@ -253,10 +253,35 @@ export interface KnobSpec {
 	unit?: string;
 }
 
+/**
+ * The floors an algorithm states as its own policy, so a grader holds it to what it promised rather
+ * than to a number the engine picked. Every entry is the algorithm's opinion; the engine only carries
+ * it. An absent entry means the algorithm has said nothing and a grader falls back to the standard.
+ */
+export interface AlgorithmDeclarations {
+	/**
+	 * The contrast `--ring` is promised to read at against every surface it can be drawn on. Declaring
+	 * *below* the 3:1 of WCAG 2.2 SC 1.4.11 is allowed and is a real position for a posture to take —
+	 * `auditRegister` reports the standard alongside whatever it graded, so a lower floor reads as a
+	 * stated trade rather than as a pass.
+	 */
+	focusRingFloor?: number;
+	/**
+	 * The schemes this algorithm states an anchor pair for. A grader reads it to know whether the
+	 * other half is a theme the algorithm answers for or just a lightness flip of the one it does.
+	 *
+	 * Absent or single-entry means one stated half. The other still derives and is still reachable;
+	 * the algorithm just never claimed it.
+	 */
+	schemes?: Scheme[];
+}
+
 export interface Algorithm {
 	id: string;
 	/** The xtyle version this algorithm first shipped in. Absent reads as the floor. */
 	since?: string;
+	/** What this algorithm promises about its own output, for a grader to hold it to. */
+	declares?: AlgorithmDeclarations;
 	produces: TokenName[];
 	/**
 	 * When a token arrived, keyed by token name, for the ones that did not arrive at the beginning.

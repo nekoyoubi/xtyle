@@ -111,6 +111,69 @@ import CommandPalette from "@xtyle/astro/CommandPalette.astro";
 	};
 <\/script>`;
 
+const lineHtmlExample = `<xtyle-command-palette id="line" complete-first label="Command line"></xtyle-command-palette>
+
+<script type="module">
+	import "@xtyle/core/elements";
+
+	const palette = document.querySelector("#line");
+	palette.items = [
+		{ id: "rect", label: "rect <x,y> <w,h> [color]", hint: "draw a rectangle" },
+		{ id: "goto", label: "goto <line>", hint: "jump to a line" },
+		{ id: "clear", label: "clear", hint: "wipe the layer" },
+	];
+
+	// recents are whole lines, so history keeps the rectangle and not just "rect"
+	let history = ["rect 10,10 40,40 azul", "goto 214"];
+	palette.recent = history;
+
+	palette.addEventListener("select", (event) => {
+		const { id, query } = event.detail;
+		const line = query.trim().split(/\\s+/)[0] === id ? query.trim() : id;
+		run(line);
+		if (line !== id) palette.recent = history = [line, ...history.filter((seen) => seen !== line)].slice(0, 8);
+	});
+<\/script>`;
+
+const lineSvelteExample = `<script lang="ts">
+	import { CommandPalette } from "@xtyle/svelte";
+
+	const items = [
+		{ id: "rect", label: "rect <x,y> <w,h> [color]", hint: "draw a rectangle" },
+		{ id: "goto", label: "goto <line>", hint: "jump to a line" },
+		{ id: "clear", label: "clear", hint: "wipe the layer" },
+	];
+
+	let history = $state(["rect 10,10 40,40 azul", "goto 214"]);
+
+	function onselect(event: CustomEvent) {
+		const { id, query } = event.detail;
+		const line = query.trim().split(/\\s+/)[0] === id ? query.trim() : id;
+		run(line);
+		if (line !== id) history = [line, ...history.filter((seen) => seen !== line)].slice(0, 8);
+	}
+<\/script>
+
+<!-- Enter on a half-typed name completes it; Enter on a finished name runs the line -->
+<CommandPalette {items} completeFirst recent={history} {onselect} />`;
+
+const lineAstroExample = `---
+import CommandPalette from "@xtyle/astro/CommandPalette.astro";
+
+const items = [
+	{ id: "rect", label: "rect <x,y> <w,h> [color]", hint: "draw a rectangle" },
+	{ id: "goto", label: "goto <line>", hint: "jump to a line" },
+	{ id: "clear", label: "clear", hint: "wipe the layer" },
+];
+---
+
+<CommandPalette id="line" {items} completeFirst label="Command line" />
+
+<script>
+	const palette = document.querySelector("#line");
+	palette.recent = ["rect 10,10 40,40 azul", "goto 214"];
+<\/script>`;
+
 export const commandPaletteManifest: ComponentManifest = {
 	id: "command-palette",
 	name: "Command Palette",
@@ -122,6 +185,7 @@ export const commandPaletteManifest: ComponentManifest = {
 	description:
 		"CommandPalette is the surface behind Ctrl-K. It takes the whole list of things an app can do, filters it as the user types, groups what survives, spells out each command's own shortcut in keycaps, and runs the one they land on.\n\nIt filters *itself*. A palette handed a pre-filtered list is just a list, so the component ships a working ranker: a subsequence matcher, which is why `of` finds \"Open File\" and `gcm` finds \"Git: Commit Message\". It scores runs, word starts, and camelCase humps, docks late and long matches, and falls back to an item's `group`, `hint`, and `keywords` so a command surfaces on a synonym it never displays. The matched characters come back marked in the label. Nothing about that is load-bearing: assign a `scorer` and the palette ranks with yours instead — a real fuzzy library, a usage-weighted model, a server-side search — and renders whatever you return, in the order you score it. That is the whole extension point, and it is one function.\n\nThe surface is a native `<dialog>`, so the scrim, the focus trap, and Escape are the platform's rather than a re-derived imitation. Focus stays in the input the entire time: the list is a `listbox` under *virtual* focus (`aria-activedescendant`), so ↑/↓ walk the commands while the caret keeps typing. Enter runs the active command, Escape dismisses, and focus goes back to whatever had it when the palette opened — a button, a menu item, a text caret mid-document. Home and End are deliberately left alone; they belong to the caret in an editable combobox, and stealing them is the classic palette bug.\n\nRecently-run commands lift to the top of the unfiltered list under their own heading — free, and the affordance every real palette grows within a week. Point `storage-key` at a `localStorage` key and they survive the reload. Give it a `hotkey` (`mod+k`, ⌘ on Apple and Ctrl elsewhere) and it binds itself to the document; the docs site you are reading uses exactly that.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["dialog", "empty", "footer", "glyph", "group", "heading", "hint", "input", "key", "keys", "label", "legend", "list", "match", "option", "palette", "results", "search"],
 	anatomy: [
 		{
 			name: "palette",
@@ -228,7 +292,8 @@ export const commandPaletteManifest: ComponentManifest = {
 			type: "CommandScorer",
 			description:
 				"The ranking override: `(query, item) => CommandMatch | null`. Return `null` to drop an item, or `{ score, indices? }` to keep it — higher scores rank earlier, and `indices` are the label characters to highlight. Defaults to the built-in subsequence matcher. Property only; it is a function.",
-			bindings: ["html", "svelte", "astro"],
+			bindings: ["html", "svelte"],
+			propertyOnly: true,
 		},
 		{
 			name: "query",
@@ -236,6 +301,7 @@ export const commandPaletteManifest: ComponentManifest = {
 			default: '""',
 			description: "The live filter text. Setting it re-filters and re-ranks, exactly as typing does.",
 			bindings: ["html", "svelte"],
+			propertyOnly: true,
 		},
 		{
 			name: "hotkey",
@@ -269,8 +335,9 @@ export const commandPaletteManifest: ComponentManifest = {
 			name: "recent",
 			type: "string[]",
 			description:
-				"The ids of recently-run commands, most recent first. Read it to persist them yourself; assign it to seed them from your own store.",
+				"What was run recently, most recent first. Read it to persist them yourself; assign it to seed them from your own store. An entry naming a command in `items` renders that command; one that names nothing renders as itself, so a palette whose query carries arguments can remember whole lines — `rect 10,10 40,40 azul` rather than the fact that you once ran `rect`. Selecting a line reports it as the `select` event's `id`.",
 			bindings: ["html", "svelte"],
+			propertyOnly: true,
 		},
 		{
 			name: "recentLabel",
@@ -313,6 +380,14 @@ export const commandPaletteManifest: ComponentManifest = {
 			default: "false",
 			description:
 				"Keep the palette open after a command runs — for a surface whose commands toggle state rather than navigate away.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "completeFirst",
+			type: "boolean",
+			default: "false",
+			description:
+				"Make Enter commit a command's name before it runs anything. Landing on a command the query's first word does not already name — half-typed, fuzzy-matched, or arrowed to — fills the name in and waits, so a second Enter runs it; `cl` cannot wipe a layer on one keystroke. Once the first word names the command, Enter runs it, arguments and all. Leave it off for an index of complete commands, where one Enter should run what you landed on; turn it on for a palette whose query carries a command's arguments. While it is on, a query whose first word is a command's id matches that command and leads the list, so a completed name never filters itself out.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -380,6 +455,33 @@ export const commandPaletteManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
+	events: [
+		{ name: "open", description: "The palette opened. The query is always empty at this point.", bindings: ["html", "svelte", "astro"] },
+		{ name: "close", detail: "{ reason: \"escape\" | \"dismiss\" | \"select\" | \"api\" }", description: "The palette closed, however it closed.", bindings: ["html", "svelte", "astro"] },
+		{ name: "query", detail: "{ query }", description: "The filter text changed. What a palette whose commands take arguments watches.", bindings: ["html", "svelte", "astro"] },
+		{ name: "select", detail: "{ id, label, item, index, query }", description: "A command was run.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "show",
+			description: "Open the palette, remembering what had focus so closing can hand it back.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "close",
+			params: "reason?: \"escape\" | \"dismiss\" | \"select\" | \"api\"",
+			description: "Close the palette and return focus to wherever it came from. The reason rides along on the `close` event.",
+			bindings: ["html", "svelte"],
+		},
+		{ name: "toggle", description: "Open if closed, close if open — what the hotkey does.", bindings: ["html", "svelte"] },
+		{
+			name: "run",
+			params: "id: string",
+			description:
+				"Run a command by id, exactly as selecting it would: the `select` event, the recents bump, the close. Does nothing for an id that is missing or disabled.",
+			bindings: ["html", "svelte"],
+		},
+	],
 	variants: [],
 	sizes: [],
 	states: [
@@ -436,6 +538,8 @@ export const commandPaletteManifest: ComponentManifest = {
 		"--weight-semibold",
 	],
 	composition: [
+		"While open, the host relocates to `document.body` — a modal `<dialog>` anchors to the nearest ancestor that establishes a containing block, so one declared inside a transformed or filtered panel would center on that panel rather than the viewport. The consequence is that it stops being a descendant of whatever declared it, precisely while it is visible: a `bind:this` container query and a framework-scoped selector both go dead on open and come back on close. Reach it by `id` (`document.getElementById`, `:global(#that-id)`), which survives the move.",
+		"An inherited property an app sets document-wide (`cursor`, `font-family`) reaches this component's internals only through its light-DOM host, so set it on the host rather than on the rendered `dialog`. A document-level rule cannot cross the shadow boundary, which is why an app that hides the OS cursor gets a cursorless overlay until the declaration moves onto the element itself.",
 		"Give every command in your app an entry and bind `hotkey=\"mod+k\"`. That is the whole integration: one element, one list, one `select` handler.",
 		"`group` is what the headings are made of. Group by surface (File, View, Git), not by rarity — the filter already handles rarity.",
 		"Put the command's real shortcut in `shortcut` and the palette spells it in `Kbd` keycaps, so the palette teaches the shortcut that makes it unnecessary.",
@@ -466,6 +570,13 @@ export const commandPaletteManifest: ComponentManifest = {
 			description:
 				"The override hook: one function. Return `null` to drop an item, `{ score, indices }` to keep it. The palette renders whatever you return, in the order you score it.",
 			source: { html: scorerHtmlExample, svelte: scorerSvelteExample, astro: scorerAstroExample },
+		},
+		{
+			id: "command-line",
+			title: "A command line, where the query carries the arguments",
+			description:
+				"`completeFirst` makes Enter commit a name before it runs anything, so `cl` fills in `clear` and waits rather than wiping the layer on one keystroke. Recents are whole lines rather than command ids, because an id can only remember that you ran `rect`, never the rectangle.",
+			source: { html: lineHtmlExample, svelte: lineSvelteExample, astro: lineAstroExample },
 		},
 	],
 };

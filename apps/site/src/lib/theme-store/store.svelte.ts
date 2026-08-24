@@ -37,30 +37,29 @@ class ThemeStore {
 	private backend: StoreBackend = defaultBackend();
 	private suppressPersist = false;
 
+	constructor() {
+		this.hydrate();
+	}
+
 	get docs(): ThemeDoc[] {
-		this.ensureHydrated();
 		return this.docsState;
 	}
 
 	get activeId(): string | null {
-		this.ensureHydrated();
 		return this.activeIdState;
 	}
 
 	get activeDoc(): ThemeDoc | null {
-		this.ensureHydrated();
 		const id = this.activeIdState;
 		if (id === null) return null;
 		return this.docsState.find((doc) => doc.id === id) ?? null;
 	}
 
 	get selectedId(): string | null {
-		this.ensureHydrated();
 		return this.selectedIdState;
 	}
 
 	get selectedDoc(): ThemeDoc | null {
-		this.ensureHydrated();
 		const id = this.selectedIdState;
 		if (id === null) return null;
 		return this.docsState.find((doc) => doc.id === id) ?? null;

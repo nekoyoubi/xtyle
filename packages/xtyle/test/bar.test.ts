@@ -46,7 +46,7 @@ describe("bar chart", () => {
 
 	it("mirrors the data into a visually-hidden table for assistive tech", async () => {
 		const html = await renderFragmentLight("bar", bindings);
-		expect(html).toContain('class="xtyle-bar__a11y"');
+		expect(html).toContain('class="xtyle-bar__a11y"><table>');
 		expect(html).toContain("<caption>Revenue</caption>");
 		expect(html).toContain("<th scope=\"col\">Web</th>");
 	});

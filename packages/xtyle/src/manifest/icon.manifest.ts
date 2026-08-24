@@ -1,6 +1,6 @@
 import type { ComponentManifest } from "./types.js";
 import { PALETTES } from "../series.js";
-import { FULL_TONES } from "../vocab.js";
+import { FULL_TONES, ICON_SIZES } from "../vocab.js";
 import { ICON_NAMES } from "../icons.js";
 
 const htmlExample = `<xtyle-icon name="search"></xtyle-icon>
@@ -241,9 +241,10 @@ export const iconManifest: ComponentManifest = {
 			name: "size",
 			type: "IconSize",
 			default: "md",
-			description: "The glyph size, stepping in `em` off the surrounding text: `sm`, `md`, `lg`, `xl`. Omit to match the current text size.",
+			description:
+				"The glyph size, stepping in `em` off the surrounding text: `xs`, `sm`, `md`, `lg`, `xl`. Omit to match the current text size. The scale shares its floor with Button's, so an `xs` control can hold an `xs` glyph. When a layout constraint wants an exact figure rather than a step, set `--xtyle-icon-size` on the host and it wins over whichever step is named.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["sm", "md", "lg", "xl"],
+			options: [...ICON_SIZES],
 		},
 		{
 			name: "tone",
@@ -278,6 +279,7 @@ export const iconManifest: ComponentManifest = {
 	],
 	variants: [],
 	sizes: [
+		{ name: "xs", description: "The floor of the scale, matching an `xs` Button so the smallest control can hold a correctly-sized glyph.", className: "xtyle-icon--xs" },
 		{ name: "sm", description: "A compact glyph for dense inline hints.", className: "xtyle-icon--sm" },
 		{ name: "md", description: "The default glyph, matching body text.", className: "xtyle-icon", isDefault: true },
 		{ name: "lg", description: "A prominent glyph for a featured control.", className: "xtyle-icon--lg" },
@@ -293,6 +295,8 @@ export const iconManifest: ComponentManifest = {
 	slots: [],
 	consumedTokens: [...FULL_TONES.map((t) => `--${t}`)],
 	composition: [
+		"Contribute glyphs with `registerIcons({ name: body })`, or with `{ body, viewBox, strokeWidth }` when the artwork was drawn somewhere other than the roster's 24x24 grid - the registry fits it the way `preserveAspectRatio=\"xMidYMid meet\"` would, so a 32-grid or 16-pixel-grid mark registers unedited instead of being re-pathed by hand. A second argument carries set-wide defaults, so a pack drawn entirely at one weight says so once.",
+		"Size a glyph with the scale or with `--xtyle-icon-size`, not with `width` / `height`. The mark draws at `1em` inside the element, so sizing the *box* leaves a text-sized glyph floating in a large empty one - which half-works, which is what makes it cost time.",
 		"Drop an Icon inside a `Button` before or after the label for an icon-and-text control, or on its own in an icon-only button.",
 		"Set an Icon inline in `Text` at its default size to sit a glyph on the baseline mid-sentence.",
 		"Pair `tone` with a matching status glyph (`success` + `tone=\"success\"`) for a colored inline indicator.",

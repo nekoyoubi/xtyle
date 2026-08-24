@@ -99,6 +99,7 @@ export const buttonManifest: ComponentManifest = {
 	description:
 		"Button triggers an action or navigates. Visual treatment (`variant`) and semantic color (`tone`) are independent axes: any of the five variants (solid, outline, ghost, subtle, link) can carry any of the six tones (accent, neutral, danger, success, warn, info). It renders a native `<button>` by default and an `<a>` when given an `href`, so the same component covers both actions and links. Icon slots, an icon-only square form, a loading state with an inline accessible spinner, and a full-width block mode round out the surface.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["button", "icon-end", "icon-start", "label", "spinner"],
 	anatomy: [
 		{
 			name: "root",
@@ -223,10 +224,18 @@ export const buttonManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "focusable",
+			type: "boolean",
+			default: "true",
+			description:
+				"Set `false` to keep the control out of sequential focus navigation. A component rendering a native control makes it tab-reachable whether or not the app wants it: an app driving selection from its own keyboard cursor otherwise gets two focus rings that diverge, and Enter activates through both, firing one keypress twice. The host's own `tabindex` cannot express this, because focus lands on the inner control rather than the host.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "selected",
 			type: "boolean",
 			description:
-				"Marks the button as selected within a set and reflects its state to `aria-selected`; distinct from `pressed`'s on/off toggle. Set it (`selected` / `selected=\"true\"`) for selected, `selected=\"false\"` for not, and omit it entirely for a button with no selection semantics. Controlled: flip it in your own click handler; the button reflects state, it does not self-toggle.",
+				"Marks the button as the current one within a set and reflects its state to `aria-current`; distinct from `pressed`'s on/off toggle. `aria-selected` is only valid on `tab` / `option` / `row` roles, so a button carries `aria-current` instead. Set it (`selected` / `selected=\"true\"`) for selected, `selected=\"false\"` for not, and omit it entirely for a button with no selection semantics. Controlled: flip it in your own click handler; the button reflects state, it does not self-toggle.",
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
@@ -289,8 +298,8 @@ export const buttonManifest: ComponentManifest = {
 		},
 		{
 			name: "selected",
-			description: "Selected within a set: `aria-selected=\"true\"` paints the selected overlay persistently, so a chosen pill reads as active across every variant.",
-			selector: '.xtyle-button[aria-selected="true"]',
+			description: "Current within a set: `aria-current=\"true\"` paints the selected overlay persistently, so a chosen pill reads as active across every variant.",
+			selector: '.xtyle-button[aria-current="true"]',
 			tokens: ["--state-selected"],
 		},
 		{
@@ -370,7 +379,7 @@ export const buttonManifest: ComponentManifest = {
 		"`disabled` blocks interaction; on an anchor it applies `aria-disabled` and drops `href` (anchors cannot be natively disabled).",
 		"`loading` sets `aria-busy=\"true\"` and prevents activation.",
 		"`pressed` makes it a toggle via `aria-pressed`; it is controlled, so the consumer flips the state on click. The button reflects, it does not self-toggle.",
-		"`selected` marks membership in a set via `aria-selected` (distinct from `pressed`); it is controlled the same way. The consumer flips it, the button reflects.",
+		"`selected` marks membership in a set via `aria-current` (distinct from `pressed`); it is controlled the same way. The consumer flips it, the button reflects.",
 		"The icon-only form has no visible text, so it REQUIRES an `aria-label`; the binding warns at runtime when one is missing.",
 		"Focus is shown with a token ring and a transparent outline that the forced-colors base rule promotes to a real system outline.",
 		"The spinner is decorative (`aria-hidden`); busy state is conveyed by `aria-busy`, not the spinner.",

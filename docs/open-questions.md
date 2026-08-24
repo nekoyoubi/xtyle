@@ -79,10 +79,36 @@ bindings.)
 - Ramp stop count / names: the swatch ladder (`--color-*`) carries a monotonic lightness ramp;
   the exact named-stop vocabulary beyond the four-token family is the one piece still soft.
 
-## 4. Spacing scale shape
+## 4. Spacing scale shape: RESOLVED
 
-Numeric step scale (`--space-1..16`) vs named (`--space-xs..xl`). How density
-modes compose over it (multiplier vs override).
+Both halves went the way the question's first option pointed, and the code has been shipping the
+answer for long enough that leaving this open was the record lagging rather than a live fork.
+
+**Numeric, and shorter than proposed.** The scale is `--space-0` through `--space-8`, nine steps,
+linear at a quarter-rem stride (`0 · 0.25 · 0.5 · 0.75 · 1 · 1.25 · 1.5 · 1.75 · 2` rem at
+`normal`). Not named (`xs..xl`), and not the `1..16` the question sketched — nine steps covers the
+component set with every step used, and a step nobody reaches for is a token the theme still has to
+carry. Components address it by index (`gap` on `Stack` / `Cluster` / `Grid` takes `0–8`), which is
+what makes the numeric form worth its terseness: a named scale would need a mapping table at every
+call site.
+
+**Density is a multiplier, not an override.** The `density` knob (`compact` / `normal` /
+`comfortable`, default `normal`) scales the whole ramp uniformly rather than substituting a second
+set of values:
+
+| step | compact | normal | comfortable |
+|---|---|---|---|
+| `--space-1` | 0.2rem | 0.25rem | 0.3125rem |
+| `--space-4` | 0.8rem | 1rem | 1.25rem |
+| `--space-8` | 1.6rem | 2rem | 2.5rem |
+
+0.8x and 1.25x off `normal`, exactly. The consequence worth naming: **a component that reads
+`--space-N` gets density for free and can never disagree with it**, because there is no second
+scale to fall out of sync with. An override model would have let one surface ship a compact ramp
+while its neighbour stayed normal, which is the failure a derived token set exists to prevent.
+
+The multiplier is the *algorithm's* policy, not an engine law — a pack is free to derive a
+non-uniform ramp, or to ignore density entirely.
 
 ## 5. Type ramp extent: RESOLVED
 
@@ -173,32 +199,82 @@ a typo into a quietly different design. `color` / `list` kinds are intentionally
 the type yet (a boolean folds onto `select`, a color onto the token-override tier);
 they can join if a real knob needs one.
 
-## 10. Discovery & resolution: sub-forks
+## 10. Discovery & resolution: MOSTLY RESOLVED (the CLI is real)
 
-The shape is settled (`repo-layout.md` → "Discovery & resolution"): manifest-declared
-packs, shape-dispatched refs, `#name` selectors, an npm-derived index, a `@handle`
-author shorthand. The open details:
+The shape was always settled (`repo-layout.md` → "Discovery & resolution"). The
+sub-forks below said "settle once the CLI is real", and `xtyle search` / `xtyle add` /
+`xtyle packs` are now built, so they are settled by what shipped rather than by
+argument:
 
-- **Reference grammar finalization**: the exact accepted shapes and the selector
-  char (`#name` vs `:name` vs `/name`). Settle once the CLI is real.
-- **`@handle` vs `@scope/pkg` disambiguation**: reserve bare `@handle` (no slash)
-  for the author-profile index, `@scope/pkg` for npm. Confirm no edge cases bite.
-- **Index source**: npm-derived (keyword / scope / maintainer queries) vs an
-  author-published **profile manifest** vs both. Where the profile lives (served by
-  xtyle.dev? a `<owner>/xtyle-profile` repo?) and how cross-scope / GitHub packs
-  aggregate.
-- **Pack manifest schema**: the exact `xtyle` field / `xtyle.json` shape that
-  enumerates `{ algorithms, themes }` (names, kinds, entry points, version pins).
-- **Install-time trust for CLI `add`**: npm install runs unsandboxed postinstall;
-  decide whether xtyle leans on plain npm trust or adds any vetting / lockfile
-  discipline. (Run-time is already safe via the xript sandbox.)
+- **Reference grammar** — RESOLVED. `@scope/pkg` and a bare name are npm,
+  `owner/repo` is GitHub, `./path` and `/path` and `C:\path` are paths, a `scheme://`
+  or `file:` is a tarball URL, and bare `@handle` is an author. `@version` pins
+  (a committish, for GitHub). The selector char is `#name`, uniformly across every
+  shape. A GitHub committish therefore goes in the version position
+  (`owner/repo@main`), translated back to npm's own `owner/repo#main` at the install
+  boundary: `#` means exactly one thing on a xtyle reference, which is the property
+  that makes a selector portable across npm / GitHub / tarball.
+- **`@handle` vs `@scope/pkg`** — RESOLVED, no edge case bit. The slash is the whole
+  test, and it is unambiguous because npm forbids a bare `@scope` as a package name.
+  A version on an author (`@handle@1.0.0`) is refused rather than guessed at.
+- **Index source** — RESOLVED as npm-derived, and the profile manifest is not built.
+  `keywords:xtyle-pack` scopes every query; `@handle` becomes `maintainer:`, `@scope/`
+  becomes `scope:`. A profile manifest only earns its keep for an author spanning
+  scopes *or* distributing off-npm, which is a real case and a later one — it is an
+  addition to this, not a fork in it.
+- **Pack manifest schema** — RESOLVED. `{ algorithms: [{ name, entry, description? }],
+  themes: [...] }`, in the `xtyle` field of `package.json` or a standalone `xtyle.json`
+  (the file wins when both exist). Two departures from the sketch: an entry carries no
+  `kind`, because the list it sits in already says so and a second spelling could only
+  ever disagree with the first; and no version pin, because the pack *is* an npm
+  package and its own version is the pin.
+- **Install-time trust** — RESOLVED as plain npm trust, said out loud. `add` prints
+  that install scripts are not sandboxed and that the sandbox covers the moment an
+  algorithm *runs*, which is a different moment. No vetting layer, no second lockfile:
+  a bespoke trust story would imply a guarantee xtyle cannot make.
+
+Still open, and genuinely:
+
+- **What `#name` restricts.** It selects for *verification and reporting* at install
+  time and for *resolution* when one entry is being named — it does not hide the pack's
+  other entries afterwards. Making it do so would need xtyle to keep an exclusion list
+  per project, which is state that rots the moment the pack updates. Revisit only if a
+  real pack ships enough unwanted entries for the clutter to bite.
+- **The author profile manifest**, per the index note above.
+- **Browser-side resolution.** `searchPacks` is neutral and the site can query the same
+  index today, but fetching a *pack* from a CDN into the in-browser host (so the
+  generator can derive with any published algorithm) is not built.
 
 ## 11. Derivation quality under real-world anchors: sub-forks
 
 Scrutiny across five real-world themes (light corporate, warm brand, near-monochrome,
 high-vibrancy, high-contrast) rendered over the full component set confirmed the
 chassis holds everywhere: the `fg-0..3` text ramp and the surface *lightness* spacing
-are even, monotonic, and AA/AAA in every theme. It also surfaced where the algorithm
+are even, monotonic, and AA/AAA in every theme.
+
+**That holds for *anchors*, not for *pins*, and the difference is now measured.** Every one of those
+five themes supplied `--bg-0` / `--accent` and let the ramp derive. Pin `--fg-0` itself — which no
+gauntlet run does, since `CONSTRAINT_TARGETS` draws from five other tokens — and the ramp walks the
+anchor toward the contrast floor with no headroom left to walk into, so `--fg-1/2/3` all land back on
+it. Four text levels, one colour, on all five algorithms; `nxi-nite` inverts instead, pushing the
+lower steps past the anchor to a pole. Every contrast pair still passes, because each step is as
+legible as the anchor: the theme is safe and its hierarchy has stopped existing. The audit's
+`rampSeparation` reports it (distance per adjacent step, plus `reversed` for a step that jumps the
+wrong way). **Whether anything should gate is DECIDED: it does not.** Separation stays a report across the
+board — `roleSeparation`, `fillSurface` and `rampSeparation` are measured, published, and ignored by
+`passes`, deliberately and not as a stopgap. Measuring is cheap and safe; gating spends someone's shipped
+theme, and the `--danger` boundary grade already proved a damning number can describe a control that
+renders correctly. **And when a pin makes the hierarchy impossible, `derive()` collapses quietly**, which
+is today's behaviour: it stays honest about contrast and silent about hierarchy rather than breaking the
+floor or overriding the author's pin. Do not re-open either as though it were pending.
+**A pinned *surface* over-constrains the same way, and reaches further.** Pin `--bg-1` across the
+light/dark line from the page (`#8a8a8a` on a near-black `--bg-0`, or `#222222` on a near-white one) and
+the surface ladder re-threads correctly — `--bg-2` follows the pin — while every ink collapses onto one
+value and fails on the surface that moved: `--fg-1 on --bg-1` at 2.63, `--neutral-text` at 1.14, twelve
+failing pairs. It is unsatisfiable rather than mis-derived: each ink is *one* token contracted to read on
+the page base and both panel steps, so surfaces that straddle leave it no value. The audit reports
+`surfacePolarity` so the twelve read as one cause rather than twelve, and stays silent whenever the
+surfaces sit on one side. It also surfaced where the algorithm
 passes its per-token AA invariant while failing the *product*: the gauntlet checks
 each token in isolation, so none of these were caught. Each is per-algorithm policy,
 not architecture:
@@ -206,7 +282,9 @@ not architecture:
 - **Accent-2/3/4 identity: SETTLED — it is a knob, not a taste.** This began as "shade ladder vs
   harmonic," became an algorithm-declared taste field (`accentFan`), and has now landed where it
   belonged: **`accentStrategy` is a first-class knob** on the shared derivation, taking `fan`
-  (the default: 2/3 flank the accent at ∓`accentSplit`, 4 is its 180° complement), `step` (an even
+  (the default: 2/3 flank the accent at ∓`accentSplit`, and 4 takes the widest gap the three leave,
+  which with symmetric flanks is the accent's 180° complement and with a pinned flank is wherever the
+  pin left room), `step` (an even
   hue-walk, each accent one `accentShiftStep` past the last, chaining a pinned wing with it),
   `shade` (2/3/4 hold the accent's hue and step its lightness — a tint up, two deeper shades down),
   or `duo` (two brand anchors: `--accent` *and* `--accent-2` are inputs, and 3/4 are their shades,
@@ -235,13 +313,45 @@ not architecture:
   fills) is pushed away from `--bg-0` along lightness (hue and chroma preserved) until it clears a
   minimum `1.5:1` separation, and a `solid fills separate from --bg-0` gauntlet invariant guards the
   line. A healthy chromatic fill already clears it and is untouched (amber `1.88`, vivid blue `4.53`),
-  so only the degenerate near-coincident cases move; a pinned fill is honored verbatim. What *remains*
-  open is purely the **categorical taste fork for the *hue* strategies**: a pure-gray accent still fans
-  `accent-2/3/4` into four byte-identical grays under `fan` / `step` (hue rotation is a no-op with no
-  chroma to turn), and whether that hue fan should borrow the status chroma-floor so a muted brand's
-  accents stay mutually distinguishable. The `shade` and `duo` strategies (§11 first bullet) sidestep it
-  by separating on lightness instead of hue; whether a *hue* strategy should chroma-floor a near-gray fan
-  is a look call, not a safety one; surface, don't force.
+  so only the degenerate near-coincident cases move; a pinned fill is honored verbatim.
+
+  **The hue-strategy chroma fork this bullet used to leave open is CLOSED, and the claim it rested on was
+  stale.** `FAN_MIN_CHROMA` (0.045) floors the *fan base* for every strategy, so a pure-gray accent does
+  not fan into four identical grays: measured, `#808080` yields wings at chroma 0.045 across hues 316 / 45
+  / 180 under `fan` and 88 / 180 / 270 under `step`, all four distinct, with `--accent` itself honored
+  verbatim at chroma 0. Anyone re-reading the old wording would have gone looking for a floor that was
+  already there.
+
+  What the floor did *not* cover is the rails, and writing the invariant the fork kept circling — "the
+  accent family stays mutually distinguishable", pairwise, failing when ΔL and ΔC are both tiny and the
+  chroma-weighted hue arc is too — turned up three real collapses the per-token gauntlet never saw:
+
+  - **`shade` near a lightness rail: FIXED.** A dark accent (L 22) stepped down twice, both rungs clamped
+    to the floor, and 3/4 emitted one hex digit apart. The ladder now walks away from the nearer rail and
+    keeps its tint-up-two-down posture whenever both sides have room.
+  - **`fan` / `step` at the top of the ramp: FIXED.** The chroma floor was applied at a lightness the gamut
+    will not honor, so a near-white accent fanned into four near-identical near-whites — the floor was
+    real and simply unspendable there. The hue strategies now fan from a base moved off the rail far
+    enough to hold it; `shade` and `duo` separate on lightness and keep the accent's own.
+  - **`duo` with an achromatic second brand: FIXED.** Two brands separate their shades by hue alone, and
+    a gray brand has none to give — pinning `--accent-2` to `#878787` put both shades on the floored
+    chroma at hue 0 and the same lightness, emitting them byte-identically. They step apart on lightness
+    now when the hue arc cannot carry them, and stay on one lightness when it can.
+
+  **The invariant is now in the gauntlet**, and all five algorithms pass it at full depth. It is what
+  makes this bullet checkable rather than a taste claim: every one of the three collapses passed each
+  per-token check while two members read as one colour.
+
+  One thing the hunt cost two passes and is worth not repeating: a gauntlet failure used to report its
+  `seeds` and `knobs` but not the extra tokens the run pinned — a headroom target, a mid-lightness
+  background, `duo`'s second brand. The duo case is *only* reachable with that pin, so the record could
+  not reproduce its own failure and the case looked fixed every time it was checked by hand. Failures
+  now carry their full `constraints`.
+
+  Worth carrying into that work: `--accent-2`/`-3` have exactly one consumer in the component library
+  (`dock-zone`'s drop indicators) and `--accent-4` has none. The family is a *theme* surface apps paint
+  with, not library chrome — so "does the fan look good" is answered on a palette or an app, never from
+  the component gallery.
 - **Bare `--accent` as a non-text affordance: the fill floor (1.5:1) is below the WCAG non-text floor (3:1).**
   The safety floor above guarantees a solid fill *separates* from `--bg-0` (≥1.5:1, so it can't vanish), tuned
   for `--accent` as a **fill** with `--accent-fg` on top. But dogfooding a *derived-accent* sweep (bg only, no
@@ -264,10 +374,103 @@ not architecture:
   distinguishability invariant + re-pointing the consumers, i.e. a real algorithm pass. A per-algorithm
   `--accent`-vs-`--bg-0` ≥ 3:1 non-text invariant would guard whichever branch lands. Look-affecting and
   user-owned: surfaced with the measurements, not forced.
-- **Accent↔danger collision guard.** When the brand accent hue lands in the red
-  family, solid primary and solid destructive read identical. Nudge danger, warn, or
-  leave it?
-- **Named-hue mutual distinguishability: the warm cluster collapses, `brown`↔`orange` worst.** The
+- **Accent↔status collision guard: DECIDED and SHIPPED for `danger`.** The call was made: a status role
+  re-derives away from the accent when the two collide. `danger` is held `STATUS_ACCENT_MIN_HUE_SEPARATION`
+  (30 degrees) off a chromatic accent, measured rather than chosen: an accent walked through `--danger`
+  reads as one color across roughly a 40 degree arc and is comfortably distinct by 45.
+  **It changes nothing at any default anchor** because no blessed algorithm ships a red accent, so it
+  bites only the case it exists for. A pin on the role still wins outright.
+  Which way it moves is a property of the role rather than of the accent: it retreats from its own
+  nearest neighbouring status hue, so `danger` backs away from `--warn` into the pinks. That direction
+  is load-bearing. Keying it off which side the accent sits on puts a discontinuity in the middle of the
+  collision zone, where an accent nudged five degrees swings `danger` sixty degrees around the wheel.
+  Pushing the other way is worse than magenta: it lands `danger` within ten degrees of `--warn`, which
+  breaks the mutual-distinguishability invariant that is a hard promise, to protect hue semantics that
+  are not.
+  **`--info` is deliberately NOT guarded**, and the measurement is why. It reads as blue by definition
+  and the blessed accents are blues, so guarding it rotates every shipped `--info` about thirty degrees
+  into violet (`#8b8fff` on `hc`, `#736eff` on `loud`) on four of the five algorithms at their default
+  anchors. That trades a role that cannot be told from the accent for a role that is no longer the color
+  its name promises, and it is a separate call from the one that was made. `ACCENT_COLLISION_GUARDED` is
+  the one-line switch if it is ever wanted.
+  **The third option — break the collision on lightness rather than hue — is measured and dominated.**
+  It was the honest alternative: keep `--info` blue, move it in L until it separates. At the 0.02 floor
+  it takes ΔL 0.02 and produces `#0083e0` against a `#0089ea` accent, which clears the metric and reads
+  as the same colour, so it satisfies the number and not the eye. Pushed to the 0.0864 the hue guard
+  achieves, it breaks two other floors: `--info-fg` falls to **4.1** on `loud` and **4.0** on `quiet`
+  (under AA), and the fill against `--bg-0` falls to **2.7** and **2.6** (under the 3:1 boundary). So
+  the axis that keeps the name costs the contract, and there is no ΔL that buys real separation cheaply.
+  The choice is hue-rotation or nothing.
+  **And the collision is dark-only**, which the numbers above do not say because they were all taken at
+  default knobs. In `light` all five algorithms already separate (0.0755–0.3006), so guarding `--info`
+  would rotate a scheme that has no collision to fix. A guard keyed on measured distance rather than on
+  hue proximity would not — that is a real difference between the guard as built and the guard as
+  described, and it is unexplored.
+  **Where the pushed role lands is worth watching, and is currently fine.** Guarding costs `--danger`
+  distance from the *named* hue it moves toward: against a crimson brand it derives at hue 46 and sits
+  **0.0599** from `--orange`, against 0.1255 under a blue brand. That clears comfortably and renders as
+  two colours, but it halves the margin, and nothing checks a status role against a named hue in either
+  direction. A larger threshold, or a brand sitting further into the reds, is the shape that would crowd
+  them. The `crimson` visual project renders the guarded path, since every blessed algorithm anchors on
+  a blue and nothing else in the suite turns the guard on at all.
+  The measurements that prompted it are kept below.
+- **The original finding — not hypothetical, nor only `danger`.** When the brand
+  accent lands on a status role's hue, solid primary and that solid status read identical. Measured on
+  the shipped defaults, with no accent supplied at all: `xtyle-loud` emits `--accent` and `--info` as
+  the *same hex* (`#0089ea`), `xtyle-hc` likewise (`#339fff`), `xtyle-quiet` at ΔE 0.0051 and
+  `nxi-nite` at 0.0097 (`#2389e2` vs `#2d8add`) — so a primary control and an info badge paint one
+  color out of the box on **four** of the five algorithms. `xtyle-default` is the only one clear
+  (worst pair 0.1069, `--success` vs `--warn`). The blessed "status roles mutually distinguishable"
+  invariant deliberately excludes `--accent`, which is why nothing catches this; the audit deliberately
+  *includes* it (`xtyle audit` reports the pair), so the "warn" branch is already built and reporting.
+  What is left is the taste call the original bullet named: nudge the colliding status role, nudge the
+  accent, or leave it and treat the audit as the answer. Leaving it is defensible — `--info` is defined
+  as blue and a blue brand legitimately coincides — which is exactly why it wants your call and not the
+  engine's.
+  **The report now says which axis a distance lives on**, because the floor is a single number and the
+  same number means different things depending on where it comes from. `roleSeparation[]` carries
+  `axes` (the lightness / chroma / hue steps, which recombine in quadrature to exactly the distance)
+  and `dominant`, and the summary line names it: `closest 0 --accent vs --info by hue, 0°`. This is
+  what makes the collision legible rather than one more close pair — and it is also what shows the
+  floor is not a perceptual constant. A crimson brand accent scores **0.0342** against `--danger`,
+  clearing the 0.02 floor by 70% while rendering as the same button, because 73% of that distance is an
+  8.5° hue rotation and the hue term scales with the chroma it happens at; the `orange`/`brown`
+  collapse that genuinely needed fixing scored **0.0193**, and two plainly-distinct grays score 0.0199.
+  No floor *value* fixes that ordering, which is the part the separation call has to answer.
+- **Named-hue mutual distinguishability: DECIDED, and it resolves to no gate.** `xtyle-quiet` **declines**
+  the promise: a muted palette converging at `vibrancy: 0` is quiet working as asked, not quiet broken, so
+  no invariant asserts a promise it never made. The hue-separation gate therefore does not ship on any
+  algorithm, and `xtyle audit --hues` stays the only thing watching, which is the intended end state
+  rather than a gap. **`brown`'s `-0.1` stays** as shipped, and the remaining dark earth tones are the
+  palette owner's to calibrate; the loop does not extend the prescription. The history below is kept as
+  the diagnosis of why the hues crowd.
+- **How it got here: the lightness offset was IMPLEMENTED, and the taste call it
+  was reserved for is still open.** A loop pass took the per-hue lightness offset this bullet marks as
+  yours and shipped it (`brown` at `l: -0.1` on the ladder), so the code no longer matches the "not
+  forced" framing below. What it bought, measured across all five algorithms on dark and light anchors:
+  `orange`/`brown` separation moved from **0.0193** to **0.102–0.120**, every contrast pair held (worst
+  ratio unchanged at 4.67, zero failures), and the gauntlet stayed 150/150. `brown` reads as a brown
+  again rather than a second orange (`#ea6e00` → `#bd5700` on `hc`/`loud`; `#883d00` on white).
+  **What is still yours is the number.** `-0.1` was picked to clear the floor with margin, not chosen as
+  a design value, and this bullet's own point stands: brown's exact darkness is a taste decision. Retune
+  it or revert it — the change is one commit and touches only `PALETTE_HUES` plus the ladder that reads
+  the new optional `l`. **The invariant's blocker also changed shape**: with the offset in, the hard
+  named-hue invariant goes green on `default` / `nxi-nite` / `hc` / `loud` at 150/150 and red only on
+  `quiet`, 23 runs of 150, every one at `vibrancy: 0` where the muted taste converges by request. So it
+  is no longer "red on today's palette" but "asserts a promise `quiet` may not make," which is a
+  different and smaller question. It stayed unshipped for that reason.
+  The measured history below is left as the diagnosis of *why* they crowd.
+  Re-measured before the offset landed: `brown` no longer derives more chroma than `orange` in any
+  algorithm (`loud` now 0.159 vs 0.175, `quiet` 0.036 vs 0.079, `default` 0.082 vs 0.175), so the
+  outright inversion the rest of this bullet diagnosed has since been fixed elsewhere and is not the
+  live problem. Default-dark improved to 0.0928 with `red`/`orange` the nearest pair, not
+  `orange`/`brown`. What remains is `loud`, where `orange`/`brown` sits at 0.0221 on the shipped
+  anchors and the gauntlet's randomized inputs drive it to **0.0139** — under the 0.02 the engine's own
+  status guard uses. `xtyle audit --hues` now reports the whole 36-pair matrix against that floor, so
+  the palette owner can see it without running a battery. A hard invariant was written and **not
+  shipped**: it goes red on today's palette, and the only fix that greens it is the per-hue lightness
+  offset below, which is yours. The rest of this bullet stands as the diagnosis of *why* they crowd.
+  The
   status roles and the `--code-*` scopes each carry an OKLab-distance *distinguishability invariant*;
   the twelve named hues do not, and dogfooding shows they need one. Measured nearest-pair OKLab
   distance across themes: `orange`/`brown` is consistently the closest, at `0.060` (default dark),
@@ -281,8 +484,9 @@ not architecture:
   palette calibration and **user-owned** (same lane as the status-hue nudge): give `brown` (and the
   other dark earth tones) a per-hue lightness offset so it reads as the dark, muted color it *is* and
   separates from `orange` by lightness; and/or add a named-hue distinguishability invariant like the
-  status/code ones. Not forced: surfaced for the palette owner's call; `brown`'s exact darkness is a
-  taste decision, not an engine law.
+  status/code ones. That prescription is what a pass went and implemented for `brown`, ahead of the call
+  it was waiting on — see the head of this bullet. **The other dark earth tones are untouched**, and
+  whether they want the same treatment is still open, as is the invariant.
 - **Soft-status (and named-hue) surface derivation: FIXED.** The soft `*-bg` degenerated
   two ways: in the light path the status tint reached *above* the page and clamped to
   white-on-white, and a named hue's `-bg` reused its swatch ramp's `subtle` chip, reading
@@ -327,9 +531,17 @@ not architecture:
   vs `~1.17` in a normal dark theme, i.e. stripes that are subtle by design go nearly invisible at the
   pole. It only bites a *pinned* pole (an explicit extreme the user chose), and a fix reshapes the
   surface step on every theme, so it stays a calibration call, not a safety fix.
-- **Soft vs solid status axis.** In some postures "soft" collapses to the same fill as
-  "solid," making the variant a no-op. Should soft always be a distinct tinted
-  treatment?
+- **Soft vs solid status axis: the *collapse* is FIXED; the *tinted-treatment* taste fork stays open.**
+  The tint takes the surface's lightness and the accent's chroma, so a mid-gray page under a near-gray
+  accent put the page, the fill and the tint on one lightness with nothing left to tell them apart:
+  measured `--accent` `#7a7d80` against `--accent-bg` `#7d7e7f` at ΔOKLCH 0.0059, under the 0.02 the
+  engine already treats as one color, so `variant="soft"` painted exactly what `variant="solid"` paints.
+  `--accent-bg` now steps off `--accent` when the two read as one, re-running the ink's contrast lift on
+  every candidate so separation is never bought by making the tint unreadable, and returning the tint
+  untouched when a pole leaves nowhere to go. Gated on the collapse, so a theme whose tint already read
+  apart is byte-identical (the flagship dark holds at 0.4998). Guarded by `a soft fill reads apart from
+  its solid`. What remains is the taste question: should soft always be a *distinctly tinted* treatment
+  rather than merely a separate one? That reshapes every soft variant on every theme, so it wants an eye.
 - **Light-theme chromatic-text black-collapse: FIXED.** `--link` / `--link-hover` /
   `--accent-text` formerly collapsed to pure black on light / dark-text themes (a vivid blue
   accent yielded `--link = #000000`): the shared `enforceOnPanels` leans on `sweepToward`,
@@ -582,10 +794,132 @@ pure-pole `--link` collapse as acceptable and fails only an *avoidable* one. Gre
 `XTYLE_GAUNTLET_DEPTH=full` battery. (The deeper cause, a mid-gray surface ramp whose panels can't clear a text
 floor, is the §11 surface-minimum-step territory, not a link concern.)
 
-**Still open (the taste call).** The delta stays near-imperceptible even after the collapse fix: that
-`#40a0fa` → `#42a3fd` step on the flagship reads as no change, and since the default `<xtyle-link>` rides its
-entire hover on that color delta, the affordance is effectively invisible. Strengthening it is a design decision,
-not a bug fix, and it can go two ways: widen the derived link/link-hover delta across all themes, or give
+**The collapse guard was testing identity, not perceptibility — half fixed, half still open.**
+The derivation's collapse trigger compared the emitted strings for *equality*, so `xtyle-hc` on a light page
+shipped `--link` `#0542c9` against `--link-hover` `#0442c9` — one unit apart in one channel — and the check
+called them distinct. The trigger and its candidate-acceptance test now compare perceptual distance against
+`LINK_HOVER_MIN_DELTA`, set at the perceptibility floor rather than at a designed hover strength (how bold the
+affordance should be is the taste call below). `hc` moves `#0542c9` → `#002b92`, 0.0003 → 0.108, and every other
+algorithm/anchor pair is byte-identical to before because they were already clearing it.
+
+**The bigger effect was on the search, not the trigger.** Accepting the first *non-identical* candidate stopped
+the walk at whatever barely-different colour came up first, which is why cases well away from a pole still
+emitted near-collapses: `xtyle-default` on `#0b0d12` shipped `#3f7cff` / `#437fff` (0.0087) and a `#020100`
+accent shipped 0.0014. Holding candidates to the floor lets the search keep walking to a genuinely distinct one —
+those two now emit 0.117 and 0.101. This revises the section's own history: the `#020100` → `#98938a` /
+`#99948b` pair recorded above as resolved was itself 0.0014 apart, distinct only under the identity test it was
+written against.
+
+A near-miss candidate is now also kept as a fallback rather than discarded. Rejecting it outright made the search
+fall through to the *original* hover, which the full battery caught emitting `--link` and `--link-hover` both
+`#fcfcfc` on `xtyle-hc` at a near-pole seed — strictly worse than the near-miss it replaced.
+
+**The invariant now grades the same way, and the pole exception moved from two hexes to a reach.** Tightening it
+first failed the full battery on `xtyle-hc` with a pure-black accent over a near-black page: the exception named
+`#000000` and `#ffffff` exactly, and the panel-contrast fallback desaturates *toward* a pole without always
+landing on one, so a `--link` at `#fcfcfc` is the same dead end and was not covered. `POLE_REACH` keys the
+exception on how close the lightness actually sits, which is what the situation is about — a link at an extreme
+has one direction left to move and no readable room in it, so that collapse is unavoidable rather than wrong.
+Green at `XTYLE_GAUNTLET_DEPTH=full`, which is the depth that draws the pole seeds at all.
+
+Note the flagship figures in the paragraph above are historical: `xtyle-default` at its own anchors now emits
+`#3ad6f8` → `#99eaff`, not the `#40a0fa` → `#42a3fd` this section was written against.
+
+**Still open (the taste call).** How *strong* the affordance should be is still a design decision rather than a
+bug: the floor above only guarantees the hover is visible at all, not that it reads boldly. It can go two ways: widen the derived link/link-hover delta across all themes, or give
 `<xtyle-link>` a non-color hover affordance the way the `muted` variant already does (thicken the underline, or a
 faint tint) so hover never rides on color alone. Both reshape the flagship's link feel site-wide, so they wait on
 a design eye and your taste.
+
+## 17. An algorithm stating its own light anchor: RESOLVED
+
+`PresetAnchors` is one pair — `{ bg, fg }` — and `DEFAULT_ANCHORS` is dark (`#25272e` / `#e2e0e0`). The `scheme`
+knob flips the *derivation*, not the anchor, so `derive(algo, { knobs: { scheme: "light" } })` reads a dark anchor
+under a light scheme and lands on a mid-gray page (`--bg-0: #9da0a9`, `--bg-2: #91949d`) rather than a light one.
+Nothing is broken in the ladder: the inks are readable and the invariants hold. It is simply not a theme anyone
+would ship, and it is what every blessed algorithm produces if you ask for its light half without seeding one.
+
+**Why it matters more than it looks.** `invertedOptions` inverts *seeds*, deliberately, so inverting an unseeded
+invocation is a no-op on the anchor and lands in the same gray. So there is no expression, anywhere, for "the light
+counterpart of this algorithm at its own defaults" — you can only get a light theme by supplying a light surface
+yourself. That also makes the mid-gray a trap for tooling: an audit that grades it reports every solid fill under
+the boundary grade, which reads as a catastrophic finding and is an artifact of the input. `xtyle audit` now
+declines to grade a counterpart it would have to invent, and says so, but that is the tool refusing a bad question
+rather than the gap closing.
+
+**The knob layer already solved the shape.** `KnobSpec` carries `defaultByScheme`, which is exactly how
+`surfaceRamp` flips its sign between dark and light. Anchors have no equivalent. The obvious symmetry is
+`anchors: { bg, fg, accent?, byScheme?: { light: { bg, fg } } }` or a second anchor pair keyed by scheme, and it is
+mechanism the engine offers with the values staying the algorithm's own taste — the same split the declared
+focus-ring floor uses.
+
+**Settled: optional, with a stated fallback.** `anchorsByScheme` is the symmetry the knob layer already had:
+`anchors: { … }` names the pair an algorithm starts from, `anchorsByScheme: { light: { bg, fg, accent? } }` names the
+half its default pair does not describe, and the values stay the algorithm's own taste. Optional matches every
+neighboring decision (`KnobSpec.defaultByScheme`, the declared focus-ring floor, `adds`): absent, the flip still
+happens and the gray is still reachable, which keeps a single-posture algorithm cheap to write.
+
+The algorithms themselves refuse the reading that one is inherently single-scheme, with a light theme always a
+*theme's* choice of seed. Every one of them declares `scheme` as a knob, which is a claim to have two halves;
+until now none could say what the second one was.
+
+**A caller's seed still wins.** The stated pair is a *default*, not a pin, so `derive(algo, { constraints: { "--bg-0":
+… } })` is byte-identical to before. Measured across the blessed set: bare and dark-seeded output are unchanged,
+light-seeded picks up the stated half's taste, and the path that used to be gray is the one that moves most.
+
+**All five now answer for both halves.** `xtyle-hc` already did, because flipping pure black lands on pure white; it
+states the pair anyway so the intent survives a change to its dark anchor. The other four went from `#9da0a9` to a
+real page. `xtyle-default` also states a light-tuned accent, which answers question 18 from its third reading: the
+preset cyan sits at 1.42 on a light page and the light-half accent at **2.88**, inside the 2.79–3.55 band the rest
+of the blessed set occupies.
+
+**Downstream, now closed:** `xtyle audit` grades the counterpart whenever the algorithm declares one. The refusal
+was about a mid-gray the audit would have had to invent; a stated algorithm hands it a real theme instead.
+`declares.schemes` carries which halves an algorithm answers for, through the facade and the packaged mod manifest,
+so a third party that states one half still gets the refusal rather than a grade on a page it does not ship.
+
+Grading both halves found something on its first run: **every** blessed algorithm's light half puts `--accent`
+under the `fill/surface` floor against `--bg-2` (2.38–2.81 against 3), while three of the five have a clean dark
+half. That is question 18's closing paragraph (`pageFloor` floors against `--bg-0` alone) arriving
+from the direction it named, and the failure is sharper in light because the surface ladder *descends*, so
+`--bg-2` moves toward a fill rather than away from one.
+
+## 18. A preset's accent outranks the algorithm's own surface-separation floor
+
+Two stated intents collide, and they cannot both hold.
+
+**The first** is pinned by a test — *"honors a baked `defaultAnchors.accent` exactly as a call-site accent would
+resolve."* A flavour author picked that colour deliberately, the same way an app author would, so the derivation
+honours it verbatim: `completeAnchors` sets `accentExplicit` when *either* the caller supplied an accent **or** the
+preset declares one, and an explicit accent skips `pageFloor`.
+
+**The second** is an invariant — *"solid fills separate from `--bg-0`"* at `SURFACE_SEPARATION` (1.5). It skips a
+fill the *caller* constrained, but a preset's accent is not a caller constraint, so the invariant does apply to it.
+
+**Where they meet.** Seed a light page and supply no brand — a very ordinary thing to want — and `xtyle-default`
+hands back its preset cyan `#3ad6f8` against `#e6e9ef` at **1.42**, under the algorithm's own 1.5 floor. Every
+other fill on that theme sits at 4.30–4.90; the accent is alone. Letting `pageFloor` reach a preset accent lifts it
+to 1.54 (`#2dcef0`) and is **byte-identical in dark on all five algorithms**, because the floor is a no-op wherever
+the accent already clears — but it breaks the first intent, and the test that states it.
+
+**The gauntlet cannot referee this.** It seeds `--accent` whenever it seeds a background, so "preset accent, author
+page" is outside its input space; the case is unreachable by the fuzzer and reachable by an ordinary user. Widening
+the battery to cover it is mechanism rather than policy — but it cannot be widened without going red, because the
+conflict is real. Which way it should go red is the question.
+
+**The three readings.** That a preset accent is the *algorithm's taste* and should be floored against a page the
+author chose, leaving only a caller's brand untouchable. That it is a *brand* like any other and 1.42 is the honest
+consequence of asking for a cyan-accented light theme, in which case the invariant should skip it and say so. Or
+that the real defect is upstream — an algorithm whose only accent is tuned for its only (dark) anchor, which is
+[question 17](#17-an-algorithm-stating-its-own-light-anchor-resolved) again from a second direction.
+
+**The third reading is now the one that shipped, and it removes the symptom without settling the question.**
+`xtyle-default` states a light-half accent, so seeding a light page and supplying no brand hands back **2.70**
+rather than 1.42. The collision itself is untouched: a preset accent still outranks `pageFloor`, and an algorithm
+that declares no light accent still reaches the same conflict. What changed is that the blessed set no longer walks
+into it, so the remaining question is about the rule rather than about a theme anyone ships.
+
+**Separately, and not in conflict with anything:** `pageFloor` floors fills against `--bg-0` alone. Nothing governs
+them against `--bg-1` or `--bg-2`, which the audit does grade, so a fill can clear the page and still have no edge
+on a raised panel. Measured across the blessed set the gap is small in dark (bg-0 2.79–3.55 against bg-2 2.79–3.09)
+and the same shape in light. That one is a straightforward extension whenever the floor above is settled.

@@ -1,5 +1,7 @@
 ---
 import ThemeBuilder from "../../components/bench/ThemeBuilder.svelte";
+import Alert from "@xtyle/astro/Alert.astro";
+import Link from "@xtyle/astro/Link.astro";
 import Base from "../../layouts/Base.astro";
 import { getStats } from "../../data/stats";
 
@@ -10,5 +12,12 @@ const { tokens } = await getStats();
 	title="Theme Builder"
 	description={`The theme studio. Pick an algorithm, then set anchors, knobs, or any of the ${tokens} tokens directly, and watch the whole register derive live. Contrast, coverage, gamut, and token-graph inspectors are built in.`}
 >
+	<noscript>
+		<Alert severity="info" static>
+			The Theme Builder re-derives all {tokens} tokens in your browser on every change, so it
+			needs JavaScript to run at all. Every <Link href="/components" static>component page</Link> renders
+			without it.
+		</Alert>
+	</noscript>
 	<ThemeBuilder client:only="svelte" />
 </Base>

@@ -1,5 +1,6 @@
 import { initXript, type XriptRuntime, type ModInstance, type FragmentOp } from "@xriptjs/runtime";
 import componentHost from "./fragments/component-host.json" with { type: "json" };
+import { sandboxInitOptions } from "../sandbox.js";
 import { builtInFillFor } from "./built-in-fills.js";
 
 /**
@@ -144,7 +145,7 @@ export function componentRuntimeStarted(): boolean {
 
 function componentRuntime(): Promise<XriptRuntime> {
 	if (!runtimePromise) {
-		runtimePromise = initXript().then((factory) =>
+		runtimePromise = initXript(sandboxInitOptions()).then((factory) =>
 			factory.createRuntime(componentHost, {
 				hostBindings: {},
 				capabilities: grantedCapabilities,
@@ -269,6 +270,9 @@ export function loadedFillNames(): string[] {
 }
 
 let fillFailureWarned = false;
+let emptyMountWarned = false;
+let formNameWarned = false;
+let formDoubledWarned = false;
 
 /**
  * Surface a fill / component-runtime load failure. A client-only (bare-shadow) element has
@@ -293,6 +297,65 @@ export function markFillFailure(host: Element, error: unknown): void {
 	);
 }
 
+/**
+ * Surface a mount that produced no markup. A fill's `mount` builds the whole scaffold, so an empty
+ * one paints nothing — and unlike a load failure it throws nothing, which is the worse shape: the
+ * element looks like a component that renders badly rather than one that never ran. Shares the
+ * `data-xtyle-fill-error` marker, so a consumer's fallback CSS covers both.
+ */
+export function markEmptyMount(host: Element, fragmentId: string): void {
+	host.setAttribute("data-xtyle-fill-error", "");
+	if (emptyMountWarned) return;
+	emptyMountWarned = true;
+	const tag = host.tagName.toLowerCase();
+	console.error(
+		`xtyle: the "${fragmentId}" fill mounted and produced no markup, so client-rendered elements ` +
+			`(starting with <${tag}>) will appear empty. Either an override registered for this fill ` +
+			`emits nothing on mount, or the sandbox loaded but cannot answer — a QuickJS variant passed ` +
+			`to setSandboxVariant that does not match the quickjs-emscripten-core the runtime resolves ` +
+			`fails exactly this way, reporting "QuickJSContext had no callback with id 0".`,
+	);
+}
+
+/**
+ * Surface a fill that rendered its control without the `name` it was handed. In light DOM that
+ * control is the only thing inside the form, because the host deliberately does not also report
+ * through `ElementInternals` there — so the value submits nowhere while the component looks and
+ * behaves correctly. Nothing else catches it: the slot's payload schema declares the binding but
+ * no runtime enforces that a fill writes it, and a form that posts a missing key fails at the
+ * server rather than here. Marked with its own attribute rather than `data-xtyle-fill-error`,
+ * since the component did render and a consumer's blank-render fallback should not fire.
+ */
+export function markFormNameUnbound(host: Element, name: string): void {
+	host.setAttribute("data-xtyle-form-unbound", "");
+	if (formNameWarned) return;
+	formNameWarned = true;
+	const tag = host.tagName.toLowerCase();
+	console.error(
+		`xtyle: <${tag}> was given name="${name}" but the fill rendered no control carrying it, so the ` +
+			`value will not submit with the form. In light DOM the inner control is the only submitting ` +
+			`channel. A fill overriding this component must write the \`name\` binding onto its control.`,
+	);
+}
+
+/**
+ * The inverse of `markFormNameUnbound`: a component whose host owns form reporting rendered a
+ * light-DOM node carrying the same `name`, so the form collects the value twice under one key and a
+ * server reads an array where it expected a string. This is what an override that adds a `name` to a
+ * control whose host never expected one produces, and the component looks correct throughout.
+ */
+export function markFormNameDoubled(host: Element, name: string): void {
+	host.setAttribute("data-xtyle-form-doubled", "");
+	if (formDoubledWarned) return;
+	formDoubledWarned = true;
+	const tag = host.tagName.toLowerCase();
+	console.error(
+		`xtyle: <${tag}> reports name="${name}" through ElementInternals, and a light-DOM node it ` +
+			`rendered carries the same name, so the value will submit twice under one key. A fill for ` +
+			`this component must not write the \`name\` binding onto its control.`,
+	);
+}
+
 function serializeEvent(el: HTMLElement, event: Event): SerializedEvent {
 	const input = el as HTMLInputElement;
 	const mod = event as Partial<MouseEvent & KeyboardEvent>;
@@ -312,7 +375,13 @@ function serializeEvent(el: HTMLElement, event: Event): SerializedEvent {
 	};
 }
 
-function applyOps(root: ShadowRoot | HTMLElement, ops: FragmentOp[]): void {
+/**
+ * Apply a fill's op buffer to a live root — the browser half of the pair whose other half is
+ * `applyOpsToHtml` in `elements/fragment-ssr`. A component renders through both over its life
+ * (the build-time string rewrite, then this against the DOM), so the two must agree on every op:
+ * a divergence shows up only for a reader who never reaches the second one.
+ */
+export function applyOps(root: ShadowRoot | HTMLElement, ops: FragmentOp[]): void {
 	for (const op of ops) {
 		for (const el of root.querySelectorAll(op.selector)) {
 			applyOp(el, op);
@@ -396,6 +465,8 @@ export class FragmentHost {
 	 * group into its matching `[data-slot]` / `[data-slot="name"]` region after every (re)mount.
 	 * `null` until first captured. */
 	private slotted: Map<string, Node[]> | null = null;
+	private scaffoldRoots: Node[] = [];
+	private readonly ownedNodes = new Set<Node>();
 
 	constructor(
 		private root: ShadowRoot | HTMLElement,
@@ -405,7 +476,7 @@ export class FragmentHost {
 		private binding: FragmentBinding,
 	) {
 		this.handlers = collectHandlers(manifest);
-		this.template = this.fragmentSources[fillSource(manifest, fragmentId)] ?? "";
+		this.template = fillScaffold(manifest, fragmentSources, fragmentId);
 		this.lightDom = !(typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot);
 	}
 
@@ -459,11 +530,13 @@ export class FragmentHost {
 				for (const region of this.ownRegions()) {
 					this.slotted.set(region.getAttribute("data-slot") ?? "", consumerNodes(region));
 				}
+				this.scaffoldRoots = [...this.root.childNodes];
 				this.mounted = true;
 				return;
 			}
 			this.slotted = groupBySlot(this.root.childNodes);
 			this.root.innerHTML = this.template;
+			this.scaffoldRoots = [...this.root.childNodes];
 			return;
 		}
 		if (existing) return;
@@ -504,6 +577,55 @@ export class FragmentHost {
 	 * detaches them, so they must be read here rather than off the live tree. */
 	slottedNodes(name = ""): Node[] {
 		return this.slottedMap().get(name) ?? [];
+	}
+
+	/**
+	 * Declare a node the element created for itself — an `aria-live` announcer, a hidden mirror input,
+	 * a measurement sentinel. Such a node sits among the consumer's children and is indistinguishable
+	 * from them by inspection, so {@link recaptureSlotted} would adopt it as content and a child
+	 * observer would read its arrival as a consumer edit. Call this the moment the node is appended.
+	 */
+	ownNode(node: Node): void {
+		this.ownedNodes.add(node);
+	}
+
+	/**
+	 * Whether a node is something this fill painted or the element declared as its own, rather than
+	 * the consumer's content. The authority is the fill's actual root-level output, recorded when the
+	 * scaffold painted, plus whatever {@link ownNode} named — never a marker attribute: a fill may
+	 * render several root-level siblings (`carousel` draws a viewport *and* a control bar) and only
+	 * one of them carries `[data-root]`, so a marker walk answers "consumer content" for the rest.
+	 */
+	ownsPaint(node: Node | null): boolean {
+		for (let at: Node | null = node; at && at !== this.root; at = at.parentNode) {
+			if (this.ownedNodes.has(at) || this.scaffoldRoots.includes(at)) return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Fold children that arrived after the scaffold into the captured slot map, and report whether any
+	 * did. In light DOM the capture is taken once — the scaffold paint would otherwise wipe it — so a
+	 * slide, option, or row a framework renders after mount is invisible to the element forever. Call
+	 * this before reading {@link slottedNodes}, and remount when it returns `true`.
+	 *
+	 * Additions only. A removal cannot be told from the relocation's own detach without the element
+	 * naming every node it moves, so this never drops a captured node; a consumer that removes content
+	 * keeps rendering it until the next remount.
+	 */
+	recaptureSlotted(): boolean {
+		if (!this.lightDom || !this.mounted || !this.slotted) return false;
+		let added = false;
+		for (const node of [...this.root.childNodes]) {
+			if (this.ownsPaint(node)) continue;
+			const name = node instanceof Element ? (node.getAttribute("slot") ?? "") : "";
+			const group = this.slotted.get(name);
+			if (!group) this.slotted.set(name, [node]);
+			else if (!group.includes(node)) group.push(node);
+			else continue;
+			added = true;
+		}
+		return added;
 	}
 
 	/**
@@ -561,7 +683,9 @@ export class FragmentHost {
 			mountedHosts.add(new WeakRef(this));
 		}
 		const lifecycle = this.mounted ? "update" : "mount";
-		applyOps(this.root, loaded.runtime.fireFragmentHook(this.fragmentId, lifecycle, bindings));
+		const ops = loaded.runtime.fireFragmentHook(this.fragmentId, lifecycle, bindings);
+		if (lifecycle === "mount" && !ops.length) markEmptyMount(this.hostElement(), this.fragmentId);
+		applyOps(this.root, ops);
 		if (lifecycle === "mount" && this.lightDom) {
 			for (const region of this.ownRegions()) {
 				const nodes = this.slotted?.get(region.getAttribute("data-slot") ?? "");
@@ -621,6 +745,10 @@ export class FragmentHost {
 			}, NON_BUBBLING.has(type));
 		}
 	}
+}
+
+export function fillScaffold(manifest: unknown, sources: Record<string, string>, fragmentId: string): string {
+	return (sources[fillSource(manifest, fragmentId)] ?? "").trim();
 }
 
 export function fillSource(manifest: unknown, fragmentId: string): string {

@@ -104,6 +104,7 @@ export const heroManifest: ComponentManifest = {
 			default: "center",
 			description: "The content alignment: `center` (a centered landing hero) or `start` (left-aligned).",
 			bindings: ["html", "svelte", "astro"],
+			unobserved: "css",
 			options: ["center", "start"],
 		},
 		{
@@ -112,6 +113,7 @@ export const heroManifest: ComponentManifest = {
 			default: "false",
 			description: "Lays the band out as two columns (content and media) that fold to one column on a narrow screen. Give it two children: a content block and a media block.",
 			bindings: ["html", "svelte", "astro"],
+			unobserved: "css",
 		},
 		{
 			name: "static",

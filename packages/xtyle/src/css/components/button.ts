@@ -105,8 +105,8 @@ ${linkRules}
 .xtyle-button:active::after { background: var(--state-press); }
 .xtyle-button[aria-pressed="true"]::after,
 .xtyle-button[aria-pressed="true"]:hover::after { background: var(--state-press); }
-.xtyle-button[aria-selected="true"]::after,
-.xtyle-button[aria-selected="true"]:hover::after { background: var(--state-selected); }
+.xtyle-button[aria-current="true"]::after,
+.xtyle-button[aria-current="true"]:hover::after { background: var(--state-selected); }
 /* The link variant carries no state wash in any state, so its overrides come after the generic
    ones. They used to sit before, where an equal-specificity :hover rule and a higher-specificity
    pressed/selected one both beat them, and a link button lit up with a surface it has no surface
@@ -116,8 +116,8 @@ ${linkRules}
 .xtyle-button--link:active::after,
 .xtyle-button--link[aria-pressed="true"]::after,
 .xtyle-button--link[aria-pressed="true"]:hover::after,
-.xtyle-button--link[aria-selected="true"]::after,
-.xtyle-button--link[aria-selected="true"]:hover::after { background: transparent; }
+.xtyle-button--link[aria-current="true"]::after,
+.xtyle-button--link[aria-current="true"]:hover::after { background: transparent; }
 .xtyle-button:focus-visible {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);

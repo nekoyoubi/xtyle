@@ -19,7 +19,7 @@ import Text from "@xtyle/astro/Text.astro";
 			</Text>
 		</Stack>
 		<Cluster gap={3}>
-			<Button variant="solid" tone="accent" data-open="confirm">
+			<Button variant="solid" tone="danger" data-open="confirm">
 				Delete account…
 			</Button>
 			<Button variant="outline" tone="neutral" data-open="signin">
@@ -31,8 +31,18 @@ import Text from "@xtyle/astro/Text.astro";
 			<Button variant="outline" tone="accent" data-open="editor">
 				Open editor…
 			</Button>
+			<Button variant="ghost" tone="neutral" data-open="footerless">
+				No footer…
+			</Button>
 		</Cluster>
 	</Card>
+
+	<Dialog id="footerless" heading="Nothing to decide" size="sm">
+		<Text>
+			A dialog with no <code>footer</code> slot renders no footer at all — no hairline, no padded
+			band under the body. The close button is the only way out and says so at rest.
+		</Text>
+	</Dialog>
 
 	<Dialog id="confirm" heading="Delete account?" size="sm">
 		<Text>

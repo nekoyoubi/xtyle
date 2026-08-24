@@ -164,7 +164,7 @@
     const label = b.label ? ` aria-label="${escapeAttr(b.label)}"` : "";
     const tabindex = b.disabled ? "-1" : "0";
     const grips = liveDirections(b).map((direction) => gripHtml(direction, b)).join("");
-    return `<div class="xtyle-reveal__lid" part="lid" tabindex="${tabindex}" role="group"${label} aria-expanded="${escapeAttr(b.open ? "true" : "false")}"><div class="xtyle-reveal__content" part="content" data-slot><slot></slot></div>` + grips + "</div>";
+    return `<div class="xtyle-reveal__lid" part="lid" tabindex="${tabindex}" role="${b.control ? "button" : "group"}"${label} aria-expanded="${escapeAttr(b.open ? "true" : "false")}"><div class="xtyle-reveal__content" part="content" data-slot><slot></slot></div>` + grips + "</div>";
   }
   function revealHtml(b) {
     const bellies = DIRECTIONS.map((direction) => bellyHtml(direction, b)).join("");
@@ -176,6 +176,7 @@
   hooks.fragment.update("reveal", (bindings, ops) => {
     ops.setAttr(".xtyle-reveal", "class", revealClass(bindings));
     ops.setAttr(".xtyle-reveal", "data-open", bindings.open ?? "");
+    ops.setAttr(".xtyle-reveal__lid", "role", bindings.control ? "button" : "group");
     ops.setAttr(".xtyle-reveal__lid", "aria-expanded", bindings.open ? "true" : "false");
     ops.setAttr(".xtyle-reveal__lid", "tabindex", bindings.disabled ? "-1" : "0");
     for (const direction of DIRECTIONS) {
@@ -200,6 +201,11 @@
     const context = args[1] ?? {};
     const live = context.directions ?? [];
     if (payload.key === "Escape" && context.open) return { conceal: true, preventDefault: true };
+    if (payload.key === "Enter" || payload.key === " " || payload.key === "Spacebar") {
+      const target = context.open ?? (live.length === 1 ? live[0] : void 0);
+      if (target) return { commit: target, preventDefault: true };
+      return {};
+    }
     const wanted = payload.key ? ARROW_DIRECTION[payload.key] : void 0;
     if (wanted && live.indexOf(wanted) !== -1) return { reveal: wanted, preventDefault: true };
     return {};

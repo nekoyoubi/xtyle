@@ -45,6 +45,7 @@ import { derive, resolveIconMark, composeIconThemed, seriesPalette } from "@xtyl
 import { resolveAlgorithm } from "@xtyle/core/algorithms";
 import { bundledAlgorithms } from "@xtyle/core/host/bundle";
 import { resolveInstalledAlgorithm, resolveAlgorithm as deprecatedAlias } from "@xtyle/core/host";
+import { PACK_CDN, fetchPack, packBaseUrl } from "@xtyle/core/host/remote";
 
 const ids = bundledAlgorithms();
 if (!ids.includes("xtyle-default")) throw new Error("bundledAlgorithms() omits xtyle-default: " + ids.join(","));
@@ -66,6 +67,23 @@ if (colors.length !== 4) throw new Error("seriesPalette did not resolve against 
 for (const id of ids) {
   if ((await resolveAlgorithm(id)).id !== id) throw new Error("resolveAlgorithm returned the wrong id for " + id);
 }
+
+// The CDN twin is the one export with no filesystem at all, so a packaged install is the only place
+// its promise can be checked. Resolved with an injected fetch: what is under test is the exports map
+// and the URL grammar, not the network.
+const base = packBaseUrl({ raw: "@demo/pack", kind: "npm", target: "@demo/pack" });
+if (base !== PACK_CDN + "/npm/@demo/pack/") throw new Error("packBaseUrl did not map an npm reference onto the CDN: " + base);
+
+const served = {
+  [base + "package.json"]: JSON.stringify({ name: "@demo/pack", xtyle: { algorithms: [{ name: "a", entry: "a" }] } }),
+};
+const remote = await fetchPack("@demo/pack", {
+  fetch: async (url) => {
+    const body = served[String(url)];
+    return body === undefined ? new Response("", { status: 404 }) : new Response(body, { status: 200 });
+  },
+});
+if (remote.pack.algorithms[0]?.name !== "a") throw new Error("fetchPack did not read the pack's declared algorithm");
 
 // The disk twin cannot work here and is not supposed to. What it owes the caller is an error that
 // names the path that does work — that is the whole trap this check exists to keep shut.

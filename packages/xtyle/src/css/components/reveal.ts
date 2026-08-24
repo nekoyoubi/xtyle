@@ -11,13 +11,13 @@ const tonedBellies = FULL_TONES.map(
 
 export const revealCss = `
 [data-root][data-reveal] { display: contents; }
-xtyle-reveal { display: block; position: relative; }
+xtyle-reveal { display: block; position: relative; border-radius: var(--xtyle-reveal-radius, var(--radius-md)); }
 xtyle-reveal-group { display: block; }
 .xtyle-reveal {
 	position: relative;
 	display: block;
 	overflow: clip;
-	border-radius: var(--radius-md);
+	border-radius: inherit;
 	--xtyle-reveal-grip-span: calc(var(--xtyle-reveal-grip-size, var(--space-5)) + var(--xtyle-reveal-grip-pad, var(--space-3)) * 2);
 }
 .xtyle-reveal__belly {
@@ -74,6 +74,7 @@ ${tonedBellies}
 .xtyle-reveal--shaped .xtyle-reveal__belly { clip-path: var(--xtyle-reveal-shape); }
 .xtyle-reveal__grip {
 	position: absolute;
+	z-index: 2;
 	display: flex;
 	align-items: center;
 	justify-content: center;

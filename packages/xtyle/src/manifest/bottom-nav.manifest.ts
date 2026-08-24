@@ -51,6 +51,7 @@ export const bottomNavManifest: ComponentManifest = {
 	description:
 		"BottomNav is the tab bar that pairs with `MobileShell` the way `Statusbar` pairs with `AppShell`: the app's top-level sections, sitting where a thumb actually reaches.\n\nIt renders the tablist from its `tabs` through its own fragment, like `Tabs` and `Segmented`, so a mod can reshape a tab the same way it can reshape any other control.\n\nThe runtime adds what markup can't: a *roving tabindex*, so the whole bar is a single tab stop in the page with the arrow keys (plus Home / End) moving between sections inside it, rather than every tab being its own stop to tab past.\n\nEach tab takes an optional icon and a badge. The selected one is marked by an accent bar as well as by color, so which section you're in never rests on hue alone.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["badge", "bar", "icon", "item", "label"],
 	anatomy: [
 		{
 			name: "bar",
@@ -97,6 +98,9 @@ export const bottomNavManifest: ComponentManifest = {
 			description: "The tabs, in the bindings: `{ value, label, icon?, badge? }`. Pass an array from the bindings, or JSON on the attribute for a static page.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "change", detail: "{ value }", description: "A destination was chosen.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

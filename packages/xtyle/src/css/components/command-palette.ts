@@ -122,7 +122,11 @@ export const commandPaletteCss = `
 	color: inherit;
 }
 .xtyle-command-palette__hint {
-	flex: none;
+	flex: 0 100 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-size: var(--text-xs);
 	color: inherit;
 	opacity: 0.7;

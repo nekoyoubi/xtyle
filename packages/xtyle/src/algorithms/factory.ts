@@ -1,8 +1,10 @@
 import {
 	clampToGamut,
 	contrast,
+	flatten,
 	formatCss,
 	hueDelta,
+	oklabDistance,
 	oklch,
 	pickReadable,
 	schemeOf,
@@ -12,7 +14,7 @@ import {
 	type OklchColor,
 } from "../color.js";
 import { resolveGraph, type TokenNode } from "../graph.js";
-import { FULL_TONES } from "../vocab.js";
+import { FULL_TONES, SURFACE_ROLES } from "../vocab.js";
 import type {
 	AccentStrategy,
 	Algorithm,
@@ -36,6 +38,25 @@ import type {
 
 const AA = 4.5;
 const AAA = 7;
+
+/**
+ * How far `--link-hover` must read from `--link` before the derivation stops calling them distinct.
+ *
+ * The guard used to test the emitted strings for equality, which is a test of *identity* and not of
+ * *perceptibility*: `#0542c9` and `#0442c9` are one unit apart in one channel, pass an equality check,
+ * and are one colour to anyone looking. Sits at the perceptibility floor rather than at a designed
+ * hover strength — how bold the affordance should be is the algorithm's taste, and this is only the
+ * line under which there is no affordance at all.
+ */
+const LINK_HOVER_MIN_DELTA = 0.01;
+
+/**
+ * How close to a lightness pole counts as *at* one, for the collapses that are unavoidable rather
+ * than wrong. A `--link` the panel-contrast fallback desaturated toward black or white has one
+ * direction left to move and no readable room in it, but the fallback does not always land on the
+ * exact pole hex — `#fcfcfc` is the same dead end as `#ffffff` and an equality test misses it.
+ */
+const POLE_REACH = 0.03;
 const ENFORCE = AA + 0.2;
 export const SURFACE_SEPARATION = 1.5;
 export const BORDER_SEPARATION = 1.5;
@@ -98,6 +119,74 @@ const HUE_STABLE_CHROMA = 0.1;
 // INFO: floors the fan's base chroma so a near-gray accent fans into distinct tints; must stay below
 // `HUE_STABLE_CHROMA` so the floored fan lands inside the constant-L/C fan invariant's exempt band.
 const FAN_MIN_CHROMA = 0.045;
+const ACCENT_FAMILY_SEPARATION = 0.02;
+const ACCENT_FAMILY_HUE_ARC = 0.6;
+
+/**
+ * Where the fan's fourth member sits: the middle of the widest gap the accent and its two flanks
+ * leave on the hue circle, as an offset from the accent.
+ *
+ * With nothing pinned the flanks are symmetric at ±`accentSplit` (90° at most), so the widest gap is
+ * always the one opposite the accent and this returns 180 — the complement the fan has always used.
+ * A pinned flank breaks that symmetry: its mirror can land beside the complement, and the fourth
+ * member would sit on top of a sibling while every per-token check passed. Taking the widest gap
+ * instead keeps the four spread however the pin moved them.
+ */
+function fanFourthOffset(accentHue: number, flankA: number, flankB: number): number {
+	const norm = (deg: number): number => (((deg % 360) + 360) % 360);
+	const placed = [accentHue, flankA, flankB].map(norm).sort((x, y) => x - y);
+	let widest = -1;
+	let center = 180;
+	for (let i = 0; i < placed.length; i++) {
+		const from = placed[i] as number;
+		const to = i === placed.length - 1 ? (placed[0] as number) + 360 : (placed[i + 1] as number);
+		if (to - from > widest) {
+			widest = to - from;
+			center = norm(from + (to - from) / 2);
+		}
+	}
+	return norm(center - accentHue);
+}
+const FAN_CHROMA_RICH_L = 0.6;
+const FAN_LIGHTNESS_SEARCH_STEPS = 24;
+
+/**
+ * The three lightness offsets a `shade` ladder hangs off its accent, aimed at whichever side of the
+ * ramp has room for them.
+ *
+ * A tint up and two shades down is the posture, but an accent already sitting near a rail cannot
+ * spend three steps in that direction: they clamp, and the rungs that clamp land on each other. So
+ * the ladder walks away from the nearer rail — all three up from a dark accent, all three down from
+ * a light one — and only takes the mixed posture when both sides can pay for it.
+ */
+/**
+ * A base the *hue* strategies can actually fan from: same hue and chroma floor, moved off the
+ * lightness rails far enough that the gamut will hold that chroma.
+ *
+ * Rotating hue only separates colors that have chroma to turn, and chroma is not free at every
+ * lightness — near white or near black the gamut crushes it back out, so a floored base emits as
+ * four near-identical near-whites. `shade` and `duo` separate on lightness instead and are left on
+ * the accent's own, which is why this is not folded into `fanBase`.
+ */
+function chromaCapableBase(base: OklchColor): OklchColor {
+	const holds = (l: number): boolean => clampToGamut({ l, c: FAN_MIN_CHROMA, h: base.h, alpha: 1 }).c >= FAN_MIN_CHROMA - 0.001;
+	if (holds(base.l)) return base;
+	for (let step = 1; step <= FAN_LIGHTNESS_SEARCH_STEPS; step++) {
+		const l = base.l + (FAN_CHROMA_RICH_L - base.l) * (step / FAN_LIGHTNESS_SEARCH_STEPS);
+		if (holds(l)) return { ...base, l };
+	}
+	return { ...base, l: FAN_CHROMA_RICH_L };
+}
+
+function shadeLadderRungs(l: number): [number, number, number] {
+	const step = SHADE_LADDER_L_STEP;
+	const room = (offset: number): boolean => l + offset <= ACCENT_RAMP_L_MAX && l + offset >= ACCENT_RAMP_L_MIN;
+	if (room(step) && room(-2 * step)) return [step, -step, -2 * step];
+	if (room(3 * step)) return [step, 2 * step, 3 * step];
+	if (room(-3 * step)) return [-step, -2 * step, -3 * step];
+	const span = (ACCENT_RAMP_L_MAX - ACCENT_RAMP_L_MIN) / 4;
+	return [span, 2 * span, 3 * span].map((offset) => (l - ACCENT_RAMP_L_MIN < ACCENT_RAMP_L_MAX - l ? offset : -offset)) as [number, number, number];
+}
 const HUE_TOLERANCE = 8;
 const LIGHTNESS_TOLERANCE = 0.05;
 
@@ -138,14 +227,14 @@ const STATUS_TO_HUE = {
  * a more saturated accent pushes them up, a muted one down. */
 const NEUTRAL_ACCENT_CHROMA = 0.13;
 
-const PALETTE_HUES: Record<string, { h: number; c: number } | "gray" | "white" | "black"> = {
+const PALETTE_HUES: Record<string, { h: number; c: number; l?: number } | "gray" | "white" | "black"> = {
 	red: { h: 25, c: 0.2 },
 	orange: { h: 55, c: 0.18 },
 	yellow: { h: 95, c: 0.17 },
 	green: { h: 145, c: 0.18 },
 	blue: { h: 250, c: 0.18 },
 	purple: { h: 300, c: 0.18 },
-	brown: { h: 50, c: 0.08 },
+	brown: { h: 50, c: 0.08, l: -0.1 },
 	pink: { h: 350, c: 0.16 },
 	cyan: { h: 200, c: 0.14 },
 	gray: "gray",
@@ -190,6 +279,65 @@ const SURFACES = ["--body-bg", "--bg-0", "--bg-1", "--bg-2", "--bg-3"] as const;
 
 const PANEL_REF_INDEX = SURFACES.indexOf("--bg-2");
 const PANEL_SURFACES = ["--bg-1", "--bg-2"] as const;
+
+const BASE_SURFACE_INDEX = SURFACES.indexOf("--bg-0");
+
+const RING_SURFACE_INDICES = SURFACE_ROLES.map((name) =>
+	SURFACES.indexOf(name as (typeof SURFACES)[number]),
+);
+
+interface SurfaceAnchor {
+	index: number;
+	lightness: number;
+	token: TokenName | null;
+}
+
+interface SurfaceLadder {
+	lightness: number[];
+	sources: TokenName[][];
+}
+
+function solveSurfaceLadder(
+	pins: readonly (OklchColor | null)[],
+	baseLightness: number,
+	step: number,
+): SurfaceLadder {
+	const anchors: SurfaceAnchor[] = [];
+	pins.forEach((pin, index) => {
+		if (pin) anchors.push({ index, lightness: pin.l, token: SURFACES[index] as TokenName });
+	});
+	if (!anchors.some((anchor) => anchor.index === BASE_SURFACE_INDEX)) {
+		anchors.push({ index: BASE_SURFACE_INDEX, lightness: baseLightness, token: null });
+	}
+	anchors.sort((a, b) => a.index - b.index);
+
+	const lightness: number[] = [];
+	const sources: TokenName[][] = [];
+	const tokensOf = (...of: (SurfaceAnchor | undefined)[]): TokenName[] =>
+		of.flatMap((anchor) => (anchor?.token ? [anchor.token] : []));
+
+	pins.forEach((_, index) => {
+		const exact = anchors.find((anchor) => anchor.index === index);
+		if (exact) {
+			lightness.push(exact.lightness);
+			sources.push(tokensOf(exact));
+			return;
+		}
+		const below = anchors.filter((anchor) => anchor.index < index).at(-1);
+		const above = anchors.find((anchor) => anchor.index > index);
+		if (below && above) {
+			const span = (index - below.index) / (above.index - below.index);
+			lightness.push(below.lightness + (above.lightness - below.lightness) * span);
+			sources.push(tokensOf(below, above));
+			return;
+		}
+		const edge = below ?? (above as SurfaceAnchor);
+		lightness.push(edge.lightness + step * (index - edge.index));
+		sources.push(tokensOf(edge));
+	});
+
+	return { lightness, sources };
+}
 
 const TEXT_STEPS = ["xs", "sm", "body", "lg", "xl", "2xl", "3xl", "4xl", "5xl"] as const;
 const LEADING_STEPS = ["tight", "normal", "loose"] as const;
@@ -258,6 +406,7 @@ const SPACE_BASE_REM = 0.25;
  * contrast strictness, elevation punch, accent / palette saturation) while sharing
  * a single tested core. `contrastFloor` is the WCAG ratio the algorithm clamps
  * derived text to; `declaredTextOnFillFloor` is the floor its gauntlet asserts.
+ * `declaredFocusRingFloor` is the same shape for `--ring`, which is walked to it.
  */
 export type PresetAnchors = { bg: string; fg: string; accent?: string };
 
@@ -267,8 +416,19 @@ export interface PresetDefaults {
 	/** Domain specs for any knob not in the shared registry — a novel knob this preset introduces. */
 	knobSpecs?: KnobSpec[];
 	defaultAnchors: PresetAnchors;
+	/**
+	 * An anchor pair this algorithm states for a scheme other than its own, superseding
+	 * {@link defaultAnchors} whenever the derivation resolves to that scheme and the caller seeded no
+	 * surface of their own. Optional: absent, the opposite scheme is reached by flipping the default
+	 * pair's lightness.
+	 *
+	 * The same shape `KnobSpec.defaultByScheme` already uses, for the same reason: one value cannot
+	 * answer for both halves of a theme.
+	 */
+	anchorsByScheme?: Partial<Record<Scheme, PresetAnchors>>;
 	contrastFloor: number;
 	declaredTextOnFillFloor: number;
+	declaredFocusRingFloor: number;
 	defaultVibrancy: number;
 	accentChromaMul: number;
 	statusChromaMul: number;
@@ -592,6 +752,48 @@ function liftStopForContrast(fg: OklchColor, bgCss: string, target: number, towa
  * mid-lightness page can't park the fill in the dead zone where neither text pole reaches its
  * on-fill floor. Hue and chroma are held.
  */
+/**
+ * Whether two emitted colors read as one — the same test the accent family holds its four members
+ * to, so the engine has a single answer to "are these the same colour" rather than one per caller.
+ */
+function readsAsOneColor(a: OklchColor, b: OklchColor): boolean {
+	const arc = Math.abs(hueDelta(a.h, b.h)) * Math.min(a.c, b.c);
+	return (
+		Math.abs(a.l - b.l) < ACCENT_FAMILY_SEPARATION &&
+		Math.abs(a.c - b.c) < ACCENT_FAMILY_SEPARATION &&
+		arc < ACCENT_FAMILY_HUE_ARC
+	);
+}
+
+/**
+ * Keep a soft fill from landing on its own solid one. The tint is derived at the surface's
+ * lightness, so a page, an accent and therefore its tint can all share one lightness with no chroma
+ * to tell them apart — and `variant="soft"` then paints exactly what `variant="solid"` paints.
+ *
+ * Steps lightness until the two stop reading as one colour, re-running the ink's contrast lift on
+ * every candidate so the tint never buys separation by becoming unreadable. Gated on the collapse,
+ * so a tint that already reads apart is returned untouched and every ordinary theme is unchanged.
+ * A tint with nowhere left to go is returned as it came: readable beats distinct.
+ */
+function separateTintFromFill(
+	tint: OklchColor,
+	fill: OklchColor,
+	inkCss: string,
+	target: number,
+	towardLight: boolean,
+): OklchColor {
+	if (!readsAsOneColor(tint, fill)) return tint;
+	for (const direction of [1, -1]) {
+		for (let step = 1; step <= 40; step++) {
+			const l = tint.l + direction * step * 0.01;
+			if (l < 0 || l > 1) break;
+			const candidate = liftStopForContrast(clampToGamut(oklch(l, tint.c, tint.h)), inkCss, target, towardLight);
+			if (!readsAsOneColor(candidate, fill)) return candidate;
+		}
+	}
+	return tint;
+}
+
 function separateFillFromSurface(
 	fill: OklchColor,
 	surface: OklchColor,
@@ -637,6 +839,50 @@ export function borderForContrast(
 		if (emittedContrast(candidate, surfaceCss) >= minContrast) break;
 	}
 	return candidate;
+}
+
+/**
+ * Floor a focus ring so it clears `floor` against every one of `surfaces`, not just the nearest.
+ *
+ * The seed's alpha is honoured: each candidate is composited over the surface before grading, since
+ * a translucent ring reads as the blend. Hue is preserved and chroma is held as far as it can be,
+ * yielding only when no lightness at the seed's saturation reaches the floor. Returns the seed
+ * untouched when it already clears, and the closest it reached when the floor is unreachable.
+ */
+export function ringForContrast(
+	seed: OklchColor,
+	surfaces: readonly OklchColor[],
+	floor: number,
+): OklchColor {
+	const backdrops = surfaces.map(formatCss);
+	if (backdrops.length === 0) return seed;
+	const worst = (candidate: OklchColor): number =>
+		Math.min(...backdrops.map((bg) => contrast(formatCss(flatten(formatCss(candidate), bg)), bg)));
+	if (worst(seed) >= floor) return seed;
+	const meanL = surfaces.reduce((sum, s) => sum + s.l, 0) / surfaces.length;
+	const away = meanL < 0.5 ? 1 : 0;
+	let best = seed;
+	let bestRatio = worst(seed);
+	for (const keepChroma of [true, false]) {
+		for (const targetL of [away, 1 - away]) {
+			for (let i = 1; i <= 100; i++) {
+				const t = i / 100;
+				const candidate: OklchColor = {
+					l: seed.l + (targetL - seed.l) * t,
+					c: keepChroma ? seed.c : seed.c * (1 - t),
+					h: seed.h,
+					alpha: seed.alpha,
+				};
+				const ratio = worst(candidate);
+				if (ratio > bestRatio) {
+					bestRatio = ratio;
+					best = candidate;
+				}
+				if (ratio >= floor) return candidate;
+			}
+		}
+	}
+	return best;
 }
 
 function readableOnTint(tint: OklchColor, hue: number, floor: number, inkChroma?: number): string {
@@ -791,7 +1037,7 @@ function shadowString(
 function paletteRamp(
 	register: TokenRegister,
 	hue: string,
-	spec: { h: number; c: number } | "gray" | "white" | "black",
+	spec: { h: number; c: number; l?: number } | "gray" | "white" | "black",
 	scheme: Scheme,
 	vibrancy: number,
 	floor: number,
@@ -812,25 +1058,31 @@ function paletteRamp(
 		register[`--${hue}-vivid`] = vivid;
 	};
 
+	const page = panels[0] as OklchColor;
+	const offPage = (fill: OklchColor): OklchColor =>
+		separateFillFromSurface(fill, page, SURFACE_SEPARATION, floor);
+
 	const grayscale = (lights: [number, number, number, number], chroma: number): void => {
 		const stops = lights.map((l) => oklch(l, chroma, 0));
 		const baseStop = stops[2] as OklchColor;
+		const solidBase = offPage(pinnedBase ?? baseStop);
 		const subtleStop = stops[0] as OklchColor;
 		const strongStop = liftStopForContrast(stops[3] as OklchColor, formatCss(subtleStop), AA + 0.2, (stops[3] as OklchColor).l >= subtleStop.l);
 		// INFO: achromatic inks stay neutral; a hued ink reads as tinted gray on a gray chip.
-		const contrast = readableOnTint(baseStop, 0, AA + 0.3, 0);
+		const stopInk = readableOnTint(baseStop, 0, AA + 0.3, 0);
+		const solidInk = readableOnTint(solidBase, 0, AA + 0.3, 0);
 		set("", baseStop);
 		set("subtle", subtleStop);
 		set("muted", stops[1] as OklchColor);
 		set("base", baseStop);
 		set("strong", strongStop);
-		register[`--color-${hue}-contrast`] = contrast;
+		register[`--color-${hue}-contrast`] = stopInk;
 		// INFO: achromatic poles can't read `strong` on `subtle` (same scale end), so the soft ink
 		// sweeps the opposite pole; vivid is the chroma-0 ink that lands on the contrasting pole.
 		family(
-			formatCss(baseStop),
+			formatCss(solidBase),
 			formatCss(subtleStop),
-			contrast,
+			solidInk,
 			readableOnTint(subtleStop, 0, AA + 0.2, 0),
 			vividOnPanel(0, panels, floor, 0),
 		);
@@ -856,7 +1108,7 @@ function paletteRamp(
 	const baseL = scheme === "dark" ? 0.7 : 0.55;
 	const lBias = Math.max(-0.06, Math.min(0.06, (accent.l - baseL) * 0.25));
 	const ladderL = (scheme === "dark" ? [0.45, 0.58, baseL, 0.82] : [0.78, 0.66, baseL, 0.42]).map(
-		(l) => Math.max(0.05, Math.min(0.97, l + lBias)),
+		(l) => Math.max(0.05, Math.min(0.97, l + lBias + (spec.l ?? 0))),
 	);
 	const ladderC = [chroma * 0.7, chroma * 0.9, chroma, chroma * 0.85];
 	const stops = ladderL.map((l, i) =>
@@ -952,18 +1204,17 @@ function completeAnchors(preset: PresetDefaults, opts: DeriveOptions): Completed
 	const givenFg = parsePin(pin["--fg-0"]);
 	const givenAccent = parsePin(pin["--accent"]);
 
-	const defBg = toOklchColor(preset.defaultAnchors.bg);
-	const defFg = toOklchColor(preset.defaultAnchors.fg);
+	const baseScheme = schemeOf(toOklchColor(preset.defaultAnchors.bg));
+	const scheme: Scheme =
+		opts.knobs?.scheme ?? (givenBg ? schemeOf(givenBg) : givenFg ? schemeFromFg(givenFg) : baseScheme);
+
+	const anchors = preset.anchorsByScheme?.[scheme] ?? preset.defaultAnchors;
+
+	const defBg = toOklchColor(anchors.bg);
+	const defFg = toOklchColor(anchors.fg);
 	const defScheme = schemeOf(defBg);
 	const surfaceDepth = defScheme === "dark" ? defBg.l : 1 - defBg.l;
 	const floor = Math.max(ENFORCE, preset.contrastFloor);
-
-	const inferredScheme: Scheme = givenBg
-		? schemeOf(givenBg)
-		: givenFg
-			? schemeFromFg(givenFg)
-			: defScheme;
-	const scheme: Scheme = opts.knobs?.scheme ?? inferredScheme;
 
 	let bg: OklchColor;
 	if (givenBg) {
@@ -977,12 +1228,9 @@ function completeAnchors(preset: PresetDefaults, opts: DeriveOptions): Completed
 	}
 
 	const fg = givenFg ?? defFg;
-	const accentExplicit = givenAccent !== null || preset.defaultAnchors.accent !== undefined;
+	const accentExplicit = givenAccent !== null || anchors.accent !== undefined;
 	const accent =
-		givenAccent ??
-		(preset.defaultAnchors.accent
-			? toOklchColor(preset.defaultAnchors.accent)
-			: deriveAccentAnchor(bg, fg));
+		givenAccent ?? (anchors.accent ? toOklchColor(anchors.accent) : deriveAccentAnchor(bg, fg));
 
 	return { bg, fg, accent, scheme, accentExplicit };
 }
@@ -1019,6 +1267,56 @@ function resolveStatusHue(role: string, pinned: TokenRegister): number {
 		pinned[`--${name}`] ?? pinned[`--color-${name}-base`] ?? pinned[`--color-${name}`],
 	);
 	return pin ? pin.h : paletteHueAngle(name);
+}
+
+/**
+ * How far a status role is held from the accent, in degrees of hue.
+ *
+ * Measured rather than chosen: walking an accent through `--danger` at the chroma a solid fill
+ * carries, the two read as one color across roughly a 40 degree arc, and are comfortably distinct by
+ * 45. Thirty clears the measured arc with margin on both sides.
+ */
+const STATUS_ACCENT_MIN_HUE_SEPARATION = 30;
+
+/**
+ * The status roles held off the accent's hue.
+ *
+ * `danger` alone, and the restraint is the point: no blessed algorithm ships a red accent, so guarding
+ * it changes nothing at any default anchor and only bites the case it exists for, where an author
+ * brings a red brand. `info` is the tempting second entry and the wrong one. It reads as blue *by
+ * definition*, the blessed accents are blues, so guarding it would rotate every shipped `--info` about
+ * thirty degrees into violet: trading a role that cannot be told from the accent for a role that is no
+ * longer the color its name promises, on four of the five algorithms, at their default anchors.
+ */
+const ACCENT_COLLISION_GUARDED = new Set(["danger"]);
+
+/**
+ * Pushes a status role off the accent's hue when the two collide.
+ *
+ * A brand accent is an input and a status hue is a promise, so an accent that lands on one makes the
+ * primary and the destructive control render as the same button while every contrast pair still
+ * passes. The role moves rather than the accent, because the accent is what the author asked for.
+ *
+ * It moves to whichever side of the accent it already sat on, so it travels the shortest distance that
+ * clears and keeps its identity: a `danger` pushed off a red accent stays a warm red rather than
+ * swinging to magenta. Dead-on, it takes the side leaving it furthest from the other status roles.
+ *
+ * A hard minimum separation cannot be continuous everywhere: a circle minus an arc has nowhere to send
+ * the excluded region's interior, so the role's hue jumps exactly once as an accent sweeps past. That
+ * single discontinuity is inherent to the constraint rather than to this rule, and
+ * `accent-status-collision.test.ts` pins the count at one so a future change cannot quietly add a
+ * second.
+ */
+function separateFromAccent(roleHue: number, accentHue: number, otherHues: readonly number[]): number {
+	const delta = hueDelta(accentHue, roleHue);
+	if (Math.abs(delta) >= STATUS_ACCENT_MIN_HUE_SEPARATION) return roleHue;
+	if (delta !== 0) return accentHue + Math.sign(delta) * STATUS_ACCENT_MIN_HUE_SEPARATION;
+
+	const clearance = (candidate: number): number =>
+		otherHues.reduce((min, other) => Math.min(min, Math.abs(hueDelta(candidate, other))), 360);
+	const ahead = accentHue + STATUS_ACCENT_MIN_HUE_SEPARATION;
+	const behind = accentHue - STATUS_ACCENT_MIN_HUE_SEPARATION;
+	return clearance(ahead) >= clearance(behind) ? ahead : behind;
 }
 
 /**
@@ -1079,6 +1377,9 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 
 	lit("--scheme", scheme);
 
+	const pinnedSurface = (token: TokenName, derived: OklchColor): OklchColor =>
+		pinned[token] ? toOklchColor(pinned[token] as string) : derived;
+
 	const bg0 = pinned["--bg-0"]
 		? toOklchColor(pinned["--bg-0"])
 		: extreme
@@ -1090,17 +1391,26 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 				);
 	const pageFloor = (fill: OklchColor): OklchColor =>
 		separateFillFromSurface(fill, bg0, SURFACE_SEPARATION, floor);
-	const surfaceColors: OklchColor[] = SURFACES.map((_, index) =>
-		withLightness(bg0, bg0.l + surfaceRamp * (index - 1)),
+	const surfacePins = SURFACES.map((name) =>
+		pinned[name] ? toOklchColor(pinned[name] as string) : null,
+	);
+	const ladder = solveSurfaceLadder(surfacePins, bg0.l, surfaceRamp);
+	const surfaceRefs = (index: number): TokenName[] => [
+		...new Set([...refIfPinned("--bg-0"), ...(ladder.sources[index] as TokenName[])]),
+	];
+	const surfaceColors: OklchColor[] = SURFACES.map(
+		(_, index) =>
+			surfacePins[index] ?? withLightness(bg0, ladder.lightness[index] as number),
 	);
 	SURFACES.forEach((name, index) => {
-		lit(name, formatCss(surfaceColors[index] as OklchColor), refIfPinned("--bg-0"));
+		lit(name, formatCss(surfaceColors[index] as OklchColor), surfaceRefs(index));
 	});
 
+	const bottomStep = (ladder.lightness[1] as number) - (ladder.lightness[0] as number);
 	lit(
 		"--bg-sunken",
-		formatCss(withLightness(bg0, bg0.l - surfaceRamp * 2)),
-		refIfPinned("--bg-0"),
+		formatCss(withLightness(bg0, (ladder.lightness[0] as number) - bottomStep)),
+		[...new Set([...surfaceRefs(0), ...surfaceRefs(1)])],
 	);
 
 	lit("--scrim", formatCss(oklch(scheme === "dark" ? 0 : 0.1, 0, 0, 0.6)));
@@ -1224,18 +1534,30 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const accentTextColor = enforceChromaticOnPanels(accentFill);
 	const accentTextCss = formatCss(accentTextColor);
 	// INFO: the soft tint is derived to clear AA against `--accent-text`, the ink painted on it.
-	const accentTint = liftStopForContrast(
-		oklch(
-			scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04),
-			accentFill.c * preset.accentTintChromaMul,
-			accentFill.h,
-		),
-		accentTextCss,
-		AA + 0.2,
-		bestTruePole(accentTextCss) === TRUE_WHITE,
-	);
+	const pinnedAccentTint = parsePin(pinned["--accent-bg"]);
+	const accentTint =
+		pinnedAccentTint ??
+		separateTintFromFill(
+			liftStopForContrast(
+				oklch(
+					scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04),
+					accentFill.c * preset.accentTintChromaMul,
+					accentFill.h,
+				),
+				accentTextCss,
+				AA + 0.2,
+				bestTruePole(accentTextCss) === TRUE_WHITE,
+			),
+			accentFill,
+			accentTextCss,
+			AA + 0.2,
+			bestTruePole(accentTextCss) === TRUE_WHITE,
+		);
+	const accentTextOnTint = pinnedAccentTint
+		? readableHuedOnTintAndPanel(accentTint, accentFill.h, AA + 0.3, panelSurfaces, AA + 0.05, accentFill.c)
+		: accentTextCss;
 	lit("--accent-bg", formatCss(accentTint), ["--accent", ...refIfPinned("--bg-0")]);
-	lit("--accent-text", accentTextCss, ["--accent", ...refIfPinned("--bg-0")]);
+	lit("--accent-text", accentTextOnTint, ["--accent", ...refIfPinned("--bg-0")]);
 	lit(
 		"--accent-vivid",
 		vividOnPanel(accentFill.h, [bg0, ...panelSurfaces], floor, accentFill.c),
@@ -1252,16 +1574,22 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	lit("--neutral", formatCss(neutralFill), ["--accent", ...refIfPinned("--neutral")]);
 	const neutralTextColor = enforceOnPanels(neutralFill);
 	const neutralTextCss = formatCss(neutralTextColor);
-	const neutralTint = liftStopForContrast(
-		oklch(
-			scheme === "dark" ? Math.max(0.2, bg0.l + 0.06) : Math.min(0.92, bg0.l - 0.04),
-			0.005,
-			neutralTintHue,
-		),
+	const neutralTintSeed = oklch(
+		scheme === "dark" ? Math.max(0.2, bg0.l + 0.06) : Math.min(0.92, bg0.l - 0.04),
+		0.005,
+		neutralTintHue,
+	);
+	const neutralTintTarget = AA + 0.2;
+	const neutralTintLeaned = liftStopForContrast(
+		neutralTintSeed,
 		neutralTextCss,
-		AA + 0.2,
+		neutralTintTarget,
 		neutralTextColor.l < 0.5,
 	);
+	const neutralTint =
+		contrast(formatCss(neutralTintLeaned), neutralTextCss) >= neutralTintTarget
+			? neutralTintLeaned
+			: liftStopForContrast(neutralTintSeed, neutralTextCss, neutralTintTarget, neutralTextColor.l >= 0.5);
 	lit("--neutral-bg", formatCss(neutralTint), ["--accent", ...refIfPinned("--bg-0")]);
 	lit("--neutral-fg", pickReadable(neutralFill, TEXT_POLES, floor), ["--neutral"]);
 	lit("--neutral-text", neutralTextCss, ["--neutral", ...refIfPinned("--bg-0")]);
@@ -1285,10 +1613,17 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		["--scrollbar-thumb"],
 	);
 
-	lit("--ring", formatCss(withAlpha(accentFill, 0.7)), ["--accent"]);
-	lit("--ring-bg", formatCss(withAlpha(accentFill, 0.18)), ["--accent"]);
+	const ringSurfaces = RING_SURFACE_INDICES.map((index) => surfaceColors[index] as OklchColor);
+	const ringColor = ringForContrast(
+		withAlpha(accentFill, 0.7),
+		ringSurfaces,
+		preset.declaredFocusRingFloor,
+	);
+	const ringRefs: TokenName[] = ["--accent", ...refIfPinned("--bg-0")];
+	lit("--ring", formatCss(ringColor), ringRefs);
+	lit("--ring-bg", formatCss(withAlpha(ringColor, 0.18)), ["--ring"]);
 
-	const fieldBg = withLightness(bg0, scheme === "dark" ? bg0.l - 0.03 : bg0.l + 0.02);
+	const fieldBg = pinnedSurface("--field-bg", withLightness(bg0, scheme === "dark" ? bg0.l - 0.03 : bg0.l + 0.02));
 	lit("--field-bg", formatCss(fieldBg), refIfPinned("--bg-0"));
 	const fieldBorderSeed = extreme
 		? oklch(scheme === "dark" ? 0.8 : 0.2, 0, 0)
@@ -1339,6 +1674,7 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	};
 	const a1 = accentDisplay;
 	const fanBase: OklchColor = { ...a1, c: Math.max(a1.c, FAN_MIN_CHROMA) };
+	const hueFanBase: OklchColor = chromaCapableBase(fanBase);
 	const rotate = (deg: number): AccentDelta => ({ dL: 0, dC: 0, dH: deg });
 	const fanned = (n: string, derived: OklchColor): OklchColor =>
 		pinned[`--accent-${n}`] ? toOklchColor(pinned[`--accent-${n}`] as string) : derived;
@@ -1351,25 +1687,26 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	if (strategy === "fan") {
 		// INFO: pin either flank and the other mirrors its hue across the accent; lightness and chroma
 		// stay the fan base's throughout (constant-L/C fan).
-		const mirrorOf = (c: OklchColor): OklchColor => applyAccentDelta(fanBase, rotate(-hueDelta(a1.h, c.h)));
+		const mirrorOf = (c: OklchColor): OklchColor => applyAccentDelta(hueFanBase, rotate(-hueDelta(a1.h, c.h)));
 		const a2Pin = pinned["--accent-2"];
 		const a3Pin = pinned["--accent-3"];
-		let a2Derived = applyAccentDelta(fanBase, rotate(-accentSplit));
-		let a3Derived = applyAccentDelta(fanBase, rotate(accentSplit));
+		let a2Derived = applyAccentDelta(hueFanBase, rotate(-accentSplit));
+		let a3Derived = applyAccentDelta(hueFanBase, rotate(accentSplit));
 		if (a2Pin && !a3Pin) a3Derived = mirrorOf(toOklchColor(a2Pin as string));
 		else if (a3Pin && !a2Pin) a2Derived = mirrorOf(toOklchColor(a3Pin as string));
 		a2 = fanned("2", a2Derived);
 		a3 = fanned("3", a3Derived);
-		a4 = fanned("4", applyAccentDelta(fanBase, rotate(180)));
+		a4 = fanned("4", applyAccentDelta(hueFanBase, rotate(fanFourthOffset(a1.h, a2.h, a3.h))));
 		a2Refs = a3Pin && !a2Pin ? ["--accent", "--accent-3"] : ["--accent"];
 		a3Refs = a2Pin && !a3Pin ? ["--accent", "--accent-2"] : ["--accent"];
-		a4Refs = ["--accent"];
+		a4Refs = a2Pin || a3Pin ? ["--accent", "--accent-2", "--accent-3"] : ["--accent"];
 	} else if (strategy === "shade") {
 		// INFO: 2/3/4 hold the accent's hue and step lightness (tint up, two shades down), so a
 		// near-gray accent still yields four distinguishable rungs where a hue rotation is a no-op.
-		a2 = fanned("2", applyAccentDelta(fanBase, { dL: SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
-		a3 = fanned("3", applyAccentDelta(fanBase, { dL: -SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
-		a4 = fanned("4", applyAccentDelta(fanBase, { dL: -2 * SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+		const rungs = shadeLadderRungs(fanBase.l);
+		a2 = fanned("2", applyAccentDelta(fanBase, { dL: rungs[0], dC: 0, dH: 0 }));
+		a3 = fanned("3", applyAccentDelta(fanBase, { dL: rungs[1], dC: 0, dH: 0 }));
+		a4 = fanned("4", applyAccentDelta(fanBase, { dL: rungs[2], dC: 0, dH: 0 }));
 		a2Refs = ["--accent"];
 		a3Refs = ["--accent"];
 		a4Refs = ["--accent"];
@@ -1384,23 +1721,33 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 			return target <= ACCENT_RAMP_L_MAX && target >= ACCENT_RAMP_L_MIN;
 		};
 		const dir = room(away) ? away : -away;
-		const shadeL = Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, midL + dir * DUO_L_STEP));
+		const steppedL = Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, midL + dir * DUO_L_STEP));
+		const shadeL = chromaCapableBase({ l: steppedL, c: FAN_MIN_CHROMA, h: a1.h, alpha: 1 }).l;
 		const shadeOf = (brand: OklchColor): OklchColor => ({
 			l: shadeL,
 			c: Math.max(brand.c, FAN_MIN_CHROMA),
 			h: brand.h,
 			alpha: 1,
 		});
-		a3 = fanned("3", shadeOf(a1));
-		a4 = fanned("4", shadeOf(a2));
+		const firstShade = shadeOf(a1);
+		const secondShade = shadeOf(a2);
+		// INFO: two brands only separate their shades by hue, and an achromatic brand has none to give —
+		// a gray second brand lands both on the floored chroma at hue 0, so they step apart instead.
+		const shadesRead = Math.abs(hueDelta(firstShade.h, secondShade.h)) * Math.min(firstShade.c, secondShade.c);
+		const stepped =
+			shadesRead < ACCENT_FAMILY_HUE_ARC
+				? { ...secondShade, l: Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, shadeL - dir * DUO_L_STEP)) }
+				: secondShade;
+		a3 = fanned("3", firstShade);
+		a4 = fanned("4", stepped);
 		a2Refs = ["--accent"];
 		a3Refs = ["--accent", "--accent-2"];
 		a4Refs = ["--accent-2", "--accent"];
 	} else {
 		// INFO: `step` chains each accent one hue-step past the last off `fanBase` (not `a1`), holding
 		// the walk at floored chroma for a near-gray accent.
-		a2 = fanned("2", applyAccentDelta(fanBase, rotate(shiftStep)));
-		a3 = fanned("3", applyAccentDelta(a2, accentDelta(fanBase, a2)));
+		a2 = fanned("2", applyAccentDelta(hueFanBase, rotate(shiftStep)));
+		a3 = fanned("3", applyAccentDelta(a2, accentDelta(hueFanBase, a2)));
 		a4 = fanned("4", applyAccentDelta(a3, accentDelta(a2, a3)));
 		a2Refs = ["--accent", "--accent-shift-step"];
 		a3Refs = ["--accent-2", "--accent"];
@@ -1414,10 +1761,13 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const emitAccentFamily = (n: string, raw: OklchColor): void => {
 		const color = toOklchColor(emitAccent(raw));
 		lit(`--accent-${n}-fg`, pickReadable(color, TEXT_POLES, floor), [`--accent-${n}`]);
-		const tint = oklch(
-			scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04),
-			color.c * preset.accentTintChromaMul,
-			color.h,
+		const tint = pinnedSurface(
+			`--accent-${n}-bg`,
+			oklch(
+				scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04),
+				color.c * preset.accentTintChromaMul,
+				color.h,
+			),
 		);
 		lit(`--accent-${n}-bg`, formatCss(tint), [`--accent-${n}`, ...refIfPinned("--bg-0")]);
 		lit(
@@ -1437,14 +1787,26 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	lit("--selection-cue", extreme || knobs.cues === "redundant" ? "marker" : "tint");
 
 	const statusChroma = Math.max(0.12, accent.c) * (0.6 + vibrancy * 0.7) * preset.statusChromaMul;
+	const accentIsChromatic = accent.c >= ACHROMATIC_CHROMA;
 	for (const role of Object.keys(STATUS_TO_HUE)) {
 		const namedHue = resolveStatusHue(role, pinned);
 		const pinnedFill = parseChromaticPin(pinned[`--${role}`]);
-		const roleHue = pinnedFill ? pinnedFill.h : namedHue;
+		const effectivePin = parsePin(pinned[`--${role}`]);
+		const others = Object.keys(STATUS_TO_HUE)
+			.filter((other) => other !== role)
+			.map((other) => resolveStatusHue(other, pinned));
+		const roleHue = pinnedFill
+			? pinnedFill.h
+			: accentIsChromatic && ACCENT_COLLISION_GUARDED.has(role)
+				? separateFromAccent(namedHue, accent.h, others)
+				: namedHue;
 		const fillL = scheme === "dark" ? 0.62 : 0.52;
-		const fill = pinnedFill ?? pageFloor(fillWithTextHeadroom(fillL, statusChroma, roleHue, floor));
+		const fill = effectivePin ?? pageFloor(fillWithTextHeadroom(fillL, statusChroma, roleHue, floor));
 		const tintL = scheme === "dark" ? Math.min(0.3, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04);
-		const tint = ensureTextHeadroom(oklch(tintL, statusChroma * 0.35, roleHue), scheme, AA + 0.3);
+		const tint = pinnedSurface(
+			`--${role}-bg`,
+			ensureTextHeadroom(oklch(tintL, statusChroma * 0.35, roleHue), scheme, AA + 0.3),
+		);
 		const fillRefs = refIfPinned("--accent", `--${role}`);
 		lit(`--${role}`, formatCss(fill), fillRefs);
 		lit(`--${role}-bg`, formatCss(tint), [`--${role}`, ...refIfPinned("--bg-0")]);
@@ -1485,14 +1847,23 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const linkColor = enforceChromaticOnPanels(accent);
 	const linkCss = formatCss(linkColor);
 	let linkHoverColor = enforceChromaticOnPanels(withLightness(accent, accent.l + (scheme === "dark" ? 0.08 : -0.08)));
-	if (formatCss(linkHoverColor) === linkCss) {
+	if (oklabDistance(formatCss(linkHoverColor), linkCss) < LINK_HOVER_MIN_DELTA) {
 		// INFO: the hover step can collapse onto `--link` (low-chroma accent, or gamut clamping near a
 		// pole); force a distinct readable value by stepping lightness, then the other way, then chroma.
 		const pole = textLight ? 1 : 0;
 		const toward = linkColor.l < pole ? 1 : -1;
+		// INFO: a candidate under the floor is still worth keeping — rejecting it outright falls back to a
+		// value that can be byte-identical to `--link`, which is worse than the near-miss it replaced.
+		let best: OklchColor | undefined;
+		let bestDelta = oklabDistance(formatCss(linkHoverColor), linkCss);
 		const distinctHover = (candidate: OklchColor): OklchColor | undefined => {
 			const enforced = enforceChromaticOnPanels(candidate);
-			return formatCss(enforced) === linkCss ? undefined : enforced;
+			const delta = oklabDistance(formatCss(enforced), linkCss);
+			if (delta > bestDelta) {
+				best = enforced;
+				bestDelta = delta;
+			}
+			return delta < LINK_HOVER_MIN_DELTA ? undefined : enforced;
 		};
 		let hover: OklchColor | undefined;
 		for (let step = 0.1; step <= 0.6 && !hover; step += 0.05) {
@@ -1504,20 +1875,16 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		for (let cut = 0.7; cut >= 0.05 && !hover; cut -= 0.15) {
 			hover = distinctHover(oklch(linkColor.l, linkColor.c * cut, linkColor.h));
 		}
-		linkHoverColor = hover ?? linkHoverColor;
+		linkHoverColor = hover ?? best ?? linkHoverColor;
 	}
 	lit("--link", formatCss(linkColor), ["--accent", ...refIfPinned("--bg-0")]);
 	lit("--link-hover", formatCss(linkHoverColor), ["--link", ...refIfPinned("--bg-0")]);
 
 	for (const [hue, spec] of Object.entries(PALETTE_HUES)) {
-		const pinnedBase =
-			typeof spec === "object"
-				? parseChromaticPin(
-						pinned[`--${hue}`] ?? pinned[`--color-${hue}-base`] ?? pinned[`--color-${hue}`],
-					)
-				: null;
-		const effectiveSpec =
-			pinnedBase && typeof spec === "object" ? { h: pinnedBase.h, c: pinnedBase.c } : spec;
+		const pinSource = pinned[`--${hue}`] ?? pinned[`--color-${hue}-base`] ?? pinned[`--color-${hue}`];
+		const pinnedHue = typeof spec === "object" ? parseChromaticPin(pinSource) : null;
+		const pinnedBase = parsePin(pinSource);
+		const effectiveSpec = pinnedHue && typeof spec === "object" ? { h: pinnedHue.h, c: pinnedHue.c } : spec;
 		const ramp: TokenRegister = {};
 		paletteRamp(
 			ramp,
@@ -1538,19 +1905,18 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 			]);
 		}
 		lit(`--${hue}`, ramp[`--${hue}`] as string, [`--color-${hue}-base`]);
-		lit(`--${hue}-bg`, ramp[`--${hue}-bg`] as string, [`--color-${hue}-subtle`]);
+		lit(`--${hue}-bg`, ramp[`--${hue}-bg`] as string, [`--color-${hue}`, ...refIfPinned("--bg-0")]);
 		lit(`--${hue}-fg`, ramp[`--${hue}-fg`] as string, [`--color-${hue}-base`]);
-		lit(`--${hue}-text`, ramp[`--${hue}-text`] as string, [`--color-${hue}-subtle`]);
+		lit(`--${hue}-text`, ramp[`--${hue}-text`] as string, [`--${hue}-bg`, ...refIfPinned("--bg-0")]);
 		lit(`--${hue}-vivid`, ramp[`--${hue}-vivid`] as string, [
 			`--color-${hue}-base`,
 			...refIfPinned("--bg-0"),
 		]);
 	}
 
-	const codeBg = ensureTextHeadroom(
-		withLightness(bg0, scheme === "dark" ? bg0.l - 0.02 : bg0.l + 0.012),
-		scheme,
-		floor,
+	const codeBg = pinnedSurface(
+		"--code-bg",
+		ensureTextHeadroom(withLightness(bg0, scheme === "dark" ? bg0.l - 0.02 : bg0.l + 0.012), scheme, floor),
 	);
 	const codeBgCss = formatCss(codeBg);
 	lit("--code-bg", codeBgCss, refIfPinned("--bg-0"));
@@ -1641,10 +2007,9 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	);
 	lit("--code-variable", codeFgCss, ["--code-fg"]);
 
-	const terminalBg = ensureTextHeadroom(
-		withLightness(bg0, scheme === "dark" ? bg0.l - 0.035 : bg0.l + 0.02),
-		scheme,
-		floor,
+	const terminalBg = pinnedSurface(
+		"--terminal-bg",
+		ensureTextHeadroom(withLightness(bg0, scheme === "dark" ? bg0.l - 0.035 : bg0.l + 0.02), scheme, floor),
 	);
 	const terminalBgCss = formatCss(terminalBg);
 	lit("--terminal-bg", terminalBgCss, refIfPinned("--bg-0"));
@@ -1697,8 +2062,8 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	const terminalAchroma = (l: number): OklchColor => oklch(l, 0.006, terminalHue);
 	lit("--terminal-black", formatCss(terminalAchroma(0.2)), refIfPinned("--bg-0"));
 	lit("--terminal-bright-black", formatCss(terminalAchroma(0.42)), refIfPinned("--bg-0"));
-	lit("--terminal-white", formatCss(terminalAchroma(0.85)), ["--fg-0"]);
-	lit("--terminal-bright-white", formatCss(terminalAchroma(0.97)), ["--fg-0"]);
+	lit("--terminal-white", formatCss(terminalAchroma(0.85)), refIfPinned("--bg-0"));
+	lit("--terminal-bright-white", formatCss(terminalAchroma(0.97)), refIfPinned("--bg-0"));
 
 	lit("--font-sans", fonts.sans);
 	lit("--font-mono", fonts.mono);
@@ -1905,20 +2270,21 @@ function achievableFloor(declaredFloor: number, bgCss: string | undefined): numb
 	return Math.min(declaredFloor, ceiling - CEILING_EPSILON);
 }
 
-/** Perceptual OKLab distance between two colors — sees hue separation that luminance contrast can't. */
-function oklabDist(a: string, b: string): number {
-	const x = toOklchColor(a);
-	const y = toOklchColor(b);
-	const rad = Math.PI / 180;
-	const ax = x.c * Math.cos(x.h * rad);
-	const ay = x.c * Math.sin(x.h * rad);
-	const bx = y.c * Math.cos(y.h * rad);
-	const by = y.c * Math.sin(y.h * rad);
-	return Math.hypot(x.l - y.l, ax - bx, ay - by);
+function achievableRingFloor(declaredFloor: number, ringCss: string, surfaces: string[]): number {
+	const a = alpha(ringCss);
+	const reach = (pole: string): number =>
+		Math.min(
+			...surfaces.map((surface) =>
+				contrast(formatCss(flatten(formatCss(withAlpha(toOklchColor(pole), a)), surface)), surface),
+			),
+		);
+	const ceiling = Math.max(reach("#000000"), reach("#ffffff"));
+	return Math.min(declaredFloor, ceiling - CEILING_EPSILON);
 }
 
 export function makeInvariants(preset: PresetDefaults): Invariant[] {
 	const onFillFloor = preset.declaredTextOnFillFloor;
+	const ringFloor = preset.declaredFocusRingFloor;
 	return [
 		(ctx: InvariantContext): InvariantResult => {
 			for (const name of PRODUCES) {
@@ -2129,6 +2495,33 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			return { name: "text-on-tint clears AA", ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
+			const name = `focus ring clears ${ringFloor}`;
+			if (ctx.constraints["--ring"]) return { name, ok: true, detail: "skipped (pinned ring)" };
+			const ring = ctx.register["--ring"];
+			if (!ring) return { name, ok: false, detail: "missing --ring" };
+			const surfaces = SURFACE_ROLES.map((token) => ctx.register[token]).filter(
+				(value): value is string => typeof value === "string" && value.length > 0,
+			);
+			if (surfaces.length === 0) return { name, ok: true, detail: "skipped (no surfaces)" };
+			const required = achievableRingFloor(ringFloor, ring, surfaces);
+			let worst = Infinity;
+			let worstOn = "";
+			for (const surface of surfaces) {
+				const ratio = contrast(formatCss(flatten(ring, surface)), surface);
+				if (ratio < worst) {
+					worst = ratio;
+					worstOn = surface;
+				}
+			}
+			return {
+				name,
+				ok: worst >= required - 0.01,
+				detail: `--ring on ${worstOn} = ${worst.toFixed(2)} (floor ${required.toFixed(2)}${
+					required < ringFloor ? ` best-achievable, declared ${ringFloor}` : ""
+				})`,
+			};
+		},
+		(ctx: InvariantContext): InvariantResult => {
 			const name = "achromatic tone inks stay neutral";
 			const achromatic = ["gray", "white", "black"];
 			for (const hue of achromatic) {
@@ -2250,6 +2643,50 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			return { name, ok: true };
 		},
 		(ctx: InvariantContext): InvariantResult => {
+			const name = "the accent family stays mutually distinguishable";
+			const members = ["--accent", "--accent-2", "--accent-3", "--accent-4"]
+				.filter((token) => !ctx.constraints[token] && ctx.register[token])
+				.map((token) => ({ token, color: toOklchColor(ctx.register[token] as string) }));
+			for (let i = 0; i < members.length; i++) {
+				for (let j = i + 1; j < members.length; j++) {
+					const a = members[i] as { token: string; color: OklchColor };
+					const b = members[j] as { token: string; color: OklchColor };
+					if (readsAsOneColor(a.color, b.color)) {
+						const dL = Math.abs(a.color.l - b.color.l);
+						const dC = Math.abs(a.color.c - b.color.c);
+						const arc = Math.abs(hueDelta(a.color.h, b.color.h)) * Math.min(a.color.c, b.color.c);
+						return {
+							name,
+							ok: false,
+							detail: `${a.token} and ${b.token} read as one color (ΔL ${dL.toFixed(3)}, ΔC ${dC.toFixed(3)}, hue arc ${arc.toFixed(3)})`,
+						};
+					}
+				}
+			}
+			return { name, ok: true };
+		},
+		(ctx: InvariantContext): InvariantResult => {
+			const name = "a soft fill reads apart from its solid";
+			for (const tone of ["accent", "neutral"]) {
+				const solid = ctx.register[`--${tone}`];
+				const soft = ctx.register[`--${tone}-bg`];
+				if (!solid || !soft || ctx.constraints[`--${tone}-bg`] || ctx.constraints[`--${tone}`]) continue;
+				const fill = toOklchColor(solid as string);
+				const tint = toOklchColor(soft as string);
+				// INFO: at a true pole the tint has one direction to move and every step there stops
+				// clearing its ink's floor, so the collapse is unavoidable and readability wins.
+				if (tint.l <= 0.02 || tint.l >= 0.98) continue;
+				if (readsAsOneColor(fill, tint)) {
+					return {
+						name,
+						ok: false,
+						detail: `--${tone}-bg ${soft} reads as --${tone} ${solid}, so a soft variant paints its solid`,
+					};
+				}
+			}
+			return { name, ok: true };
+		},
+		(ctx: InvariantContext): InvariantResult => {
 			const name = "borders separate from their surface";
 			const borders: Array<[string, string, number]> = [
 				["--line", "--bg-0", BORDER_SEPARATION],
@@ -2329,11 +2766,17 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			if (!link || !hover) return { name, ok: true };
 			// INFO: a user pinning either token owns the collapse; the guard governs only derived values.
 			if (ctx.constraints["--link"] || ctx.constraints["--link-hover"]) return { name, ok: true };
-			if (link === hover) {
-				// INFO: a `--link` forced to a pure pole (#000/#fff) to clear an un-clearable same-side
-				// panel has no distinct readable hover, so that collapse is acceptable; any other is a bug.
-				if (link === "#000000" || link === "#ffffff") return { name, ok: true };
-				return { name, ok: false, detail: `--link and --link-hover both ${link}` };
+			const delta = oklabDistance(link, hover);
+			if (delta < LINK_HOVER_MIN_DELTA) {
+				// INFO: a `--link` at a lightness extreme has one direction left and no readable room in
+				// it, so that collapse is unavoidable rather than a bug.
+				const l = toOklchColor(link).l;
+				if (l >= 1 - POLE_REACH || l <= POLE_REACH) return { name, ok: true };
+				return {
+					name,
+					ok: false,
+					detail: `--link ${link} and --link-hover ${hover} read as one colour (${delta.toFixed(4)})`,
+				};
 			}
 			return { name, ok: true };
 		},
@@ -2364,7 +2807,11 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 				if (strategy === "duo") return n === 3 ? 0 : duoSecondHue();
 				if (n === 2) return pinnedAccent3 ? -hueDelta(accent.h, pinnedAccent3.h) : -split;
 				if (n === 3) return pinnedAccent2 ? -hueDelta(accent.h, pinnedAccent2.h) : split;
-				return 180;
+				// INFO: the fourth is placed against where the flanks *landed*, so a pinned flank
+				// contributes its own hue rather than the one it would have been derived at.
+				const flank = (slot: 2 | 3): number =>
+					(slot === 2 ? pinnedAccent2 : pinnedAccent3)?.h ?? accent.h + fanOffset(slot);
+				return fanFourthOffset(accent.h, flank(2), flank(3));
 			};
 			// INFO: `shade` and `duo` move lightness off the accent's, so the constant-L/C checks apply
 			// only to the hue-rotating postures.
@@ -2666,7 +3113,7 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 					const a = ctx.register[ni];
 					const b = ctx.register[nj];
 					if (!a || !b) continue;
-					const d = oklabDist(a, b);
+					const d = oklabDistance(a, b);
 					if (d < MIN_DE) {
 						return { name, ok: false, detail: `${ni} vs ${nj} ΔE=${d.toFixed(4)} (min ${MIN_DE})` };
 					}
@@ -2706,7 +3153,7 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 					const a = ctx.register[ni];
 					const b = ctx.register[nj];
 					if (!a || !b) continue;
-					const d = oklabDist(a, b);
+					const d = oklabDistance(a, b);
 					if (d < MIN_DE) {
 						return { name, ok: false, detail: `${ni} vs ${nj} ΔE=${d.toFixed(4)} (min ${MIN_DE})` };
 					}
@@ -2727,7 +3174,7 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 					const a = ctx.register[ni];
 					const b = ctx.register[nj];
 					if (!a || !b) continue;
-					const d = oklabDist(a, b);
+					const d = oklabDistance(a, b);
 					if (d < MIN_DE) {
 						return { name, ok: false, detail: `${ni} vs ${nj} ΔE=${d.toFixed(4)} (min ${MIN_DE})` };
 					}
@@ -2761,6 +3208,7 @@ export function makeXtylePipelineAlgorithm(
 	return {
 		id: preset.id,
 		since: PACK_SINCE,
+		declares: { focusRingFloor: preset.declaredFocusRingFloor, schemes: statedSchemes(preset) },
 		produces: PRODUCES,
 		producedSince: PRODUCED_SINCE,
 		knobs: preset.knobs,
@@ -2911,6 +3359,13 @@ export function resolveKnobSpecs(names: readonly string[], extra: readonly KnobS
 		out.push(spec);
 	}
 	return out;
+}
+
+/** The schemes a preset states an anchor pair for: its own, plus any it named in `anchorsByScheme`. */
+export function statedSchemes(preset: PresetDefaults): Scheme[] {
+	const own = schemeOf(toOklchColor(preset.defaultAnchors.bg));
+	const stated = Object.keys(preset.anchorsByScheme ?? {}) as Scheme[];
+	return [...new Set([own, ...stated])];
 }
 
 export const DEFAULT_ANCHORS: PresetAnchors = {

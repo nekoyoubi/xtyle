@@ -36,6 +36,8 @@
 		browseLabel?: string;
 		/** The hover skin. A native host drives this itself (an OS drag never fires `dragover`). */
 		dragging?: boolean;
+		/** The refuse half of the hover state; only meaningful alongside `dragging`. */
+		rejecting?: boolean;
 		/** Every batch, whatever ingress it came in through (`detail: { accepted, rejected, files, source }`). */
 		onfiledrop?: (event: FileDropEvent) => void;
 		/** Fires when a batch lost files to validation (`detail: { rejected }`). */
@@ -75,6 +77,7 @@
 		hint,
 		browseLabel,
 		dragging = false,
+		rejecting = false,
 		onfiledrop,
 		onfilereject,
 		onfileremove,
@@ -152,4 +155,5 @@
 	paste={paste || undefined}
 	required={required || undefined}
 	disabled={disabled || undefined}
-	dragging={dragging || undefined}>{@render children?.()}</xtyle-dropzone>
+	dragging={dragging || undefined}
+	rejecting={rejecting || undefined}>{@render children?.()}</xtyle-dropzone>

@@ -46,6 +46,7 @@ export const stepsManifest: ComponentManifest = {
 	description:
 		"Steps shows where a user is in a linear process: a checkout, an onboarding wizard, a multi-part form. Author a semantic ordered list of `<li>` steps and it splits them by the `current` index: everything before it is done (a filled marker with a check), the one at it is current (an outlined marker, flagged with `aria-current`), and everything after is upcoming (a muted, numbered marker). A connector track fills in behind the markers up to the current step. The marker and the connector are real nodes rendered by the component's fill, not glyphs painted onto the author's markup, so a mod can put an icon in the marker, number the steps in roman, or draw the connector as a dashed arrow — while each step's own content is relocated into the marker's label region untouched, and the rendered list stays a semantic `<ol>` screen readers hear in order.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["connector", "label", "list", "marker", "step"],
 	anatomy: [
 		{
 			name: "list",

@@ -202,37 +202,94 @@ The resolve → load → run shape is settled; the reference-grammar details are
 
 A pack (npm package or GitHub repo) carries an **xtyle manifest** (an `xtyle` field
 in `package.json`, or a top-level `xtyle.json`) enumerating its contents:
-`{ algorithms: [...], themes: [...] }` with name / kind / entry point. It's
-authoritative: `xtyle add <pack>` reads it and registers everything declared, both
+`{ algorithms: [...], themes: [...] }`, each entry a name + an entry point. It's
+authoritative: `xtyle add <pack>` reads it and reports everything declared, both
 themes *and* algorithms. **No directory-scanning, no guessing**: the pack tells
 you what's inside (manifest-as-source-of-truth, same as xript).
 
+An entry's *kind* is the list it sits in, not a field on the entry — a second
+spelling of the same fact can only ever disagree with the first. There is no
+version pin on an entry either: the pack is an npm package, and its own version
+is the pin.
+
+Registration is the install. A pack's algorithms resolve because the project
+declares the package, so `xtyle list` shows them and `xtyle derive -a <name>`
+runs them through the same sandbox the blessed set uses; `xtyle derive --theme
+<name>` re-derives a declared theme from its recipe. An id already taken keeps
+its owner and the shadowing pack is reported, because an id is what a theme file
+records — a marketplace cannot afford to change what an existing theme derives
+quietly.
+
 ### Reference grammar: dispatch on shape
 
-- `@scope/pkg` → an npm package (default, versioned)
-- `owner/repo` → a GitHub repo (git/tarball; "grab my repo" with no npm publish)
-- `./path` or a URL → local / remote tarball
-- `<ref>#name` → register *one* declared entry, selected by its **manifest name**,
+- `@scope/pkg` or a bare name → an npm package (default), `@version` pinning one
+- `owner/repo` → a GitHub repo (git/tarball; "grab my repo" with no npm publish),
+  `@ref` pinning a committish
+- `./path`, `/path`, `C:\path`, or a `scheme://` / `file:` URL → local / remote tarball
+- `@handle` (no slash) → an author, resolved to their packs through the index
+- `<ref>#name` → *one* declared entry, selected by its **manifest name**,
   not a file path, so the selector survives the author reorganizing folders and
   works identically across npm / GitHub / tarball
 
-Bare ref registers all; `#name` registers one.
+`#` means the entry selector on every shape, which is why a GitHub committish sits
+in the version position rather than in npm's own `owner/repo#ref` spelling; the
+translation back happens at the install boundary and nowhere else.
+
+### Reaching a pack from a browser
+
+`@xtyle/core/host/remote` resolves the same references with no filesystem, which is
+what lets the generator derive with any published algorithm rather than only the
+bundled five. A browser cannot unpack a tarball, so a pack is read **file by file over a CDN**:
+`npm/<pkg>` and `gh/<owner>/<repo>` on jsDelivr. Same manifest grammar as disk, same
+precedence (a standalone `xtyle.json` wins over the `package.json` block), same
+`#name` selector.
+
+Two shapes read differently here than on disk, and deliberately:
+
+- a **URL** is the *directory a pack is served from*, not a tarball; an archive
+  extension is refused by name rather than fetched and failed
+- a **path** has nothing to resolve against and says so, pointing at `@xtyle/core/host`
+
+An entry that resolves outside its own pack is refused: a pack declares where its
+files live, and one that climbs out is naming someone else's.
+
+`fetchPackAlgorithmManifest` answers what an algorithm accepts straight off the
+packaged mod manifest with **no sandbox boot**; listing a hundred packs must not
+cost a hundred QuickJS runtimes, which is the whole reason the static block exists.
+
+`packs/xtyle-pack-example` is a worked pack in this repo: two algorithms and a theme,
+declared the way a published pack declares them. `npm run build:packs` bundles it and
+stages it under the site's `public/`, so the Bench's **From a pack** tier has something
+real to resolve and the path is exercised rather than described.
+
+The two algorithms are deliberately different depths. `example-tinted` is a taste
+vector: five numbers over the standard derivation, which is what most packs are.
+`example-banded` is the one that matters for the premise: it runs its own pass after
+`settle`, **declares four tokens of its own** through `adds`, and introduces a knob
+(`bandLift`) with its own domain. That proves the open register and a novel knob from
+a *third-party* pack, over the fetch path, rather than from inside this repo alone.
+The Bench renders that knob's control from the pack's own `knobSpecs`, with no UI
+entry anywhere for it.
 
 ### Discovery is an index *over* npm, not a host
 
-Packs publish with a convention keyword (`xtyle-algorithm` / `xtyle-pack`). The
-marketplace and `xtyle search` are queries over npm metadata (keyword / scope /
-maintainer), so xtyle.dev is a **front-end over npm, not a hosted registry**,
-near-zero to run. The index is a **pointer map**; npm / GitHub still serve the
-bytes.
+Packs publish with the convention keyword `xtyle-pack`. The marketplace and
+`xtyle search` are the same query over npm metadata (keyword / scope / maintainer),
+so xtyle.dev is a **front-end over npm, not a hosted registry**, near-zero to run.
+The index is a **pointer map**; npm / GitHub still serve the bytes. `searchPacks`
+is environment-neutral for exactly this reason — the CLI and the site query one
+index through one function.
 
 ### Author shorthand: `xtyle add @handle`
 
-`@handle` (bare, no `/pkg`) resolves an *author* to their packs through the index.
-Leanest path: derive it from the author's npm scope / maintainer. For authors who
-span scopes or also distribute from GitHub, an optional **profile manifest** (a
-JSON listing pack coordinates) is aggregated by the index. Disambiguation: `@handle`
-(no slash) = author profile; `@scope/pkg` (with slash) = npm package.
+`@handle` (bare, no `/pkg`) resolves an *author* to their packs through the index,
+derived from npm's own maintainer field. One pack is added; several are listed for
+you to name, because installing an author's whole catalogue on one command is not
+what anyone meant by it. For authors who span scopes or also distribute from
+GitHub, an optional **profile manifest** (a JSON listing pack coordinates) would be
+aggregated by the index — not built, and an addition to this rather than a
+replacement for it. Disambiguation: `@handle` (no slash) = author; `@scope/pkg`
+(with slash) = npm package.
 
 ### Trust gradient (since `add` spans data and code)
 
@@ -242,6 +299,12 @@ JSON listing pack coordinates) is aggregated by the index. Disambiguation: `@han
 - **CLI `add`** is an *npm install* → normal supply-chain trust applies (postinstall
   scripts are not sandboxed). The sandbox protects at **run-time, not install-time**;
   be honest about that distinction.
+- **who chose the address** is its own axis, and the browser path introduced it. A
+  pack reference in a share link is resolved by `fetch` *in the page*, before any
+  runtime exists — so opening someone's link reaches out to whatever origin that link
+  names. The execution stays sandboxed and the distinction holds, but "the sandbox
+  makes a stranger's algorithm safe" is a claim about **running** it, never about
+  **fetching** it.
 
 ---
 

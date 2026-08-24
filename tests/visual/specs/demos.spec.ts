@@ -4,6 +4,7 @@ import type { Algorithm } from "./lib/theme.ts";
 import { themeEnvelope } from "./lib/theme.ts";
 import { COMPONENTS } from "./lib/components.ts";
 import { hideChrome } from "./lib/prepare.ts";
+import { isResourceError } from "./lib/page.ts";
 
 async function prepareForShot(page: Page) {
 	await hideChrome(page);
@@ -31,19 +32,23 @@ test.describe("component demos", () => {
 	for (const id of COMPONENTS) {
 		test(id, async ({ page, context }, testInfo) => {
 			const algorithm = testInfo.project.metadata.algorithm as Algorithm;
+			const scheme = testInfo.project.metadata.scheme as "light" | undefined;
 
 			await context.addInitScript((envJson: string) => {
 				localStorage.setItem("xtyle.themes.v1", envJson);
-			}, themeEnvelope(algorithm));
+			}, themeEnvelope(algorithm, scheme ? { scheme, stated: true } : {}));
 
 			const jsErrors: string[] = [];
 			const resourceWarnings: string[] = [];
-			const isResourceLoad = (t: string) =>
-				/Failed to load resource/i.test(t);
+			const libraryComplaints: string[] = [];
 			page.on("console", (msg) => {
-				if (msg.type() !== "error") return;
 				const text = msg.text();
-				(isResourceLoad(text) ? resourceWarnings : jsErrors).push(text);
+				if (text.startsWith("xtyle")) {
+					libraryComplaints.push(text);
+					return;
+				}
+				if (msg.type() !== "error") return;
+				(isResourceError(text) ? resourceWarnings : jsErrors).push(text);
 			});
 			page.on("pageerror", (err) => jsErrors.push(String(err)));
 
@@ -76,6 +81,11 @@ test.describe("component demos", () => {
 			expect(
 				jsErrors,
 				`JS errors on /components/${id}:\n${jsErrors.join("\n")}`,
+			).toEqual([]);
+
+			expect(
+				[...new Set(libraryComplaints)],
+				`components complained about their own usage on /components/${id}`,
 			).toEqual([]);
 		});
 	}

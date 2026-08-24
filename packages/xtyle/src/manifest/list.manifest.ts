@@ -11,6 +11,7 @@ export const listManifest: ComponentManifest = {
 	keywords: ["listbox", "options", "select", "multiselect", "collection", "roving", "menu"],
 	seeAlso: ["menu", "tree", "combobox", "segmented", "tabs"],
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["actions", "item", "item-action", "label", "lead", "list", "root", "title", "trail"],
 	anatomy: [
 		{ name: "root", description: "The host container.", selector: ".xtyle-list-shell" },
 		{ name: "list", description: "The list/listbox element holding the items.", selector: ".xtyle-list", tokens: ["--space-1", "--font-sans", "--text-body", "--fg-1"] },
@@ -21,12 +22,18 @@ export const listManifest: ComponentManifest = {
 		{ name: "actions", description: "The per-item action cluster (actionable posture); each button emits a list-action event.", selector: ".xtyle-list__actions" },
 	],
 	props: [
-		{ name: "items", type: "string | (string | ListItem)[]", description: "The items, as a comma-string shorthand (label:value pairs or bare labels) or a structured array carrying lead/trail/actions. Also accepts a JSON string on the attribute.", bindings: ["html", "svelte", "astro"] },
+		{ name: "items", type: "string | (string | ListItem)[]", description: "The items, as a comma-string shorthand (label:value pairs or bare labels) or a structured array carrying lead/trail/actions. Also accepts a JSON string on the attribute.", bindings: ["html", "svelte", "astro"], aliases: ["options"] },
 		{ name: "interaction", type: "\"static\" | \"navigational\" | \"selectable\" | \"actionable\"", default: "navigational", description: "The interaction posture: presentational, keyboard-navigable, selectable, or navigable with per-item actions.", bindings: ["html", "svelte", "astro"], options: ["static", "navigational", "selectable", "actionable"] },
 		{ name: "selection", type: "\"none\" | \"single\" | \"multi\" | \"range\"", default: "none", description: "The selection model (only meaningful under interaction=\"selectable\"). Ctrl/Cmd-click toggles, Shift-click extends a range.", bindings: ["html", "svelte", "astro"], options: ["none", "single", "multi", "range"] },
 		{ name: "orientation", type: "\"vertical\" | \"horizontal\"", default: "vertical", description: "The list flow and the roving arrow-key axis.", bindings: ["html", "svelte", "astro"], options: ["vertical", "horizontal"] },
 		{ name: "size", type: "\"sm\" | \"md\" | \"lg\"", default: "md", description: "The item type scale.", bindings: ["html", "svelte", "astro"], options: ["sm", "md", "lg"] },
 		{ name: "label", type: "string", description: "A visible group label; use labelledby or aria-label instead where a visible label would be noise.", bindings: ["html", "svelte", "astro"] },
+		{ name: "labelledby", type: "string", description: "The `id` of an element elsewhere on the page that names the list, for a heading the list already sits under.", bindings: ["html", "svelte", "astro"] },
+	],
+	events: [
+		{ name: "select", detail: "{ value, index }", description: "An item was activated.", bindings: ["html", "svelte", "astro"] },
+		{ name: "change", detail: "{ value, values }", description: "The selection changed.", bindings: ["html", "svelte", "astro"] },
+		{ name: "list-action", detail: "{ value, action }", description: "An item's trailing action button was activated.", bindings: ["html", "svelte", "astro"], handler: "onlistaction" },
 	],
 	variants: [],
 	sizes: [

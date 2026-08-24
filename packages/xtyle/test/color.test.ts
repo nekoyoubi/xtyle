@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { argbToRgbHex, contrast } from "../src/index.js";
+import { argbToRgbHex, contrast, flatten, formatCss, oklabDistance, separationAxes } from "../src/index.js";
 
 describe("argbToRgbHex", () => {
 	it("drops the leading alpha byte from an 8-digit ARGB hex", () => {
@@ -46,5 +46,62 @@ describe("contrast — CSS hex contract", () => {
 
 	it("is correct once the ARGB hex is converted with argbToRgbHex", () => {
 		expect(ratio(argbToRgbHex("#ff112233"))).toBe(16.15);
+	});
+});
+
+describe("separationAxes", () => {
+	const q = (a: string, b: string) => {
+		const x = separationAxes(a, b);
+		return Math.hypot(x.lightness, x.chroma, x.hue);
+	};
+
+	it("recombines in quadrature to exactly the oklabDistance", () => {
+		const pairs: Array<[string, string]> = [
+			["#d1495b", "#d65652"],
+			["#ea6e00", "#e27500"],
+			["#3b82f6", "#22c55e"],
+			["#8a8a8a", "#909090"],
+			["#000000", "#ffffff"],
+		];
+		for (const [a, b] of pairs) {
+			expect(q(a, b)).toBeCloseTo(oklabDistance(a, b), 10);
+		}
+	});
+
+	it("puts a pure lightness step entirely on the lightness axis", () => {
+		const axes = separationAxes("#8a8a8a", "#909090");
+		expect(axes.chroma).toBeCloseTo(0, 6);
+		expect(axes.hue).toBeCloseTo(0, 6);
+		expect(axes.hueAngle).toBeCloseTo(0, 6);
+	});
+
+	it("reports the hue angle a chroma-scaled distance hides", () => {
+		const crimson = separationAxes("#d1495b", "#d65652");
+		expect(crimson.hueAngle).toBeLessThan(10);
+		expect(crimson.hue).toBeGreaterThan(crimson.lightness);
+	});
+
+	it("scores a small rotation at high chroma above a visible gray step", () => {
+		expect(oklabDistance("#d1495b", "#d65652")).toBeGreaterThan(oklabDistance("#8a8a8a", "#909090"));
+	});
+});
+
+describe("flatten", () => {
+	it("returns an opaque colour untouched", () => {
+		expect(formatCss(flatten("#3ad6f8", "#000000"))).toBe(formatCss("#3ad6f8"));
+	});
+
+	it("lands between the two colours, weighted by alpha", () => {
+		const half = flatten("rgba(255, 255, 255, 0.5)", "#000000");
+		expect(half.alpha).toBe(1);
+		expect(half.l).toBeGreaterThan(0.4);
+		expect(half.l).toBeLessThan(0.75);
+	});
+
+	it("reads a translucent colour as weaker than the same colour opaque", () => {
+		const backdrop = "#0e1116";
+		const faint = contrast(formatCss(flatten("rgba(255, 255, 255, 0.15)", backdrop)), backdrop);
+		const solid = contrast("#ffffff", backdrop);
+		expect(faint).toBeLessThan(solid);
 	});
 });

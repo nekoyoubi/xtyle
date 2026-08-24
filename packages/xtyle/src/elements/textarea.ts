@@ -17,15 +17,35 @@ export class XtyleTextarea extends XtyleElement {
 
 	static formAssociated = true;
 
-	private internals = this.attachInternals();
+	private internals: ElementInternals | null = null;
+
+	constructor() {
+		super();
+		if ("attachInternals" in this) {
+			try {
+				this.internals = this.attachInternals();
+			} catch {
+				this.internals = null;
+			}
+		}
+	}
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
+
+	protected override get fillOwnsFormName(): boolean {
+		return true;
+	}
 	private textareaNumber = ++textareaCounter;
 	private fieldId = `xtyle-textarea-${this.textareaNumber}`;
 	private errorId = `xtyle-textarea-error-${this.textareaNumber}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "textarea", {
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
 			this.projectContent();
 			this.syncField();
+			this.verifyFormName();
 		},
 	});
 
@@ -40,6 +60,7 @@ export class XtyleTextarea extends XtyleElement {
 			"disabled",
 			"invalid",
 			"required",
+			"required-message",
 			"error",
 			"name",
 			"mono",
@@ -116,7 +137,8 @@ export class XtyleTextarea extends XtyleElement {
 	formResetCallback(): void {
 		const initial = this.getAttribute("value") ?? "";
 		if (this.field) this.field.value = initial;
-		this.internals.setFormValue(initial);
+		if (this.reportsFormValue()) this.internals?.setFormValue(initial);
+		this.syncValidity();
 	}
 
 	formDisabledCallback(disabled: boolean): void {
@@ -155,7 +177,8 @@ export class XtyleTextarea extends XtyleElement {
 
 		const value = this.getAttribute("value");
 		if (value !== null && field.value !== value) field.value = value;
-		this.internals.setFormValue(field.value);
+		if (this.reportsFormValue()) this.internals?.setFormValue(field.value);
+		this.syncValidity();
 
 		if (this.required) field.setAttribute("aria-required", "true");
 		else field.removeAttribute("aria-required");
@@ -163,7 +186,7 @@ export class XtyleTextarea extends XtyleElement {
 		const name = this.getAttribute("name");
 		if (name !== null) field.name = name;
 
-		const errorText = this.getAttribute("error") ?? "";
+		const errorText = this.validityMessage("error", "");
 		if (this.invalid && errorText.length > 0) field.setAttribute("aria-describedby", this.errorId);
 		else field.removeAttribute("aria-describedby");
 
@@ -183,12 +206,26 @@ export class XtyleTextarea extends XtyleElement {
 		);
 	}
 
+	private syncValidity(): void {
+		const field = this.field ?? undefined;
+		try {
+			if (this.invalid) {
+				this.internals?.setValidity({ customError: true }, this.validityMessage("error", "Invalid value"), field);
+			} else if (this.required && (this.field?.value ?? this.getAttribute("value") ?? "").length === 0) {
+				this.internals?.setValidity({ valueMissing: true }, this.validityMessage("required-message", "Please fill out this field."), field);
+			} else {
+				this.internals?.setValidity({});
+			}
+		} catch {}
+	}
+
 	private applyIntent(intent: FragmentIntent, _event: Event): void {
 		if (typeof intent.value === "string") {
-			this.internals.setFormValue(intent.value);
+			if (this.reportsFormValue()) this.internals?.setFormValue(intent.value);
 			if (intent.commitValue) this.setAttribute("value", intent.value);
+			this.syncValidity();
 		}
-		if (intent.emit) this.dispatchEvent(new Event(intent.emit.type, { bubbles: true, composed: true }));
+		if (intent.emit) this.emitOwn(intent.emit.type, null, { value: this.value });
 	}
 
 	private projectContent(): void {

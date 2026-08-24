@@ -24,6 +24,7 @@ interface RevealBindings {
 	gripStyles?: { [direction: string]: string };
 	gripBodies?: { [direction: string]: string | null };
 	label?: string | null;
+	control?: boolean;
 }
 
 interface EventPayload {
@@ -39,6 +40,7 @@ interface RevealContext {
 interface Intent {
 	reveal?: string;
 	conceal?: boolean;
+	commit?: string;
 	preventDefault?: boolean;
 }
 
@@ -122,7 +124,7 @@ function lidHtml(b: RevealBindings): string {
 		.map((direction) => gripHtml(direction, b))
 		.join("");
 	return (
-		`<div class="xtyle-reveal__lid" part="lid" tabindex="${tabindex}" role="group"${label}` +
+		`<div class="xtyle-reveal__lid" part="lid" tabindex="${tabindex}" role="${b.control ? "button" : "group"}"${label}` +
 		` aria-expanded="${escapeAttr(b.open ? "true" : "false")}">` +
 		'<div class="xtyle-reveal__content" part="content" data-slot><slot></slot></div>' +
 		grips +
@@ -142,6 +144,7 @@ hooks.fragment.mount("reveal", (bindings, ops) => {
 hooks.fragment.update("reveal", (bindings, ops) => {
 	ops.setAttr(".xtyle-reveal", "class", revealClass(bindings));
 	ops.setAttr(".xtyle-reveal", "data-open", bindings.open ?? "");
+	ops.setAttr(".xtyle-reveal__lid", "role", bindings.control ? "button" : "group");
 	ops.setAttr(".xtyle-reveal__lid", "aria-expanded", bindings.open ? "true" : "false");
 	ops.setAttr(".xtyle-reveal__lid", "tabindex", bindings.disabled ? "-1" : "0");
 	for (const direction of DIRECTIONS) {
@@ -169,6 +172,12 @@ xript.exports.register("keydown", (...args: unknown[]): Intent => {
 	const live = context.directions ?? [];
 
 	if (payload.key === "Escape" && context.open) return { conceal: true, preventDefault: true };
+
+	if (payload.key === "Enter" || payload.key === " " || payload.key === "Spacebar") {
+		const target = context.open ?? (live.length === 1 ? live[0] : undefined);
+		if (target) return { commit: target, preventDefault: true };
+		return {};
+	}
 
 	const wanted = payload.key ? ARROW_DIRECTION[payload.key] : undefined;
 	if (wanted && live.indexOf(wanted) !== -1) return { reveal: wanted, preventDefault: true };

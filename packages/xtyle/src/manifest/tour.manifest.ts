@@ -46,6 +46,60 @@ import { Tour, TourStep } from "@xtyle/astro";
 	tour.addEventListener("close", () => localStorage.setItem("toured", "1"));
 </script>`;
 
+const specHtmlExample = `<xtyle-tour id="first-run" spec='{
+	"id": "first-run",
+	"title": "Getting around",
+	"steps": [
+		{ "target": "#rail", "heading": "The rail", "body": "Everything hangs off this." },
+		{ "target": "#canvas", "heading": "The canvas", "placement": "left" },
+		{ "target": "#help", "heading": "Help", "body": "And the tours live here." }
+	]
+}'></xtyle-tour>`;
+
+const specSvelteExample = `<script lang="ts">
+	import { Tour } from "@xtyle/svelte";
+	import type { TourSpec } from "@xtyle/core";
+
+	// A tour is data, so it can live anywhere and be addressed by id.
+	const TOURS = {
+		"first-run": {
+			id: "first-run",
+			title: "Getting around",
+			summary: "Three stops",
+			steps: [
+				{ target: "#rail", heading: "The rail", body: "Everything hangs off this." },
+				{ target: "#canvas", heading: "The canvas", placement: "left" },
+				{ target: "#help", heading: "Help", body: "And the tours live here." },
+			],
+		},
+	} satisfies Record<string, TourSpec>;
+
+	let taken = $state(localStorage.getItem("tour:first-run") === "done");
+</script>
+
+<Tour
+	spec={TOURS["first-run"]}
+	{taken}
+	oncomplete={() => { taken = true; localStorage.setItem("tour:first-run", "done"); }}
+	onskip={() => { taken = true; }}
+/>`;
+
+const specAstroExample = `---
+import Tour from "@xtyle/astro/Tour.astro";
+import type { TourSpec } from "@xtyle/core";
+
+const firstRun: TourSpec = {
+	id: "first-run",
+	title: "Getting around",
+	steps: [
+		{ target: "#rail", heading: "The rail", body: "Everything hangs off this." },
+		{ target: "#canvas", heading: "The canvas", placement: "left" },
+	],
+};
+---
+
+<Tour spec={firstRun} />`;
+
 export const tourManifest: ComponentManifest = {
 	id: "tour",
 	name: "Tour",
@@ -58,6 +112,7 @@ export const tourManifest: ComponentManifest = {
 	description:
 		"Tour is a Spotlight with more than one step. It owns the sequence — which step is showing, the Back / Next / Skip / Done buttons, and the progress readout — and drives a single composed `<xtyle-spotlight>` through it, so every step gets the same honest isolation: the page dims, a hole is cut over the target, and a callout points at it, with the target left live underneath. Each step is an `<xtyle-tour-step>` carrying a `target` and, as its content, whatever the callout should say; any spotlight knob (`heading`, `placement`, `shape`, `pulse`, `arrow`, `dim`, `blur`, `no-dismiss`) set on a step overrides the Tour's default for that step alone. The Tour resolves each step's target against the page and hands the element to the spotlight directly, so a selector still finds a node the tour's own shadow root can't see, and the step-to-step focus handling — the part that goes wrong when a sequence is hand-rolled — is the spotlight's, already proven. The only chrome the Tour invents is the nav row; it renders through `component.tour`, so a mod can reshape Back / Next / Skip and the progress dots without touching the sequencing.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["back", "body", "nav", "next", "progress", "skip", "spotlight", "tour"],
 	anatomy: [
 		{
 			name: "tour",
@@ -152,6 +207,38 @@ export const tourManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "spec",
+			type: "TourSpec",
+			description:
+				"A whole tour as data - `{ id, title, summary, steps }` - in place of authoring `TourStep` children by hand. It materializes those children rather than rendering a second way, so a spec-driven tour behaves identically to a slotted one; the same items-mode/slotted-mode split `tabs` and `accordion` carry. Declaring a tour as data is what lets it be held in a variable, addressed by id from a help menu or a command palette, listed in a picker, or contributed by a mod - none of which markup living inside one screen can be. Set it as a property from JS, or as a JSON string in markup, the way `Progress` takes a `ramp` stop list.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "beforeStep",
+			type: "(index: number) => void | Promise<void>",
+			description:
+				"Run before a step's target is resolved, and awaited when it returns a promise. This is the seam for a step that has to *make* what it points at rather than merely find it - open a collapsed panel, select a layer, switch a tool - because a target that does not exist yet cannot be measured, and `step` fires on arrival, which is already too late. Property only; it is a function.",
+			bindings: ["html", "svelte"],
+			propertyOnly: true,
+		},
+		{
+			name: "targetTimeout",
+			type: "number",
+			default: "2000",
+			description:
+				"How long to keep watching for a step's target after the callout is already up, in milliseconds. The step never waits on this - it opens immediately against whatever resolves at that moment and attaches the target the frame it appears - so this only bounds how long a late target has to show up before `target-missing` says it never did.",
+			bindings: ["html", "svelte", "astro"],
+			attr: "target-timeout",
+		},
+		{
+			name: "taken",
+			type: "boolean",
+			default: "false",
+			description:
+				"Whether this tour has already been taken. The component reports `complete` and `skip` separately and keeps no memory of either: which storage holds that, under what key, whether it is per-user or per-device, and whether it resets when the tour's content changes are all the app's decisions. So this is the app telling the component, not the component guessing.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "noSkip",
 			type: "boolean",
 			default: "false",
@@ -181,11 +268,104 @@ export const tourManifest: ComponentManifest = {
 			options: ["none", "slow", "fast"],
 		},
 		{
+			name: "padding",
+			type: "number",
+			default: "8",
+			description: "The default breathing room between a target and the edge of the hole, in px. Overridable per step.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "dim",
+			type: "number",
+			default: "0.72",
+			description: "How dark every step's veil goes, 0–1. Overridable per step.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "blur",
+			type: "number",
+			default: "0",
+			description:
+				"How far the page behind every step's veil blurs, in px. Nothing blurs at 0, which is the default: blur costs a compositor layer over the whole viewport. Overridable per step.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "arrow",
+			type: "SpotlightArrow",
+			default: "bounce",
+			description: "The default pointer at each target: `bounce` animates toward it, `static` holds still, `none` draws nothing. Overridable per step.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["none", "static", "bounce"],
+		},
+		{
+			name: "scrollIntoView",
+			type: "boolean",
+			default: "false",
+			description:
+				"Scrolls each step's target to the middle of the viewport before its callout opens. A step pointing at something off-screen is a solid scrim. Overridable per step.",
+			bindings: ["html", "svelte", "astro"],
+			attr: "scroll-into-view",
+		},
+		{
 			name: "noDismiss",
 			type: "boolean",
 			default: "false",
 			description: "Makes every step's veil and Escape inert, so the tour advances only through its nav. Overridable per step.",
 			bindings: ["html", "svelte", "astro"],
+		},
+	],
+	events: [
+		{ name: "start", detail: "{ total }", description: "The tour opened on its first step.", bindings: ["html", "svelte", "astro"] },
+		{ name: "step", detail: "{ index, total }", description: "The tour advanced to a step.", bindings: ["html", "svelte", "astro"] },
+		{ name: "complete", description: "The last step's Done was pressed.", bindings: ["html", "svelte", "astro"] },
+		{ name: "skip", detail: "{ index, total }", description: "The user left the tour early.", bindings: ["html", "svelte", "astro"] },
+		{ name: "close", description: "The tour closed, for any reason. Fires after `complete` or `skip`.", bindings: ["html", "svelte", "astro"] },
+		{ name: "target-missing", detail: "{ index, target }", description: "A step's `target` selector never resolved, even after `targetTimeout`. The callout still opened, anchored to nothing - without this the step degrades in silence and reads exactly like a mistyped selector.", bindings: ["html", "svelte", "astro"], handler: "ontargetmissing" },
+	],
+	methods: [
+		{
+			name: "start",
+			params: "index?: number",
+			description:
+				"Open the tour on a step, defaulting to the first. Fires `start`, and runs `beforeStep` before the step's target is measured.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "next",
+			description:
+				"Advance one step, finishing the tour if there is nowhere further to go.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "back",
+			description:
+				"Step back one, stopping at the first rather than wrapping.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "go",
+			params: "index: number",
+			description:
+				"Jump straight to a step by index — what a picker or a resumed walkthrough needs. Out-of-range is ignored rather than clamped, so a stale index cannot silently show the wrong step.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "finish",
+			description:
+				"End the tour as completed. Fires `complete`, which is the half of the take-versus-replay distinction a `taken` store watches.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "skip",
+			description:
+				"End the tour as abandoned. Fires `skip`, so a store can tell the user who bailed from the user who finished.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "close",
+			description:
+				"Close the callout without judging it either way — neither completed nor skipped.",
+			bindings: ["html", "svelte"],
 		},
 	],
 	variants: [],
@@ -228,7 +408,7 @@ export const tourManifest: ComponentManifest = {
 		"Give every step a `target` that resolves. A tour points at things; a step with nothing to point at has no callout to open, because the callout anchors to the target.",
 		"Set the common look on the Tour and only the exceptions on a step. `placement`, `shape`, and `pulse` cascade down; a step overrides just what it needs.",
 		"Reach for `dots` progress on a short tour and `count` on a long one — five dots read at a glance, fifteen don't.",
-		"Emit `complete` when the last step's Done is pressed and `skip` when the user bails; both are followed by `close`. Store a flag on `close` so a returning user isn't toured twice.",
+		"Emit `complete` when the last step's Done is pressed and `skip` when the user bails; both are followed by `close`. Which of the two a returning user's flag keys on is the difference between a tour they finished and one they escaped, so persist against those rather than against `close`, and hand the answer back as `taken`. Where that flag lives is your app's call — xtyle reaches outside the page for nothing.",
 		"Pair `noSkip` with `noDismiss` for a tour that must be finished — but leave that for the rare step that truly can't be skipped, because a walkthrough with no exit is a trap.",
 	],
 	a11y: [
@@ -239,6 +419,13 @@ export const tourManifest: ComponentManifest = {
 		"The ring's pulse and the callout's motion honor `prefers-reduced-motion`, inherited from the spotlight.",
 	],
 	examples: [
+		{
+			id: "tour-as-data",
+			title: "A tour declared as data",
+			description:
+				"`spec` takes the whole walkthrough as `{ id, title, summary, steps }` instead of `TourStep` children, and materializes the same steps — so a spec-driven tour behaves identically to a slotted one. That is what lets a tour be held in a variable, addressed by id from a help menu or a command palette, listed in a picker, or contributed by a mod. Keeping it inert data is also why there is no registry here: a table of your tours is a plain object, and it stays yours. `taken` is the other half — the component reports `complete` and `skip` and remembers neither, so where that is stored is your call.",
+			source: { html: specHtmlExample, svelte: specSvelteExample, astro: specAstroExample },
+		},
 		{
 			id: "onboarding",
 			title: "A three-step onboarding tour",

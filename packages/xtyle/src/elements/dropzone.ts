@@ -234,9 +234,9 @@ export class XtyleDropzone extends XtyleElement {
 	 * fresh id here would leave the label addressing an input that no longer exists.
 	 */
 	private adoptServerInput(): void {
-		if (this.fileInput) return;
 		const existing = this.querySelector<HTMLInputElement>("input.xtyle-dropzone__input");
-		if (!existing) return;
+		if (!existing || existing === this.fileInput) return;
+		this.fileInput?.remove();
 		this.fileInput = existing;
 		if (existing.id) this.elementId = existing.id;
 		existing.addEventListener("change", this.onPick);
@@ -524,6 +524,7 @@ export class XtyleDropzone extends XtyleElement {
 	 * the form value telling the truth.
 	 */
 	private syncInput(): void {
+		this.adoptServerInput();
 		if (!this.fileInput) {
 			this.fileInput = document.createElement("input");
 			this.fileInput.type = "file";

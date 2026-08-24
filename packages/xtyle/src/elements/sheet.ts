@@ -4,6 +4,7 @@ import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/sheet/source.generated.js";
 import { resolveVocab, SHEET_SIDES, SHEET_SIZES } from "../vocab.js";
 import { startDrag } from "./gesture.js";
+import type { DialogCloseReason } from "./dialog.js";
 
 /** How far along its own extent a sheet must be dragged before release dismisses it. */
 const DISMISS_FRACTION = 0.35;
@@ -102,6 +103,8 @@ export class XtyleSheet extends XtyleElement {
 		return this.root.querySelector("dialog");
 	}
 
+	private closeReason: DialogCloseReason = "api";
+
 	/** Opens the sheet. Modal by default (native focus trap, scrim, Esc); `non-modal` opens it beside a live page. */
 	showModal(): void {
 		this.open = true;
@@ -113,7 +116,8 @@ export class XtyleSheet extends XtyleElement {
 	}
 
 	/** Closes the sheet and restores focus to the previously focused element. */
-	close(): void {
+	close(reason: DialogCloseReason = "api"): void {
+		this.closeReason = reason;
 		this.open = false;
 	}
 
@@ -201,7 +205,7 @@ export class XtyleSheet extends XtyleElement {
 
 	private applyIntent(intent: FragmentIntent, event: Event): void {
 		if (intent.preventDefault) event.preventDefault();
-		if (intent.requestClose) this.close();
+		if (intent.requestClose) this.close("dismiss");
 	}
 
 	/** The first element in an event's composed path matching `selector` and belonging to this sheet's own
@@ -293,14 +297,16 @@ export class XtyleSheet extends XtyleElement {
 		dialog.addEventListener("keydown", (event) => {
 			if (!this.nonModal || (event as KeyboardEvent).key !== "Escape") return;
 			event.preventDefault();
+			this.closeReason = "escape";
 			this.dispatchEvent(new Event("cancel", { bubbles: true, composed: true }));
-			this.close();
+			this.close("escape");
 		});
 		dialog.addEventListener("close", () => {
 			if (this.open) this.open = false;
 			this.clearDrag();
 			this.restoreFromPortal();
-			this.dispatchEvent(new Event("close", { bubbles: true, composed: true }));
+			this.emitOwn("close", null, { reason: this.closeReason });
+			this.closeReason = "api";
 		});
 		dialog.addEventListener("cancel", () => {
 			this.dispatchEvent(new Event("cancel", { bubbles: true, composed: true }));

@@ -1,9 +1,9 @@
 ---
-import { type TabItemData } from "@xtyle/core/markup";
+import { type TabItemData, type TabsOverflow } from "@xtyle/core/markup";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { authoredPairs } from "./internal/paired-slots.js";
 import { checkAuthoring } from "./internal/diagnose.js";
-import { TABS_SIZES, resolveVocab, TABS_VARIANTS, TABS_ACTIVATIONS } from "@xtyle/core";
+import { TABS_SIZES, resolveVocab, TABS_VARIANTS, TABS_ACTIVATIONS, TABS_OVERFLOWS } from "@xtyle/core";
 
 type Size = (typeof TABS_SIZES)[number];
 type TabsVariant = (typeof TABS_VARIANTS)[number];
@@ -18,7 +18,12 @@ interface Props {
 	label?: string;
 	labelledby?: string;
 	/** Pin the tablist while the active panel scrolls beneath it (app-surface tabs); off for inline tabs. */
+	/** How a strip wider than its container behaves: `wrap` onto more rows (default), or `scroll`
+	 * on one row. */
+	overflow?: TabsOverflow;
 	sticky?: boolean;
+	/** Take the remaining height of a bounded parent and scroll the active panel. */
+	fill?: boolean;
 	/** Render only the tab strip (no panel region) so the consumer owns the content; the element still
 	 * drives selection, roving focus, and a11y, and tabs omit `aria-controls` since they own no panels. */
 	tablist?: boolean;
@@ -37,7 +42,9 @@ const {
 	value,
 	label,
 	labelledby,
+	overflow: overflowInput,
 	sticky = false,
+	fill = false,
 	tablist = false,
 	static: isStatic = false,
 	class: extra,
@@ -48,6 +55,7 @@ await checkAuthoring("tabs", Astro.props);
 const size = resolveVocab(sizeInput, TABS_SIZES, "md", "tabs size");
 const variant = resolveVocab(variantInput, TABS_VARIANTS, "underline", "tabs variant");
 const activation = resolveVocab(activationInput, TABS_ACTIVATIONS, "automatic", "tabs activation");
+const overflow = resolveVocab(overflowInput, TABS_OVERFLOWS, "wrap", "tabs overflow");
 
 const uid = `xtyle-tabs-${Math.random().toString(36).slice(2, 9)}`;
 
@@ -76,7 +84,9 @@ const bindings = {
 	activeId: value ?? null,
 	variant,
 	size,
+	overflow,
 	sticky,
+	fill,
 	tablist,
 	label: label ?? null,
 	labelledby: labelledby ?? null,
@@ -101,7 +111,9 @@ const composed = authored.reduce(
 	value={value}
 	label={label}
 	labelledby={labelledby}
-	sticky={sticky}
+	overflow={overflow}
+	sticky={sticky || undefined}
+	fill={fill || undefined}
 	tablist={tablist || undefined}
 	items={items ? JSON.stringify(items) : undefined}
 	class={extra}

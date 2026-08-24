@@ -19,6 +19,7 @@ export const accordionCss = `
 	line-height: inherit;
 }
 .xtyle-accordion__trigger {
+	box-sizing: border-box;
 	display: flex;
 	list-style: none;
 	align-items: center;

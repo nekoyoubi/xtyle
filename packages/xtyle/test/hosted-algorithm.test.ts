@@ -35,6 +35,14 @@ describe("hostedAlgorithm", () => {
 		}
 	});
 
+	it("carries each algorithm's declared floors across the sandbox boundary", async () => {
+		await Promise.all(IDS.map((id) => resolveAlgorithm(id)));
+		for (const id of IDS) {
+			expect(hostedAlgorithm(id).declares).toEqual(getAlgorithm(id).declares);
+			expect(hostedAlgorithm(id).declares?.focusRingFloor).toBeTypeOf("number");
+		}
+	});
+
 	it("throws on an id with no baked twin, like getAlgorithm", () => {
 		expect(() => hostedAlgorithm("nope")).toThrow(/no baked algorithm/);
 	});

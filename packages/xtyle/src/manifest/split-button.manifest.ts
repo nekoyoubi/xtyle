@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
 
 const htmlExample = `<xtyle-split-button
 	variant="solid"
@@ -43,6 +44,7 @@ const svelteExample = `<script lang="ts">
 
 const astroExample = `---
 import { SplitButton } from "@xtyle/astro";
+import { FULL_TONES } from "../vocab.js";
 
 const actions = [
 	{ label: "Deploy to staging", value: "staging" },
@@ -74,6 +76,7 @@ export const splitButtonManifest: ComponentManifest = {
 	description:
 		"SplitButton is the control for an action that has a *default* and a *family*: Save, and also Save-and-close; Deploy, and also Deploy-to-staging; Export, and also Export-as-CSV. The press is one click away and the alternatives are two, which is the whole point — a plain Menu makes the common case cost an extra press, and a row of Buttons makes the rare case cost the same as the common one. It is a composition rather than a re-implementation: both halves carry Button's own classes, so every variant, tone, and size the button set speaks is the split button's too, and the dropdown is a real `<xtyle-menu>`, so the roving focus, the typeahead, the separators, the headings, the `hint` accelerators, the danger rows, and the `select` event all come from Menu instead of a second copy of them living here. What the element adds is the group: one shared shape with a square seam, the divider, the caret, and the menu keys answering from *either* half — ArrowDown on the primary drops the menu the way it does on the caret. The primary fires a plain `click`; the menu fires `select` with the chosen row's value, and the caret's own click never reaches a `click` listener, so the two paths never blur together.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["caret", "divider", "label", "menu", "primary", "spinner", "split-button", "toggle"],
 	anatomy: [
 		{
 			name: "split-button",
@@ -133,6 +136,7 @@ export const splitButtonManifest: ComponentManifest = {
 			default: "accent",
 			description: "The semantic or hue tone, applied to both halves.",
 			bindings: ["html", "svelte", "astro"],
+			options: [...FULL_TONES],
 		},
 		{
 			name: "size",
@@ -184,6 +188,25 @@ export const splitButtonManifest: ComponentManifest = {
 			default: "button",
 			description: "The primary's native button `type` — set it to `submit` to make the default action submit the surrounding form.",
 			bindings: ["html", "svelte", "astro"],
+		},
+	],
+	events: [
+		{ name: "select", detail: "{ value, label }", description: "An item in the attached menu was chosen.", bindings: ["html", "svelte", "astro"] },
+		{ name: "click", description: "The primary action was pressed. The native event, from the primary half only.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "showMenu",
+			params: "focus?: \"first\" | \"last\"",
+			description:
+				"Open the menu half, putting the cursor on the first or last item — `last` is what an upward-opening menu wants under a keyboard.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "closeMenu",
+			description:
+				"Close the menu half, leaving the action half as it was.",
+			bindings: ["html", "svelte"],
 		},
 	],
 	variants: [

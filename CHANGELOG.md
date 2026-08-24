@@ -1,5 +1,111 @@
 # Changelog
 
+## v0.12.0
+
+No new components this time. v0.12.0 finishes what was already here. A theme declares two schemes and had only ever derived one: the light half came off an anchor nobody chose, went ungraded by the audit, and had never been drawn in the visual suite. All three are closed. The discovery path reached the browser at the same time, so the generator derives with any published algorithm rather than the bundled five. Under both sits the largest defect sweep the project has run: which channel a control posts on, what a manifest promises against what an element does, and a keyboard driven through three engines instead of assumed from one.
+
+### Schemes
+
+- **An algorithm declares its own light anchor.** The blessed set names one dark anchor, so flipping the scheme knob derived a mid-gray page rather than a light theme; `declares.schemes` carries an anchor pair per scheme, and the counterpart is a real derivation instead of an inversion
+- **`xtyle audit` grades the half it used to decline.** Seed a surface and it audits that theme *and* its inverted counterpart, keyed under `schemes`, because a theme ships both and one can pass while the other does not
+  - without a seed it grades the native scheme alone, which is the honest answer for an algorithm declaring one anchor
+  - a `COUNTERPART_ABSENT` message had been reported against pinned schemes where the counterpart was simply not requested
+- **The visual suite renders light.** 92 baselines across the component set, the first time the algorithm's own light anchors have been drawn at all, and the pass that produced them found the accent under the fill floor on every algorithm's light half
+- **Fills are graded against the surfaces they sit on**, not only against text, so a solid that vanishes into a raised panel is a failure the audit names rather than something a reader discovers
+
+### Packs
+
+- **`@xtyle/core/host/remote` fetches a published pack over a CDN** and loads its algorithm through the same zero-authority sandbox the blessed set runs in, so the generator is no longer limited to what shipped in the box
+  - jsDelivr backs `npm` and `owner/repo` references, a URL is served as itself, and the pack shape is file-addressable because a browser cannot unpack a tarball
+  - `fetchPackAlgorithmManifest` answers what an algorithm accepts off its packaged manifest, so listing a pack never boots a sandbox
+- **A pack's declared themes re-derive in the browser too**, not just its algorithms, so `xtyle derive --theme <name>` and the Bench's *From a pack* tier reach the same recipes
+- **A stranger's pack can declare tokens the engine never heard of**, which is the open register working as designed rather than an escape hatch
+- **No mod had ever been typechecked.** esbuild strips types without checking them, so a mod compiled, bundled, stamped its manifest, passed the gauntlet, and shipped with its types never once looked at; `check-mod-types.mjs` runs `tsc --noEmit --strict` over every mod both roots declare and found four defects on its first run
+  - `@xtyle/core/authoring` re-exported no types at all, so an author writing a pass could not name its type and the whole body ran unchecked
+  - `XtyleAlgorithmSpec.anchors` required `bg` and `fg` while `toPreset` deliberately merges a partial, so `xtyle-default`'s own definition had never typechecked
+- **`produces` is a claim, and the packaged-manifest cross-check could not test it**, because both sides are generated from one declaration and agree by construction; `declared-tokens-derive.test.ts` derives every algorithm across three seeds instead
+  - a check comparing two artifacts generated from one source proves synchronisation, not correctness, and it reads like verification
+
+### Forms
+
+- **Render mode had been deciding which channel a control posts on.** Six components were wrong in three different ways, and the shape of the bug is that a form submitted different data depending on whether the element had hydrated
+- **Every form control declares its channel** rather than inferring one, and a fill that drops `name` says so out loud instead of silently posting nothing
+- **A fill author has the contract to code against**, with payload schemas rather than a convention to be reverse-engineered from a working example
+- **The form guard admits what it was not testing.** It had been asserting against synthetic events that never drove the path a real submit takes
+
+### Engines, keyboard, and focus
+
+- **Every component renders under Firefox, WebKit, and script-disabled Chromium** on every run, 92 components across three projects, plus a lint refusing a not-universal CSS property outside an `@supports`
+- **The interactions run outside Chromium too.** `events.spec.ts` drives Firefox and WebKit, so an event payload is verified where it fires rather than inferred from one engine
+- **The collection substrate is walked with the arrows** in a real browser: menu open and return, combobox typing focus, the date picker's grid, and the roving tab stop across every component that ropes off items
+- **Focus stops falling on the floor when a panel closes**, and a tab's key no longer arrives too late to count
+- **`focusable` is a convention across the set**, wired through the wrappers and manifests, so a control can be kept out of the tab order without a bespoke attribute per component
+- **The focus ring is graded against the floor the algorithm declares**, with WCAG 2.2's 3:1 reported beside it, and three of the five blessed algorithms shipped it under that floor
+
+### Manifests
+
+- **72 events declared a `detail` and 33 delivered one.** `switch`, `checkbox`, `radio`, `panel`, and `combobox` all documented a payload and dispatched a bare `Event`, so the documented handler threw
+  - `dialog` and `sheet` documented a close *reason* neither element had any concept of; both carry `escape` / `backdrop` / `dismiss` / `api` now, so an abandoned task reads differently from a finished one
+  - `event-detail-contract.test.ts` is driven off `listComponents()`, so a new component declaring a payload is covered the day it lands
+- **Every html-bound prop says where it lives**, and the attribute check meant to catch the gap had been skipping the props it mattered most for
+- **The manifest is held against what HTML actually does**, so a prop colliding with a platform meaning is a failure rather than a surprise
+- **Wrappers export the methods they advertise.** Several exported nothing at all, `Tour` advertised seven, and three more had gaps between the documented surface and the shipped one
+- **A component's methods have somewhere to be named**, so a manifest can carry them instead of leaving the reference page to guess
+
+### Palette and audit
+
+- **The palette register is open**, and the audit reads the named hues rather than only the semantic roles
+- **`--accent` and `--info` derived to the same hex on two blessed algorithms at default anchors**, which is a collision no invariant was watching; role separation is graded now, and reports which axis carries the distance
+- **The audit answers in prose a person can read**, naming each dimension's weakest pair rather than handing back a table to interpret
+- **A pin re-threads the whole register.** Pinning a surface re-spaces the ladder around it instead of leaving it to double back, a gray ramp takes a pin at all, and a pin reads as the fill rather than only as a hue
+- **A ramp is graded against itself**, not only against the page, so two adjacent steps that read as one color are caught
+- **A link's hover is distinct to an eye**, not merely to a parser, and the guard knows where a lightness pole really is
+- **`brown` has a lightness of its own**, and the fan's fourth accent has room to stand in
+
+### Tour
+
+- **A tour is declared as data.** A `TourSpec` arrives from markup or from a wrapper, so an app shipping several walkthroughs is not hand-building an index
+- **A step can make what it points at** before the target is measured, which is the hook a walkthrough over lazily-rendered UI needs
+
+### The Bench
+
+- **Every scene has its own address.** `?view=mockups&scene=dashboard` opens on a named view and scene, the address bar follows what is showing, and a shared theme opens on the scene it was being judged in
+- **Nine more app mockups**, and every tab group mounts lazily, so a visit mounts the one scene it asked for instead of all twenty-seven
+- **The Bench is off its own critical path.** The hosted-algorithm load was interleaving with island hydration and holding off first paint; it waits for a genuine idle callback now, and Firefox went 25.7s to 3.1s on the worst scene while WebKit gained 4x nobody predicted
+- **Two derivations of one card sit side by side**, so the baked and hosted paths can be compared rather than trusted
+
+### Effects
+
+- **`spin` is the ambient still-working verb**, where `wobble` is the one-shot jitter that settles; it takes a `rate` and a `direction`
+- **An effect can declare that intensity does not scale it.** A rotation has no amplitude to give back, so scaling its arc yields a partial turn that snaps every cycle and scaling its rate yields a slower spinner rather than a calmer one; `scalesWithIntensity` makes the exemption legible instead of leaving it as an interpolation someone forgot
+  - suppressing it on a high-contrast theme would hide the fact that something is still working from the readers least able to absorb an interface that looks frozen, and `prefers-reduced-motion` is still the motion-safety lever
+- **The split between `<Spinner>` and `data-fx="spin"` is written down.** A component is a thing you place, an effect is a verb you apply; remove the motion and either there is a hole or the glyph is standing still
+
+### Fixes
+
+- **The accordion had never drawn its chevron.** `box-sizing` was set on `.xtyle-control` and nowhere else, so a trigger pairing `width: 100%` with its own padding rendered 31px wider than its host and pushed the marker outside the `overflow: hidden` on `.xtyle-accordion`
+  - a collapsed header and an expanded one were pixel-identical, so the one affordance telling a reader the row opens was missing everywhere the component shipped
+  - seven rules carried the same shape and were fixed together, including `.xtyle-radio--card`, which overhung by 34px
+- **A tab strip wraps instead of scrolling.** `.xtyle-tabs__tablist` carried `overflow-x: auto` unconditionally, so every crowded strip grew a scrollbar with no way to say otherwise; `overflow` takes `wrap` (the default) or `scroll`, and wrapping is the right answer when the tab count is data-driven
+- **The table of contents followed the wrong section.** The activation band is a thin strip near the top of the viewport, so any section shorter than the strip puts two headings inside it at once and the earliest one won; the highlight sat one entry behind the reader for the whole page
+- **`Field` rendered its clear glyph as six literal characters.** The insertion path resolves numeric character references and not named ones, so `&#128065;` decoded into an eye on the reveal button while the named entity beside it sat there as text
+  - it lived in two places, the fill and the `markup/` module the static render goes through, and fixing only the fill left the rendered page identical
+- **Every Astro `<Tabs>` was rendering as `sticky`.** `sticky={sticky}` emits `sticky="false"` on a custom element, and the element reads presence via `hasAttribute`, so every strip in the docs and the Bench had been pinning when nothing asked
+- **A getter was mutating state mid-render.** The theme store hydrated lazily from `get docs()`, which assigns `$state`; read from a template expression that is a `state_unsafe_mutation` throw, and the Bench came back as an island with no children
+- **`align` restyled what it was never asked to.** It is a legacy presentational attribute, so the UA sheet maps it to `text-align` on any element carrying it, and that inherits into every node a component's own sheet did not pin; the reset uses `inherit` rather than `initial`, which is the difference between a fix and severing a container's own alignment from every component inside it
+- **`Grid` can express a main-plus-sidebar.** `sidebar` takes the rail's width and `side` says which child it is, with `minColWidth` reading as the main column's floor rather than growing a second threshold vocabulary
+- **`Progress` rendered zero-width unless you wrote its own default.** The rule keyed on `[variant="linear"]` while the default was applied internally, so the attribute the selector wanted was never there
+- **A crowded toolbar wraps instead of spilling**, a hidden table no longer widens the page, a restored float stays inside the workspace, and the tooltip compass fits a phone
+- **A drag survives an uncapturable pointer**, which is the case a hand-rolled dragger reaches only after shipping
+- **Accordion, carousel, and a slotted child list see content that arrives late**, so a component built from data that loads after mount stops rendering an empty shell
+
+| package | tests |
+|---|---|
+| `@xtyle/core` | 4145 |
+| `@xtyle/site` | 101 |
+| `@xtyle/svelte` | 30 |
+| visual regression | 1511 |
+
 ## v0.11.0
 
 A release about gestures and the things they set off. `reveal`, the swipe-to-act row, is the one component that lands, but the more useful half is underneath it: a shared pointer-drag core that every dragger in the library now sits on, and a set of transient effects so the thing a gesture *does* has somewhere to be said. The icon grammar learned arbitrary polygons, and six reports from consumers building against earlier versions are closed. The surfaces a mod contributes through got a pass of their own: two registries that could only be reached by running code answer a slot now, and a new gate over the component vocabulary found 22 attributes a fill had been silently losing.

@@ -66,6 +66,7 @@ export const radioManifest: ComponentManifest = {
 	description:
 		"Radio is a styled native `<input type=\"radio\">`: the real input drives state and keyboard semantics while a custom indicator paints the selected dot in any of the six semantic tones. RadioGroup wraps a set of radios in a `role=\"radiogroup\"`, lays them out vertically or horizontally, and owns the WAI-ARIA roving-tabindex pattern: the group is a single Tab stop and arrow keys move selection between options, wrapping at the ends. Each radio carries its own label (via the `label` attribute or default-slot text), an optional `description` (a secondary explanation line wired to `aria-describedby`), an invalid state, and a disabled state; the group can disable as a whole. Add `card` to render a radio as a full-width option card that takes an accent ring and tint when selected: `card` plus `description` is the title-and-explanation option-card pattern, selection and a11y owned by the component instead of hand-rolled. State lives on the native input, so form participation and submission come for free.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["control", "description", "dot", "indicator", "label", "radio"],
 	anatomy: [
 		{
 			name: "radio",
@@ -162,7 +163,8 @@ export const radioManifest: ComponentManifest = {
 			name: "invalid",
 			type: "boolean",
 			default: "false",
-			description: "Marks the radio invalid, danger-colored ring plus `aria-invalid`. Radio only.",
+			description:
+				"Marks the radio invalid: danger-colored ring, `aria-invalid`, and a custom validity on the host element, so the form will not submit while it is set. Radio only.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -196,6 +198,7 @@ export const radioManifest: ComponentManifest = {
 			default: "vertical",
 			description: "Layout direction and `aria-orientation` of the group. RadioGroup only.",
 			bindings: ["html", "svelte", "astro"],
+			attrOn: "xtyle-radio-group",
 			options: ["vertical", "horizontal"],
 		},
 		{
@@ -205,6 +208,9 @@ export const radioManifest: ComponentManifest = {
 			description: "Disables interaction. On a Radio it disables that option; on a RadioGroup it marks the whole group `aria-disabled`.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "change", detail: "{ value }", description: "The chosen option changed.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{

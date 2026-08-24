@@ -13,6 +13,10 @@
 		tone?: FullTone;
 		size?: Size;
 		label?: string;
+		/** The accessible name of the previous-page step. */
+		prevLabel?: string;
+		/** The accessible name of the next-page step. */
+		nextLabel?: string;
 		/** Fired when a page or control is activated in button mode (no `href`). */
 		onpagechange?: (event: PageChange) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -28,6 +32,8 @@
 		tone = "accent",
 		size = "md",
 		label = "Pagination",
+		prevLabel,
+		nextLabel,
 		onpagechange,
 		...rest
 	}: Props = $props();
@@ -53,4 +59,6 @@
 	tone={tone}
 	size={size}
 	label={label}
+	prev-label={prevLabel}
+	next-label={nextLabel}
 ></xtyle-pagination>

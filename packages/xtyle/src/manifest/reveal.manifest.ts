@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
 
 const htmlExample = `<!-- One direction: slide the lid aside to read what's under it -->
 <xtyle-reveal>
@@ -53,6 +54,7 @@ const svelteExample = `<script lang="ts">
 const astroExample = `---
 import Reveal from "@xtyle/astro/Reveal.astro";
 import RevealGroup from "@xtyle/astro/RevealGroup.astro";
+import { FULL_TONES } from "../vocab.js";
 
 const products = [
 	{ name: "Kettle", price: "£49" },
@@ -87,6 +89,7 @@ export const revealManifest: ComponentManifest = {
 	description:
 		"Reveal layers a **lid** over as many as four **bellies**, one per direction, and slides the lid to expose whichever the gesture asks for. Which directions are live is inferred from the bellies you fill: a `[slot=\"end\"]` makes the end direction live and nothing else does, so there is no second list of directions to keep in sync. Travel is locked to one axis per gesture, so a component offering `start` and `bottom` still only ever moves one way at a time. Every knob is a host attribute, so the same markup configures identically from HTML, Svelte, and Astro; `behavior` sets the default and `endBehavior` and friends override one direction. Each direction decides what its own slide means: `latch` opens and stays, `commit` fires an action and springs back, and `both` gives the short pull a latch and the full pull the action. Give several reveals a shared `name` and they behave like radios, where opening one closes the last; leave the name off and they behave like checkboxes, each independent. A concealed belly is `inert`, so its buttons never sit in the tab order waiting to be tabbed into by accident.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["belly", "belly-${direction}", "content", "grip", "grip-${direction}", "lid", "reveal"],
 	anatomy: [
 		{
 			name: "lid",
@@ -144,6 +147,14 @@ export const revealManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "control",
+			type: "boolean",
+			default: "false",
+			description:
+				"Declares the lid a control rather than a container, giving it `role=\"button\"` in place of `role=\"group\"`. A reveal whose lid carries a picture and a name, and whose pull is the only way to act, is a button by every test a screen reader applies. Opt-in, because the lid takes whatever you slot into it and a lid holding its own buttons is genuinely a container. Pair it with `label`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "contained",
 			type: "boolean",
 			default: "false",
@@ -157,7 +168,7 @@ export const revealManifest: ComponentManifest = {
 			description:
 				"Paints every belly from one tone's token family (its fill from `--{tone}-bg`, its text from `--{tone}-text`, and a frame from `--{tone}`), so a belly reads as accept or decline at a glance. Any tone in the roster works: the semantic roles, the accent-ramp variants, and the named hues.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["accent", "neutral", "danger", "success", "warn", "info"],
+			options: [...FULL_TONES],
 		},
 		{
 			name: "flickVelocity",
@@ -416,6 +427,32 @@ export const revealManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
+	events: [
+		{ name: "xtyle:reveal", detail: "{ direction }", description: "A belly was exposed.", bindings: ["html", "svelte", "astro"], handler: "onreveal" },
+		{ name: "xtyle:conceal", detail: "{ direction }", description: "The lid closed over whichever belly was open.", bindings: ["html", "svelte", "astro"], handler: "onconceal" },
+		{ name: "xtyle:reveal-commit", detail: "{ direction }", description: "A direction's action fired — a full pull past its threshold, `Enter` or `Space` on the lid, or `commit(direction)`.", bindings: ["html", "svelte", "astro"], handler: "oncommit" },
+	],
+	methods: [
+		{
+			name: "reveal",
+			params: "direction: \"start\" | \"end\" | \"top\" | \"bottom\"",
+			description:
+				"Slide the lid open on a direction, exactly as a pull past its `latchAt` does. Ignored for a direction with no belly, and on a disabled reveal.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "conceal",
+			description: "Slide the lid back over whatever is open, exactly as letting go short of the threshold does.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "commit",
+			params: "direction: \"start\" | \"end\" | \"top\" | \"bottom\"",
+			description:
+				"Take a direction's action and close, exactly as a full pull past its `commitAt` does. This is the door for a test harness: a reveal's only other input is an analogue gesture, and driving one from a script means reproducing axis lock, travel fractions, and pointer capture rather than saying what you mean. A `latch` direction has no action to take, so this opens it instead, and closes it if it is already open.",
+			bindings: ["html", "svelte"],
+		},
+	],
 	variants: [],
 	sizes: [],
 	states: [
@@ -553,7 +590,9 @@ export const revealManifest: ComponentManifest = {
 	],
 	a11y: [
 		"The lid is focusable and announced as a group carrying `aria-expanded`, so the disclosure is legible without a pointer.",
-		"Arrow keys open the belly on the matching edge and Escape closes whichever is open, so every direction has a keyboard route.",
+		"Arrow keys open the belly on the matching edge and Escape closes whichever is open. `Enter` and `Space` take the action: they fire the same `xtyle:reveal-commit` a full pull does, on the open direction, or on the sole live one when nothing is open and there is no ambiguity about which action was meant. A `latch` direction has no action behind it — being open is the whole interaction — so there they open and close instead.",
+		"`control` declares the lid a control rather than a container, swapping `role=\"group\"` for `role=\"button\"`. A reveal whose lid carries a picture and a name, and whose pull is the only way to act, is a button by every test a screen reader applies, and announcing it as a group describes the furniture instead of the affordance. It is opt-in because the lid takes whatever you slot into it: a lid holding its own buttons is genuinely a container, and a `button` role there would fold its children into itself. Pair it with `label`.",
+		"Opening a belly is not the same as reaching what is inside it. A `commit` direction's action was once reachable only by dragging, which made the lid's tabstop a stop that led nowhere; `Enter` is the keyboard equivalent of the pull, and `commit(direction)` is the imperative one for a host or a test harness.",
 		"A concealed belly is `inert`, keeping its controls out of the tab order until it is actually on screen.",
 		"When a grouped reveal is closed by a sibling opening, focus lands on its own lid rather than being dropped to the document.",
 		"Travel locks to one axis after `lockThreshold` pixels, so a vertical scroll gesture on a horizontal reveal still scrolls the page.",

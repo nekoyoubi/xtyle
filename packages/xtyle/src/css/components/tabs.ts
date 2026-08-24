@@ -11,6 +11,17 @@ export const tabsCss = `
 	align-items: stretch;
 	gap: var(--space-1);
 	position: relative;
+	flex-wrap: wrap;
+}
+.xtyle-tabs--scroll .xtyle-tabs__tablist {
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scrollbar-width: thin;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+.xtyle-tabs__tab {
+	scroll-margin-inline: var(--space-4);
 }
 .xtyle-tabs__tab {
 	display: inline-flex;
@@ -83,6 +94,19 @@ export const tabsCss = `
 .xtyle-tabs__panel[hidden] {
 	display: block;
 	visibility: hidden;
+}
+.xtyle-tabs--fill {
+	flex: 1 1 auto;
+	min-height: 0;
+	height: 100%;
+}
+.xtyle-tabs--fill .xtyle-tabs__panels {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+.xtyle-tabs--fill .xtyle-tabs__panel {
+	overflow: auto;
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 .xtyle-tabs--underline .xtyle-tabs__tablist {
 	gap: var(--space-2);

@@ -63,7 +63,9 @@ export function startDrag(event: PointerEvent, handlers: DragHandlers): void {
 
 	const nextState = dragStateFactory(event, handlers.axes ?? "both", handlers.lockThreshold ?? 0);
 	const pointerId = event.pointerId;
-	(event.target as Element | null)?.setPointerCapture?.(pointerId);
+	try {
+		(event.target as Element | null)?.setPointerCapture?.(pointerId);
+	} catch {}
 
 	const move = (raw: Event): void => {
 		const moved = raw as PointerEvent;

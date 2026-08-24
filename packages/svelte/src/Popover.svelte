@@ -65,6 +65,7 @@
 		show(opts?: PopoverOpenOptions): void;
 		openAt(x: number, y: number, opts?: PopoverOpenOptions): void;
 		openFrom(anchor: HTMLElement, opts?: PopoverOpenOptions): void;
+		reanchor(anchor: HTMLElement, opts?: PopoverOpenOptions): void;
 		hide(reason?: string, returnFocus?: boolean): void;
 		toggle(): void;
 		reposition(): void;
@@ -97,6 +98,16 @@
 		el?.reposition();
 	}
 
+	/** Move an already-open popover onto a different anchor, without closing and reopening it. */
+	export function reanchor(anchor: HTMLElement, opts?: PopoverOpenOptions): void {
+		el?.reanchor(anchor, opts);
+	}
+
+	/** Open it if closed, close it if open — the one-call form for a trigger that toggles. */
+	export function toggle(): void {
+		el?.toggle();
+	}
+
 	function handleClose(event: Event): void {
 		open = false;
 		onclose?.(event as CustomEvent<{ reason: string }>);
@@ -109,11 +120,12 @@
 
 	$effect(() => {
 		const target = el;
+		const next = open;
 		if (!target) return;
 		// HACK: defer to a microtask so an `open`-by-default popover doesn't run the element's popover
 		// logic during Svelte's mount-effect flush, which corrupts reconciliation
 		queueMicrotask(() => {
-			target.open = open;
+			target.open = next;
 		});
 	});
 </script>

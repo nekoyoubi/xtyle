@@ -1,5 +1,8 @@
 import { componentStyleSheet } from "../css/index.js";
 import { THEME_APPLY_EVENT } from "../dom.js";
+import { markFormNameUnbound, markFormNameDoubled } from "./fragment-host.js";
+
+const CHILD_IDENTITY_ATTRS = ["data-value", "value", "disabled", "aria-disabled", "selected"];
 
 /**
  * The base every xtyle element extends — and the blessed base for consumer
@@ -59,8 +62,123 @@ export abstract class XtyleElement extends HTMLElement {
 			: (this.shadowRoot ?? this.attachShadow({ mode: "open" }));
 	}
 
+	/** Whether this instance rendered behind a real shadow root rather than into light DOM. */
+	/**
+	 * A validity message, never empty. `setValidity` throws when a flag is set and the message is
+	 * blank, and an attribute written as `error=""` is *present* — so `??` reads it as supplied and
+	 * hands the empty string straight through. Any consumer binding a possibly-empty error string,
+	 * which is the ordinary shape in every framework, crashed the element on that path.
+	 */
+	protected validityMessage(attribute: string, fallback: string): string {
+		const stated = this.getAttribute(attribute);
+		return stated !== null && stated.trim() !== "" ? stated : fallback;
+	}
+
+	protected isShadow(): boolean {
+		return (this.root as unknown as Node) !== (this as unknown as Node);
+	}
+
+	/** A form-associated subclass returns its `ElementInternals` here to publish the standard
+	 * constraint-validation surface below. Returning `null` leaves the element non-validating. */
+	protected formInternals(): ElementInternals | null {
+		return null;
+	}
+
+	/**
+	 * Whether something this component renders into light DOM carries the host's `name` and posts on
+	 * its own — the fill's control, or a hidden mirror the element appends. `true` means the host must
+	 * stay out of `setFormValue` in light DOM or the value posts twice; `false` means the host's
+	 * `ElementInternals` is the only channel in either mode. A subclass declares which it is; the two
+	 * halves must not both be true, and `verifyFormName` checks the declaration against the DOM.
+	 */
+	protected get fillOwnsFormName(): boolean {
+		return false;
+	}
+
+	/** Whether the host should report this value through `ElementInternals`. */
+	protected reportsFormValue(): boolean {
+		return this.isShadow() || !this.fillOwnsFormName;
+	}
+
+	/** Check, after the fill has mounted, that light DOM matches what `fillOwnsFormName` declares:
+	 * a control carrying the `name` when it claims one, and none when it does not. */
+	protected verifyFormName(): void {
+		if (this.isShadow()) return;
+		const name = this.getAttribute("name");
+		if (!name) return;
+		const bound = Array.from(this.querySelectorAll("[name]")).some(
+			(node) => node.getAttribute("name") === name,
+		);
+		if (bound === this.fillOwnsFormName) {
+			this.removeAttribute("data-xtyle-form-unbound");
+			this.removeAttribute("data-xtyle-form-doubled");
+			return;
+		}
+		if (this.fillOwnsFormName) markFormNameUnbound(this, name);
+		else markFormNameDoubled(this, name);
+	}
+
+	get validity(): ValidityState | undefined {
+		return this.formInternals()?.validity;
+	}
+
+	get validationMessage(): string {
+		return this.formInternals()?.validationMessage ?? "";
+	}
+
+	get willValidate(): boolean {
+		return this.formInternals()?.willValidate ?? false;
+	}
+
+	get form(): HTMLFormElement | null {
+		return this.formInternals()?.form ?? null;
+	}
+
+	checkValidity(): boolean {
+		return this.formInternals()?.checkValidity() ?? true;
+	}
+
+	reportValidity(): boolean {
+		return this.formInternals()?.reportValidity() ?? true;
+	}
+
 	/** The element's shadow markup. Required; a subclass overrides it to re-shape output. */
 	protected abstract template(): string;
+
+	/**
+	 * Whether the internal control takes part in sequential focus navigation. A component that renders a
+	 * natively focusable element makes it tab-reachable whether or not the app wants a second cursor:
+	 * a consumer driving selection from its own keyboard cursor gets two focus rings that diverge, and
+	 * Enter activates through both, firing one keypress twice. `focusable="false"` opts the control out.
+	 *
+	 * The host's own `tabindex` cannot express this — focus lands on the inner control, not the host —
+	 * and setting `tabindex` on that control from outside does not survive the next render.
+	 */
+	protected get focusable(): boolean {
+		return this.getAttribute("focusable") !== "false";
+	}
+
+	/**
+	 * The text a consumer slotted, for mirroring onto an internal control as its accessible name.
+	 * Chromium does not carry slotted light-DOM text across the shadow boundary into a control's
+	 * name-from-content, so a control whose only content is a `<slot>` computes no name at all — the
+	 * label is on screen and absent from the accessibility tree. Returns `null` in light DOM, where the
+	 * text is a real descendant and names the control natively, and for an empty slot.
+	 */
+	protected slottedName(slotName?: string): string | null {
+		if (!this.shadowRoot) return null;
+		const sources = slotName
+			? Array.from(this.children).filter((child) => child.getAttribute("slot") === slotName)
+			: Array.from(this.childNodes).filter(
+					(node) => !(node instanceof Element) || !node.hasAttribute("slot"),
+				);
+		const text = sources
+			.map((node) => node.textContent ?? "")
+			.join(" ")
+			.replace(/\s+/g, " ")
+			.trim();
+		return text ? text : null;
+	}
 
 	/** Per-element host-layout rules only (e.g. `:host { display: ... }`). The component's visual styling comes from the shared `@xtyle/core/css` sheet. */
 	protected styles(): string {
@@ -73,6 +191,59 @@ export abstract class XtyleElement extends HTMLElement {
 	 * subscribe to `THEME_APPLY_EVENT` and re-render on a live theme swap. */
 	protected get resolvesThemeAtRuntime(): boolean {
 		return false;
+	}
+
+	private applyingEvent: Event | null = null;
+
+	/**
+	 * Run a fragment intent with the event that provoked it in scope, so an `emitOwn` anywhere inside —
+	 * including down a private helper that never sees the event — can silence the native echo without
+	 * every call site threading it by hand.
+	 */
+	protected applying<T>(event: Event, run: () => T): T {
+		const outer = this.applyingEvent;
+		this.applyingEvent = event;
+		try {
+			return run();
+		} finally {
+			this.applyingEvent = outer;
+		}
+	}
+
+	/**
+	 * Silence the native event of this name that provoked the current intent, without emitting anything
+	 * in its place. For the path that decides it has nothing to report — a commit that did not change
+	 * the value — where the echo still has to be stopped, or it reaches the consumer alone and unlabelled.
+	 */
+	protected silenceEcho(type: string, source?: Event | null): void {
+		const echo = source ?? this.applyingEvent;
+		if (echo && echo.type === type && echo.composedPath()[0] !== this) {
+			echo.stopImmediatePropagation();
+		}
+	}
+
+	/**
+	 * Emit the component's own event, silencing the native one that provoked it.
+	 *
+	 * An inner `<input>` fires native `input` / `change` / `select` that bubble to the host — and
+	 * `input` crosses a shadow boundary too — so an element that answers one by dispatching its own
+	 * leaves a consumer listening on the host hearing both: twice per interaction, the echo carrying
+	 * no `detail`. The echo stops at the moment the element speaks in its place, taken from `source`
+	 * or from the intent `applying` currently has in flight.
+	 *
+	 * `composedPath()[0]` is what distinguishes them, not `target`: a composed event is retargeted to
+	 * the host on its way out, so `target` reads as the host for an event the inner control fired.
+	 *
+	 * Only for an element that emits its own event. One whose declared event *is* the native event
+	 * passing through calls nothing — the native event is the contract.
+	 */
+	protected emitOwn(type: string, source?: Event | null, detail?: unknown): void {
+		this.silenceEcho(type, source);
+		this.dispatchEvent(
+			detail === undefined
+				? new Event(type, { bubbles: true, composed: true })
+				: new CustomEvent(type, { bubbles: true, composed: true, detail }),
+		);
 	}
 
 	connectedCallback(): void {
@@ -92,6 +263,62 @@ export abstract class XtyleElement extends HTMLElement {
 			document.removeEventListener(THEME_APPLY_EVENT, this.themeListener);
 			this.themeListener = undefined;
 		}
+		this.childObserver?.disconnect();
+		this.childObserver = undefined;
+	}
+
+	private childObserver?: MutationObserver;
+
+	/**
+	 * Re-render whenever the host's light-DOM children change.
+	 *
+	 * A component that reads `this.children` rather than projecting through a `<slot>` holds a copy taken
+	 * at render time, and every framework renders a list as an effect that runs *after* the element is
+	 * inserted — so a loop-rendered child arrives one tick too late and is never seen. Watching the
+	 * subtree is what makes the read live; the connect-time read alone cannot be made correct.
+	 *
+	 * The identity attributes are watched too, because a child can arrive before it is keyed. A read
+	 * that lands in that window sees no key, falls back to positional ones, and a requested value that
+	 * matches none of them selects the first item instead — permanently, since nothing else would
+	 * re-render. None of these are attributes an element writes back to a light child, so watching them
+	 * cannot feed itself.
+	 */
+	protected observeChildren(): void {
+		if (typeof MutationObserver === "undefined" || this.childObserver) return;
+		this.childObserver = new MutationObserver((records) => {
+			if (!this.isConnected || !this.root.firstChild) return;
+			if (records.every((record) => this.isOwnMutation(record))) return;
+			this.render();
+		});
+		this.childObserver.observe(this, {
+			childList: true,
+			subtree: true,
+			characterData: true,
+			attributes: true,
+			attributeFilter: CHILD_IDENTITY_ATTRS,
+		});
+	}
+
+	private isOwnMutation(record: MutationRecord): boolean {
+		if (this.isOwnPaint(record.target)) return true;
+		if (record.type !== "childList") return false;
+		const touched = [...record.addedNodes, ...record.removedNodes];
+		return touched.length > 0 && touched.every((node) => this.isOwnPaint(node));
+	}
+
+	/**
+	 * True for a node the element painted itself. Under a light-DOM render the scaffold lives among the
+	 * author's children, so an unfiltered observer would see its own output and re-render forever.
+	 *
+	 * The default answers from `[data-root]`, which holds while a fill paints a single root-level
+	 * subtree. An element whose fill renders root-level siblings outside that marker overrides this and
+	 * defers to its `FragmentHost`, which records what the scaffold actually produced.
+	 */
+	protected isOwnPaint(node: Node | null): boolean {
+		for (let at: Node | null = node; at && at !== this; at = at.parentNode) {
+			if (at instanceof Element && at.hasAttribute("data-root")) return true;
+		}
+		return false;
 	}
 
 	/** Paint the render root. Under `isolated`, adopt the shared component sheet and inline

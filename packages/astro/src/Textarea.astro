@@ -18,6 +18,7 @@ interface Props {
 	error?: string;
 	disabled?: boolean;
 	required?: boolean;
+	requiredMessage?: string;
 	/** Render the control in the monospace stack for code-shaped text. */
 	mono?: boolean;
 	/** Render zero-JS: emit the declarative shadow but never load the runtime to hydrate it. */
@@ -39,6 +40,7 @@ const {
 	error,
 	disabled = false,
 	required = false,
+	requiredMessage,
 	mono = false,
 	static: isStatic = false,
 	class: extra,
@@ -77,6 +79,7 @@ const light = await renderFragmentLight("textarea", bindings);
 	error={error}
 	disabled={disabled || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	mono={mono || undefined}
 	class={extra}
 	set:html={light}

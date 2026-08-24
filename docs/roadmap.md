@@ -39,13 +39,13 @@ Remaining:
 
 The algorithm has to behave the way it was envisioned against the inputs people actually use, not just pass the gauntlet.
 
-- Pin re-threading across the whole register: an override re-enters derivation and dependents re-solve around it (accent ramp + the tone families done: pinning `--accent-2` re-threads `-3`/`-4`, and pinning a tone solid like `--green` or `--danger` now re-hues its whole `-bg`/`-fg`/`-text` family; surface re-spacing next).
+- Pin re-threading across the whole register: an override re-enters derivation and dependents re-solve around it (accent ramp, the tone families, and the surface ladder done: pinning `--accent-2` re-threads `-3`/`-4`, pinning a tone solid like `--green` or `--danger` re-hues its whole `-bg`/`-fg`/`-text` family, and pinning any surface re-spaces the rest of the stack around it rather than leaving the ladder to double back). Open: whether a chromatic surface pin should carry its chroma into the rungs it re-spaces, or leave them on the page's own neutral.
 - The sibling algorithms (`xtyle-hc` / `xtyle-quiet` / `xtyle-loud`) as genuinely distinct design postures, not chroma multipliers.
 - Gamut and contrast robustness; scrutiny against real brand colors, light palettes, near-monochrome, and off-hue accents, judged by eye, not just green.
 
 ### 3. component contract & correctness
 
-- Cross-browser correctness and a11y depth on the live, driven UI, Firefox-verified so far: the four interactive controls (**checkbox** toggle+check, **switch** `aria-checked`, **radio** check+dot, **slider** `role=slider` thumb + ArrowRight) and the overlays (**Dialog** opens, traps focus, renders its body; **Tooltip** shows on hover). The library's `appearance: none` + custom-role + sibling-indicator + native-`<dialog>`/Popover patterns hold cross-engine. (`Menu` behaves identically in Chromium and Firefox: no engine divergence; its interactive open is verified in the live Bench.) Remaining: layout / data components, and adding Safari/WebKit.
+- Cross-browser correctness and a11y depth on the live, driven UI, Firefox-verified so far: the four interactive controls (**checkbox** toggle+check, **switch** `aria-checked`, **radio** check+dot, **slider** `role=slider` thumb + ArrowRight) and the overlays (**Dialog** opens, traps focus, renders its body; **Tooltip** shows on hover). The library's `appearance: none` + custom-role + sibling-indicator + native-`<dialog>`/Popover patterns hold cross-engine. (`Menu` behaves identically in Chromium and Firefox: no engine divergence; its interactive open is verified in the live Bench.) ✅ **Every component now renders under Firefox, WebKit and script-disabled Chromium** on every run — 92 components × 3, structural rather than pixel, plus a lint refusing a not-universal CSS property outside an `@supports`. The first full sweep found no divergence at all, which is a result rather than a formality: nothing in the library depends on a single engine today. Remaining: the bar that sweep does *not* clear — a layout subtly wrong in one engine still passes, so interaction depth and a11y behavior per engine are the next rung.
 - Component discoverability / IA: a persistent component nav, not a listing stranded on one index page.
 - Fill genuine contract gaps; keep parity across `core` / `svelte` / `astro`.
 
@@ -57,7 +57,10 @@ The algorithm has to behave the way it was envisioned against the inputs people 
 
 ### 5. discovery & packs
 
-- The `xtyle add` / `xtyle search` path; the npm-derived pack index; authored algorithm + theme packs.
+- ✅ **The pack unit and the CLI path.** A pack declares itself (`xtyle` field or `xtyle.json`), a reference dispatches on shape (`@scope/pkg` · `owner/repo` · `./path` · URL · `@handle`, with `@version` pinning and `#name` selecting one entry), and `xtyle search` / `xtyle add` / `xtyle packs` are built over an npm-derived index that xtyle hosts none of. An installed pack's algorithms resolve through the same sandbox the blessed set uses, and `xtyle derive --theme <name>` re-derives a declared theme from its recipe.
+- ✅ **Browser-side pack resolution.** `@xtyle/core/host/remote` reads a published pack file by file over a CDN (jsDelivr for `npm` and `owner/repo` references, the URL itself for a pack served directly) and loads its algorithm through the same zero-authority sandbox the blessed set runs in. The generator derives with any published algorithm now, not only the bundled five. A browser cannot unpack a tarball, which is why the pack shape is file-addressable rather than archive-addressable. `fetchPackAlgorithmManifest` answers what an algorithm accepts off its packaged manifest, so listing a pack never boots a sandbox. The Bench's **From a pack** tier is the surface, and `packs/xtyle-pack-example` is a worked pack the site serves.
+- **The author profile manifest**, for an author spanning scopes or distributing off npm.
+- **Authored algorithm + theme packs** worth shipping, which is the half that proves the range rather than the plumbing.
 
 ### 6. consumer DX & publish-readiness
 

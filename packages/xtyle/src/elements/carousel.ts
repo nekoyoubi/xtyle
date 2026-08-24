@@ -41,7 +41,7 @@ export class XtyleCarousel extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["label", "autoplay", "interval", "loop", "controls", "dots", "transition", "direction"];
+		return ["label", "autoplay", "interval", "loop", "controls", "dots", "transition", "direction", "pause-on-hover"];
 	}
 
 	private controller: AbortController | null = null;
@@ -157,7 +157,12 @@ export class XtyleCarousel extends XtyleElement {
 
 	override connectedCallback(): void {
 		super.connectedCallback();
+		this.observeChildren();
 		this.activate();
+	}
+
+	protected override isOwnPaint(node: Node | null): boolean {
+		return this.fragment.ownsPaint(node);
 	}
 
 	override disconnectedCallback(): void {
@@ -275,6 +280,10 @@ export class XtyleCarousel extends XtyleElement {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold("");
 		this.claimScaffold();
+		if (this.fragment.recaptureSlotted()) {
+			this.fragment.remount();
+			this.remounting = true;
+		}
 		this.slides = this.fragment.slottedNodes().filter((node): node is HTMLElement => node instanceof HTMLElement);
 		if (this.slides.length === 0) return;
 		this.index = Math.min(this.index, this.lastIndex);
@@ -405,6 +414,7 @@ export class XtyleCarousel extends XtyleElement {
 		live.className = "xtyle-carousel__live";
 		live.setAttribute("role", "status");
 		live.setAttribute("aria-live", "polite");
+		this.fragment.ownNode(live);
 		this.append(live);
 		this.liveEl = live;
 	}

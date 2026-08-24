@@ -156,6 +156,7 @@ export const barManifest: ComponentManifest = {
 	description:
 		"Bar plots one or more numeric series across a set of categories as an SVG chart that renders from data alone. Each series takes its color from a `scheme` naming a palette resolved off the live theme (the `accents` fan, the `skittles` hue ring, the `statuses` roster, a `thermal` cold-to-hot scale, `severity` good-to-bad), so a chart is coherent with the rest of the UI out of the box; pass an explicit color array for full control, and `reverse` to flip any palette. Bars sit side by side by default or stack with `stacked`, and run vertically or horizontally (`orientation`) for long category labels. It's interactive: hovering or focusing a bar dims the rest and floats a value readout, and the whole chart is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: each bar becomes a button that fires a `select` event with its series, category, and value, so a click filters, navigates, or drills into that data. A value axis with gridlines and category labels come derived; a legend appears for multi-series data. Set `height` for the plot area; the chart fills its container's width. With no categories or series to plot, it shows a muted `No data` message in place of the axes.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["bar", "chart", "legend", "legend-item", "tooltip", "tooltip-row"],
 	anatomy: [
 		{
 			name: "chart",
@@ -280,6 +281,9 @@ export const barManifest: ComponentManifest = {
 				"Makes bars actionable: each bar becomes a `role=\"button\"` with a pointer cursor, and clicking one (or pressing Enter/Space while it's focused) fires a `select` `CustomEvent` whose `detail` carries `{ series, category, value, seriesIndex, categoryIndex }`. `@xtyle/svelte` surfaces it as an `onselect` callback. Leave it off for a read-only chart.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "select", detail: "{ label, value, index }", description: "A bar was activated.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

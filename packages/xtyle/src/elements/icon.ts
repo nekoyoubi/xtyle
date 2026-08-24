@@ -6,7 +6,7 @@ import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/icon/source.generated.js";
 import { resolveIconMark, composeIconThemed, iconClass } from "../icon-builder.js";
 import { readLiveRegister } from "./live-register.js";
-import { hasRosterIcon, iconBody } from "../icon-registry.js";
+import { hasRosterIcon, iconBody, onIconRegistryChanged } from "../icon-registry.js";
 import { PALETTE_TOKENS, resolvePaletteName, type Palette } from "../series.js";
 import { resolveOptionalTone, resolveVocab, ICON_SIZES } from "../vocab.js";
 
@@ -72,6 +72,21 @@ export class XtyleIcon extends XtyleElement {
 	}
 	set spin(value: boolean) {
 		this.toggleAttribute("spin", value);
+	}
+
+	private unwatchRegistry?: () => void;
+
+	override connectedCallback(): void {
+		super.connectedCallback();
+		this.unwatchRegistry ??= onIconRegistryChanged(() => {
+			if (this.isConnected && this.root.firstChild) this.render();
+		});
+	}
+
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
+		this.unwatchRegistry?.();
+		this.unwatchRegistry = undefined;
 	}
 
 	attributeChangedCallback(): void {

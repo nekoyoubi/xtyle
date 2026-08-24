@@ -44,6 +44,7 @@ export const dotManifest: ComponentManifest = {
 	description:
 		"Dot is the bare indicator for \"presence without a full chip\": a connection light in a titlebar, a per-row streaming pip, an online/offline marker. `tone` colors it across the six semantic roles (plus the accent variants and named hues), `size` picks sm, md, or lg, and a `color` escape hatch paints any raw value past the tone set (a `color-mix(...)` expression, a per-state color from a status map). Three composable animations layer on: `ping` radiates an expanding ring, `glow` adds a soft halo, and `pulse` breathes the dot at a slow or fast cadence; all three hold still under `prefers-reduced-motion`. It ships as a first-class element that self-styles in its own shadow root, so a shadow-DOM consumer with no global stylesheet gets it for free, and the `.xtyle-dot` utility class stays available for global-CSS pages. A labelled dot is exposed as a named `role=\"img\"`; an unlabelled one is decorative and hidden from assistive tech.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["dot"],
 	anatomy: [
 		{
 			name: "dot",

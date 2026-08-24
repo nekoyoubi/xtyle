@@ -27,6 +27,8 @@
 		labelledby?: string;
 		/** Fires on a selection change (selectable). `event.detail` carries `{ value, selected }`. */
 		onchange?: (event: Event) => void;
+		/** Fires when an item's trailing action button is activated. `event.detail` carries `{ value, action }`. */
+		onlistaction?: (event: Event) => void;
 		/** Fires when a navigational item is activated. `event.detail` carries `{ value }`. */
 		onselect?: (event: Event) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -42,6 +44,7 @@
 		label,
 		labelledby,
 		onchange,
+		onlistaction,
 		onselect,
 		...rest
 	}: Props = $props();
@@ -65,5 +68,6 @@
 	{label}
 	labelledby={labelledby || undefined}
 	onchange={onchange}
+	onlistaction={onlistaction}
 	onselect={onselect}
 ></xtyle-list>

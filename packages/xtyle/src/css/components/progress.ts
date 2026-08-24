@@ -31,15 +31,52 @@ export const progressCss = `
 [data-root][data-progress] { display: contents; }
 .xtyle-progress {
 	display: inline-flex;
-	align-items: center;
+	flex-direction: column;
+	gap: var(--space-1);
 	font-family: var(--font-sans);
 	color: var(--fg-1);
 	vertical-align: middle;
 }
+.xtyle-progress__bar {
+	display: inline-flex;
+	align-items: center;
+}
 .xtyle-progress--linear {
 	display: flex;
 	width: 100%;
+}
+.xtyle-progress--linear .xtyle-progress__bar {
+	display: flex;
+	width: 100%;
 	gap: var(--space-2);
+}
+.xtyle-progress__caption {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-3);
+	font-size: var(--text-sm);
+	line-height: var(--leading-tight);
+}
+.xtyle-progress__label {
+	color: var(--fg-1);
+	min-width: 0;
+}
+.xtyle-progress__reading {
+	flex: none;
+	color: var(--fg-2);
+	font-variant-numeric: tabular-nums;
+}
+.xtyle-progress__note {
+	font-size: var(--text-xs);
+	line-height: var(--leading-normal);
+	color: var(--fg-2);
+}
+.xtyle-progress--sm .xtyle-progress__caption {
+	font-size: var(--text-xs);
+}
+.xtyle-progress--lg .xtyle-progress__caption {
+	font-size: var(--text-body);
 }
 .xtyle-progress__track {
 	position: relative;
@@ -77,16 +114,19 @@ ${linearToneRules}
 	font-size: var(--text-body);
 }
 .xtyle-progress--circular {
+	align-items: center;
+}
+.xtyle-progress--circular .xtyle-progress__bar {
 	display: inline-grid;
 	place-items: center;
 	width: var(--xtyle-progress-size, var(--space-8));
 	height: var(--xtyle-progress-size, var(--space-8));
 }
-.xtyle-progress--circular.xtyle-progress--sm {
+.xtyle-progress--circular.xtyle-progress--sm .xtyle-progress__bar {
 	width: var(--xtyle-progress-size, var(--space-6));
 	height: var(--xtyle-progress-size, var(--space-6));
 }
-.xtyle-progress--circular.xtyle-progress--lg {
+.xtyle-progress--circular.xtyle-progress--lg .xtyle-progress__bar {
 	width: var(--xtyle-progress-size, calc(var(--space-8) + var(--space-3)));
 	height: var(--xtyle-progress-size, calc(var(--space-8) + var(--space-3)));
 }
@@ -145,7 +185,7 @@ ${circularToneRules}
 	font-size: var(--text-sm);
 }
 ${colorizeToneRules}
-.xtyle-progress--linear.xtyle-progress--value-inset {
+.xtyle-progress--linear.xtyle-progress--value-inset .xtyle-progress__bar {
 	position: relative;
 }
 .xtyle-progress--linear.xtyle-progress--value-inset .xtyle-progress__track {
@@ -177,6 +217,44 @@ ${colorizeToneRules}
 	transition: none;
 	animation: xtyle-progress-slide 2s var(--ease-standard) infinite;
 }
+.xtyle-progress--vertical {
+	display: inline-flex;
+	align-items: center;
+	width: auto;
+}
+.xtyle-progress--linear.xtyle-progress--vertical .xtyle-progress__bar {
+	flex-direction: column;
+	width: auto;
+	height: var(--xtyle-progress-length, calc(var(--space-8) * 3));
+}
+.xtyle-progress--vertical .xtyle-progress__track {
+	flex: 1;
+	width: var(--space-2);
+	height: auto;
+}
+.xtyle-progress--vertical.xtyle-progress--sm .xtyle-progress__track {
+	width: var(--space-1);
+	height: auto;
+}
+.xtyle-progress--vertical.xtyle-progress--lg .xtyle-progress__track {
+	width: var(--space-3);
+	height: auto;
+}
+.xtyle-progress--linear.xtyle-progress--vertical .xtyle-progress__indicator {
+	inset: auto 0 0 0;
+	width: auto;
+	height: 0%;
+	transition: height var(--duration-base) var(--ease-emphasized);
+}
+.xtyle-progress--linear.xtyle-progress--vertical.xtyle-progress--indeterminate .xtyle-progress__indicator {
+	width: auto;
+	height: 40%;
+	animation: xtyle-progress-rise 2s var(--ease-standard) infinite;
+}
+.xtyle-progress--linear.xtyle-progress--vertical.xtyle-progress--value-inset .xtyle-progress__track {
+	min-width: var(--space-6);
+	min-height: 0;
+}
 .xtyle-progress--circular.xtyle-progress--indeterminate .xtyle-progress__svg {
 	animation: xtyle-progress-spin 1s linear infinite;
 }
@@ -191,6 +269,10 @@ ${colorizeToneRules}
 @keyframes xtyle-progress-slide {
 	0% { left: -40%; }
 	100% { left: 100%; }
+}
+@keyframes xtyle-progress-rise {
+	0% { bottom: -40%; }
+	100% { bottom: 100%; }
 }
 @keyframes xtyle-progress-spin {
 	from { transform: rotate(-90deg); }

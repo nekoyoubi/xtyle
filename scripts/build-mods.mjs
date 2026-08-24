@@ -2,30 +2,14 @@ import { build } from "esbuild";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { discoverAlgorithms, readAlgorithmManifest, writeStaticManifest } from "./algorithms.mjs";
+import { buildMod, discoverAlgorithms } from "./algorithms.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const mods = discoverAlgorithms(root);
 
 for (const mod of mods) {
-	await build({
-		entryPoints: [mod.sourcePath],
-		outfile: mod.scriptPath,
-		bundle: true,
-		format: "iife",
-		platform: "neutral",
-		target: "es2020",
-		legalComments: "none",
-		logLevel: "warning",
-	});
-	console.log(`bundled ${mod.id} mod -> algorithms/${mod.dir}/src/mod.js`);
-}
-
-for (const mod of mods) {
-	const block = readAlgorithmManifest(readFileSync(mod.scriptPath, "utf8"), mod.id);
-	if (writeStaticManifest(mod, block)) {
-		console.log(`stamped ${mod.id} static manifest -> algorithms/${mod.dir}/mod-manifest.json`);
-	}
+	const stamped = await buildMod(mod, build);
+	console.log(`bundled ${mod.id} mod -> algorithms/${mod.dir}/src/mod.js${stamped ? " + stamped its static manifest" : ""}`);
 }
 
 const core = join(root, "packages", "xtyle");

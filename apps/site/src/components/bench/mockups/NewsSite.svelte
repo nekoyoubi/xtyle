@@ -164,7 +164,7 @@
 
 				<Separator variant="with-label">More from today</Separator>
 
-				<Grid minColWidth="13rem" gap={4}>
+				<Grid minColWidth="8rem" gap={4}>
 					{#each secondary as story (story.title)}
 						<CardLink href="#" compact>
 							{#snippet header()}

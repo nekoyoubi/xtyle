@@ -101,6 +101,17 @@ export const themeScopeManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
+	events: [
+		{ name: "xtyle:theme-scope", detail: "{ theme }", description: "The scoped theme was applied or replaced.", bindings: ["html", "astro"] },
+	],
+	methods: [
+		{
+			name: "toggleScheme",
+			description:
+				"Flip this scope between light and dark, re-deriving the theme for the subtree rather than the page.",
+			bindings: ["html", "svelte"],
+		},
+	],
 	variants: [],
 	sizes: [],
 	states: [

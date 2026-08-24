@@ -24,6 +24,7 @@ const sections = [
 	{ id: "passes", label: "Deriving in passes" },
 	{ id: "prove", label: "Prove it" },
 	{ id: "load", label: "Load it" },
+	{ id: "ship", label: "Ship it as a pack" },
 ];
 
 const builtIns = [
@@ -39,7 +40,7 @@ const specFields = [
 	{ field: "anchors", type: "{ bg, fg, accent }", note: "baked default anchors; any omitted one derives from the others" },
 	{ field: "vibrancy", type: "0–1", note: "how saturated the derivation runs before the knob overrides it" },
 	{ field: "chroma", type: "{ accent, status, palette, neutral, accentTint }", note: "per-family chroma multipliers over the shared derivation" },
-	{ field: "contrast", type: "{ floor, textOnFill }", note: "the AA/AAA floors the derivation must clear" },
+	{ field: "contrast", type: "{ floor, textOnFill, focusRing }", note: "the floors the derivation must clear; contrast.focusRing is what --ring is walked to against every surface it can be drawn on, and what xtyle audit grades it against" },
 	{ field: "elevation", type: "{ strength, alphaBoost }", note: "shadow weight and overlay opacity" },
 	{ field: "accentStrategy", type: '"fan" | "step" | "shade" | "duo"', note: "the accent family this taste ships with — the default for the accentStrategy knob, which a theme can still override" },
 	{ field: "knobs", type: "string[]", note: "the knobs this algorithm accepts (defaults to the shared set)" },
@@ -146,6 +147,27 @@ npx xtyle audit -a sunrise`;
 const loadSnippet = `npm run build:mods            # bundles src/mod.ts → src/mod.js
 npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 
+const packManifestSnippet = `{
+  "name": "@someone/xtyle-sunrise",
+  "version": "1.0.0",
+  "keywords": ["xtyle-pack"],
+  "xtyle": {
+    "algorithms": [
+      { "name": "sunrise", "entry": "./algorithms/sunrise" }
+    ],
+    "themes": [
+      { "name": "dawn", "entry": "./themes/dawn.theme.json" }
+    ]
+  }
+}`;
+
+const packConsumeSnippet = `npx xtyle search sunrise               # query the index
+npx xtyle add @someone/xtyle-sunrise   # npm install, then read what it declares
+npx xtyle packs                        # what this project has, and what each declares
+
+npx xtyle derive -a sunrise            # the pack's algorithm, by its manifest name
+npx xtyle derive --theme dawn          # the pack's theme, re-derived from its recipe`;
+
 const fanBg = "#0e1018";
 const fanAccent = "#6c5cff";
 const fanAccent2 = "#ff8a3d";
@@ -207,7 +229,7 @@ const fanComparison = [
 				</Text>
 			</Stack>
 
-			<Panel title="What an algorithm is" id="what" class="docs-anchor">
+			<Panel heading="What an algorithm is" id="what" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						The engine (<code>@xtyle/core</code>) is mechanism: the open token register,
@@ -226,7 +248,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="The built-in set" id="built-in" class="docs-anchor">
+			<Panel heading="The built-in set" id="built-in" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						Five algorithms ship blessed. They are ordinary mods, the same shape yours
@@ -247,7 +269,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="Anatomy of a mod" id="anatomy" class="docs-anchor">
+			<Panel heading="Anatomy of a mod" id="anatomy" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						A mod is a directory: a manifest that declares it, and the code it runs. The
@@ -262,7 +284,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="Tier 1: a family preset" id="preset" class="docs-anchor">
+			<Panel heading="Tier 1: a family preset" id="preset" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						The fast path. <code>defineXtyleAlgorithm</code> takes a taste vector and runs
@@ -271,7 +293,7 @@ const fanComparison = [
 						<code>{"{ id: \"xtyle-default\" }"}</code>; from there you turn knobs up or down.
 					</Text>
 					<Code lang="typescript" code={presetSnippet} />
-					<Text tone="muted">Every field is optional but <code>id</code>; the rest fall through to the shared defaults. <code>accentStrategy</code> is the one taste that reshapes the accent family itself, and it is also a knob — so what you set here is the algorithm's default posture, not a lock a theme can't move. <code>fan</code> (the default) flanks the accent with 2/3 and complements it with 4; <code>step</code> walks all four evenly around the hue circle; <code>shade</code> holds one hue and steps its lightness; and <code>duo</code> takes <em>two</em> brand colors — <code>--accent</code> and <code>--accent-2</code> are both inputs, and 3/4 become their shades, placed against the pair's mean lightness so the two ramps read as one system.</Text>
+					<Text tone="muted">Every field is optional but <code>id</code>; the rest fall through to the shared defaults. <code>accentStrategy</code> is the one taste that reshapes the accent family itself, and it is also a knob — so what you set here is the algorithm's default posture, not a lock a theme can't move. <code>fan</code> (the default) flanks the accent with 2/3 and gives 4 the widest gap the other three leave, which is the accent's complement until you pin a flank somewhere that crowds it; <code>step</code> walks all four evenly around the hue circle; <code>shade</code> holds one hue and steps its lightness; and <code>duo</code> takes <em>two</em> brand colors — <code>--accent</code> and <code>--accent-2</code> are both inputs, and 3/4 become their shades, placed against the pair's mean lightness so the two ramps read as one system.</Text>
 					<div class="fan-compare" role="group" aria-label="Accent strategies compared off one accent">
 						{fanComparison.map((row) => (
 							<div class="fan-row">
@@ -307,7 +329,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="Tier 2: from scratch" id="scratch" class="docs-anchor">
+			<Panel heading="Tier 2: from scratch" id="scratch" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						When you want to own the derivation, <code>defineAlgorithm</code> hands you the
@@ -327,7 +349,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="Declaring knob controls" id="knobs" class="docs-anchor">
+			<Panel heading="Declaring knob controls" id="knobs" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						An algorithm's <code>knobs</code> names the dials it reads;
@@ -368,7 +390,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="Deriving in passes" id="passes" class="docs-anchor">
+			<Panel heading="Deriving in passes" id="passes" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						An algorithm that derives in stages lists ordered <code>passes</code>. Each is
@@ -382,7 +404,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="Prove it" id="prove" class="docs-anchor">
+			<Panel heading="Prove it" id="prove" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						The gauntlet runs your algorithm against extreme and random anchor sets and
@@ -392,7 +414,22 @@ const fanComparison = [
 						are all in what you produce, and <code>xtyle audit</code> grades a materialized
 						theme against xtyle's canonical text/fill pairs at the WCAG floors: the
 						register-level complement to the gauntlet's algorithm-level sweep, so you can
-						read a specific theme's contrast per pair.
+						read a specific theme's contrast per pair. Seed a surface and it grades that
+						theme's inverted counterpart too, because a theme ships both halves and one can
+						pass while the other does not. Without a seed it grades your algorithm's native
+						scheme alone — an algorithm declares one anchor pair, so flipping the
+						<code>scheme</code> knob leaves that anchor in place and derives a mid-gray page
+						rather than the other half of anything.
+					</Text>
+					<Text tone="muted">
+						Some of those floors are yours to set. <code>contrast.focusRing</code> is the
+						contrast your algorithm promises <code>--ring</code> clears against every
+						surface it can be drawn on; the derivation walks the ring to it, the gauntlet
+						holds you to it, and <code>xtyle audit</code> grades against it instead of
+						guessing. Declaring <em>below</em> WCAG 2.2's 3:1 is a real position for a
+						posture to take. The audit reports the standard alongside whatever it graded,
+						so a lower floor reads as a stated trade rather than as a pass.
+						<code>xtyle-hc</code> goes the other way and declares 4.5.
 					</Text>
 					<Code lang="bash" code={proveSnippet} />
 					<Text tone="muted">
@@ -403,7 +440,7 @@ const fanComparison = [
 				</Stack>
 			</Panel>
 
-			<Panel title="Load it" id="load" class="docs-anchor">
+			<Panel heading="Load it" id="load" class="docs-anchor">
 				<Stack gap={4}>
 					<Text tone="muted">
 						Build the mods to bundle your <code>mod.ts</code> into the self-contained
@@ -412,6 +449,41 @@ const fanComparison = [
 						CLI, the importable API, and the browser.
 					</Text>
 					<Code lang="bash" code={loadSnippet} />
+				</Stack>
+			</Panel>
+
+			<Panel heading="Ship it as a pack" id="ship" class="docs-anchor">
+				<Stack gap={4}>
+					<Text tone="muted">
+						A <strong>pack</strong> is any npm package that declares what it carries: an
+						<code>xtyle</code> field in its <code>package.json</code>, or a top-level
+						<code>xtyle.json</code> holding the same block. Nothing scans your folders,
+						so a file the manifest does not name is not part of the pack, and moving one
+						is an edit to <code>entry</code> rather than a break for everyone who
+						installed it.
+					</Text>
+					<Code lang="json" code={packManifestSnippet} />
+					<Text tone="muted">
+						Publish it with the <code>xtyle-pack</code> keyword and it is discoverable —
+						there is no registry to sign up for. The index is a query over npm, so
+						xtyle.dev is a front end over packages npm already serves.
+					</Text>
+					<Code lang="bash" code={packConsumeSnippet} />
+					<Alert severity="info" variant="soft">
+						<strong>Trust lands at two different moments.</strong>
+						An algorithm <em>runs</em> in xript's zero-authority sandbox, so deriving with
+						a stranger's algorithm is safe. <code>add</code> is an npm install, and install
+						scripts are not sandboxed by anyone — that half is ordinary supply-chain trust,
+						and it is worth being plain about rather than letting the sandbox imply more
+						than it covers.
+					</Alert>
+					<Text size="sm" tone="subtle">
+						A reference dispatches on shape: <code>@scope/pkg</code> is npm,
+						<code>owner/repo</code> is GitHub, <code>./path</code> and a tarball URL are
+						what they look like, and <code>@handle</code> alone finds an author's packs.
+						<code>@version</code> pins one, and <code>#name</code> selects a single
+						declared entry — by its manifest name, so it survives the author moving files.
+					</Text>
 					<Text size="sm" tone="subtle">
 						Questions or contributions live on
 						<Link href="https://github.com/nekoyoubi/xtyle" target="_blank">GitHub</Link>.

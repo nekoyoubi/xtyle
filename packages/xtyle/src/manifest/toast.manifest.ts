@@ -71,6 +71,7 @@ export const toastManifest: ComponentManifest = {
 	description:
 		"Toast surfaces brief, transient feedback without stealing focus. Two axes drive it independently. `severity` (success, warn, danger, info) carries the *meaning*: the status glyph and the live-region politeness, so `danger`/`warn` announce assertively. `tone` carries the *color*, from the full palette. A severity paints its standard color by default (danger reads red), but a `tone` overrides it, and a color-only toast (a non-status `tone`, no `severity`) shows no glyph and announces politely. A `xtyle-toast-region` is a fixed live-region container with an imperative `toast(opts)` method that pushes cards; each carries one of two variants: `soft`, an overlay card with a colored edge, or `solid`, a fully filled card. Toasts enter and leave with a tokened transition, auto-dismiss after a configurable delay that pauses while the pointer or focus rests on them, and may carry a single action button and a close button. A standalone `xtyle-toast` element is also exposed for declarative, statically-placed notices.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["action", "body", "close", "icon", "message", "toast"],
 	anatomy: [
 		{
 			name: "toast-region",
@@ -161,6 +162,7 @@ export const toastManifest: ComponentManifest = {
 			type: "string",
 			description: "The toast text. Required by the imperative `toast(opts)` API; the slot carries it declaratively.",
 			bindings: ["html"],
+			attrOn: "toast()",
 		},
 		{
 			name: "duration",
@@ -168,6 +170,7 @@ export const toastManifest: ComponentManifest = {
 			default: "5000",
 			description: "Auto-dismiss delay in milliseconds; `0` keeps the toast until dismissed. Pauses on hover/focus. (Imperative API.)",
 			bindings: ["html"],
+			attrOn: "toast()",
 		},
 		{
 			name: "actionLabel",
@@ -195,12 +198,28 @@ export const toastManifest: ComponentManifest = {
 			default: "bottom-right",
 			description: "Region anchor: bottom-right, top, top-left, bottom-left, top-center, or bottom-center.",
 			bindings: ["html"],
+			attrOn: "xtyle-toast-region",
 		},
 		{
 			name: "max",
 			type: "number",
 			default: "5",
 			description: "Maximum visible toasts; the oldest is dismissed when the cap is exceeded. (Region.)",
+			bindings: ["html"],
+			attrOn: "xtyle-toast-region",
+		},
+	],
+	events: [
+		{ name: "action", detail: "{ value }", description: "The toast's action button was pressed.", bindings: ["html", "svelte", "astro"] },
+		{ name: "dismiss", detail: "{ reason }", description: "The toast was dismissed, by the close button or by its own timeout.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "toast",
+			params: "opts: { message: string; tone?: string; duration?: number }",
+			returns: "HTMLElement",
+			description:
+				"Raise a toast and hand back the element it created, so a caller can dismiss it early or watch it. The imperative surface is the point: a toast has no markup a consumer authors ahead of time.",
 			bindings: ["html"],
 		},
 	],

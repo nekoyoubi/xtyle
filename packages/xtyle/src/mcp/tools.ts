@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { derive, listEffects, listConditions, effectsCss, EFFECT_TOKENS } from "../index.js";
 import { iconPrimitiveRoster, iconComposition, composeIcon } from "../index.js";
-import { PALETTES } from "../series.js";
+import { paletteNames } from "../series.js";
 import { ICON_GRAMMAR } from "./icon-grammar.js";
 import { auditRegister } from "../audit.js";
 import { emit, emitters } from "../emit/index.js";
@@ -126,7 +126,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		{
 			title: "List algorithms, their knobs, and emit formats",
 			description:
-				"List the algorithms that derive a theme — each with the `knobs` it reads and the `knobSpecs` declaring what those knobs accept (kind, range, options, default) — plus the emit formats the engine can serialize a register into. Read this before passing `knobs` to any other tool: the algorithm owns its knob domain, so this is the only place the accepted values are stated. `accentStrategy` is the one that reshapes the accent family (`fan` / `step` / `shade` / `duo`); a novel knob a third-party algorithm declares shows up here the same way a blessed one does.",
+				"List the algorithms that derive a theme — each with the `knobs` it reads and the `knobSpecs` declaring what those knobs accept (kind, range, options, default) — plus the emit formats the engine can serialize a register into. Read this before passing `knobs` to any other tool: the algorithm owns its knob domain, so this is the only place the accepted values are stated. `accentStrategy` is the one that reshapes the accent family (`fan` / `step` / `shade` / `duo`); a novel knob a third-party algorithm declares shows up here the same way a blessed one does. `focusRingFloor` is the contrast an algorithm promises `--ring` clears, when it states one.",
 			inputSchema: {},
 		},
 		async () => {
@@ -218,7 +218,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		{
 			title: "List or describe components",
 			description:
-				"Without an id, list every shipped component (id, name, category, summary, keywords, seeAlso, bindings). With an id, return that component's full manifest: props, variants, states, slots, consumedTokens, accessibility, and examples. Reach for this first when building against xtyle so token names and prop shapes come from the manifest, not a guess. `keywords` are capability synonyms (a searcher's words, not the component's own name) and `seeAlso` cross-references overlapping components, so scan them to find the right component by what it does — e.g. `meter`/`gauge` lands on `progress`, `dropdown` on `select`, `modal` on `dialog`.",
+				"Without an id, list every shipped component (id, name, category, summary, keywords, seeAlso, bindings). With an id, return that component's full manifest: props, events, methods, variants, states, slots, anatomy, exposedParts, consumedTokens, accessibility, and examples. Reach for this first when building against xtyle so token names, prop shapes, and event names come from the manifest, not a guess. `events` is what the component emits: each entry's `name` is the string `addEventListener` takes, `detail` is the payload, and `handler` is the Svelte prop where that differs (a hyphenated or namespaced event has no valid identifier, so `month-change` arrives as `onmonthchange`). A component with no `events` emits nothing. `methods` is what you call on the element itself — the half of the surface a prop or an event cannot express, such as a control driven by a gesture or one whose state the platform owns. Each entry's `bindings` is load-bearing: `html` is the raw element and always reachable, `svelte` only where the wrapper re-exports the method, and never `astro`, which renders on the server and hands back no instance. `exposedParts` answers whether `anatomy`'s nodes can be reached from an outside sheet: a name listed there is `::part(name)`, and anatomy publishes the internal selector, which under a shadow render matches nothing. `keywords` are capability synonyms (a searcher's words, not the component's own name) and `seeAlso` cross-references overlapping components, so scan them to find the right component by what it does — e.g. `meter`/`gauge` lands on `progress`, `dropdown` on `select`, `modal` on `dialog`.",
 			inputSchema: {
 				id: z.string().optional().describe("A component id. Omit to list all components."),
 				version: z.string().optional().describe(VERSION_INPUT_DESCRIPTION),
@@ -353,7 +353,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 			return json({
 				...asOf,
 				grammar: ICON_GRAMMAR,
-				palettes: PALETTES,
+				palettes: paletteNames(),
 				primitiveCount: roster.length,
 				primitives: roster,
 			});
@@ -401,7 +401,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		{
 			title: "Audit a theme's contrast",
 			description:
-				"Grade a derived register against xtyle's canonical text/fill pairs (body tiers, link, and every semantic tone's readable-on-base and text-on-fill variants) at the WCAG floors, returning a per-pair AAA/AA/fail tier plus tallies. The register-level complement to the gauntlet: the gauntlet proves an algorithm is safe across random seeds, this reports a specific theme's contrast.",
+				"Grade a derived register against xtyle's canonical text/fill pairs (body tiers, link, and every semantic tone's readable-on-base and text-on-fill variants) at the WCAG floors, returning a per-pair AAA/AA/fail tier plus tallies. The register-level complement to the gauntlet: the gauntlet proves an algorithm is safe across random seeds, this reports a specific theme's contrast. Grades the focus ring against the floor the algorithm declares, and reports WCAG 2.2's 3:1 beside it as focusRingStandard. When you seed a surface (`bg`), it also grades that theme's inverted counterpart and keys both under `schemes`, because a theme ships both halves and one can pass while the other does not. Without a seed it grades the algorithm's native scheme alone: the blessed set declares one dark anchor, so flipping the scheme knob would derive a mid-gray page rather than a light theme.",
 			inputSchema: {
 				algorithm: z.string().optional().describe("Algorithm id. Defaults to xtyle-default."),
 				bg: z.string().optional().describe("Background seed color."),
@@ -417,9 +417,34 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 			try {
 				const target = await resolveTarget(algorithm, knobs);
 				const resolved = target.algorithm;
-				const register = derive(resolved, { constraints: constraintsFrom({ bg, fg, accent, overrides }), knobs: target.knobs });
-				const result = auditRegister(register, { level, largeText });
-				return json({ algorithm: target.id, ...result }, !result.passes);
+				const constraints = constraintsFrom({ bg, fg, accent, overrides });
+				const ringFloor = resolved.declares?.focusRingFloor;
+				const opts = {
+					level,
+					largeText,
+					...(ringFloor === undefined ? {} : { focusRingFloor: ringFloor }),
+				};
+				const native = derive(resolved, { constraints, knobs: target.knobs });
+				const nativeScheme = String(native["--scheme"] ?? "dark");
+				const graded = [{ scheme: nativeScheme, result: auditRegister(native, opts) }];
+				if (!target.knobs.scheme && constraints["--bg-0"] !== undefined) {
+					graded.push({
+						scheme: nativeScheme === "light" ? "dark" : "light",
+						result: auditRegister(derive(resolved, { constraints, knobs: target.knobs, invert: true }), opts),
+					});
+				}
+				const passes = graded.every(({ result }) => result.passes);
+				const only = graded[0] as (typeof graded)[number];
+				return json(
+					graded.length === 1
+						? { algorithm: target.id, ...only.result }
+						: {
+								algorithm: target.id,
+								passes,
+								schemes: Object.fromEntries(graded.map(({ scheme, result }) => [scheme, result])),
+							},
+					!passes,
+				);
 			} catch (error) {
 				return text(error instanceof Error ? error.message : String(error), true);
 			}

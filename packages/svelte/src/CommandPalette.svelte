@@ -6,6 +6,8 @@
 		/** Every command the palette can run, unfiltered — the palette does the filtering. */
 		items?: CommandItem[];
 		open?: boolean;
+		/** The live filter text. Writable, so a palette whose commands take arguments can complete into it. */
+		query?: string;
 		/** The ranking override. Return `null` to drop an item, `{ score, indices? }` to keep it. */
 		scorer?: CommandScorer;
 		/** A document-wide chord that opens the palette: `mod+k` (⌘ on Apple, Ctrl elsewhere). */
@@ -25,7 +27,10 @@
 		noFooter?: boolean;
 		/** Keep the palette open after a command runs. */
 		noCloseOnSelect?: boolean;
+		completeFirst?: boolean;
 		onselect?: (event: CustomEvent<{ id: string; label: string; item: CommandItem; index: number; query: string }>) => void;
+		/** The filter text changed — `event.detail` carries `{ query }`. */
+		onquery?: (event: CustomEvent<{ query: string }>) => void;
 		onopen?: (event: Event) => void;
 		onclose?: (event: CustomEvent<{ reason: string }>) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
@@ -35,6 +40,7 @@
 	let {
 		items = [],
 		open = $bindable(false),
+		query = $bindable(""),
 		scorer,
 		hotkey,
 		label,
@@ -47,7 +53,9 @@
 		storageKey,
 		noFooter = false,
 		noCloseOnSelect = false,
+		completeFirst = false,
 		onselect,
+		onquery,
 		onopen,
 		onclose,
 		...rest
@@ -87,6 +95,12 @@
 		el?.run(id);
 	}
 
+	function handleQuery(event: Event): void {
+		const detail = (event as CustomEvent<{ query: string }>).detail;
+		query = detail?.query ?? "";
+		onquery?.(event as CustomEvent<{ query: string }>);
+	}
+
 	function handleOpen(event: Event): void {
 		open = true;
 		onopen?.(event);
@@ -111,12 +125,20 @@
 
 	$effect(() => {
 		const target = el;
+		const next = open;
 		if (!target) return;
 		// HACK: defer to a microtask so an `open`-by-default palette doesn't call `showModal()`
 		// synchronously in Svelte's mount-effect flush, which corrupts Svelte's reconciliation
 		queueMicrotask(() => {
-			target.open = open;
+			target.open = next;
 		});
+	});
+
+	$effect(() => {
+		const target = el;
+		const next = query;
+		if (!target || target.query === next) return;
+		target.query = next;
 	});
 </script>
 
@@ -133,7 +155,9 @@
 	storage-key={storageKey}
 	no-footer={noFooter || undefined}
 	no-close-on-select={noCloseOnSelect || undefined}
+	complete-first={completeFirst || undefined}
 	onselect={onselect as unknown as (event: Event) => void}
+	onquery={handleQuery}
 	onopen={handleOpen}
 	onclose={handleClose}
 ></xtyle-command-palette>

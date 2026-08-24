@@ -46,8 +46,8 @@
     else if (hasState) nameAttr = ` aria-labelledby="${stateId}"`;
     const disabledAttr = disabled ? ' disabled aria-disabled="true"' : "";
     const leadingLabel = b.label ? `<span class="xtyle-switch__label" part="label" id="${labelId}">${escapeHtml(b.label)}</span>` : "";
-    const trailingState = hasState ? `<span class="xtyle-switch__state" part="state" id="${stateId}">${stateText}</span>` : "";
-    return leadingLabel + `<button class="xtyle-switch__track" part="track" type="button" role="switch" aria-checked="${String(checked)}"${nameAttr}${disabledAttr}><span class="xtyle-switch__thumb" part="thumb" aria-hidden="true"></span></button>` + trailingState;
+    const trailingState = hasState ? `<span class="xtyle-switch__state" part="state" id="${stateId}">${escapeHtml(stateText)}</span>` : "";
+    return leadingLabel + `<button class="xtyle-switch__track" part="track" type="button" role="switch"${b.focusable === false ? ' tabindex="-1"' : ""} aria-checked="${String(checked)}"${nameAttr}${disabledAttr}><span class="xtyle-switch__thumb" part="thumb" aria-hidden="true"></span></button>` + trailingState;
   }
   hooks.fragment.mount("switch", (bindings, ops) => {
     ops.setAttr(".xtyle-switch", "class", switchClass(bindings));
@@ -56,6 +56,7 @@
   hooks.fragment.update("switch", (bindings, ops) => {
     ops.setAttr(".xtyle-switch", "class", switchClass(bindings));
     ops.setAttr('[role="switch"]', "aria-checked", String(bindings.checked ?? false));
+    ops.setAttr('[role="switch"]', "tabindex", bindings.focusable === false ? "-1" : "");
     const text = stateLabel(bindings);
     if (text !== null) ops.setText('[part="state"]', text);
   });

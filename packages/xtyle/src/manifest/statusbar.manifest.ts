@@ -64,6 +64,7 @@ export const statusbarManifest: ComponentManifest = {
 	description:
 		"Statusbar is the thin strip that lives along the bottom of an app shell, reporting ambient state: cursor position, encoding, branch, sync status, build result. It is a flex row of `item` parts you space apart with one or more `spacer` parts that absorb the slack, so groups push to the left and right edges. The default treatment is small monospace ink at low contrast; an `item--strong` modifier lifts a single item to full-contrast foreground for the one fact that matters most. A `live` flag turns the bar into an `aria-live` region so screen readers announce status changes as they happen; ideal for build, sync, or save indicators that update in place. Under `overflow=\"collapse\"` it measures the row with a `ResizeObserver`, ranks items by `data-priority` (a `data-required` item never drops), and folds the lowest-priority ones into a `+N` popover until the row fits; by default it clones the dropped items into a shadow popover, which is right for plain text/token cells, though a clone can't carry light-DOM styles or event handlers, so set `manual-overflow` for styled/interactive cells. Whenever the dropped set changes, collapse fires an `overflow-change` `CustomEvent` (`bubbles`, `composed`, deduped against the last emit) whose `detail` carries the actual slotted light-DOM cell elements (`{ hidden: HTMLElement[]; visible: HTMLElement[] }`) so a consumer knows exactly which of its own cells dropped and can render them itself with their original styles and handlers intact.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["overflow", "overflow-popover", "overflow-trigger", "statusbar"],
 	anatomy: [
 		{
 			name: "statusbar",
@@ -156,6 +157,7 @@ export const statusbarManifest: ComponentManifest = {
 			description:
 				"Set on an individual item (not the bar). Under `overflow=\"collapse\"`, items drop lowest-priority-first when the row can't fit; higher values are kept longer. Ties drop right-to-left so leading items survive. Ignored by every other overflow mode.",
 			bindings: ["html", "svelte", "astro"],
+			attrOn: "item",
 		},
 		{
 			name: "data-required",
@@ -164,6 +166,7 @@ export const statusbarManifest: ComponentManifest = {
 			description:
 				"Set on an individual item. Under `overflow=\"collapse\"`, a required item is never dropped into the `+N` popover regardless of width. Ignored by every other overflow mode.",
 			bindings: ["html", "svelte", "astro"],
+			attrOn: "item",
 		},
 		{
 			name: "manualOverflow",

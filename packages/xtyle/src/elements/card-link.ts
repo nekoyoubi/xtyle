@@ -58,6 +58,7 @@ export class XtyleCardLink extends XtyleElement {
 			compact: this.compact,
 			hasHeader: this.fragment.hasSlotted("header"),
 			hasFooter: this.fragment.hasSlotted("footer"),
+			ariaLabel: this.getAttribute("aria-label") ?? this.slottedName("header") ?? this.slottedName(),
 		};
 	}
 

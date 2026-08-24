@@ -57,6 +57,7 @@ export const swatchManifest: ComponentManifest = {
 	description:
 		"Swatch is the smallest way to show a color and say what it is. A filled dot beside an optional name and an optional value in mono; the shape every `label + value + dot` row and palette rail is built from. The color it shows is *data*, not theme: it comes in on the `color` prop and is painted straight onto the dot as an inline fill, so a swatch can carry any color a user hands it, including one nowhere in the current theme. Its own chrome is the derived part: the dot's hairline border, the label and value type, the corner radius all read from the same tokens the rest of the UI does, so the chip frames a foreign color in the theme's own voice. A thin border keeps even a near-background color legible against the surface. The `size` prop steps the whole chip with the surrounding type from `sm` to `lg`.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["detail-model", "detail-value", "details", "dot", "label", "swatch", "value"],
 	anatomy: [
 		{
 			name: "swatch",
@@ -154,6 +155,9 @@ export const swatchManifest: ComponentManifest = {
 				"Show a popover on hover and focus listing the color across `hex` / `rgb` / `hsl` / `oklch`, parsed and reformatted by the engine; a built-in way to read a color without leaving the chip.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "select", detail: "{ value }", description: "A swatch was activated.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [

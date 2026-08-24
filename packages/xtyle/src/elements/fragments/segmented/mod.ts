@@ -20,6 +20,7 @@ interface SegmentedBindings {
 	segments?: Segment[];
 	value?: string | null;
 	disabled?: boolean;
+	focusable?: boolean;
 	size?: string;
 	tone?: string;
 	label?: string | null;
@@ -78,7 +79,7 @@ function options(bindings: SegmentedBindings, selected: string): string {
 		.map((seg) => {
 			const segDisabled = groupDisabled || !!seg.disabled;
 			const isOn = seg.value === selected;
-			const tabindex = segDisabled ? "-1" : isOn ? "0" : "-1";
+			const tabindex = bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1";
 			const disabledAttr = segDisabled ? " disabled" : "";
 			const badge = seg.badge ? `<span class="xtyle-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
 			// INFO: a slotted segment's body is an icon (not text), so it needs an aria-label for its
@@ -131,7 +132,7 @@ hooks.fragment.update("segmented", (bindings, ops) => {
 		const isOn = seg.value === selected;
 		const sel = `[role="radio"][data-value="${escapeSelectorValue(seg.value)}"]`;
 		ops.setAttr(sel, "aria-checked", String(isOn));
-		ops.setAttr(sel, "tabindex", segDisabled ? "-1" : isOn ? "0" : "-1");
+		ops.setAttr(sel, "tabindex", bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1");
 	}
 });
 

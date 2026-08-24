@@ -83,6 +83,7 @@ export const radioCss = `
 	margin-top: 0.12em;
 }
 .xtyle-radio--card {
+	box-sizing: border-box;
 	display: flex;
 	width: 100%;
 	align-items: flex-start;

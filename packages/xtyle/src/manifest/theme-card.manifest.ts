@@ -52,6 +52,7 @@ export const themeCardManifest: ComponentManifest = {
 	description:
 		"Theme Card derives an invocation exactly the way `<xtyle-theme-scope>` does — a named algorithm plus its `knobs` and token `constraints` — but *paints* the result instead of applying it, so a theme can be shown without the page having to wear it. What it draws is a **fake**: a small simulated interface in the theme's own colors, with a surface, a title, a row of swatches, a filled button, and the status dots. A fake reads a palette faster than a list of hex values does, because it shows the colors doing the job they were derived for. The whole drawing lives in the component's fill, so a mod can redraw the fake into whatever preview an app wants — a different mock, more swatches, a type specimen — without touching the element. `interactive` turns the card into a real button that emits `select`, which is what a theme picker listens to; `selected` marks the current one. A bad invocation shows its error on the card rather than a blank frame.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["body", "card", "error", "meta", "name", "preview"],
 	anatomy: [
 		{
 			name: "card",
@@ -121,6 +122,10 @@ export const themeCardManifest: ComponentManifest = {
 			description: "Mark this card as the chosen one; sets `aria-pressed` on the interactive card.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "select", description: "The card was activated.", bindings: ["html", "svelte", "astro"] },
+		{ name: "xtyle:theme-card", detail: "{ theme }", description: "The card's theme was chosen, carrying the whole invocation.", bindings: ["html", "astro"] },
 	],
 	variants: [],
 	sizes: [],

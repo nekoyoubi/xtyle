@@ -24,6 +24,12 @@ interface Props {
 	hideOutsideDays?: boolean;
 	hideNav?: boolean;
 	/** The roster glyph for the previous-month nav arrow. */
+	/** The accessible name of the previous-month step. */
+	prevLabel?: string;
+	/** The accessible name of the next-month step. */
+	nextLabel?: string;
+	/** The week-of-year column header, and what each week number is announced as. */
+	weekLabel?: string;
 	prevIcon?: string;
 	/** The roster glyph for the next-month nav arrow. */
 	nextIcon?: string;
@@ -56,6 +62,9 @@ const {
 	fixedWeeks = false,
 	hideOutsideDays = false,
 	hideNav = false,
+	prevLabel,
+	nextLabel,
+	weekLabel,
 	prevIcon,
 	nextIcon,
 	disabledDates = [],
@@ -98,6 +107,9 @@ const bindings = calendarBindings({
 	label: label ?? null,
 	labelledby: labelledby ?? null,
 	hideNav,
+	prevLabel,
+	nextLabel,
+	weekLabel,
 	prevIcon,
 	nextIcon,
 	prevBody: iconBody(prevIcon ?? "chevron-left") ?? null,
@@ -126,6 +138,9 @@ const light = await renderFragmentLight("calendar", bindings as unknown as Recor
 	fixed-weeks={fixedWeeks || undefined}
 	hide-outside-days={hideOutsideDays || undefined}
 	hide-nav={hideNav || undefined}
+	prev-label={prevLabel}
+	next-label={nextLabel}
+	week-label={weekLabel}
 	prev-icon={prevIcon}
 	next-icon={nextIcon}
 	disabled-dates={disabledDates.length ? disabledDates.join(",") : undefined}

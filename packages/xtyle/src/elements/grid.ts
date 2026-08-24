@@ -1,10 +1,11 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { GRID_ALIGNS } from "../vocab.js";
-import { gridHostCss, type GridAlign } from "../markup/index.js";
+import { GRID_ALIGNS, GRID_SIDES } from "../vocab.js";
+import { gridHostCss, type GridAlign, type GridSide } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/grid/source.generated.js";
 
 const ALIGNS: readonly GridAlign[] = GRID_ALIGNS;
+const SIDES: readonly GridSide[] = GRID_SIDES;
 
 function clampGap(raw: string | null): number | null {
 	if (raw === null) return null;
@@ -30,7 +31,7 @@ export class XtyleGrid extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["gap", "columns", "min-col-width", "align", "justify", "inline"];
+		return ["gap", "columns", "min-col-width", "sidebar", "side", "align", "justify", "inline"];
 	}
 
 	get gap(): number {
@@ -52,6 +53,22 @@ export class XtyleGrid extends XtyleElement {
 	}
 	set minColWidth(value: string | null | undefined) {
 		this.reflectString("min-col-width", value);
+	}
+
+	get sidebar(): string | null {
+		const raw = this.getAttribute("sidebar");
+		return raw !== null && raw.trim() !== "" ? raw : null;
+	}
+	set sidebar(value: string | null | undefined) {
+		this.reflectString("sidebar", value);
+	}
+
+	get side(): GridSide | null {
+		const raw = this.getAttribute("side") as GridSide | null;
+		return raw && SIDES.includes(raw) ? raw : null;
+	}
+	set side(value: GridSide) {
+		this.setAttribute("side", value);
 	}
 
 	get align(): GridAlign | null {
@@ -86,6 +103,8 @@ export class XtyleGrid extends XtyleElement {
 			gap: this.gap,
 			columns: this.columns,
 			minColWidth: this.minColWidth,
+			sidebar: this.sidebar,
+			side: this.side,
 			align: this.align,
 			justify: this.justify,
 			inline: this.inline,

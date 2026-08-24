@@ -55,6 +55,11 @@
     if (e.disabled) return {};
     return { nudge: 1 };
   });
+  xript.exports.register("onInput", (payload) => {
+    const e = payload;
+    if (e.disabled) return {};
+    return { emit: { type: "input", detail: { value: e.value ?? "" } } };
+  });
   xript.exports.register("commit", (payload) => {
     const e = payload;
     if (e.disabled) return {};

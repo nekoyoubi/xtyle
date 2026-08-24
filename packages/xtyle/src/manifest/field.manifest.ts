@@ -106,6 +106,7 @@ export const fieldManifest: ComponentManifest = {
 	description:
 		"Field is the complete single-line text input: a label, an input, a persistent description, and an error message wired together with the right accessibility relationships out of the box. The input inherits the shared `.xtyle-control` chrome and adds field-specific layout: a unified control box that holds leading and trailing adornment slots (icons, currency prefixes, unit suffixes) alongside the input. It generates a stable `id` and links it to the label, builds `aria-describedby` from both the description and the error, and ships two optional built-in actions: a clear button and a password reveal toggle. In the HTML and Svelte bindings the element is form-associated, participating in native form submission and constraint validation. Sizes (sm / md / lg) match the Button padding scale, and `readonly`, `required`, `disabled`, and `invalid` are all first-class.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["action-clear", "action-reveal", "adornment", "control", "description", "error", "field", "input", "label", "required"],
 	anatomy: [
 		{
 			name: "field",
@@ -217,6 +218,13 @@ export const fieldManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "requiredMessage",
+			type: "string",
+			default: "Please fill out this field.",
+			description: "The message the browser shows when `required` is unmet. The platform localizes its own constraint messages and this one is xtyle's, so an app that is not in English should set it.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "readonly",
 			type: "boolean",
 			default: "false",
@@ -292,6 +300,10 @@ export const fieldManifest: ComponentManifest = {
 			description: "Forwarded to the inner control: what a touch keyboard's action key should read.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "input", detail: "{ value }", description: "The control's value changed as it was typed.", bindings: ["html", "svelte", "astro"] },
+		{ name: "change", detail: "{ value }", description: "The control's value settled.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{

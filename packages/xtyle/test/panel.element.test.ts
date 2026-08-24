@@ -17,7 +17,7 @@ type PanelEl = HTMLElement & { open: boolean };
 
 function make(attrs: Record<string, string> = {}): PanelEl {
 	const el = document.createElement("xtyle-panel") as PanelEl;
-	el.setAttribute("title", "Advanced options");
+	el.setAttribute("heading", "Advanced options");
 	for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value);
 	document.body.appendChild(el);
 	return el;
@@ -107,5 +107,49 @@ describe("<xtyle-panel> collapse survives the marker swap", () => {
 		expect(region.getAttribute("aria-labelledby")).toBe(
 			root(el).querySelector(".xtyle-panel__title")?.id,
 		);
+	});
+});
+
+describe("<xtyle-panel> heading", () => {
+	it("renders the heading from `heading`, leaving no title attribute to paint a tooltip", () => {
+		const el = make();
+		expect(root(el).querySelector(".xtyle-panel__title")?.textContent).toBe("Advanced options");
+		expect(el.hasAttribute("title")).toBe(false);
+	});
+
+	it("migrates a legacy `title` onto `heading` and lifts it off the host", () => {
+		const el = document.createElement("xtyle-panel") as PanelEl;
+		el.setAttribute("title", "Connections");
+		document.body.appendChild(el);
+		expect(el.getAttribute("heading")).toBe("Connections");
+		expect(el.hasAttribute("title")).toBe(false);
+		expect(root(el).querySelector(".xtyle-panel__title")?.textContent).toBe("Connections");
+	});
+
+	it("keeps an explicit `heading` when a legacy `title` arrives alongside it", () => {
+		const el = document.createElement("xtyle-panel") as PanelEl;
+		el.setAttribute("heading", "Kept");
+		el.setAttribute("title", "Dropped");
+		document.body.appendChild(el);
+		expect(el.getAttribute("heading")).toBe("Kept");
+		expect(el.hasAttribute("title")).toBe(false);
+	});
+});
+
+describe("<xtyle-panel> footer", () => {
+	it("renders no footer strip when nothing fills the slot", () => {
+		const el = make();
+		expect(root(el).querySelector(".xtyle-panel__footer")).toBeNull();
+	});
+
+	it("renders the footer once the slot is filled", () => {
+		const el = document.createElement("xtyle-panel") as PanelEl;
+		el.setAttribute("heading", "Advanced options");
+		const foot = document.createElement("span");
+		foot.setAttribute("slot", "footer");
+		foot.textContent = "Saved";
+		el.appendChild(foot);
+		document.body.appendChild(el);
+		expect(root(el).querySelector(".xtyle-panel__footer")).not.toBeNull();
 	});
 });

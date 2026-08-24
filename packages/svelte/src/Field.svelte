@@ -16,6 +16,7 @@
 		readonly?: boolean;
 		invalid?: boolean;
 		required?: boolean;
+		requiredMessage?: string;
 		clearable?: boolean;
 		description?: string;
 		error?: string;
@@ -41,6 +42,7 @@
 		readonly = false,
 		invalid = false,
 		required = false,
+		requiredMessage,
 		clearable = false,
 		description = "",
 		error = "",
@@ -79,6 +81,7 @@
 	readonly={readonly || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	clearable={clearable || undefined}
 	mono={mono || undefined}
 	{description}

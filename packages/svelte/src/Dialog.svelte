@@ -40,9 +40,22 @@
 		open = false;
 		onclose?.(event);
 	}
+
+	let el: (HTMLElement & { showModal(): void; close(reason?: string): void }) | undefined = $state();
+
+	/** Open it modally, the imperative half of `bind:open` for a caller that has no state to flip. */
+	export function showModal(): void {
+		el?.showModal();
+	}
+
+	/** Close it, optionally naming why — the reason rides the `close` event's detail. */
+	export function close(reason?: string): void {
+		el?.close(reason);
+	}
 </script>
 
 <xtyle-dialog
+	bind:this={el}
 	{...rest}
 	open={open || undefined}
 	{size}

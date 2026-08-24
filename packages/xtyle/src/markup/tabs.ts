@@ -1,9 +1,10 @@
-import { TABS_VARIANTS, TABS_SIZES } from "../vocab.js";
+import { TABS_VARIANTS, TABS_SIZES, TABS_OVERFLOWS } from "../vocab.js";
 export type TabsVariant = (typeof TABS_VARIANTS)[number];
 
 /** Tabs steps only two rungs; there is no `lg`. */
 export type TabsSize = (typeof TABS_SIZES)[number];
 export type TabsActivation = "automatic" | "manual";
+export type TabsOverflow = (typeof TABS_OVERFLOWS)[number];
 
 export interface TabItemData {
 	/** The tab trigger's label as plain text; it is escaped on render. Markup belongs in `labelSlot`. */
@@ -34,4 +35,5 @@ export interface TabItemData {
 }
 
 /** The host-layout rule for tabs — the one `:host` rule, shared by the element's scaffold and the SSR declarative shadow root. */
-export const tabsHostCss = ":host { display: block; }";
+export const tabsHostCss =
+	":host { display: block; } :host([fill]) { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }";

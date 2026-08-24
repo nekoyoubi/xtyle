@@ -1,5 +1,7 @@
 ---
 import IconBuilder from "../../components/bench/IconBuilder.svelte";
+import Alert from "@xtyle/astro/Alert.astro";
+import Link from "@xtyle/astro/Link.astro";
 import Base from "../../layouts/Base.astro";
 ---
 
@@ -7,5 +9,11 @@ import Base from "../../layouts/Base.astro";
 	title="Icon Builder"
 	description="Compose an icon from stacked primitives on the keypad grid, colored from the active theme's own series. Every mark is just a name string, baked or generated, and recolors with the theme for free."
 >
+	<noscript>
+		<Alert severity="info" static>
+			The Icon Builder composes a name string as you stack primitives, so it needs JavaScript to
+			run at all. The <Link href="/components/icon" static>icon reference</Link> renders without it.
+		</Alert>
+	</noscript>
 	<IconBuilder client:only="svelte" />
 </Base>

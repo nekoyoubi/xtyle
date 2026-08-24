@@ -3,6 +3,9 @@ import Select from "@xtyle/astro/Select.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Grid from "@xtyle/astro/Grid.astro";
 import Heading from "@xtyle/astro/Heading.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Text from "@xtyle/astro/Text.astro";
 ---
 
 <Stack gap={6} class="demo">
@@ -51,7 +54,46 @@ import Heading from "@xtyle/astro/Heading.astro";
 			</Select>
 		</Grid>
 	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">In a form</Heading>
+		<Text size="sm" tone="muted">
+			The chosen value posts once under its <code>name</code>, whether it rendered into light DOM or behind a shadow
+			root. <code>required</code> is real constraint validity, so the browser blocks a submit with no plan chosen.
+		</Text>
+		<form id="demo-select-form">
+			<Stack gap={3}>
+				<Grid minColWidth="15rem" gap={4}>
+					<Select label="Plan" name="plan" required>
+						<option value="" selected>Choose…</option>
+						<option value="team">Team</option>
+						<option value="pro">Pro</option>
+					</Select>
+					<Select label="Billing" name="billing">
+						<option value="monthly" selected>Monthly</option>
+						<option value="yearly">Yearly</option>
+					</Select>
+				</Grid>
+				<Cluster gap={2} align="center">
+					<Button type="submit" size="sm">Subscribe</Button>
+					<Text size="sm" tone="muted" id="demo-select-out">Nothing submitted yet.</Text>
+				</Cluster>
+			</Stack>
+		</form>
+	</section>
 </Stack>
+
+<script>
+	import "@xtyle/core/elements";
+
+	document.getElementById("demo-select-form")?.addEventListener("submit", (event) => {
+		event.preventDefault();
+		const data = new FormData(event.target as HTMLFormElement);
+		const shown = [...data.entries()].map(([key, value]) => `${key}=${String(value)}`).join(" · ");
+		const out = document.getElementById("demo-select-out");
+		if (out) out.textContent = shown.length > 0 ? `Submitted: ${shown}` : "Nothing submitted yet.";
+	});
+</script>
 
 <style>
 	.demo {

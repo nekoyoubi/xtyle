@@ -4,4 +4,5 @@ export const spec = {
 	vibrancy: 0.12,
 	chroma: { accent: 0.5, status: 0.55, palette: 0.6, neutral: 0.005, accentTint: 0.18 },
 	elevation: { strength: 0.6, alphaBoost: -0.04 },
+	anchorsByScheme: { light: { bg: "#ededeb", fg: "#26262a" } },
 };

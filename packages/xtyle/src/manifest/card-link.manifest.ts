@@ -37,6 +37,7 @@ export const cardLinkManifest: ComponentManifest = {
 	description:
 		"Card Link is a `Card` that navigates. It renders one `<a>` carrying the card's surface, padding, and slots, so the entire card is the click target instead of a link buried in it. It composes the same `interactive`, `overlay`, and `compact` looks as `Card`, defaults to `interactive` (a link card invites the click), and resets the underline and ink so the card reads as a card, not a hyperlink. Pass `href` (plus optional `target`/`rel`); a keyboard `focus-visible` ring lands on the card itself. Reach for it wherever a card *is* a destination: a pager, a nav grid, a list of entries.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["body", "card", "footer", "header"],
 	anatomy: [
 		{
 			name: "card-link",

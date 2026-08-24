@@ -3584,6 +3584,30 @@
     const value = contrast(formatCss2(a), formatCss2(b));
     return value ?? 1;
   }
+  function flatten(over, under) {
+    const top = toOklchColor(over);
+    if (top.alpha >= 1)
+      return { ...top, alpha: 1 };
+    const base = toOklchColor(under);
+    const a = clamp01(top.alpha);
+    const mixHue = (from, to, t) => from + hueDelta(from, to) * t;
+    return {
+      l: base.l + (top.l - base.l) * a,
+      c: base.c + (top.c - base.c) * a,
+      h: mixHue(base.h, top.h, a),
+      alpha: 1
+    };
+  }
+  function oklabDistance(a, b) {
+    const x = toOklchColor(a);
+    const y = toOklchColor(b);
+    const rad = Math.PI / 180;
+    const ax = x.c * Math.cos(x.h * rad);
+    const ay = x.c * Math.sin(x.h * rad);
+    const bx = y.c * Math.cos(y.h * rad);
+    const by = y.c * Math.sin(y.h * rad);
+    return Math.hypot(x.l - y.l, ax - bx, ay - by);
+  }
   function clampToGamut(color) {
     const mapped = clampChroma({ mode: "oklch", l: color.l, c: color.c, h: color.h, alpha: color.alpha }, "oklch", "rgb");
     return {
@@ -3703,10 +3727,13 @@
     "black"
   ];
   var FULL_TONES = [...TONES, ...ACCENT_VARIANTS, ...HUES];
+  var SURFACE_ROLES = ["--bg-0", "--bg-1", "--bg-2"];
 
   // packages/xtyle/dist/algorithms/factory.js
   var AA = 4.5;
   var AAA = 7;
+  var LINK_HOVER_MIN_DELTA = 0.01;
+  var POLE_REACH = 0.03;
   var ENFORCE = AA + 0.2;
   var SURFACE_SEPARATION = 1.5;
   var BORDER_SEPARATION = 1.5;
@@ -3744,6 +3771,48 @@
   var DUO_L_STEP = 0.16;
   var HUE_STABLE_CHROMA = 0.1;
   var FAN_MIN_CHROMA = 0.045;
+  var ACCENT_FAMILY_SEPARATION = 0.02;
+  var ACCENT_FAMILY_HUE_ARC = 0.6;
+  function fanFourthOffset(accentHue, flankA, flankB) {
+    const norm = (deg) => (deg % 360 + 360) % 360;
+    const placed = [accentHue, flankA, flankB].map(norm).sort((x, y) => x - y);
+    let widest = -1;
+    let center = 180;
+    for (let i = 0; i < placed.length; i++) {
+      const from = placed[i];
+      const to = i === placed.length - 1 ? placed[0] + 360 : placed[i + 1];
+      if (to - from > widest) {
+        widest = to - from;
+        center = norm(from + (to - from) / 2);
+      }
+    }
+    return norm(center - accentHue);
+  }
+  var FAN_CHROMA_RICH_L = 0.6;
+  var FAN_LIGHTNESS_SEARCH_STEPS = 24;
+  function chromaCapableBase(base) {
+    const holds = (l) => clampToGamut({ l, c: FAN_MIN_CHROMA, h: base.h, alpha: 1 }).c >= FAN_MIN_CHROMA - 1e-3;
+    if (holds(base.l))
+      return base;
+    for (let step = 1; step <= FAN_LIGHTNESS_SEARCH_STEPS; step++) {
+      const l = base.l + (FAN_CHROMA_RICH_L - base.l) * (step / FAN_LIGHTNESS_SEARCH_STEPS);
+      if (holds(l))
+        return { ...base, l };
+    }
+    return { ...base, l: FAN_CHROMA_RICH_L };
+  }
+  function shadeLadderRungs(l) {
+    const step = SHADE_LADDER_L_STEP;
+    const room = (offset) => l + offset <= ACCENT_RAMP_L_MAX && l + offset >= ACCENT_RAMP_L_MIN;
+    if (room(step) && room(-2 * step))
+      return [step, -step, -2 * step];
+    if (room(3 * step))
+      return [step, 2 * step, 3 * step];
+    if (room(-3 * step))
+      return [-step, -2 * step, -3 * step];
+    const span = (ACCENT_RAMP_L_MAX - ACCENT_RAMP_L_MIN) / 4;
+    return [span, 2 * span, 3 * span].map((offset) => l - ACCENT_RAMP_L_MIN < ACCENT_RAMP_L_MAX - l ? offset : -offset);
+  }
   var HUE_TOLERANCE = 8;
   var LIGHTNESS_TOLERANCE = 0.05;
   var DEFAULT_TYPE_SCALE = 1.2;
@@ -3776,7 +3845,7 @@
     green: { h: 145, c: 0.18 },
     blue: { h: 250, c: 0.18 },
     purple: { h: 300, c: 0.18 },
-    brown: { h: 50, c: 0.08 },
+    brown: { h: 50, c: 0.08, l: -0.1 },
     pink: { h: 350, c: 0.16 },
     cyan: { h: 200, c: 0.14 },
     gray: "gray",
@@ -3812,6 +3881,42 @@
   var SURFACES = ["--body-bg", "--bg-0", "--bg-1", "--bg-2", "--bg-3"];
   var PANEL_REF_INDEX = SURFACES.indexOf("--bg-2");
   var PANEL_SURFACES = ["--bg-1", "--bg-2"];
+  var BASE_SURFACE_INDEX = SURFACES.indexOf("--bg-0");
+  var RING_SURFACE_INDICES = SURFACE_ROLES.map((name) => SURFACES.indexOf(name));
+  function solveSurfaceLadder(pins, baseLightness, step) {
+    const anchors = [];
+    pins.forEach((pin, index) => {
+      if (pin)
+        anchors.push({ index, lightness: pin.l, token: SURFACES[index] });
+    });
+    if (!anchors.some((anchor) => anchor.index === BASE_SURFACE_INDEX)) {
+      anchors.push({ index: BASE_SURFACE_INDEX, lightness: baseLightness, token: null });
+    }
+    anchors.sort((a, b) => a.index - b.index);
+    const lightness2 = [];
+    const sources = [];
+    const tokensOf = (...of) => of.flatMap((anchor) => anchor?.token ? [anchor.token] : []);
+    pins.forEach((_, index) => {
+      const exact = anchors.find((anchor) => anchor.index === index);
+      if (exact) {
+        lightness2.push(exact.lightness);
+        sources.push(tokensOf(exact));
+        return;
+      }
+      const below = anchors.filter((anchor) => anchor.index < index).at(-1);
+      const above = anchors.find((anchor) => anchor.index > index);
+      if (below && above) {
+        const span = (index - below.index) / (above.index - below.index);
+        lightness2.push(below.lightness + (above.lightness - below.lightness) * span);
+        sources.push(tokensOf(below, above));
+        return;
+      }
+      const edge = below ?? above;
+      lightness2.push(edge.lightness + step * (index - edge.index));
+      sources.push(tokensOf(edge));
+    });
+    return { lightness: lightness2, sources };
+  }
   var TEXT_STEPS = ["xs", "sm", "body", "lg", "xl", "2xl", "3xl", "4xl", "5xl"];
   var LEADING_STEPS = ["tight", "normal", "loose"];
   var WEIGHT_STEPS = ["normal", "medium", "semibold", "bold"];
@@ -4101,6 +4206,25 @@
     }
     return best;
   }
+  function readsAsOneColor(a, b) {
+    const arc = Math.abs(hueDelta(a.h, b.h)) * Math.min(a.c, b.c);
+    return Math.abs(a.l - b.l) < ACCENT_FAMILY_SEPARATION && Math.abs(a.c - b.c) < ACCENT_FAMILY_SEPARATION && arc < ACCENT_FAMILY_HUE_ARC;
+  }
+  function separateTintFromFill(tint, fill, inkCss, target, towardLight) {
+    if (!readsAsOneColor(tint, fill))
+      return tint;
+    for (const direction of [1, -1]) {
+      for (let step = 1; step <= 40; step++) {
+        const l = tint.l + direction * step * 0.01;
+        if (l < 0 || l > 1)
+          break;
+        const candidate = liftStopForContrast(clampToGamut(oklch2(l, tint.c, tint.h)), inkCss, target, towardLight);
+        if (!readsAsOneColor(candidate, fill))
+          return candidate;
+      }
+    }
+    return tint;
+  }
   function separateFillFromSurface(fill, surface, separation, textFloor) {
     const surfaceCss = formatCss2(surface);
     if (contrast2(formatCss2(fill), surfaceCss) >= separation)
@@ -4129,6 +4253,39 @@
         break;
     }
     return candidate;
+  }
+  function ringForContrast(seed, surfaces, floor) {
+    const backdrops = surfaces.map(formatCss2);
+    if (backdrops.length === 0)
+      return seed;
+    const worst = (candidate) => Math.min(...backdrops.map((bg) => contrast2(formatCss2(flatten(formatCss2(candidate), bg)), bg)));
+    if (worst(seed) >= floor)
+      return seed;
+    const meanL = surfaces.reduce((sum, s) => sum + s.l, 0) / surfaces.length;
+    const away = meanL < 0.5 ? 1 : 0;
+    let best = seed;
+    let bestRatio = worst(seed);
+    for (const keepChroma of [true, false]) {
+      for (const targetL of [away, 1 - away]) {
+        for (let i = 1; i <= 100; i++) {
+          const t = i / 100;
+          const candidate = {
+            l: seed.l + (targetL - seed.l) * t,
+            c: keepChroma ? seed.c : seed.c * (1 - t),
+            h: seed.h,
+            alpha: seed.alpha
+          };
+          const ratio = worst(candidate);
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            best = candidate;
+          }
+          if (ratio >= floor)
+            return candidate;
+        }
+      }
+    }
+    return best;
   }
   function readableOnTint(tint, hue3, floor, inkChroma) {
     const tintCss = formatCss2(tint);
@@ -4236,19 +4393,23 @@
       register[`--${hue3}-text`] = text;
       register[`--${hue3}-vivid`] = vivid;
     };
+    const page = panels[0];
+    const offPage = (fill) => separateFillFromSurface(fill, page, SURFACE_SEPARATION, floor);
     const grayscale = (lights, chroma2) => {
       const stops2 = lights.map((l) => oklch2(l, chroma2, 0));
       const baseStop = stops2[2];
+      const solidBase2 = offPage(pinnedBase ?? baseStop);
       const subtleStop2 = stops2[0];
       const strongStop2 = liftStopForContrast(stops2[3], formatCss2(subtleStop2), AA + 0.2, stops2[3].l >= subtleStop2.l);
-      const contrast4 = readableOnTint(baseStop, 0, AA + 0.3, 0);
+      const stopInk = readableOnTint(baseStop, 0, AA + 0.3, 0);
+      const solidInk = readableOnTint(solidBase2, 0, AA + 0.3, 0);
       set("", baseStop);
       set("subtle", subtleStop2);
       set("muted", stops2[1]);
       set("base", baseStop);
       set("strong", strongStop2);
-      register[`--color-${hue3}-contrast`] = contrast4;
-      family(formatCss2(baseStop), formatCss2(subtleStop2), contrast4, readableOnTint(subtleStop2, 0, AA + 0.2, 0), vividOnPanel(0, panels, floor, 0));
+      register[`--color-${hue3}-contrast`] = stopInk;
+      family(formatCss2(solidBase2), formatCss2(subtleStop2), solidInk, readableOnTint(subtleStop2, 0, AA + 0.2, 0), vividOnPanel(0, panels, floor, 0));
     };
     if (spec2 === "white") {
       grayscale([0.82, 0.9, 0.97, 1], 0);
@@ -4266,7 +4427,7 @@
     const chroma = spec2.c * accentChromaFactor * (0.6 + vibrancy * 0.7) * preset.paletteChromaMul;
     const baseL = scheme === "dark" ? 0.7 : 0.55;
     const lBias = Math.max(-0.06, Math.min(0.06, (accent.l - baseL) * 0.25));
-    const ladderL = (scheme === "dark" ? [0.45, 0.58, baseL, 0.82] : [0.78, 0.66, baseL, 0.42]).map((l) => Math.max(0.05, Math.min(0.97, l + lBias)));
+    const ladderL = (scheme === "dark" ? [0.45, 0.58, baseL, 0.82] : [0.78, 0.66, baseL, 0.42]).map((l) => Math.max(0.05, Math.min(0.97, l + lBias + (spec2.l ?? 0))));
     const ladderC = [chroma * 0.7, chroma * 0.9, chroma, chroma * 0.85];
     const stops = ladderL.map((l, i) => clampToGamut(oklch2(l, ladderC[i], spec2.h)));
     const base = stops[2];
@@ -4298,13 +4459,14 @@
     const givenBg = parsePin(pin["--bg-0"]);
     const givenFg = parsePin(pin["--fg-0"]);
     const givenAccent = parsePin(pin["--accent"]);
-    const defBg = toOklchColor(preset.defaultAnchors.bg);
-    const defFg = toOklchColor(preset.defaultAnchors.fg);
+    const baseScheme = schemeOf(toOklchColor(preset.defaultAnchors.bg));
+    const scheme = opts.knobs?.scheme ?? (givenBg ? schemeOf(givenBg) : givenFg ? schemeFromFg(givenFg) : baseScheme);
+    const anchors = preset.anchorsByScheme?.[scheme] ?? preset.defaultAnchors;
+    const defBg = toOklchColor(anchors.bg);
+    const defFg = toOklchColor(anchors.fg);
     const defScheme = schemeOf(defBg);
     const surfaceDepth = defScheme === "dark" ? defBg.l : 1 - defBg.l;
     const floor = Math.max(ENFORCE, preset.contrastFloor);
-    const inferredScheme = givenBg ? schemeOf(givenBg) : givenFg ? schemeFromFg(givenFg) : defScheme;
-    const scheme = opts.knobs?.scheme ?? inferredScheme;
     let bg;
     if (givenBg) {
       bg = scheme === schemeOf(givenBg) ? givenBg : withLightness(givenBg, 1 - givenBg.l);
@@ -4316,8 +4478,8 @@
       bg = scheme === defScheme ? defBg : withLightness(defBg, 1 - defBg.l);
     }
     const fg = givenFg ?? defFg;
-    const accentExplicit = givenAccent !== null || preset.defaultAnchors.accent !== void 0;
-    const accent = givenAccent ?? (preset.defaultAnchors.accent ? toOklchColor(preset.defaultAnchors.accent) : deriveAccentAnchor(bg, fg));
+    const accentExplicit = givenAccent !== null || anchors.accent !== void 0;
+    const accent = givenAccent ?? (anchors.accent ? toOklchColor(anchors.accent) : deriveAccentAnchor(bg, fg));
     return { bg, fg, accent, scheme, accentExplicit };
   }
   function parsePin(value) {
@@ -4346,6 +4508,19 @@
     const name = STATUS_TO_HUE[role] ?? "red";
     const pin = parseChromaticPin(pinned[`--${name}`] ?? pinned[`--color-${name}-base`] ?? pinned[`--color-${name}`]);
     return pin ? pin.h : paletteHueAngle(name);
+  }
+  var STATUS_ACCENT_MIN_HUE_SEPARATION = 30;
+  var ACCENT_COLLISION_GUARDED = /* @__PURE__ */ new Set(["danger"]);
+  function separateFromAccent(roleHue, accentHue, otherHues) {
+    const delta = hueDelta(accentHue, roleHue);
+    if (Math.abs(delta) >= STATUS_ACCENT_MIN_HUE_SEPARATION)
+      return roleHue;
+    if (delta !== 0)
+      return accentHue + Math.sign(delta) * STATUS_ACCENT_MIN_HUE_SEPARATION;
+    const clearance = (candidate) => otherHues.reduce((min, other) => Math.min(min, Math.abs(hueDelta(candidate, other))), 360);
+    const ahead = accentHue + STATUS_ACCENT_MIN_HUE_SEPARATION;
+    const behind = accentHue - STATUS_ACCENT_MIN_HUE_SEPARATION;
+    return clearance(ahead) >= clearance(behind) ? ahead : behind;
   }
   var GRAPH_CACHE_LIMIT = 16;
   var graphCaches = /* @__PURE__ */ new WeakMap();
@@ -4392,13 +4567,20 @@
     const pinKeys = new Set(Object.keys(pinned));
     const refIfPinned = (...names) => names.filter((n) => pinKeys.has(n));
     lit("--scheme", scheme);
+    const pinnedSurface = (token, derived) => pinned[token] ? toOklchColor(pinned[token]) : derived;
     const bg0 = pinned["--bg-0"] ? toOklchColor(pinned["--bg-0"]) : extreme ? oklch2(scheme === "dark" ? 0 : 1, 0, 0) : ensureTextHeadroom(withLightness(bg, bg.l + surfaceRamp), scheme, floor);
     const pageFloor = (fill) => separateFillFromSurface(fill, bg0, SURFACE_SEPARATION, floor);
-    const surfaceColors = SURFACES.map((_, index) => withLightness(bg0, bg0.l + surfaceRamp * (index - 1)));
+    const surfacePins = SURFACES.map((name) => pinned[name] ? toOklchColor(pinned[name]) : null);
+    const ladder = solveSurfaceLadder(surfacePins, bg0.l, surfaceRamp);
+    const surfaceRefs = (index) => [
+      .../* @__PURE__ */ new Set([...refIfPinned("--bg-0"), ...ladder.sources[index]])
+    ];
+    const surfaceColors = SURFACES.map((_, index) => surfacePins[index] ?? withLightness(bg0, ladder.lightness[index]));
     SURFACES.forEach((name, index) => {
-      lit(name, formatCss2(surfaceColors[index]), refIfPinned("--bg-0"));
+      lit(name, formatCss2(surfaceColors[index]), surfaceRefs(index));
     });
-    lit("--bg-sunken", formatCss2(withLightness(bg0, bg0.l - surfaceRamp * 2)), refIfPinned("--bg-0"));
+    const bottomStep = ladder.lightness[1] - ladder.lightness[0];
+    lit("--bg-sunken", formatCss2(withLightness(bg0, ladder.lightness[0] - bottomStep)), [.../* @__PURE__ */ new Set([...surfaceRefs(0), ...surfaceRefs(1)])]);
     lit("--scrim", formatCss2(oklch2(scheme === "dark" ? 0 : 0.1, 0, 0, 0.6)));
     const overlayBase = withLightness(bg0, scheme === "dark" ? bg0.l + 0.07 : bg0.l + 0.03);
     lit("--surface-overlay", formatCss2(overlayBase), refIfPinned("--bg-0"));
@@ -4474,9 +4656,11 @@
     lit("--accent-fg", pickReadable(accentFill, TEXT_POLES, floor), ["--accent"]);
     const accentTextColor = enforceChromaticOnPanels(accentFill);
     const accentTextCss = formatCss2(accentTextColor);
-    const accentTint = liftStopForContrast(oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04), accentFill.c * preset.accentTintChromaMul, accentFill.h), accentTextCss, AA + 0.2, bestTruePole(accentTextCss) === TRUE_WHITE);
+    const pinnedAccentTint = parsePin(pinned["--accent-bg"]);
+    const accentTint = pinnedAccentTint ?? separateTintFromFill(liftStopForContrast(oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04), accentFill.c * preset.accentTintChromaMul, accentFill.h), accentTextCss, AA + 0.2, bestTruePole(accentTextCss) === TRUE_WHITE), accentFill, accentTextCss, AA + 0.2, bestTruePole(accentTextCss) === TRUE_WHITE);
+    const accentTextOnTint = pinnedAccentTint ? readableHuedOnTintAndPanel(accentTint, accentFill.h, AA + 0.3, panelSurfaces, AA + 0.05, accentFill.c) : accentTextCss;
     lit("--accent-bg", formatCss2(accentTint), ["--accent", ...refIfPinned("--bg-0")]);
-    lit("--accent-text", accentTextCss, ["--accent", ...refIfPinned("--bg-0")]);
+    lit("--accent-text", accentTextOnTint, ["--accent", ...refIfPinned("--bg-0")]);
     lit("--accent-vivid", vividOnPanel(accentFill.h, [bg0, ...panelSurfaces], floor, accentFill.c), ["--accent", ...refIfPinned("--bg-0")]);
     const pinnedNeutral = parsePin(pinned["--neutral"]);
     const neutralFill = pinnedNeutral ?? pageFloor(fillWithTextHeadroom(scheme === "dark" ? 0.6 : 0.5, preset.neutralChroma, accentFill.h, floor));
@@ -4484,7 +4668,10 @@
     lit("--neutral", formatCss2(neutralFill), ["--accent", ...refIfPinned("--neutral")]);
     const neutralTextColor = enforceOnPanels(neutralFill);
     const neutralTextCss = formatCss2(neutralTextColor);
-    const neutralTint = liftStopForContrast(oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.06) : Math.min(0.92, bg0.l - 0.04), 5e-3, neutralTintHue), neutralTextCss, AA + 0.2, neutralTextColor.l < 0.5);
+    const neutralTintSeed = oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.06) : Math.min(0.92, bg0.l - 0.04), 5e-3, neutralTintHue);
+    const neutralTintTarget = AA + 0.2;
+    const neutralTintLeaned = liftStopForContrast(neutralTintSeed, neutralTextCss, neutralTintTarget, neutralTextColor.l < 0.5);
+    const neutralTint = contrast2(formatCss2(neutralTintLeaned), neutralTextCss) >= neutralTintTarget ? neutralTintLeaned : liftStopForContrast(neutralTintSeed, neutralTextCss, neutralTintTarget, neutralTextColor.l >= 0.5);
     lit("--neutral-bg", formatCss2(neutralTint), ["--accent", ...refIfPinned("--bg-0")]);
     lit("--neutral-fg", pickReadable(neutralFill, TEXT_POLES, floor), ["--neutral"]);
     lit("--neutral-text", neutralTextCss, ["--neutral", ...refIfPinned("--bg-0")]);
@@ -4497,9 +4684,12 @@
     lit("--scrollbar-track", "transparent");
     lit("--scrollbar-thumb", formatCss2(line2Color), ["--line-2", ...refIfPinned("--bg-0")]);
     lit("--scrollbar-thumb-hover", formatCss2(withLightness(line2Color, line2Color.l + (scheme === "dark" ? 0.12 : -0.12))), ["--scrollbar-thumb"]);
-    lit("--ring", formatCss2(withAlpha(accentFill, 0.7)), ["--accent"]);
-    lit("--ring-bg", formatCss2(withAlpha(accentFill, 0.18)), ["--accent"]);
-    const fieldBg = withLightness(bg0, scheme === "dark" ? bg0.l - 0.03 : bg0.l + 0.02);
+    const ringSurfaces = RING_SURFACE_INDICES.map((index) => surfaceColors[index]);
+    const ringColor = ringForContrast(withAlpha(accentFill, 0.7), ringSurfaces, preset.declaredFocusRingFloor);
+    const ringRefs = ["--accent", ...refIfPinned("--bg-0")];
+    lit("--ring", formatCss2(ringColor), ringRefs);
+    lit("--ring-bg", formatCss2(withAlpha(ringColor, 0.18)), ["--ring"]);
+    const fieldBg = pinnedSurface("--field-bg", withLightness(bg0, scheme === "dark" ? bg0.l - 0.03 : bg0.l + 0.02));
     lit("--field-bg", formatCss2(fieldBg), refIfPinned("--bg-0"));
     const fieldBorderSeed = extreme ? oklch2(scheme === "dark" ? 0.8 : 0.2, 0, 0) : withLightness(bg0, scheme === "dark" ? bg0.l + 0.16 : bg0.l - 0.16);
     lit("--field-border", formatCss2(borderForContrast(fieldBorderSeed, fieldBg, BORDER_SEPARATION)), refIfPinned("--bg-0"));
@@ -4527,6 +4717,7 @@
     };
     const a1 = accentDisplay;
     const fanBase = { ...a1, c: Math.max(a1.c, FAN_MIN_CHROMA) };
+    const hueFanBase = chromaCapableBase(fanBase);
     const rotate = (deg) => ({ dL: 0, dC: 0, dH: deg });
     const fanned = (n, derived) => pinned[`--accent-${n}`] ? toOklchColor(pinned[`--accent-${n}`]) : derived;
     let a2;
@@ -4536,25 +4727,26 @@
     let a3Refs;
     let a4Refs;
     if (strategy === "fan") {
-      const mirrorOf = (c2) => applyAccentDelta(fanBase, rotate(-hueDelta(a1.h, c2.h)));
+      const mirrorOf = (c2) => applyAccentDelta(hueFanBase, rotate(-hueDelta(a1.h, c2.h)));
       const a2Pin = pinned["--accent-2"];
       const a3Pin = pinned["--accent-3"];
-      let a2Derived = applyAccentDelta(fanBase, rotate(-accentSplit));
-      let a3Derived = applyAccentDelta(fanBase, rotate(accentSplit));
+      let a2Derived = applyAccentDelta(hueFanBase, rotate(-accentSplit));
+      let a3Derived = applyAccentDelta(hueFanBase, rotate(accentSplit));
       if (a2Pin && !a3Pin)
         a3Derived = mirrorOf(toOklchColor(a2Pin));
       else if (a3Pin && !a2Pin)
         a2Derived = mirrorOf(toOklchColor(a3Pin));
       a2 = fanned("2", a2Derived);
       a3 = fanned("3", a3Derived);
-      a4 = fanned("4", applyAccentDelta(fanBase, rotate(180)));
+      a4 = fanned("4", applyAccentDelta(hueFanBase, rotate(fanFourthOffset(a1.h, a2.h, a3.h))));
       a2Refs = a3Pin && !a2Pin ? ["--accent", "--accent-3"] : ["--accent"];
       a3Refs = a2Pin && !a3Pin ? ["--accent", "--accent-2"] : ["--accent"];
-      a4Refs = ["--accent"];
+      a4Refs = a2Pin || a3Pin ? ["--accent", "--accent-2", "--accent-3"] : ["--accent"];
     } else if (strategy === "shade") {
-      a2 = fanned("2", applyAccentDelta(fanBase, { dL: SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
-      a3 = fanned("3", applyAccentDelta(fanBase, { dL: -SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
-      a4 = fanned("4", applyAccentDelta(fanBase, { dL: -2 * SHADE_LADDER_L_STEP, dC: 0, dH: 0 }));
+      const rungs = shadeLadderRungs(fanBase.l);
+      a2 = fanned("2", applyAccentDelta(fanBase, { dL: rungs[0], dC: 0, dH: 0 }));
+      a3 = fanned("3", applyAccentDelta(fanBase, { dL: rungs[1], dC: 0, dH: 0 }));
+      a4 = fanned("4", applyAccentDelta(fanBase, { dL: rungs[2], dC: 0, dH: 0 }));
       a2Refs = ["--accent"];
       a3Refs = ["--accent"];
       a4Refs = ["--accent"];
@@ -4567,21 +4759,26 @@
         return target <= ACCENT_RAMP_L_MAX && target >= ACCENT_RAMP_L_MIN;
       };
       const dir = room(away) ? away : -away;
-      const shadeL = Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, midL + dir * DUO_L_STEP));
+      const steppedL = Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, midL + dir * DUO_L_STEP));
+      const shadeL = chromaCapableBase({ l: steppedL, c: FAN_MIN_CHROMA, h: a1.h, alpha: 1 }).l;
       const shadeOf = (brand) => ({
         l: shadeL,
         c: Math.max(brand.c, FAN_MIN_CHROMA),
         h: brand.h,
         alpha: 1
       });
-      a3 = fanned("3", shadeOf(a1));
-      a4 = fanned("4", shadeOf(a2));
+      const firstShade = shadeOf(a1);
+      const secondShade = shadeOf(a2);
+      const shadesRead = Math.abs(hueDelta(firstShade.h, secondShade.h)) * Math.min(firstShade.c, secondShade.c);
+      const stepped = shadesRead < ACCENT_FAMILY_HUE_ARC ? { ...secondShade, l: Math.min(ACCENT_RAMP_L_MAX, Math.max(ACCENT_RAMP_L_MIN, shadeL - dir * DUO_L_STEP)) } : secondShade;
+      a3 = fanned("3", firstShade);
+      a4 = fanned("4", stepped);
       a2Refs = ["--accent"];
       a3Refs = ["--accent", "--accent-2"];
       a4Refs = ["--accent-2", "--accent"];
     } else {
-      a2 = fanned("2", applyAccentDelta(fanBase, rotate(shiftStep)));
-      a3 = fanned("3", applyAccentDelta(a2, accentDelta(fanBase, a2)));
+      a2 = fanned("2", applyAccentDelta(hueFanBase, rotate(shiftStep)));
+      a3 = fanned("3", applyAccentDelta(a2, accentDelta(hueFanBase, a2)));
       a4 = fanned("4", applyAccentDelta(a3, accentDelta(a2, a3)));
       a2Refs = ["--accent", "--accent-shift-step"];
       a3Refs = ["--accent-2", "--accent"];
@@ -4594,7 +4791,7 @@
     const emitAccentFamily = (n, raw) => {
       const color = toOklchColor(emitAccent(raw));
       lit(`--accent-${n}-fg`, pickReadable(color, TEXT_POLES, floor), [`--accent-${n}`]);
-      const tint = oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04), color.c * preset.accentTintChromaMul, color.h);
+      const tint = pinnedSurface(`--accent-${n}-bg`, oklch2(scheme === "dark" ? Math.max(0.2, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04), color.c * preset.accentTintChromaMul, color.h));
       lit(`--accent-${n}-bg`, formatCss2(tint), [`--accent-${n}`, ...refIfPinned("--bg-0")]);
       lit(`--accent-${n}-text`, readableHuedOnTintAndPanel(tint, color.h, AA + 0.3, panelSurfaces, AA + 0.05, color.c), [`--accent-${n}-bg`, ...refIfPinned("--bg-0")]);
       lit(`--accent-${n}-vivid`, vividOnPanel(color.h, [bg0, ...panelSurfaces], floor, color.c), [`--accent-${n}`, ...refIfPinned("--bg-0")]);
@@ -4604,14 +4801,17 @@
     emitAccentFamily("4", a4);
     lit("--selection-cue", extreme || knobs.cues === "redundant" ? "marker" : "tint");
     const statusChroma = Math.max(0.12, accent.c) * (0.6 + vibrancy * 0.7) * preset.statusChromaMul;
+    const accentIsChromatic = accent.c >= ACHROMATIC_CHROMA;
     for (const role of Object.keys(STATUS_TO_HUE)) {
       const namedHue = resolveStatusHue(role, pinned);
       const pinnedFill = parseChromaticPin(pinned[`--${role}`]);
-      const roleHue = pinnedFill ? pinnedFill.h : namedHue;
+      const effectivePin = parsePin(pinned[`--${role}`]);
+      const others = Object.keys(STATUS_TO_HUE).filter((other) => other !== role).map((other) => resolveStatusHue(other, pinned));
+      const roleHue = pinnedFill ? pinnedFill.h : accentIsChromatic && ACCENT_COLLISION_GUARDED.has(role) ? separateFromAccent(namedHue, accent.h, others) : namedHue;
       const fillL = scheme === "dark" ? 0.62 : 0.52;
-      const fill = pinnedFill ?? pageFloor(fillWithTextHeadroom(fillL, statusChroma, roleHue, floor));
+      const fill = effectivePin ?? pageFloor(fillWithTextHeadroom(fillL, statusChroma, roleHue, floor));
       const tintL = scheme === "dark" ? Math.min(0.3, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04);
-      const tint = ensureTextHeadroom(oklch2(tintL, statusChroma * 0.35, roleHue), scheme, AA + 0.3);
+      const tint = pinnedSurface(`--${role}-bg`, ensureTextHeadroom(oklch2(tintL, statusChroma * 0.35, roleHue), scheme, AA + 0.3));
       const fillRefs = refIfPinned("--accent", `--${role}`);
       lit(`--${role}`, formatCss2(fill), fillRefs);
       lit(`--${role}-bg`, formatCss2(tint), [`--${role}`, ...refIfPinned("--bg-0")]);
@@ -4633,12 +4833,19 @@
     const linkColor = enforceChromaticOnPanels(accent);
     const linkCss = formatCss2(linkColor);
     let linkHoverColor = enforceChromaticOnPanels(withLightness(accent, accent.l + (scheme === "dark" ? 0.08 : -0.08)));
-    if (formatCss2(linkHoverColor) === linkCss) {
+    if (oklabDistance(formatCss2(linkHoverColor), linkCss) < LINK_HOVER_MIN_DELTA) {
       const pole = textLight ? 1 : 0;
       const toward = linkColor.l < pole ? 1 : -1;
+      let best;
+      let bestDelta = oklabDistance(formatCss2(linkHoverColor), linkCss);
       const distinctHover = (candidate) => {
         const enforced = enforceChromaticOnPanels(candidate);
-        return formatCss2(enforced) === linkCss ? void 0 : enforced;
+        const delta = oklabDistance(formatCss2(enforced), linkCss);
+        if (delta > bestDelta) {
+          best = enforced;
+          bestDelta = delta;
+        }
+        return delta < LINK_HOVER_MIN_DELTA ? void 0 : enforced;
       };
       let hover;
       for (let step = 0.1; step <= 0.6 && !hover; step += 0.05) {
@@ -4650,13 +4857,15 @@
       for (let cut = 0.7; cut >= 0.05 && !hover; cut -= 0.15) {
         hover = distinctHover(oklch2(linkColor.l, linkColor.c * cut, linkColor.h));
       }
-      linkHoverColor = hover ?? linkHoverColor;
+      linkHoverColor = hover ?? best ?? linkHoverColor;
     }
     lit("--link", formatCss2(linkColor), ["--accent", ...refIfPinned("--bg-0")]);
     lit("--link-hover", formatCss2(linkHoverColor), ["--link", ...refIfPinned("--bg-0")]);
     for (const [hue3, spec2] of Object.entries(PALETTE_HUES)) {
-      const pinnedBase = typeof spec2 === "object" ? parseChromaticPin(pinned[`--${hue3}`] ?? pinned[`--color-${hue3}-base`] ?? pinned[`--color-${hue3}`]) : null;
-      const effectiveSpec = pinnedBase && typeof spec2 === "object" ? { h: pinnedBase.h, c: pinnedBase.c } : spec2;
+      const pinSource = pinned[`--${hue3}`] ?? pinned[`--color-${hue3}-base`] ?? pinned[`--color-${hue3}`];
+      const pinnedHue = typeof spec2 === "object" ? parseChromaticPin(pinSource) : null;
+      const pinnedBase = parsePin(pinSource);
+      const effectiveSpec = pinnedHue && typeof spec2 === "object" ? { h: pinnedHue.h, c: pinnedHue.c } : spec2;
       const ramp = {};
       paletteRamp(ramp, hue3, effectiveSpec, scheme, vibrancy, floor, preset, accent, [bg0, ...panelSurfaces], pinnedBase ?? void 0);
       lit(`--color-${hue3}`, ramp[`--color-${hue3}`]);
@@ -4666,15 +4875,15 @@
         ]);
       }
       lit(`--${hue3}`, ramp[`--${hue3}`], [`--color-${hue3}-base`]);
-      lit(`--${hue3}-bg`, ramp[`--${hue3}-bg`], [`--color-${hue3}-subtle`]);
+      lit(`--${hue3}-bg`, ramp[`--${hue3}-bg`], [`--color-${hue3}`, ...refIfPinned("--bg-0")]);
       lit(`--${hue3}-fg`, ramp[`--${hue3}-fg`], [`--color-${hue3}-base`]);
-      lit(`--${hue3}-text`, ramp[`--${hue3}-text`], [`--color-${hue3}-subtle`]);
+      lit(`--${hue3}-text`, ramp[`--${hue3}-text`], [`--${hue3}-bg`, ...refIfPinned("--bg-0")]);
       lit(`--${hue3}-vivid`, ramp[`--${hue3}-vivid`], [
         `--color-${hue3}-base`,
         ...refIfPinned("--bg-0")
       ]);
     }
-    const codeBg = ensureTextHeadroom(withLightness(bg0, scheme === "dark" ? bg0.l - 0.02 : bg0.l + 0.012), scheme, floor);
+    const codeBg = pinnedSurface("--code-bg", ensureTextHeadroom(withLightness(bg0, scheme === "dark" ? bg0.l - 0.02 : bg0.l + 0.012), scheme, floor));
     const codeBgCss = formatCss2(codeBg);
     lit("--code-bg", codeBgCss, refIfPinned("--bg-0"));
     const codeFg = enforceContrastFloor(fg0, codeBg, scheme, floor);
@@ -4723,7 +4932,7 @@
     lit("--code-operator", formatCss2(readableHuedOnCode(codeBaseL, codeChroma * 0.5, codeBaseHue, codeFloor)), ["--accent", "--code-bg"]);
     lit("--code-punctuation", formatCss2(enforceContrastFloor(withLightness(codeFg, codeFg.l + (codePole - codeFg.l) * 0.18), codeBg, scheme, codeFloor)), ["--code-fg", "--code-bg"]);
     lit("--code-variable", codeFgCss, ["--code-fg"]);
-    const terminalBg = ensureTextHeadroom(withLightness(bg0, scheme === "dark" ? bg0.l - 0.035 : bg0.l + 0.02), scheme, floor);
+    const terminalBg = pinnedSurface("--terminal-bg", ensureTextHeadroom(withLightness(bg0, scheme === "dark" ? bg0.l - 0.035 : bg0.l + 0.02), scheme, floor));
     const terminalBgCss = formatCss2(terminalBg);
     lit("--terminal-bg", terminalBgCss, refIfPinned("--bg-0"));
     const terminalFg = enforceContrastFloor(fg0, terminalBg, scheme, floor);
@@ -4748,8 +4957,8 @@
     const terminalAchroma = (l) => oklch2(l, 6e-3, terminalHue);
     lit("--terminal-black", formatCss2(terminalAchroma(0.2)), refIfPinned("--bg-0"));
     lit("--terminal-bright-black", formatCss2(terminalAchroma(0.42)), refIfPinned("--bg-0"));
-    lit("--terminal-white", formatCss2(terminalAchroma(0.85)), ["--fg-0"]);
-    lit("--terminal-bright-white", formatCss2(terminalAchroma(0.97)), ["--fg-0"]);
+    lit("--terminal-white", formatCss2(terminalAchroma(0.85)), refIfPinned("--bg-0"));
+    lit("--terminal-bright-white", formatCss2(terminalAchroma(0.97)), refIfPinned("--bg-0"));
     lit("--font-sans", fonts.sans);
     lit("--font-mono", fonts.mono);
     lit("--font-display", fonts.display);
@@ -4904,18 +5113,15 @@
     const ceiling = Math.max(contrast2("#000000", bgCss), contrast2("#ffffff", bgCss));
     return Math.min(declaredFloor, ceiling - CEILING_EPSILON);
   }
-  function oklabDist(a, b) {
-    const x = toOklchColor(a);
-    const y = toOklchColor(b);
-    const rad = Math.PI / 180;
-    const ax = x.c * Math.cos(x.h * rad);
-    const ay = x.c * Math.sin(x.h * rad);
-    const bx = y.c * Math.cos(y.h * rad);
-    const by = y.c * Math.sin(y.h * rad);
-    return Math.hypot(x.l - y.l, ax - bx, ay - by);
+  function achievableRingFloor(declaredFloor, ringCss, surfaces) {
+    const a = alpha(ringCss);
+    const reach = (pole) => Math.min(...surfaces.map((surface) => contrast2(formatCss2(flatten(formatCss2(withAlpha(toOklchColor(pole), a)), surface)), surface)));
+    const ceiling = Math.max(reach("#000000"), reach("#ffffff"));
+    return Math.min(declaredFloor, ceiling - CEILING_EPSILON);
   }
   function makeInvariants(preset) {
     const onFillFloor = preset.declaredTextOnFillFloor;
+    const ringFloor = preset.declaredFocusRingFloor;
     return [
       (ctx) => {
         for (const name of PRODUCES) {
@@ -5119,6 +5325,32 @@
         return { name: "text-on-tint clears AA", ok: true };
       },
       (ctx) => {
+        const name = `focus ring clears ${ringFloor}`;
+        if (ctx.constraints["--ring"])
+          return { name, ok: true, detail: "skipped (pinned ring)" };
+        const ring = ctx.register["--ring"];
+        if (!ring)
+          return { name, ok: false, detail: "missing --ring" };
+        const surfaces = SURFACE_ROLES.map((token) => ctx.register[token]).filter((value) => typeof value === "string" && value.length > 0);
+        if (surfaces.length === 0)
+          return { name, ok: true, detail: "skipped (no surfaces)" };
+        const required = achievableRingFloor(ringFloor, ring, surfaces);
+        let worst = Infinity;
+        let worstOn = "";
+        for (const surface of surfaces) {
+          const ratio = contrast2(formatCss2(flatten(ring, surface)), surface);
+          if (ratio < worst) {
+            worst = ratio;
+            worstOn = surface;
+          }
+        }
+        return {
+          name,
+          ok: worst >= required - 0.01,
+          detail: `--ring on ${worstOn} = ${worst.toFixed(2)} (floor ${required.toFixed(2)}${required < ringFloor ? ` best-achievable, declared ${ringFloor}` : ""})`
+        };
+      },
+      (ctx) => {
         const name = "achromatic tone inks stay neutral";
         const achromatic = ["gray", "white", "black"];
         for (const hue3 of achromatic) {
@@ -5256,6 +5488,48 @@
         return { name, ok: true };
       },
       (ctx) => {
+        const name = "the accent family stays mutually distinguishable";
+        const members = ["--accent", "--accent-2", "--accent-3", "--accent-4"].filter((token) => !ctx.constraints[token] && ctx.register[token]).map((token) => ({ token, color: toOklchColor(ctx.register[token]) }));
+        for (let i = 0; i < members.length; i++) {
+          for (let j = i + 1; j < members.length; j++) {
+            const a = members[i];
+            const b = members[j];
+            if (readsAsOneColor(a.color, b.color)) {
+              const dL = Math.abs(a.color.l - b.color.l);
+              const dC = Math.abs(a.color.c - b.color.c);
+              const arc = Math.abs(hueDelta(a.color.h, b.color.h)) * Math.min(a.color.c, b.color.c);
+              return {
+                name,
+                ok: false,
+                detail: `${a.token} and ${b.token} read as one color (\u0394L ${dL.toFixed(3)}, \u0394C ${dC.toFixed(3)}, hue arc ${arc.toFixed(3)})`
+              };
+            }
+          }
+        }
+        return { name, ok: true };
+      },
+      (ctx) => {
+        const name = "a soft fill reads apart from its solid";
+        for (const tone of ["accent", "neutral"]) {
+          const solid = ctx.register[`--${tone}`];
+          const soft = ctx.register[`--${tone}-bg`];
+          if (!solid || !soft || ctx.constraints[`--${tone}-bg`] || ctx.constraints[`--${tone}`])
+            continue;
+          const fill = toOklchColor(solid);
+          const tint = toOklchColor(soft);
+          if (tint.l <= 0.02 || tint.l >= 0.98)
+            continue;
+          if (readsAsOneColor(fill, tint)) {
+            return {
+              name,
+              ok: false,
+              detail: `--${tone}-bg ${soft} reads as --${tone} ${solid}, so a soft variant paints its solid`
+            };
+          }
+        }
+        return { name, ok: true };
+      },
+      (ctx) => {
         const name = "borders separate from their surface";
         const borders = [
           ["--line", "--bg-0", BORDER_SEPARATION],
@@ -5340,10 +5614,16 @@
           return { name, ok: true };
         if (ctx.constraints["--link"] || ctx.constraints["--link-hover"])
           return { name, ok: true };
-        if (link === hover) {
-          if (link === "#000000" || link === "#ffffff")
+        const delta = oklabDistance(link, hover);
+        if (delta < LINK_HOVER_MIN_DELTA) {
+          const l = toOklchColor(link).l;
+          if (l >= 1 - POLE_REACH || l <= POLE_REACH)
             return { name, ok: true };
-          return { name, ok: false, detail: `--link and --link-hover both ${link}` };
+          return {
+            name,
+            ok: false,
+            detail: `--link ${link} and --link-hover ${hover} read as one colour (${delta.toFixed(4)})`
+          };
         }
         return { name, ok: true };
       },
@@ -5374,7 +5654,8 @@
             return pinnedAccent3 ? -hueDelta(accent.h, pinnedAccent3.h) : -split;
           if (n === 3)
             return pinnedAccent2 ? -hueDelta(accent.h, pinnedAccent2.h) : split;
-          return 180;
+          const flank = (slot) => (slot === 2 ? pinnedAccent2 : pinnedAccent3)?.h ?? accent.h + fanOffset(slot);
+          return fanFourthOffset(accent.h, flank(2), flank(3));
         };
         const stepsLightness = strategy === "shade" || strategy === "duo";
         for (let n = 2; n <= 4; n++) {
@@ -5673,7 +5954,7 @@
             const b = ctx.register[nj];
             if (!a || !b)
               continue;
-            const d = oklabDist(a, b);
+            const d = oklabDistance(a, b);
             if (d < MIN_DE) {
               return { name, ok: false, detail: `${ni} vs ${nj} \u0394E=${d.toFixed(4)} (min ${MIN_DE})` };
             }
@@ -5713,7 +5994,7 @@
             const b = ctx.register[nj];
             if (!a || !b)
               continue;
-            const d = oklabDist(a, b);
+            const d = oklabDistance(a, b);
             if (d < MIN_DE) {
               return { name, ok: false, detail: `${ni} vs ${nj} \u0394E=${d.toFixed(4)} (min ${MIN_DE})` };
             }
@@ -5733,7 +6014,7 @@
             const b = ctx.register[nj];
             if (!a || !b)
               continue;
-            const d = oklabDist(a, b);
+            const d = oklabDistance(a, b);
             if (d < MIN_DE) {
               return { name, ok: false, detail: `${ni} vs ${nj} \u0394E=${d.toFixed(4)} (min ${MIN_DE})` };
             }
@@ -5842,12 +6123,18 @@
     }
     return out;
   }
+  function statedSchemes(preset) {
+    const own = schemeOf(toOklchColor(preset.defaultAnchors.bg));
+    const stated = Object.keys(preset.anchorsByScheme ?? {});
+    return [.../* @__PURE__ */ new Set([own, ...stated])];
+  }
   var DEFAULT_ANCHORS = {
     bg: "#25272e",
     fg: "#e2e0e0"
   };
 
   // packages/xtyle/dist/authoring.js
+  var WCAG_FOCUS_RING = 3;
   function toLineage(nodes) {
     return nodes.map(({ name, value, refs }) => refs && refs.length ? { name, value, refs } : { name, value });
   }
@@ -5873,6 +6160,7 @@
       defaultAnchors: spec2.anchors ? { ...DEFAULT_ANCHORS, ...spec2.anchors } : DEFAULT_ANCHORS,
       contrastFloor: contrast3.floor ?? 4.7,
       declaredTextOnFillFloor: contrast3.textOnFill ?? 4.5,
+      declaredFocusRingFloor: contrast3.focusRing ?? WCAG_FOCUS_RING,
       defaultVibrancy: spec2.vibrancy ?? 0.5,
       accentChromaMul: chroma.accent ?? 1,
       statusChromaMul: chroma.status ?? 1,
@@ -5882,6 +6170,14 @@
       elevationAlphaBoost: elevation.alphaBoost ?? 0,
       accentTintChromaMul: chroma.accentTint ?? 0.3
     };
+    if (spec2.anchorsByScheme) {
+      const byScheme = {};
+      for (const [scheme, stated] of Object.entries(spec2.anchorsByScheme)) {
+        if (stated)
+          byScheme[scheme] = { ...preset.defaultAnchors, ...stated };
+      }
+      preset.anchorsByScheme = byScheme;
+    }
     if (spec2.accentStrategy)
       preset.accentStrategy = spec2.accentStrategy;
     if (spec2.extreme)
@@ -5895,17 +6191,23 @@
     const finalNodes = (input) => singlePass ? buildGraph(preset, input) : registerToNodes(runPipeline(buildPasses(preset, input), (passIndex) => buildPassContext(preset, input, passIndex)).register);
     registerExports(finalNodes, (input) => tracePreset(preset, buildPasses, input), {
       since: PACK_SINCE,
-      produces: PRODUCED_TOKENS,
+      produces: spec2.adds ? [.../* @__PURE__ */ new Set([...PRODUCED_TOKENS, ...spec2.adds.tokens])] : PRODUCED_TOKENS,
       producedSince: PRODUCED_SINCE,
-      categories: TOKEN_CATEGORIES,
+      categories: spec2.adds ? { ...TOKEN_CATEGORIES, ...spec2.adds.categories } : TOKEN_CATEGORIES,
       knobs: preset.knobs,
       knobSpecs: resolveKnobSpecs(preset.knobs, preset.knobSpecs),
-      passNames: buildPasses(preset, {}).map((pass) => pass.name)
+      passNames: buildPasses(preset, {}).map((pass) => pass.name),
+      focusRingFloor: preset.declaredFocusRingFloor,
+      schemes: statedSchemes(preset)
     }, makeInvariants(preset));
   }
 
   // algorithms/xtyle-default/src/preset.ts
-  var spec = { id: "xtyle-default", anchors: { accent: "#3ad6f8" } };
+  var spec = {
+    id: "xtyle-default",
+    anchors: { accent: "#3ad6f8" },
+    anchorsByScheme: { light: { bg: "#e6e9ef", fg: "#1b1d22", accent: "#0096b1" } }
+  };
 
   // algorithms/xtyle-default/src/mod.ts
   defineXtyleAlgorithm(spec);

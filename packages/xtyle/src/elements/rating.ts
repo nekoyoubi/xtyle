@@ -44,7 +44,7 @@ export class XtyleRating extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["value", "max", "size", "icon", "colors", "tone", "readonly", "allowhalf", "name", "label"];
+		return ["value", "max", "size", "icon", "colors", "tone", "readonly", "allow-half", "allowhalf", "name", "label"];
 	}
 
 	protected template(): string {
@@ -79,7 +79,7 @@ export class XtyleRating extends XtyleElement {
 		return this.hasAttribute("readonly");
 	}
 	get allowHalf(): boolean {
-		return this.hasAttribute("allowhalf");
+		return this.hasAttribute("allow-half") || this.hasAttribute("allowhalf");
 	}
 	private get icon(): string {
 		return this.getAttribute("icon") || "star";
@@ -211,7 +211,9 @@ export class XtyleRating extends XtyleElement {
 			return;
 		}
 		if (!this.hiddenInput) {
-			this.hiddenInput = document.createElement("input");
+			this.hiddenInput =
+				this.querySelector<HTMLInputElement>(`input[type="hidden"][name="${CSS.escape(name)}"]`) ??
+				document.createElement("input");
 			this.hiddenInput.type = "hidden";
 		}
 		this.hiddenInput.name = name;

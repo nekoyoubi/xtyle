@@ -13,7 +13,10 @@ interface Props {
 	invalid?: boolean;
 	error?: string;
 	disabled?: boolean;
+	/** Set false to keep the control out of sequential focus navigation. */
+	focusable?: boolean;
 	required?: boolean;
+	requiredMessage?: string;
 	ariaLabel?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -30,7 +33,9 @@ const {
 	invalid = false,
 	error,
 	disabled = false,
+	focusable,
 	required = false,
+	requiredMessage,
 	ariaLabel,
 	static: isStatic = false,
 	class: extra,
@@ -51,6 +56,7 @@ const bindings = {
 	value: value ?? null,
 	size,
 	disabled,
+	focusable: focusable ?? true,
 	invalid,
 	required,
 	error: error ?? null,
@@ -69,8 +75,10 @@ const composed = light + optionsHtml;
 	size={size}
 	name={name}
 	disabled={disabled || undefined}
+	focusable={focusable === false ? "false" : undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	error={error}
 	aria-label={ariaLabel}
 	class={extra}

@@ -108,11 +108,17 @@ describe.each(SET.map((a) => [a.id, a] as const))("graph(%s)", (_id, algorithm: 
 		expect(refsOf("--accent-4")).toEqual(["--accent"]);
 	});
 
-	it("pulls the mirror flank into the lineage when a wing is pinned, keeping 4 the accent's complement", () => {
+	it("pulls the mirror flank and the fourth into the lineage when a wing is pinned", () => {
 		const nodes = algorithm.lineage({ constraints: { "--accent-2": "#22c55e" } });
 		const refsOf = (name: string) => nodes.find((n) => n.name === name)?.refs ?? [];
 		expect(refsOf("--accent-2")).toEqual([]);
 		expect(refsOf("--accent-3")).toContain("--accent-2");
+		expect(refsOf("--accent-4")).toContain("--accent-2");
+	});
+
+	it("keeps the fourth hanging off the accent alone when neither wing is pinned", () => {
+		const nodes = algorithm.lineage({});
+		const refsOf = (name: string) => nodes.find((n) => n.name === name)?.refs ?? [];
 		expect(refsOf("--accent-4")).toEqual(["--accent"]);
 	});
 });

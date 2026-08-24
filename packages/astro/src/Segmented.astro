@@ -11,6 +11,8 @@ interface Props {
 	value?: string;
 	options?: string | ReadonlyArray<string | { value: string; label?: string; disabled?: boolean; badge?: string; title?: string }>;
 	disabled?: boolean;
+	/** Set false to keep the control out of sequential focus navigation. */
+	focusable?: boolean;
 	size?: Size;
 	tone?: Tone;
 	label?: string;
@@ -27,6 +29,7 @@ const {
 	value,
 	options,
 	disabled = false,
+	focusable,
 	size: sizeInput,
 	tone: toneInput,
 	label,
@@ -51,6 +54,7 @@ const bindings = {
 	segments,
 	value: value ?? null,
 	disabled,
+	focusable: focusable ?? true,
 	size,
 	tone,
 	label: label ?? null,
@@ -65,6 +69,7 @@ const light = useSlotted ? "" : await renderFragmentLight("segmented", bindings)
 	<xtyle-segmented
 		value={value}
 		disabled={disabled || undefined}
+		focusable={focusable === false ? "false" : undefined}
 		size={size}
 		tone={tone}
 		label={label}
@@ -81,6 +86,7 @@ const light = useSlotted ? "" : await renderFragmentLight("segmented", bindings)
 		value={value}
 		options={optionsAttr}
 		disabled={disabled || undefined}
+		focusable={focusable === false ? "false" : undefined}
 		size={size}
 		tone={tone}
 		label={label}

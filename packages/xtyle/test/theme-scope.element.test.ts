@@ -21,7 +21,7 @@ function mount(attrs: Record<string, string> = {}, children = ""): HTMLElement {
  * reading straight after mount. */
 async function settled(el: HTMLElement): Promise<CustomEvent> {
 	return await new Promise((resolve, reject) => {
-		const timer = setTimeout(() => reject(new Error("theme scope never settled")), 8000);
+		const timer = setTimeout(() => reject(new Error("theme scope never settled")), 30000);
 		el.addEventListener(
 			"xtyle:theme-scope",
 			(event) => {

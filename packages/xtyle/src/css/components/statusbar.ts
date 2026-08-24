@@ -116,4 +116,24 @@ xtyle-statusbar[separated] .xtyle-statusbar__item[data-rule-start]::before {
 	flex: 1;
 	min-width: var(--space-2);
 }
+::slotted(.xtyle-statusbar__item) {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	white-space: nowrap;
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: 0;
+	font: inherit;
+	color: inherit;
+}
+::slotted(.xtyle-statusbar__item--strong) {
+	color: var(--fg-0);
+	font-weight: var(--weight-medium);
+}
+::slotted(.xtyle-statusbar__spacer) {
+	flex: 1;
+	min-width: var(--space-2);
+}
 `.trim();

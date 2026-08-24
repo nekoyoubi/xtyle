@@ -108,6 +108,33 @@ arrowmark--poly-ptsarrow
 effect library takes verbs. Names are lowercase alphanumeric with no hyphen, since a hyphen is how
 the grammar separates flags. `arrow` and `pennant` ship built in.
 
+### From a point list to a primitive
+
+A registered point list is what `pts` takes; it is not itself a primitive, so reaching one still costs
+a `poly-pts` prefix at every use. `registerIconPrimitives` mints the primitive:
+
+```js
+registerIconPrimitives({
+  blade: { pts: "0,0 100,40 40,100", tags: ["blade", "shard"] },
+  sig: { pts: "10,70 30,30 50,60 90,20", open: true },
+  ring: { body: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>' },
+});
+```
+
+`blade` is then a primitive like any other — `mark--blade-c2-r45`, in the roster, in the tag search —
+rather than `mark--poly-ptsblade-c2-r45`. `pts` takes a coordinate run or the name of a list already
+registered, so a shape worth reusing is named once and minted from that name; `open` strokes the run
+instead of closing it, the way `polyline` does; and `body` takes raw SVG for a shape no point run can
+describe, which is how the built-in library is written.
+
+Registration is last-wins and outranks a grammar keyword, so `registerIconPrimitives({ heart: … })`
+replaces the built-in heart everywhere `heart` is written. Names follow the same rule point lists do:
+lowercase alphanumeric, no hyphen.
+
+Both registries answer a slot as well as a function call — `xtyle.icon-points` for the lists,
+`xtyle.icon-primitives` for the primitives — so a mod declares either in its manifest and the
+toolchain validates it before it runs.
+
 | family | keywords |
 |--------|----------|
 | curves & nature | `wave` a water band, `water` a wavy fill level, `swish` a tapered swoosh, `blob`, `lens` a vesica petal, `leaf`, `cloud`, `mountain`, `sun`, `flame`, `drop` |

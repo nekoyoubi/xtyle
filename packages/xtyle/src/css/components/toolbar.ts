@@ -2,6 +2,7 @@ export const toolbarCss = `
 [data-root][data-toolbar] { display: contents; }
 .xtyle-toolbar {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-3);
 	padding: var(--space-2) var(--space-4);
@@ -51,9 +52,9 @@ a.xtyle-toolbar__title:focus-visible {
 }
 .xtyle-toolbar__group {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-2);
-	min-width: 0;
 }
 .xtyle-toolbar__group--start { justify-content: flex-start; }
 .xtyle-toolbar__group--center {

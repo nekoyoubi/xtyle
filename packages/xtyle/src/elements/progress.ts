@@ -5,10 +5,11 @@ import { rampColor, rampGradientStops, resolvePalette, paletteRegisterTokens, ty
 import { readLiveRegister } from "./live-register.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/progress/source.generated.js";
-import { resolveTone, resolveOptionalTone, PROGRESS_VARIANTS, PROGRESS_SIZES, resolveVocab } from "../vocab.js";
+import { resolveTone, resolveOptionalTone, PROGRESS_VARIANTS, PROGRESS_SIZES, PROGRESS_ORIENTS, resolveVocab } from "../vocab.js";
 
 export type ProgressVariant = (typeof PROGRESS_VARIANTS)[number];
 export type ProgressSize = (typeof PROGRESS_SIZES)[number];
+export type ProgressOrient = (typeof PROGRESS_ORIENTS)[number];
 export type ProgressValueFormat = "percent" | "value" | "value-max";
 export type ProgressPulse = "fast" | "slow" | null;
 export type ProgressRampMode = "solid" | "gradient";
@@ -27,7 +28,46 @@ export class XtyleProgress extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "ramp", "ramp-mode", "reverse", "track", "thickness", "aria-label"];
+		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "ramp", "ramp-mode", "reverse", "track", "thickness", "orient", "label", "reading", "note", "aria-label"];
+	}
+
+	/** The visible caption above the bar. Distinct from `aria-label`, which names the control for a screen
+	 * reader and renders nothing: two bars stacked in a panel are told apart by AT and not by eye unless
+	 * one of them says what it is. Setting `label` alone also names the control, so the string is written
+	 * once; an explicit `aria-label` still wins. */
+	get label(): string {
+		return this.getAttribute("label") ?? "";
+	}
+	set label(value: string | null) {
+		this.reflectString("label", value);
+	}
+
+	/** A free-form reading on the caption line, opposite the label. Independent of `value-format`, because
+	 * a meter's most useful reading is often not a number the component could have computed (`8/20`,
+	 * `even`, `46 left`). */
+	get reading(): string {
+		return this.getAttribute("reading") ?? "";
+	}
+	set reading(value: string | null) {
+		this.reflectString("reading", value);
+	}
+
+	/** A line of prose under the bar, explaining what the reading means. */
+	get note(): string {
+		return this.getAttribute("note") ?? "";
+	}
+	set note(value: string | null) {
+		this.reflectString("note", value);
+	}
+
+	/** Which axis the bar fills along. `vertical` grows the indicator up the block axis natively, so a
+	 * standing gauge needs no rotation: a rotated element keeps its pre-rotation layout box, and no
+	 * percentage resolves against the side you can see. Linear only; a ring has no axis to stand up. */
+	get orient(): ProgressOrient {
+		return resolveVocab(this.getAttribute("orient"), PROGRESS_ORIENTS, "horizontal", "progress orient");
+	}
+	set orient(value: ProgressOrient) {
+		this.setAttribute("orient", value);
 	}
 
 	get variant(): ProgressVariant {
@@ -257,7 +297,7 @@ export class XtyleProgress extends XtyleElement {
 		if (bands.length === 0) return null;
 		const span = this.max - this.min;
 		const pct = span > 0 ? ((Math.min(Math.max(this.value, this.min), this.max) - this.min) / span) * 100 : 0;
-		return bands.find((band) => pct < band.below) ?? bands[bands.length - 1] ?? null;
+		return bands.find((band) => pct < band.below) ?? null;
 	}
 
 	get effectiveTone(): FullTone {
@@ -290,11 +330,27 @@ export class XtyleProgress extends XtyleElement {
 			pulse: this.effectivePulse(),
 			track: this.track,
 			thickness: this.thickness,
+			orient: this.orient,
+			label: this.getAttribute("label"),
+			reading: this.getAttribute("reading"),
+			note: this.getAttribute("note"),
+			hasLabel: this.fragment.hasSlotted("label"),
+			hasReading: this.fragment.hasSlotted("reading"),
+			hasNote: this.fragment.hasSlotted("note"),
 			role: this.ariaRole,
-			ariaLabel: this.getAttribute("aria-label"),
-			ariaLabelledby: this.getAttribute("aria-labelledby"),
+			ariaLabel: this.accessibleName,
+			ariaLabelledby: this.accessibleName === null ? this.getAttribute("aria-labelledby") : null,
 			...(this.ramp ? this.rampBindings(this.ramp) : {}),
 		};
+	}
+
+	/** An explicit `aria-label` wins; a visible `label` names the control when there is no other name, so
+	 * a caption does not have to be written twice to be announced. */
+	private get accessibleName(): string | null {
+		const explicit = this.getAttribute("aria-label");
+		if (explicit !== null) return explicit;
+		if (this.getAttribute("aria-labelledby") !== null) return null;
+		return this.label || null;
 	}
 
 	/** A signature of the state ops can't patch incrementally — the variant (linear vs circular
@@ -304,16 +360,17 @@ export class XtyleProgress extends XtyleElement {
 	 * or dropping the name entirely, requires removing an attribute, which `setAttr` can't do). When
 	 * it changes, the structure is rebuilt rather than patched. */
 	private shapeSignature(): string {
-		const label = this.getAttribute("aria-label");
+		const name = this.accessibleName;
 		const labelledby = this.getAttribute("aria-labelledby");
-		const name = label !== null ? `l:${label}` : labelledby !== null ? `b:${labelledby}` : "";
-		return `${this.variant}|${this.indeterminate}|${this.showValue}|${name}`;
+		const named = name !== null ? `l:${name}` : labelledby !== null ? `b:${labelledby}` : "";
+		const caption = `${this.label || this.fragment.hasSlotted("label") ? "L" : ""}${this.reading || this.fragment.hasSlotted("reading") ? "R" : ""}${this.note || this.fragment.hasSlotted("note") ? "N" : ""}`;
+		return `${this.variant}|${this.orient}|${this.indeterminate}|${this.showValue}|${caption}|${named}`;
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("aria-label") && !this.getAttribute("aria-labelledby")) {
+		if (this.accessibleName === null && !this.getAttribute("aria-labelledby")) {
 			console.warn(
-				`xtyle-progress: a ${this.ariaRole} has no accessible name. Provide an \`aria-label\` so it is announced.`,
+				`xtyle-progress: a ${this.ariaRole} has no accessible name. Provide a \`label\` or an \`aria-label\` so it is announced.`,
 			);
 		}
 	}

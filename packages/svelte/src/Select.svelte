@@ -9,8 +9,11 @@
 		size?: Size;
 		name?: string;
 		disabled?: boolean;
+		/** Set false to keep the control out of sequential focus navigation. */
+		focusable?: boolean;
 		invalid?: boolean;
 		required?: boolean;
+		requiredMessage?: string;
 		error?: string;
 		ariaLabel?: string;
 		onchange?: (event: Event) => void;
@@ -25,8 +28,10 @@
 		size = "md",
 		name,
 		disabled = false,
+		focusable,
 		invalid = false,
 		required = false,
+		requiredMessage,
 		error = "",
 		ariaLabel,
 		onchange,
@@ -47,8 +52,10 @@
 	{size}
 	{name}
 	disabled={disabled || undefined}
+	focusable={focusable === false ? "false" : undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	{error}
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	onchange={handleChange}

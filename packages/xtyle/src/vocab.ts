@@ -74,6 +74,14 @@ export const STAT_SENTIMENTS = ["positive", "negative", "neutral"] as const;
 export const IMAGE_LOADING = ["lazy", "eager"] as const;
 
 /**
+ * The surfaces a control can sit on, and therefore the ones a fill or a focus ring has to read
+ * against. Declared once because the derivation walks tokens to a floor over this set and the audit
+ * grades them over it: two lists would let the walk and the report disagree about what a control is
+ * drawn on, and the disagreement would read as a grading bug rather than a drifted constant.
+ */
+export const SURFACE_ROLES = ["--bg-0", "--bg-1", "--bg-2"] as const;
+
+/**
  * Narrow an author value to a member of a component-local vocabulary, warning and falling back when
  * it is not one. The tone roster has {@link resolveTone}; this is the same guarantee for the smaller
  * per-component vocabularies, and it exists for the same reason: these values are interpolated into
@@ -253,7 +261,7 @@ export const EYEBROW_TRACKINGS = ["normal", "wide"] as const;
 
 export const HERO_ALIGNS = ["center", "start"] as const;
 
-export const ICON_SIZES = ["sm", "md", "lg", "xl"] as const;
+export const ICON_SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 
 export const IMAGE_FITS = ["cover", "contain"] as const;
 export const IMAGE_RADII = ["none", "sm", "md", "lg"] as const;
@@ -314,6 +322,8 @@ export const TABS_VARIANTS = ["underline", "pill", "enclosed"] as const;
 /** Tabs steps only two rungs — there is no `.xtyle-tabs--lg` rule for a third to land on. */
 export const TABS_SIZES = ["sm", "md"] as const;
 
+export const TABS_OVERFLOWS = ["wrap", "scroll"] as const;
+
 /** Checkbox and Switch style a compact rung and the default only; an `lg` would land on no rule. */
 export const CHECKBOX_SIZES = ["sm", "md"] as const;
 export const SWITCH_SIZES = ["sm", "md"] as const;
@@ -348,11 +358,13 @@ export const STACK_ALIGNS = ["start", "center", "end", "stretch", "baseline"] as
 export const STACK_JUSTIFIES = ["start", "center", "end", "between", "around", "evenly"] as const;
 
 export const GRID_ALIGNS = ["start", "center", "end", "stretch"] as const;
+export const GRID_SIDES = ["start", "end"] as const;
 
 export const IMAGE_TRIGGERS = ["frame", "button"] as const;
 export const IMAGE_HOVER_AUDIO = ["on", "off"] as const;
 
 export const PROGRESS_RAMP_MODES = ["solid", "gradient"] as const;
+export const PROGRESS_ORIENTS = ["horizontal", "vertical"] as const;
 
 export const REDACT_MODES = ["blur", "block", "mask"] as const;
 export const REDACT_REVEALS = ["hover", "click", "hold", "never"] as const;

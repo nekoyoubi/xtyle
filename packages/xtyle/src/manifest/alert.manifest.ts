@@ -66,6 +66,7 @@ export const alertManifest: ComponentManifest = {
 	description:
 		"Alert presents a persistent, inline message. Two axes drive it independently. `severity` (success, warn, danger, info) carries the *meaning*: the leading status glyph and the live-region politeness. `tone` carries the *color*, drawn from the full palette (semantic roles, accent variants, or named hues). By default a severity paints itself its standard color (danger reads red), but a `tone` overrides that, so a `danger` can be repainted pink and still announce as danger, while a color-only notice (a pink awareness banner with no `severity`) shows no glyph and announces politely. A `soft` variant tints the banner; a `solid` variant fills it for higher emphasis. An optional title sits above the message, an actions footer holds buttons, and a `dismissible` form adds a close button (also closable with Escape) that emits a `dismiss` event before removing the banner.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["actions", "alert", "body", "dismiss", "icon", "message", "title"],
 	anatomy: [
 		{
 			name: "alert",
@@ -154,6 +155,9 @@ export const alertManifest: ComponentManifest = {
 			description: "Accessible label for the close button (kebab `dismiss-label` on the custom element).",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "dismiss", description: "The alert's close button was pressed. Removing the alert is the consumer's to do.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{

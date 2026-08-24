@@ -20,6 +20,7 @@
 		open?: boolean;
 		context?: boolean;
 		openAt(x: number, y: number, opts?: MenuOpenAtOptions): void;
+		openFrom(anchor: HTMLElement, opts?: MenuOpenAtOptions): void;
 	};
 
 	let el: MenuElement | undefined = $state();
@@ -29,17 +30,23 @@
 		el?.openAt(x, y, opts);
 	}
 
+	/** Open it against any element — the hook for a component that owns its own trigger. */
+	export function openFrom(anchor: HTMLElement, opts?: MenuOpenAtOptions): void {
+		el?.openFrom(anchor, opts);
+	}
+
 	$effect(() => {
 		if (el) el.items = items;
 	});
 
 	$effect(() => {
 		const target = el;
+		const next = open;
 		if (!target) return;
 		// HACK: defer to a microtask so an open-by-default menu doesn't run popover logic synchronously
 		// inside Svelte's mount-effect flush, which corrupts reconciliation
 		queueMicrotask(() => {
-			target.open = open;
+			target.open = next;
 		});
 	});
 </script>

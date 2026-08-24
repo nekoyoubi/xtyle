@@ -165,6 +165,7 @@ export const chartManifest: ComponentManifest = {
 	description:
 		"Chart plots one or more series against a shared x axis as an SVG that renders from data alone. Each series is a list of `{ at, value }` samples; `at` may be a timestamp (epoch ms or a date string) or a plain number, and the axis labels itself accordingly — `xScale` is inferred by default and can be pinned to `time` or `linear`. The domain is the data's own extent unless you set an explicit `domain` or a sliding `window` for a live feed, and samples outside it are dropped. Series take their colors from a `scheme` naming a palette resolved off the live theme, so a chart is coherent with the rest of the UI out of the box. Draw it as a `line` or an `area`, and join points `linear`, `smooth`, or `step`. The value axis derives round bounds and gridlines from the data (always including zero, and drawing a zero line when the data crosses it); `yMin` / `yMax` pin it instead. It reads out on hover *and* on keyboard: a crosshair snaps to the nearest x and a tooltip reports every series at that position at once, and the whole plot is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: clicking (or pressing Enter at the cursor) fires a `select` event carrying the x position and each series' value there. A legend appears for multi-series data. With nothing to plot, it shows a muted `No data` message in place of the axes.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["area", "axis", "axis-title", "chart", "grid", "guide", "legend", "legend-item", "legend-swatch", "line", "plot", "point", "series", "tooltip", "tooltip-row", "xtick", "ytick", "zero"],
 	anatomy: [
 		{
 			name: "chart",
@@ -348,6 +349,9 @@ export const chartManifest: ComponentManifest = {
 				"Makes the plot actionable: clicking it (or pressing Enter/Space at the keyboard cursor) fires a `select` `CustomEvent` whose `detail` carries `{ x, label, index, points }` — the cursor's position in domain units, how the chart labels it, and every series' value there. `@xtyle/svelte` surfaces it as an `onselect` callback.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "select", detail: "{ series, label, value, index }", description: "A datum was activated.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{

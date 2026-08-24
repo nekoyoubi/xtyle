@@ -16,6 +16,7 @@ interface Props {
 	readonly?: boolean;
 	invalid?: boolean;
 	required?: boolean;
+	requiredMessage?: string;
 	clearable?: boolean;
 	description?: string;
 	error?: string;
@@ -43,6 +44,7 @@ const {
 	readonly = false,
 	invalid = false,
 	required = false,
+	requiredMessage,
 	clearable = false,
 	description,
 	error,
@@ -111,6 +113,7 @@ const composed = composeFallbackSlot(composeFallbackSlot(light, "reveal-icon", r
 	readonly={readonly || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	clearable={clearable || undefined}
 	mono={mono || undefined}
 	description={description}

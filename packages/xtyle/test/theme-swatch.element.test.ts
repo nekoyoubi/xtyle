@@ -18,10 +18,16 @@ function mount(attrs: Record<string, string> = {}): HTMLElement {
 	return el;
 }
 
-/** The row derives through a dynamic import, so a test waits for the settled event. */
+/**
+ * The row derives through a dynamic import, so a test waits for the settled event. The bound is
+ * generous on purpose: settling costs a sandboxed derive, which measures ~5.8s on an idle machine
+ * against the 8s this used to allow, so ordinary full-suite contention tipped it rather than any
+ * failure. These assertions ask whether the row composes what it claims, never how fast; a genuine
+ * hang still fails.
+ */
 async function settled(el: HTMLElement): Promise<CustomEvent> {
 	return await new Promise((resolve, reject) => {
-		const timer = setTimeout(() => reject(new Error("theme swatch never settled")), 8000);
+		const timer = setTimeout(() => reject(new Error("theme swatch never settled")), 30_000);
 		el.addEventListener(
 			"xtyle:theme-swatch",
 			(event) => {

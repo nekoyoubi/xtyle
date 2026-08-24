@@ -42,6 +42,11 @@ export const dialogCss = `
 	padding: var(--space-4) var(--space-5);
 	border-bottom: var(--border-thin) solid var(--line);
 }
+.xtyle-dialog__header > *:not(.xtyle-dialog__close):not(slot),
+.xtyle-dialog__header slot[name="header"]::slotted(*) {
+	flex: 1;
+	min-width: 0;
+}
 .xtyle-dialog__title {
 	flex: 1;
 	margin: 0;
@@ -68,14 +73,17 @@ export const dialogCss = `
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 1.5em;
-	height: 1.5em;
+	width: 2em;
+	height: 2em;
+	min-width: 24px;
+	min-height: 24px;
 	flex: none;
 	padding: 0;
 	color: var(--fg-2);
 	background: transparent;
 	border: none;
 	border-radius: var(--radius-sm);
+	box-shadow: inset 0 0 0 var(--border-thin) var(--line);
 	cursor: pointer;
 	position: relative;
 	isolation: isolate;
@@ -94,6 +102,7 @@ export const dialogCss = `
 }
 .xtyle-dialog__close:hover {
 	color: var(--fg-0);
+	box-shadow: inset 0 0 0 var(--border-thin) var(--fg-3);
 }
 .xtyle-dialog__close:hover::after { background: var(--state-hover); }
 .xtyle-dialog__close:active::after { background: var(--state-press); }

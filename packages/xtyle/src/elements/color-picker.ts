@@ -32,14 +32,19 @@ export class XtyleColorPicker extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 	private hsv: Hsv = { h: 217, s: 0.64, v: 1 };
 	private alpha = 1;
 	private planeMaxC = PLANE_MAX_C;
 	private lastShape = "";
 	private needsWire = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "color-picker", {
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
+			this.verifyFormName();
 			this.paint();
 			if (this.needsWire && !this.disabled) {
 				this.wireEvents();
@@ -215,7 +220,7 @@ export class XtyleColorPicker extends XtyleElement {
 	}
 
 	private emit(kind: "input" | "change"): void {
-		this.dispatchEvent(new Event(kind, { bubbles: true, composed: true }));
+		this.emitOwn(kind, null, { value: this.value });
 	}
 
 	private setColor(hsv: Hsv, alpha: number, kind: "input" | "change"): void {
@@ -607,7 +612,8 @@ export class XtyleColorPicker extends XtyleElement {
 		);
 		this.el(".xtyle-color-picker__alpha-handle")?.addEventListener("keydown", (e) => this.onAlphaKeydown(e as KeyboardEvent));
 		const valueInput = this.el(".xtyle-color-picker__value") as HTMLInputElement | null;
-		valueInput?.addEventListener("change", () => this.onValueCommit(valueInput));
+		valueInput?.addEventListener("input", (event) => event.stopImmediatePropagation());
+		valueInput?.addEventListener("change", (event) => this.applying(event, () => this.onValueCommit(valueInput)));
 		valueInput?.addEventListener("keydown", (e) => {
 			if ((e as KeyboardEvent).key === "Enter") {
 				e.preventDefault();
@@ -636,8 +642,8 @@ export class XtyleColorPicker extends XtyleElement {
 		this.el(".xtyle-color-picker__plane")?.addEventListener("pointerdown", (e) => this.dragPlane(e as PointerEvent));
 		this.el(".xtyle-color-picker__plane-handle")?.addEventListener("keydown", (e) => this.onPlaneKeydown(e as KeyboardEvent));
 		const channels = this.el(".xtyle-color-picker__channels");
-		channels?.addEventListener("input", () => this.commitChannels("input"));
-		channels?.addEventListener("change", () => this.commitChannels("change"));
+		channels?.addEventListener("input", (event) => this.applying(event, () => this.commitChannels("input")));
+		channels?.addEventListener("change", (event) => this.applying(event, () => this.commitChannels("change")));
 		this.el(".xtyle-color-picker__snaps")?.addEventListener("click", (event) => {
 			const button = (event.target as HTMLElement).closest<HTMLElement>(".xtyle-color-picker__snap");
 			if (button?.dataset.snap) this.applySnap(button.dataset.snap);

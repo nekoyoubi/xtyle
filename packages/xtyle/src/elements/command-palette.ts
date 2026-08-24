@@ -35,6 +35,13 @@ interface GroupView {
 /** How far PageUp / PageDown move the active command. */
 const PAGE = 5;
 
+/**
+ * What a command scores when the query's first word is its id and `complete-first` is on. The default
+ * scorer reads labels, not ids, so a completed name would otherwise filter its own command out of the
+ * list and leave the second Enter with nothing to run.
+ */
+const NAMED_SCORE = 1e6;
+
 /** How many ids the recents list remembers, regardless of how many `recentLimit` renders. */
 const RECENT_CAP = 25;
 
@@ -116,7 +123,7 @@ export class XtyleCommandPalette extends XtyleElement {
 	private docWired = false;
 	private recentLoaded = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "command-palette", {
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => this.afterApply(),
 	});
 
@@ -133,6 +140,7 @@ export class XtyleCommandPalette extends XtyleElement {
 			"no-recent",
 			"no-footer",
 			"no-close-on-select",
+			"complete-first",
 			"hotkey",
 			"storage-key",
 		];
@@ -237,6 +245,20 @@ export class XtyleCommandPalette extends XtyleElement {
 	}
 	set recentLimit(value: number) {
 		this.reflectString("recent-limit", String(value));
+	}
+
+	/**
+	 * Make Enter commit the active command's name before it runs anything. Landing on a command the
+	 * query's first word does not already name — half-typed, fuzzy-matched, or arrowed to — completes
+	 * the input and waits, so a second Enter runs it. Off by default: an index palette wants one Enter
+	 * to run what you landed on. Turn it on for a palette whose query carries a command's arguments,
+	 * where a single keystroke on a half-typed name would run the wrong verb.
+	 */
+	get completeFirst(): boolean {
+		return this.hasAttribute("complete-first");
+	}
+	set completeFirst(value: boolean) {
+		this.reflectBoolean("complete-first", value);
 	}
 
 	/** Don't track or surface recently-run commands at all. */
@@ -354,7 +376,10 @@ export class XtyleCommandPalette extends XtyleElement {
 		if (this.queryValue === value) return;
 		this.queryValue = value;
 		this.activeValue = "";
+		const input = this.inputEl;
+		if (input && input.value !== value) input.value = value;
 		this.paint();
+		this.dispatchEvent(new CustomEvent("query", { bubbles: true, composed: true, detail: { query: value } }));
 	}
 
 	/** Re-rank and repaint the surface. Everything the palette does in response to a keystroke goes through
@@ -370,10 +395,11 @@ export class XtyleCommandPalette extends XtyleElement {
 	private compute(): void {
 		const query = this.queryValue.trim();
 		const scorer = this.scorer;
+		const named = this.completeFirst ? (query.split(/\s+/)[0] ?? "") : "";
 		const ranked: { item: CommandItem; match: CommandMatch; order: number }[] = [];
 		this.items.forEach((item, order) => {
 			if (!item || typeof item.id !== "string") return;
-			const match = scorer(query, item);
+			const match = named !== "" && item.id === named ? { score: NAMED_SCORE } : scorer(query, item);
 			if (match) ranked.push({ item, match, order });
 		});
 		if (query !== "") ranked.sort((a, b) => b.match.score - a.match.score || a.order - b.order);
@@ -423,16 +449,22 @@ export class XtyleCommandPalette extends XtyleElement {
 		}
 	}
 
-	/** The recents that lead an unfiltered list: ids we remember, still present, still runnable, newest first. */
+	/**
+	 * The recents that lead an unfiltered list, newest first. An entry naming a live command renders that
+	 * command; one that names nothing in `items` is a *line* — the whole input a consumer chose to keep,
+	 * arguments and all — and renders as itself. A command line's history is its lines, not the verbs that
+	 * started them, and an id can only ever remember that you ran `rect`, never the rectangle.
+	 */
 	private recentEntries(
 		query: string,
 		ranked: { item: CommandItem; match: CommandMatch; order: number }[],
 	): { item: CommandItem; match: CommandMatch }[] {
 		if (query !== "" || this.noRecent || this.recentLimit === 0) return [];
 		const out: { item: CommandItem; match: CommandMatch }[] = [];
-		for (const id of this.recentIds) {
-			const entry = ranked.find((candidate) => candidate.item.id === id && !candidate.item.disabled);
-			if (entry) out.push({ item: entry.item, match: entry.match });
+		for (const entry of this.recentIds) {
+			const known = ranked.find((candidate) => candidate.item.id === entry && !candidate.item.disabled);
+			if (known) out.push({ item: known.item, match: known.match });
+			else out.push({ item: { id: entry, label: entry }, match: { score: 0 } });
 			if (out.length >= this.recentLimit) break;
 		}
 		return out;
@@ -464,15 +496,20 @@ export class XtyleCommandPalette extends XtyleElement {
 		if (item.disabled) return;
 		const index = this.navigable.findIndex((entry) => entry.id === item.id);
 		this.remember(item.id);
-		this.dispatchEvent(
-			new CustomEvent("select", {
-				bubbles: true,
-				composed: true,
-				detail: { id: item.id, label: item.label, item, index, query: this.queryValue },
-			}),
-		);
+		this.emitOwn("select", undefined, {
+			id: item.id,
+			label: item.label,
+			item,
+			index,
+			query: this.queryValue,
+		});
 		if (this.noCloseOnSelect) this.paint();
 		else this.close("select");
+	}
+
+	private queryNames(item: CommandItem): boolean {
+		const head = this.queryValue.trim().split(/\s+/)[0] ?? "";
+		return head !== "" && head === item.id;
 	}
 
 	private remember(id: string): void {
@@ -522,7 +559,7 @@ export class XtyleCommandPalette extends XtyleElement {
 	private openDialog(dialog: HTMLDialogElement): void {
 		if (!this.returnFocusTo) this.captureReturnFocus();
 		this.portalToBody();
-		this.queryValue = "";
+		this.setQuery("");
 		this.activeValue = "";
 		this.paint();
 		const input = this.inputEl;
@@ -607,6 +644,10 @@ export class XtyleCommandPalette extends XtyleElement {
 		}
 		if (intent.commitValue) {
 			const item = this.navigable.find((entry) => entry.id === this.activeValue);
+			if (item && this.completeFirst && !this.queryNames(item)) {
+				this.setQuery(`${item.id} `);
+				return;
+			}
 			if (item) this.select(item);
 			return;
 		}
@@ -630,6 +671,13 @@ export class XtyleCommandPalette extends XtyleElement {
 			this.root.addEventListener("click", (event) => {
 				if (event.target === this.dialogEl) this.close("dismiss");
 			});
+			this.addEventListener(
+				"select",
+				(event) => {
+					if (event.composedPath()[0] !== this) event.stopImmediatePropagation();
+				},
+				{ capture: true },
+			);
 		}
 		const dialog = this.dialogEl;
 		if (dialog && dialog !== this.wiredDialog) {

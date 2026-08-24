@@ -147,9 +147,33 @@ describe("fragment escaping", () => {
 			const itemMembers = collectionStringMembers(src);
 			if (!fields.size && !itemMembers.size) continue;
 
+			const functions = [...src.matchAll(/function\s+(\w+)\s*\([^)]*\)\s*:\s*([^{]*)\{([\s\S]*?)\n\}/g)];
 			const markupHelpers = new Set(
-				[...src.matchAll(/function\s+(\w+)\s*\([^)]*\)[^{]*\{([\s\S]*?)\n\}/g)]
-					.filter(([, , body]) => /return\s*[`"']\s*<[a-z/]/.test(body) || /`\s*<[a-z]/.test(body))
+				functions
+					.filter(([, , , body]) => /return\s*[`"']\s*<[a-z/]/.test(body) || /`\s*<[a-z]/.test(body))
+					.map(([, name]) => name),
+			);
+			const carriesField = (text: string): boolean =>
+				[...text.replace(/\b[A-Z][A-Z0-9_]*\s*\[[^\]]*\]/g, "").matchAll(/\b(?:b|bindings)\.(\w+)\b/g)].some((m) =>
+					fields.has(m[1]),
+				);
+
+			const valueHelpers = new Set(
+				functions
+					.filter(([, name]) => !markupHelpers.has(name))
+					.filter(([, , type]) => /\bstring\b/.test(type))
+					.filter(([, , , body]) => !escaped.test(body))
+					.filter(([, , , body]) => {
+						const locals = new Set<string>();
+						for (const [, local, init] of body.matchAll(/\b(?:const|let)\s+(\w+)\s*(?::[^=]+)?=\s*(.+?);/g)) {
+							if (carriesField(init)) locals.add(local);
+						}
+						return [...body.matchAll(/return\s+([\s\S]*?);/g)].some(
+							([, expr]) =>
+								carriesField(expr) ||
+								[...expr.matchAll(/\b([A-Za-z_$][\w$]*)\b/g)].some((m) => locals.has(m[1])),
+						);
+					})
 					.map(([, name]) => name),
 			);
 
@@ -157,11 +181,21 @@ describe("fragment escaping", () => {
 			for (const [, name, init] of src.matchAll(/\b(?:const|let)\s+(\w+)\s*(?::[^=]+)?=\s*([\s\S]{0,400}?);\n/g)) {
 				if (escaped.test(init) || /[`"']\s*<[a-z/]|="/.test(init) || /\.map\(|\.join\(/.test(init)) continue;
 				if ([...markupHelpers].some((fn) => new RegExp(`\\b${fn}\\s*\\(`).test(init))) continue;
-				if ([...init.matchAll(/\b(?:b|bindings)\.(\w+)\b/g)].some((m) => fields.has(m[1]))) carriesBinding.add(name);
+				if (carriesField(init)) carriesBinding.add(name);
+				else if (
+					[...valueHelpers].some((fn) =>
+						new RegExp(`\\b${fn}\\s*\\(`).test(init.replace(/\b[A-Z][A-Z0-9_]*\s*\[[^\]]*\]/g, "")),
+					)
+				)
+					carriesBinding.add(name);
 			}
+
+			const literalTernary = /^[^?]+\?\s*(["'])[^"']*\1\s*:\s*(["'])[^"']*\2$/;
 
 			for (const { expr, context } of markupInterpolations(src)) {
 				if (context === "other" || escaped.test(expr)) continue;
+				if (literalTernary.test(expr.trim())) continue;
+				if ([...markupHelpers].some((fn) => new RegExp(`\\b${fn}\\s*\\(`).test(expr))) continue;
 
 				const imported = [...src.matchAll(/import \{([^}]+)\} from "[^"]+";/g)]
 					.flatMap((m) => m[1].split(",").map((s) => s.trim().split(/\s+as\s+/).pop()!))
@@ -183,6 +217,13 @@ describe("fragment escaping", () => {
 			}
 		}
 		expect(holes).toEqual([]);
+	});
+
+	it("lands a switch's state label as text, not as markup", async () => {
+		const { renderFragmentLight } = await import("../src/elements/fragment-ssr.js");
+		const html = await renderFragmentLight("switch", { checked: true, onLabel: "<img src=x onerror=go>" });
+		expect(html).toContain("&lt;img src=x onerror=go&gt;");
+		expect(html).not.toContain("<img");
 	});
 
 	it("escapes the characters that break out of attributes and text", () => {

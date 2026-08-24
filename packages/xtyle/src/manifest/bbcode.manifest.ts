@@ -158,6 +158,7 @@ export const bbcodeManifest: ComponentManifest = {
 	description:
 		"BBCode renders forum-style markup into HTML that themes entirely from the token register: quotes and rules ride the border and surface ramps, sizes ride the type scale, and `[code]` renders a real `<xtyle-code>` so a code block inside a post and an `<xtyle-code>` beside it agree in any theme. The roster is **phpBB's core set** — `[b]`, `[i]`, `[u]`, `[url]`, `[img]`, `[email]`, `[quote]`, `[code]`, `[list]`/`[*]`, `[color]`, `[size]` — plus declared extensions where the major dialects agree: `[s]`, `[sub]`/`[sup]`, `[mark]`, `[font]`, `[bg]`, `[spoiler]`, `[noparse]`, `[hr]`, `[br]`, `[h1]`–`[h6]`, `[table]`/`[tr]`/`[td]`/`[th]`, and the four alignments. `inline` switches to a label render for a chip or a tab title. **It ships no sanitizer, and unlike Markdown there is no `allowHtml` either** — BBCode has no raw-HTML passthrough to lift, so everything that is not a registered tag is escaped to text and every tag emits markup the renderer wrote itself, from a bounded set. The two places an author's value still reaches an attribute are handled by name: URLs go through the same scheme allowlist Markdown uses, and style values (`[color]`, `[size]`, `[font]`, `[bg]`) are matched against narrow patterns rather than escaped, because `red;background:url(…)` survives escaping intact and is still a second declaration. **`vocabulary` is the interesting attribute.** One registry backs every instance and a vocabulary is a named subset of it, so a story body can admit `[choice]` while an author bio beside it cannot — refusal by construction rather than by filtering afterward. `registerBbcodeTags` adds tags, `defineBbcodeVocabulary` composes them into a named set, and an instance picks one by name; a tag outside the set renders as its literal text. The same seam is reachable from Markdown through `processBbcode`, which composes both languages in one body.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["bbcode", "body", "controls", "editor", "toggle"],
 	anatomy: [
 		{
 			name: "body",
@@ -256,6 +257,9 @@ export const bbcodeManifest: ComponentManifest = {
 				"Whether the source view is showing. Only meaningful alongside `editable`; setting it alone would strand the reader in a box with no way out, so it is ignored.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "input", detail: "{ source }", description: "The editable source changed. The payload is the author's BBCode, not rendered HTML.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

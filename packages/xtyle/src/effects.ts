@@ -47,6 +47,13 @@ export interface EffectParam {
 	 * this simply stops when it runs out of targets.
 	 */
 	expands?: string[];
+	/**
+	 * The literal values this param accepts, for a param whose vocabulary is CSS keywords rather than
+	 * magnitudes or colors. A bare word otherwise reads as a token reference — the grammar that makes
+	 * `color:accent` mean `var(--accent)` — which would turn `direction:reverse` into `var(--reverse)`
+	 * and silently drop the declaration.
+	 */
+	keywords?: string[];
 }
 
 /** One effect: the declarations it applies, its tunables, and how it behaves under reduced motion. */
@@ -82,6 +89,14 @@ export interface EffectDefinition {
 	 * the moment has come. `armInView` drives every effect declaring this, so a mod's own enter effect is
 	 * observed on the same terms `reveal` is instead of being a name the runtime hardcodes. */
 	arms?: boolean;
+	/**
+	 * Whether `--fx-intensity` scales the effect. Default true. An effect whose magnitude *is* the
+	 * effect — a halo's spread, a lift's distance — degrades to absent at zero, which is the layer
+	 * working. A rotation has no amplitude to spend: scaling its arc yields a partial turn that snaps
+	 * back every cycle, and scaling its rate yields a slower spinner rather than a calmer one. Declaring
+	 * it keeps the exemption legible instead of leaving it as an interpolation someone forgot.
+	 */
+	scalesWithIntensity?: boolean;
 	/** True when the effect fires once and is over, rather than lasting as long as a state does. Marks
 	 * the set `fireEffect` is for, so a catalog, a doc, or an authoring surface can name the transients
 	 * without each one keeping its own copy of the list. */
@@ -271,6 +286,7 @@ export function resolveEffectArg(raw: string, param?: EffectParam): string {
 	}
 	if (/^-?\d*\.?\d+$/.test(value)) return param?.unit ? `${value}${param.unit}` : value;
 	if (/^-?\d*\.?\d+[a-z%]+$/i.test(value)) return value;
+	if (param?.keywords?.some((keyword) => keyword.toLowerCase() === value.toLowerCase())) return value.toLowerCase();
 	if (/^[a-z][a-z0-9-]*$/i.test(value)) return `var(--${value.replace(/([a-z])(\d+)$/i, "$1-$2")})`;
 	return value;
 }
@@ -469,6 +485,20 @@ const BUILT_INS: EffectDefinition[] = [
 		params: [{ name: "angle", unit: "deg" }, { name: "rate", property: "--fx-wobble-duration", unit: "ms" }],
 		active: `animation:xtyle-fx-wobble ${own("wobble", "duration", `calc(${DURATION} * 2.5)`)} ${EASE}`,
 		extra: `@keyframes xtyle-fx-wobble{0%,100%{rotate:0deg}20%,60%{rotate:calc(-1 * ${own("wobble", "angle", "4deg")} * ${INTENSITY})}40%,80%{rotate:calc(${own("wobble", "angle", "4deg")} * ${INTENSITY})}}`,
+	},
+	{
+		name: "spin",
+		since: "0.12.0",
+		scalesWithIntensity: false,
+		description: "A continuous rotation; the ambient \"still working\" verb, where `wobble` is a one-shot jitter.",
+		tags: ["spin", "rotate", "loading", "busy", "working", "progress", "ambient", "loop"],
+		animated: true,
+		params: [
+			{ name: "rate", property: "--fx-spin-duration", unit: "s" },
+			{ name: "direction", keywords: ["normal", "reverse", "alternate", "alternate-reverse"] },
+		],
+		active: `animation:xtyle-fx-spin ${own("spin", "duration", `calc(${DURATION} * 6)`)} linear infinite ${own("spin", "direction", "normal")}`,
+		extra: `@keyframes xtyle-fx-spin{to{rotate:360deg}}`,
 	},
 	{
 		name: "saturate",

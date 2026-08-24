@@ -1,4 +1,5 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
 import { PALETTES } from "../series.js";
 
 const htmlExample = `<xtyle-rating value="3" label="Rate this product"></xtyle-rating>
@@ -7,7 +8,7 @@ const htmlExample = `<xtyle-rating value="3" label="Rate this product"></xtyle-r
 
 <xtyle-rating value="4" icon="heart" tone="red" label="Rate this recipe"></xtyle-rating>
 
-<xtyle-rating value="3.5" allowhalf label="Rate this stay"></xtyle-rating>
+<xtyle-rating value="3.5" allow-half label="Rate this stay"></xtyle-rating>
 
 <xtyle-rating value="4" icon="crest--shield-c1--star-s45-cf" colors="skittles" label="Rate this guild"></xtyle-rating>
 
@@ -41,6 +42,7 @@ const svelteExample = `<script lang="ts">
 
 const astroExample = `---
 import Rating from "@xtyle/astro/Rating.astro";
+import { FULL_TONES } from "../vocab.js";
 ---
 
 <Rating value={3} label="Rate this product" />
@@ -70,6 +72,7 @@ export const ratingManifest: ComponentManifest = {
 	description:
 		"Rating draws `max` icons and overlays a colored copy clipped to `value / max`, so a fractional value like 4.5 shows an exact partial icon rather than rounding. It renders two rows: a neutral **base** row (the icon silhouetted to a muted track color) and a **filled** row (the icon in full color) clipped to the value fraction. Both rows are the component's fill, not markup the element hardcodes, so a mod filling `component.rating` can swap the star for a heart, clip the fill by mask or by count instead of by width, or restructure the row entirely — the element keeps the value, the keys, the pointer, and the ARIA either way. Any icon works: the default `star`, any functional glyph (`heart`, `bolt`, …), or a composed colorful mark spec (`taco--…`), drawn through the icon system. A monochrome glyph takes its fill from `tone` (a register hue), a colorful mark draws its palette from `colors`. By default it is an interactive slider — focusable, `role=\"slider\"`, driven by pointer drag, click, and Arrow/Home/End keys, with a hover preview, firing `input` and `change` and posting through a hidden input when `name` is set. Add `readonly` and it becomes a fixed `role=\"img\"` display for an average score, a product rating, a survey result. The element's own text is the no-JS fallback and the accessible label. Override `--rating-track` (base color, defaults to `--neutral-bg`) or `--rating-fill` (fill color, defaults to `--accent`) per instance to retune it.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["fill", "rows", "track"],
 	anatomy: [
 		{
 			name: "root",
@@ -135,14 +138,16 @@ export const ratingManifest: ComponentManifest = {
 			name: "allowHalf",
 			type: "boolean",
 			default: "false",
-			description: "Snaps interactive input (pointer and keys) to half steps instead of whole ones. Attribute is `allowhalf`.",
+			description: "Snaps interactive input (pointer and keys) to half steps instead of whole ones. The attribute is `allow-half`; the older all-lowercase `allowhalf` is still read.",
 			bindings: ["html", "svelte", "astro"],
+			aliases: ["allowhalf"],
 		},
 		{
 			name: "tone",
 			type: "string",
 			description: "Fill hue for a monochrome icon: a register token name (`accent`, `success`, `red`, …). Sets `--rating-fill`.",
 			bindings: ["html", "svelte", "astro"],
+			options: [...FULL_TONES],
 		},
 		{
 			name: "colors",
@@ -180,6 +185,10 @@ export const ratingManifest: ComponentManifest = {
 				"Astro only: keep the server-rendered glyph row and its clipped fill but never load the runtime to hydrate them — a static rating reads correctly, including a fractional value. Pointer and keyboard input are what hydration adds, which is what `readonly` already opts out of. The Svelte and raw-element paths always upgrade, so they carry no equivalent.",
 			bindings: ["astro"],
 		},
+	],
+	events: [
+		{ name: "input", detail: "{ value }", description: "The rating changed as the pointer moves across the row.", bindings: ["html", "svelte", "astro"] },
+		{ name: "change", detail: "{ value }", description: "The rating was committed.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [

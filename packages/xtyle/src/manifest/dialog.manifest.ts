@@ -1,6 +1,6 @@
 import type { ComponentManifest } from "./types.js";
 
-const htmlExample = `<xtyle-button variant="solid" tone="accent" onclick="document.getElementById('confirm').showModal()">
+const htmlExample = `<xtyle-button variant="solid" tone="danger" onclick="document.getElementById('confirm').showModal()">
 	Delete account
 </xtyle-button>
 
@@ -12,7 +12,13 @@ const htmlExample = `<xtyle-button variant="solid" tone="accent" onclick="docume
 		</xtyle-button>
 		<xtyle-button variant="solid" tone="danger">Delete</xtyle-button>
 	</div>
-</xtyle-dialog>`;
+</xtyle-dialog>
+
+<script>
+	document.getElementById("confirm").addEventListener("close", (event) => {
+		if (event.detail.reason !== "api") console.log("dismissed without deciding");
+	});
+</script>`;
 
 const svelteExample = `<script lang="ts">
 	import { Button, Dialog } from "@xtyle/svelte";
@@ -20,7 +26,7 @@ const svelteExample = `<script lang="ts">
 	let open = $state(false);
 </script>
 
-<Button variant="solid" tone="accent" onclick={() => (open = true)}>Delete account</Button>
+<Button variant="solid" tone="danger" onclick={() => (open = true)}>Delete account</Button>
 
 <Dialog bind:open heading="Delete account?" size="sm">
 	<p>This permanently removes your account and all of its data. This cannot be undone.</p>
@@ -34,7 +40,7 @@ const astroExample = `---
 import { Button, Dialog } from "@xtyle/astro";
 ---
 
-<Button variant="solid" tone="accent" id="open-confirm">Delete account</Button>
+<Button variant="solid" tone="danger" id="open-confirm">Delete account</Button>
 
 <Dialog heading="Delete account?">
 	<p>This permanently removes your account and all of its data. This cannot be undone.</p>
@@ -61,6 +67,7 @@ export const dialogManifest: ComponentManifest = {
 	description:
 		"Dialog is a centered modal that wraps the platform `<dialog>` element, so the native modal machinery (the top-layer scrim, the focus trap, focus restore on close, `Escape` to dismiss, and the `role`/`aria-modal` semantics) all comes from the browser rather than re-implemented JavaScript. Open and close it imperatively with `showModal()` / `close()` (or the reactive `open` prop in the framework wrappers). It lays out a header, a scrolling body, and a footer via named slots, and ships a close button by default. The header is wired to the dialog with `aria-labelledby` whenever a `heading` (or explicit `labelledby`) is supplied; a dialog that brings its own `header` slot instead names itself with `label`, since `aria-labelledby` cannot reach a slotted title across the shadow boundary. Five sizes (sm, md, lg, xl, full) cap its width while it stays responsive on small screens; `xl` (64rem) and `full` cover editor-class content, and the inner panel is exposed as `::part(dialog)` so a consumer can size or style it to an exact width directly.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["body", "close", "dialog", "footer", "header"],
 	anatomy: [
 		{
 			name: "dialog",
@@ -171,6 +178,25 @@ export const dialogManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
+	events: [
+		{ name: "cancel", description: "Escape was pressed. Cancelable: prevent it to keep the dialog open.", bindings: ["html", "svelte", "astro"] },
+		{ name: "close", detail: "{ reason }", description: "The dialog closed.", bindings: ["html", "svelte", "astro"] },
+	],
+	methods: [
+		{
+			name: "showModal",
+			description:
+				"Open the dialog as a modal: the top layer, a backdrop, focus moved inside, and the rest of the page inert. The `open` attribute reflects it, so a consumer can drive it either way.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "close",
+			params: "reason?: DialogCloseReason",
+			description:
+				"Close the dialog and hand focus back to whatever opened it. Fires `close` whether it was dismissed, escaped, or closed from script, and reports which as `detail.reason` — `escape`, `backdrop`, `dismiss`, or `api`.",
+			bindings: ["html", "svelte"],
+		},
+	],
 	variants: [],
 	sizes: [
 		{ name: "sm", description: "Compact: for short confirmations.", className: "xtyle-dialog--sm" },
@@ -232,6 +258,7 @@ export const dialogManifest: ComponentManifest = {
 		"--fg-0",
 		"--fg-1",
 		"--fg-2",
+		"--fg-3",
 		"--surface-overlay",
 		"--surface-overlay-border",
 		"--scrim",
@@ -254,6 +281,8 @@ export const dialogManifest: ComponentManifest = {
 		"--state-press",
 	],
 	composition: [
+		"While open, the host relocates to `document.body` — a modal `<dialog>` anchors to the nearest ancestor that establishes a containing block, so one declared inside a transformed or filtered panel would center on that panel rather than the viewport. The consequence is that it stops being a descendant of whatever declared it, precisely while it is visible: a `bind:this` container query and a framework-scoped selector both go dead on open and come back on close. Reach it by `id` (`document.getElementById`, `:global(#that-id)`), which survives the move.",
+		"An inherited property an app sets document-wide (`cursor`, `font-family`) reaches this component's internals only through its light-DOM host, so set it on the host rather than on the rendered `dialog`. A document-level rule cannot cross the shadow boundary, which is why an app that hides the OS cursor gets a cursorless overlay until the declaration moves onto the element itself.",
 		"Pair the footer with Button for the action row; wire a ghost neutral Cancel to `close()` and the primary action to its handler.",
 		"Use `heading` for the common titled case; drop in a `header` slot when the title needs an icon, badge, or subtitle.",
 		"Set `no-close-button` when the dialog is a blocking confirm whose only exits are explicit footer actions.",

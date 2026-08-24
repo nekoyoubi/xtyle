@@ -173,6 +173,7 @@ export const comboboxCss = `
 	background: var(--bg-1);
 }
 .xtyle-combobox__list {
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
@@ -214,6 +215,7 @@ export const comboboxCss = `
 	color: currentColor;
 }
 .xtyle-combobox__empty {
+	box-sizing: border-box;
 	width: var(--xtyle-combobox-anchor);
 	max-width: 100%;
 	margin: 0;

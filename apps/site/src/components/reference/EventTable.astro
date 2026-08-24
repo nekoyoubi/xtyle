@@ -1,0 +1,84 @@
+---
+import type { EventDef } from "@xtyle/core";
+import { renderMarkdownInline } from "@xtyle/core/markup";
+import Table from "@xtyle/astro/Table.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Badge from "@xtyle/astro/Badge.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+interface Props {
+	events: EventDef[];
+}
+
+const { events } = Astro.props;
+const bindingOrder = ["html", "svelte", "astro"] as const;
+---
+
+{events.length > 0 && (
+	<Table variant="striped" ariaLabel="Component events">
+		<table>
+			<thead>
+				<tr>
+					<th scope="col">Event</th>
+					<th scope="col">Detail</th>
+					<th scope="col">Bindings</th>
+					<th scope="col">Description</th>
+				</tr>
+			</thead>
+			<tbody>
+				{events.map((e) => (
+					<tr>
+						<td>
+							<Badge tone="accent" size="sm" class="event-name-badge">{e.name}</Badge>
+							{e.handler && (
+								<Text as="span" size="sm" tone="muted" mono class="event-handler">
+									svelte: {e.handler}
+								</Text>
+							)}
+						</td>
+						<td>
+							{e.detail ? (
+								<Text as="span" size="sm" tone="muted" mono class="event-detail">{e.detail}</Text>
+							) : (
+								<Text as="span" size="sm" tone="subtle" aria-label="No payload">—</Text>
+							)}
+						</td>
+						<td>
+							<Cluster gap={1}>
+								{bindingOrder
+									.filter((b) => e.bindings.includes(b))
+									.map((b) => (
+										<Badge variant="outline" size="sm">{b}</Badge>
+									))}
+							</Cluster>
+						</td>
+						<td>
+							<Text as="span" size="sm" class="event-desc" set:html={renderMarkdownInline(e.description)} />
+						</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	</Table>
+)}
+
+<style>
+	.event-name-badge {
+		font-family: var(--font-mono);
+		font-weight: var(--weight-semibold);
+	}
+	.event-detail {
+		display: inline-block;
+		max-width: 22rem;
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+	.event-handler {
+		display: block;
+		margin-top: var(--space-1);
+	}
+	.event-desc {
+		display: inline-block;
+		min-width: 16rem;
+	}
+</style>

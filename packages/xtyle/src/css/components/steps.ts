@@ -39,7 +39,7 @@ export const stepsCss = `
 .xtyle-steps__connector {
 	position: absolute;
 	top: 0.9rem;
-	left: -50%;
+	inset-inline-start: -50%;
 	width: 100%;
 	height: var(--border-thick);
 	background: var(--line);

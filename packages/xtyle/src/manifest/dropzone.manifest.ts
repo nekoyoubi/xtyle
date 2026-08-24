@@ -124,6 +124,7 @@ export const dropzoneManifest: ComponentManifest = {
 	description:
 		"Dropzone takes files — by drag-and-drop, by keyboard through a real `<input type=\"file\">`, by paste, or **programmatically**. That last one is the point. Inside a native shell (Tauri, Electron, WebView2) the operating system hands a file drop to the *webview*, not to the document, so DOM `dragover` / `drop` never fire and a DOM-only drop target is silently inert in exactly the desktop apps this library exists to serve. So the DOM listener here is one input, not *the* input: `addFiles(items)` is the public seam every ingress runs through, and it takes `File` objects, bare **filesystem paths** (what a native drop actually gives you — there is no `File` behind them), or descriptors carrying whatever the host knows. `setDragging(active, rejecting)` drives the hover and reject skins from a host that owns the drag, and `routeNativeDrop(state, { x, y, items })` wires a shell's own drag events straight through to whichever zone sits under the pointer. Everything is validated identically no matter where it came from: `accept` by extension or mime (a path-only file has its type inferred from its extension), `max-size` per file (`5mb`, `500kb`, or bytes), `max-files` by count, plus duplicate rejection — and every failure lands on a real error surface with a human message, not a silent drop. Every batch reports itself: `file-drop` carries what was accepted, what was refused, and which ingress it came through; `file-reject` carries the refusals alone; `file-remove` fires when a row is dropped; and `change` fires whenever the accepted list moves. Accepted files render as an upload list with a per-file bar the host drives (`setProgress`, `setStatus`) and a remove button; `removeFile(id)` moves focus to the next row. Keyboard and screen-reader access is not an afterthought: a real, focusable `<input type=\"file\">` sits under the surface as the keyboard path and as the `<form>` value, and the accepted list is written back to it so a rejected file can never post. It server-renders whole, too — the `@xtyle/astro` binding emits the resolved surface, the derived hint, and that file input, so the zone is a working picker and form field before any JavaScript loads (and stays one, with `static`, if none ever does). The surface, its idle / hover / reject / disabled states, the rejection list, and the upload rows are all the fill's markup (`component.dropzone`) — a mod reshapes every one of them while the element keeps the drop logic.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["bar", "browse", "clear", "count", "error", "errors", "file", "file-error", "file-icon", "file-meta", "file-name", "foot", "hint", "icon", "list", "prompt", "remove", "root", "surface", "track"],
 	anatomy: [
 		{
 			name: "root",
@@ -290,6 +291,14 @@ export const dropzoneManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "rejecting",
+			type: "boolean",
+			default: "false",
+			description:
+				"The refuse half of the hover state: the surface says the drag would be turned away before the drop happens. Only meaningful alongside `dragging`, and set the same two ways — by the DOM listeners, or by `setDragging(true, true)` from a host that owns the drag.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "static",
 			type: "boolean",
 			default: "false",
@@ -304,6 +313,12 @@ export const dropzoneManifest: ComponentManifest = {
 				"Svelte only: every batch, whatever ingress it came through (`detail: { accepted, rejected, files, source }`). The raw element and the Astro path listen for the `file-drop` event itself; `file-reject` (`onfilereject`), `file-remove` (`onfileremove`), and `change` (`onchange`) are the rest of the set.",
 			bindings: ["svelte"],
 		},
+	],
+	events: [
+		{ name: "file-drop", detail: "{ accepted, rejected, files, source }", description: "A batch arrived, whatever ingress it came through.", bindings: ["html", "svelte", "astro"], handler: "onfiledrop" },
+		{ name: "file-reject", detail: "{ rejected }", description: "A batch lost files to validation.", bindings: ["html", "svelte", "astro"], handler: "onfilereject" },
+		{ name: "file-remove", detail: "{ file }", description: "A file was dropped from the list.", bindings: ["html", "svelte", "astro"], handler: "onfileremove" },
+		{ name: "change", detail: "{ files }", description: "The accepted list moved — an add, a removal, a clear.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

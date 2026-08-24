@@ -51,6 +51,8 @@
 		...rest
 	}: Props = $props();
 
+	let host: HTMLElement | undefined = $state();
+
 	function sync(event: Event) {
 		const target = event.currentTarget as HTMLElement & { value: number };
 		value = target.value;
@@ -59,14 +61,22 @@
 		sync(event);
 		onresize?.(event as CustomEvent<SplitterResizeDetail>);
 	}
-	function handleResizeEnd(event: Event) {
-		sync(event);
-		onresizeend?.(event as CustomEvent<SplitterResizeDetail>);
-	}
+
+	$effect(() => {
+		if (!host) return;
+		const notify = onresizeend;
+		const handler = (event: Event) => {
+			sync(event);
+			notify?.(event as CustomEvent<SplitterResizeDetail>);
+		};
+		host.addEventListener("resize-end", handler);
+		return () => host?.removeEventListener("resize-end", handler);
+	});
 </script>
 
 <xtyle-splitter
 	{...rest}
+	bind:this={host}
 	{orientation}
 	{size}
 	line={line || undefined}
@@ -82,5 +92,4 @@
 	{label}
 	{labelledby}
 	onresize={handleResize}
-	onresizeend={handleResizeEnd}
 ></xtyle-splitter>

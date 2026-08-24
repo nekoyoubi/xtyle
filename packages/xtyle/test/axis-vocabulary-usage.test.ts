@@ -20,10 +20,12 @@ for (const m of readFileSync(join(SRC, "vocab.ts"), "utf8").matchAll(
 	VOCAB.set(m[1], [...m[2].matchAll(/"([^"]*)"/g)].map((x) => x[1]));
 }
 
-/** The palette roster lives in `series.ts` rather than `vocab.ts`, but it is a closed set all the same. */
+/** The blessed palettes live in `series.ts` rather than `vocab.ts`. The register itself is open — a mod
+ * adds names through `registerPalettes` — but the manifests' `options` list the built-in set, so that is
+ * what an accessor is checked against. */
 const PALETTES = [
 	...readFileSync(join(SRC, "series.ts"), "utf8")
-		.match(/^export const PALETTES: readonly Palette\[\] = \[([^\]]*)\];$/m)![1]
+		.match(/^export const PALETTES: readonly BuiltInPalette\[\] = \[([^\]]*)\];$/m)![1]
 		.matchAll(/"([^"]*)"/g),
 ].map((m) => m[1]);
 

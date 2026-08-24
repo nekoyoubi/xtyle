@@ -97,6 +97,7 @@ export const appShellManifest: ComponentManifest = {
 	description:
 		"AppShell is the outermost layout frame for a full-screen application. It establishes a three-row grid (a top toolbar, a flexible body, and a bottom status bar) where the body is itself a three-column grid of a left rail, a scrollable main column, and a right rail. Every region is an optional named slot, so the same scaffold collapses cleanly from a full IDE-style layout down to a bare main column. The main region is a real `<main>` landmark that owns the only scroll, keeping the chrome pinned. An optional skip link, hidden until focused, lets keyboard users jump straight past the chrome to the content. It carries no chrome of its own: the Astro and HTML bindings emit the same light-DOM structure, and the custom element is a transparent `display: contents` host that contributes nothing to the layout.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["app", "main", "skip-link"],
 	anatomy: [
 		{
 			name: "app",
@@ -157,6 +158,14 @@ export const appShellManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "mainId",
+			type: "string",
+			default: '"main"',
+			description:
+				"The `id` given to the `<main>` region, and the anchor the skip link jumps to (`main-id`). Rename it when a page holds more than one shell, or when something else on the page already owns `main`.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "leftSize",
 			type: "number | string",
 			description: "Width of the left rail column. A bare number is treated as px; a string passes through (`18rem`, `20%`). Omit to size the rail to its content.",
@@ -211,6 +220,10 @@ export const appShellManifest: ComponentManifest = {
 			description: "Upper clamp, in px, for the resizable right rail (`right-max`).",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "resize", detail: "{ side, size }", description: "A resizable rail moved, continuous, one per pointer move.", bindings: ["html", "svelte", "astro"] },
+		{ name: "resize-end", detail: "{ side, size }", description: "A rail settled: a drag released, or a keyboard nudge, `Home`/`End`, or a double-click reset committed. The keyboard routes emit only this one, never `resize`.", bindings: ["html", "svelte", "astro"], handler: "onresizeend" },
 	],
 	variants: [],
 	sizes: [],

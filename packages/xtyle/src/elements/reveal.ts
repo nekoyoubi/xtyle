@@ -61,6 +61,7 @@ export class XtyleReveal extends XtyleElement {
 			"grip-size",
 			"grip-pad",
 			"label",
+			"control",
 			...REVEAL_DIRECTIONS.flatMap((direction) => [
 				`${direction}-behavior`,
 				`${direction}-latch-at`,
@@ -146,6 +147,23 @@ export class XtyleReveal extends XtyleElement {
 		this.reflectBoolean("contained", value);
 	}
 
+	/**
+	 * Declare that the lid *is* the control rather than a container around one, giving it `role="button"`
+	 * instead of `role="group"`.
+	 *
+	 * A reveal whose lid carries a picture and a name, and whose pull is the only way to act, is a button
+	 * by every test a screen reader applies — announcing it as a group describes the furniture instead of
+	 * the affordance. It is opt-in because the lid takes whatever you slot into it: a lid holding its own
+	 * buttons is genuinely a container, and a `button` role there would fold its children into itself and
+	 * make them unreachable. Pair it with `label`, since a control has to have a name.
+	 */
+	get control(): boolean {
+		return this.hasAttribute("control");
+	}
+	set control(value: boolean) {
+		this.reflectBoolean("control", value);
+	}
+
 	toneFor(direction: RevealDirection): FullTone | null {
 		return resolveOptionalTone(this.getAttribute(`${direction}-tone`) ?? this.getAttribute("tone"));
 	}
@@ -186,6 +204,10 @@ export class XtyleReveal extends XtyleElement {
 		return this.root.querySelector(".xtyle-reveal__lid");
 	}
 
+	private get box(): HTMLElement | null {
+		return this.root.querySelector(".xtyle-reveal");
+	}
+
 	private async settleTo(direction: RevealDirection | null, offset: number): Promise<void> {
 		const lid = this.lid;
 		if (!lid) return;
@@ -197,6 +219,8 @@ export class XtyleReveal extends XtyleElement {
 		await settle(lid, AXIS_OF[direction] === "x" ? `translateX(${signed}px)` : `translateY(${signed}px)`);
 	}
 
+	private driving = false;
+	private drove = false;
 	private dragDirection: RevealDirection | null = null;
 
 	private applyInert(): void {
@@ -246,7 +270,9 @@ export class XtyleReveal extends XtyleElement {
 	reveal(direction: RevealDirection): void {
 		if (this.disabled || !this.liveDirections.includes(direction)) return;
 		this.closeGroupPeers();
+		this.driving = true;
 		this.open = direction;
+		this.driving = false;
 		this.applyInert();
 		this.fragment.update(this.bindings);
 		void this.settleTo(direction, this.extentOf(direction));
@@ -263,8 +289,29 @@ export class XtyleReveal extends XtyleElement {
 		this.closeTo("xtyle:reveal-commit", direction);
 	}
 
+	/**
+	 * Take a direction's action and close, exactly as a full pull past `commit-at` does. The imperative
+	 * completion of {@link reveal} and {@link conceal}, so a keyboard route, a host, and a test harness
+	 * all drive the documented API rather than synthesising a gesture.
+	 *
+	 * A `latch` direction has no action to take — its whole interaction is being open — so this opens it
+	 * instead of firing, and closes it if it is already open.
+	 */
+	commit(direction: RevealDirection): void {
+		if (this.disabled || !this.liveDirections.includes(direction)) return;
+		if (this.behaviorFor(direction) === "latch") {
+			if (this.open === direction) this.conceal();
+			else this.reveal(direction);
+			return;
+		}
+		if (this.open !== direction) this.reveal(direction);
+		this.commitDirection(direction);
+	}
+
 	private closeTo(eventType: string, direction: RevealDirection): void {
+		this.driving = true;
 		this.open = null;
+		this.driving = false;
 		this.applyInert();
 		this.fragment.update(this.bindings);
 		void this.settleTo(null, 0);
@@ -301,10 +348,49 @@ export class XtyleReveal extends XtyleElement {
 		lid.style.transform = axis === "x" ? `translateX(${offset}px)` : `translateY(${offset}px)`;
 	}
 
+	/** Whether a press landed inside a revealed belly, whose own controls are the point of revealing it.
+	 * The drag core claims the press it is given, so a belly's button would never see its click. The
+	 * check walks the composed path rather than the target's ancestors, because a belly's content is
+	 * slotted: the `[data-belly]` wrapper is in the shadow tree and the control the user pressed is not,
+	 * so neither one is an ancestor of the other. */
+	private pressedBelly(event: PointerEvent): boolean {
+		const path = event.composedPath?.() ?? [];
+		for (const node of path) {
+			if (node === this || node === this.box) return false;
+			if (node instanceof Element && (node.hasAttribute("data-belly") || node.hasAttribute("slot"))) return true;
+		}
+		return false;
+	}
+
+	/** Which belly a press that never became a drag is asking for: the grip it landed on, the only live
+	 * direction when there is just one, else the live direction whose edge it landed nearest. A pointer
+	 * route that costs no painted furniture, so `gripStyle: none` still opens by tap. */
+	private tapDirection(target: EventTarget | null, x: number, y: number): RevealDirection | null {
+		const live = this.liveDirections;
+		if (live.length === 0) return null;
+		const node = target instanceof Element ? target.closest<HTMLElement>("[data-grip]") : null;
+		const gripped = node?.dataset.grip as RevealDirection | undefined;
+		if (gripped && live.includes(gripped)) return gripped;
+		if (live.length === 1) return live[0] as RevealDirection;
+		const rect = this.box?.getBoundingClientRect();
+		if (!rect || rect.width === 0 || rect.height === 0) return null;
+		const edge: Record<RevealDirection, number> = {
+			start: this.rtl ? rect.right - x : x - rect.left,
+			end: this.rtl ? x - rect.left : rect.right - x,
+			top: y - rect.top,
+			bottom: rect.bottom - y,
+		};
+		return live.reduce((best, d) => ((edge[d] as number) < (edge[best] as number) ? d : best));
+	}
+
 	private onPointerdown(event: PointerEvent): void {
 		if (this.disabled) return;
 		const live = this.liveDirections;
 		if (live.length === 0) return;
+		const pressed = event.target;
+		if (this.pressedBelly(event)) return;
+		const pressX = event.clientX;
+		const pressY = event.clientY;
 		event.preventDefault();
 
 		let axis: DragAxis | null = null;
@@ -353,7 +439,15 @@ export class XtyleReveal extends XtyleElement {
 			},
 			onEnd: (state) => {
 				this.removeAttribute("data-dragging");
-				if (axis === null) return;
+				if (axis === null) {
+					if (this.open !== null) {
+						this.conceal();
+						return;
+					}
+					const tapped = this.tapDirection(pressed, pressX, pressY);
+					if (tapped) this.reveal(tapped);
+					return;
+				}
 
 				const { direction, extent } = resolve(offset);
 				const springBack = (): void => {
@@ -397,6 +491,10 @@ export class XtyleReveal extends XtyleElement {
 			this.conceal();
 			return;
 		}
+		if (intent.commit && (REVEAL_DIRECTIONS as readonly string[]).includes(intent.commit as string)) {
+			this.commit(intent.commit as RevealDirection);
+			return;
+		}
 		if (intent.reveal && (REVEAL_DIRECTIONS as readonly string[]).includes(intent.reveal as string)) {
 			const direction = intent.reveal as RevealDirection;
 			if (this.open === direction) this.conceal();
@@ -423,11 +521,12 @@ export class XtyleReveal extends XtyleElement {
 			gripStyles: Object.fromEntries(REVEAL_DIRECTIONS.map((d) => [d, this.gripStyleFor(d)])),
 			gripBodies: Object.fromEntries(REVEAL_DIRECTIONS.map((d) => [d, iconBody(this.gripFor(d)) ?? null])),
 			label: this.getAttribute("label"),
+			control: this.control,
 		};
 	}
 
 	private shapeSignature(): string {
-		return `${this.liveDirections.join(",")}|${this.disabled}|${this.getAttribute("label") != null}|${this.shape ?? ""}|${this.contained}|${this.bleed}|${REVEAL_DIRECTIONS.map((d) => `${this.toneFor(d) ?? ""}:${this.gripFor(d)}:${this.gripStyleFor(d)}`).join(",")}`;
+		return `${this.liveDirections.join(",")}|${this.disabled}|${this.getAttribute("label") != null}|${this.control}|${this.shape ?? ""}|${this.contained}|${this.bleed}|${REVEAL_DIRECTIONS.map((d) => `${this.toneFor(d) ?? ""}:${this.gripFor(d)}:${this.gripStyleFor(d)}`).join(",")}`;
 	}
 
 	attributeChangedCallback(name: string): void {
@@ -435,9 +534,25 @@ export class XtyleReveal extends XtyleElement {
 		if (name === "open") {
 			this.applyInert();
 			this.fragment.update(this.bindings);
+			if (!this.driving) this.driveToOpen();
 			return;
 		}
 		this.render();
+	}
+
+	/** Slides the lid to match whatever `open` now says. The attribute is a way *in*, not only a record
+	 * of having opened: markup that ships `open="end"` renders open, and a consumer with no handle on
+	 * the element drives it declaratively. `driving` suppresses the re-entry from the element's own
+	 * reflection, so `reveal()` and `conceal()` still own the event and group bookkeeping. */
+	private driveToOpen(): void {
+		const direction = this.open;
+		if (direction === null) {
+			void this.settleTo(null, 0);
+			return;
+		}
+		if (this.disabled || !this.liveDirections.includes(direction)) return;
+		this.closeGroupPeers();
+		void this.settleTo(direction, this.extentOf(direction));
 	}
 
 	protected template(): string {
@@ -473,14 +588,18 @@ export class XtyleReveal extends XtyleElement {
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
 		this.applyInert();
+		if (!this.drove && this.open !== null) {
+			this.drove = true;
+			this.driveToOpen();
+		}
 	}
 
-	private wiredLid: HTMLElement | null = null;
+	private wiredBox: HTMLElement | null = null;
 	private wireLid(): void {
-		const lid = this.lid;
-		if (!lid || lid === this.wiredLid) return;
-		this.wiredLid = lid;
-		lid.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
+		const box = this.box;
+		if (!box || box === this.wiredBox) return;
+		this.wiredBox = box;
+		box.addEventListener("pointerdown", (e) => this.onPointerdown(e as PointerEvent));
 	}
 }
 

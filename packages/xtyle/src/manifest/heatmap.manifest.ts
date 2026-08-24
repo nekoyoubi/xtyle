@@ -218,6 +218,7 @@ export const heatmapManifest: ComponentManifest = {
 	description:
 		"Heatmap renders a matrix of values as a grid of colored cells, each cell's fill scaled by its value on an intensity ramp resolved off the live theme, the activity-calendar / punch-card shape (runs per hour over a week, load by host and resource, a GitHub-style contribution grid). Feed it a dense `values` matrix (row-major) plus optional `rows` and `cols` labels; the default `intensity` ramp washes from a faint surface up to the accent, and `thermal` or `severity` (or an explicit color array) swap the scale. Set `categorical` to color by category instead of intensity: each column (or each row, with `categoryAxis=\"row\"`) takes a distinct color sampled off any `Palette` (`accents` / `skittles` / `statuses`), and the cell value washes that hue from the surface up. One grid, then, reads its categories by hue and their magnitude by fill: the categorical heat-grid. Turn `scale` on and a legend keys the hues. Every cell's intensity is normalized against the data's own maximum, or an explicit `max` so several grids share one scale. It's interactive: hovering or focusing a cell floats a value readout, and the whole grid is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make cells a drill-in surface, each firing a `select` event with its row, column, and value. `showValues` prints the number in each cell. Feed an optional second `glow` matrix (the same shape as `values`) to carry a second signal in one grid: the fill reads one metric while a per-cell halo reads another (run count vs total runtime, requests vs error rate). An empty matrix shows a muted `No data` message in place of the grid.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["cell", "chart", "empty", "legend", "scale", "tooltip", "tooltip-row"],
 	anatomy: [
 		{
 			name: "chart",
@@ -405,6 +406,9 @@ export const heatmapManifest: ComponentManifest = {
 			description: "An accessible name for the grid, used as the data table's caption.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "select", detail: "{ row, column, value }", description: "A cell was activated.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [],

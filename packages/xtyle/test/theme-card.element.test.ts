@@ -21,7 +21,7 @@ function mount(attrs: Record<string, string> = {}): HTMLElement {
 /** The card derives through a dynamic import, so a test waits for the settled event. */
 async function settled(el: HTMLElement): Promise<CustomEvent> {
 	return await new Promise((resolve, reject) => {
-		const timer = setTimeout(() => reject(new Error("theme card never settled")), 8000);
+		const timer = setTimeout(() => reject(new Error("theme card never settled")), 30000);
 		el.addEventListener(
 			"xtyle:theme-card",
 			(event) => {

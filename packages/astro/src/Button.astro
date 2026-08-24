@@ -21,6 +21,8 @@ interface Props {
 	iconOnly?: boolean;
 	pressed?: boolean;
 	selected?: boolean;
+	/** Set false to keep the control out of sequential focus navigation. */
+	focusable?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -41,6 +43,7 @@ const {
 	iconOnly = false,
 	pressed,
 	selected,
+	focusable,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -63,6 +66,7 @@ const bindings = {
 	iconOnly,
 	pressed: pressed ?? null,
 	selected: selected ?? null,
+	focusable: focusable ?? true,
 	ariaLabel: (rest as Record<string, unknown>)["aria-label"] ?? null,
 	ariaLabelledby: (rest as Record<string, unknown>)["aria-labelledby"] ?? null,
 };
@@ -89,6 +93,7 @@ const composed = chrome
 	icon-only={iconOnly || undefined}
 	pressed={pressed === undefined ? undefined : String(pressed)}
 	selected={selected === undefined ? undefined : String(selected)}
+	focusable={focusable === false ? "false" : undefined}
 	class={extra}
 	set:html={composed}
 	{...rest}

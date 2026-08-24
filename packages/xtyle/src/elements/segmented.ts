@@ -17,6 +17,10 @@ export class XtyleSegmented extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 	private elementId = `xtyle-segmented-${Math.random().toString(36).slice(2, 8)}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "segmented", {
 		context: (handler) => (handler === "navKeydown" ? this.navContext() : undefined),
@@ -24,7 +28,7 @@ export class XtyleSegmented extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["value", "options", "disabled", "size", "tone", "label", "labelledby", "aria-label", "name"];
+		return ["value", "options", "disabled", "size", "tone", "label", "labelledby", "aria-label", "name", "focusable"];
 	}
 
 	constructor() {
@@ -36,6 +40,7 @@ export class XtyleSegmented extends XtyleElement {
 
 	override connectedCallback(): void {
 		super.connectedCallback();
+		this.observeChildren();
 		this.scheduleSettle();
 	}
 
@@ -148,7 +153,7 @@ export class XtyleSegmented extends XtyleElement {
 			segments: this.segments,
 			value: this.getAttribute("value"),
 			disabled: this.disabled,
-			size: this.size,
+			focusable: this.focusable,			size: this.size,
 			tone: this.tone,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
@@ -179,7 +184,7 @@ export class XtyleSegmented extends XtyleElement {
 		if (intent.preventDefault) event.preventDefault();
 		if (intent.select !== undefined && intent.select !== this.value) {
 			this.value = intent.select;
-			this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+			this.emitOwn("change", event, { value: this.value });
 			this.syncForm();
 		}
 		if (intent.focus !== undefined) {
@@ -210,6 +215,7 @@ export class XtyleSegmented extends XtyleElement {
 		this.fragment.update(this.bindings);
 		this.warnIfUnnamed();
 		this.syncForm();
+		this.verifyFormName();
 	}
 }
 

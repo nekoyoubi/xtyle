@@ -18,11 +18,12 @@ const markerHtmlExample = `<xtyle-accordion chevron-icon="plus">
 
 const markerSvelteExample = `<script lang="ts">
 	import { Accordion } from "@xtyle/svelte";
+
+	const sections = [{ value: "marker", header: "What is a marker glyph?" }];
 </script>
 
-<Accordion chevronIcon="plus">
-	<span data-xtyle-header>What is a marker glyph?</span>
-	<div data-xtyle-panel>Any name the icon roster can draw.</div>
+<Accordion chevronIcon="plus" {sections}>
+	{#snippet panel()}Any name the icon roster can draw.{/snippet}
 </Accordion>`;
 
 const markerAstroExample = `---
@@ -33,6 +34,22 @@ import Accordion from "@xtyle/astro/Accordion.astro";
 	<span data-xtyle-header>What is a marker glyph?</span>
 	<div data-xtyle-panel>Any name the icon roster can draw.</div>
 </Accordion>`;
+
+const itemsHtmlExample = `<xtyle-accordion items='[
+	{ "value": "shipping", "header": "Shipping", "panel": "Orders ship within two business days." },
+	{ "value": "returns", "header": "Returns", "panel": "Unworn items are accepted within 30 days.", "open": true }
+]'></xtyle-accordion>`;
+
+const itemsAstroExample = `---
+import Accordion from "@xtyle/astro/Accordion.astro";
+
+const sections = [
+	{ value: "shipping", header: "Shipping", panel: "Orders ship within two business days." },
+	{ value: "returns", header: "Returns", panel: "Unworn items are accepted within 30 days.", open: true },
+];
+---
+
+<Accordion items={sections} />`;
 
 const multipleExample = `<xtyle-accordion multiple size="sm">
 	<span slot="header" open>Filters</span>
@@ -45,13 +62,18 @@ const multipleExample = `<xtyle-accordion multiple size="sm">
 
 const svelteExample = `<script lang="ts">
 	import { Accordion } from "@xtyle/svelte";
+
+	const sections = [
+		{ value: "shipping", header: "Shipping" },
+		{ value: "returns", header: "Returns", open: true },
+	];
 </script>
 
-<Accordion>
-	<span slot="header">Shipping</span>
-	<div slot="panel">Orders ship within two business days.</div>
-	<span slot="header" open>Returns</span>
-	<div slot="panel">Unworn items are accepted within 30 days.</div>
+<Accordion {sections}>
+	{#snippet panel(value)}
+		{#if value === "shipping"}Orders ship within two business days.{/if}
+		{#if value === "returns"}Unworn items are accepted within 30 days.{/if}
+	{/snippet}
 </Accordion>`;
 
 const astroExample = `---
@@ -78,6 +100,7 @@ export const accordionManifest: ComponentManifest = {
 	description:
 		"Accordion stacks a set of disclosure sections that expand and collapse. Each section pairs a `[slot=\"header\"]` header with the `[slot=\"panel\"]` that follows it; the component wraps every header in a heading and a `role=\"button\"` trigger carrying `aria-expanded` and `aria-controls`, and turns each panel into a labelled `role=\"region\"` that hides when collapsed. By default it is single-open: opening one section closes the rest. `multiple` lets several stay open at once. Mark a header `open` to expand its section initially, or `disabled` to lock it. The heading level is `h3` by default and settable with `headingLevel`, and three sizes (`sm`, `md`, `lg`) scale the trigger density. A chevron rotates with the open state, and pointer, Enter/Space, and the arrow/Home/End keys all drive it.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["accordion", "chevron", "heading", "item", "panel", "trigger"],
 	anatomy: [
 		{
 			name: "accordion",
@@ -121,10 +144,26 @@ export const accordionManifest: ComponentManifest = {
 		},
 	],
 	props: [
+		{
+			name: "items",
+			type: "AccordionSection[]",
+			description:
+				"The sections as data instead of authored `[slot=\"header\"]` / `[slot=\"panel\"]` pairs: an array of `{ value, header, body?, disabled? }`, serialized to JSON on the attribute. The Svelte binding spells the same list `sections` and takes its bodies from a `panel` snippet.",
+			bindings: ["html", "astro"],
+		},
+		{
+			name: "sections",
+			type: "AccordionSection[]",
+			description: "Svelte only: the sections as data, with each panel rendered by the `panel` snippet keyed by value. The same list is `items` on every other binding.",
+			bindings: ["svelte"],
+		},
 		{ name: "multiple", type: "boolean", default: "false", description: "Allows several sections to stay open at once; when off, opening one closes the others.", bindings: ["html", "svelte", "astro"] },
 		{ name: "size", type: "Size", default: "md", description: "Trigger density: `sm`, `md`, or `lg`.", bindings: ["html", "svelte", "astro"], options: ["sm", "md", "lg"] },
 		{ name: "headingLevel", type: "2 | 3 | 4 | 5 | 6", default: "3", description: "The heading level wrapping each trigger, so the accordion sits correctly in the document outline.", bindings: ["html", "svelte", "astro"] },
 		{ name: "chevronIcon", type: "string", default: "\"chevron-down\"", description: "The roster glyph drawn as the disclosure marker. Any name the icon roster can draw, including one a mod contributed through the `xtyle.icons` slot.", bindings: ["html", "svelte", "astro"] },
+	],
+	events: [
+		{ name: "toggle", detail: "{ value, open, values }", description: "A section opened or closed.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [
@@ -203,6 +242,7 @@ export const accordionManifest: ComponentManifest = {
 	],
 	composition: [
 		"Pair headers and panels in order (a `[slot=\"header\"]` followed by its `[slot=\"panel\"]`) and repeat for each section.",
+		"The slotted form is for raw HTML and Astro; under Astro use the `data-xtyle-header` / `data-xtyle-panel` markers, because its named-slot handling consumes `slot` before the element sees it. `@xtyle/svelte` takes its sections as data instead — a `sections` array and a `panel` snippet — and renders the pairs itself, so slotted children handed to it are not read.",
 		"Leave `multiple` off for an FAQ where one answer shows at a time; turn it on for independent filter or settings groups.",
 		"For a small fixed set of mutually exclusive views with their own content area, reach for Tabs instead.",
 	],
@@ -227,6 +267,13 @@ export const accordionManifest: ComponentManifest = {
 			title: "Multiple open, with a disabled section",
 			description: "A compact accordion that lets several panels stay open, with one locked header.",
 			source: { html: multipleExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "sections-as-data",
+			title: "Sections as data",
+			description:
+				"The same accordion declared as a list instead of authored pairs. The attribute takes JSON, the Astro binding takes the array, and the Svelte binding spells it `sections` with a `panel` snippet.",
+			source: { html: itemsHtmlExample, svelte: svelteExample, astro: itemsAstroExample },
 		},
 		{
 			id: "marker-glyph",

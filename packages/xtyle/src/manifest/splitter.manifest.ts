@@ -42,8 +42,9 @@ export const splitterManifest: ComponentManifest = {
 	seeAlso: ["dock-zone", "separator", "panel"],
 	summary: "A draggable divider that resizes an adjacent pane, with configurable bounds and steps.",
 	description:
-		"Splitter is the handle between two panes: drag it (or arrow it with the keyboard) and the neighboring pane grows or shrinks. It is a `role=\"separator\"` control, so it announces its current, minimum, and maximum size and takes the full keyboard. The size it manages is _data_ the consumer owns: the splitter clamps a `value` (in px) to `min`/`max`, snaps it to an integral `step`, writes it into a CSS custom property (`var`) on a target so a grid or flex track resizes declaratively, and fires `resize` (live, during the drag) and `resize-end` (on release) so the consumer can react or persist. `orientation` picks the axis (`vertical` resizes width, `horizontal` resizes height), and `reversed` flips the direction for a trailing-edge pane like a right rail. Its own chrome is derived: the grip and its focus ring read from the same tokens the rest of the UI does.",
+		"Splitter is the handle between two panes: drag it (or arrow it with the keyboard) and the neighboring pane grows or shrinks. It is a `role=\"separator\"` control, so it announces its current, minimum, and maximum size and takes the full keyboard. The size it manages is _data_ the consumer owns: the splitter clamps a `value` (in px) to `min`/`max`, snaps it to an integral `step`, writes it into a CSS custom property (`var`) on a target so a grid or flex track resizes declaratively, and fires `resize` (live, during the drag) and `resize-end` (when it settles, whether from a release or a keyboard commit) so the consumer can react or persist. `orientation` picks the axis (`vertical` resizes width, `horizontal` resizes height), and `reversed` flips the direction for a trailing-edge pane like a right rail. Its own chrome is derived: the grip and its focus ring read from the same tokens the rest of the UI does.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["grip", "host", "splitter"],
 	anatomy: [
 		{
 			name: "splitter",
@@ -153,6 +154,10 @@ export const splitterManifest: ComponentManifest = {
 			description: "Lock the size. The handle stops responding to drag and keys and dims.",
 			bindings: ["html", "svelte", "astro"],
 		},
+	],
+	events: [
+		{ name: "resize", detail: "{ value, orientation }", description: "The split moved, continuous, one per pointer move.", bindings: ["html", "svelte", "astro"] },
+		{ name: "resize-end", detail: "{ value, orientation }", description: "The split settled: a drag released, or a keyboard nudge, `Home`/`End`, or a double-click reset committed. The keyboard routes emit only this one, never `resize`.", bindings: ["html", "svelte", "astro"], handler: "onresizeend" },
 	],
 	variants: [],
 	sizes: [

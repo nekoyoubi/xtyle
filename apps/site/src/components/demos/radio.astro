@@ -5,6 +5,7 @@ import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
+import Button from "@xtyle/astro/Button.astro";
 import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
 
 const TONE_GROUPS = [
@@ -125,7 +126,49 @@ const TONE_GROUPS = [
 			</Stack>
 		</Cluster>
 	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">In a form</Heading>
+		<Text size="sm" tone="muted">
+			The checked radio posts once under the group's <code>name</code>. <code>invalid</code> is a custom validity on the
+			host, so the browser blocks the submit while it is set.
+		</Text>
+		<form id="demo-radio-form">
+			<Stack gap={3}>
+				<RadioGroup label="Delivery">
+					<Radio name="delivery" value="standard" checked label="Standard">Standard</Radio>
+					<Radio name="delivery" value="express" label="Express">Express</Radio>
+				</RadioGroup>
+				<Cluster gap={2} align="center">
+					<Button type="submit" size="sm">Place order</Button>
+					<Button type="button" size="sm" variant="ghost" id="demo-radio-flag">Flag invalid</Button>
+					<Text size="sm" tone="muted" id="demo-radio-out">Nothing submitted yet.</Text>
+				</Cluster>
+			</Stack>
+		</form>
+	</section>
 </Stack>
+
+<script>
+	import "@xtyle/core/elements";
+
+	const form = document.getElementById("demo-radio-form");
+	const out = document.getElementById("demo-radio-out");
+
+	form?.addEventListener("submit", (event) => {
+		event.preventDefault();
+		const data = new FormData(event.target as HTMLFormElement);
+		const shown = [...data.entries()].map(([key, value]) => `${key}=${String(value)}`).join(" · ");
+		if (out) out.textContent = shown.length > 0 ? `Submitted: ${shown}` : "Nothing submitted yet.";
+	});
+
+	document.getElementById("demo-radio-flag")?.addEventListener("click", () => {
+		const radios = [...(form?.querySelectorAll("xtyle-radio") ?? [])];
+		const flagged = radios.some((radio) => radio.hasAttribute("invalid"));
+		for (const radio of radios) radio.toggleAttribute("invalid", !flagged);
+		if (out) out.textContent = flagged ? "Cleared. Submit is allowed again." : "Flagged. Submit is refused.";
+	});
+</script>
 
 <style>
 	.demo {

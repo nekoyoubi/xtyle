@@ -20,15 +20,21 @@
 		name?: string;
 		/** Accessible label (also the no-JS fallback text). */
 		label?: string;
+		/** Fires as the pointer moves across the row. `event.detail` carries `{ value }`. */
+		oninput?: (event: CustomEvent<{ value: number }>) => void;
+		/** Fires when the rating is committed. `event.detail` carries `{ value }`. */
+		onchange?: (event: CustomEvent<{ value: number }>) => void;
 		/** Any other attribute (`title`, `id`, `data-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
 
-	let { value = 0, max = 5, size, icon, readonly, allowHalf, colors, tone, name, label, ...rest }: Props = $props();
+	let { value = 0, max = 5, size, icon, readonly, allowHalf, colors, tone, name, label, oninput, onchange, ...rest }: Props = $props();
 </script>
 
 <xtyle-rating
 	{...rest}
+	{oninput}
+	{onchange}
 	value={value}
 	max={max}
 	{size}
@@ -38,4 +44,4 @@
 	{name}
 	{label}
 	readonly={readonly || undefined}
-	allowhalf={allowHalf || undefined}>{label ?? `${value} out of ${max} stars`}</xtyle-rating>
+	allow-half={allowHalf || undefined}>{label ?? `${value} out of ${max} stars`}</xtyle-rating>

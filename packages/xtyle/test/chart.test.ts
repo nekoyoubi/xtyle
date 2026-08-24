@@ -200,7 +200,7 @@ describe("chart", () => {
 
 	it("mirrors the data into a visually-hidden table for assistive tech", async () => {
 		const html = await renderFragmentLight("chart", bindingsFor(timeSeries));
-		expect(html).toContain('class="xtyle-chart__a11y"');
+		expect(html).toContain('class="xtyle-chart__a11y"><table>');
 		expect(html).toContain("<caption>Requests</caption>");
 		expect(html).toContain('<th scope="col">Edge</th>');
 		expect(html).toContain("<td>16</td>");

@@ -13,13 +13,17 @@ export class XtyleSwitch extends XtyleElement {
 	}
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 	private elementId = `xtyle-switch-${Math.random().toString(36).slice(2, 8)}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "switch", {
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["checked", "disabled", "size", "tone", "shape", "orientation", "reverse", "label-side", "label", "labelledby", "on-label", "off-label", "label-on", "label-off", "name", "value"];
+		return ["checked", "disabled", "size", "tone", "shape", "orientation", "reverse", "label-side", "label", "labelledby", "on-label", "off-label", "label-on", "label-off", "name", "value", "focusable"];
 	}
 
 	constructor() {
@@ -100,7 +104,7 @@ export class XtyleSwitch extends XtyleElement {
 		return {
 			checked: this.checked,
 			disabled: this.disabled,
-			size: this.size,
+			focusable: this.focusable,			size: this.size,
 			tone: this.tone,
 			shape: this.shape,
 			orientation: this.orientation,
@@ -150,7 +154,7 @@ export class XtyleSwitch extends XtyleElement {
 		if (intent.preventDefault) event.preventDefault();
 		if (!intent.toggleChecked) return;
 		this.checked = !this.checked;
-		this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+		this.emitOwn("change", event, { checked: this.checked, value: this.value });
 		this.syncForm();
 	}
 
@@ -165,6 +169,7 @@ export class XtyleSwitch extends XtyleElement {
 		this.fragment.update(this.bindings);
 		this.warnIfUnnamed();
 		this.syncForm();
+		this.verifyFormName();
 	}
 }
 

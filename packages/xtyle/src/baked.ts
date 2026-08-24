@@ -28,6 +28,8 @@ export interface AlgorithmDomain {
 	id: string;
 	knobs: string[];
 	knobSpecs: KnobSpec[];
+	/** The contrast this algorithm promises `--ring` clears, when it declares one. */
+	focusRingFloor?: number;
 }
 
 /**
@@ -47,10 +49,21 @@ export async function algorithmDomains(ids: readonly string[]): Promise<Algorith
 		ids.map(async (id) => {
 			const declared = algorithmManifest(id);
 			if (declared) {
-				return { id, knobs: declared.knobs, knobSpecs: resolveKnobSpecs(declared.knobs, declared.knobSpecs ?? []) };
+				return {
+					id,
+					knobs: declared.knobs,
+					knobSpecs: resolveKnobSpecs(declared.knobs, declared.knobSpecs ?? []),
+					...(declared.focusRingFloor === undefined ? {} : { focusRingFloor: declared.focusRingFloor }),
+				};
 			}
 			const algorithm = await bakedAlgorithm(id);
-			return { id, knobs: algorithm.knobs, knobSpecs: algorithm.knobSpecs };
+			const floor = algorithm.declares?.focusRingFloor;
+			return {
+				id,
+				knobs: algorithm.knobs,
+				knobSpecs: algorithm.knobSpecs,
+				...(floor === undefined ? {} : { focusRingFloor: floor }),
+			};
 		}),
 	);
 }

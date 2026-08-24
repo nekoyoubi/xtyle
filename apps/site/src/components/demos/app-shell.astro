@@ -22,6 +22,7 @@ const { tokens } = await getStats();
 	<Text size="sm" tone="muted" class="appshell-demo__hint">
 		Both rails are resizable: drag either inner edge (or focus the handle and use the arrow keys), and double-click to reset. Tab into the frame to reveal the skip link.
 	</Text>
+	<Text size="xs" tone="muted" mono class="appshell-demo__readout">resize-end: waiting for a rail to settle</Text>
 	<div class="appshell-demo__device">
 		<AppShell
 			skipLink
@@ -131,3 +132,13 @@ const { tokens } = await getStats();
 		height: 30rem;
 	}
 </style>
+
+<script>
+	for (const demo of document.querySelectorAll(".appshell-demo")) {
+		const readout = demo.querySelector(".appshell-demo__readout");
+		demo.addEventListener("resize-end", (event) => {
+			const { side, size } = (event as CustomEvent<{ side: string; size: number }>).detail;
+			if (readout) readout.textContent = `resize-end: ${side} rail settled at ${size}px`;
+		});
+	}
+</script>

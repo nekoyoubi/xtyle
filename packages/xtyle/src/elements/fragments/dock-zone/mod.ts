@@ -44,6 +44,7 @@ interface DockFloat {
 }
 
 interface DockZoneBindings {
+	uid?: string;
 	tree?: DockNode | null;
 	floats?: DockFloat[];
 	restFilms?: number;
@@ -93,28 +94,33 @@ function controls(panel: DockPanel): string {
 	return `${html}</div>`;
 }
 
-function tab(panel: DockPanel, zoneId: string, active: boolean): string {
+function tab(panel: DockPanel, zoneId: string, active: boolean, uid: string): string {
 	const isActive = active ? " is-active" : "";
 	return (
 		`<button type="button" class="xtyle-dock-zone__tab${isActive}" part="tab" role="tab" ` +
+		`id="${escapeAttr(`${uid}-tab-${panel.id}`)}" aria-controls="${escapeAttr(`${uid}-body-${zoneId}`)}" ` +
+		`tabindex="${active ? 0 : -1}" ` +
 		`aria-selected="${active}" data-tab data-panel-id="${escapeAttr(panel.id)}" data-zone-id="${escapeAttr(zoneId)}" ` +
 		`data-index="${panel.index}">${escapeHtml(panel.title)}${badge(panel)}</button>`
 	);
 }
 
-function tabsLeaf(node: DockNode): string {
+function tabsLeaf(node: DockNode, uid: string): string {
 	const zoneId = node.id ?? "";
 	const panels = node.panels ?? [];
 	const active = node.active ?? 0;
-	const strip = panels.map((panel, i) => tab(panel, zoneId, i === active)).join("");
+	const strip = panels.map((panel, i) => tab(panel, zoneId, i === active, uid)).join("");
 	const activePanel = panels[active];
+	const bodyId = escapeAttr(`${uid}-body-${zoneId}`);
+	const labelledBy = activePanel ? ` aria-labelledby="${escapeAttr(`${uid}-tab-${activePanel.id}`)}"` : "";
 	return (
 		`<div class="xtyle-dock-zone__leaf" part="zone" data-zone-id="${escapeAttr(zoneId)}" style="flex:${node.flex ?? 1}">` +
 		`<div class="xtyle-dock-zone__head" part="head">` +
-		`<div class="xtyle-dock-zone__tabs" part="tabs">${strip}</div>` +
+		`<div class="xtyle-dock-zone__tabs" part="tabs" role="tablist">${strip}</div>` +
 		`${activePanel ? controls(activePanel) : ""}` +
 		`</div>` +
-		`<div class="xtyle-dock-zone__body" part="body" data-body-for="${escapeAttr(zoneId)}"></div>` +
+		`<div class="xtyle-dock-zone__body" part="body" role="tabpanel" id="${bodyId}"${labelledBy} ` +
+		`data-body-for="${escapeAttr(zoneId)}"></div>` +
 		`</div>`
 	);
 }
@@ -149,16 +155,16 @@ function stackLeaf(node: DockNode): string {
 	);
 }
 
-function node(n: DockNode): string {
+function node(n: DockNode, uid: string): string {
 	if (n.kind === "split") {
 		const direction = n.direction === "column" ? "column" : "row";
-		const children = (n.children ?? []).map(node).join("");
+		const children = (n.children ?? []).map((child) => node(child, uid)).join("");
 		return (
 			`<div class="xtyle-dock-split xtyle-dock-split--${direction}" part="split" ` +
 			`style="flex:${n.flex ?? 1}">${children}</div>`
 		);
 	}
-	return n.mode === "stack" ? stackLeaf(n) : tabsLeaf(n);
+	return n.mode === "stack" ? stackLeaf(n) : tabsLeaf(n, uid);
 }
 
 /** The drag-preview films: the drop target, the remnant a split would leave behind, and one per
@@ -214,7 +220,8 @@ function overflowMenu(hasMenu: boolean): string {
 
 function workspace(b: DockZoneBindings): string {
 	if (!b.tree) return "";
-	return node(b.tree) + films(b.restFilms ?? 0) + floats(b.floats ?? []) + overflowMenu(b.hasMenu === true);
+	const uid = b.uid ?? "xtyle-dock-zone";
+	return node(b.tree, uid) + films(b.restFilms ?? 0) + floats(b.floats ?? []) + overflowMenu(b.hasMenu === true);
 }
 
 function paint(bindings: DockZoneBindings, ops: OpsBuilder): void {

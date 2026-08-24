@@ -30,6 +30,7 @@ const SKIP = [
 	/\.generated\./,
 	/\/fragments\/[^/]+\/mod\.js$/,
 	/(^|\/)algorithms\/[^/]+\/src\/mod\.js$/,
+	/(^|\/)packs\/[^/]+\/[^/]+\/src\/mod\.js$/,
 ];
 
 /** A file whose first line marks it build-output. Generated files carry whatever their generator emits. */

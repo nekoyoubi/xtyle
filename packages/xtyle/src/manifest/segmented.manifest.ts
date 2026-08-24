@@ -116,6 +116,7 @@ export const segmentedManifest: ComponentManifest = {
 	description:
 		"Segmented picks one option from a small, fixed set rendered as a connected button bar. It's the compact alternative to a radio group when the choices are few and worth showing at once. It is a `role=\"radiogroup\"` of `role=\"radio\"` buttons with roving tabindex: the selected segment is the tab stop, arrow keys move and select with wraparound, and Home/End jump to the ends. Options are declared as a comma-separated `options` string (bare labels, or `label:value` pairs), or as a structured `{ value, label }[]` when a label differs from its value or carries a comma or colon. For rich segments, drop in `<Segment value=\"…\" label=\"…\">` children holding an icon or other markup instead of a text label; they win over `options` when both are present. It's form-associated; give it a `name` and the chosen value submits. Three sizes: `sm`, `md`, `lg`.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["badge", "field", "label", "option", "segmented"],
 	anatomy: [
 		{
 			name: "field",
@@ -149,6 +150,14 @@ export const segmentedManifest: ComponentManifest = {
 		},
 	],
 	props: [
+		{
+			name: "focusable",
+			type: "boolean",
+			default: "true",
+			description:
+				"Set `false` to keep the control out of sequential focus navigation, for an app driving selection from its own keyboard cursor. The host's own `tabindex` cannot express this, because focus lands on the inner control rather than the host, and setting it there from outside does not survive the next render.",
+			bindings: ["html", "svelte", "astro"],
+		},
 		{ name: "value", type: "string", description: "The selected option's value. Defaults to the first option. Reflected and form-submitted.", bindings: ["html", "svelte", "astro"] },
 		{
 			name: "options",
@@ -164,6 +173,9 @@ export const segmentedManifest: ComponentManifest = {
 		{ name: "labelledby", type: "string", description: "ID of an external element that names the group. Takes precedence over `label`.", bindings: ["html", "svelte", "astro"] },
 		{ name: "aria-label", type: "string", description: "Names the group with no visible label, for a compact icon bar (a toolbar) where a heading would be noise. `labelledby` and a visible `label` both win over it.", bindings: ["html", "svelte", "astro"] },
 		{ name: "name", type: "string", description: "Form field name; the selected value submits with the form.", bindings: ["html", "svelte", "astro"] },
+	],
+	events: [
+		{ name: "change", detail: "{ value }", description: "The chosen segment changed.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [],
 	sizes: [

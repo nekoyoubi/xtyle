@@ -2,15 +2,16 @@ import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { relative } from "node:path";
-import { discoverAlgorithms } from "./algorithms.mjs";
+import { discoverAlgorithms, discoverPacks, packAlgorithmMods } from "./algorithms.mjs";
 
 // INFO: compares the rebuild to the working tree (not git HEAD), so a fresh-but-uncommitted artifact passes.
 
 const root = process.cwd();
 const mods = discoverAlgorithms(root);
+const packMods = discoverPacks(root).flatMap((pack) => packAlgorithmMods(pack));
 
 const committed = [
-	...mods.flatMap((mod) => [relative(root, mod.scriptPath), relative(root, mod.manifestPath)]),
+	...[...mods, ...packMods].flatMap((mod) => [relative(root, mod.scriptPath), relative(root, mod.manifestPath)]),
 	"packages/xtyle/src/host/algorithms-bundle.generated.ts",
 	"packages/xtyle/src/host/authoring-prelude.generated.ts",
 ];
@@ -25,6 +26,7 @@ const hashAll = (files) => files.map(hashOne);
 const beforeCommitted = hashAll(committed);
 const beforeOutputs = hashAll(buildOutputs);
 execSync("node scripts/build-mods.mjs", { stdio: "inherit" });
+execSync("node scripts/build-packs.mjs", { stdio: "inherit" });
 const afterCommitted = hashAll(committed);
 const afterOutputs = hashAll(buildOutputs);
 

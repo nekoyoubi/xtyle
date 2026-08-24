@@ -26,6 +26,7 @@
 		disabled?: boolean;
 		readonly?: boolean;
 		required?: boolean;
+		requiredMessage?: string;
 		invalid?: boolean;
 		/** Drop the clear button, otherwise shown whenever the field holds a value and is editable. */
 		noClear?: boolean;
@@ -60,6 +61,7 @@
 		disabled = false,
 		readonly = false,
 		required = false,
+		requiredMessage,
 		invalid = false,
 		noClear = false,
 		size = "md",
@@ -132,6 +134,7 @@
 	disabled={disabled || undefined}
 	readonly={readonly || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	invalid={invalid || undefined}
 	no-clear={noClear || undefined}
 	{size}

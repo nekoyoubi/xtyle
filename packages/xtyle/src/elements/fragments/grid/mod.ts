@@ -1,3 +1,5 @@
+import { escapeAttr } from "../escape.js";
+
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
 	setAttr(selector: string, attr: string, value: string): void;
@@ -7,6 +9,8 @@ interface GridBindings {
 	gap?: number;
 	columns?: number | null;
 	minColWidth?: string | null;
+	sidebar?: string | null;
+	side?: string | null;
 	align?: string | null;
 	justify?: string | null;
 	inline?: boolean;
@@ -30,15 +34,23 @@ function clampColumns(value: number | null | undefined): number | null {
 	return n;
 }
 
+function railWidth(b: GridBindings): string | null {
+	const raw = b.sidebar ?? null;
+	return raw !== null && raw.trim() !== "" ? raw : null;
+}
+
 function gridClass(b: GridBindings): string {
 	const gap = clampGap(b.gap);
 	const columns = clampColumns(b.columns);
 	const min = b.minColWidth ?? null;
-	const usesColumns = min === null && columns !== null;
+	const rail = railWidth(b);
+	const usesColumns = rail === null && min === null && columns !== null;
 	return [
 		"xtyle-grid",
 		`xtyle-grid--gap-${gap}`,
 		usesColumns && `xtyle-grid--cols-${columns}`,
+		rail !== null && "xtyle-grid--sidebar",
+		rail !== null && `xtyle-grid--sidebar-${b.side === "start" ? "start" : "end"}`,
 		b.align && `xtyle-grid--align-${b.align}`,
 		b.justify && `xtyle-grid--justify-${b.justify}`,
 		b.inline && "xtyle-grid--inline",
@@ -49,13 +61,18 @@ function gridClass(b: GridBindings): string {
 
 function gridStyle(b: GridBindings): string {
 	const min = b.minColWidth ?? null;
+	const rail = railWidth(b);
+	if (rail !== null) {
+		const floor = min === null ? "" : ` --xtyle-grid-main: ${min};`;
+		return `--xtyle-grid-rail: ${rail};${floor}`;
+	}
 	return min === null ? "" : `grid-template-columns: repeat(auto-fit, minmax(${min}, 1fr))`;
 }
 
 function gridHtml(b: GridBindings): string {
 	const style = gridStyle(b);
-	const styleAttr = style === "" ? "" : ` style="${style}"`;
-	return `<div part="grid" class="${gridClass(b)}"${styleAttr}><slot></slot></div>`;
+	const styleAttr = style === "" ? "" : ` style="${escapeAttr(style)}"`;
+	return `<div part="grid" class="${escapeAttr(gridClass(b))}"${styleAttr}><slot></slot></div>`;
 }
 
 hooks.fragment.mount("grid", (bindings, ops) => {

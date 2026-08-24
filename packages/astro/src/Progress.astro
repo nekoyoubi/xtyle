@@ -2,10 +2,11 @@
 import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
-import { rampGradientStops, type FullTone as Tone, type Palette, resolveTone, PROGRESS_VARIANTS, resolveVocab, PROGRESS_SIZES, PROGRESS_RAMP_MODES } from "@xtyle/core";
+import { rampGradientStops, type FullTone as Tone, type Palette, resolveTone, PROGRESS_VARIANTS, resolveVocab, PROGRESS_SIZES, PROGRESS_RAMP_MODES, PROGRESS_ORIENTS } from "@xtyle/core";
 type ProgressVariant = (typeof PROGRESS_VARIANTS)[number];
 type ProgressSize = (typeof PROGRESS_SIZES)[number];
 type ProgressRampMode = (typeof PROGRESS_RAMP_MODES)[number];
+type ProgressOrient = (typeof PROGRESS_ORIENTS)[number];
 
 interface Props {
 	variant?: ProgressVariant;
@@ -40,6 +41,16 @@ interface Props {
 	/** How heavy a `circular` ring reads, independent of its diameter: a unitless number in ring units
 	 * (scales with the ring) or a CSS length (`6px`) that holds its weight at any size. */
 	thickness?: string | number;
+	/** The visible caption above the bar, distinct from `aria-label`, which renders nothing. Setting it
+	 * alone also names the control, so the string is written once. */
+	label?: string;
+	/** A free-form reading on the caption line, independent of `valueFormat` (`8/20`, `even`, `46 left`). */
+	reading?: string;
+	/** A line of prose under the bar, explaining what the reading means. */
+	note?: string;
+	/** Which axis the bar fills along. `vertical` grows the indicator up the block axis natively, so a
+	 * standing gauge needs no rotation. Linear only. */
+	orient?: ProgressOrient;
 	"aria-label"?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
@@ -67,6 +78,10 @@ const {
 	reverse = false,
 	track = true,
 	thickness,
+	label,
+	reading,
+	note,
+	orient: orientInput,
 	"aria-label": ariaLabel,
 	static: isStatic = false,
 	class: extra,
@@ -76,6 +91,7 @@ await checkAuthoring("progress", Astro.props);
 const variant = resolveVocab(variantInput, PROGRESS_VARIANTS, "linear", "progress variant");
 const size = resolveVocab(sizeInput, PROGRESS_SIZES, "md", "progress size");
 const rampMode = resolveVocab(rampModeInput, PROGRESS_RAMP_MODES, "solid", "progress rampMode");
+const orient = resolveVocab(orientInput, PROGRESS_ORIENTS, "horizontal", "progress orient");
 const tone = resolveTone(toneInput, "accent");
 const trackAttr = track === true ? undefined : track === false ? "none" : track;
 const thicknessAttr = thickness != null ? String(thickness) : undefined;
@@ -105,17 +121,32 @@ const bindings = {
 	pulse: null,
 	track: trackAttr ?? null,
 	thickness: thicknessAttr ?? null,
+	orient,
+	label: label ?? null,
+	reading: reading ?? null,
+	note: note ?? null,
+	hasLabel: Astro.slots.has("label"),
+	hasReading: Astro.slots.has("reading"),
+	hasNote: Astro.slots.has("note"),
 	role: meter ? "meter" : "progressbar",
-	ariaLabel: ariaLabel ?? null,
+	ariaLabel: ariaLabel ?? label ?? null,
 	ariaLabelledby: null,
 	...rampBindings,
 };
 const light = await renderFragmentLight("progress", bindings);
 const valueHtml = Astro.slots.has("value") ? await Astro.slots.render("value") : null;
+const labelHtml = Astro.slots.has("label") ? await Astro.slots.render("label") : null;
+const readingHtml = Astro.slots.has("reading") ? await Astro.slots.render("reading") : null;
+const noteHtml = Astro.slots.has("note") ? await Astro.slots.render("note") : null;
 // INFO: the default slot carries `<threshold>` config elements; re-emit them as hidden direct
 // children so the hydrating element can read `:scope > threshold`
 const thresholdHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
-const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
+const withSlots = composeFallbackSlot(
+	composeFallbackSlot(composeFallbackSlot(composeFallbackSlot(light, "value", valueHtml), "label", labelHtml), "reading", readingHtml),
+	"note",
+	noteHtml,
+);
+const composed = withSlots + thresholdHtml;
 ---
 
 <xtyle-progress
@@ -137,6 +168,10 @@ const composed = composeFallbackSlot(light, "value", valueHtml) + thresholdHtml;
 	reverse={reverse || undefined}
 	track={trackAttr}
 	thickness={thicknessAttr}
+	label={label}
+	reading={reading}
+	note={note}
+	orient={orient !== "horizontal" ? orient : undefined}
 	aria-label={ariaLabel}
 	class={extra}
 	set:html={composed}

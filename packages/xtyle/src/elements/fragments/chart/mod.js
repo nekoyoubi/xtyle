@@ -145,7 +145,7 @@
       return `<tr><th scope="row">${escapeAttr(formatPointX(toDomain(x), xScale, span))}</th>${cells}</tr>`;
     }).join("");
     const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
-    return `<table class="xtyle-chart__a11y">${cap}<thead>${head}</thead><tbody>${rows}</tbody></table>`;
+    return `<div class="xtyle-chart__a11y"><table>${cap}<thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
   }
   function emptyHtml(b, height) {
     const label = b.title ?? b.ariaLabel ?? "";

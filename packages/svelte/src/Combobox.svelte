@@ -29,6 +29,7 @@
 		readonly?: boolean;
 		invalid?: boolean;
 		required?: boolean;
+		requiredMessage?: string;
 		description?: string;
 		error?: string;
 		emptyText?: string;
@@ -60,6 +61,7 @@
 		readonly = false,
 		invalid = false,
 		required = false,
+		requiredMessage,
 		description = "",
 		error = "",
 		emptyText,
@@ -119,6 +121,7 @@
 	readonly={readonly || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
+	required-message={requiredMessage}
 	{description}
 	{error}
 	empty-text={emptyText}

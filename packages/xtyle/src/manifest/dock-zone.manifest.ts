@@ -106,6 +106,7 @@ export const dockZoneManifest: ComponentManifest = {
 	description:
 		"Dock Zone is a movable-panel workspace, the editor-style chrome an app builds its layout from. Its direct children are the panels: any element with a `data-panel-id` and a `data-title` (or `title`) for its tab. The zone reads them, arranges them into a layout of tabbed zones, and renders the tab strips and splits around them. Dragging a tab re-docks its panel onto another zone, joining it as a tab when dropped over the center or splitting the zone when dropped against an edge. Dragging a tab out past every zone tears it into a floating window that moves, resizes, and docks back on the same layout. A float's titlebar moves it: dragging anywhere across the open workspace just repositions the window, and a re-dock is only offered — films and all — once the pointer comes within the `--dock-band` of a zone's boundary, the seam a split would land against. Every rearrangement dispatches a `layout-change` event carrying the serializable layout, and setting the `layout` property restores a saved one, so a workspace persists across reloads. A panel carries its own header chrome, declared on the panel child: `data-closable` for a built-in close (a cancelable `panel-close`, then removal and a fresh `layout-change`), `data-actions` for direct header buttons, and `data-menu` for a kebab overflow `<xtyle-menu>`. A header button or a menu row both fire `panel-action`, and a `data-badge` puts trailing status text (a count) on the panel's own tab. A leaf renders in one of two modes: `tabs` (the default, one active panel behind a tab strip) or `stack` (every panel a collapsible section, the tool-rail shape); set `mode` for the whole workspace or per leaf in the tree. The layout physics are xtyle's own headless engine (`resolveDrop` for the drop geometry, `dockPanel` for the tree), the same primitives a consumer can drive directly from `@xtyle/core/elements`. The Svelte binding surfaces `layout` as a prop and reports rearrangement through `onLayoutChange`, close through `onPanelClose`, and header controls through `onPanelAction`; the Astro binding renders the panels and upgrades the workspace on the client. All of the chrome the workspace invents — the tab strips, the section headers and their chevrons, the header buttons and the kebab, the float windows and their resize grips, the drag films — is drawn by the `component.dock-zone` fragment, so an app reskins or restructures the panel chrome the same way a third-party mod would, while the element keeps the dock math, the pointer gestures, panel custody, and the persisted layout.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["action", "actions", "badge", "body", "chevron", "close", "film", "float", "float-action", "float-body", "float-head", "float-resize", "float-title", "floats", "head", "kebab", "kebab-glyph", "menu", "root", "section", "section-body", "section-head", "section-title", "section-toggle", "split", "tab", "tabs", "zone"],
 	anatomy: [
 		{
 			name: "root",
@@ -163,6 +164,7 @@ export const dockZoneManifest: ComponentManifest = {
 			default: "all panels in one zone",
 			description: "The whole workspace (a `DockLayout` from `@xtyle/core/elements`: `{ tree, floating }`, the docked tree plus any floating windows). Set the JS property to restore a persisted layout and read it back from `layout-change.detail`; for a declarative start, pass it as a JSON `layout` attribute. A bare `DockNode` tree is still accepted and read as a layout with no floats. A leaf's `mode` / `collapsed` and each float's rect travel in the one layout, so the whole workspace persists together.",
 			bindings: ["html", "svelte"],
+			unobserved: "seed",
 		},
 		{
 			name: "mode",
@@ -170,48 +172,35 @@ export const dockZoneManifest: ComponentManifest = {
 			default: '"tabs"',
 			description: "The starting render mode when no `layout` is authored: `\"tabs\"` shows one active panel behind a tab strip; `\"stack\"` shows every panel as a collapsible section stacked top-to-bottom (a tool/inspector rail). Per-leaf mode lives in the layout tree; this attribute only seeds the auto single zone.",
 			bindings: ["html", "svelte", "astro"],
+			unobserved: "seed",
 		},
 		{
 			name: "data-badge",
 			type: "string (on a panel child)",
 			description: "Trailing status text on the panel's own tab (and its stacked-section header), like an unread or problem count. Rides on every panel's tab, not just the active one; decorative (`aria-hidden`), so the tab's accessible name stays its title.",
 			bindings: ["html", "svelte", "astro"],
+			attrOn: "panel",
 		},
 		{
 			name: "data-closable",
 			type: "boolean attribute (on a panel child)",
 			description: "Renders a close button in the panel's header. Clicking it fires a cancelable `panel-close` (`detail: { panelId }`); unless a listener calls `preventDefault()`, the zone removes the panel and fires `layout-change` with the new tree.",
 			bindings: ["html", "svelte", "astro"],
+			attrOn: "panel",
 		},
 		{
 			name: "data-actions",
-			type: "JSON `{ id, label, icon? }[]` (on a panel child)",
+			type: "JSON { id, label, icon? }[] (on a panel child)",
 			description: "Direct header buttons for a panel. `icon` is a short glyph shown on the button, `label` its accessible name. Clicking one fires `panel-action` (`detail: { panelId, actionId }`).",
 			bindings: ["html", "svelte", "astro"],
+			attrOn: "panel",
 		},
 		{
 			name: "data-menu",
-			type: "JSON `MenuItem[]` (on a panel child)",
+			type: "JSON MenuItem[] (on a panel child)",
 			description: "A kebab (⋮) overflow menu for the panel. The kebab is a real button in the panel's header; pressing it opens the workspace's shared cursor-anchored `<xtyle-menu>` loaded with this panel's rows (so it carries headings, hints, keyboard navigation, and `intent: \"danger\"`). Selecting a row fires `panel-action` with the row's `value` as the `actionId`.",
 			bindings: ["html", "svelte", "astro"],
-		},
-		{
-			name: "closePanel",
-			type: "(panelId: string) => void (method)",
-			description: "Close a panel through the same path as the built-in close button (a cancelable `panel-close`, then removal + `layout-change`). Call this from a `data-menu` \"close\" row or a shortcut; pulling a panel from the tree by hand and re-setting `layout` won't stick, since the panel is still a DOM child the zone will recover.",
-			bindings: ["html", "svelte", "astro"],
-		},
-		{
-			name: "floatPanel",
-			type: "(panelId: string, rect?: { x, y, w, h }) => void (method)",
-			description: "Tear a docked panel out into a floating window over the workspace, opening at `rect` (or a cascaded default), and report the new layout through `layout-change`. The window has a titlebar that drags it around the workspace (clamped to it), a bottom-right resize grip, plus dock and close buttons; its rect rides on the same `layout` as the docks, so it persists with everything else. Dragging a tab out past every zone floats it too. Wire the method to a `data-menu` \"float\" row or a shortcut.",
-			bindings: ["html", "svelte"],
-		},
-		{
-			name: "dockFloating",
-			type: "(panelId: string, target?: string, region?: DockRegion) => void (method)",
-			description: "Re-dock a floating panel back into the tree, routing through the same drop path a tab move uses. With no `target` it returns to the zone it floated out of (or the root zone if that's gone); pass a `target` zone id and `region` to land it elsewhere. The float window's dock button calls this — it is also the only way back to a *tab*, since a titlebar drag only ever offers a split. Dragging the window's titlebar into the `--dock-band` along a zone's boundary re-docks it there through the drop preview; anywhere else in the workspace the drag is just a move.",
-			bindings: ["html", "svelte"],
+			attrOn: "panel",
 		},
 		{
 			name: "onPanelClose",
@@ -224,6 +213,34 @@ export const dockZoneManifest: ComponentManifest = {
 			type: "(event: CustomEvent<{ panelId, actionId }>) => void",
 			description: "Svelte callback for the `panel-action` event fired by a header button or a menu row.",
 			bindings: ["svelte"],
+		},
+	],
+	events: [
+		{ name: "layout-change", detail: "{ layout }", description: "The dock's arrangement changed — a drag, a tear-off, a close.", bindings: ["html", "svelte", "astro"], handler: "onLayoutChange" },
+		{ name: "panel-action", detail: "{ panel, action }", description: "A panel's own action button was activated.", bindings: ["html", "svelte", "astro"], handler: "onPanelAction" },
+		{ name: "panel-close", detail: "{ panel }", description: "A panel was dismissed.", bindings: ["html", "svelte", "astro"], handler: "onPanelClose" },
+	],
+	methods: [
+		{
+			name: "closePanel",
+			params: "panelId: string",
+			description:
+				"Close a panel by id, whether it is docked or floating, through the same path as the built-in close button: a cancelable `panel-close`, then removal and `layout-change`. Call it from a `data-menu` close row or a shortcut; pulling a panel out of the tree by hand and re-setting `layout` will not stick, since the panel is still a DOM child the zone recovers.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "floatPanel",
+			params: "panelId: string, rect?: { x: number; y: number; width: number; height: number }",
+			description:
+				"Tear a docked panel out into a floating window over the workspace, opening at `rect` or a cascaded default, and report the new arrangement through `layout-change`. The imperative half of the drag that does the same thing. The window drags by its titlebar (clamped to the workspace), resizes from a bottom-right grip, and carries dock and close buttons; its rect rides on the same `layout` as the docks, so the whole workspace persists together.",
+			bindings: ["html", "svelte"],
+		},
+		{
+			name: "dockFloating",
+			params: "panelId: string, target?: string, region?: \"center\" | \"start\" | \"end\" | \"top\" | \"bottom\"",
+			description:
+				"Dock a floating panel back into the tree, routing through the same drop path a tab move uses and defaulting to the centre region of the zone it floated out of. Pass a `target` zone id and `region` to land it elsewhere. The float window's dock button calls this, and it is the only way back to a *tab*, since a titlebar drag only ever offers a split.",
+			bindings: ["html", "svelte"],
 		},
 	],
 	variants: [],
@@ -278,7 +295,9 @@ export const dockZoneManifest: ComponentManifest = {
 		"To reshape the chrome itself (a tab that carries an icon, a different float titlebar, a kebab that isn't a `⋮`), fill the `component.dock-zone` slot: the built-in panel chrome is a fragment, so an override goes through the same surface a third-party mod would use. The dock math, the gestures, and the layout stay with the element, so a reshaped workspace still drags, splits, floats, and persists.",
 	],
 	a11y: [
-		"Tabs are real `<button>`s with `role=\"tab\"` and `aria-selected`, so the active panel is announced and the strip is keyboard-focusable.",
+		"A zone's tab strip is a real `role=\"tablist\"` of `role=\"tab\"` buttons, each `aria-controls`-linked to the zone's panel body, which is a `role=\"tabpanel\"` named by the active tab. A `tab` outside a `tablist` is not a tab to assistive tech, so the relationship is declared rather than implied.",
+		"The strip is one Tab stop: the active tab carries `tabindex=\"0\"` and the rest `-1`, so Tab reaches the strip and moves past it rather than through every panel name.",
+		"Ids are scoped to the element instance, so several docks on one page never collide.",
 		"Dragging is pointer-driven; clicking a tab activates its panel without a drag, so rearrangement is not the only way to switch panels.",
 		"Header controls are real `<button>`s with an accessible name (`data-actions` uses its `label`, close reads `Close <title>`, the kebab reads `<title> options`); the kebab opens a full `<xtyle-menu>` with keyboard navigation, and its glyph is `aria-hidden`.",
 		"A floating window's titlebar controls are named buttons (`Dock <title>`, `Close <title>`), so a torn-off panel can be docked back or closed without a pointer drag.",

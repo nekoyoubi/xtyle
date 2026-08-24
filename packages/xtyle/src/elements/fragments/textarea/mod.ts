@@ -93,7 +93,7 @@ hooks.fragment.update("textarea", (bindings, ops) => {
 
 xript.exports.register("onInput", (payload: unknown): Intent => {
 	const e = payload as EventPayload;
-	return { value: e.value ?? "" };
+	return { value: e.value ?? "", emit: { type: "input" } };
 });
 
 xript.exports.register("onChange", (payload: unknown): Intent => {

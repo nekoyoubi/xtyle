@@ -1,5 +1,6 @@
 ---
 import type { PropDef } from "@xtyle/core";
+import { renderMarkdownInline } from "@xtyle/core/markup";
 import Table from "@xtyle/astro/Table.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Badge from "@xtyle/astro/Badge.astro";
@@ -11,6 +12,15 @@ interface Props {
 
 const { props } = Astro.props;
 const bindingOrder = ["html", "svelte", "astro"] as const;
+
+const kebab = (name: string) => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+const htmlAttr = (p: PropDef): string | null => {
+	if (p.readonly || p.propertyOnly || !p.bindings.includes("html") || p.name.includes("(")) return null;
+	const attr = p.attr ?? kebab(p.name);
+	if (p.attrOn) return p.attrOn.includes(attr) ? p.attrOn : `${attr} on ${p.attrOn}`;
+	if (p.unobserved === "seed") return `${attr}, read once at mount`;
+	return attr === p.name ? null : attr;
+};
 ---
 
 {props.length > 0 && (
@@ -30,6 +40,16 @@ const bindingOrder = ["html", "svelte", "astro"] as const;
 					<tr>
 						<td>
 							<Badge tone="accent" size="sm" class="prop-name-badge">{p.name}</Badge>
+							{htmlAttr(p) && (
+								<Text as="span" size="sm" tone="muted" mono class="prop-attr">
+									html: {htmlAttr(p)}
+								</Text>
+							)}
+							{(p.readonly || p.propertyOnly) && (
+								<Cluster gap={1} class="prop-option-row">
+									<Badge variant="outline" size="sm" tone="neutral">{p.readonly ? "read-only" : "property"}</Badge>
+								</Cluster>
+							)}
 						</td>
 						<td>
 							<Text as="span" size="sm" tone="muted" mono class="prop-type">{p.type}</Text>
@@ -58,7 +78,7 @@ const bindingOrder = ["html", "svelte", "astro"] as const;
 							</Cluster>
 						</td>
 						<td>
-							<Text as="span" size="sm" class="prop-desc">{p.description}</Text>
+							<Text as="span" size="sm" class="prop-desc" set:html={renderMarkdownInline(p.description)} />
 						</td>
 					</tr>
 				))}
@@ -79,6 +99,10 @@ const bindingOrder = ["html", "svelte", "astro"] as const;
 		overflow-wrap: anywhere;
 	}
 	.prop-option-row {
+		margin-top: var(--space-1);
+	}
+	.prop-attr {
+		display: block;
 		margin-top: var(--space-1);
 	}
 	.prop-desc {

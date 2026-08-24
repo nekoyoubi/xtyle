@@ -102,7 +102,7 @@
 				<Badge tone="neutral" variant="outline" size="sm">Draft</Badge>
 			</header>
 
-			<Panel title="Appearance">
+			<Panel heading="Appearance">
 				{#snippet actions()}
 					<Button variant="ghost" size="sm">
 						{#snippet iconStart()}<Icon name="arrow-left" />{/snippet}
@@ -173,7 +173,7 @@
 				</div>
 			</Panel>
 
-			<Panel title="Notifications">
+			<Panel heading="Notifications">
 				<div class="prefs__stack">
 					<FormGroup label="Delivery" description="Where routine notifications land.">
 						<Cluster gap={4}>
@@ -202,7 +202,7 @@
 				</div>
 			</Panel>
 
-			<Panel title="Account">
+			<Panel heading="Account">
 				<div class="prefs__stack">
 					<Card compact>
 						<div class="prefs__plan">
@@ -259,7 +259,7 @@
 				</div>
 			</Panel>
 
-			<Panel title="Danger zone">
+			<Panel heading="Danger zone">
 				<Alert severity="danger" variant="soft">
 					{#snippet title()}Deleting a workspace is permanent{/snippet}
 					Every theme, algorithm, and derived token set in it goes too. Exports do not come back.

@@ -108,7 +108,7 @@
 		</div>
 
 		<div class="dash__row dash__row--split">
-			<Panel title="Sessions by channel">
+			<Panel heading="Sessions by channel">
 				{#snippet actions()}
 					<Text size="xs" tone="subtle">thousands / month</Text>
 					<Badge size="sm" tone="success" variant="soft">+18% QoQ</Badge>
@@ -116,7 +116,7 @@
 				<Bar series={traffic} categories={months} scheme="accents" stacked legend height={190} label="Sessions by channel, by month" />
 			</Panel>
 
-			<Panel title="Revenue by plan">
+			<Panel heading="Revenue by plan">
 				{#snippet actions()}
 					<Text size="xs" tone="subtle">$48.2k</Text>
 				{/snippet}
@@ -125,7 +125,7 @@
 		</div>
 
 		<div class="dash__row dash__row--split">
-			<Panel title="Requests by hour">
+			<Panel heading="Requests by hour">
 				{#snippet actions()}
 					<Text size="xs" tone="subtle">last 7 days</Text>
 				{/snippet}
@@ -141,7 +141,7 @@
 				/>
 			</Panel>
 
-			<Panel title="Deploys">
+			<Panel heading="Deploys">
 				{#snippet actions()}
 					<Badge size="sm" tone="neutral" variant="soft">176 runs</Badge>
 				{/snippet}
@@ -155,7 +155,7 @@
 		</div>
 
 		<div class="dash__row dash__row--wide">
-			<Panel title="Top campaigns">
+			<Panel heading="Top campaigns">
 				{#snippet actions()}
 					<Button variant="link" size="sm">
 						View all
@@ -196,7 +196,7 @@
 				</Table>
 			</Panel>
 
-			<Panel title="Capacity">
+			<Panel heading="Capacity">
 				{#snippet actions()}
 					<Badge size="sm" tone="warn" variant="soft" dot>1 near limit</Badge>
 				{/snippet}
@@ -268,7 +268,7 @@
 	.dash__row {
 		display: grid;
 		gap: var(--space-4);
-		align-items: start;
+		align-items: stretch;
 	}
 
 	.dash__row--split {

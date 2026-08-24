@@ -77,7 +77,8 @@ function paint(b: SpotlightBindings, ops: OpsBuilder): void {
 	ops.setText("[data-sl-title]", heading);
 	ops.setAttr("[data-sl-title]", "id", b.headingId ?? "");
 	ops.setAttr("[data-sl-title]", "hidden", heading.length > 0 ? "" : "hidden");
-	ops.setAttr("[data-callout]", "aria-labelledby", heading.length > 0 ? (b.headingId ?? "") : "");
+	ops.setAttr("[data-callout]", "labelledby", heading.length > 0 ? (b.headingId ?? "") : "");
+	ops.setAttr("[data-callout]", "label", heading.length > 0 ? "" : "Highlighted step");
 
 	ops.setText("[data-sl-close]", b.closeLabel ?? "Got it");
 	ops.setAttr("[data-sl-close]", "hidden", b.noCloseButton === true ? "hidden" : "");

@@ -22,6 +22,7 @@ interface Props {
 	noFooter?: boolean;
 	/** Keep the palette open after a command runs. */
 	noCloseOnSelect?: boolean;
+	completeFirst?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -42,6 +43,7 @@ const {
 	storageKey,
 	noFooter = false,
 	noCloseOnSelect = false,
+	completeFirst = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -94,6 +96,7 @@ const light = await renderFragmentLight("command-palette", bindings);
 	storage-key={storageKey}
 	no-footer={noFooter || undefined}
 	no-close-on-select={noCloseOnSelect || undefined}
+	complete-first={completeFirst || undefined}
 	class={extra}
 	{...rest}
 	set:html={light}

@@ -10,6 +10,18 @@ import Text from "@xtyle/astro/Text.astro";
 import Button from "@xtyle/astro/Button.astro";
 import Field from "@xtyle/astro/Field.astro";
 import Avatar from "@xtyle/astro/Avatar.astro";
+import type { TourSpec } from "@xtyle/core";
+
+const asData: TourSpec = {
+	id: "tr-spec",
+	title: "The same tour, as data",
+	summary: "Three stops, no markup",
+	steps: [
+		{ target: "#tr-compose", heading: "Compose", body: "Declared in a variable, not in markup.", placement: "bottom" },
+		{ target: "#tr-search", heading: "Search", body: "Which is what lets a help menu offer it by id.", placement: "bottom" },
+		{ target: "#tr-settings", heading: "Settings", body: "Same rendering as a slotted tour, because it materializes the same steps.", placement: "left" },
+	],
+};
 ---
 
 <div class="tr-demo" data-tour-demo>
@@ -42,7 +54,36 @@ import Avatar from "@xtyle/astro/Avatar.astro";
 			<Cluster gap={3}>
 				<Button variant="solid" tone="accent" data-start-tour="tr-dots">Take the tour (dots)</Button>
 				<Button variant="outline" tone="neutral" data-start-tour="tr-count">Take the tour (count)</Button>
+					<Button variant="ghost" tone="neutral" data-start-tour="tr-spec">Take the tour (declared as data)</Button>
 			</Cluster>
+
+			<Stack gap={2}>
+				<Text tone="muted" size="sm">
+					A step can point at something that is not on screen yet. <code>beforeStep</code> runs before
+					the target is resolved, so the step makes what it needs first; the callout opens straight
+					away either way and attaches the target the moment it appears.
+				</Text>
+				<div id="tr-drawer" class="tr-demo__drawer" hidden>
+					<Button id="tr-archive" variant="subtle" tone="neutral" size="sm">Archive</Button>
+				</div>
+				<Cluster gap={3}>
+					<Button variant="solid" tone="accent" data-start-tour="tr-late">Take the tour (opens a drawer)</Button>
+					<Text as="span" size="xs" tone="subtle" data-prepared-count>prepared 0 times</Text>
+				</Cluster>
+			</Stack>
+
+			<Stack gap={2}>
+				<Text tone="muted" size="sm">
+					The spotlight knobs are the tour's to set once for every step: <code>dim</code> how dark the
+					veil goes, <code>blur</code> how far the page behind it softens, <code>padding</code> how much
+					room the hole leaves around a target, and <code>arrow</code> whether the pointer bounces,
+					holds still, or is dropped. <code>scrollIntoView</code> brings a target that is off screen to
+					the middle before its callout opens. Any step can still override its own.
+				</Text>
+				<Cluster gap={3}>
+					<Button variant="outline" tone="neutral" data-start-tour="tr-look">Take the tour (dimmed and blurred)</Button>
+				</Cluster>
+			</Stack>
 		</Stack>
 	</Card>
 </div>
@@ -62,6 +103,27 @@ import Avatar from "@xtyle/astro/Avatar.astro";
 	</TourStep>
 </Tour>
 
+<Tour id="tr-spec" progress="count" spec={asData} />
+
+<Tour id="tr-late" progress="count">
+	<TourStep target="#tr-compose" heading="Start here" placement="bottom">The drawer below is still closed.</TourStep>
+	<TourStep target="#tr-archive" heading="Made on demand" placement="top">
+		This button did not exist a moment ago; the step opened the drawer that holds it.
+	</TourStep>
+</Tour>
+
+<Tour id="tr-look" progress="count" dim={0.9} blur={4} padding={16} arrow="static" scrollIntoView>
+	<TourStep target="#tr-compose" heading="A heavier veil" placement="bottom">
+		<code>dim</code> at 0.9 and <code>blur</code> at 4px, so the page behind reads as out of focus rather than merely darkened.
+	</TourStep>
+	<TourStep target="#tr-search" heading="More room, no bounce" placement="bottom">
+		<code>padding</code> at 16px opens the hole well clear of the field, and <code>arrow="static"</code> points without animating.
+	</TourStep>
+	<TourStep target="#tr-settings" heading="Overridable per step" placement="left" pulse="fast">
+		The tour sets the defaults; this step still takes its own <code>pulse</code>.
+	</TourStep>
+</Tour>
+
 <Tour id="tr-count" progress="count">
 	<TourStep target="#tr-compose" heading="Compose" placement="bottom">Where a new message begins.</TourStep>
 	<TourStep target="#tr-search" heading="Search" placement="bottom">Find anything, fast.</TourStep>
@@ -69,16 +131,41 @@ import Avatar from "@xtyle/astro/Avatar.astro";
 </Tour>
 
 <script>
-	type TourEl = HTMLElement & { start(): void };
+	type TourEl = HTMLElement & {
+		start(): void;
+		beforeStep: ((index: number) => void | Promise<void>) | null;
+	};
 	for (const trigger of document.querySelectorAll<HTMLElement>("[data-start-tour]")) {
 		trigger.addEventListener("click", () => {
 			const id = trigger.dataset.startTour!;
 			(document.getElementById(id) as TourEl | null)?.start();
 		});
 	}
+
+	const late = document.getElementById("tr-late") as TourEl | null;
+	const drawer = document.getElementById("tr-drawer");
+	const readout = document.querySelector("[data-prepared-count]");
+	let prepared = 0;
+	if (late && drawer) {
+		late.beforeStep = async (index) => {
+			prepared += 1;
+			if (readout) readout.textContent = `prepared ${prepared} time${prepared === 1 ? "" : "s"}`;
+			drawer.hidden = index !== 1;
+			await new Promise((resolve) => setTimeout(resolve, 120));
+		};
+		late.addEventListener("close", () => {
+			drawer.hidden = true;
+		});
+	}
 </script>
 
 <style>
+	.tr-demo__drawer {
+		padding: var(--space-3);
+		border-radius: var(--radius-md);
+		background: var(--bg-2);
+		border: var(--border-thin) solid var(--line);
+	}
 	.tr-demo__stage {
 		display: grid;
 		gap: var(--space-4);

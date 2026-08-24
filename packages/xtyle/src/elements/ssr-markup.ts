@@ -232,15 +232,37 @@ export function topLevelElements(html: string): MarkedChild[] {
 	return out;
 }
 
-/** Pair marked children into `{ lead, body }` records — a header with its panel, a tab with its
- * panel. A lead with no body following it still yields a pair, so a malformed authoring run
- * degrades to an empty panel rather than silently dropping the section. */
+/**
+ * Pair marked children into `{ lead, body }` records — a header with its panel, a tab with its panel.
+ * A lead with no body still yields a pair, so a malformed authoring run degrades to an empty section
+ * rather than silently dropping it.
+ *
+ * Two authoring orders are legitimate and both appear in this repo's own examples: **interleaved**
+ * (`tab, panel, tab, panel`, which the manifest samples use) and **grouped** (`tab, tab, panel, panel`,
+ * which reads better in a template and is what the site demos use). They need different rules, so the
+ * order is detected rather than assumed: every lead preceding every body is grouped and pairs by index;
+ * anything else is interleaved and pairs by the body that follows each lead, which is what lets a
+ * surplus panel be discarded instead of stealing the next lead's slot.
+ *
+ * Assuming interleaving is what made the grouped shape fail silently: each lead but the last took a
+ * `null` body and the surplus bodies were dropped, so a three-tab set rendered two empty panels and one
+ * holding the wrong content — with no error anywhere.
+ */
 export function markedPairs(
 	html: string,
 	leadMarker: string,
 	bodyMarker: string,
 ): { lead: MarkedChild; body: MarkedChild | null }[] {
 	const children = markedChildren(html, [leadMarker, bodyMarker]);
+	let lastLead = -1;
+	for (let i = 0; i < children.length; i++) if (children[i]!.marker === leadMarker) lastLead = i;
+	const firstBody = children.findIndex((child) => child.marker !== leadMarker);
+	const grouped = firstBody === -1 || lastLead < firstBody;
+	if (grouped) {
+		const leads = children.filter((child) => child.marker === leadMarker);
+		const bodies = children.filter((child) => child.marker !== leadMarker);
+		return leads.map((lead, i) => ({ lead, body: bodies[i] ?? null }));
+	}
 	const pairs: { lead: MarkedChild; body: MarkedChild | null }[] = [];
 	for (const child of children) {
 		if (child.marker === leadMarker) pairs.push({ lead: child, body: null });

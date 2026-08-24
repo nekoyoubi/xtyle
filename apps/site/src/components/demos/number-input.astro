@@ -11,7 +11,7 @@ import Text from "@xtyle/astro/Text.astro";
 		<Heading level={3} size="sm" tone="muted">Common fields</Heading>
 		<Cluster gap={5} align="end" class="demo__row">
 			<Stack gap={2}>
-				<NumberInput label="Quantity" value={1} min={0} max={99} />
+				<NumberInput name="quantity" label="Quantity" value={1} min={0} max={99} />
 			</Stack>
 			<Stack gap={2}>
 				<NumberInput label="Step by 5" value={20} min={0} max={100} step={5} />

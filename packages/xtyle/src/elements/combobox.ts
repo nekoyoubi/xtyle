@@ -47,6 +47,14 @@ export class XtyleCombobox extends XtyleElement {
 	static formAssociated = true;
 
 	private internals: ElementInternals | null = null;
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
+
+	protected override get fillOwnsFormName(): boolean {
+		return true;
+	}
 	private uid = `xtyle-combobox-${++comboboxSeq}`;
 	private inputId = `${this.uid}-input`;
 	private listId = `${this.uid}-list`;
@@ -68,7 +76,7 @@ export class XtyleCombobox extends XtyleElement {
 	private hostWired = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "combobox", {
 		context: (handler) => (handler === "inputKeydown" ? this.navContext() : undefined),
-		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => this.afterApply(),
 	});
 
@@ -100,6 +108,7 @@ export class XtyleCombobox extends XtyleElement {
 			"readonly",
 			"invalid",
 			"required",
+			"required-message",
 			"description",
 			"error",
 			"empty-text",
@@ -432,7 +441,7 @@ export class XtyleCombobox extends XtyleElement {
 			this.queryDirty = false;
 		}
 		this.repaint();
-		if (changed) this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+		if (changed) this.emitOwn("change", null, { value: this.value, values: this.values });
 	}
 
 	/** Mirror the selection onto the attributes: `value` for the single-select posture, a JSON `values` array
@@ -519,7 +528,7 @@ export class XtyleCombobox extends XtyleElement {
 			this.openList();
 			this.setActiveEdge("first");
 			this.popup?.reposition();
-			this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+			this.emitOwn("input", null, { query: this.query });
 			return;
 		}
 		if (intent.openMenu) {
@@ -547,7 +556,7 @@ export class XtyleCombobox extends XtyleElement {
 		}
 		if (intent.clearValue) {
 			this.clearAll();
-			this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+			this.emitOwn("input", null, { query: this.query });
 		}
 		if (intent.removeValue !== undefined) this.removeValue(intent.removeValue);
 		if (intent.removeLast) {
@@ -658,7 +667,7 @@ export class XtyleCombobox extends XtyleElement {
 	private syncFormValue(): void {
 		const values = this.values;
 		this.syncHiddenInputs(values, this.name);
-		if (this.internals && this.isShadow()) {
+		if (this.internals && this.reportsFormValue()) {
 			try {
 				this.internals.setFormValue(values.join(","));
 			} catch {
@@ -673,19 +682,15 @@ export class XtyleCombobox extends XtyleElement {
 		const input = this.input ?? undefined;
 		try {
 			if (this.invalid) {
-				this.internals.setValidity({ customError: true }, this.getAttribute("error") ?? "Invalid value", input);
+				this.internals.setValidity({ customError: true }, this.validityMessage("error", "Invalid value"), input);
 			} else if (this.required && this.values.length === 0) {
-				this.internals.setValidity({ valueMissing: true }, "Please select a value.", input);
+				this.internals.setValidity({ valueMissing: true }, this.validityMessage("required-message", "Please select a value."), input);
 			} else {
 				this.internals.setValidity({});
 			}
 		} catch {
 			/* validity is advisory here; the mirrored inputs still carry the value */
 		}
-	}
-
-	private isShadow(): boolean {
-		return (this.root as unknown as Node) !== (this as unknown as Node);
 	}
 
 	private syncHiddenInputs(values: string[], name: string | null): void {

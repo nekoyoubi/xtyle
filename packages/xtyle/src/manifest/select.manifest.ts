@@ -23,6 +23,43 @@ const htmlExample = `<xtyle-select label="Theme" name="theme" value="auto">
 	<option value="ca">Canada</option>
 </xtyle-select>`;
 
+const formHtmlExample = `<form>
+	<xtyle-select label="Plan" name="plan" required>
+		<option value="" selected>Choose…</option>
+		<option value="team">Team</option>
+		<option value="pro">Pro</option>
+	</xtyle-select>
+	<xtyle-button type="submit">Subscribe</xtyle-button>
+</form>`;
+
+const formSvelteExample = `<script lang="ts">
+	import { Select, Button } from "@xtyle/svelte";
+	let plan = $state("");
+</script>
+
+<form onsubmit={(event) => { event.preventDefault(); console.log(new FormData(event.currentTarget)); }}>
+	<Select label="Plan" name="plan" required bind:value={plan}>
+		<option value="">Choose…</option>
+		<option value="team">Team</option>
+		<option value="pro">Pro</option>
+	</Select>
+	<Button type="submit">Subscribe</Button>
+</form>`;
+
+const formAstroExample = `---
+import Select from "@xtyle/astro/Select.astro";
+import Button from "@xtyle/astro/Button.astro";
+---
+
+<form>
+	<Select label="Plan" name="plan" required>
+		<option value="" selected>Choose…</option>
+		<option value="team">Team</option>
+		<option value="pro">Pro</option>
+	</Select>
+	<Button type="submit">Subscribe</Button>
+</form>`;
+
 const svelteExample = `<script lang="ts">
 	import { Select } from "@xtyle/svelte";
 	let theme = $state("auto");
@@ -87,8 +124,9 @@ export const selectManifest: ComponentManifest = {
 	seeAlso: ["menu", "field", "segmented"],
 	summary: "A styled native dropdown: `.xtyle-control` chrome, a custom chevron, and a label, with valid and invalid states across three sizes.",
 	description:
-		"Select is a thin, accessible skin over the native `<select>`. It inherits the shared `.xtyle-control` chrome (the same fill, border, radius, and focus ring as Field) so it sits flush beside other form controls, then hides the platform arrow and paints its own chevron, colored by focus, invalid, and disabled state. Options are plain `<option>` / `<optgroup>` children passed straight through to the native element, so keyboard navigation, type-ahead, and the OS picker all come for free. A `label` wires an accessible name, `invalid` plus `error` surface validation, and `sm` / `md` / `lg` tune the density.",
+		"Select is a thin, accessible skin over the native `<select>`. It inherits the shared `.xtyle-control` chrome (the same fill, border, radius, and focus ring as Field) so it sits flush beside other form controls, then hides the platform arrow and paints its own chevron, colored by focus, invalid, and disabled state. Options are plain `<option>` / `<optgroup>` children passed straight through to the native element, so keyboard navigation, type-ahead, and the OS picker all come for free. A `label` wires an accessible name, `invalid` plus `error` surface validation, and `sm` / `md` / `lg` tune the density. It is form-associated: give it a `name` and the chosen value posts once, whether the element rendered into light DOM or behind a shadow root; `required` and `invalid` reach the form as real constraint validity rather than styling alone.",
 	bindings: ["html", "svelte", "astro"],
+	exposedParts: ["chevron", "control", "error", "label", "root", "select"],
 	anatomy: [
 		{
 			name: "root",
@@ -167,6 +205,14 @@ export const selectManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "focusable",
+			type: "boolean",
+			default: "true",
+			description:
+				"Set `false` to keep the control out of sequential focus navigation, for an app driving selection from its own keyboard cursor. The host's own `tabindex` cannot express this, because focus lands on the inner control rather than the host, and setting it there from outside does not survive the next render.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "disabled",
 			type: "boolean",
 			default: "false",
@@ -180,6 +226,16 @@ export const selectManifest: ComponentManifest = {
 			description: "Marks the field required, reflecting `required` and `aria-required` onto the native select.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "requiredMessage",
+			type: "string",
+			default: "Please select a value.",
+			description: "The message the browser shows when `required` is unmet. The platform localizes its own constraint messages and this one is xtyle's, so an app that is not in English should set it.",
+			bindings: ["html", "svelte", "astro"],
+		},
+	],
+	events: [
+		{ name: "change", detail: "{ value }", description: "The chosen option changed.", bindings: ["html", "svelte", "astro"] },
 	],
 	variants: [
 		{
@@ -265,6 +321,13 @@ export const selectManifest: ComponentManifest = {
 			title: "Labels, groups, and validation",
 			description: "A plain labelled select, a grouped large select, and an invalid required select with an error message.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "in-a-form",
+			title: "In a form",
+			description:
+				"A required select inside a `<form>` with a submit button: the chosen value posts under its `name`, and leaving it empty blocks the submit.",
+			source: { html: formHtmlExample, svelte: formSvelteExample, astro: formAstroExample },
 		},
 	],
 };

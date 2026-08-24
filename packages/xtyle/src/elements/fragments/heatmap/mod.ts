@@ -93,7 +93,7 @@ function tableHtml(values: number[][], rows: string[], cols: string[], caption: 
 		)
 		.join("");
 	const cap = caption ? `<caption>${escapeAttr(caption)}</caption>` : "";
-	return `<table class="xtyle-heatmap__a11y">${cap}<thead>${head}</thead><tbody>${body}</tbody></table>`;
+	return `<div class="xtyle-heatmap__a11y"><table>${cap}<thead>${head}</thead><tbody>${body}</tbody></table></div>`;
 }
 
 function heatmapHtml(b: HeatmapBindings): string {

@@ -1,10 +1,12 @@
 ---
 import { checkAuthoring } from "./internal/diagnose.js";
-import { TOUR_PROGRESS, resolveVocab, POPOVER_PLACEMENTS, resolveOptionalVocab, SPOTLIGHT_SHAPES, SPOTLIGHT_PULSES } from "@xtyle/core";
+import type { TourSpec } from "@xtyle/core";
+import { TOUR_PROGRESS, resolveVocab, POPOVER_PLACEMENTS, resolveOptionalVocab, SPOTLIGHT_SHAPES, SPOTLIGHT_PULSES, SPOTLIGHT_ARROWS } from "@xtyle/core";
 type Progress = (typeof TOUR_PROGRESS)[number];
 type Placement = (typeof POPOVER_PLACEMENTS)[number];
 type Shape = (typeof SPOTLIGHT_SHAPES)[number];
 type Pulse = (typeof SPOTLIGHT_PULSES)[number];
+type Arrow = (typeof SPOTLIGHT_ARROWS)[number];
 
 interface Props {
 	open?: boolean;
@@ -18,7 +20,24 @@ interface Props {
 	placement?: Placement;
 	shape?: Shape;
 	pulse?: Pulse;
+	/** Breathing room between a target and the edge of its hole, in px. */
+	padding?: number;
+	/** How dark each step's veil goes, 0–1. */
+	dim?: number;
+	/** How far the page behind each veil blurs, in px. */
+	blur?: number;
+	arrow?: Arrow;
+	/** Scroll each target to the middle of the viewport before its callout opens. */
+	scrollIntoView?: boolean;
 	noDismiss?: boolean;
+	/** Whether this tour has already been taken. The component reports `complete` / `skip` and keeps no
+	 * memory of either; where that is stored is the app's decision. */
+	taken?: boolean;
+	/** How long to keep watching for a late target after the callout is up, in ms. */
+	targetTimeout?: number;
+	/** A whole tour as data, in place of authoring `TourStep` children. Serialized to the element's `spec`
+	 * attribute, so the static render carries it. */
+	spec?: TourSpec;
 	/** Render zero-JS: emit the markup but never load the runtime. A tour is invisible until started, so this is a bare element. */
 	static?: boolean;
 	class?: string;
@@ -38,7 +57,15 @@ const {
 	placement: placementInput,
 	shape: shapeInput,
 	pulse: pulseInput,
+	padding,
+	dim,
+	blur,
+	arrow: arrowInput,
+	scrollIntoView = false,
 	noDismiss = false,
+	taken = false,
+	targetTimeout,
+	spec,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -48,6 +75,7 @@ const progress = resolveVocab(progressInput, TOUR_PROGRESS, "count", "tour progr
 const placement = resolveOptionalVocab(placementInput, POPOVER_PLACEMENTS, "tour placement");
 const shape = resolveOptionalVocab(shapeInput, SPOTLIGHT_SHAPES, "tour shape");
 const pulse = resolveOptionalVocab(pulseInput, SPOTLIGHT_PULSES, "tour pulse");
+const arrow = resolveOptionalVocab(arrowInput, SPOTLIGHT_ARROWS, "tour arrow");
 ---
 
 <xtyle-tour
@@ -62,7 +90,15 @@ const pulse = resolveOptionalVocab(pulseInput, SPOTLIGHT_PULSES, "tour pulse");
 	placement={placement}
 	shape={shape}
 	pulse={pulse}
+	padding={padding != null ? String(padding) : undefined}
+	dim={dim != null ? String(dim) : undefined}
+	blur={blur != null ? String(blur) : undefined}
+	arrow={arrow}
+	scroll-into-view={scrollIntoView || undefined}
 	no-dismiss={noDismiss || undefined}
+	taken={taken || undefined}
+	target-timeout={targetTimeout != null ? String(targetTimeout) : undefined}
+	spec={spec ? JSON.stringify(spec) : undefined}
 	class={extra}
 	{...rest}
 >

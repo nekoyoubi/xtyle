@@ -23,7 +23,7 @@ const logLines = [
 ---
 
 <Stack gap={6}>
-	<Panel title="Project overview" level={3}>
+	<Panel heading="Project overview" level={3}>
 		<Button slot="actions" variant="outline" tone="neutral" size="sm">
 			Edit
 		</Button>
@@ -42,7 +42,7 @@ const logLines = [
 	</Panel>
 
 	<Grid minColWidth="18rem" gap={4}>
-		<Panel variant="collapsible" title="Closed by default" level={3}>
+		<Panel variant="collapsible" heading="Closed by default" level={3}>
 			<Stack gap={2}>
 				<Text size="sm">
 					The collapsible variant turns the header into a disclosure toggle.
@@ -55,7 +55,7 @@ const logLines = [
 			</Stack>
 		</Panel>
 
-		<Panel variant="collapsible" title="Open by default" level={3} open>
+		<Panel variant="collapsible" heading="Open by default" level={3} open>
 			<Button slot="actions" variant="ghost" tone="neutral" size="sm">
 				Reset
 			</Button>
@@ -65,13 +65,13 @@ const logLines = [
 					in the header alongside the marker.
 				</Text>
 				<Text tone="muted" size="sm">
-					The marker leading the title is an <code>&lt;xtyle-icon&gt;</code> the panel's
+					The marker leading the heading is an <code>&lt;xtyle-icon&gt;</code> the panel's
 					fragment draws, so a mod can swap the caret without touching the panel.
 				</Text>
 			</Stack>
 		</Panel>
 
-		<Panel variant="collapsible" title="A different marker" level={3} markerIcon="plus">
+		<Panel variant="collapsible" heading="A different marker" level={3} markerIcon="plus">
 			<Stack gap={2}>
 				<Text size="sm">
 					<code>markerIcon</code> names any glyph the icon roster can draw, so this
@@ -84,7 +84,7 @@ const logLines = [
 		</Panel>
 	</Grid>
 
-	<Panel title="Build log" level={3} scroll>
+	<Panel heading="Build log" level={3} scroll>
 		<Badge slot="actions" tone="success" variant="soft" size="sm">live</Badge>
 		<Stack gap={1} class="demo-panel__log">
 			{logLines.map((line) => (
@@ -96,6 +96,32 @@ const logLines = [
 			<Button variant="subtle" tone="neutral" size="sm">Clear</Button>
 		</Cluster>
 	</Panel>
+
+	<Stack gap={2}>
+		<Text size="sm" tone="subtle">
+			<code>fill</code> — in a bounded column, one panel absorbs the slack and scrolls its body while the rest keep their
+			natural height. The header and footer stay put.
+		</Text>
+		<div class="demo-panel__column">
+			<Panel heading="Fixed" level={3}>
+				<Text size="sm">Natural height, whatever its content needs.</Text>
+			</Panel>
+			<Panel heading="Layers" level={3} fill>
+				<Badge slot="actions" tone="accent" variant="soft" size="sm">12</Badge>
+				<Stack gap={2}>
+					{Array.from({ length: 12 }, (_, i) => (
+						<Text size="sm" mono tone="muted">layer {String(12 - i).padStart(2, "0")} · normal · 100%</Text>
+					))}
+				</Stack>
+				<Cluster slot="footer" gap={2} justify="between" align="center">
+					<Text size="sm" tone="subtle">12 layers</Text>
+				</Cluster>
+			</Panel>
+			<Panel heading="Also fixed" level={3}>
+				<Text size="sm">The column's slack went to the panel that asked for it.</Text>
+			</Panel>
+		</div>
+	</Stack>
 </Stack>
 
 <style>
@@ -108,5 +134,11 @@ const logLines = [
 	}
 	.demo-panel__log :global(.xtyle-text) {
 		white-space: nowrap;
+	}
+	.demo-panel__column {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		height: 30rem;
 	}
 </style>

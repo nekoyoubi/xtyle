@@ -18,8 +18,9 @@ import {
 	categoryOrder,
 	categoryMeta,
 } from "../../components/reference/categories.ts";
-import { renderMarkdownInline } from "../../components/reference/inline-markdown.ts";
+import { renderMarkdownInline } from "@xtyle/core/markup";
 import { isNewComponent } from "../../data/newness.ts";
+import { releasedVersions } from "../../data/releases.ts";
 import type { ComponentManifest } from "@xtyle/core";
 
 const site = await getStats();
@@ -64,7 +65,7 @@ const compareVersions = (a: string, b: string): number => {
 	return 0;
 };
 
-const versions = [...new Set(all.map((c) => c.since ?? "0.1.0"))].sort(compareVersions);
+const versions = releasedVersions(all.map((c) => c.since ?? "0.1.0"));
 const advent = versions.map((version, i) => ({
 	version,
 	added: all.filter((c) => (c.since ?? "0.1.0") === version).length,
@@ -536,11 +537,7 @@ const metaDescription = `The xtyle component contract: ${total} components acros
 	.cx-lede code,
 	.cx-card__summary code,
 	.cx-search__empty code {
-		font-family: var(--font-mono);
 		font-size: 0.9em;
-		background: var(--bg-2);
-		padding: 0.1em 0.35em;
-		border-radius: var(--radius-sm);
 	}
 	@media (min-width: 60rem) {
 		.cx-stats {
