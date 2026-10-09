@@ -1,5 +1,12 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import type { CarouselTransition, CarouselDirection } from "../vocab.js";
+import {
+	CAROUSEL_CONTROLS,
+	CAROUSEL_DIRECTIONS,
+	CAROUSEL_TRANSITIONS,
+	resolveVocab,
+	type CarouselTransition,
+	type CarouselDirection,
+} from "../vocab.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/carousel/source.generated.js";
 import { iconBody } from "../icon-registry.js";
@@ -39,6 +46,8 @@ export class XtyleCarousel extends XtyleElement {
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => this.afterApply(),
 	});
+
+	static override readonly ownedData = ["data-controls", "data-enhanced"];
 
 	static get observedAttributes(): string[] {
 		return ["label", "autoplay", "interval", "loop", "controls", "dots", "transition", "direction", "pause-on-hover"];
@@ -97,7 +106,7 @@ export class XtyleCarousel extends XtyleElement {
 	/** Where the prev/next arrows sit: `bar` (default, below the track), `overlay` (on the slides,
 	 * left/right edges), or `none`. */
 	get controlsMode(): "bar" | "overlay" | "none" {
-		const value = this.getAttribute("controls");
+		const value = resolveVocab(this.getAttribute("controls"), CAROUSEL_CONTROLS, "true", "carousel controls");
 		if (value === "false") return "none";
 		if (value === "overlay") return "overlay";
 		return "bar";
@@ -118,8 +127,7 @@ export class XtyleCarousel extends XtyleElement {
 	}
 
 	get transition(): CarouselTransition {
-		const raw = this.getAttribute("transition");
-		return raw === "fade" || raw === "scale" || raw === "flip" ? raw : "slide";
+		return resolveVocab(this.getAttribute("transition"), CAROUSEL_TRANSITIONS, "slide", "carousel transition");
 	}
 
 	/** A stacked transition (`fade` / `scale` / `flip`) overlays the slides and cross-fades the active
@@ -129,8 +137,7 @@ export class XtyleCarousel extends XtyleElement {
 	}
 
 	get direction(): CarouselDirection {
-		const raw = this.getAttribute("direction");
-		return raw === "left" || raw === "up" || raw === "down" ? raw : "right";
+		return resolveVocab(this.getAttribute("direction"), CAROUSEL_DIRECTIONS, "right", "carousel direction");
 	}
 
 	/** `up` / `down` scroll a vertical track; `right` / `left` a horizontal one. The reverse sense
@@ -272,7 +279,14 @@ export class XtyleCarousel extends XtyleElement {
 		return Array.from(this.children).some((child) => child instanceof HTMLElement);
 	}
 
+	private checkVocab(): void {
+		void this.controlsMode;
+		void this.transition;
+		void this.direction;
+	}
+
 	protected override render(): void {
+		this.checkVocab();
 		if (!this.scaffolded && !this.hasSlideChildren()) {
 			this.scheduleRetry();
 			return;

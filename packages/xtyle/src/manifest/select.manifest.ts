@@ -126,6 +126,7 @@ export const selectManifest: ComponentManifest = {
 	description:
 		"Select is a thin, accessible skin over the native `<select>`. It inherits the shared `.xtyle-control` chrome (the same fill, border, radius, and focus ring as Field) so it sits flush beside other form controls, then hides the platform arrow and paints its own chevron, colored by focus, invalid, and disabled state. Options are plain `<option>` / `<optgroup>` children passed straight through to the native element, so keyboard navigation, type-ahead, and the OS picker all come for free. A `label` wires an accessible name, `invalid` plus `error` surface validation, and `sm` / `md` / `lg` tune the density. It is form-associated: give it a `name` and the chosen value posts once, whether the element rendered into light DOM or behind a shadow root; `required` and `invalid` reach the form as real constraint validity rather than styling alone.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["chevron", "control", "error", "label", "root", "select"],
 	anatomy: [
 		{
@@ -213,6 +214,14 @@ export const selectManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "cursor",
+			type: "boolean",
+			default: "false",
+			description:
+				"Marks the select as the one an app-owned keyboard cursor rests on, and draws exactly the `:focus-visible` ring (tinted chevron, invalid tint and forced-colors outline included) without moving DOM focus. For a settings list driven from the app's own input layer, usually alongside `focusable={false}`. Controlled: move it in your own input handler. Changes no ARIA.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "disabled",
 			type: "boolean",
 			default: "false",
@@ -269,6 +278,12 @@ export const selectManifest: ComponentManifest = {
 			tokens: ["--danger", "--danger-bg", "--border-normal"],
 		},
 		{
+			name: "cursor",
+			description: "App-owned keyboard cursor: `cursor` puts `data-cursor` on the native select, which shares the `.xtyle-control` focus-visible rule and the chevron tint, so it draws the same ring and the same forced-colors outline while DOM focus stays where it is.",
+			selector: ".xtyle-select__field[data-cursor] + .xtyle-select__chevron",
+			tokens: ["--accent"],
+		},
+		{
 			name: "disabled",
 			description: "Non-interactive: the native control mutes and the chevron drops to the disabled ink.",
 			selector: ".xtyle-select__field:disabled + .xtyle-select__chevron",
@@ -310,10 +325,12 @@ export const selectManifest: ComponentManifest = {
 	a11y: [
 		"Renders a native `<select>`, so keyboard navigation, type-ahead, and the OS picker work without any custom scripting.",
 		"`label` provides the accessible name via a `for`-linked `<label>`; when absent, an `aria-label` is required and the html binding warns at runtime when neither is present.",
+		"The host's `aria-label` / `aria-labelledby` names the inner `<select>`, ahead of `label`; `aria-labelledby` ids are read from the host's own tree.",
 		"`invalid` sets `aria-invalid=\"true\"`; when an `error` string is present it is linked with `aria-describedby`.",
 		"`required` reflects both the native `required` attribute and `aria-required` for assistive tech.",
 		"The chevron is decorative (`aria-hidden`); selection state lives in the native control, not the visual.",
 		"Focus is shown with the shared `.xtyle-control` ring plus a transparent outline that the forced-colors base rule promotes to a real system outline.",
+		"`cursor` is visual only and sets no ARIA: an app-owned cursor is not focus, so it is not announced as focus, and the chosen option stays in the native control alone. An app that needs the cursor position announced owns that channel itself, typically by moving real focus or with a live region.",
 	],
 	examples: [
 		{

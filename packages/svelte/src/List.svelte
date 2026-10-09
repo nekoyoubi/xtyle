@@ -12,9 +12,18 @@
 		label: string;
 		disabled?: boolean;
 		lead?: string;
-		trail?: string;
+		trail?: string | string[];
+		description?: string;
+		badge?: string | { text: string; tone?: string } | Array<string | { text: string; tone?: string }>;
 		selected?: boolean;
 		actions?: Action[];
+		heading?: boolean;
+		checked?: boolean;
+		separator?: boolean;
+		variant?: "solid" | "outline" | "subtle";
+		trailTone?: string;
+		accelerator?: string;
+		tone?: string;
 	};
 
 	interface Props {
@@ -25,6 +34,10 @@
 		size?: Size;
 		label?: string;
 		labelledby?: string;
+		/** Announced after a checked row's label in place of `checked`. */
+		checkedLabel?: string;
+		/** Announced after an unchecked row's label in place of `not checked`. */
+		uncheckedLabel?: string;
 		/** Fires on a selection change (selectable). `event.detail` carries `{ value, selected }`. */
 		onchange?: (event: Event) => void;
 		/** Fires when an item's trailing action button is activated. `event.detail` carries `{ value, action }`. */
@@ -43,6 +56,8 @@
 		size = "md",
 		label,
 		labelledby,
+		checkedLabel,
+		uncheckedLabel,
 		onchange,
 		onlistaction,
 		onselect,
@@ -67,6 +82,8 @@
 	{size}
 	{label}
 	labelledby={labelledby || undefined}
+	checked-label={checkedLabel || undefined}
+	unchecked-label={uncheckedLabel || undefined}
 	onchange={onchange}
 	onlistaction={onlistaction}
 	onselect={onselect}

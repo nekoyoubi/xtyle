@@ -92,10 +92,15 @@ test.describe("a tab strip moves on the arrows", () => {
 		const first = strip.locator('[role="tab"]').first();
 		await settleFocusOn(page, first);
 		const before = await focused(page);
-		await page.keyboard.press("ArrowRight");
 
 		await expect
-			.poll(async () => (await focused(page))?.key, { message: "ArrowRight moved nothing" })
+			.poll(
+				async () => {
+					await page.keyboard.press("ArrowRight");
+					return (await focused(page))?.key;
+				},
+				{ message: "ArrowRight moved nothing once the strip was wired", intervals: [250] },
+			)
 			.not.toBe(before?.key);
 		expect((await focused(page))?.role, "the arrows should land on another tab").toBe("tab");
 	});
@@ -186,6 +191,104 @@ test.describe("a menu opens on the keyboard and hands focus back", () => {
 				{ message: "Escape did not hand focus back to the trigger" },
 			)
 			.toBe(true);
+	});
+});
+
+test.describe("a modal popover traps focus through shadow-rendered controls", () => {
+	test("lands on the first field's input and wraps Tab between the inner controls", async ({ page, context }) => {
+		await context.addInitScript((env: string) => localStorage.setItem("xtyle.themes.v1", env), themeEnvelope("xtyle-default"));
+		await open(page, "popover");
+		await page.evaluate(async () => {
+			const anchor = document.createElement("button");
+			anchor.id = "trap-anchor";
+			anchor.textContent = "Open";
+			const pop = document.createElement("xtyle-popover");
+			pop.id = "trap";
+			pop.setAttribute("modal", "");
+			pop.setAttribute("label", "Trap");
+			pop.innerHTML = `<xtyle-field label="First" id="trap-first"></xtyle-field><xtyle-field label="Last" id="trap-last"></xtyle-field>`;
+			document.body.append(anchor, pop);
+			for (let tries = 0; tries < 60; tries++) {
+				const ready = ["trap-first", "trap-last"].every((id) => document.getElementById(id)?.shadowRoot?.querySelector("input"));
+				if (ready) break;
+				await new Promise((resolve) => setTimeout(resolve, 50));
+			}
+			(pop as HTMLElement & { openFrom(el: HTMLElement): void }).openFrom(anchor);
+		});
+		const leafHost = () =>
+			page.evaluate(() => {
+				let el = document.activeElement;
+				while (el?.shadowRoot?.activeElement) {
+					if (el.id.startsWith("trap-")) return `${el.id}:${el.shadowRoot.activeElement.tagName.toLowerCase()}`;
+					el = el.shadowRoot.activeElement;
+				}
+				return el ? `${el.id}:${el.tagName.toLowerCase()}` : null;
+			});
+		await expect.poll(leafHost, { message: "initial focus did not reach the first field's input" }).toBe("trap-first:input");
+		await page.keyboard.press("Shift+Tab");
+		await expect.poll(leafHost, { message: "Shift+Tab from the first control did not wrap to the last" }).toBe("trap-last:input");
+		await page.keyboard.press("Tab");
+		await expect.poll(leafHost, { message: "Tab from the last control did not wrap to the first" }).toBe("trap-first:input");
+	});
+});
+
+test.describe("closing an overlay hands focus back into a shadow-rendered trigger", () => {
+	test("Escape returns focus to the inner control of the xtyle-button that opened the popover", async ({ page, context }) => {
+		await context.addInitScript((env: string) => localStorage.setItem("xtyle.themes.v1", env), themeEnvelope("xtyle-default"));
+		await open(page, "popover");
+		await page.evaluate(async () => {
+			const trigger = document.createElement("xtyle-button");
+			trigger.id = "return-trigger";
+			trigger.textContent = "Open";
+			const pop = document.createElement("xtyle-popover");
+			pop.id = "return-pop";
+			pop.setAttribute("label", "Return");
+			pop.innerHTML = `<button id="return-inside">Inside</button>`;
+			document.body.append(trigger, pop);
+			for (let tries = 0; tries < 60 && !trigger.shadowRoot?.querySelector("button"); tries++) {
+				await new Promise((resolve) => setTimeout(resolve, 50));
+			}
+			trigger.shadowRoot!.querySelector("button")!.focus();
+			(pop as HTMLElement & { openFrom(el: HTMLElement): void }).openFrom(trigger);
+		});
+		const leaf = () =>
+			page.evaluate(() => {
+				let el = document.activeElement;
+				let host = "";
+				while (el?.shadowRoot?.activeElement) {
+					host = el.id;
+					el = el.shadowRoot.activeElement;
+				}
+				return `${host || el?.id}:${el?.tagName.toLowerCase()}`;
+			});
+		await expect.poll(leaf, { message: "the popover never took focus" }).toBe("return-inside:button");
+		await page.keyboard.press("Escape");
+		await expect.poll(leaf, { message: "focus did not return into the trigger's inner button" }).toBe("return-trigger:button");
+	});
+});
+
+test.describe("a reveal fires from the keyboard", () => {
+	test("Enter commits a control reveal, an arrow opens a container one, and Escape closes it", async ({ page, context }) => {
+		await context.addInitScript((env: string) => localStorage.setItem("xtyle.themes.v1", env), themeEnvelope("xtyle-default"));
+		await open(page, "reveal");
+
+		const travel = page.locator('xtyle-reveal[label="Travel to the abbey"]').first();
+		const commits = await travel.evaluateHandle((host) => {
+			const seen: string[] = [];
+			host.addEventListener("xtyle:reveal-commit", (event) => seen.push((event as CustomEvent).detail.direction));
+			return seen;
+		});
+		await settleFocusOn(page, travel.locator('[part="lid"]'));
+		await expect.poll(async () => (await focused(page))?.role).toBe("button");
+		await page.keyboard.press("Enter");
+		await expect.poll(() => commits.evaluate((seen) => seen.join(","))).toBe("end");
+
+		const message = page.locator('xtyle-reveal[label="Message from Ada"]').first();
+		await settleFocusOn(page, message.locator('[part="lid"]'));
+		await page.keyboard.press("ArrowLeft");
+		await expect.poll(() => message.getAttribute("open")).toBe("end");
+		await page.keyboard.press("Escape");
+		await expect.poll(() => message.getAttribute("open")).toBeNull();
 	});
 });
 

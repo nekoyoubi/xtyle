@@ -8,18 +8,54 @@ import { resolveTone, resolveVocab, BUTTON_VARIANTS, BUTTON_SIZES, BUTTON_ALIGNS
 
 
 export class XtyleButton extends XtyleElement {
+	static formAssociated = true;
+
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "button", {
 		applyIntent: () => {},
 	});
 	private ariaLabelValue: string | null = null;
 	private ariaLabelledbyValue: string | null = null;
+	private internals: ElementInternals | null = null;
+
+	constructor() {
+		super();
+		if ("attachInternals" in this) {
+			try {
+				this.internals = this.attachInternals();
+			} catch {
+				this.internals = null;
+			}
+		}
+		this.addEventListener("click", (event) => this.submitAcrossShadow(event));
+	}
+
+	protected override formInternals(): ElementInternals | null {
+		return this.internals;
+	}
 
 	protected override get styleMode(): StyleMode {
 		return "auto";
 	}
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "align", "type", "href", "disabled", "loading", "block", "icon-only", "pressed", "selected", "focusable", "aria-label", "aria-labelledby"];
+		return ["variant", "tone", "size", "align", "type", "form", "href", "disabled", "loading", "block", "icon-only", "pressed", "selected", "focusable", "cursor", "aria-label", "aria-labelledby"];
+	}
+
+	private get submitsThroughHost(): boolean {
+		return this.isShadow() || this.hasAttribute("form");
+	}
+
+	private submitAcrossShadow(event: Event): void {
+		const type = this.getAttribute("type");
+		if (type !== "submit" && type !== "reset") return;
+		if (!this.submitsThroughHost || this.href != null || this.disabled || this.loading) return;
+		const form = this.internals?.form;
+		if (!form) return;
+		queueMicrotask(() => {
+			if (event.defaultPrevented) return;
+			if (type === "submit") form.requestSubmit();
+			else form.reset();
+		});
 	}
 
 	get variant(): ButtonVariant {
@@ -98,6 +134,14 @@ export class XtyleButton extends XtyleElement {
 		else this.setAttribute("selected", String(value));
 	}
 
+	/** Whether the app's own keyboard cursor rests on this button: draws the focus ring without moving focus. */
+	get cursor(): boolean {
+		return this.hasAttribute("cursor");
+	}
+	set cursor(value: boolean) {
+		this.reflectBoolean("cursor", value);
+	}
+
 	get href(): string | null {
 		return this.getAttribute("href");
 	}
@@ -123,7 +167,7 @@ export class XtyleButton extends XtyleElement {
 			tone: this.tone,
 			size: this.size,
 			align: this.align,
-			type: this.getAttribute("type") ?? "button",
+			type: this.submitsThroughHost ? "button" : (this.getAttribute("type") ?? "button"),
 			href: this.href,
 			disabled: this.disabled,
 			loading: this.loading,
@@ -132,6 +176,7 @@ export class XtyleButton extends XtyleElement {
 			pressed: this.pressed,
 			selected: this.selected,
 			focusable: this.focusable,
+			cursor: this.cursor,
 			ariaLabel: this.ariaLabelValue ?? (this.ariaLabelledbyValue ? null : this.slottedName()),
 			ariaLabelledby: this.ariaLabelledbyValue,
 		};

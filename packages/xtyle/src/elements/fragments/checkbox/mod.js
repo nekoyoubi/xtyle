@@ -33,7 +33,7 @@
     const ariaLabel = label && !labelledby ? ` aria-label="${escapeAttr(label)}"` : "";
     const ariaLabelledby = labelledby ? ` aria-labelledby="${escapeAttr(labelledby)}"` : "";
     const box = `<span class="xtyle-checkbox__box" part="box"><input part="control" class="xtyle-checkbox__control" type="checkbox"${checkedAttr}${disabledAttr}${ariaLabel}${ariaLabelledby} />` + INDICATOR + `</span>`;
-    const labelPart = `<span class="xtyle-checkbox__label" part="label"><slot></slot></span>`;
+    const labelPart = `<span class="xtyle-checkbox__label" part="label"><slot></slot>${escapeHtml(b.labelText ?? "")}</span>`;
     return box + labelPart;
   }
   hooks.fragment.mount("checkbox", (bindings, ops) => {

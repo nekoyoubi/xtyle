@@ -2,10 +2,14 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { pieHostCss, type PieDatum, type PieScheme, type PieVariant } from "../markup/index.js";
 import { seriesPalette, seriesColorsFor, resolvePaletteName, paletteRegisterTokens, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/pie/source.generated.js";
+import { resolveVocab } from "../vocab.js";
 
 export type { PieDatum, PieScheme, PieVariant };
+
+const PIE_VARIANTS: readonly PieVariant[] = ["pie", "donut"];
 
 function parseJson<T>(raw: string | null): T | null {
 	if (!raw) return null;
@@ -28,12 +32,13 @@ export class XtylePie extends XtyleElement {
 	private dataProp: PieDatum[] | null = null;
 	private schemeProp: PieScheme | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "pie", {
+		nameTarget: '[role="img"]',
 		applyIntent: () => {},
 		afterApply: () => this.wireInteraction(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["data", "scheme", "reverse", "variant", "show-values", "legend", "size", "label"];
+		return ["data", "scheme", "reverse", "variant", "show-values", "legend", "size", "label", ...NAME_ATTRIBUTES];
 	}
 
 	get data(): PieDatum[] {
@@ -57,7 +62,7 @@ export class XtylePie extends XtyleElement {
 	}
 
 	get variant(): PieVariant {
-		return this.getAttribute("variant") === "donut" ? "donut" : "pie";
+		return resolveVocab(this.getAttribute("variant"), PIE_VARIANTS, "pie", "pie variant");
 	}
 	set variant(value: PieVariant) {
 		this.setAttribute("variant", value);

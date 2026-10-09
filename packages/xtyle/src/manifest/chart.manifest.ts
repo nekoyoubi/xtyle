@@ -40,6 +40,40 @@ const series = [
 
 <Chart series={series} label="Requests per second" xLabel="Time" yLabel="req/s" height={280} />`;
 
+const denseHtmlExample = `<xtyle-chart
+	x-ticks="12"
+	label="Requests in the last 90 seconds"
+	height="240"></xtyle-chart>
+<script>
+	const now = Date.now();
+	document.querySelector("xtyle-chart").series = [
+		{ name: "Requests", points: [14, 22, 19, 31, 27, 40, 36, 52, 47, 44, 58, 51, 63].map((value, i) => ({ at: now - (90 - i * 7.5) * 1000, value })) },
+	];
+</script>`;
+
+const denseSvelteExample = `<script lang="ts">
+	import { Chart } from "@xtyle/svelte";
+
+	const now = Date.now();
+	const series = [
+		{ name: "Requests", points: [14, 22, 19, 31, 27, 40, 36, 52, 47, 44, 58, 51, 63].map((value, i) => ({ at: now - (90 - i * 7.5) * 1000, value })) },
+	];
+</script>
+
+<Chart {series} xTicks={12} label="Requests in the last 90 seconds" height={240} />
+<Chart {series} xTicks={12} labelAngle={-90} label="Requests in the last 90 seconds" height={240} />`;
+
+const denseAstroExample = `---
+import { Chart } from "@xtyle/astro";
+const now = Date.now();
+const series = [
+	{ name: "Requests", points: [14, 22, 19, 31, 27, 40, 36, 52, 47, 44, 58, 51, 63].map((value, i) => ({ at: now - (90 - i * 7.5) * 1000, value })) },
+];
+---
+
+<Chart series={series} xTicks={12} label="Requests in the last 90 seconds" height={240} />
+<Chart series={series} xTicks={12} labelAngle={-90} label="Requests in the last 90 seconds" height={240} />`;
+
 const areaHtmlExample = `<xtyle-chart
 	variant="area"
 	curve="smooth"
@@ -165,6 +199,7 @@ export const chartManifest: ComponentManifest = {
 	description:
 		"Chart plots one or more series against a shared x axis as an SVG that renders from data alone. Each series is a list of `{ at, value }` samples; `at` may be a timestamp (epoch ms or a date string) or a plain number, and the axis labels itself accordingly — `xScale` is inferred by default and can be pinned to `time` or `linear`. The domain is the data's own extent unless you set an explicit `domain` or a sliding `window` for a live feed, and samples outside it are dropped. Series take their colors from a `scheme` naming a palette resolved off the live theme, so a chart is coherent with the rest of the UI out of the box. Draw it as a `line` or an `area`, and join points `linear`, `smooth`, or `step`. The value axis derives round bounds and gridlines from the data (always including zero, and drawing a zero line when the data crosses it); `yMin` / `yMax` pin it instead. It reads out on hover *and* on keyboard: a crosshair snaps to the nearest x and a tooltip reports every series at that position at once, and the whole plot is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: clicking (or pressing Enter at the cursor) fires a `select` event carrying the x position and each series' value there. A legend appears for multi-series data. With nothing to plot, it shows a muted `No data` message in place of the axes.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["area", "axis", "axis-title", "chart", "grid", "guide", "legend", "legend-item", "legend-swatch", "line", "plot", "point", "series", "tooltip", "tooltip-row", "xtick", "ytick", "zero"],
 	anatomy: [
 		{
@@ -342,6 +377,14 @@ export const chartManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "labelAngle",
+			type: "\"auto\" | number",
+			default: "\"auto\"",
+			description:
+				"The angle of the x-axis labels. `\"auto\"` keeps them upright until they would collide (dense `xTicks`, long clock labels), then tilts them and makes room under the plot. A number fixes the angle, from `0` (upright) to `-90` (vertical). Kebab `label-angle` on the element.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "selectable",
 			type: "boolean",
 			default: "false",
@@ -416,6 +459,7 @@ export const chartManifest: ComponentManifest = {
 		"Make a dashboard chart a drill-in with `selectable` and a `select` listener: click a spike to open that moment's logs, filter a table to that window, or route to a detail view. The `detail` names the exact x and every series' value there, so the handler needs no lookup.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"img\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree. The plot's keyboard guidance then moves to its `aria-description`, so it is still announced.",
 		"The SVG is decorative (`aria-hidden`); the chart's data is mirrored into a visually-hidden `<table>` — one row per x position, one column per series — so assistive tech reads the actual numbers. `label` becomes the table's caption.",
 		"The plot is a single tab stop (`role=\"img\"`, named by `label`) rather than one stop per sample, which would make a long series unnavigable. Arrow Left/Right walk the cursor along the axis, Home/End jump to the ends, and Escape dismisses the readout.",
 		"The readout is a live region (`role=\"status\"`), so moving the cursor by keyboard announces the x position and every series' value there without moving focus.",
@@ -428,6 +472,12 @@ export const chartManifest: ComponentManifest = {
 			title: "Time series",
 			description: "Two series over a time domain. The axis labels itself as a clock, and the cursor reads both series at once.",
 			source: { html: htmlExample, svelte: svelteExample, astro: astroExample },
+		},
+		{
+			id: "dense-ticks",
+			title: "Dense ticks",
+			description: "Twelve ticks across ninety seconds give each clock label less room than it needs, so the labels tilt and the plot makes room under them. `labelAngle` (`label-angle` on the element) fixes the angle instead.",
+			source: { html: denseHtmlExample, svelte: denseSvelteExample, astro: denseAstroExample },
 		},
 		{
 			id: "area",

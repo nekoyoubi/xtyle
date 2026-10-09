@@ -1,9 +1,13 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { barHostCss, type BarSeries, type BarScheme } from "../markup/index.js";
+import { barHostCss, parseLabelAngle, type BarSeries, type BarScheme } from "../markup/index.js";
 import { seriesPalette, seriesColorsFor, resolvePaletteName, paletteRegisterTokens, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/bar/source.generated.js";
+import { ORIENTATIONS, resolveOptionalVocab, resolveVocab } from "../vocab.js";
+
+const BAR_COLOR_BYS = ["series", "category"] as const;
 
 export type { BarSeries, BarScheme };
 
@@ -29,19 +33,20 @@ export class XtyleBar extends XtyleElement {
 	private categoriesProp: string[] | null = null;
 	private schemeProp: BarScheme | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "bar", {
+		nameTarget: '[role="img"]',
 		applyIntent: () => {},
 		afterApply: () => this.wireInteraction(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["series", "categories", "scheme", "reverse", "color-by", "orientation", "stacked", "show-values", "legend", "height", "label", "selectable"];
+		return ["series", "categories", "scheme", "reverse", "color-by", "orientation", "stacked", "show-values", "legend", "height", "label", "selectable", "label-angle", ...NAME_ATTRIBUTES];
 	}
 
 	/** Which axis drives the palette. `auto` (default) colors by category for a single series so the
 	 * scheme still varies, and by series once there's more than one. */
 	private resolvedColorBy(): "series" | "category" {
-		const raw = this.getAttribute("color-by");
-		if (raw === "series" || raw === "category") return raw;
+		const explicit = resolveOptionalVocab(this.getAttribute("color-by"), BAR_COLOR_BYS, "bar color by");
+		if (explicit) return explicit;
 		return this.series.length <= 1 ? "category" : "series";
 	}
 
@@ -124,7 +129,7 @@ export class XtyleBar extends XtyleElement {
 			categories: this.categories,
 			colors: this.colors(colorItems),
 			colorBy,
-			orientation: this.getAttribute("orientation") === "horizontal" ? "horizontal" : "vertical",
+			orientation: resolveVocab(this.getAttribute("orientation"), ORIENTATIONS, "vertical", "bar orientation"),
 			stacked: this.stacked,
 			showValues: this.hasAttribute("show-values"),
 			legend: this.getAttribute("legend") !== "false",
@@ -132,6 +137,7 @@ export class XtyleBar extends XtyleElement {
 			title: this.getAttribute("label"),
 			ariaLabel: this.getAttribute("label"),
 			selectable: this.selectable,
+			labelAngle: parseLabelAngle(this.getAttribute("label-angle")),
 		};
 	}
 

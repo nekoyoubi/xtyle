@@ -71,7 +71,7 @@ export const calendarManifest: ComponentManifest = {
 	description:
 		'Calendar is the month grid itself: a controlled `role="grid"` of day cells with no opinion about being inside a popup (that is `DatePicker`\'s job, and it consumes this). Three modes: `single` picks one day, `multiple` toggles a set, and `range` opens on the first pick and closes on the second, previewing the pending half as the pointer — or the keyboard cursor — sweeps across the grid. **Every date is a wall-clock date**, an ISO `YYYY-MM-DD` civil day rather than an instant, so nothing here can shift a selection across a DST boundary; `today` is read in the host\'s timezone, or whichever IANA zone `timezone` names. The locale drives the month and weekday names, the numbering system, and the first day of the week, all through `Intl` (`Intl.Locale`\'s `weekInfo` where the engine has it, ISO-8601 otherwise) — no bundled locale table and no date library — and `firstDayOfWeek` overrides it outright. `min` / `max`, a `disabledDates` list, and an `isDateDisabled` predicate compose into which days are refused, and `decorations` hangs event dots, a busy bar, and extra announced text on any day. The keyboard is the full WAI-ARIA date grid: arrows walk days and weeks straight across month boundaries, `Home` / `End` snap to the week\'s edges, `PageUp` / `PageDown` step months (`Shift` for years), and `Escape` cancels a half-drawn range.',
 	bindings: ["html", "svelte", "astro"],
-	exposedParts: ["busy", "calendar", "cell", "chevron", "cue", "day", "dot", "grid", "header", "marks", "nav", "num", "title", "week", "weekday", "weeknum"],
+	render: "light",
 	anatomy: [
 		{
 			name: "calendar",
@@ -442,6 +442,7 @@ export const calendarManifest: ComponentManifest = {
 		"Use `readonly` for a published schedule: the grid still navigates and announces, but nothing can be picked.",
 	],
 	a11y: [
+		"Under `forced-colors: active` a selected day and every day inside a range (or its preview) fill with the system `Highlight` and `HighlightText`, since the mode flattens the accent fill and the range band to `Canvas`.",
 		'The month is a `role="grid"` named by its heading, with each day a `gridcell` carrying its full localized date as the accessible name — so a screen reader announces "Wednesday, July 1, 2026", never a bare "1".',
 		"The full WAI-ARIA date-grid keyboard: arrows move by day and by week (straight across week, month, and year boundaries), `Home` / `End` snap to the week's edges, `PageUp` / `PageDown` step months and `Shift` + either steps years, `Enter` / `Space` select, and `Escape` cancels a half-drawn range.",
 		"One roving tab stop: the grid is a single stop in the tab order, and the cursor is re-seated onto the equivalent cell after every repaint, so a month step never drops focus to the body.",

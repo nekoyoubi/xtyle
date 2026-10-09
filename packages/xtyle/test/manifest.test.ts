@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	consumedTokensInCss,
 	coverComponent,
 	coverComponents,
 	declaredPropsInCss,
@@ -81,6 +82,12 @@ describe("styleQueriedTokensInCss", () => {
 	it("does not count style-queried tokens in declaredPropsInCss", () => {
 		const css = "@container style(--selection-cue: marker) { .x { color: red; } }";
 		expect(declaredPropsInCss(css).has("--selection-cue")).toBe(false);
+	});
+
+	it("does not read a modifier class followed by a pseudo-class as a declaration", () => {
+		const css = ".x__item--accent:not([disabled]) { color: var(--accent); } .x { --gap: 1rem; } .y{--pad:0}";
+		expect([...declaredPropsInCss(css)].sort()).toEqual(["--gap", "--pad"]);
+		expect(consumedTokensInCss(css).has("--accent")).toBe(true);
 	});
 });
 

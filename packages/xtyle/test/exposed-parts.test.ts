@@ -7,7 +7,14 @@ import { listComponents } from "../src/manifest/registry.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const fragments = resolve(here, "../src/elements/fragments");
 
-const PART = /part=\\?"([^"\\]+)/g;
+const PART = /(?<![\w-])part=\\?"([^"\\]+)/g;
+const IDENT = /^-?[a-zA-Z_][\w-]*$/;
+
+/** A part name the fill builds per instance (`belly-${direction}`) as a pattern its listed names must match. */
+function templatePattern(name: string): RegExp {
+	const literal = name.split(/\$\{[^}]*\}/).map((piece) => piece.replace(/[.*+?^$()|[\]\\]/g, "\\$&"));
+	return new RegExp(`^${literal.join("[\\w-]+")}$`);
+}
 
 /**
  * Every `part` name a component's fill emits, or null when it has no fill to read. A fill emits from two
@@ -41,15 +48,28 @@ describe("exposedParts says what an outside sheet can actually reach", () => {
 	it("lists precisely what each fill emits, no more and no less", () => {
 		const drift: string[] = [];
 		for (const manifest of listComponents()) {
+			if (manifest.render === "light") continue;
 			const emitted = emittedParts(manifest.id);
 			if (!emitted || emitted.size === 0) continue;
 			const declared = new Set(manifest.exposedParts ?? []);
-			const missing = [...emitted].filter((p) => !declared.has(p));
-			const phantom = [...declared].filter((p) => !emitted.has(p));
+			const literal = [...emitted].filter((p) => !p.includes("${"));
+			const built = [...emitted].filter((p) => p.includes("${")).map(templatePattern);
+			const missing = [
+				...literal.filter((p) => !declared.has(p)),
+				...built.filter((pattern) => ![...declared].some((p) => pattern.test(p))).map((pattern) => pattern.source),
+			];
+			const phantom = [...declared].filter((p) => !emitted.has(p) && !built.some((pattern) => pattern.test(p)));
 			if (missing.length) drift.push(`${manifest.id}: emits but does not declare ${missing.join(", ")}`);
 			if (phantom.length) drift.push(`${manifest.id}: declares but never emits ${phantom.join(", ")}`);
 		}
 		expect(drift).toEqual([]);
+	});
+
+	it("lists only names `::part()` can take, never the source text that builds one", () => {
+		const bad = listComponents().flatMap((m) =>
+			(m.exposedParts ?? []).filter((p) => !IDENT.test(p)).map((p) => `${m.id}: ${p}`),
+		);
+		expect(bad).toEqual([]);
 	});
 
 	it("claims nothing for a component with no parts-emitting fill, rather than an empty promise", () => {

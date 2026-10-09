@@ -17,6 +17,12 @@ export interface AccordionSection {
 	 * snapshotted to static HTML. The Astro binding sets it for slotted authoring too.
 	 */
 	panelSlot?: string;
+	/**
+	 * Project authored controls (reorder arrows, a view switch) through a named `<slot>` beside the
+	 * trigger, on the header row but outside the `<summary>`, so they stay real buttons, never toggle
+	 * the section, and stay visible while it is closed.
+	 */
+	actionsSlot?: string;
 	open?: boolean;
 	disabled?: boolean;
 	/** Stable key emitted on `data-key`; defaults to the section index. */

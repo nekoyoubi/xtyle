@@ -2,8 +2,9 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size, FullTone } from "../index.js";
 import { sliderHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/slider/source.generated.js";
-import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
+import { resolveTone, resolveVocab, SIZES, STEP_MODIFIERS } from "../vocab.js";
 import { startDrag } from "./gesture.js";
 
 export class XtyleSlider extends XtyleElement {
@@ -24,6 +25,7 @@ export class XtyleSlider extends XtyleElement {
 	private lastNamed = false;
 	private hostWired = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "slider", {
+		nameTarget: '[role="slider"]',
 		context: (handler) => (handler === "keyAdjust" ? this.keyContext() : undefined),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
@@ -31,7 +33,7 @@ export class XtyleSlider extends XtyleElement {
 	private initialValue = Number.NaN;
 
 	static get observedAttributes(): string[] {
-		return ["value", "min", "max", "step", "alt-step", "alt-default", "modifier", "overflow", "disabled", "size", "tone", "label", "labelledby", "name", "show-value", "hide-label", "default", "static-value"];
+		return ["value", "min", "max", "step", "alt-step", "alt-default", "modifier", "overflow", "disabled", "size", "tone", "label", "labelledby", "name", "show-value", "hide-label", "default", "static-value", ...NAME_ATTRIBUTES];
 	}
 
 	private editing = false;
@@ -104,8 +106,7 @@ export class XtyleSlider extends XtyleElement {
 
 	/** Which key toggles between `step` and `altStep` for keyboard and drag; mirrors the number field. */
 	get modifier(): "shift" | "alt" | "ctrl" | "meta" {
-		const raw = (this.getAttribute("modifier") ?? "shift").toLowerCase();
-		return raw === "alt" || raw === "ctrl" || raw === "meta" ? raw : "shift";
+		return resolveVocab(this.getAttribute("modifier")?.toLowerCase(), STEP_MODIFIERS, "shift", "slider modifier");
 	}
 	set modifier(value: "shift" | "alt" | "ctrl" | "meta") {
 		this.setAttribute("modifier", value);
@@ -267,7 +268,7 @@ export class XtyleSlider extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("label") && !this.getAttribute("labelledby")) {
+		if (!this.getAttribute("label") && !this.getAttribute("labelledby") && !hasHostName(this)) {
 			console.warn(
 				"xtyle-slider: no accessible name. Provide a `label` or `labelledby` so the slider is announced.",
 			);
@@ -425,6 +426,10 @@ export class XtyleSlider extends XtyleElement {
 		return "";
 	}
 
+	private checkVocab(): void {
+		void this.modifier;
+	}
+
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(sliderHostCss);
@@ -436,6 +441,7 @@ export class XtyleSlider extends XtyleElement {
 		this.wireHostEvents();
 		const named = !!this.getAttribute("label") || !!this.getAttribute("labelledby");
 		if (firstPaint || named !== this.lastNamed) this.warnIfUnnamed();
+		this.checkVocab();
 		this.lastNamed = named;
 		this.syncForm();
 		this.verifyFormName();

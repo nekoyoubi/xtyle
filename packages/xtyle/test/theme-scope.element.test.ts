@@ -99,4 +99,37 @@ describe("xtyle-theme-scope", () => {
 		el.remove();
 		expect(document.documentElement.style.getPropertyValue("--bg-0")).toBe("");
 	});
+
+	it("keeps its own theme when it is moved to another parent", async () => {
+		const el = mount();
+		await settled(el);
+		const bg = el.style.getPropertyValue("--bg-0");
+		expect(bg).not.toBe("");
+		const elsewhere = document.createElement("section");
+		document.body.appendChild(elsewhere);
+		elsewhere.appendChild(el);
+		expect(el.style.getPropertyValue("--bg-0")).toBe(bg);
+		expect(el.getAttribute("data-effective-scheme")).toBeTruthy();
+	});
+
+	it("derives again when a root-targeted scope comes back after leaving", async () => {
+		const el = mount({ target: "root" });
+		await settled(el);
+		el.remove();
+		const back = settled(el);
+		document.body.appendChild(el);
+		await back;
+		expect(document.documentElement.style.getPropertyValue("--bg-0")).not.toBe("");
+	});
+
+	it("re-derives a move that interrupted its first derivation", async () => {
+		const el = document.createElement("xtyle-theme-scope");
+		document.body.appendChild(el);
+		const holder = document.createElement("div");
+		document.body.appendChild(holder);
+		const done = settled(el);
+		holder.appendChild(el);
+		await done;
+		expect(el.style.getPropertyValue("--bg-0")).not.toBe("");
+	});
 });

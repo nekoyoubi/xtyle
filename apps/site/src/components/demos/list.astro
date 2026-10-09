@@ -16,6 +16,38 @@ const files = [
 	{ value: "styles", label: "styles.css", lead: "folder", actions: [{ id: "delete", label: "Delete", icon: "close" }] },
 ];
 
+const settings = [
+	{ value: "play", label: "Play", heading: true },
+	{ value: "speed", label: "Text speed", trail: "Fast" },
+	{ value: "music", label: "Music", checked: true },
+	{ value: "display", label: "Display", heading: true },
+	{ value: "scale", label: "Interface scale", trail: "100%" },
+	{ value: "motion", label: "Reduce motion", checked: false },
+	{ value: "danger", label: "Danger zone", heading: true, tone: "danger" },
+	{ value: "wipe", label: "Erase all data" },
+	{ value: "reset", label: "Reset settings" },
+];
+
+const saves = [
+	{ value: "slot-1", label: "Slot 1", description: "Harbor district, day 12", trail: ["3h 40m", "Lv 14"], badge: { text: "latest", tone: "success" } },
+	{ value: "slot-2", label: "Slot 2", description: "Northern pass, day 9", trail: ["2h 05m", "Lv 9"] },
+	{ value: "slot-3", label: "Slot 3", description: "Old mine, day 31", trail: ["11h 12m", "Lv 27"], badge: [{ text: "locked", tone: "warn" }, "backup"] },
+];
+
+const pause = [
+	{ value: "resume", label: "Resume", accelerator: "r" },
+	{ value: "options", label: "Options", accelerator: "o" },
+	{ value: "break", label: "", separator: true },
+	{ value: "retire", label: "Retire", accelerator: "t", variant: "subtle" },
+	{ value: "quit", label: "Quit", accelerator: "q", variant: "outline", tone: "danger" },
+] as const;
+
+const shop = [
+	{ value: "rope", label: "Rope", trail: "12g" },
+	{ value: "lantern", label: "Lantern", trail: "40g" },
+	{ value: "map", label: "Old map", trail: "250g", trailTone: "danger" },
+];
+
 const nav = [
 	{ value: "overview", label: "Overview", lead: "eye" },
 	{ value: "install", label: "Install", lead: "gear" },
@@ -42,6 +74,49 @@ const nav = [
 		<div class="demo__row">
 			<List label="Toppings" interaction="selectable" selection="multi" items="Cheese,Basil,Chili,Olives,Onion" />
 			<List label="Days" interaction="selectable" selection="range" items="Mon,Tue,Wed,Thu,Fri" />
+		</div>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Sections, toggles and tones</Heading>
+		<Text size="sm" tone="muted">
+			An item with <code>heading: true</code> opens a labelled section; the cursor passes over it. An
+			item with <code>checked</code> is a toggle row that leads with a check and announces its state, in
+			whatever words <code>checkedLabel</code> and <code>uncheckedLabel</code> give it. A
+			<code>tone</code> on a heading paints its whole section, and on an item paints that row.
+		</Text>
+		<List label="Settings" interaction="navigational" items={settings} checkedLabel="on" uncheckedLabel="off" />
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Sections in columns</Heading>
+		<Text size="sm" tone="muted">
+			Each section's rows sit in a <code>group-items</code> part. Make <code>list</code> a grid and both
+			<code>group</code> and <code>group-items</code> subgrids, and every section's rows share the same
+			columns while one cursor walks them all.
+		</Text>
+		<List class="demo__columns" label="Settings" interaction="navigational" items={settings} />
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Descriptions, badges and trailing fields</Heading>
+		<Text size="sm" tone="muted">
+			A <code>description</code> adds a second line, a <code>badge</code> a toned chip, and a list of
+			<code>trail</code> fields becomes columns, each its own <code>trail-N</code> part to size.
+		</Text>
+		<List class="demo__saves" label="Saves" interaction="selectable" selection="single" items={saves} />
+	</section>
+
+	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Variants, accelerators, separators and trail tones</Heading>
+		<Text size="sm" tone="muted">
+			A <code>variant</code> fills or rings a row in its tone, an <code>accelerator</code> underlines the key
+			that takes it, a <code>separator</code> breaks a list without a heading, and <code>trailTone</code>
+			inks only the trailing fields, like a price the player cannot afford.
+		</Text>
+		<div class="demo__row">
+			<List label="Paused" interaction="navigational" items={pause} />
+			<List label="Shop" interaction="navigational" items={shop} />
 		</div>
 	</section>
 
@@ -84,5 +159,35 @@ const nav = [
 		border: var(--border-thin) solid var(--line);
 		border-radius: var(--radius-md);
 		background: var(--bg-1);
+	}
+	.demo :global(xtyle-list.demo__saves) {
+		max-width: 28rem;
+	}
+	.demo :global(xtyle-list.demo__columns) {
+		max-width: 32rem;
+	}
+	.demo :global(.demo__columns [part~="list"]),
+	.demo :global(.demo__columns::part(list)) {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		column-gap: var(--space-4);
+	}
+	.demo :global(.demo__columns [part~="group"]),
+	.demo :global(.demo__columns::part(group)),
+	.demo :global(.demo__columns [part~="group-items"]),
+	.demo :global(.demo__columns::part(group-items)) {
+		grid-column: 1 / -1;
+		display: grid;
+		grid-template-columns: subgrid;
+	}
+	.demo :global(.demo__columns [part~="heading"]),
+	.demo :global(.demo__columns::part(heading)) {
+		grid-column: 1 / -1;
+	}
+	.demo :global(.demo__saves [part~="trail-1"]) {
+		min-width: 4.5rem;
+	}
+	.demo :global(.demo__saves [part~="trail-2"]) {
+		min-width: 3rem;
 	}
 </style>

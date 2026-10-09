@@ -83,6 +83,7 @@ xtyle-code[line-numbers] .xtyle-code-line__text {
 	border-top-left-radius: 0;
 	border-top-right-radius: 0;
 }
+.xtyle-code-copy[hidden] { display: none; }
 .xtyle-code-copy {
 	position: absolute;
 	top: var(--space-2);

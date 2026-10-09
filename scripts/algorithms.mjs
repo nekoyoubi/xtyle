@@ -110,8 +110,14 @@ export async function buildMod(mod, build) {
 		target: "es2020",
 		legalComments: "none",
 		logLevel: "warning",
+		plugins: [await modPlugin()],
 	});
-	return writeStaticManifest(mod, readAlgorithmManifest(readFileSync(mod.scriptPath, "utf8"), mod.id));
+	return writeStaticManifest(mod, await readAlgorithmManifest(readFileSync(mod.scriptPath, "utf8"), mod.id));
+}
+
+export async function modPlugin() {
+	const { xtyleModPlugin } = await import(new URL("../packages/xtyle/dist/esbuild.js", import.meta.url).href);
+	return xtyleModPlugin();
 }
 
 /**
@@ -119,10 +125,12 @@ export async function buildMod(mod, build) {
  * the `manifest` export it registers. The same artifact the sandbox executes, so the answer is the
  * algorithm's own, not a second derivation of it from the engine's source.
  */
-export function readAlgorithmManifest(source, id) {
+export async function readAlgorithmManifest(source, id) {
+	const { createCuti } = await import(new URL("../packages/xtyle/dist/cuti.js", import.meta.url).href);
 	const registered = new Map();
 	const context = {
 		xript: { exports: { register: (name, fn) => registered.set(name, fn) } },
+		cuti: createCuti(),
 		console: { log() {}, warn() {}, error() {} },
 	};
 	runInNewContext(source, context, { timeout: 10_000, filename: `${id}/mod.js` });

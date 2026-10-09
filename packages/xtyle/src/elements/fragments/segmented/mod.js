@@ -120,6 +120,7 @@
       const isOn = seg.value === selected;
       const tabindex = bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1";
       const disabledAttr = segDisabled ? " disabled" : "";
+      const cursorAttr = bindings.cursor && isOn ? ' data-cursor="true"' : "";
       const badge = seg.badge ? `<span class="xtyle-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
       const ariaLabel = seg.slot ? ` aria-label="${escapeAttr(seg.label)}"` : "";
       const tooltip = seg.title ?? (seg.slot ? seg.label : void 0);
@@ -127,7 +128,7 @@
       const named = `${ariaLabel}${titleAttr}`;
       const body = seg.slot ? `<slot name="${escapeAttr(seg.slot)}"></slot>` : escapeHtml(seg.label);
       const optionClass = seg.slot ? "xtyle-segmented__option xtyle-segmented__option--icon" : "xtyle-segmented__option";
-      return `<button class="${optionClass}" part="option" type="button" role="radio" aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${named}${disabledAttr}>${body}${badge}</button>`;
+      return `<button class="${optionClass}" part="option" type="button" role="radio" aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${cursorAttr}${named}${disabledAttr}>${body}${badge}</button>`;
     }).join("");
   }
   function fieldInner(bindings, selected) {
@@ -153,6 +154,7 @@
       const sel = `[role="radio"][data-value="${escapeSelectorValue(seg.value)}"]`;
       ops.setAttr(sel, "aria-checked", String(isOn));
       ops.setAttr(sel, "tabindex", bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1");
+      ops.setAttr(sel, "data-cursor", bindings.cursor && isOn ? "true" : "");
     }
   });
   xript.exports.register("selectOption", (payload) => {

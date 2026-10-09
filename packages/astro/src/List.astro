@@ -14,9 +14,18 @@ type Item = {
 	label: string;
 	disabled?: boolean;
 	lead?: string;
-	trail?: string;
+	trail?: string | string[];
+	description?: string;
+	badge?: string | { text: string; tone?: string } | Array<string | { text: string; tone?: string }>;
 	selected?: boolean;
 	actions?: Action[];
+	heading?: boolean;
+	checked?: boolean;
+	separator?: boolean;
+	variant?: "solid" | "outline" | "subtle";
+	trailTone?: string;
+	accelerator?: string;
+	tone?: string;
 };
 
 interface Props {
@@ -27,6 +36,10 @@ interface Props {
 	size?: Size;
 	label?: string;
 	labelledby?: string;
+	/** Announced after a checked row's label in place of `checked`. */
+	checkedLabel?: string;
+	/** Announced after an unchecked row's label in place of `not checked`. */
+	uncheckedLabel?: string;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -43,6 +56,8 @@ const {
 	label,
 	labelledby,
 	"aria-label": ariaLabel,
+	checkedLabel,
+	uncheckedLabel,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -71,6 +86,8 @@ const bindings = {
 	label: label ?? null,
 	labelledby: labelledby ?? null,
 	ariaLabel: ariaLabel ?? null,
+	checkedLabel: checkedLabel ?? "checked",
+	uncheckedLabel: uncheckedLabel ?? "not checked",
 	elementId,
 };
 const light = await renderFragmentLight("list", bindings);
@@ -86,6 +103,8 @@ const light = await renderFragmentLight("list", bindings);
 	label={label}
 	labelledby={labelledby}
 	aria-label={ariaLabel}
+	checked-label={checkedLabel}
+	unchecked-label={uncheckedLabel}
 	class={extra}
 	{...rest}
 	set:html={light}

@@ -6,7 +6,7 @@
 
 A **themable-derivation engine and component contract**. Hand it an *algorithm* and a few
 pinned colors and it derives a full, internally-consistent design-token set; on top of those
-tokens ships a library of **91 components** that read their styling straight from it.
+tokens ships a library of **93 components** that read their styling straight from it.
 
 ```sh
 npm install @xtyle/core
@@ -29,7 +29,7 @@ npm install @xtyle/core
 
 ## Components
 
-**91 components across 10 categories**, all styled purely by the design tokens an algorithm
+**93 components across 10 categories**, all styled purely by the design tokens an algorithm
 derives (no per-component color, no magic numbers). Drop a derived theme on `:root` and every
 component themes with it.
 
@@ -42,7 +42,7 @@ component themes with it.
 | **navigation** | paths between views: `tabs`, `breadcrumb`, `link`, `menu`, `pagination`, `command-palette`, `tree`, `toc` |
 | **feedback** | signals of what's happening: `alert`, `progress`, `spinner`, `skeleton`, `toast`, `steps`, `empty` |
 | **overlay** | layers above the page: `dialog`, `sheet`, `popover`, `tooltip`, `spotlight`, `tour` |
-| **content** | shapes that carry words and structured detail: `heading`, `text`, `code`, `table`, `kbd`, `list`, `markdown`, `bbcode`, `timeline`, `eyebrow`, `redact`, `theme-card`, `theme-swatch` |
+| **content** | shapes that carry words and structured detail: `heading`, `text`, `code`, `table`, `kbd`, `number-format`, `list`, `markdown`, `bbcode`, `timeline`, `eyebrow`, `redact`, `theme-card`, `theme-swatch` |
 | **media** | the visual pieces: `icon`, `image`, `avatar`, `avatar-group`, `badge`, `hero`, `carousel`, `parallax`, `nine-patch` |
 | **metrics** | numbers at a glance: `chart`, `bar`, `pie`, `sparkline`, `heatmap`, `stat` |
 
@@ -214,6 +214,8 @@ rather than from memory.
 | `@xtyle/core/algorithms` | the five blessed algorithms plus a re-export of the engine, so the whole derive path is one import. |
 | `@xtyle/core/elements` | the raw custom-element library (barrel registers all); `./elements/<id>.js` for one; `./elements/ssr` for server rendering. |
 | `@xtyle/core/dom` | browser helpers (`apply`, `clear`, `persist`, `restore`, `toStyleSheet`) that write tokens to a live `:root`. |
+| `@xtyle/core/install` | `install` / `uninstall` / `installed`: derive, apply, and land the component and effect sheets in the document in one call. |
+| `@xtyle/core/api-since.json` | the first published version that exports each name, per entry point (`since["./dom"].apply`). The lowest xtyle a consumer can require is the latest `since` among what it imports; `floor` is the earliest version on npm, so a name dated there may be older still. |
 | `@xtyle/core/css` | the component, utility, and effect CSS as strings (`componentsCss`, `utilitiesCss`, `effectsCss`, and per-component exports). |
 | `@xtyle/core/authoring` | `defineXtyleAlgorithm` / `defineAlgorithm` for writing your own algorithm. |
 | `@xtyle/core/concepts` | the concept documentation the reference site and MCP server read. |

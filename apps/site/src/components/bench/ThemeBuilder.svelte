@@ -30,7 +30,7 @@
 	import FirstRun from "./mockups/FirstRun.svelte";
 	import LaunchPage from "./mockups/LaunchPage.svelte";
 	import { AppShell, Badge, Button, Code, Switch, Tabs, Textarea, Toolbar } from "@xtyle/svelte";
-	import { derivePathOf, loadHostedAlgorithms } from "./hosted.js";
+	import { derivePathOf, loadHostedAlgorithms, type SandboxProof } from "./hosted.js";
 	import { SandboxedAlgorithm } from "./sandboxed-algorithm.svelte.js";
 	import type { BenchState } from "./state.js";
 	import {
@@ -124,9 +124,7 @@
 	const AUTHORED_IDS = [CUSTOM_ALGORITHM, CUSTOM_CODE_ALGORITHM, PACK_ALGORITHM];
 
 	const baseAlgorithm = $derived<Algorithm>(
-		AUTHORED_IDS.includes(settledState.algorithm)
-			? getAlgorithm("xtyle-default")
-			: (hosted?.get(settledState.algorithm) ?? getAlgorithm(settledState.algorithm)),
+		getAlgorithm(AUTHORED_IDS.includes(settledState.algorithm) ? "xtyle-default" : settledState.algorithm),
 	);
 
 	const authored = new SandboxedAlgorithm((code) => loadAuthoredAlgorithm(code, { name: "custom-code" }), 400);
@@ -269,6 +267,44 @@
 		),
 	);
 	const error = $derived<string | null>(result.error);
+
+	let sandboxProof = $state<SandboxProof>({ status: "idle" });
+	let provedOnLoad = false;
+
+	function verifyInSandbox(): void {
+		const mod = result.algorithm === baseAlgorithm ? hosted?.get(baseAlgorithm.id) : undefined;
+		if (!mod) {
+			sandboxProof = { status: "unavailable" };
+			return;
+		}
+		const expected = JSON.stringify(register);
+		const options = deriveOptions;
+		sandboxProof = { status: "verifying" };
+		requestAnimationFrame(() =>
+			setTimeout(() => {
+				try {
+					const matched = JSON.stringify(derive(mod, options)) === expected;
+					const moved = JSON.stringify(untrack(() => register)) !== expected;
+					sandboxProof = { status: moved ? "stale" : matched ? "matched" : "differed" };
+				} catch (thrown: unknown) {
+					sandboxProof = { status: "failed", message: thrown instanceof Error ? thrown.message : String(thrown) };
+				}
+			}, 0),
+		);
+	}
+
+	$effect(() => {
+		if (!hosted || provedOnLoad) return;
+		provedOnLoad = true;
+		verifyInSandbox();
+	});
+
+	$effect(() => {
+		void register;
+		if (untrack(() => sandboxProof.status) === "matched" || untrack(() => sandboxProof.status) === "differed") {
+			sandboxProof = { status: "stale" };
+		}
+	});
 
 	/** For each token, how many other tokens transitively derive from it — the blast radius of editing
 	 * it. Read off the lineage graph's `refs` (reversed), so a set token's badge says what it feeds. */
@@ -803,7 +839,7 @@
 						<Tabs items={REPORT_TABS} bind:value={reportTab} lazy variant="underline" class="bench-subtabs" label="Report view">
 							{#snippet panel(p)}
 								<div class="bench-scene" data-scene={p}>
-									<Inspectors {register} {algorithm} {derivePath} {lineage} panel={p} />
+									<Inspectors {register} {algorithm} {derivePath} {sandboxProof} onverify={verifyInSandbox} {lineage} panel={p} />
 								</div>
 							{/snippet}
 						</Tabs>

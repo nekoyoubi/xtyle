@@ -15,6 +15,8 @@ interface Props {
 	disabled?: boolean;
 	/** Set false to keep the control out of sequential focus navigation. */
 	focusable?: boolean;
+	/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+	cursor?: boolean;
 	required?: boolean;
 	requiredMessage?: string;
 	ariaLabel?: string;
@@ -34,6 +36,7 @@ const {
 	error,
 	disabled = false,
 	focusable,
+	cursor = false,
 	required = false,
 	requiredMessage,
 	ariaLabel,
@@ -57,6 +60,7 @@ const bindings = {
 	size,
 	disabled,
 	focusable: focusable ?? true,
+	cursor,
 	invalid,
 	required,
 	error: error ?? null,
@@ -76,6 +80,7 @@ const composed = light + optionsHtml;
 	name={name}
 	disabled={disabled || undefined}
 	focusable={focusable === false ? "false" : undefined}
+	cursor={cursor || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
 	required-message={requiredMessage}

@@ -3,6 +3,7 @@ import "./button.js";
 import "./icon.js";
 import { schemeToggleGlyphs, schemeToggleHostClass } from "../markup/index.js";
 import { escapeAttr } from "./fragments/escape.js";
+import { ICON_SIZES, SCHEMES, resolveOptionalVocab } from "../vocab.js";
 
 type Scheme = "light" | "dark";
 
@@ -63,7 +64,7 @@ export class XtyleSchemeToggle extends XtyleElement {
 	/** The glyph's size, independent of the control's own. A toolbar often wants a large glyph in a
 	 * small chrome-free control, which the button's `size` cannot express on its own. */
 	get iconSize(): string | null {
-		return this.getAttribute("icon-size");
+		return resolveOptionalVocab(this.getAttribute("icon-size"), ICON_SIZES, "scheme toggle icon size");
 	}
 	set iconSize(value: string | null | undefined) {
 		this.reflectString("icon-size", value);
@@ -96,9 +97,7 @@ export class XtyleSchemeToggle extends XtyleElement {
 	 * that owns it. `null` when neither applies, which is the case the glyph resolves from the
 	 * document instead. */
 	private pinnedScheme(): Scheme | null {
-		const pinned = this.getAttribute("scheme");
-		if (pinned === "light" || pinned === "dark") return pinned;
-		return this.scopeHost?.scheme ?? null;
+		return resolveOptionalVocab(this.getAttribute("scheme"), SCHEMES, "scheme toggle scheme") ?? this.scopeHost?.scheme ?? null;
 	}
 
 	/**
@@ -135,8 +134,7 @@ export class XtyleSchemeToggle extends XtyleElement {
 	 * the mode it already had. Reading it through the cascade costs nothing and never goes stale.
 	 */
 	private updateHostClass(): void {
-		const attr = this.getAttribute("scheme");
-		const pinned = attr === "light" || attr === "dark" ? attr : null;
+		const pinned = resolveOptionalVocab(this.getAttribute("scheme"), SCHEMES, "scheme toggle scheme");
 		this.classList.add("xtyle-scheme-toggle");
 		this.classList.toggle("xtyle-scheme-toggle--auto", pinned === null);
 		this.classList.toggle("xtyle-scheme-toggle--light", pinned === "light");

@@ -9,12 +9,19 @@ import {
 	type ChartXScale,
 	type ChartPlot,
 } from "../markup/chart.js";
+import { parseLabelAngle } from "../markup/axis.js";
 import { seriesPalette, seriesColorsFor, resolvePaletteName, paletteRegisterTokens, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/chart/source.generated.js";
+import { resolveVocab } from "../vocab.js";
 
 export type { ChartSeries, ChartScheme, ChartVariant, ChartCurve, ChartXScale };
+
+const CHART_VARIANTS: readonly ChartVariant[] = ["line", "area"];
+const CHART_CURVES: readonly ChartCurve[] = ["linear", "smooth", "step"];
+const CHART_X_SCALES: readonly ChartXScale[] = ["auto", "time", "linear"];
 
 /** One series' readout at the cursor: the series name and the value of its nearest sample. */
 export interface ChartSelectionPoint {
@@ -57,6 +64,7 @@ export class XtyleChart extends XtyleElement {
 	private plotCache: ChartPlot | null = null;
 	private clientX: { si: number; i: number; cx: number }[] = [];
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "chart", {
+		nameTarget: '[role="img"]',
 		applyIntent: () => {},
 		afterApply: () => this.wireInteraction(),
 	});
@@ -75,6 +83,7 @@ export class XtyleChart extends XtyleElement {
 			"y-min",
 			"y-max",
 			"x-ticks",
+			"label-angle",
 			"y-ticks",
 			"x-label",
 			"y-label",
@@ -82,6 +91,7 @@ export class XtyleChart extends XtyleElement {
 			"height",
 			"label",
 			"selectable",
+			...NAME_ATTRIBUTES,
 		];
 	}
 
@@ -106,15 +116,14 @@ export class XtyleChart extends XtyleElement {
 	}
 
 	get variant(): ChartVariant {
-		return this.getAttribute("variant") === "area" ? "area" : "line";
+		return resolveVocab(this.getAttribute("variant"), CHART_VARIANTS, "line", "chart variant");
 	}
 	set variant(value: ChartVariant) {
 		this.setAttribute("variant", value);
 	}
 
 	get curve(): ChartCurve {
-		const raw = this.getAttribute("curve");
-		return raw === "smooth" || raw === "step" ? raw : "linear";
+		return resolveVocab(this.getAttribute("curve"), CHART_CURVES, "linear", "chart curve");
 	}
 	set curve(value: ChartCurve) {
 		this.setAttribute("curve", value);
@@ -170,8 +179,7 @@ export class XtyleChart extends XtyleElement {
 	/** The series shaped onto the shared x domain. Recomputed per render and cached for the hover and
 	 * keyboard paths, so the readout reads the same numbers the plot drew. */
 	private plot(): ChartPlot {
-		const xScaleRaw = this.getAttribute("x-scale");
-		const xScale: ChartXScale = xScaleRaw === "time" || xScaleRaw === "linear" ? xScaleRaw : "auto";
+		const xScale = resolveVocab(this.getAttribute("x-scale"), CHART_X_SCALES, "auto", "chart x scale");
 		return resolveChartPlot(this.series, {
 			xScale,
 			window: this.num("window"),
@@ -196,6 +204,7 @@ export class XtyleChart extends XtyleElement {
 			yMin: this.num("y-min"),
 			yMax: this.num("y-max"),
 			xTicks: this.num("x-ticks"),
+			labelAngle: parseLabelAngle(this.getAttribute("label-angle")),
 			yTicks: this.num("y-ticks"),
 			xLabel: this.getAttribute("x-label"),
 			yLabel: this.getAttribute("y-label"),
@@ -204,6 +213,7 @@ export class XtyleChart extends XtyleElement {
 			title: label,
 			ariaLabel: label,
 			selectable: this.selectable,
+			hostNamed: hasHostName(this),
 		};
 	}
 

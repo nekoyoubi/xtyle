@@ -59,6 +59,11 @@ const LINK_HOVER_MIN_DELTA = 0.01;
 const POLE_REACH = 0.03;
 const ENFORCE = AA + 0.2;
 export const SURFACE_SEPARATION = 1.5;
+export const FILL_SURFACE_FLOOR = 3;
+const FILL_SURFACE_TARGET = FILL_SURFACE_FLOOR + 0.05;
+const STATUS_SEPARATION = 0.02;
+const ACCENT_STATUS_SEPARATION = 0.05;
+const CONTROL_EDGE_FLOOR = 3;
 export const BORDER_SEPARATION = 1.5;
 export const DIVIDER_SEPARATION = 1.8;
 const DEFAULT_SHIFT_STEP = 90;
@@ -443,6 +448,14 @@ export interface PresetDefaults {
 	extreme?: boolean;
 }
 
+/**
+ * The literal an algorithm author hands {@link makeXtyleAlgorithm}. Only `id` is required: every field
+ * {@link PRESET_DEFAULTS} carries a value for may be omitted, so a preset states its taste and inherits
+ * the rest. {@link resolvePreset} fills it out to a total {@link PresetDefaults} before any derivation
+ * reads it, which is why a pass can keep assuming every field is present.
+ */
+export type PresetInput = Pick<PresetDefaults, "id"> & Partial<Omit<PresetDefaults, "id">>;
+
 function buildProduces(): { produces: string[]; categories: TokenCategories } {
 	const produces: string[] = [];
 	const categories: TokenCategories = {};
@@ -493,6 +506,7 @@ function buildProduces(): { produces: string[]; categories: TokenCategories } {
 
 	add("--field-bg", "color");
 	add("--field-border", "color");
+	add("--line-strong", "color");
 
 	for (const role of Object.keys(STATUS_TO_HUE)) {
 		add(`--${role}`, "color");
@@ -794,28 +808,46 @@ function separateTintFromFill(
 	return tint;
 }
 
+function walkFillOffSurfaces(
+	fill: OklchColor,
+	surfaces: readonly OklchColor[],
+	separation: number,
+	textFloor: number,
+): { found: OklchColor | null; last: OklchColor } {
+	const surfaceCss = surfaces.map((s) => formatCss(s));
+	const clears = (color: OklchColor): boolean => {
+		const css = formatCss(color);
+		return surfaceCss.every((s) => contrast(css, s) >= separation);
+	};
+	if (clears(fill)) return { found: fill, last: fill };
+	const headroom = Math.min(textFloor, bestPoleContrast(fill));
+	const poleL = (surfaces[0] as OklchColor).l < 0.5 ? 1 : 0;
+	let last = fill;
+	for (let i = 1; i <= 100; i++) {
+		const candidate = clampToGamut(oklch(fill.l + (poleL - fill.l) * (i / 100), fill.c, fill.h));
+		last = candidate;
+		if (clears(candidate) && bestPoleContrast(candidate) >= headroom - 0.01) {
+			return { found: candidate, last };
+		}
+	}
+	return { found: null, last };
+}
+
 function separateFillFromSurface(
 	fill: OklchColor,
 	surface: OklchColor,
 	separation: number,
 	textFloor: number,
 ): OklchColor {
-	const surfaceCss = formatCss(surface);
-	if (contrast(formatCss(fill), surfaceCss) >= separation) return fill;
-	const headroom = Math.min(textFloor, bestPoleContrast(fill));
-	const poleL = surface.l < 0.5 ? 1 : 0;
-	let best = fill;
-	for (let i = 1; i <= 100; i++) {
-		const candidate = clampToGamut(oklch(fill.l + (poleL - fill.l) * (i / 100), fill.c, fill.h));
-		best = candidate;
-		if (
-			contrast(formatCss(candidate), surfaceCss) >= separation &&
-			bestPoleContrast(candidate) >= headroom - 0.01
-		) {
-			return candidate;
-		}
-	}
-	return best;
+	const { found, last } = walkFillOffSurfaces(fill, [surface], separation, textFloor);
+	return found ?? last;
+}
+
+function floorFillOnSurfaces(fill: OklchColor, surfaces: readonly OklchColor[], textFloor: number): OklchColor {
+	return (
+		walkFillOffSurfaces(fill, surfaces, FILL_SURFACE_TARGET, textFloor).found ??
+		separateFillFromSurface(fill, surfaces[0] as OklchColor, SURFACE_SEPARATION, textFloor)
+	);
 }
 
 /**
@@ -1097,7 +1129,7 @@ function paletteRamp(
 		return;
 	}
 	if (spec === "gray") {
-		grayscale([0.4, 0.55, 0.68, 0.82], 0.005);
+		grayscale(scheme === "dark" ? [0.4, 0.55, 0.68, 0.82] : [0.82, 0.68, 0.55, 0.4], 0.005);
 		return;
 	}
 
@@ -1279,14 +1311,12 @@ function resolveStatusHue(role: string, pinned: TokenRegister): number {
 const STATUS_ACCENT_MIN_HUE_SEPARATION = 30;
 
 /**
- * The status roles held off the accent's hue.
+ * The status roles held off the accent's hue by the full arc.
  *
- * `danger` alone, and the restraint is the point: no blessed algorithm ships a red accent, so guarding
- * it changes nothing at any default anchor and only bites the case it exists for, where an author
- * brings a red brand. `info` is the tempting second entry and the wrong one. It reads as blue *by
- * definition*, the blessed accents are blues, so guarding it would rotate every shipped `--info` about
- * thirty degrees into violet: trading a role that cannot be told from the accent for a role that is no
- * longer the color its name promises, on four of the five algorithms, at their default anchors.
+ * `danger` alone: no blessed algorithm ships a red accent, so the arc only bites the author who brings
+ * a red brand. Every other role is guarded by measured distance instead, and moves only as far as it
+ * takes to stop reading as the accent, so a blue `--info` beside a blue accent turns a few degrees
+ * rather than the whole arc into violet.
  */
 const ACCENT_COLLISION_GUARDED = new Set(["danger"]);
 
@@ -1389,8 +1419,6 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 					scheme,
 					floor,
 				);
-	const pageFloor = (fill: OklchColor): OklchColor =>
-		separateFillFromSurface(fill, bg0, SURFACE_SEPARATION, floor);
 	const surfacePins = SURFACES.map((name) =>
 		pinned[name] ? toOklchColor(pinned[name] as string) : null,
 	);
@@ -1405,6 +1433,9 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	SURFACES.forEach((name, index) => {
 		lit(name, formatCss(surfaceColors[index] as OklchColor), surfaceRefs(index));
 	});
+	const fillSurfaces = SURFACE_ROLES.map((role) => surfaceColors[SURFACES.indexOf(role)] as OklchColor);
+	const pageFloor = (fill: OklchColor): OklchColor =>
+		floorFillOnSurfaces(fill, fillSurfaces, floor);
 
 	const bottomStep = (ladder.lightness[1] as number) - (ladder.lightness[0] as number);
 	lit(
@@ -1516,9 +1547,10 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		["--fg-0", ...refIfPinned("--bg-0")],
 	);
 
-	const accentFill =
-		pinned["--accent"] || completed.accentExplicit
-			? accent
+	const accentFill = pinned["--accent"]
+		? accent
+		: completed.accentExplicit
+			? pageFloor(accent)
 			: pageFloor(
 					fillWithTextHeadroom(
 						accent.l,
@@ -1572,8 +1604,18 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		);
 	const neutralTintHue = Number.isFinite(neutralFill.h) ? neutralFill.h : accentFill.h;
 	lit("--neutral", formatCss(neutralFill), ["--accent", ...refIfPinned("--neutral")]);
-	const neutralTextColor = enforceOnPanels(neutralFill);
+	const neutralTextColor = extreme ? enforceOnPanels(neutralFill) : enforceChromaticOnPanels(neutralFill);
 	const neutralTextCss = formatCss(neutralTextColor);
+	const neutralInkRefs = [bg0, ...panelSurfaces.filter((p) => p.l < 0.5 === textLight)].map((s) => formatCss(s));
+	const neutralVividColor = (() => {
+		const clearsAAA = (c: OklchColor): boolean => neutralInkRefs.every((r) => emittedContrast(c, r) >= AAA);
+		const towardL = textLight ? 1 : 0;
+		let candidate = neutralTextColor;
+		for (let i = 1; i <= 100 && !clearsAAA(candidate); i++) {
+			candidate = withLightness(neutralTextColor, neutralTextColor.l + (towardL - neutralTextColor.l) * (i / 100));
+		}
+		return candidate;
+	})();
 	const neutralTintSeed = oklch(
 		scheme === "dark" ? Math.max(0.2, bg0.l + 0.06) : Math.min(0.92, bg0.l - 0.04),
 		0.005,
@@ -1593,7 +1635,7 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 	lit("--neutral-bg", formatCss(neutralTint), ["--accent", ...refIfPinned("--bg-0")]);
 	lit("--neutral-fg", pickReadable(neutralFill, TEXT_POLES, floor), ["--neutral"]);
 	lit("--neutral-text", neutralTextCss, ["--neutral", ...refIfPinned("--bg-0")]);
-	lit("--neutral-vivid", neutralTextCss, ["--neutral-text", ...refIfPinned("--bg-0")]);
+	lit("--neutral-vivid", formatCss(neutralVividColor), ["--neutral-text", ...refIfPinned("--bg-0")]);
 
 	const lineSeed = extreme
 		? oklch(scheme === "dark" ? 0.7 : 0.3, 0, 0)
@@ -1633,6 +1675,11 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 		formatCss(borderForContrast(fieldBorderSeed, fieldBg, BORDER_SEPARATION)),
 		refIfPinned("--bg-0"),
 	);
+	const lineStrong = [fieldBg, ...fillSurfaces].reduce(
+		(edge, surface) => borderForContrast(edge, surface, CONTROL_EDGE_FLOOR),
+		fieldBorderSeed,
+	);
+	lit("--line-strong", formatCss(lineStrong), [...new Set([...refIfPinned("--bg-0"), ...refIfPinned("--field-bg")])]);
 
 	lit(
 		"--accent-hover",
@@ -1788,20 +1835,54 @@ function buildGraphUncached(preset: PresetDefaults, opts: DeriveOptions): TokenN
 
 	const statusChroma = Math.max(0.12, accent.c) * (0.6 + vibrancy * 0.7) * preset.statusChromaMul;
 	const accentIsChromatic = accent.c >= ACHROMATIC_CHROMA;
-	for (const role of Object.keys(STATUS_TO_HUE)) {
-		const namedHue = resolveStatusHue(role, pinned);
+	const statusRoles = Object.keys(STATUS_TO_HUE);
+	const statusFillL = scheme === "dark" ? 0.62 : 0.52;
+	const fillAtHue = (hue: number): OklchColor => fillWithTextHeadroom(statusFillL, statusChroma, hue, floor);
+	const readsAsAccent = (hue: number): boolean =>
+		oklabDistance(formatCss(floorFillOnSurfaces(fillAtHue(hue), fillSurfaces, floor)), formatCss(accentFill)) < ACCENT_STATUS_SEPARATION;
+	const statusHues = new Map<string, number>();
+	const statusHueOf = (role: string): number => {
+		const known = statusHues.get(role);
+		if (known !== undefined) return known;
 		const pinnedFill = parseChromaticPin(pinned[`--${role}`]);
+		const namedHue = resolveStatusHue(role, pinned);
+		const others = statusRoles.filter((other) => other !== role).map((other) => resolveStatusHue(other, pinned));
+		let hue = namedHue;
+		if (pinnedFill) hue = pinnedFill.h;
+		else if (accentIsChromatic && ACCENT_COLLISION_GUARDED.has(role)) hue = separateFromAccent(namedHue, accent.h, others);
+		else if (accentIsChromatic && readsAsAccent(namedHue)) {
+			const pushed = separateFromAccent(namedHue, accentFill.h, others);
+			const side = Math.sign(hueDelta(namedHue, pushed)) || Math.sign(hueDelta(accentFill.h, namedHue)) || 1;
+			hue = namedHue + side * STATUS_ACCENT_MIN_HUE_SEPARATION;
+			for (let step = 2; step < STATUS_ACCENT_MIN_HUE_SEPARATION; step += 2) {
+				if (!readsAsAccent(namedHue + side * step)) {
+					hue = namedHue + side * step;
+					break;
+				}
+			}
+		}
+		statusHues.set(role, hue);
+		return hue;
+	};
+	const statusBaseFill = (role: string): OklchColor => fillAtHue(statusHueOf(role));
+	const strongStatusFills = statusRoles.map(
+		(role) =>
+			parsePin(pinned[`--${role}`]) ??
+			walkFillOffSurfaces(statusBaseFill(role), fillSurfaces, FILL_SURFACE_TARGET, floor).found,
+	);
+	const statusFloorHolds =
+		strongStatusFills.every((fill) => fill !== null) &&
+		strongStatusFills.every((a, i) =>
+			strongStatusFills.every((b, j) => j <= i || oklabDistance(formatCss(a as OklchColor), formatCss(b as OklchColor)) >= STATUS_SEPARATION),
+		);
+	for (const [index, role] of statusRoles.entries()) {
 		const effectivePin = parsePin(pinned[`--${role}`]);
-		const others = Object.keys(STATUS_TO_HUE)
-			.filter((other) => other !== role)
-			.map((other) => resolveStatusHue(other, pinned));
-		const roleHue = pinnedFill
-			? pinnedFill.h
-			: accentIsChromatic && ACCENT_COLLISION_GUARDED.has(role)
-				? separateFromAccent(namedHue, accent.h, others)
-				: namedHue;
-		const fillL = scheme === "dark" ? 0.62 : 0.52;
-		const fill = effectivePin ?? pageFloor(fillWithTextHeadroom(fillL, statusChroma, roleHue, floor));
+		const roleHue = statusHueOf(role);
+		const fill =
+			effectivePin ??
+			(statusFloorHolds
+				? (strongStatusFills[index] as OklchColor)
+				: separateFillFromSurface(statusBaseFill(role), bg0, SURFACE_SEPARATION, floor));
 		const tintL = scheme === "dark" ? Math.min(0.3, bg0.l + 0.08) : Math.min(0.92, bg0.l - 0.04);
 		const tint = pinnedSurface(
 			`--${role}-bg`,
@@ -3165,7 +3246,7 @@ export function makeInvariants(preset: PresetDefaults): Invariant[] {
 			// INFO: OKLab distance catches two equally-light status hues reading as one; floored well
 			// under the muted reality (~0.044) so it guards a real collapse, not taste.
 			const name = "status roles mutually distinguishable";
-			const MIN_DE = 0.02;
+			const MIN_DE = STATUS_SEPARATION;
 			const roles = Object.keys(STATUS_TO_HUE).map((r) => `--${r}`);
 			for (let i = 0; i < roles.length; i++) {
 				for (let j = i + 1; j < roles.length; j++) {
@@ -3197,9 +3278,10 @@ export const TOKEN_CATEGORIES = CATEGORIES;
  * value-only nodes so `resolveGraph(lineage(opts)) === derive(opts)` holds either way.
  */
 export function makeXtylePipelineAlgorithm(
-	preset: PresetDefaults,
+	input: PresetInput,
 	buildPasses: (preset: PresetDefaults, opts: DeriveOptions) => Pass[],
 ): Algorithm {
+	const preset = resolvePreset(input);
 	const run = (opts: DeriveOptions): { register: TokenRegister; trace: TraceSnapshot[] } => {
 		const passes = buildPasses(preset, opts);
 		return runPipeline(passes, (passIndex) => buildPassContext(preset, opts, passIndex));
@@ -3227,8 +3309,8 @@ export function makeXtylePipelineAlgorithm(
 	};
 }
 
-export function makeXtyleAlgorithm(preset: PresetDefaults): Algorithm {
-	return makeXtylePipelineAlgorithm(preset, (p, opts) => [settlePass(p, opts)]);
+export function makeXtyleAlgorithm(input: PresetInput): Algorithm {
+	return makeXtylePipelineAlgorithm(input, (p, opts) => [settlePass(p, opts)]);
 }
 
 export const SHARED_KNOBS = [
@@ -3372,3 +3454,50 @@ export const DEFAULT_ANCHORS: PresetAnchors = {
 	bg: "#25272e",
 	fg: "#e2e0e0",
 };
+
+/**
+ * The value each optional {@link PresetInput} field takes when a preset does not state one. Both
+ * authoring tiers resolve against this table — the raw preset literal through {@link resolvePreset} and
+ * the `XtyleAlgorithmSpec` through `toPreset` — so the two surfaces cannot drift, and a field added
+ * here is inherited by existing presets rather than demanded of them.
+ */
+export const PRESET_DEFAULTS = {
+	knobs: SHARED_KNOBS,
+	defaultAnchors: DEFAULT_ANCHORS,
+	contrastFloor: 4.7,
+	declaredTextOnFillFloor: 4.5,
+	declaredFocusRingFloor: 3,
+	defaultVibrancy: 0.5,
+	accentChromaMul: 1,
+	statusChromaMul: 1,
+	paletteChromaMul: 1,
+	neutralChroma: 0.01,
+	elevationStrengthMul: 1,
+	elevationAlphaBoost: 0,
+	accentTintChromaMul: 0.3,
+} satisfies Omit<PresetDefaults, "id" | "knobSpecs" | "anchorsByScheme" | "accentStrategy" | "extreme">;
+
+/**
+ * Fills a {@link PresetInput} out to a total {@link PresetDefaults} against {@link PRESET_DEFAULTS}.
+ * A field stated as `undefined` takes the default rather than passing `undefined` through, so an
+ * optional property spread from a caller's own config cannot land as `NaN` in the derivation.
+ */
+export function resolvePreset(input: PresetInput): PresetDefaults {
+	return {
+		...input,
+		id: input.id,
+		knobs: input.knobs ?? PRESET_DEFAULTS.knobs,
+		defaultAnchors: input.defaultAnchors ?? PRESET_DEFAULTS.defaultAnchors,
+		contrastFloor: input.contrastFloor ?? PRESET_DEFAULTS.contrastFloor,
+		declaredTextOnFillFloor: input.declaredTextOnFillFloor ?? PRESET_DEFAULTS.declaredTextOnFillFloor,
+		declaredFocusRingFloor: input.declaredFocusRingFloor ?? PRESET_DEFAULTS.declaredFocusRingFloor,
+		defaultVibrancy: input.defaultVibrancy ?? PRESET_DEFAULTS.defaultVibrancy,
+		accentChromaMul: input.accentChromaMul ?? PRESET_DEFAULTS.accentChromaMul,
+		statusChromaMul: input.statusChromaMul ?? PRESET_DEFAULTS.statusChromaMul,
+		paletteChromaMul: input.paletteChromaMul ?? PRESET_DEFAULTS.paletteChromaMul,
+		neutralChroma: input.neutralChroma ?? PRESET_DEFAULTS.neutralChroma,
+		elevationStrengthMul: input.elevationStrengthMul ?? PRESET_DEFAULTS.elevationStrengthMul,
+		elevationAlphaBoost: input.elevationAlphaBoost ?? PRESET_DEFAULTS.elevationAlphaBoost,
+		accentTintChromaMul: input.accentTintChromaMul ?? PRESET_DEFAULTS.accentTintChromaMul,
+	};
+}

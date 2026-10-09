@@ -41,6 +41,9 @@
 		/** How heavy a `circular` ring reads, independent of its diameter: a unitless number in ring units
 		 * (scales with the ring) or a CSS length (`6px`) that holds its weight at any size. */
 		thickness?: string | number;
+		/** How a `circular` arc ends: `butt` stops exactly at the value, `round` caps it. Defaults to `butt`
+		 * on a `meter` and `round` otherwise. */
+		linecap?: "butt" | "round";
 		/** The visible caption above the bar, distinct from `ariaLabel`, which renders nothing. Setting it
 		 * alone also names the control, so the string is written once. */
 		label?: string;
@@ -85,6 +88,7 @@
 		reverse = false,
 		track = true,
 		thickness,
+		linecap,
 		label,
 		reading,
 		note,
@@ -119,6 +123,7 @@
 	reverse={reverse || undefined}
 	track={track === true ? undefined : track === false ? "none" : track}
 	thickness={thickness ?? undefined}
+	{linecap}
 	label={label ?? undefined}
 	reading={reading ?? undefined}
 	note={note ?? undefined}

@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
 import { treeHostCss, firstSelectedValue, type TreeNode } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { resolveRoving } from "./collection/index.js";
 import { manifest, fragmentSources } from "./fragments/tree/source.generated.js";
 import { resolveVocab, SIZES } from "../vocab.js";
@@ -34,12 +35,13 @@ export class XtyleTree extends XtyleElement {
 	 * questions, and a leaf that gains its first child answers them differently. */
 	private knownBranchKeys: Set<string> | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "tree", {
+		nameTarget: '[role="tree"]',
 		context: (handler) => (handler === "navKeydown" ? this.navContext() : undefined),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["items", "size", "label", "labelledby"];
+		return ["items", "size", "label", "labelledby", ...NAME_ATTRIBUTES];
 	}
 
 	get items(): TreeNode[] {
@@ -269,7 +271,7 @@ export class XtyleTree extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("label") && !this.getAttribute("labelledby")) {
+		if (!this.getAttribute("label") && !this.getAttribute("labelledby") && !hasHostName(this)) {
 			console.warn("xtyle-tree: no accessible name. Provide a `label` or `labelledby` so the tree is announced.");
 		}
 	}

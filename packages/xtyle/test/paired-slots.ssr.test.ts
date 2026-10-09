@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { markedChildren, markedPairs, topLevelElements, renderFragmentLight } from "../src/elements/fragment-ssr.js";
+import { markedChildren, markedExtras, markedPairs, topLevelElements, renderFragmentLight } from "../src/elements/fragment-ssr.js";
 
 describe("markedChildren", () => {
 	it("finds top-level children by marker, in document order", () => {
@@ -261,5 +261,26 @@ describe("slotted tabs, composed server-side from the legacy named slots", () =>
 		const withScript = `<script type="module" src="/@fs/Code.astro?astro&type=script"></script>${panelBodies}`;
 		const html = await composeTabs(tabSlot, withScript);
 		expect(panelLanguages(html)).toEqual(["markup", "svelte", "astro"]);
+	});
+});
+
+describe("markedExtras", () => {
+	const html = (parts: string[]) => parts.join("");
+	const H = (t: string) => `<span data-xtyle-header>${t}</span>`;
+	const P = (t: string) => `<div data-xtyle-panel>${t}</div>`;
+	const A = (t: string) => `<span data-xtyle-actions>${t}</span>`;
+
+	it("gives interleaved actions to the header before them and leaves the rest null", () => {
+		const out = markedExtras(html([H("a"), P("pa"), H("b"), A("for b"), P("pb")]), "header", "panel", "actions");
+		expect(out.map((x) => x?.html ?? null)).toEqual([null, "for b"]);
+	});
+
+	it("pairs grouped actions by index", () => {
+		const out = markedExtras(html([H("a"), H("b"), P("pa"), P("pb"), A("for a"), A("for b")]), "header", "panel", "actions");
+		expect(out.map((x) => x?.html ?? null)).toEqual(["for a", "for b"]);
+	});
+
+	it("is empty when nothing is marked", () => {
+		expect(markedExtras("<p>loose</p>", "header", "panel", "actions")).toEqual([]);
 	});
 });

@@ -84,6 +84,7 @@ import { eyebrowManifest } from "./eyebrow.manifest.js";
 import { cardLinkManifest } from "./card-link.manifest.js";
 import { tocManifest } from "./toc.manifest.js";
 import { kbdManifest } from "./kbd.manifest.js";
+import { numberFormatManifest } from "./number-format.manifest.js";
 import { iconManifest } from "./icon.manifest.js";
 import { imageManifest } from "./image.manifest.js";
 import { carouselManifest } from "./carousel.manifest.js";
@@ -178,6 +179,7 @@ export const components: ComponentRegistry = {
 	"card-link": cardLinkManifest,
 	toc: tocManifest,
 	kbd: kbdManifest,
+	"number-format": numberFormatManifest,
 	icon: iconManifest,
 	image: imageManifest,
 	carousel: carouselManifest,

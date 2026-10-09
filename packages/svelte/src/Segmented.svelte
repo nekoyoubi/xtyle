@@ -11,6 +11,8 @@
 		disabled?: boolean;
 		/** Set false to keep the control out of sequential focus navigation. */
 		focusable?: boolean;
+		/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+		cursor?: boolean;
 		size?: Size;
 		tone?: Tone;
 		label?: string;
@@ -29,6 +31,7 @@
 		options,
 		disabled = false,
 		focusable,
+		cursor = false,
 		size = "md",
 		tone = "accent",
 		label,
@@ -59,6 +62,7 @@
 	options={typeof options === "string" ? options : undefined}
 	disabled={disabled || undefined}
 	focusable={focusable === false ? "false" : undefined}
+	cursor={cursor || undefined}
 	{size}
 	{tone}
 	{label}

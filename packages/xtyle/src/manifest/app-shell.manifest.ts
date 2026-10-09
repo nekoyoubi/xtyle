@@ -97,6 +97,7 @@ export const appShellManifest: ComponentManifest = {
 	description:
 		"AppShell is the outermost layout frame for a full-screen application. It establishes a three-row grid (a top toolbar, a flexible body, and a bottom status bar) where the body is itself a three-column grid of a left rail, a scrollable main column, and a right rail. Every region is an optional named slot, so the same scaffold collapses cleanly from a full IDE-style layout down to a bare main column. The main region is a real `<main>` landmark that owns the only scroll, keeping the chrome pinned. An optional skip link, hidden until focused, lets keyboard users jump straight past the chrome to the content. It carries no chrome of its own: the Astro and HTML bindings emit the same light-DOM structure, and the custom element is a transparent `display: contents` host that contributes nothing to the layout.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["app", "main", "skip-link"],
 	anatomy: [
 		{

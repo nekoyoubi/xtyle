@@ -8,6 +8,8 @@ interface OpsBuilder {
 interface AvatarGroupBindings {
 	size?: string | null;
 	spacing?: string | null;
+	layout?: string | null;
+	stack?: string | null;
 	overflow?: number;
 	label?: string | null;
 }
@@ -19,10 +21,13 @@ declare const hooks: {
 function groupClass(b: AvatarGroupBindings): string {
 	const size = b.size === "sm" || b.size === "lg" || b.size === "xl" ? b.size : "md";
 	const spacing = b.spacing === "snug" || b.spacing === "loose" ? b.spacing : "normal";
+	const layout = b.layout === "row" || b.layout === "wrap" || b.layout === "lattice" ? b.layout : "overlap";
 	return [
 		"xtyle-avatar-group",
 		size !== "md" && `xtyle-avatar-group--${size}`,
 		spacing !== "normal" && `xtyle-avatar-group--${spacing}`,
+		`xtyle-avatar-group--${layout}`,
+		b.stack === "start" && "xtyle-avatar-group--stack-start",
 	]
 		.filter(Boolean)
 		.join(" ");

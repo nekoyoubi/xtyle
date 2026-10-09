@@ -1,5 +1,5 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { STACK_ALIGNS, STACK_JUSTIFIES } from "../vocab.js";
+import { STACK_ALIGNS, STACK_JUSTIFIES, SPACE_STEP_EXPECTS, resolveIntegerIn, resolveOptionalVocab } from "../vocab.js";
 import { stackHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/stack/source.generated.js";
@@ -9,13 +9,6 @@ type StackJustify = (typeof STACK_JUSTIFIES)[number];
 
 const ALIGNS: readonly StackAlign[] = STACK_ALIGNS;
 const JUSTIFIES: readonly StackJustify[] = STACK_JUSTIFIES;
-
-function clampGap(raw: string | null): number | null {
-	if (raw === null) return null;
-	const n = Math.trunc(Number(raw));
-	if (!Number.isFinite(n) || n < 0 || n > 8) return null;
-	return n;
-}
 
 export class XtyleStack extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "stack", {
@@ -31,23 +24,21 @@ export class XtyleStack extends XtyleElement {
 	}
 
 	get gap(): number {
-		return clampGap(this.getAttribute("gap")) ?? 4;
+		return resolveIntegerIn(this.getAttribute("gap"), 0, 8, "stack gap", SPACE_STEP_EXPECTS) ?? 4;
 	}
 	set gap(value: number) {
 		this.setAttribute("gap", String(value));
 	}
 
 	get align(): StackAlign | null {
-		const raw = this.getAttribute("align") as StackAlign | null;
-		return raw && ALIGNS.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("align"), ALIGNS, "stack align");
 	}
 	set align(value: StackAlign) {
 		this.setAttribute("align", value);
 	}
 
 	get justify(): StackJustify | null {
-		const raw = this.getAttribute("justify") as StackJustify | null;
-		return raw && JUSTIFIES.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("justify"), JUSTIFIES, "stack justify");
 	}
 	set justify(value: StackJustify) {
 		this.setAttribute("justify", value);

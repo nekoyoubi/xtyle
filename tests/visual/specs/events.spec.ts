@@ -277,3 +277,24 @@ test.describe("events a real interaction produces", () => {
 		});
 	}
 });
+
+test.describe("a listener attached before the component is ready", () => {
+	test("hears one input per keystroke on a server-rendered field", async ({ page }) => {
+		await page.addInitScript(() => {
+			const store = window as unknown as { __early: string[] };
+			store.__early = [];
+			void customElements.whenDefined("xtyle-field").then(() => {
+				document
+					.querySelector("xtyle-field")
+					?.addEventListener("input", (event) => store.__early.push(event instanceof CustomEvent ? "own" : "native"));
+			});
+		});
+		await page.goto("/components/field/");
+		const input = page.locator("xtyle-field").first().locator("input").first();
+		await input.click();
+		await page.keyboard.type("a");
+		await page.waitForTimeout(200);
+		const heard = await page.evaluate(() => (window as unknown as { __early: string[] }).__early);
+		expect(heard, "a host listener attached early hears every input once").toHaveLength(1);
+	});
+});

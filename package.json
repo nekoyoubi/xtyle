@@ -1,6 +1,6 @@
 {
 	"name": "xtyle-workspace",
-	"version": "0.12.0",
+	"version": "0.13.0",
 	"private": true,
 	"type": "module",
 	"workspaces": [
@@ -9,7 +9,7 @@
 		"tests/*"
 	],
 	"scripts": {
-		"build": "node scripts/build-fragments.mjs && npm run build -w @xtyle/core && node scripts/build-mods.mjs && node scripts/build-packs.mjs && npm run build --workspaces --if-present",
+		"build": "node scripts/build-tag-map.mjs && node scripts/build-fragments.mjs && npm run build -w @xtyle/core && node scripts/build-mods.mjs && node scripts/build-packs.mjs && npm run build --workspaces --if-present",
 		"build:fragments": "node scripts/build-fragments.mjs",
 		"build:mods": "node scripts/build-mods.mjs",
 		"build:packs": "node scripts/build-packs.mjs",

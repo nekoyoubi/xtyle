@@ -3,7 +3,7 @@ import type { FullTone, Size } from "../index.js";
 import { badgeHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/badge/source.generated.js";
-import { resolveTone, BADGE_VARIANTS, resolveVocab, SIZES } from "../vocab.js";
+import { resolveTone, BADGE_VARIANTS, DOT_PULSES, resolveVocab, SIZES } from "../vocab.js";
 
 type BadgeVariant = (typeof BADGE_VARIANTS)[number];
 type BadgePulse = "slow" | "fast" | null;
@@ -60,7 +60,7 @@ export class XtyleBadge extends XtyleElement {
 	get pulse(): BadgePulse {
 		const raw = this.getAttribute("pulse");
 		if (raw === null) return null;
-		return raw === "fast" ? "fast" : "slow";
+		return resolveVocab(raw, DOT_PULSES, "slow", "badge pulse");
 	}
 	set pulse(value: BadgePulse | boolean) {
 		if (value === true) this.setAttribute("pulse", "slow");

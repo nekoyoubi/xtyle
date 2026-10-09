@@ -2,7 +2,7 @@
 import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight, composeFallbackSlot } from "@xtyle/core/elements/ssr";
 
-import { rampGradientStops, type FullTone as Tone, type Palette, resolveTone, PROGRESS_VARIANTS, resolveVocab, PROGRESS_SIZES, PROGRESS_RAMP_MODES, PROGRESS_ORIENTS } from "@xtyle/core";
+import { rampGradientStops, type FullTone as Tone, type Palette, resolveTone, PROGRESS_VARIANTS, resolveVocab, PROGRESS_SIZES, PROGRESS_RAMP_MODES, PROGRESS_ORIENTS, PROGRESS_LINECAPS } from "@xtyle/core";
 type ProgressVariant = (typeof PROGRESS_VARIANTS)[number];
 type ProgressSize = (typeof PROGRESS_SIZES)[number];
 type ProgressRampMode = (typeof PROGRESS_RAMP_MODES)[number];
@@ -41,6 +41,9 @@ interface Props {
 	/** How heavy a `circular` ring reads, independent of its diameter: a unitless number in ring units
 	 * (scales with the ring) or a CSS length (`6px`) that holds its weight at any size. */
 	thickness?: string | number;
+	/** How a `circular` arc ends: `butt` stops exactly at the value, `round` caps it. Defaults to `butt` on
+	 * a `meter` and `round` otherwise. */
+	linecap?: "butt" | "round";
 	/** The visible caption above the bar, distinct from `aria-label`, which renders nothing. Setting it
 	 * alone also names the control, so the string is written once. */
 	label?: string;
@@ -78,6 +81,7 @@ const {
 	reverse = false,
 	track = true,
 	thickness,
+	linecap,
 	label,
 	reading,
 	note,
@@ -121,6 +125,7 @@ const bindings = {
 	pulse: null,
 	track: trackAttr ?? null,
 	thickness: thicknessAttr ?? null,
+	linecap: resolveVocab(linecap, PROGRESS_LINECAPS, meter ? "butt" : "round", "progress linecap"),
 	orient,
 	label: label ?? null,
 	reading: reading ?? null,
@@ -168,6 +173,7 @@ const composed = withSlots + thresholdHtml;
 	reverse={reverse || undefined}
 	track={trackAttr}
 	thickness={thicknessAttr}
+	linecap={linecap}
 	label={label}
 	reading={reading}
 	note={note}

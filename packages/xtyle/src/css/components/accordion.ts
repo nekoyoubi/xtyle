@@ -9,8 +9,25 @@ export const accordionCss = `
 	border-radius: var(--radius-md);
 	overflow: hidden;
 }
-.xtyle-accordion__item + .xtyle-accordion__item {
+.xtyle-accordion__section {
+	position: relative;
+}
+.xtyle-accordion__section + .xtyle-accordion__section {
 	border-top: var(--border-thin) solid var(--line);
+}
+.xtyle-accordion__actions {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-end: var(--_actions-end, calc(var(--space-4) + 1em + var(--space-3)));
+	block-size: var(--_trigger-block, calc(var(--space-3) * 2 + 1lh));
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-body);
+	line-height: var(--leading-tight);
+}
+.xtyle-accordion__section:has(> .xtyle-accordion__actions) .xtyle-accordion__label {
+	margin-inline-end: var(--_actions-inline, 0px);
 }
 .xtyle-accordion__heading {
 	margin: 0;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import pkg from "../../package.json";
 import baseline from "./stats-baseline.json";
 import { releasedVersions } from "./releases";
 
@@ -11,7 +12,7 @@ describe("releasedVersions", () => {
 	});
 
 	it("stops at the last release, so the cycle being built is not offered as shipped", () => {
-		expect(releasedVersions()).not.toContain("0.12.0");
+		expect(releasedVersions()).not.toContain(pkg.version);
 		expect(releasedVersions().at(-1)).toBe(baseline.version);
 	});
 

@@ -118,7 +118,8 @@ ${linkRules}
 .xtyle-button--link[aria-pressed="true"]:hover::after,
 .xtyle-button--link[aria-current="true"]::after,
 .xtyle-button--link[aria-current="true"]:hover::after { background: transparent; }
-.xtyle-button:focus-visible {
+.xtyle-button:focus-visible,
+.xtyle-button[data-cursor] {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
 }
@@ -192,5 +193,14 @@ ${linkRules}
 .xtyle-button[aria-disabled="true"]::after { background: transparent; }
 @media (prefers-reduced-motion: reduce) {
 	.xtyle-button__spinner { animation: none; }
+}
+@media (forced-colors: active) {
+	.xtyle-button:not(.xtyle-button--link)[aria-pressed="true"],
+	.xtyle-button:not(.xtyle-button--link)[aria-current="true"] {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+		border-color: Highlight !important;
+	}
 }
 `.trim();

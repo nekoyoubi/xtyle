@@ -1,4 +1,64 @@
 import type { ComponentManifest } from "./types.js";
+import { FULL_TONES } from "../vocab.js";
+
+const toneTokens = FULL_TONES.flatMap((t) => [`--${t}-bg`, `--${t}-text`]);
+
+const tonedHtmlExample = `<xtyle-table hover aria-label="Deploys">
+	<table>
+		<thead>
+			<tr><th scope="col">Service</th><th scope="col">Region</th><th scope="col">Status</th></tr>
+		</thead>
+		<tbody>
+			<tr><td>api</td><td>us-east</td><td data-tone="success">Healthy</td></tr>
+			<tr data-tone="danger"><td>billing</td><td>eu-west</td><td>Failing</td></tr>
+			<tr><td>search</td><td>ap-south</td><td data-tone="warn">Degraded</td></tr>
+		</tbody>
+	</table>
+</xtyle-table>`;
+
+const tonedSvelteExample = `<script lang="ts">
+	import { Table } from "@xtyle/svelte";
+
+	const deploys = [
+		{ service: "api", region: "us-east", status: "Healthy", tone: "success" },
+		{ service: "billing", region: "eu-west", status: "Failing", tone: "danger" },
+		{ service: "search", region: "ap-south", status: "Degraded", tone: "warn" },
+	];
+</script>
+
+<Table hover ariaLabel="Deploys">
+	<table>
+		<thead>
+			<tr><th scope="col">Service</th><th scope="col">Region</th><th scope="col">Status</th></tr>
+		</thead>
+		<tbody>
+			{#each deploys as d (d.service)}
+				<tr data-tone={d.tone === "danger" ? "danger" : undefined}>
+					<td>{d.service}</td>
+					<td>{d.region}</td>
+					<td data-tone={d.tone}>{d.status}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+</Table>`;
+
+const tonedAstroExample = `---
+import { Table } from "@xtyle/astro";
+---
+
+<Table hover aria-label="Deploys">
+	<table>
+		<thead>
+			<tr><th scope="col">Service</th><th scope="col">Region</th><th scope="col">Status</th></tr>
+		</thead>
+		<tbody>
+			<tr><td>api</td><td>us-east</td><td data-tone="success">Healthy</td></tr>
+			<tr data-tone="danger"><td>billing</td><td>eu-west</td><td>Failing</td></tr>
+			<tr><td>search</td><td>ap-south</td><td data-tone="warn">Degraded</td></tr>
+		</tbody>
+	</table>
+</Table>`;
 
 const htmlExample = `<xtyle-table variant="striped" hover sticky aria-label="Recent orders">
 	<table>
@@ -132,6 +192,7 @@ export const tableManifest: ComponentManifest = {
 	description:
 		"Table dresses a native `<table>` in xtyle styling without taking over its markup. The binding is a thin wrapper that relays consumer-authored rows: you write the real `<thead>`/`<tbody>`/`<tr>`/`<th>`/`<td>` and tag them with the `xtyle-table__*` part classes, and the wrapper supplies the scroll container, variant, size, hover, and sticky behavior. Rows you render after mount get decorated automatically by a subtree observer, so a keyed `{#each}` or a live feed needs no classing at all. A framework that would rather class rows at author time (skipping the observer entirely) can, and to keep that path from hard-coding magic strings, `@xtyle/core` exports the part-class names as the typed `tableParts` map (`tableParts.head`, `.row`, `.cell`, `.headerCell`, `.body`, …); the same constants the decorator itself writes, so a part rename can't drift silently. Variants `default`/`striped`/`bordered` set the row and cell chrome; `compact`/`normal` sizes set the cell padding. The sortable-header affordance renders a sort caret — an `<xtyle-icon>`, so the glyph comes from the Icon component's fragment and re-skins with the rest of the icon set — and exposes an `aria-sort` hook on the header cell; the engine is presentation-only, so the consumer wires the actual sort and toggles `aria-sort` (`ascending`/`descending`/`none`), and the caret rotates to match. `scope` belongs on every header cell so screen readers associate it with its row or column.",
 	bindings: ["html", "svelte", "astro"],
+	render: "light",
 	anatomy: [
 		{
 			name: "wrap",
@@ -253,6 +314,16 @@ export const tableManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "tone",
+			type: "FullTone",
+			description:
+				"Paints a row or a single cell in a tone: its cells take the tone's soft background and on-surface ink. Set `data-tone` on a `<tr>` for the whole row or on a `<td>`/`<th>` for one cell; a cell's tone wins over its row's, and a selected row's accent fill wins over both. Any tone in the roster works (the semantic roles, the accent variants, the named hues).",
+			bindings: ["html", "svelte", "astro"],
+			attr: "data-tone",
+			attrOn: "<tr>, <td> and <th> children",
+			options: [...FULL_TONES],
+		},
+		{
 			name: "static",
 			type: "boolean",
 			default: "false",
@@ -290,8 +361,8 @@ export const tableManifest: ComponentManifest = {
 	states: [
 		{
 			name: "hover",
-			description: "Pointer over a body row (with `hover`); the row paints the hover tint.",
-			selector: ".xtyle-table--hover .xtyle-table__body .xtyle-table__row:hover",
+			description: "Pointer over a body row (with `hover`); each of its cells lays the hover tint over whatever it already paints, so a toned row, a stripe, or a cell a consumer made opaque for a sticky column all keep both.",
+			selector: ".xtyle-table--hover .xtyle-table__body .xtyle-table__row:hover > *",
 			tokens: ["--state-hover"],
 		},
 		{
@@ -323,6 +394,12 @@ export const tableManifest: ComponentManifest = {
 			description: "A selected body row (with `selection`): an accent fill, plus a redundant check in the first cell under `--selection-cue: marker`.",
 			selector: '.xtyle-table__body .xtyle-table__row[aria-selected="true"]',
 			tokens: ["--accent-bg", "--fg-0", "--selection-cue"],
+		},
+		{
+			name: "toned",
+			description: "A row or cell carrying `data-tone`: the tone's soft background and on-surface ink, with the hover tint laid over it rather than replacing it.",
+			selector: '.xtyle-table__row[data-tone], .xtyle-table__cell[data-tone]',
+			tokens: toneTokens,
 		},
 		{
 			name: "row-focus",
@@ -369,6 +446,7 @@ export const tableManifest: ComponentManifest = {
 		"--state-hover",
 		"--duration-fast",
 		"--ease-standard",
+		...toneTokens,
 	],
 	composition: [
 		"Pair header cells with the sortable affordance and wire sorting yourself: toggle `aria-sort` between `ascending`/`descending`/`none`; the glyph follows.",
@@ -376,9 +454,11 @@ export const tableManifest: ComponentManifest = {
 		"Wrap the table in a Card for an elevated, contained data surface.",
 	],
 	a11y: [
+		"Under `forced-colors: active` a selected row's cells fill with the system `Highlight` and `HighlightText`, since the mode flattens the accent wash to `Canvas`.",
 		"Built on a native `<table>` with `<thead>`/`<tbody>`/`<tfoot>`, `<th scope>`, and an optional `<caption>`. Row/column semantics come for free.",
 		"Every header cell SHOULD carry `scope` (`col` or `row`) so assistive tech associates data cells correctly.",
 		"A table with no `<caption>` needs an `aria-label`; the binding warns at runtime when both are missing.",
+		"A row or cell tone is color only. Say the same thing in the cell's text (\"Failing\", not just a red row), so the meaning survives a screen reader, forced colors, and color blindness.",
 		"Sortable headers expose state via `aria-sort` (`ascending`/`descending`/`none`), not via the glyph, which is `aria-hidden`.",
 		"With `selection` set, the table becomes a `role=grid`: body rows carry `aria-selected` and a roving `tabindex`, Up/Down/Home/End move the row cursor, and selection is never color-only (a redundant check appears under `--selection-cue: marker`). Selection stays off the column axis, which keeps its native sort/scope semantics.",
 		"The sortable header is keyboard-focusable; focus shows a token ring plus a transparent outline the forced-colors base rule promotes to a real system outline.",
@@ -397,6 +477,12 @@ export const tableManifest: ComponentManifest = {
 			description:
 				"When you render rows yourself, class them from the exported `tableParts` map instead of string literals; a part rename is then a compile error, not a silent style regression.",
 			source: { svelte: tablePartsExample },
+		},
+		{
+			id: "row-and-cell-tones",
+			title: "Row and cell tones",
+			description: "`data-tone` on a row paints the whole row; on a cell it paints just that cell. The status text still says what the color means.",
+			source: { html: tonedHtmlExample, svelte: tonedSvelteExample, astro: tonedAstroExample },
 		},
 	],
 };

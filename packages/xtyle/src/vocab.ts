@@ -106,6 +106,32 @@ export function resolveVocab<T extends string>(
 }
 
 /**
+ * Narrows an integer attribute to `min`–`max`, warning (like {@link resolveVocab}) when it is set but is
+ * not a whole number in range: a size name such as `sm`, a fraction, or a value past the scale. Unset or
+ * empty answers `null` silently, so the caller's own default applies.
+ *
+ * @param expects what the attribute takes, completing "It takes …" in the warning
+ */
+export function resolveIntegerIn(
+	value: string | null | undefined,
+	min: number,
+	max: number,
+	label: string,
+	expects: string,
+): number | null {
+	if (value === null || value === undefined || value.trim() === "") return null;
+	const n = /^\s*\d+\s*$/.test(value) ? Number(value) : NaN;
+	if (n >= min && n <= max) return n;
+	if (typeof console !== "undefined") {
+		console.warn(`xtyle: "${value}" is not a valid ${label}. It takes ${expects}, ${min}-${max}. Ignoring it.`);
+	}
+	return null;
+}
+
+/** The `expects` clause for a `gap` on the `--space` scale, naming the vocabulary it is mistaken for. */
+export const SPACE_STEP_EXPECTS = "a step on the --space scale, not a size name like sm or md";
+
+/**
  * The same narrowing for a component-local vocabulary whose value is genuinely optional — an unset
  * `severity` on an Alert, an unset `pulse` on a Dot. An unrecognized value resolves to unset rather
  * than to a member the author never asked for, mirroring {@link resolveOptionalTone}.
@@ -188,6 +214,9 @@ export type CarouselTransition = (typeof CAROUSEL_TRANSITIONS)[number];
 export const CAROUSEL_DIRECTIONS = ["right", "left", "up", "down"] as const;
 export type CarouselDirection = (typeof CAROUSEL_DIRECTIONS)[number];
 
+/** Where a Carousel's controls sit: `true` in a bar below the track, `overlay` on the slides, `false` hidden. */
+export const CAROUSEL_CONTROLS = ["true", "false", "overlay"] as const;
+
 /** How a button justifies its content when it is wider than that content. */
 export const BUTTON_ALIGNS = ["start", "center", "end"] as const;
 export type ButtonAlign = (typeof BUTTON_ALIGNS)[number];
@@ -231,6 +260,9 @@ export type HeadingTone = "default" | "muted" | "subtle" | FullTone;
 
 export const ORIENTATIONS = ["horizontal", "vertical"] as const;
 
+/** The two schemes a theme renders in, for a component that pins one. */
+export const SCHEMES = ["light", "dark"] as const;
+
 export const REVEAL_DIRECTIONS = ["start", "end", "top", "bottom"] as const;
 export const REVEAL_BEHAVIORS = ["latch", "commit", "both"] as const;
 export const REVEAL_GRIP_STYLES = ["glyph", "bar", "dots", "none"] as const;
@@ -240,9 +272,12 @@ export const ALERT_SEVERITIES = ["success", "warn", "danger", "info"] as const;
 export const ALERT_VARIANTS = ["soft", "solid"] as const;
 
 export const AVATAR_SIZES = ["sm", "md", "lg", "xl"] as const;
-export const AVATAR_SHAPES = ["circle", "square"] as const;
+export const AVATAR_SHAPES = ["circle", "square", "diamond"] as const;
+export const AVATAR_FRAMES = ["none", "solid", "gradient"] as const;
 
 export const BADGE_VARIANTS = ["solid", "soft", "outline"] as const;
+
+export const CARD_DEPTH_STRENGTHS = ["sm", "md", "lg"] as const;
 
 export const BUTTON_SIZES = ["xs", "sm", "md", "lg"] as const;
 
@@ -268,10 +303,16 @@ export const IMAGE_RADII = ["none", "sm", "md", "lg"] as const;
 
 export const KBD_SIZES = ["sm", "md", "lg"] as const;
 
+export const NUMBER_FORMATS = ["decimal", "percent", "currency", "compact", "unit"] as const;
+export const NUMBER_CURRENCY_DISPLAYS = ["symbol", "narrowSymbol", "code", "name"] as const;
+export const NUMBER_UNIT_DISPLAYS = ["short", "long", "narrow"] as const;
+export const NUMBER_SIGNS = ["auto", "always", "exceptZero", "never"] as const;
+
 export const LINK_VARIANTS = ["default", "muted", "quiet"] as const;
 
 export const LIST_INTERACTIONS = ["static", "navigational", "selectable", "actionable"] as const;
 export const LIST_SELECTIONS = ["none", "single", "multi", "range"] as const;
+export const LIST_ITEM_VARIANTS = ["solid", "outline", "subtle"] as const;
 
 export const PANEL_VARIANTS = ["default", "collapsible"] as const;
 
@@ -327,6 +368,8 @@ export const TABS_OVERFLOWS = ["wrap", "scroll"] as const;
 /** Checkbox and Switch style a compact rung and the default only; an `lg` would land on no rule. */
 export const CHECKBOX_SIZES = ["sm", "md"] as const;
 export const SWITCH_SIZES = ["sm", "md"] as const;
+export const SWITCH_SHAPES = ["pill", "square"] as const;
+export const SWITCH_LABEL_SIDES = ["start", "end"] as const;
 
 export const TEXT_TAGS = ["p", "span"] as const;
 export const TEXT_SIZES = ["xs", "sm", "body", "lg"] as const;
@@ -339,6 +382,9 @@ export const TOAST_SEVERITIES = ["success", "warn", "danger", "info"] as const;
 export const TOAST_VARIANTS = ["soft", "solid"] as const;
 
 export const TOOLTIP_PLACEMENTS = ["top", "bottom", "left", "right"] as const;
+export const TOOLTIP_VARIANTS = ["soft", "solid"] as const;
+export const TOOLTIP_MODES = ["hint", "rich"] as const;
+export const TOOLTIP_SIZES = ["sm", "md"] as const;
 
 /**
  * A split button takes Button's treatments minus `link` — a link-styled half with a caret welded to
@@ -350,6 +396,8 @@ export const SPLIT_BUTTON_VARIANTS = ["solid", "outline", "subtle", "ghost"] as 
 
 export const AVATAR_GROUP_SIZES = ["sm", "md", "lg", "xl"] as const;
 export const AVATAR_GROUP_SPACINGS = ["snug", "normal", "loose"] as const;
+export const AVATAR_GROUP_LAYOUTS = ["overlap", "row", "wrap", "lattice"] as const;
+export const AVATAR_GROUP_STACKS = ["end", "start"] as const;
 
 export const CLUSTER_ALIGNS = ["start", "center", "end", "stretch", "baseline"] as const;
 export const CLUSTER_JUSTIFIES = ["start", "center", "end", "between", "around", "evenly"] as const;
@@ -365,6 +413,9 @@ export const IMAGE_HOVER_AUDIO = ["on", "off"] as const;
 
 export const PROGRESS_RAMP_MODES = ["solid", "gradient"] as const;
 export const PROGRESS_ORIENTS = ["horizontal", "vertical"] as const;
+export const PROGRESS_LINECAPS = ["butt", "round"] as const;
+export const PROGRESS_VALUE_FORMATS = ["percent", "value", "value-max"] as const;
+export const PROGRESS_VALUE_POSITIONS = ["end", "inset"] as const;
 
 export const REDACT_MODES = ["blur", "block", "mask"] as const;
 export const REDACT_REVEALS = ["hover", "click", "hold", "never"] as const;
@@ -372,4 +423,5 @@ export const REDACT_REVEALS = ["hover", "click", "hold", "never"] as const;
 export const TABS_ACTIVATIONS = ["automatic", "manual"] as const;
 
 export const TOUR_PROGRESS = ["count", "dots", "none"] as const;
+export const STEP_MODIFIERS = ["shift", "alt", "ctrl", "meta"] as const;
 export const SPOTLIGHT_PULSES = ["none", "slow", "fast"] as const;

@@ -3,6 +3,7 @@ import Button from "@xtyle/astro/Button.astro";
 import Card from "@xtyle/astro/Card.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
+import Field from "@xtyle/astro/Field.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
@@ -214,7 +215,74 @@ const TONE_GROUPS = [
 			</Cluster>
 		</Stack>
 	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">Outside its form</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				The actions sit below the card's form rather than inside it, the way a dialog footer does.
+				<code>form="button-demo-profile"</code> names the form, so Save runs its validation and submits it,
+				and Reset clears it.
+			</Text>
+			<form id="button-demo-profile" class="button-demo__form">
+				<Field label="Display name" name="display-name" required />
+			</form>
+			<Cluster gap={2} justify="end" align="center">
+				<Text size="sm" tone="muted" class="button-demo__form-status" aria-live="polite">Nothing submitted yet.</Text>
+				<Button type="reset" form="button-demo-profile" variant="ghost" tone="neutral">Reset</Button>
+				<Button type="submit" form="button-demo-profile">Save</Button>
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={2} size="sm">An app-owned cursor</Heading>
+		<Stack gap={3}>
+			<Text size="sm" tone="muted">
+				A menu driven from the app's own input layer never moves DOM focus, so <code>:focus-visible</code>
+				never paints. <code>cursor</code> marks the row the app's cursor rests on and draws the same ring
+				focus would, with no ARIA change. The up and down buttons stand in for the app's own input.
+			</Text>
+			<Stack gap={2} class="button-demo__cursor-menu">
+				<Button block align="start" variant="ghost" tone="neutral" focusable={false} cursor>Resume</Button>
+				<Button block align="start" variant="ghost" tone="neutral" focusable={false}>Options</Button>
+				<Button block align="start" variant="ghost" tone="neutral" focusable={false}>Quit to title</Button>
+			</Stack>
+			<Cluster gap={2}>
+				<Button variant="outline" tone="neutral" size="sm" data-cursor-step="-1">Menu up</Button>
+				<Button variant="outline" tone="neutral" size="sm" data-cursor-step="1">Menu down</Button>
+			</Cluster>
+		</Stack>
+	</Card>
 </Stack>
+
+<script>
+	type Row = HTMLElement & { cursor: boolean };
+
+	const profile = document.querySelector<HTMLFormElement>("#button-demo-profile");
+	const status = document.querySelector<HTMLElement>(".button-demo__form-status");
+	profile?.addEventListener("submit", (event) => {
+		event.preventDefault();
+		const name = new FormData(profile).get("display-name");
+		if (status) status.textContent = `Saved "${name}".`;
+	});
+	profile?.addEventListener("reset", () => {
+		if (status) status.textContent = "Form reset.";
+	});
+
+	customElements.whenDefined("xtyle-button").then(() => {
+		const rows = Array.from(document.querySelectorAll<Row>(".button-demo__cursor-menu xtyle-button"));
+		let at = rows.findIndex((row) => row.cursor);
+		for (const control of document.querySelectorAll<HTMLElement>("[data-cursor-step]")) {
+			control.addEventListener("click", () => {
+				if (!rows.length) return;
+				rows[at].cursor = false;
+				at = (at + Number(control.dataset.cursorStep) + rows.length) % rows.length;
+				rows[at].cursor = true;
+			});
+		}
+	});
+</script>
 
 <style>
 	.button-demo__split {
@@ -262,6 +330,9 @@ const TONE_GROUPS = [
 	.button-demo__matrix-cell :global(.xtyle-button) {
 		width: 100%;
 		justify-content: center;
+	}
+	.button-demo__form {
+		margin: 0;
 	}
 	.button-demo__rows :global(.xtyle-button__label) {
 		margin-right: auto;

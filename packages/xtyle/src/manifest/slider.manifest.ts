@@ -95,6 +95,7 @@ export const sliderManifest: ComponentManifest = {
 	description:
 		"Slider picks one number across a range. It renders a rail with a fill showing the chosen portion and a `role=\"slider\"` thumb carrying `aria-valuemin`/`aria-valuemax`/`aria-valuenow`, so pointer drag, click-to-position, and the full arrow/Page/Home/End keyboard set all move it. Values snap to `step` and clamp to `[min, max]`. Holding the `modifier` (Shift by default) while stepping or dragging swaps in `alt-step` for a coarser or finer jump, the same fine-tune contract the number field carries. With `show-value`, the readout is a click-to-edit numeric field that steps on the same keys; add `overflow` and a typed value may pass the rail while the thumb pins at the edge. It is form-associated: give it a `name` and it contributes its current value to form data. Three sizes (`sm`, the default `md`, and `lg`) vary the thumb and rail thickness. It is the primitive the hue and alpha tracks of a color picker compose from.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["fill", "groove", "header", "label", "rail", "slider", "thumb", "value", "value-input", "value-text"],
 	anatomy: [
 		{
@@ -155,7 +156,7 @@ export const sliderManifest: ComponentManifest = {
 			name: "value-input",
 			description: "The inline numeric field the readout becomes while it is being edited: a node in the fill's markup (drawn whenever the slider reports it is editing), not one the element conjures, so a mod that reshapes the value display keeps its own markup through an edit.",
 			selector: ".xtyle-slider__value-input",
-			tokens: ["--field-bg", "--field-border", "--border-thin", "--radius-sm", "--space-1", "--ring"],
+			tokens: ["--field-bg", "--line-strong", "--border-thin", "--radius-sm", "--space-1", "--ring"],
 		},
 		{
 			name: "overlay",
@@ -356,7 +357,7 @@ export const sliderManifest: ComponentManifest = {
 		"--space-6",
 		"--neutral-bg",
 		"--field-bg",
-		"--field-border",
+		"--line-strong",
 		"--line-2",
 		"--bg-0",
 		...FULL_TONES.map((t) => `--${t}`),
@@ -375,6 +376,8 @@ export const sliderManifest: ComponentManifest = {
 		"It is the building block for a color picker's hue and alpha tracks: same rail, fill, and thumb mechanics with a gradient rail.",
 	],
 	a11y: [
+		"The rail's edge is drawn in `--line-strong` and clears 3:1 against the page, so the track is identifiable before any value is filled.",
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"slider\"` thumb, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The thumb is `role=\"slider\"` with `aria-valuemin`, `aria-valuemax`, and `aria-valuenow` kept in sync, never conveying value by position alone.",
 		"Full keyboard support: arrows move by `step` (by `alt-step` with the `modifier` held), PageUp/PageDown by `alt-step`, Home/End jump to min/max; the keys' default scroll is prevented.",
 		"Under `overflow`, a typed value past the rail keeps `aria-valuenow` valid by widening the announced `aria-valuemin`/`aria-valuemax` to include it, rather than misreporting a pinned value.",

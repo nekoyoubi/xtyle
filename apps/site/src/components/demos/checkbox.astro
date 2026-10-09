@@ -41,14 +41,22 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={2} size="sm" tone="muted">Label as an attribute</Heading>
+		<Cluster gap={5} align="center">
+			<Checkbox checked label="Shown beside the box" />
+			<Checkbox aria-label="Named, but nothing shown" />
+		</Cluster>
+	</section>
+
+	<section class="demo__group">
 		<Heading level={2} size="sm" tone="muted">Sizes</Heading>
 		<Cluster gap={5} align="center">
 			<Stack gap={2} align="center">
-				<Checkbox size="sm" checked label="Small" />
+				<Checkbox size="sm" checked aria-label="Small" />
 				<Text size="xs" tone="subtle">sm</Text>
 			</Stack>
 			<Stack gap={2} align="center">
-				<Checkbox size="md" checked label="Medium" />
+				<Checkbox size="md" checked aria-label="Medium" />
 				<Text size="xs" tone="subtle">md</Text>
 			</Stack>
 		</Cluster>

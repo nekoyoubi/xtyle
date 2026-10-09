@@ -23,7 +23,7 @@ describe("SSR fragment registry", () => {
 		expect(html).toContain("xtyle-pagination");
 		expect(html).toContain('aria-current="page"');
 		for (const n of [1, 2, 3, 4, 5]) expect(html).toContain(`>${n}</`);
-		expect(html).toContain("<style>.x{}</style>");
+		expect(html).toContain("<style>:host([hidden]) { display: none !important; }.x{}</style>");
 	});
 
 	it("renders pagination links when given an href template", async () => {

@@ -1,7 +1,10 @@
 import { componentStyleSheet } from "../css/index.js";
 import { THEME_APPLY_EVENT } from "../dom.js";
-import { markFormNameUnbound, markFormNameDoubled } from "./fragment-host.js";
+import { hostData, markFormNameUnbound, markFormNameDoubled } from "./fragment-host.js";
+import { withHostHidden } from "./host-hidden.js";
+import { isXtyleProbe } from "../resolve-color.js";
 
+const FORM_STATE_ATTRIBUTES = ["value", "values", "checked"];
 const CHILD_IDENTITY_ATTRS = ["data-value", "value", "disabled", "aria-disabled", "selected"];
 
 /**
@@ -34,6 +37,14 @@ export function hasComposedScaffold(el: Element): boolean {
 	return Array.from(el.children).some((child) => child.hasAttribute("data-root"));
 }
 
+function definesSetter(proto: object | null, key: string): boolean {
+	for (let at = proto; at && at !== HTMLElement.prototype; at = Object.getPrototypeOf(at)) {
+		const descriptor = Object.getOwnPropertyDescriptor(at, key);
+		if (descriptor) return typeof descriptor.set === "function";
+	}
+	return false;
+}
+
 export abstract class XtyleElement extends HTMLElement {
 	/** The render root. Under `isolated` it's a real shadow root; under `inherit` / `scoped`
 	 * it's the element itself (light DOM), typed as `ShadowRoot` so the shadow elements keep
@@ -41,11 +52,15 @@ export abstract class XtyleElement extends HTMLElement {
 	 * / `addEventListener` surface both have. Subclasses read/write it via `template()` / `render()`. */
 	protected root: ShadowRoot;
 
+	/** The `data-*` attributes this element writes onto its own host. They are state, not the author's
+	 * data, so they never reach a fill's `bindings.hostData` and writing them never re-renders. */
+	static readonly ownedData: readonly string[] = [];
+
 	private hydrated = false;
 	private themeListener?: () => void;
 
-	/** Which `StyleMode` this element renders under, mirroring the `style` its host slot declares
-	 * in `component-host.json`. `isolated` attaches a shadow root and adopts the shared component
+	/** Which `StyleMode` this element renders under, published as the manifest's `render`.
+	 * `isolated` attaches a shadow root and adopts the shared component
 	 * sheet; `inherit` / `scoped` render into light DOM so the already-global sheet styles them;
 	 * `auto` resolves per-instance (light when upgrading over pre-rendered structure, shadow when
 	 * created bare). An element overrides this getter to pick a non-default mode. */
@@ -246,16 +261,50 @@ export abstract class XtyleElement extends HTMLElement {
 		);
 	}
 
+	private adoptPreUpgradeProperties(): void {
+		const self = this as unknown as Record<string, unknown>;
+		for (const key of Object.keys(this)) {
+			if (!definesSetter(Object.getPrototypeOf(this), key)) continue;
+			const value = self[key];
+			delete self[key];
+			self[key] = value;
+		}
+	}
+
 	connectedCallback(): void {
+		if (!this.hydrated) this.adoptPreUpgradeProperties();
 		if (this.resolvesThemeAtRuntime && !this.themeListener && typeof document !== "undefined") {
 			this.themeListener = () => {
 				if (this.hydrated && this.root.firstChild) this.render();
 			};
 			document.addEventListener(THEME_APPLY_EVENT, this.themeListener);
 		}
+		this.observeHostData();
 		if (this.hydrated) return;
 		this.hydrated = true;
+		for (const name of FORM_STATE_ATTRIBUTES) this.authoredState.set(name, this.getAttribute(name));
 		this.render();
+	}
+
+	private authoredState = new Map<string, string | null>();
+
+	/** The `value` the element was authored with, before any user edit or programmatic write: what a
+	 * form reset returns a control to, as a native control's `defaultValue` does. */
+	protected get defaultFormValue(): string | null {
+		return this.authoredState.get("value") ?? null;
+	}
+
+	/** Returns a form-associated control to its authored `value`, `values` and `checked` when its form
+	 * resets, as `defaultValue` and `defaultChecked` do natively. A control holding state beyond those
+	 * overrides it. */
+	formResetCallback(): void {
+		const observed = (this.constructor as { observedAttributes?: string[] }).observedAttributes ?? [];
+		for (const [name, authored] of this.authoredState) {
+			if (this.getAttribute(name) === authored) {
+				if (observed.includes(name)) replayAttribute(this, name, authored);
+			} else if (authored === null) this.removeAttribute(name);
+			else this.setAttribute(name, authored);
+		}
 	}
 
 	disconnectedCallback(): void {
@@ -265,9 +314,26 @@ export abstract class XtyleElement extends HTMLElement {
 		}
 		this.childObserver?.disconnect();
 		this.childObserver = undefined;
+		this.dataObserver?.disconnect();
+		this.dataObserver = undefined;
 	}
 
 	private childObserver?: MutationObserver;
+	private dataObserver?: MutationObserver;
+
+	private observeHostData(): void {
+		if (typeof MutationObserver === "undefined" || this.dataObserver) return;
+		let seen = JSON.stringify(hostData(this));
+		this.dataObserver = new MutationObserver((records) => {
+			if (!this.isConnected || !this.root.firstChild) return;
+			if (!records.some(({ attributeName }) => attributeName?.startsWith("data-"))) return;
+			const now = JSON.stringify(hostData(this));
+			if (now === seen) return;
+			seen = now;
+			this.render();
+		});
+		this.dataObserver.observe(this, { attributes: true });
+	}
 
 	/**
 	 * Re-render whenever the host's light-DOM children change.
@@ -303,7 +369,7 @@ export abstract class XtyleElement extends HTMLElement {
 		if (this.isOwnPaint(record.target)) return true;
 		if (record.type !== "childList") return false;
 		const touched = [...record.addedNodes, ...record.removedNodes];
-		return touched.length > 0 && touched.every((node) => this.isOwnPaint(node));
+		return touched.length > 0 && touched.every((node) => isXtyleProbe(node) || this.isOwnPaint(node));
 	}
 
 	/**
@@ -328,7 +394,7 @@ export abstract class XtyleElement extends HTMLElement {
 	protected render(): void {
 		if (this.styleMode === "isolated") {
 			this.adoptComponentSheet();
-			this.root.innerHTML = `<style>${this.styles()}</style>${this.template()}`;
+			this.root.innerHTML = `<style>${withHostHidden(this.styles())}</style>${this.template()}`;
 			return;
 		}
 		this.root.innerHTML = this.template();
@@ -414,9 +480,37 @@ export abstract class XtyleDecoratorElement extends XtyleElement {
 	protected override render(): void {}
 }
 
+type AttributeChanged = (this: HTMLElement, name: string, previous: string | null, value: string | null) => void;
+
+const UNSKIPPED = Symbol("unskippedAttributeChanged");
+
+function replayAttribute(el: HTMLElement, name: string, value: string | null): void {
+	const target = el as HTMLElement & { [UNSKIPPED]?: AttributeChanged; attributeChangedCallback?: AttributeChanged };
+	(target[UNSKIPPED] ?? target.attributeChangedCallback)?.call(el, name, value, value);
+}
+
+function skipUnchangedAttributeWrites(ctor: CustomElementConstructor): void {
+	const proto = ctor.prototype as { attributeChangedCallback?: AttributeChanged };
+	if (!Object.prototype.hasOwnProperty.call(proto, "attributeChangedCallback")) return;
+	const changed = proto.attributeChangedCallback;
+	if (typeof changed !== "function") return;
+	proto.attributeChangedCallback = function (...args: Parameters<AttributeChanged>) {
+		if (args.length >= 3 && args[1] === args[2]) return;
+		changed.apply(this, args);
+	};
+	(proto as { [UNSKIPPED]?: AttributeChanged })[UNSKIPPED] = changed;
+}
+
+/**
+ * Registers a custom element once. An attribute write that leaves the value as it was never reaches
+ * the element's `attributeChangedCallback`, so a host that re-applies its state every frame does not
+ * re-render elements whose inputs did not move.
+ */
 export function define(name: string, ctor: CustomElementConstructor): void {
 	if (typeof customElements === "undefined") return;
-	if (!customElements.get(name)) customElements.define(name, ctor);
+	if (customElements.get(name)) return;
+	skipUnchangedAttributeWrites(ctor);
+	customElements.define(name, ctor);
 }
 
 /**

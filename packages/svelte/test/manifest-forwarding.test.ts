@@ -90,7 +90,7 @@ const casesFor = (manifest: ComponentManifest): Case[] => {
 	if (!entry) return [];
 	const cases: Case[] = [];
 	for (const prop of manifest.props) {
-		if (!prop.bindings.includes("svelte")) continue;
+		if (!prop.bindings.includes("svelte") || prop.attrOn) continue;
 		if (UNREACHABLE_IN_ISOLATION[`${manifest.id}.${prop.name}`]) continue;
 		const shape = shapeOf(prop);
 		if (!shape) continue;

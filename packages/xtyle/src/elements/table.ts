@@ -151,6 +151,8 @@ export class XtyleTable extends XtyleDecoratorElement {
 		else this.style.removeProperty("--xtyle-table-max-height");
 		this.updateScrollAffordance();
 
+		const tableClass = this.computedTableClass;
+		const mode = this.selection;
 		const table = this.querySelector("table");
 		if (!table) {
 			console.warn("xtyle-table: no `<table>` child to style. Author a real table and the wrapper styles it.");
@@ -158,7 +160,7 @@ export class XtyleTable extends XtyleDecoratorElement {
 		}
 
 		table.classList.add(tableParts.table);
-		for (const cls of this.computedTableClass) table.classList.add(cls);
+		for (const cls of tableClass) table.classList.add(cls);
 		table.setAttribute("part", "table");
 
 		if (!table.getAttribute("aria-label") && !table.querySelector("caption") && !this.getAttribute("aria-label")) {
@@ -186,7 +188,7 @@ export class XtyleTable extends XtyleDecoratorElement {
 			footCell.classList.add(tableParts.footerCell);
 		}
 
-		this.applySelection(table);
+		this.applySelection(table, mode);
 	}
 
 	private bodyRows(): HTMLElement[] {
@@ -201,8 +203,7 @@ export class XtyleTable extends XtyleDecoratorElement {
 	/** ARIA + selection state for the body rows, recomputed on every decorate so a live-data row swap
 	 * keeps its marks. `aria-selected`/`tabindex` are attribute writes, which the content observer
 	 * (childList only) does not watch, so no disconnect guard is needed here. */
-	private applySelection(table: HTMLTableElement): void {
-		const mode = this.selection;
+	private applySelection(table: HTMLTableElement, mode: SelectionMode): void {
 		const rows = this.bodyRows();
 		if (mode === "none") {
 			if (table.getAttribute("role") === "grid") table.removeAttribute("role");

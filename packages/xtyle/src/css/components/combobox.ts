@@ -30,7 +30,7 @@ export const comboboxCss = `
 	padding: var(--space-1) var(--space-2);
 	color: var(--fg-0);
 	background: var(--field-bg);
-	border: var(--border-thin) solid var(--field-border);
+	border: var(--border-thin) solid var(--line-strong);
 	border-radius: var(--radius-md);
 	cursor: text;
 	transition:

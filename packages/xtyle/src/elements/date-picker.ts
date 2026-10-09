@@ -37,6 +37,9 @@ import { resolveVocab, SIZES } from "../vocab.js";
 
 export type { DatePickerMode, HourCyclePosture, CivilDate, CivilTime, CivilValue } from "../markup/index.js";
 
+const DATE_PICKER_MODES: readonly DatePickerMode[] = ["date", "time", "datetime"];
+const HOUR_CYCLES: readonly HourCyclePosture[] = ["auto", "12", "24"];
+
 /** A predicate the grid and the typed field both honour: return `true` to make a date unpickable.
  * The same shape `Calendar` takes on its own `isDateDisabled`, so one predicate serves both. */
 export type DisabledDatePredicate = (isoDate: string) => boolean;
@@ -87,6 +90,8 @@ export class XtyleDatePicker extends XtyleElement {
 	private wiredCalendar: HTMLElement | null = null;
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "date-picker", {
+		nameTarget: '[part="control"]',
+		hostName: false,
 		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
 			this.afterApply();
@@ -160,8 +165,7 @@ export class XtyleDatePicker extends XtyleElement {
 
 	/** What the field edits: a date, a clock time, or both. */
 	get mode(): DatePickerMode {
-		const raw = this.getAttribute("mode");
-		return raw === "time" || raw === "datetime" ? raw : "date";
+		return resolveVocab(this.getAttribute("mode"), DATE_PICKER_MODES, "date", "date picker mode");
 	}
 	set mode(value: DatePickerMode) {
 		this.reflectString("mode", value);
@@ -234,8 +238,7 @@ export class XtyleDatePicker extends XtyleElement {
 
 	/** `auto` (the default) takes the 12/24-hour posture from the locale; `12` / `24` force it. */
 	get hourCycle(): HourCyclePosture {
-		const raw = this.getAttribute("hour-cycle");
-		return raw === "12" || raw === "24" ? raw : "auto";
+		return resolveVocab(this.getAttribute("hour-cycle"), HOUR_CYCLES, "auto", "date picker hour cycle");
 	}
 	set hourCycle(value: HourCyclePosture) {
 		this.reflectString("hour-cycle", value);
@@ -974,8 +977,9 @@ export class XtyleDatePicker extends XtyleElement {
 		this.disabled = disabled;
 	}
 
-	formResetCallback(): void {
+	override formResetCallback(): void {
 		this.badParts.clear();
+		this.value = this.defaultFormValue;
 		this.draft = parseIsoValue(this.getAttribute("value"), this.mode) ?? { date: null, time: null };
 		this.render();
 	}

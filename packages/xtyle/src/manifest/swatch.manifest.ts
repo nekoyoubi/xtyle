@@ -57,6 +57,7 @@ export const swatchManifest: ComponentManifest = {
 	description:
 		"Swatch is the smallest way to show a color and say what it is. A filled dot beside an optional name and an optional value in mono; the shape every `label + value + dot` row and palette rail is built from. The color it shows is *data*, not theme: it comes in on the `color` prop and is painted straight onto the dot as an inline fill, so a swatch can carry any color a user hands it, including one nowhere in the current theme. Its own chrome is the derived part: the dot's hairline border, the label and value type, the corner radius all read from the same tokens the rest of the UI does, so the chip frames a foreign color in the theme's own voice. A thin border keeps even a near-background color legible against the surface. The `size` prop steps the whole chip with the surrounding type from `sm` to `lg`.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["detail-model", "detail-value", "details", "dot", "label", "swatch", "value"],
 	anatomy: [
 		{
@@ -215,6 +216,7 @@ export const swatchManifest: ComponentManifest = {
 		"Pair a swatch with a `Badge` or `Text` in a `Cluster` to annotate a color in running UI.",
 	],
 	a11y: [
+		"Under `forced-colors: active` a selected swatch draws a `Highlight` outline, since the mode drops the box-shadow ring that marks it.",
 		"The dot is marked `aria-hidden`. Color alone carries no meaning to assistive tech, so the `label` and `value` text carry the identity.",
 		"Always provide a `label` (and ideally a `value`) when the color is meaningful, so the chip is announced by name, not by an invisible swatch.",
 		"An `interactive` chip is a real `<button>`, so Enter and Space activate it and Tab reaches it for free; when it carries no visible label it borrows its `value` or `color` as an `aria-label`.",

@@ -80,6 +80,7 @@ export const panelManifest: ComponentManifest = {
 	description:
 		"Panel frames a labelled section of content. Its header carries a heading (rendered at a configurable heading `level` for a correct document outline), an actions slot pushed to the trailing edge by a spacer, and the body it labels via `aria-labelledby`. The `default` variant is a static `<section>`; the `collapsible` variant is a native `<details>`/`<summary>` disclosure that needs no JavaScript in markup. The custom element drives it with `aria-expanded`. A `footer` slot adds a quiet trailing row, and the `scroll` flag turns the body into a focusable, keyboard-scrollable region capped at a fixed height.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["body", "collapse", "footer", "header", "marker", "panel", "spacer", "title", "toggle"],
 	anatomy: [
 		{

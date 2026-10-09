@@ -66,6 +66,7 @@ export const radioManifest: ComponentManifest = {
 	description:
 		"Radio is a styled native `<input type=\"radio\">`: the real input drives state and keyboard semantics while a custom indicator paints the selected dot in any of the six semantic tones. RadioGroup wraps a set of radios in a `role=\"radiogroup\"`, lays them out vertically or horizontally, and owns the WAI-ARIA roving-tabindex pattern: the group is a single Tab stop and arrow keys move selection between options, wrapping at the ends. Each radio carries its own label (via the `label` attribute or default-slot text), an optional `description` (a secondary explanation line wired to `aria-describedby`), an invalid state, and a disabled state; the group can disable as a whole. Add `card` to render a radio as a full-width option card that takes an accent ring and tint when selected: `card` plus `description` is the title-and-explanation option-card pattern, selection and a11y owned by the component instead of hand-rolled. State lives on the native input, so form participation and submission come for free.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["control", "description", "dot", "indicator", "label", "radio"],
 	anatomy: [
 		{
@@ -91,7 +92,7 @@ export const radioManifest: ComponentManifest = {
 			selector: ".xtyle-radio__indicator",
 			tokens: [
 				"--border-normal",
-				"--field-border",
+				"--line-strong",
 				"--field-bg",
 				"--radius-full",
 				"--duration-fast",
@@ -331,7 +332,7 @@ export const radioManifest: ComponentManifest = {
 		"--ease-standard",
 		"--ease-emphasized",
 		"--field-bg",
-		"--field-border",
+		"--line-strong",
 		"--line",
 		"--line-2",
 		"--ring",
@@ -345,6 +346,9 @@ export const radioManifest: ComponentManifest = {
 		"Give every radio in a set the same `name` so native form submission yields one value.",
 	],
 	a11y: [
+		"The circle's edge is drawn in `--line-strong` and clears 3:1 against the page.",
+		"The host's `aria-label` / `aria-labelledby` names the inner radio `<input>` (on `<xtyle-radio-group>`, its `role=\"radiogroup\"`), ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
+		"Under `forced-colors: active` a checked indicator fills with `Highlight` around a `HighlightText` dot (`GrayText` when disabled), and a checked card draws a `Highlight` outline; the dot is a background the mode would otherwise flatten to `Canvas`.",
 		"Each Radio is a native `<input type=\"radio\">`, so selection, keyboard, and form semantics come for free.",
 		"RadioGroup is a `role=\"radiogroup\"` with `aria-orientation`; it implements the roving-tabindex pattern: one Tab stop, arrows move selection and wrap.",
 		"A radio needs an accessible name from `label`, default-slot text, `labelledby`, or `aria-label`; the binding warns at runtime when none is present.",

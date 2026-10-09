@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { FULL_TONES, TONES } from "../vocab.js";
+import { FULL_TONES } from "../vocab.js";
 
 const htmlExample = `<!-- a photo when one loads -->
 <xtyle-avatar user-name="Ada Lovelace" alt="Ada Lovelace" src="/avatars/ada.jpg"></xtyle-avatar>
@@ -62,6 +62,43 @@ import { Avatar } from "@xtyle/astro";
 	</svg>
 </Avatar>`;
 
+const gemHtml = `<xtyle-avatar shape="diamond" frame="gradient" frame-tone="yellow" frame-tone-2="orange" bevel tone="purple" alt="Ring of embers" data-fx="glare?repeat:infinite,rest:3,width:6%" style="--fx-glare-repeat:infinite;--fx-glare-rest:3;--fx-glare-width:6%">
+	<xtyle-icon slot="icon" name="ember--flame" aria-hidden="true"></xtyle-icon>
+</xtyle-avatar>
+<xtyle-avatar shape="diamond" frame="solid" frame-tone="gray" bevel tone="cyan" alt="Tide charm" data-fx="holo">
+	<xtyle-icon slot="icon" name="tide--drop" aria-hidden="true"></xtyle-icon>
+</xtyle-avatar>
+<xtyle-avatar shape="square" frame="solid" frame-tone="accent" user-name="Ada Lovelace"></xtyle-avatar>`;
+
+const gemSvelte = `<script lang="ts">
+	import { Avatar, Icon } from "@xtyle/svelte";
+</script>
+
+<Avatar shape="diamond" frame="gradient" frameTone="yellow" frameTone2="orange" bevel tone="purple" alt="Ring of embers" data-fx="glare?repeat:infinite,rest:3,width:6%" style="--fx-glare-repeat:infinite;--fx-glare-rest:3;--fx-glare-width:6%">
+	{#snippet icon()}<Icon name="ember--flame" aria-hidden="true" />{/snippet}
+</Avatar>
+<Avatar shape="diamond" frame="solid" frameTone="gray" bevel tone="cyan" alt="Tide charm" data-fx="holo">
+	{#snippet icon()}<Icon name="tide--drop" aria-hidden="true" />{/snippet}
+</Avatar>
+<Avatar shape="square" frame="solid" frameTone="accent" userName="Ada Lovelace" />`;
+
+const gemAstro = `---
+import { Avatar, Icon } from "@xtyle/astro";
+---
+
+<Avatar shape="diamond" frame="gradient" frameTone="yellow" frameTone2="orange" bevel tone="purple" alt="Ring of embers" data-fx="glare?repeat:infinite,rest:3,width:6%" style="--fx-glare-repeat:infinite;--fx-glare-rest:3;--fx-glare-width:6%">
+	<Icon slot="icon" name="ember--flame" aria-hidden="true" />
+</Avatar>
+<Avatar shape="diamond" frame="solid" frameTone="gray" bevel tone="cyan" alt="Tide charm" data-fx="holo">
+	<Icon slot="icon" name="tide--drop" aria-hidden="true" />
+</Avatar>
+<Avatar shape="square" frame="solid" frameTone="accent" userName="Ada Lovelace" />`;
+
+const modMarksExample = `<!-- a mod's avatar fill reads bindings.hostData.rank and paints pips into the empty marks part -->
+<xtyle-avatar shape="diamond" frame="solid" tone="green" alt="Oak ring, rank 3 of 5" data-rank="3" data-rank-max="5">
+	<xtyle-icon slot="icon" name="oak--leaf" aria-hidden="true"></xtyle-icon>
+</xtyle-avatar>`;
+
 export const avatarManifest: ComponentManifest = {
 	id: "avatar",
 	name: "Avatar",
@@ -71,9 +108,10 @@ export const avatarManifest: ComponentManifest = {
 	seeAlso: ["avatar-group", "badge"],
 	summary: "An identity chip: a photo when one loads, a tinted initials-or-icon fallback when it doesn't.",
 	description:
-		"Avatar presents a person or entity as a compact square or circle. Given a `src`, it shows the image, cover-cropped to fill; if the image is absent or fails to load, it falls back to initials derived from `userName` (`\"Ada Lovelace\"` → `AL`) on a soft, hue-tinted background. Slot your own content to override those initials, or use the `icon` slot for a glyph instead. The prop is `userName`, not `name`, because `name` carries form-participation meaning on an element and an avatar is not a form control. The fallback tint follows `tone`, which accepts any of the six semantic roles or the twelve named hues, so a deterministic per-user color is a one-attribute choice. Four sizes (sm, md, lg, xl), two shapes (circle, square), and an optional corner status dot in any semantic tone round out the surface. `alt` names the image; `userName` names the avatar when there is no image, so it is announced either way.",
+		"Avatar presents a person or entity as a compact square or circle. Given a `src`, it shows the image, cover-cropped to fill; if the image is absent or fails to load, it falls back to initials derived from `userName` (`\"Ada Lovelace\"` → `AL`) on a soft, hue-tinted background. Slot your own content to override those initials, or use the `icon` slot for a glyph instead. The prop is `userName`, not `name`, because `name` carries form-participation meaning on an element and an avatar is not a form control. The fallback tint follows `tone`, which accepts any of the six semantic roles or the twelve named hues, so a deterministic per-user color is a one-attribute choice. Four sizes (sm, md, lg, xl), three shapes (circle, square, and a diamond that clips the content, the frame, and any effect painted on the host), and an optional corner status dot in any semantic tone round out the surface. `frame` rings the content in a `solid` tone or a `gradient` between two, `bevel` shades that ring as a raised edge, and the `--xtyle-avatar-frame` (any color or gradient) and `--xtyle-avatar-frame-width` custom properties override both. Anything more particular, such as rank pips, a count, or a corner mark, belongs to a mod: the fill renders an empty `marks` part over the chip and receives the host's own `data-*` attributes as `bindings.hostData`, so `data-rank=\"3\"` is all a mod needs. `alt` names the image; `userName` names the avatar when there is no image, so it is announced either way.",
 	bindings: ["html", "svelte", "astro"],
-	exposedParts: ["avatar", "fallback", "image", "initials", "status-dot"],
+	render: "auto",
+	exposedParts: ["avatar", "fallback", "image", "initials", "status-dot", "marks"],
 	anatomy: [
 		{
 			name: "avatar",
@@ -96,15 +134,20 @@ export const avatarManifest: ComponentManifest = {
 		},
 		{
 			name: "fallback",
-			description: "The initials-or-icon stand-in shown when no image is present, painted with the tone's soft tint.",
+			description: "The initials-or-icon stand-in shown when no image is present, painted with the tone's soft tint inside a hairline edge that clears 3:1 against the page.",
 			selector: ".xtyle-avatar__fallback",
-			tokens: ["--neutral-bg", "--neutral-text"],
+			tokens: ["--neutral-bg", "--neutral-text", "--line-strong", "--border-thin"],
 		},
 		{
 			name: "status-dot",
 			description: "The optional corner indicator, ringed in the surface color so it reads against any background.",
 			selector: ".xtyle-avatar__status-dot",
 			tokens: ["--space-2", "--neutral", "--radius-full", "--border-thick", "--bg-1"],
+		},
+		{
+			name: "marks",
+			description: "An empty layer over the whole chip, rendered for mods: a fill that paints pips, a count, or a corner badge targets it, and `bindings.hostData` carries the host's `data-*` attributes to draw from. Hidden while empty.",
+			selector: ".xtyle-avatar__marks",
 		},
 	],
 	props: [
@@ -147,9 +190,39 @@ export const avatarManifest: ComponentManifest = {
 			name: "shape",
 			type: "AvatarShape",
 			default: "circle",
-			description: "Outline shape: a circle or a rounded square.",
+			description: "Outline shape: a circle, a rounded square, or a diamond (a square turned 45°, content kept upright). A diamond clips the overlays an effect paints on the host, so `glare` or `holo` stays inside the shape, while the `marks` layer and the status dot are free to sit over its corners.",
 			bindings: ["html", "svelte", "astro"],
-			options: ["circle", "square"],
+			options: ["circle", "square", "diamond"],
+		},
+		{
+			name: "frame",
+			type: "AvatarFrame",
+			default: "none",
+			description: "A ring around the content: `solid` paints it in `frameTone` (the line color by default), `gradient` runs from `frameTone` to `frameTone2` (the accent pair by default). The `--xtyle-avatar-frame` custom property takes any color or gradient instead, and `--xtyle-avatar-frame-width` sets the thickness.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["none", "solid", "gradient"],
+		},
+		{
+			name: "frameTone",
+			type: "FullTone",
+			description: "The frame's color, or the gradient's first stop. Attribute: `frame-tone`.",
+			bindings: ["html", "svelte", "astro"],
+			options: [...FULL_TONES],
+		},
+		{
+			name: "frameTone2",
+			type: "FullTone",
+			description: "The gradient frame's second stop. Attribute: `frame-tone-2`.",
+			bindings: ["html", "svelte", "astro"],
+			attr: "frame-tone-2",
+			options: [...FULL_TONES],
+		},
+		{
+			name: "bevel",
+			type: "boolean",
+			default: "false",
+			description: "Shades the frame as a raised edge lit from the top left, from the theme's own `--white` and `--black`. Implies a `solid` frame when `frame` is not set.",
+			bindings: ["html", "svelte", "astro"],
 		},
 		{
 			name: "status",
@@ -185,6 +258,11 @@ export const avatarManifest: ComponentManifest = {
 			className: "xtyle-avatar--square",
 			tokens: ["--radius-md", "--radius-sm", "--radius-lg"],
 		},
+		{
+			name: "diamond",
+			description: "A square turned 45° with the content kept upright, for items, charms, and gems rather than people.",
+			className: "xtyle-avatar--diamond",
+		},
 	],
 	sizes: [
 		{ name: "sm", description: "Compact, for dense lists.", className: "xtyle-avatar--sm" },
@@ -210,6 +288,18 @@ export const avatarManifest: ComponentManifest = {
 			description: "With `pulse`, the status dot breathes on a soft opacity loop so the avatar reads as live, at a slow or fast cadence; held still under reduced-motion.",
 			selector: ".xtyle-avatar--pulse-slow .xtyle-avatar__status-dot",
 			tokens: ["--ease-standard"],
+		},
+		{
+			name: "framed",
+			description: "With `frame`, the content sits inside a ring painted in a tone, a gradient, or whatever `--xtyle-avatar-frame` holds.",
+			selector: ".xtyle-avatar--frame-solid, .xtyle-avatar--frame-gradient",
+			tokens: ["--border-thick", "--line-2", "--accent", "--accent-2"],
+		},
+		{
+			name: "bevel",
+			description: "With `bevel`, the frame catches a highlight on its top-left edge and a shade on its bottom-right.",
+			selector: ".xtyle-avatar--bevel",
+			tokens: ["--white", "--black"],
 		},
 	],
 	slots: [
@@ -244,13 +334,20 @@ export const avatarManifest: ComponentManifest = {
 		"--radius-full",
 		"--border-thick",
 		"--bg-1",
+		"--line-2",
+		"--line-strong",
+		"--border-thin",
+		"--white",
+		"--black",
+		...FULL_TONES.map((t) => `--${t}`),
 		...FULL_TONES.flatMap((t) => [`--${t}-bg`, `--${t}-text`]),
-		...TONES.map((t) => `--${t}`),
 	],
 	composition: [
 		"Stack a row of avatars into an avatar group; negative inline margin overlaps them.",
 		"Pair with Badge for a labeled identity row, or with the status dot for presence.",
 		"Feed `tone` a hash of the user id to get a stable, distinct fallback color per person.",
+		"An avatar is any framed, proportional chip, not only a person: a diamond with an icon, a frame, and `data-fx=\"holo\"` is an inventory gem.",
+		"Put `data-fx` on the avatar for motion: `glare?repeat:infinite,rest:3,width:6%` is a thin glint that passes now and then, `holo` a slow iridescent foil, and the two stack.",
 	],
 	a11y: [
 		"The image carries `alt`; the binding warns at runtime when `src` is set without it.",
@@ -259,6 +356,7 @@ export const avatarManifest: ComponentManifest = {
 		"The decorative status dot is `aria-hidden`; its meaning rides on `statusLabel` as visually-hidden text in the accessibility tree.",
 		"`pulse` is decorative motion only, never the carrier of meaning: put the live state in `statusLabel` (\"Online\") so it reads the same to assistive tech and under `prefers-reduced-motion`, where the pulse holds still.",
 		"The fallback icon slot is decorative. Provide `alt` (or fallback initials) so the avatar still has a name.",
+		"A frame, a bevel, and a diamond are decoration only. Anything a mod paints into `marks` (a rank, a count) belongs in `alt` as well, so it is announced and not only seen.",
 	],
 	examples: [
 		{
@@ -276,6 +374,18 @@ export const avatarManifest: ComponentManifest = {
 				svelte: '<Avatar userName="Grace Hopper" status="success" statusLabel="Online" pulse />',
 				astro: '<Avatar userName="Grace Hopper" status="success" statusLabel="Online" pulse />',
 			},
+		},
+		{
+			id: "shapes-and-frames",
+			title: "Diamonds, frames, and effects",
+			description: "A diamond with a gradient, bevelled frame and a repeating thin glint; a holo foil on a solid frame; a framed square.",
+			source: { html: gemHtml, svelte: gemSvelte, astro: gemAstro },
+		},
+		{
+			id: "mod-marks",
+			title: "Data for a mod's marks",
+			description: "The host's `data-*` attributes reach every fill as `bindings.hostData`, and the empty `marks` part is where a mod paints from them.",
+			source: { html: modMarksExample },
 		},
 	],
 };

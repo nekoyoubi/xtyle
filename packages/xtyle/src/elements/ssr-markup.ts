@@ -274,6 +274,28 @@ export function markedPairs(
 	return pairs;
 }
 
+/**
+ * The optional third role of a slotted collection (an accordion section's header-row `actions`), one
+ * entry per lead, `null` where a lead has none. Grouped authoring (every lead first) pairs by index;
+ * interleaved authoring gives each extra to the lead before it, so a section with no extra never steals
+ * the next section's.
+ */
+export function markedExtras(html: string, leadMarker: string, bodyMarker: string, extraMarker: string): (MarkedChild | null)[] {
+	const children = markedChildren(html, [leadMarker, bodyMarker, extraMarker]);
+	const leads = children.filter((child) => child.marker === leadMarker);
+	const extras = children.filter((child) => child.marker === extraMarker);
+	const paired: (MarkedChild | null)[] = leads.map(() => null);
+	const lastLead = children.lastIndexOf(leads[leads.length - 1] as MarkedChild);
+	const grouped = children.every((child, i) => child.marker === leadMarker || i > lastLead);
+	if (grouped) return leads.map((_, i) => extras[i] ?? null);
+	let lead = -1;
+	for (const child of children) {
+		if (child.marker === leadMarker) lead++;
+		else if (child.marker === extraMarker && lead >= 0 && paired[lead] === null) paired[lead] = child;
+	}
+	return paired;
+}
+
 function withClass(attrs: string, className: string): string {
 	const existing = /(\sclass\s*=\s*)("([^"]*)"|'([^']*)')/i.exec(attrs);
 	if (!existing) return `${attrs} class="${className}"`;

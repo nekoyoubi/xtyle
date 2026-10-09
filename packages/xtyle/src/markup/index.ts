@@ -9,6 +9,15 @@ export { eyebrowMarkup, eyebrowClass, eyebrowHostCss } from "./eyebrow.js";
 export type { EyebrowMarkupProps, EyebrowTag, EyebrowTone, EyebrowTracking } from "./eyebrow.js";
 export { kbdHostCss } from "./kbd.js";
 export type { KbdSize, KbdTone } from "./kbd.js";
+export { numberFormatHostCss, formatNumber, parseNumberValue } from "./number-format.js";
+export type {
+	NumberFormatOptions,
+	NumberFormatStyle,
+	NumberCurrencyDisplay,
+	NumberUnitDisplay,
+	NumberSign,
+	NumberFormatTone,
+} from "./number-format.js";
 export { iconHostCss } from "./icon.js";
 export type { IconName, IconSize } from "./icon.js";
 export { mobileShellHostCss } from "./mobile-shell.js";
@@ -18,6 +27,8 @@ export { imageHostCss, hoverMediaHtml } from "./image.js";
 export type { ImageFit, ImageRadius, ImageLoading, ImageTrigger, ImageHoverAudio } from "./image.js";
 export { barHostCss } from "./bar.js";
 export type { BarSeries, BarScheme } from "./bar.js";
+export type { LabelAngle } from "./axis.js";
+export { parseLabelAngle } from "./axis.js";
 export { chartHostCss, resolveChartPlot, CHART_VARIANTS, CHART_CURVES, CHART_X_SCALES } from "./chart.js";
 export type {
 	ChartSeries,
@@ -173,7 +184,7 @@ export type { CivilTime, CivilValue, DatePickerMode, HourCyclePosture } from "./
 export { segmentedHostCss, parseSegments, normalizeSegments, selectedValue } from "./segmented.js";
 export type { Segment, SegmentInput } from "./segmented.js";
 export { listHostCss, normalizeItems, seededSelection } from "./list.js";
-export type { ListItem, ListAction, ListInput, ListInteraction, ListSelection, ListOrientation } from "./list.js";
+export type { ListItem, ListItemVariant, ListAction, ListBadge, ListInput, ListInteraction, ListSelection, ListOrientation } from "./list.js";
 export { sliderHostCss } from "./slider.js";
 export { statusbarHostCss } from "./statusbar.js";
 export { tocHostCss, tocTargetFallbackCss, tocCurrentDeclarations, TOC_SPY_ATTR } from "./toc.js";

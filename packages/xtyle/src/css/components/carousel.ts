@@ -226,4 +226,14 @@ xtyle-carousel[transition="flip"] .xtyle-carousel__slide.is-active { transform: 
 		transform: none;
 	}
 }
+@media (forced-colors: active) {
+	.xtyle-carousel__dot {
+		border: var(--border-thin) solid CanvasText;
+	}
+	.xtyle-carousel__dot.is-active {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		border-color: Highlight;
+	}
+}
 `.trim();

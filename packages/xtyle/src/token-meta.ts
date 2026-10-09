@@ -42,6 +42,7 @@ const RULES: MetaRule[] = [
 	{ test: /^--scrollbar-track$/, describe: () => "The scrollbar track — the groove behind the thumb; transparent by default so it blends into the surface.", tags: ["scrollbar", "scroll", "track", "groove", "chrome", "overflow"] },
 	{ test: /^--ring-bg$/, describe: () => "The soft halo behind a focus ring — a faint accent wash around the crisp ring.", tags: ["focus", "ring", "outline", "halo", "accent"] },
 	{ test: /^--ring$/, describe: () => "The focus ring — the accent outline on a keyboard-focused control.", tags: ["focus", "ring", "outline", "accent", "keyboard"] },
+	{ test: /^--line-strong$/, describe: () => "The edge of a control whose shape must be visible: input borders, switch tracks, checkbox and radio boxes. Clears 3:1 against every surface.", tags: ["border", "edge", "control", "boundary", "field", "input", "contrast"] },
 	{ test: /^--field-border$/, describe: () => "The border of an input field — separates the field from its surface.", tags: ["border", "field", "input", "form", "edge"] },
 	{ test: /^--field-bg$/, describe: () => "The interior of an input field — the surface text is typed onto.", tags: ["background", "surface", "field", "input", "form"] },
 

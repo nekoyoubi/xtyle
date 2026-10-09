@@ -15,6 +15,7 @@ interface Section {
 	headerSlot?: string;
 	panel?: string;
 	panelSlot?: string;
+	actionsSlot?: string;
 	value?: string;
 	disabled?: boolean;
 }
@@ -105,7 +106,12 @@ function items(bindings: AccordionBindings): string {
 				: escapeHtml(section.header);
 			const labelRegion = section.headerSlot ? ` data-slot="${escapeAttr(section.headerSlot)}"` : "";
 			const group = bindings.multiple ? "" : ` name="${escapeAttr(uid)}-group"`;
+			const actions = section.actionsSlot
+				? `<div class="xtyle-accordion__actions" part="actions" data-slot="${escapeAttr(section.actionsSlot)}">` +
+					`<slot name="${escapeAttr(section.actionsSlot)}"></slot></div>`
+				: "";
 			return (
+				`<div class="xtyle-accordion__section" part="section" data-key="${key}">` +
 				`<details class="xtyle-accordion__item" part="item" data-key="${key}"${group}${isOpen ? " open" : ""}>` +
 				`<summary class="xtyle-accordion__trigger" part="trigger" id="${triggerId}" ` +
 				`data-key="${key}" aria-controls="${panelId}"${disabledAttr}>` +
@@ -113,7 +119,9 @@ function items(bindings: AccordionBindings): string {
 				`<span class="xtyle-accordion__label"${labelRegion}>${label}</span></h${level}>${chev}</summary>` +
 				`<div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" ` +
 				`aria-labelledby="${triggerId}">` +
-				`<div class="xtyle-accordion__content"${bodyRegion}>${body}</div></div></details>`
+				`<div class="xtyle-accordion__content"${bodyRegion}>${body}</div></div></details>` +
+				actions +
+				`</div>`
 			);
 		})
 		.join("");

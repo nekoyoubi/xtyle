@@ -75,6 +75,7 @@ export {
 	XtyleCardLink,
 	XtyleToc,
 	XtyleKbd,
+	XtyleNumberFormat,
 	XtyleIcon,
 	XtyleImage,
 	XtyleLightbox,

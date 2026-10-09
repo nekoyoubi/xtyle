@@ -5,7 +5,7 @@ import type { ImageFit, ImageRadius, ImageLoading, ImageTrigger, ImageHoverAudio
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { openLightbox } from "./lightbox.js";
 import { manifest, fragmentSources } from "./fragments/image/source.generated.js";
-import { resolveVocab, IMAGE_FITS, IMAGE_RADII } from "../vocab.js";
+import { resolveVocab, IMAGE_FITS, IMAGE_HOVER_AUDIO, IMAGE_LOADING, IMAGE_RADII, IMAGE_TRIGGERS } from "../vocab.js";
 import { iconBody } from "../icon-registry.js";
 
 /** A click or key that lands on a control inside the frame belongs to the control, not the frame. */
@@ -88,7 +88,7 @@ export class XtyleImage extends XtyleElement {
 	}
 
 	get loading(): ImageLoading {
-		return this.getAttribute("loading") === "eager" ? "eager" : "lazy";
+		return resolveVocab(this.getAttribute("loading"), IMAGE_LOADING, "lazy", "image loading");
 	}
 	set loading(value: ImageLoading) {
 		this.setAttribute("loading", value);
@@ -102,7 +102,7 @@ export class XtyleImage extends XtyleElement {
 	}
 
 	get trigger(): ImageTrigger {
-		return this.getAttribute("trigger") === "button" ? "button" : "frame";
+		return resolveVocab(this.getAttribute("trigger"), IMAGE_TRIGGERS, "frame", "image trigger");
 	}
 	set trigger(value: ImageTrigger) {
 		this.setAttribute("trigger", value);
@@ -135,7 +135,7 @@ export class XtyleImage extends XtyleElement {
 	/** `null` when the attribute is absent (silent, no toggle); `"on"` / `"off"` when audio is allowed. */
 	get hoverAudio(): ImageHoverAudio | null {
 		if (!this.hasAttribute("hover-audio")) return null;
-		return this.getAttribute("hover-audio") === "on" ? "on" : "off";
+		return resolveVocab(this.getAttribute("hover-audio"), IMAGE_HOVER_AUDIO, "off", "image hover audio");
 	}
 	set hoverAudio(value: ImageHoverAudio | null) {
 		if (value === null) this.removeAttribute("hover-audio");
@@ -207,12 +207,17 @@ export class XtyleImage extends XtyleElement {
 		return "";
 	}
 
+	private checkVocab(): void {
+		void this.trigger;
+	}
+
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(imageHostCss);
 		this.fragment.reshapeIfChanged(this.caption ? "captioned" : "uncaptioned");
 		if (this.chromeStale()) this.fragment.remount();
 		this.fragment.update(this.bindings);
+		this.checkVocab();
 	}
 
 	/**

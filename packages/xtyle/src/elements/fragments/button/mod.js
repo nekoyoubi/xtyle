@@ -41,27 +41,30 @@
     const selected = b.selected ?? null;
     const ariaCurrent = selected ? ' aria-current="true"' : "";
     const tabAttr = b.focusable === false ? ' tabindex="-1"' : "";
+    const cursorAttr = b.cursor ? ' data-cursor="true"' : "";
     const name = b.ariaLabelledby ? ` aria-labelledby="${escapeAttr(b.ariaLabelledby)}"` : b.ariaLabel ? ` aria-label="${escapeAttr(b.ariaLabel)}"` : "";
     const body = inner(b);
     if (b.href != null) {
       const hrefAttr = blocked ? "" : ` href="${escapeAttr(b.href)}"`;
       const ariaDisabled = blocked ? ' aria-disabled="true"' : "";
       const ariaBusy2 = b.loading ? ' aria-busy="true"' : "";
-      return `<a part="button" class="${buttonClass(b)}"${hrefAttr}${ariaDisabled}${ariaBusy2}${ariaPressed}${ariaCurrent}${tabAttr}${name} role="button">${body}</a>`;
+      return `<a part="button" class="${buttonClass(b)}"${hrefAttr}${ariaDisabled}${ariaBusy2}${ariaPressed}${ariaCurrent}${tabAttr}${cursorAttr}${name} role="button">${body}</a>`;
     }
     const disabledAttr = blocked ? " disabled" : "";
     const ariaBusy = b.loading ? ' aria-busy="true"' : "";
     const type = b.type ?? "button";
-    return `<button part="button" class="${buttonClass(b)}" type="${escapeAttr(type)}"${disabledAttr}${ariaBusy}${ariaPressed}${ariaCurrent}${tabAttr}${name}>${body}</button>`;
+    return `<button part="button" class="${buttonClass(b)}" type="${escapeAttr(type)}"${disabledAttr}${ariaBusy}${ariaPressed}${ariaCurrent}${tabAttr}${cursorAttr}${name}>${body}</button>`;
   }
   hooks.fragment.mount("button", (bindings, ops) => {
     ops.replaceChildren("[data-button]", buttonHtml(bindings));
   });
   hooks.fragment.update("button", (bindings, ops) => {
     ops.setAttr(".xtyle-button", "class", buttonClass(bindings));
+    ops.setAttr('button[part="button"]', "type", bindings.type ?? "button");
     if (bindings.pressed != null) ops.setAttr('[part="button"]', "aria-pressed", String(bindings.pressed));
     if (bindings.selected != null) ops.setAttr('[part="button"]', "aria-current", bindings.selected ? "true" : "false");
     if (bindings.ariaLabelledby == null) ops.setAttr('[part="button"]', "aria-label", bindings.ariaLabel ?? "");
     ops.setAttr('[part="button"]', "tabindex", bindings.focusable === false ? "-1" : "");
+    ops.setAttr('[part="button"]', "data-cursor", bindings.cursor ? "true" : "");
   });
 })();

@@ -6,6 +6,7 @@ import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
+import Icon from "@xtyle/astro/Icon.astro";
 
 const team = [
 	{ name: "Ada Lovelace", initials: "AL", tone: "accent" as const },
@@ -19,6 +20,19 @@ const sizes = [
 	{ name: "md" as const, label: "Medium (default)" },
 	{ name: "lg" as const, label: "Large" },
 	{ name: "xl" as const, label: "Extra large" },
+];
+const rings = [
+	{ name: "Ember ring", tone: "red" as const, icon: "ember--flame" },
+	{ name: "Tide ring", tone: "cyan" as const, icon: "tide--drop" },
+	{ name: "Oak ring", tone: "green" as const, icon: "oak--leaf" },
+	{ name: "Sun ring", tone: "yellow" as const, icon: "sun--sun" },
+	{ name: "Storm ring", tone: "purple" as const, icon: "storm--bolt" },
+];
+const layouts = [
+	{ label: 'layout="lattice"', layout: "lattice" as const, stack: undefined, spacing: "snug" as const, diamonds: true },
+	{ label: 'layout="row"', layout: "row" as const, stack: undefined, spacing: undefined, diamonds: true },
+	{ label: 'layout="wrap"', layout: "wrap" as const, stack: undefined, spacing: undefined, diamonds: false },
+	{ label: 'stack="start"', layout: "overlap" as const, stack: "start" as const, spacing: undefined, diamonds: false },
 ];
 const spacings = [
 	{ name: "snug" as const, label: "Snug" },
@@ -72,6 +86,32 @@ const spacings = [
 							))}
 						</AvatarGroup>
 						<Text as="span" size="xs" tone="subtle" mono>spacing="{s.name}"</Text>
+					</Cluster>
+				))
+			}
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Layouts</Heading>
+		<Stack gap={4}>
+			<Text tone="muted" size="sm">
+				<code>layout</code> picks how the items sit. A <code>lattice</code> drops every other item half a step so
+				diamonds nest edge to edge; <code>stack="start"</code> puts the first item on top of the pile.
+			</Text>
+			{
+				layouts.map((l) => (
+					<Cluster gap={3} align="center" justify="between">
+						<AvatarGroup layout={l.layout} stack={l.stack} size="lg" spacing={l.spacing} label={`${l.label} layout`}>
+							{l.diamonds
+								? rings.map((r) => (
+										<Avatar size="lg" shape="diamond" frame="solid" bevel tone={r.tone} alt={r.name}>
+											<Icon slot="icon" name={r.icon} aria-hidden="true" />
+										</Avatar>
+									))
+								: team.map((p) => <Avatar size="lg" alt={p.name} tone={p.tone}>{p.initials}</Avatar>)}
+						</AvatarGroup>
+						<Text as="span" size="xs" tone="subtle" mono>{l.label}</Text>
 					</Cluster>
 				))
 			}

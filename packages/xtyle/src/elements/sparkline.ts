@@ -9,11 +9,15 @@ import {
 	type SparklineFormat,
 } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/sparkline/source.generated.js";
 import { windowedPlot, type TimeSample } from "../timeseries.js";
-import { resolveTone, resolveVocab, SPARKLINE_VARIANTS } from "../vocab.js";
+import { resolveOptionalVocab, resolveTone, resolveVocab, SPARKLINE_VARIANTS } from "../vocab.js";
 
 export type { SparklineVariant, SparklineTone, SparklineBounds };
+
+const SPARKLINE_BOUNDS: readonly SparklineBounds[] = ["percent", "unit", "duration"];
+const SPARKLINE_FORMATS: readonly SparklineFormat[] = ["percent", "duration", "bytes", "unit"];
 
 const VW = 100;
 const PAD = 3;
@@ -48,12 +52,13 @@ export class XtyleSparkline extends XtyleElement {
 	private valuesProp: number[] | null = null;
 	private pointsProp: TimeSample[] | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "sparkline", {
+		nameTarget: '[role="img"]',
 		applyIntent: () => {},
 		afterApply: () => this.wireInteraction(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["values", "points", "window", "domain", "step", "variant", "tone", "show-end", "min", "max", "bounds", "format", "label"];
+		return ["values", "points", "window", "domain", "step", "variant", "tone", "show-end", "min", "max", "bounds", "format", "label", ...NAME_ATTRIBUTES];
 	}
 
 	get values(): number[] {
@@ -87,8 +92,7 @@ export class XtyleSparkline extends XtyleElement {
 	}
 
 	get bounds(): SparklineBounds | undefined {
-		const raw = this.getAttribute("bounds");
-		return raw === "percent" || raw === "unit" || raw === "duration" ? raw : undefined;
+		return resolveOptionalVocab(this.getAttribute("bounds"), SPARKLINE_BOUNDS, "sparkline bounds") ?? undefined;
 	}
 	set bounds(value: SparklineBounds | undefined) {
 		if (value) this.setAttribute("bounds", value);
@@ -96,8 +100,7 @@ export class XtyleSparkline extends XtyleElement {
 	}
 
 	get format(): SparklineFormat | undefined {
-		const raw = this.getAttribute("format");
-		return raw === "percent" || raw === "duration" || raw === "bytes" || raw === "unit" ? raw : undefined;
+		return resolveOptionalVocab(this.getAttribute("format"), SPARKLINE_FORMATS, "sparkline format") ?? undefined;
 	}
 	set format(value: SparklineFormat | undefined) {
 		if (value) this.setAttribute("format", value);
@@ -212,10 +215,15 @@ export class XtyleSparkline extends XtyleElement {
 		return "";
 	}
 
+	private checkVocab(): void {
+		void this.format;
+	}
+
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(sparklineHostCss);
 		this.fragment.update(this.bindings);
+		this.checkVocab();
 	}
 }
 

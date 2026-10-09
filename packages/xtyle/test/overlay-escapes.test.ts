@@ -128,6 +128,11 @@ describe("the hover overlays escape a clipping ancestor", () => {
 		expect(element).toMatch(/hide = \(\): void => \{[\s\S]*?if \(this\.forcedOpen\) return;/);
 	});
 
+	it("undoes the UA popover's overflow, so the tooltip's arrow hangs outside without a scrollbar", () => {
+		const block = tooltipCss.match(/\.xtyle-tooltip__content\s*\{[^}]*\}/)?.[0] ?? "";
+		expect(block).toContain("overflow: visible");
+	});
+
 	it("leaves --layer-overlay to the one surface still stacking for itself", () => {
 		expect(tooltipCss).not.toContain("--layer-overlay");
 		expect(swatchCss).not.toContain("--layer-overlay");

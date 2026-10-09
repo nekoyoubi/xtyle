@@ -97,6 +97,31 @@ describe("the effect layer", () => {
 		expect(guard).toContain("animation:none");
 	});
 
+	it("resets under reduced motion only what each effect moves, and holds a glow still rather than dropping it", () => {
+		const guard = effectsCss()
+			.split("\n")
+			.find((line) => line.startsWith("@media (prefers-reduced-motion"))!;
+		const ruleFor = (name: string) => guard.split("}").find((rule) => rule.includes(`[data-fx~="${name}"]`)) ?? "";
+		expect(ruleFor("throb")).toContain("animation:none");
+		expect(ruleFor("throb"), "throb animates a filter, so a host's own transform survives").not.toContain("transform:none");
+		expect(ruleFor("throb"), "the glow holds its first frame").toContain("filter:drop-shadow(");
+		expect(ruleFor("spin")).toContain("rotate:none");
+		expect(ruleFor("shake")).toContain("transform:none");
+	});
+
+	it("takes an effect's own word on whether it moves over what its CSS reads like", () => {
+		registerEffect({ name: "glide", animated: true, moves: true, active: "animation:xtyle-fx-glide 1s;offset-distance:100%", still: "offset-distance:0" });
+		registerEffect({ name: "tilt", animated: true, moves: false, active: "animation:xtyle-fx-tilt 1s;transform:var(--own-tilt)" });
+		const guard = effectsCss()
+			.split("\n")
+			.find((line) => line.startsWith("@media (prefers-reduced-motion"))!;
+		const ruleFor = (name: string) => guard.split("}").find((rule) => rule.includes(`[data-fx~="${name}"]`)) ?? "";
+		expect(ruleFor("glide")).toContain("transform:none");
+		expect(ruleFor("glide")).toContain("offset-distance:0");
+		expect(ruleFor("tilt")).toContain("animation:none");
+		expect(ruleFor("tilt")).not.toContain("transform:none");
+	});
+
 	it("never hides content behind an effect that needs a runtime", () => {
 		const css = effectsCss();
 		expect(css).toContain('[data-fx~="reveal"][data-fx-armed]');

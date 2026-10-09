@@ -68,7 +68,8 @@ export const segmentedCss = `
 	color: var(--seg-ink);
 	background: var(--seg-fill);
 }
-.xtyle-segmented__option:focus-visible {
+.xtyle-segmented__option:focus-visible,
+.xtyle-segmented__option[data-cursor] {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
 }
@@ -129,4 +130,11 @@ export const segmentedCss = `
 	}
 }
 ${segmentedToneVars}
+@media (forced-colors: active) {
+	.xtyle-segmented__option[aria-checked="true"] {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+}
 `.trim();

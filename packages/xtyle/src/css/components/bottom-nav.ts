@@ -68,4 +68,10 @@ export const bottomNavCss = `
 @media (prefers-reduced-motion: reduce) {
 	.xtyle-bottom-nav__item { transition: none; }
 }
+@media (forced-colors: active) {
+	.xtyle-bottom-nav__item[aria-selected="true"]::before {
+		forced-color-adjust: none;
+		background: Highlight;
+	}
+}
 `.trim();

@@ -1,4 +1,5 @@
 import { formatHex8 } from "culori";
+import { contrastRatio } from "./color-primitives.js";
 import {
 	clampToGamut,
 	contrast,
@@ -52,6 +53,9 @@ export interface Cuti {
 	clampGamut(l: number, c: number, h: number, alpha?: number): OklchColor;
 	toHex(color: string): string;
 	toArgb(color: string): string;
+	format(l: number, c: number, h: number, alpha: number): string;
+	clamp(l: number, c: number, h: number, alpha: number): OklchColor;
+	ratio(a: string, b: string): number;
 }
 
 function mixOklch(a: OklchColor, b: OklchColor, t: number): OklchColor {
@@ -118,5 +122,8 @@ export function createCuti(): Cuti {
 				formatHex8({ mode: "oklch", l: o.l, c: o.c, h: o.h, alpha: o.alpha }) ?? "#000000ff"
 			);
 		},
+		format: (l, c, h, alpha) => formatCss({ l, c, h, alpha }),
+		clamp: (l, c, h, alpha) => clampToGamut({ l, c, h, alpha }),
+		ratio: (a, b) => contrastRatio(a, b),
 	};
 }

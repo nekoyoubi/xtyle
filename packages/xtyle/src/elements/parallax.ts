@@ -42,6 +42,8 @@ const clamp = (v: number, lo: number, hi: number): number => (v < lo ? lo : v > 
  * layers sit still: the parallax is an enhancement, never a requirement.
  */
 export class XtyleParallax extends XtyleDecoratorElement {
+	static override readonly ownedData = ["data-enhanced"];
+
 	static get observedAttributes(): string[] {
 		return ["min-height", "amplitude", "mode"];
 	}

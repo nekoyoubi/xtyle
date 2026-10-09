@@ -8,6 +8,32 @@ import { iconBody } from "../icon-registry.js";
 
 let accordionSeq = 0;
 
+function actionsOf(section: Element): HTMLElement | null {
+	return (Array.from(section.children).find((child) => child.classList.contains("xtyle-accordion__actions")) as HTMLElement | undefined) ?? null;
+}
+
+function pairActions(
+	children: HTMLElement[],
+	headers: HTMLElement[],
+	panels: HTMLElement[],
+	actions: HTMLElement[],
+): (HTMLElement | null)[] {
+	const paired: (HTMLElement | null)[] = headers.map(() => null);
+	if (actions.length === 0) return paired;
+	const lastHeader = Math.max(...headers.map((header) => children.indexOf(header)));
+	const grouped = [...panels, ...actions].every((el) => children.indexOf(el) > lastHeader);
+	if (grouped) return headers.map((_, i) => actions[i] ?? null);
+	for (const action of actions) {
+		const at = children.indexOf(action);
+		let owner = -1;
+		headers.forEach((header, i) => {
+			if (children.indexOf(header) < at) owner = i;
+		});
+		if (owner >= 0 && paired[owner] === null) paired[owner] = action;
+	}
+	return paired;
+}
+
 export class XtyleAccordion extends XtyleElement {
 	protected override get styleMode(): StyleMode {
 		return "auto";
@@ -19,7 +45,39 @@ export class XtyleAccordion extends XtyleElement {
 		context: (handler) =>
 			handler === "syncToggle" ? this.toggleContext() : handler === "navKeydown" ? this.navContext() : undefined,
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
+		afterApply: () => this.layoutActions(),
 	});
+
+	private actionsObserver: ResizeObserver | null = null;
+
+	private layoutActions(): void {
+		const sections = [...this.root.querySelectorAll<HTMLElement>(".xtyle-accordion__section")];
+		const withActions = sections.filter((section) => actionsOf(section));
+		if (withActions.length === 0) return;
+		if (!this.actionsObserver && typeof ResizeObserver !== "undefined") {
+			this.actionsObserver = new ResizeObserver(() => this.measureActions());
+			this.actionsObserver.observe(this);
+		}
+		for (const section of withActions) this.actionsObserver?.observe(actionsOf(section) as Element);
+		this.measureActions();
+	}
+
+	private measureActions(): void {
+		for (const section of this.root.querySelectorAll<HTMLElement>(".xtyle-accordion__section")) {
+			const actions = actionsOf(section);
+			const trigger = section.querySelector<HTMLElement>(".xtyle-accordion__trigger");
+			const chevron = trigger?.querySelector<HTMLElement>(".xtyle-accordion__chevron");
+			if (!actions || !trigger || !chevron) continue;
+			const box = section.getBoundingClientRect();
+			const mark = chevron.getBoundingClientRect();
+			const gap = Number.parseFloat(getComputedStyle(trigger).columnGap) || 0;
+			const rtl = getComputedStyle(section).direction === "rtl";
+			const end = (rtl ? mark.right - box.left : box.right - mark.left) + gap;
+			section.style.setProperty("--_actions-end", `${end}px`);
+			section.style.setProperty("--_actions-inline", `${actions.offsetWidth + gap}px`);
+			section.style.setProperty("--_trigger-block", `${trigger.offsetHeight}px`);
+		}
+	}
 
 	static get observedAttributes(): string[] {
 		return ["multiple", "size", "heading-level", "items", "chevron-icon"];
@@ -81,18 +139,23 @@ export class XtyleAccordion extends XtyleElement {
 	 * still a guess — it cannot tell that shape apart from an author who alternated and marked nothing —
 	 * so an unmarked element warns instead of pairing silently.
 	 */
-	private lightPairs(): { header: HTMLElement; panel: HTMLElement | null }[] {
+	private lightPairs(): { header: HTMLElement; panel: HTMLElement | null; actions: HTMLElement | null }[] {
 		const direct = (Array.from(this.children) as HTMLElement[]).filter((el) => !el.hasAttribute("data-root"));
-		const isPanelSlot = (slot: string | null) => slot === "panel" || (slot?.startsWith("panel-") ?? false);
-		const isHeaderSlot = (slot: string | null) => slot === "header" || (slot?.startsWith("header-") ?? false);
-		let headers = direct.filter((el) => el.hasAttribute("data-xtyle-header") || isHeaderSlot(el.getAttribute("slot")));
-		let panels = direct.filter((el) => el.hasAttribute("data-xtyle-panel") || isPanelSlot(el.getAttribute("slot")));
+		const isRole = (role: string) => (el: HTMLElement) => {
+			const slot = el.getAttribute("slot");
+			return el.hasAttribute(`data-xtyle-${role}`) || slot === role || (slot?.startsWith(`${role}-`) ?? false);
+		};
+		const actionList = direct.filter(isRole("actions"));
+		const sectioned = direct.filter((el) => !actionList.includes(el));
+		let headers = sectioned.filter(isRole("header"));
+		let panels = sectioned.filter(isRole("panel"));
 		if (headers.length === 0) {
-			const half = Math.ceil(direct.length / 2);
-			headers = direct.slice(0, half);
-			panels = direct.slice(half);
+			const half = Math.ceil(sectioned.length / 2);
+			headers = sectioned.slice(0, half);
+			panels = sectioned.slice(half);
 		}
-		return headers.map((header, i) => ({ header, panel: panels[i] ?? null }));
+		const actions = pairActions(direct, headers, panels, actionList);
+		return headers.map((header, i) => ({ header, panel: panels[i] ?? null, actions: actions[i] ?? null }));
 	}
 
 	private warnedUnmapped = false;
@@ -128,6 +191,7 @@ export class XtyleAccordion extends XtyleElement {
 		this.lightPairs().forEach((pair, i) => {
 			pair.header.setAttribute("slot", `header-${i}`);
 			pair.panel?.setAttribute("slot", `panel-${i}`);
+			pair.actions?.setAttribute("slot", `actions-${i}`);
 		});
 	}
 
@@ -141,13 +205,15 @@ export class XtyleAccordion extends XtyleElement {
 	private composedSections(): AccordionSection[] | null {
 		const scaffold = Array.from(this.children).find((el) => el.hasAttribute("data-root"));
 		if (!scaffold) return null;
-		return Array.from(scaffold.children).map((item, i) => {
+		return Array.from(scaffold.children).map((section, i) => {
+			const item = section.querySelector(".xtyle-accordion__item") ?? section;
 			const trigger = item.querySelector(".xtyle-accordion__trigger");
 			return {
 				header: "",
 				headerSlot: `header-${i}`,
 				panel: "",
 				panelSlot: `panel-${i}`,
+				actionsSlot: actionsOf(section) ? `actions-${i}` : undefined,
 				open: item.hasAttribute("open"),
 				disabled: trigger?.getAttribute("aria-disabled") === "true",
 				value: item.getAttribute("data-key") ?? String(i),
@@ -160,11 +226,12 @@ export class XtyleAccordion extends XtyleElement {
 		if (fromAttr.length > 0) return fromAttr;
 		const composed = this.composedSections();
 		if (composed) return composed;
-		return this.lightPairs().map(({ header }, i) => ({
+		return this.lightPairs().map(({ header, actions }, i) => ({
 			header: "",
 			headerSlot: `header-${i}`,
 			panel: "",
 			panelSlot: `panel-${i}`,
+			actionsSlot: actions ? `actions-${i}` : undefined,
 			open: readBoolAttrOrProp(header, "open") || header.getAttribute("aria-expanded") === "true",
 			disabled: readBoolAttrOrProp(header, "disabled") || header.getAttribute("aria-disabled") === "true",
 			value: readAttrOrProp(header, "value") ?? String(i),
@@ -192,6 +259,7 @@ export class XtyleAccordion extends XtyleElement {
 				headerSlot: section.headerSlot,
 				panel: section.panel,
 				panelSlot: section.panelSlot,
+				actionsSlot: section.actionsSlot,
 				value: section.value ?? String(i),
 				disabled: section.disabled,
 			})),
@@ -244,23 +312,44 @@ export class XtyleAccordion extends XtyleElement {
 		this.observeChildren();
 	}
 
+	override disconnectedCallback(): void {
+		super.disconnectedCallback();
+		this.actionsObserver?.disconnect();
+		this.actionsObserver = null;
+	}
+
 	protected template(): string {
 		return "";
 	}
 
 	private shapeSignature(): string {
 		return JSON.stringify(
-			this.sections.map((section, i) => [section.value ?? String(i), section.headerSlot, section.panelSlot]),
+			this.sections.map((section, i) => [section.value ?? String(i), section.headerSlot, section.panelSlot, section.actionsSlot ?? ""]),
 		);
 	}
 
 	protected override render(): void {
+		const focused = this.focusedTriggerKey();
 		this.warnIfUnmapped();
 		this.assignPanelSlots();
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(accordionHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
+		this.refocusTrigger(focused);
+	}
+
+	private focusedTriggerKey(): string | null {
+		const active = (this.shadowRoot?.activeElement ?? document.activeElement) as Element | null;
+		const trigger = active?.closest?.(".xtyle-accordion__trigger");
+		return trigger && this.root.contains(trigger) ? trigger.getAttribute("data-key") : null;
+	}
+
+	private refocusTrigger(key: string | null): void {
+		if (key === null) return;
+		const trigger = this.root.querySelector<HTMLElement>(`.xtyle-accordion__trigger[data-key="${CSS.escape(key)}"]`);
+		const active = this.shadowRoot?.activeElement ?? document.activeElement;
+		if (trigger && active !== trigger) trigger.focus({ preventScroll: true });
 	}
 }
 

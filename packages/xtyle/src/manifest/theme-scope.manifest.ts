@@ -57,6 +57,7 @@ export const themeScopeManifest: ComponentManifest = {
 	description:
 		"Theme Scope materializes an *invocation* — a named algorithm plus its `knobs` and token `constraints` — and applies the derived register to a target, so everything beneath it renders on that theme. It draws nothing of its own: the children you write are the content, untouched. `target` decides what the tokens land on, and it defaults to `self`, scoping the theme to this element's subtree — that is what makes a themed card, a mockup frame, or two algorithms side by side possible without either one leaking onto the page. `target=\"root\"` drives `:root` instead, for the single scope that themes a whole document. The scope also *owns the scheme*: it derives the algorithm natively, and when the requested `scheme` is not the one that derivation produced, it re-derives with `invert`, so one set of inputs yields both modes through the engine rather than a hand-mirrored guess. An `<xtyle-scheme-toggle>` nested anywhere inside drives the scope rather than the document. Each settled derivation fires `xtyle:theme-scope` carrying the scheme and the applied register, and a bad invocation reports the error on that same event instead of applying a half-derived theme.",
 	bindings: ["html", "svelte", "astro"],
+	render: "light",
 	anatomy: [
 		{
 			name: "scope",
@@ -134,6 +135,7 @@ export const themeScopeManifest: ComponentManifest = {
 		"Use one `target=\"root\"` scope for the app-level theme, and nest `target=\"self\"` scopes inside it wherever a region needs its own.",
 		"Nest an `<xtyle-scheme-toggle>` inside and it drives the scope through the engine's inversion instead of flipping `:root[data-scheme]`.",
 		"Listen for `xtyle:theme-scope` to mirror the applied register elsewhere, or to surface a bad invocation's error.",
+		"A `target=\"self\"` scope keeps its theme when it moves, so it can sit inside a dock panel, a portal, or anything else that reparents. A `target=\"root\"` scope releases `:root` when it leaves the document and derives again when it returns.",
 	],
 	a11y: [
 		"Renders no markup and takes no focus, so it adds nothing to the tab order or the accessibility tree.",

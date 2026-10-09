@@ -13,7 +13,8 @@ export interface EffectDemo {
 export const BLURB: Record<string, string> = {
 	glow: "a halo, the accent bloom",
 	throb: "a slow pulse that drifts between the two accent hues",
-	glare: "an animated sheen that sweeps across the box",
+	glare: "an animated sheen that sweeps across the box, once or on a repeat",
+	holo: "an iridescent foil that drifts through the named hues",
 	lift: "a small rise with a shadow under it",
 	tint: "a color wash over the surface",
 	frost: "a backdrop blur and saturation bump",
@@ -31,6 +32,7 @@ export const DEMOS: Record<string, EffectDemo> = {
 	glow: { spec: "glow@hover?spread:18", stage: "dark", body: "mark" },
 	throb: { spec: "throb?rate:5s,colors:[accent,accent-2],spread:20", stage: "dark", body: "mark" },
 	glare: { spec: "glare@hover?angle:105,rate:900ms", stage: "plain", body: "panel", clip: true },
+	holo: { spec: "holo glare?repeat:infinite,rest:2,width:5%", stage: "plain", body: "panel", clip: true },
 	lift: { spec: "lift@hover?distance:7", stage: "plain", body: "panel" },
 	tint: { spec: "tint@hover?amount:55,color:accent", stage: "plain", body: "panel" },
 	frost: { spec: "frost@hover?blur:7,saturation:90", stage: "stripes", body: "glass" },

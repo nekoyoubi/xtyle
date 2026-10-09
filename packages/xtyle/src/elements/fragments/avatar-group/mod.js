@@ -17,10 +17,13 @@
   function groupClass(b) {
     const size = b.size === "sm" || b.size === "lg" || b.size === "xl" ? b.size : "md";
     const spacing = b.spacing === "snug" || b.spacing === "loose" ? b.spacing : "normal";
+    const layout = b.layout === "row" || b.layout === "wrap" || b.layout === "lattice" ? b.layout : "overlap";
     return [
       "xtyle-avatar-group",
       size !== "md" && `xtyle-avatar-group--${size}`,
-      spacing !== "normal" && `xtyle-avatar-group--${spacing}`
+      spacing !== "normal" && `xtyle-avatar-group--${spacing}`,
+      `xtyle-avatar-group--${layout}`,
+      b.stack === "start" && "xtyle-avatar-group--stack-start"
     ].filter(Boolean).join(" ");
   }
   function overflowMarkup(b) {

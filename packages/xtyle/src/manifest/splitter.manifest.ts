@@ -44,6 +44,7 @@ export const splitterManifest: ComponentManifest = {
 	description:
 		"Splitter is the handle between two panes: drag it (or arrow it with the keyboard) and the neighboring pane grows or shrinks. It is a `role=\"separator\"` control, so it announces its current, minimum, and maximum size and takes the full keyboard. The size it manages is _data_ the consumer owns: the splitter clamps a `value` (in px) to `min`/`max`, snaps it to an integral `step`, writes it into a CSS custom property (`var`) on a target so a grid or flex track resizes declaratively, and fires `resize` (live, during the drag) and `resize-end` (when it settles, whether from a release or a keyboard commit) so the consumer can react or persist. `orientation` picks the axis (`vertical` resizes width, `horizontal` resizes height), and `reversed` flips the direction for a trailing-edge pane like a right rail. Its own chrome is derived: the grip and its focus ring read from the same tokens the rest of the UI does.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["grip", "host", "splitter"],
 	anatomy: [
 		{
@@ -202,6 +203,7 @@ export const splitterManifest: ComponentManifest = {
 		"Listen for `resize-end` to persist a chosen size; `resize` for a live preview.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"separator\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The handle is a `role=\"separator\"` with `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so assistive tech announces the size and its bounds.",
 		"It is fully keyboard-operable: arrow keys step by `step`, PageUp/PageDown jump ten steps, Home and End go to the bounds.",
 		"Double-clicking the handle resets the size to `default` (or the first-rendered size when `default` is omitted), the same gesture and fallback as Slider.",

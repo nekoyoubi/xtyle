@@ -7,6 +7,7 @@ import {
 	type CheckboxGroupMarkupProps,
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, forwardAccessibleName, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/checkbox/source.generated.js";
 import { resolveTone, resolveVocab, CHECKBOX_SIZES } from "../vocab.js";
 
@@ -24,6 +25,7 @@ export class XtyleCheckbox extends XtyleElement {
 	}
 	private indeterminateValue = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "checkbox", {
+		nameTarget: '[part="control"]',
 		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 	});
 
@@ -39,7 +41,7 @@ export class XtyleCheckbox extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["checked", "indeterminate", "disabled", "size", "tone", "name", "value", "label", "labelledby"];
+		return ["checked", "indeterminate", "disabled", "size", "tone", "name", "value", "label", "labelledby", ...NAME_ATTRIBUTES];
 	}
 
 	get checked(): boolean {
@@ -91,6 +93,7 @@ export class XtyleCheckbox extends XtyleElement {
 
 	override connectedCallback(): void {
 		super.connectedCallback();
+		this.observeChildren();
 		this.addEventListener("click", this.onHostClick);
 	}
 
@@ -118,7 +121,14 @@ export class XtyleCheckbox extends XtyleElement {
 			tone: this.tone,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
+			labelText: this.hasSlottedLabel() ? "" : (this.getAttribute("label") ?? ""),
 		};
+	}
+
+	private hasSlottedLabel(): boolean {
+		return this.fragment
+			.slottedNodes("")
+			.some((node) => (node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "").trim() !== "" : node.nodeType === Node.ELEMENT_NODE));
 	}
 
 	/** Structural state ops can't patch incrementally: the aria naming and the `disabled` boolean attr,
@@ -126,7 +136,7 @@ export class XtyleCheckbox extends XtyleElement {
 	 * cheap DOM-property patches the host applies post-update, so toggling never rebuilds and never
 	 * loses focus on the live input. */
 	private shapeSignature(): string {
-		return `${this.disabled}|${this.getAttribute("label")}|${this.getAttribute("labelledby")}`;
+		return `${this.disabled}|${this.getAttribute("label")}|${this.getAttribute("labelledby")}|${this.hasSlottedLabel()}`;
 	}
 
 	private syncForm(): void {
@@ -144,7 +154,7 @@ export class XtyleCheckbox extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		const hasLabel = this.getAttribute("label") || this.getAttribute("labelledby") || this.textContent?.trim();
+		const hasLabel = this.getAttribute("label") || this.getAttribute("labelledby") || this.textContent?.trim() || hasHostName(this);
 		if (!hasLabel) {
 			console.warn(
 				"xtyle-checkbox: no accessible name. Provide label text in the default slot, or a `label` / `labelledby` attribute.",
@@ -178,6 +188,7 @@ export class XtyleCheckbox extends XtyleElement {
 			control.checked = this.checked;
 			control.indeterminate = this.indeterminate;
 			this.nameControl(control);
+			this.fragment.forwardName();
 		}
 		this.warnIfUnnamed();
 		this.syncForm();
@@ -196,7 +207,7 @@ export class XtyleCheckboxGroup extends XtyleElement {
 	private labelId = `xtyle-checkbox-group-${Math.random().toString(36).slice(2, 8)}-label`;
 
 	static get observedAttributes(): string[] {
-		return ["label", "labelledby", "tone", "size", "disabled", "manual"];
+		return ["label", "labelledby", "tone", "size", "disabled", "manual", ...NAME_ATTRIBUTES];
 	}
 
 	get label(): string | null {
@@ -308,7 +319,7 @@ export class XtyleCheckboxGroup extends XtyleElement {
 	};
 
 	private warnIfUnnamed(): void {
-		if (!this.label && !this.getAttribute("labelledby") && !this.getAttribute("aria-label")) {
+		if (!this.label && !this.getAttribute("labelledby") && !hasHostName(this)) {
 			console.warn(
 				"xtyle-checkbox-group: no accessible name. Provide a `label`, `labelledby`, or `aria-label` so the group is announced.",
 			);
@@ -348,6 +359,7 @@ export class XtyleCheckboxGroup extends XtyleElement {
 				if (!this.manual) this.sync();
 			});
 		if (!this.manual) this.sync();
+		forwardAccessibleName(this, this.root.querySelector('[role="group"]'));
 		this.warnIfUnnamed();
 		this.verifyFormName();
 	}

@@ -28,6 +28,10 @@ import { escapeSelectorValue } from "./fragments/selector-escape.js";
 import { manifest, fragmentSources } from "./fragments/calendar/source.generated.js";
 import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 import { iconBody } from "../icon-registry.js";
+import { flowKey } from "./flow-key.js";
+
+const CALENDAR_MODES: readonly CalendarMode[] = ["single", "multiple", "range"];
+const WEEKDAY_FORMATS = ["short", "narrow"] as const;
 
 let calendarSeq = 0;
 
@@ -61,6 +65,8 @@ export class XtyleCalendar extends XtyleElement {
 	private decorationsProp: CalendarDecorations | null = null;
 	private wired = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "calendar", {
+		nameTarget: "[data-root]",
+		hostName: false,
 		applyIntent: () => {},
 	});
 
@@ -107,8 +113,7 @@ export class XtyleCalendar extends XtyleElement {
 	}
 
 	get mode(): CalendarMode {
-		const mode = this.getAttribute("mode");
-		return mode === "multiple" || mode === "range" ? mode : "single";
+		return resolveVocab(this.getAttribute("mode"), CALENDAR_MODES, "single", "calendar mode");
 	}
 	set mode(value: CalendarMode) {
 		this.setAttribute("mode", value);
@@ -316,7 +321,7 @@ export class XtyleCalendar extends XtyleElement {
 			today: toIso(this.today),
 			locale: this.locale,
 			firstDay: this.firstDayOfWeek,
-			weekdayFormat: this.getAttribute("weekday-format") === "narrow" ? "narrow" : "short",
+			weekdayFormat: resolveVocab(this.getAttribute("weekday-format"), WEEKDAY_FORMATS, "short", "calendar weekday format"),
 			weekNumbers: this.weekNumbers,
 			fixedWeeks: this.fixedWeeks,
 			outsideDays: !this.hideOutsideDays,
@@ -533,7 +538,7 @@ export class XtyleCalendar extends XtyleElement {
 	/** The WAI-ARIA date-grid keymap: days, weeks, week edges, months, years. Returns null for anything else. */
 	private keyStep(event: KeyboardEvent, from: CivilDate): CivilDate | null {
 		const firstDay = this.firstDayOfWeek;
-		switch (event.key) {
+		switch (flowKey(event.key, this)) {
 			case "ArrowLeft":
 				return addDays(from, -1);
 			case "ArrowRight":

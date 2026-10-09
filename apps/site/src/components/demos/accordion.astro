@@ -6,6 +6,8 @@ import Text from "@xtyle/astro/Text.astro";
 import Icon from "@xtyle/astro/Icon.astro";
 import Badge from "@xtyle/astro/Badge.astro";
 import Alert from "@xtyle/astro/Alert.astro";
+import Button from "@xtyle/astro/Button.astro";
+import Segmented from "@xtyle/astro/Segmented.astro";
 ---
 
 <Stack gap={6} class="demo">
@@ -56,6 +58,33 @@ import Alert from "@xtyle/astro/Alert.astro";
 			<div data-xtyle-panel>Price, rating, newest first.</div>
 			<span data-xtyle-header aria-disabled="true">Saved searches</span>
 			<div data-xtyle-panel>Sign in to save a search.</div>
+		</Accordion>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Controls on the header row</Heading>
+		<Text size="sm" tone="muted">
+			A <code>data-xtyle-actions</code> child sits on its section's header row, beside the trigger rather than
+			inside it, so its buttons are real buttons: they never toggle the section, and they stay put while it is closed.
+		</Text>
+		<Accordion multiple>
+			<span data-xtyle-header aria-expanded="true">Outcomes</span>
+			<span data-xtyle-actions>
+				<Segmented size="sm" options="Rows,Chart" value="Rows" aria-label="Outcome view" />
+			</span>
+			<div data-xtyle-panel>Each run's result, newest first.</div>
+			<span data-xtyle-header>Roster</span>
+			<span data-xtyle-actions>
+				<Button variant="ghost" tone="neutral" size="sm" iconOnly aria-label="Move Roster up">
+					<Icon slot="icon-start" name="chevron-up" />
+				</Button>
+				<Button variant="ghost" tone="neutral" size="sm" iconOnly aria-label="Move Roster down">
+					<Icon slot="icon-start" name="chevron-down" />
+				</Button>
+			</span>
+			<div data-xtyle-panel>Who is on shift, as chips.</div>
+			<span data-xtyle-header>Notes</span>
+			<div data-xtyle-panel>A section without controls keeps the plain header row.</div>
 		</Accordion>
 	</section>
 

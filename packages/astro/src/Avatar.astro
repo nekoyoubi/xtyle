@@ -1,11 +1,12 @@
 ---
 import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
-import { avatarInitials, resolveTone, AVATAR_SIZES, resolveVocab, AVATAR_SHAPES } from "@xtyle/core";
+import { avatarInitials, resolveTone, resolveOptionalTone, AVATAR_SIZES, resolveVocab, AVATAR_SHAPES, AVATAR_FRAMES } from "@xtyle/core";
 
 import type { Tone, FullTone as BadgeTone } from "@xtyle/core";
 type AvatarSize = (typeof AVATAR_SIZES)[number];
 type AvatarShape = (typeof AVATAR_SHAPES)[number];
+type AvatarFrame = (typeof AVATAR_FRAMES)[number];
 
 interface Props {
 	src?: string;
@@ -16,6 +17,12 @@ interface Props {
 	tone?: BadgeTone;
 	size?: AvatarSize;
 	shape?: AvatarShape;
+	/** A ring around the content: `solid` in `frameTone`, or `gradient` from `frameTone` to `frameTone2`. */
+	frame?: AvatarFrame;
+	frameTone?: BadgeTone;
+	frameTone2?: BadgeTone;
+	/** Shades the frame as a raised, lit edge; implies a `solid` frame when none is set. */
+	bevel?: boolean;
 	status?: Tone;
 	statusLabel?: string;
 	/** Breathe the status dot for a live / online presence: a bare `true` pulses slow, `"fast"` quick. */
@@ -34,6 +41,10 @@ const {
 	tone: toneInput,
 	size: sizeInput,
 	shape: shapeInput,
+	frame: frameInput,
+	frameTone,
+	frameTone2,
+	bevel = false,
 	status,
 	statusLabel,
 	pulse,
@@ -45,6 +56,7 @@ await checkAuthoring("avatar", Astro.props);
 const size = resolveVocab(sizeInput, AVATAR_SIZES, "md", "avatar size");
 const shape = resolveVocab(shapeInput, AVATAR_SHAPES, "circle", "avatar shape");
 const tone = resolveTone(toneInput, "neutral");
+const frame = resolveVocab(frameInput, AVATAR_FRAMES, "none", "avatar frame");
 
 const iconHtml = Astro.slots.has("icon") ? await Astro.slots.render("icon") : "";
 const bodyHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
@@ -57,6 +69,10 @@ const bindings = {
 	tone,
 	size,
 	shape,
+	frame,
+	frameTone: resolveOptionalTone(frameTone) ?? null,
+	frameTone2: resolveOptionalTone(frameTone2) ?? null,
+	bevel,
 	status: status ?? null,
 	statusLabel: statusLabel ?? null,
 	pulse: pulse ?? null,
@@ -74,6 +90,10 @@ const composed = chrome
 	tone={tone}
 	size={size}
 	shape={shape}
+	frame={frame === "none" ? undefined : frame}
+	frame-tone={frameTone ?? undefined}
+	frame-tone-2={frameTone2 ?? undefined}
+	bevel={bevel || undefined}
 	status={status ?? undefined}
 	status-label={statusLabel ?? undefined}
 	pulse={pulse === true ? "" : pulse || undefined}

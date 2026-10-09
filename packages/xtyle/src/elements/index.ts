@@ -1,3 +1,4 @@
+import "./tag-map.generated.js";
 export { XtyleElement, define } from "./base.js";
 export {
 	loadFill,
@@ -144,6 +145,7 @@ export { XtyleCardLink } from "./card-link.js";
 export { XtyleToc } from "./toc.js";
 export type { TocItem } from "./toc.js";
 export { XtyleKbd } from "./kbd.js";
+export { XtyleNumberFormat } from "./number-format.js";
 export { XtyleIcon } from "./icon.js";
 export { XtyleImage } from "./image.js";
 export { XtyleLightbox, openLightbox, closeLightbox } from "./lightbox.js";
@@ -263,6 +265,7 @@ import "./eyebrow.js";
 import "./card-link.js";
 import "./toc.js";
 import "./kbd.js";
+import "./number-format.js";
 import "./icon.js";
 import "./image.js";
 import "./carousel.js";

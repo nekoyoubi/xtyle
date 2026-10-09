@@ -64,6 +64,7 @@ export const stackManifest: ComponentManifest = {
 	description:
 		"Stack lays its children out in a flex column with a consistent gap drawn from the `--space` scale. The `gap` prop (0–8) selects the spacing step, while `align` and `justify` control the cross- and main-axis distribution. It carries no visual chrome of its own (no background, border, or color), so it composes cleanly inside cards, panels, and page shells. An `inline` flag switches it to an inline-flex column for embedding in running text or alongside other inline boxes.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["stack"],
 	anatomy: [
 		{
@@ -78,7 +79,7 @@ export const stackManifest: ComponentManifest = {
 			name: "gap",
 			type: "number",
 			default: "4",
-			description: "Spacing between children, as a step on the `--space` scale (0–8).",
+			description: "Spacing between children, as a step on the `--space` scale (0–8), not a size name like `sm` or `md`; anything else warns and falls back to the default.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["0", "1", "2", "3", "4", "5", "6", "7", "8"],
 		},

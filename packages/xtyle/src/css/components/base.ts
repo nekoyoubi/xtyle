@@ -9,7 +9,8 @@
  * and any non-motion consumer is untouched. The forced-colors block pairs every
  * box-shadow focus ring with a transparent `outline` on `:focus-visible`: shadows
  * are dropped in forced-colors mode, but a transparent outline becomes a real,
- * system-colored one — so keyboard focus survives.
+ * system-colored one — so keyboard focus survives. A control carrying `data-cursor` (an app-owned
+ * keyboard cursor, drawn with the same ring as focus) is promoted the same way.
  */
 export const baseCss = `
 @media (prefers-reduced-motion: reduce) {
@@ -25,9 +26,15 @@ export const baseCss = `
 }
 @media (forced-colors: active) {
 	[class^="xtyle-"]:focus-visible,
-	[class*=" xtyle-"]:focus-visible {
+	[class*=" xtyle-"]:focus-visible,
+	[class^="xtyle-"][data-cursor],
+	[class*=" xtyle-"][data-cursor] {
 		outline: var(--border-normal) solid Highlight;
 		outline-offset: var(--border-normal);
+	}
+	[class^="xtyle-"][data-cursor],
+	[class*=" xtyle-"][data-cursor] {
+		outline-color: Highlight !important;
 	}
 }
 .xtyle-control {
@@ -37,7 +44,7 @@ export const baseCss = `
 	line-height: var(--leading-normal);
 	color: var(--fg-0);
 	background: var(--field-bg);
-	border: var(--border-thin) solid var(--field-border);
+	border: var(--border-thin) solid var(--line-strong);
 	border-radius: var(--radius-md);
 	padding: var(--space-2) var(--space-3);
 	transition:
@@ -45,7 +52,8 @@ export const baseCss = `
 		box-shadow var(--duration-fast) var(--ease-standard);
 }
 .xtyle-control::placeholder { color: var(--placeholder); }
-.xtyle-control:focus-visible {
+.xtyle-control:focus-visible,
+.xtyle-control[data-cursor] {
 	outline: var(--border-normal) solid transparent;
 	border-color: var(--accent);
 	box-shadow: 0 0 0 var(--border-normal) var(--ring);

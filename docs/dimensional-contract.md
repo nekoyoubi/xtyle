@@ -63,7 +63,7 @@ out of the box.
   (readable on the matching `-bg` tint)
 - **Neutral role**: `--neutral` `--neutral-bg` `--neutral-fg` `--neutral-text`
 - **Accent surface/text**: `--accent-bg` `--accent-text` (contrast-tuned; ≠ fill)
-- **Form / field**: `--field-bg` `--field-border` `--placeholder`
+- **Form / field**: `--field-bg` `--field-border` `--line-strong` `--placeholder`
 - **Disabled content**: `--fg-disabled`
 - **Overlay surface**: `--surface-overlay` `--surface-overlay-border`
   (menus / popovers / tooltips / modals; distinct from the `bg-*` ladder)

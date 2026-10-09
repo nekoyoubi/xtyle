@@ -9,11 +9,13 @@ import {
 	makeInvariants,
 	makeXtyleAlgorithm,
 	makeXtylePipelineAlgorithm,
+	PRESET_DEFAULTS,
 	PRODUCED_TOKENS,
 	PRODUCED_SINCE,
 	PACK_SINCE,
 	registerToNodes,
 	resolveKnobSpecs,
+	resolvePreset,
 	ringForContrast,
 	runPipeline,
 	settlePass,
@@ -23,6 +25,7 @@ import {
 	TOKEN_CATEGORIES,
 	type PresetAnchors,
 	type PresetDefaults,
+	type PresetInput,
 } from "./algorithms/factory.js";
 import type { AccentStrategy, Scheme } from "./types.js";
 import { SURFACE_ROLES } from "./vocab.js";
@@ -53,6 +56,8 @@ export {
 	TOKEN_CATEGORIES,
 	PRODUCED_TOKENS,
 	DEFAULT_ANCHORS,
+	PRESET_DEFAULTS,
+	resolvePreset,
 	SHARED_KNOBS,
 	SURFACE_ROLES,
 	contrast,
@@ -62,6 +67,7 @@ export {
 	withLightness,
 	type OklchColor,
 	type PresetDefaults,
+	type PresetInput,
 	type PresetAnchors,
 };
 export type {
@@ -104,8 +110,6 @@ declare const xript: {
 declare const cuti: Cuti;
 
 type Lineage = { name: TokenName; value?: string; refs?: TokenName[] };
-
-const WCAG_FOCUS_RING = 3;
 
 function toLineage(nodes: TokenNode[]): Lineage[] {
 	return nodes.map(({ name, value, refs }) =>
@@ -218,17 +222,17 @@ export function toPreset(spec: XtyleAlgorithmSpec): PresetDefaults {
 		// INFO: merge over the full default so a spec naming only some anchors still yields complete
 		// bg/fg; derivation reads both, so a partial defaultAnchors would crash with no anchor overrides
 		defaultAnchors: spec.anchors ? { ...DEFAULT_ANCHORS, ...spec.anchors } : DEFAULT_ANCHORS,
-		contrastFloor: contrast.floor ?? 4.7,
-		declaredTextOnFillFloor: contrast.textOnFill ?? 4.5,
-		declaredFocusRingFloor: contrast.focusRing ?? WCAG_FOCUS_RING,
-		defaultVibrancy: spec.vibrancy ?? 0.5,
-		accentChromaMul: chroma.accent ?? 1,
-		statusChromaMul: chroma.status ?? 1,
-		paletteChromaMul: chroma.palette ?? 1,
-		neutralChroma: chroma.neutral ?? 0.01,
-		elevationStrengthMul: elevation.strength ?? 1,
-		elevationAlphaBoost: elevation.alphaBoost ?? 0,
-		accentTintChromaMul: chroma.accentTint ?? 0.3,
+		contrastFloor: contrast.floor ?? PRESET_DEFAULTS.contrastFloor,
+		declaredTextOnFillFloor: contrast.textOnFill ?? PRESET_DEFAULTS.declaredTextOnFillFloor,
+		declaredFocusRingFloor: contrast.focusRing ?? PRESET_DEFAULTS.declaredFocusRingFloor,
+		defaultVibrancy: spec.vibrancy ?? PRESET_DEFAULTS.defaultVibrancy,
+		accentChromaMul: chroma.accent ?? PRESET_DEFAULTS.accentChromaMul,
+		statusChromaMul: chroma.status ?? PRESET_DEFAULTS.statusChromaMul,
+		paletteChromaMul: chroma.palette ?? PRESET_DEFAULTS.paletteChromaMul,
+		neutralChroma: chroma.neutral ?? PRESET_DEFAULTS.neutralChroma,
+		elevationStrengthMul: elevation.strength ?? PRESET_DEFAULTS.elevationStrengthMul,
+		elevationAlphaBoost: elevation.alphaBoost ?? PRESET_DEFAULTS.elevationAlphaBoost,
+		accentTintChromaMul: chroma.accentTint ?? PRESET_DEFAULTS.accentTintChromaMul,
 	};
 	if (spec.anchorsByScheme) {
 		const byScheme: Partial<Record<Scheme, PresetAnchors>> = {};

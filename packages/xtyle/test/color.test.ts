@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { argbToRgbHex, contrast, flatten, formatCss, oklabDistance, separationAxes } from "../src/index.js";
+import { toOklchColor } from "../src/color.js";
 
 describe("argbToRgbHex", () => {
 	it("drops the leading alpha byte from an 8-digit ARGB hex", () => {
@@ -103,5 +104,30 @@ describe("flatten", () => {
 		const faint = contrast(formatCss(flatten("rgba(255, 255, 255, 0.15)", backdrop)), backdrop);
 		const solid = contrast("#ffffff", backdrop);
 		expect(faint).toBeLessThan(solid);
+	});
+});
+
+describe("repeated color reads", () => {
+	it("hands back a fresh parse each time, so a caller's mutation never reaches the next read", () => {
+		const first = toOklchColor("#3ad6f8");
+		first.l = 0;
+		first.alpha = 0.2;
+		const second = toOklchColor("#3ad6f8");
+		expect(second).not.toBe(first);
+		expect(second.l).toBeGreaterThan(0.5);
+		expect(second.alpha).toBe(1);
+	});
+
+	it("answers the same on a warm read as on a cold one", () => {
+		const color = { l: 0.62, c: 0.31, h: 145, alpha: 1 };
+		const cold = [formatCss("#e0457b"), formatCss(color), contrast("#e0457b", color)];
+		const warm = [formatCss("#e0457b"), formatCss({ ...color }), contrast("#e0457b", { ...color })];
+		expect(warm).toEqual(cold);
+	});
+
+	it("still refuses an unparseable color after a good one", () => {
+		toOklchColor("#112233");
+		expect(() => toOklchColor("not a color")).toThrow(/unparseable/);
+		expect(() => toOklchColor("not a color")).toThrow(/unparseable/);
 	});
 });

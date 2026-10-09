@@ -142,6 +142,21 @@ export interface ComponentManifest {
 	/** Related component ids to cross-reference, so an overlapping capability is one hop away instead of a rediscovery. */
 	seeAlso?: string[];
 	bindings: Binding[];
+	/**
+	 * Where the element renders its structure, which decides whether {@link ComponentManifest.exposedParts}
+	 * means anything:
+	 *
+	 * - `shadow`: always a shadow root. `::part(<name>)` reaches what `exposedParts` lists, and anatomy's
+	 *   selectors match nothing from outside.
+	 * - `light`: always the element's own children. There is no boundary, so `::part()` never applies,
+	 *   `exposedParts` is empty, and anatomy's selectors are the handle.
+	 * - `auto`: decided per instance. Shadow when created bare, light when it upgrades over markup that
+	 *   was already rendered (server output, an Astro page). `::part()` reaches only the first.
+	 *
+	 * A component with no element of its own (markup and classes only) is `light`. Gated against the
+	 * element's own `styleMode`.
+	 */
+	render: "shadow" | "light" | "auto";
 	anatomy: AnatomyPart[];
 	/**
 	 * The `part` names this component's fill actually emits, and therefore the only nodes an outside
@@ -150,9 +165,10 @@ export interface ComponentManifest {
 	 * Anatomy publishes the *internal* selector, which under a shadow render matches nothing from
 	 * outside — and shadow DOM's failure mode for a selector that matches nothing is silence, so an
 	 * author who copies it gets no styling and no error and cannot tell "wrong syntax" from "not
-	 * exposed". This answers that question outright: a name listed here is reachable, an anatomy entry
-	 * whose name is absent is genuinely internal, and a component with no entry here renders light DOM,
-	 * where the selector is the handle.
+	 * exposed". This answers that question outright: a name listed here is reachable, and an anatomy
+	 * entry whose name is absent is genuinely internal. A `light` component lists nothing, since
+	 * `::part()` cannot apply without a shadow root; {@link ComponentManifest.render} says which case
+	 * holds. A part whose name is built per instance is listed once per name it can take.
 	 *
 	 * Generated from the fill rather than written by hand, and gated by a test, so it cannot drift from
 	 * what the component emits.

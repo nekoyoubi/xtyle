@@ -41,7 +41,7 @@ export const checkboxCss = `
 	height: 100%;
 	margin: 0;
 	background: var(--field-bg);
-	border: var(--border-thin) solid var(--field-border);
+	border: var(--border-thin) solid var(--line-strong);
 	border-radius: var(--radius-sm);
 	cursor: inherit;
 	transition:

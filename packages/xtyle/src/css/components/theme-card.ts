@@ -58,4 +58,10 @@ export const themeCardCss = `
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
 }
 .xtyle-theme-card--selected { border-color: var(--accent); }
+@media (forced-colors: active) {
+	.xtyle-theme-card--selected {
+		outline: var(--border-thick) solid Highlight;
+		outline-offset: var(--border-thin);
+	}
+}
 `;

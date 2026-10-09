@@ -1,5 +1,5 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { CLUSTER_ALIGNS, CLUSTER_JUSTIFIES } from "../vocab.js";
+import { CLUSTER_ALIGNS, CLUSTER_JUSTIFIES, SPACE_STEP_EXPECTS, resolveIntegerIn, resolveOptionalVocab } from "../vocab.js";
 import { clusterHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/cluster/source.generated.js";
@@ -9,13 +9,6 @@ type ClusterJustify = (typeof CLUSTER_JUSTIFIES)[number];
 
 const ALIGNS: readonly ClusterAlign[] = CLUSTER_ALIGNS;
 const JUSTIFIES: readonly ClusterJustify[] = CLUSTER_JUSTIFIES;
-
-function clampGap(raw: string | null): number | null {
-	if (raw === null) return null;
-	const n = Math.trunc(Number(raw));
-	if (!Number.isFinite(n) || n < 0 || n > 8) return null;
-	return n;
-}
 
 export class XtyleCluster extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "cluster", {
@@ -31,23 +24,21 @@ export class XtyleCluster extends XtyleElement {
 	}
 
 	get gap(): number {
-		return clampGap(this.getAttribute("gap")) ?? 2;
+		return resolveIntegerIn(this.getAttribute("gap"), 0, 8, "cluster gap", SPACE_STEP_EXPECTS) ?? 2;
 	}
 	set gap(value: number) {
 		this.setAttribute("gap", String(value));
 	}
 
 	get align(): ClusterAlign | null {
-		const raw = this.getAttribute("align") as ClusterAlign | null;
-		return raw && ALIGNS.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("align"), ALIGNS, "cluster align");
 	}
 	set align(value: ClusterAlign) {
 		this.setAttribute("align", value);
 	}
 
 	get justify(): ClusterJustify | null {
-		const raw = this.getAttribute("justify") as ClusterJustify | null;
-		return raw && JUSTIFIES.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("justify"), JUSTIFIES, "cluster justify");
 	}
 	set justify(value: ClusterJustify) {
 		this.setAttribute("justify", value);

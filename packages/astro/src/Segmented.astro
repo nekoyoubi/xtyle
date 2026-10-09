@@ -13,6 +13,8 @@ interface Props {
 	disabled?: boolean;
 	/** Set false to keep the control out of sequential focus navigation. */
 	focusable?: boolean;
+	/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+	cursor?: boolean;
 	size?: Size;
 	tone?: Tone;
 	label?: string;
@@ -30,6 +32,7 @@ const {
 	options,
 	disabled = false,
 	focusable,
+	cursor = false,
 	size: sizeInput,
 	tone: toneInput,
 	label,
@@ -55,6 +58,7 @@ const bindings = {
 	value: value ?? null,
 	disabled,
 	focusable: focusable ?? true,
+	cursor,
 	size,
 	tone,
 	label: label ?? null,
@@ -70,6 +74,7 @@ const light = useSlotted ? "" : await renderFragmentLight("segmented", bindings)
 		value={value}
 		disabled={disabled || undefined}
 		focusable={focusable === false ? "false" : undefined}
+		cursor={cursor || undefined}
 		size={size}
 		tone={tone}
 		label={label}
@@ -87,6 +92,7 @@ const light = useSlotted ? "" : await renderFragmentLight("segmented", bindings)
 		options={optionsAttr}
 		disabled={disabled || undefined}
 		focusable={focusable === false ? "false" : undefined}
+		cursor={cursor || undefined}
 		size={size}
 		tone={tone}
 		label={label}

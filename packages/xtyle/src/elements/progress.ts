@@ -1,15 +1,27 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { FullTone } from "../index.js";
 import { progressHostCss } from "../markup/index.js";
-import { rampColor, rampGradientStops, resolvePalette, paletteRegisterTokens, type Palette } from "../series.js";
+import { rampColor, rampGradientStops, resolveOptionalPaletteName, paletteRegisterTokens, type Palette } from "../series.js";
 import { readLiveRegister } from "./live-register.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/progress/source.generated.js";
-import { resolveTone, resolveOptionalTone, PROGRESS_VARIANTS, PROGRESS_SIZES, PROGRESS_ORIENTS, resolveVocab } from "../vocab.js";
+import {
+	resolveTone,
+	resolveOptionalTone,
+	PROGRESS_VARIANTS,
+	PROGRESS_SIZES,
+	PROGRESS_ORIENTS,
+	PROGRESS_LINECAPS,
+	PROGRESS_RAMP_MODES,
+	PROGRESS_VALUE_FORMATS,
+	PROGRESS_VALUE_POSITIONS,
+	resolveVocab,
+} from "../vocab.js";
 
 export type ProgressVariant = (typeof PROGRESS_VARIANTS)[number];
 export type ProgressSize = (typeof PROGRESS_SIZES)[number];
 export type ProgressOrient = (typeof PROGRESS_ORIENTS)[number];
+export type ProgressLinecap = (typeof PROGRESS_LINECAPS)[number];
 export type ProgressValueFormat = "percent" | "value" | "value-max";
 export type ProgressPulse = "fast" | "slow" | null;
 export type ProgressRampMode = "solid" | "gradient";
@@ -28,7 +40,7 @@ export class XtyleProgress extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "ramp", "ramp-mode", "reverse", "track", "thickness", "orient", "label", "reading", "note", "aria-label"];
+		return ["variant", "tone", "size", "value", "min", "max", "indeterminate", "show-value", "value-format", "unit", "colorize-value", "value-position", "meter", "ramp", "ramp-mode", "reverse", "track", "thickness", "linecap", "orient", "label", "reading", "note", "aria-label"];
 	}
 
 	/** The visible caption above the bar. Distinct from `aria-label`, which names the control for a screen
@@ -127,8 +139,7 @@ export class XtyleProgress extends XtyleElement {
 	}
 
 	get valueFormat(): ProgressValueFormat {
-		const raw = this.getAttribute("value-format");
-		return raw === "value" || raw === "value-max" ? raw : "percent";
+		return resolveVocab(this.getAttribute("value-format"), PROGRESS_VALUE_FORMATS, "percent", "progress value format");
 	}
 	set valueFormat(value: ProgressValueFormat) {
 		this.setAttribute("value-format", value);
@@ -150,7 +161,7 @@ export class XtyleProgress extends XtyleElement {
 	}
 
 	get valuePosition(): "end" | "inset" {
-		return this.getAttribute("value-position") === "inset" ? "inset" : "end";
+		return resolveVocab(this.getAttribute("value-position"), PROGRESS_VALUE_POSITIONS, "end", "progress value position");
 	}
 	set valuePosition(value: "end" | "inset") {
 		this.setAttribute("value-position", value);
@@ -183,7 +194,7 @@ export class XtyleProgress extends XtyleElement {
 			const stops = raw.split(",").map((s) => s.trim()).filter(Boolean);
 			return stops.length ? stops : null;
 		}
-		return resolvePalette(raw);
+		return resolveOptionalPaletteName(raw, "progress ramp");
 	}
 	set ramp(value: Palette | string[] | null) {
 		if (value === null) this.removeAttribute("ramp");
@@ -193,7 +204,7 @@ export class XtyleProgress extends XtyleElement {
 	/** How a `ramp` paints: `solid` (one color sampled at the current value off the live cascade) or
 	 * `gradient` (the whole scale as a pure-CSS sweep clipped to the fill, SSR-safe, linear only). */
 	get rampMode(): ProgressRampMode {
-		return this.getAttribute("ramp-mode") === "gradient" ? "gradient" : "solid";
+		return resolveVocab(this.getAttribute("ramp-mode"), PROGRESS_RAMP_MODES, "solid", "progress ramp mode");
 	}
 	set rampMode(value: ProgressRampMode) {
 		this.setAttribute("ramp-mode", value);
@@ -229,6 +240,16 @@ export class XtyleProgress extends XtyleElement {
 	set thickness(value: string | number | null) {
 		if (value === null) this.removeAttribute("thickness");
 		else this.setAttribute("thickness", String(value));
+	}
+
+	/** How a circular arc ends: `butt` stops exactly at the value, `round` adds a half-stroke cap past
+	 * each end. Defaults to `butt` on a `meter`, whose reading should be exact, and `round` otherwise. */
+	get linecap(): ProgressLinecap {
+		return resolveVocab(this.getAttribute("linecap"), PROGRESS_LINECAPS, this.meter ? "butt" : "round", "progress linecap");
+	}
+	set linecap(value: ProgressLinecap | null) {
+		if (value === null) this.removeAttribute("linecap");
+		else this.setAttribute("linecap", value);
 	}
 
 	private get ariaRole(): string {
@@ -330,6 +351,7 @@ export class XtyleProgress extends XtyleElement {
 			pulse: this.effectivePulse(),
 			track: this.track,
 			thickness: this.thickness,
+			linecap: this.linecap,
 			orient: this.orient,
 			label: this.getAttribute("label"),
 			reading: this.getAttribute("reading"),
@@ -379,12 +401,17 @@ export class XtyleProgress extends XtyleElement {
 		return "";
 	}
 
+	private checkVocab(): void {
+		void this.rampMode;
+	}
+
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(progressHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
 		this.warnIfUnnamed();
+		this.checkVocab();
 	}
 }
 

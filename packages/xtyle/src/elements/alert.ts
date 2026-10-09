@@ -1,6 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { alertHostCss, type AlertSeverity, type AlertTone, type AlertVariant } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/alert/source.generated.js";
 import { resolveOptionalTone, resolveOptionalVocab, ALERT_SEVERITIES, resolveVocab, ALERT_VARIANTS } from "../vocab.js";
 
@@ -10,11 +11,12 @@ export class XtyleAlert extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "alert", {
+		nameTarget: '[part="alert"]',
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["tone", "severity", "variant", "dismissible", "dismiss-label"];
+		return ["tone", "severity", "variant", "dismissible", "dismiss-label", ...NAME_ATTRIBUTES];
 	}
 
 	get tone(): AlertTone | null {

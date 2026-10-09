@@ -4,6 +4,7 @@ import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/theme-swatch/source.generated.js";
 import { themeSwatchHostCss } from "../markup/index.js";
 import type { DeriveOptions, TokenRegister } from "../types.js";
+import { SCHEMES, SWATCH_SIZES, resolveOptionalVocab, resolveVocab } from "../vocab.js";
 
 type Scheme = "light" | "dark";
 
@@ -84,7 +85,7 @@ export class XtyleThemeSwatch extends XtyleElement {
 	}
 
 	get size(): string {
-		return this.getAttribute("size") ?? "md";
+		return resolveVocab(this.getAttribute("size"), SWATCH_SIZES, "md", "theme swatch size");
 	}
 	set size(value: string) {
 		this.setAttribute("size", value);
@@ -150,8 +151,7 @@ export class XtyleThemeSwatch extends XtyleElement {
 
 	private async derive(): Promise<void> {
 		const ticket = ++this.pending;
-		const requested = this.getAttribute("scheme");
-		const wanted = requested === "light" || requested === "dark" ? requested : null;
+		const wanted = resolveOptionalVocab(this.getAttribute("scheme"), SCHEMES, "theme swatch scheme");
 		try {
 			const [{ derive }, { getAlgorithm }, { schemeOf }] = await Promise.all([
 				import("../index.js"),

@@ -324,6 +324,26 @@ const TONE_GROUPS = [
 				</Cluster>
 			</Stack>
 			<Stack gap={2}>
+				<Text size="xs" tone="subtle" weight="semibold">Exact ends or rounded ones (<code>linecap</code>; a meter defaults to <code>butt</code>, and an empty ring draws nothing)</Text>
+				<Cluster gap={6} align="center">
+					{
+						[
+							{ cap: "butt", v: 0 },
+							{ cap: "butt", v: 1 },
+							{ cap: "butt", v: 9 },
+							{ cap: "round", v: 0 },
+							{ cap: "round", v: 1 },
+							{ cap: "round", v: 9 },
+						].map((r) => (
+							<Stack gap={2} align="center">
+								<Progress variant="circular" meter linecap={r.cap as "butt" | "round"} value={r.v} max={15} thickness={6} tone="accent" aria-label={`Rank ${r.v} of 15, ${r.cap}`} />
+								<Text as="span" size="xs" tone="muted">{r.cap} · {r.v}/15</Text>
+							</Stack>
+						))
+					}
+				</Cluster>
+			</Stack>
+			<Stack gap={2}>
 				<Text size="xs" tone="subtle" weight="semibold">Custom readout (the <code>value</code> slot)</Text>
 				<Cluster gap={6} align="center">
 					<Progress variant="circular" value={72} showValue aria-label="Sync, custom readout" style="--xtyle-progress-size: 88px" thickness="5px">

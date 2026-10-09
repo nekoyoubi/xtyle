@@ -1,25 +1,11 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
-import { GRID_ALIGNS, GRID_SIDES } from "../vocab.js";
+import { GRID_ALIGNS, GRID_SIDES, SPACE_STEP_EXPECTS, resolveIntegerIn, resolveOptionalVocab } from "../vocab.js";
 import { gridHostCss, type GridAlign, type GridSide } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/grid/source.generated.js";
 
 const ALIGNS: readonly GridAlign[] = GRID_ALIGNS;
 const SIDES: readonly GridSide[] = GRID_SIDES;
-
-function clampGap(raw: string | null): number | null {
-	if (raw === null) return null;
-	const n = Math.trunc(Number(raw));
-	if (!Number.isFinite(n) || n < 0 || n > 8) return null;
-	return n;
-}
-
-function clampColumns(raw: string | null): number | null {
-	if (raw === null) return null;
-	const n = Math.trunc(Number(raw));
-	if (!Number.isFinite(n) || n < 1 || n > 12) return null;
-	return n;
-}
 
 export class XtyleGrid extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "grid", {
@@ -35,14 +21,14 @@ export class XtyleGrid extends XtyleElement {
 	}
 
 	get gap(): number {
-		return clampGap(this.getAttribute("gap")) ?? 4;
+		return resolveIntegerIn(this.getAttribute("gap"), 0, 8, "grid gap", SPACE_STEP_EXPECTS) ?? 4;
 	}
 	set gap(value: number) {
 		this.setAttribute("gap", String(value));
 	}
 
 	get columns(): number | null {
-		return clampColumns(this.getAttribute("columns"));
+		return resolveIntegerIn(this.getAttribute("columns"), 1, 12, "grid columns", "a whole column count");
 	}
 	set columns(value: number) {
 		this.setAttribute("columns", String(value));
@@ -64,24 +50,21 @@ export class XtyleGrid extends XtyleElement {
 	}
 
 	get side(): GridSide | null {
-		const raw = this.getAttribute("side") as GridSide | null;
-		return raw && SIDES.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("side"), SIDES, "grid side");
 	}
 	set side(value: GridSide) {
 		this.setAttribute("side", value);
 	}
 
 	get align(): GridAlign | null {
-		const raw = this.getAttribute("align") as GridAlign | null;
-		return raw && ALIGNS.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("align"), ALIGNS, "grid align");
 	}
 	set align(value: GridAlign) {
 		this.setAttribute("align", value);
 	}
 
 	get justify(): GridAlign | null {
-		const raw = this.getAttribute("justify") as GridAlign | null;
-		return raw && ALIGNS.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("justify"), ALIGNS, "grid justify");
 	}
 	set justify(value: GridAlign) {
 		this.setAttribute("justify", value);

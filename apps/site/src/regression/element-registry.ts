@@ -45,6 +45,7 @@ export const elementRegistry: Record<string, () => Promise<unknown>> = {
 	"menu": () => import("@xtyle/core/elements/menu.js"),
 	"mobile-shell": () => import("@xtyle/core/elements/mobile-shell.js"),
 	"nine-patch": () => import("@xtyle/core/elements/nine-patch.js"),
+	"number-format": () => import("@xtyle/core/elements/number-format.js"),
 	"number-input": () => import("@xtyle/core/elements/number-input.js"),
 	"pagination": () => import("@xtyle/core/elements/pagination.js"),
 	"panel": () => import("@xtyle/core/elements/panel.js"),

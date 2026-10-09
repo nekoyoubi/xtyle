@@ -1,14 +1,20 @@
 ---
 import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
-import { AVATAR_GROUP_SIZES, resolveOptionalVocab, AVATAR_GROUP_SPACINGS } from "@xtyle/core";
+import { AVATAR_GROUP_SIZES, resolveOptionalVocab, AVATAR_GROUP_SPACINGS, AVATAR_GROUP_LAYOUTS, AVATAR_GROUP_STACKS } from "@xtyle/core";
 
 type AvatarGroupSize = (typeof AVATAR_GROUP_SIZES)[number];
 type AvatarGroupSpacing = (typeof AVATAR_GROUP_SPACINGS)[number];
+type AvatarGroupLayout = (typeof AVATAR_GROUP_LAYOUTS)[number];
+type AvatarGroupStack = (typeof AVATAR_GROUP_STACKS)[number];
 
 interface Props {
 	size?: AvatarGroupSize;
 	spacing?: AvatarGroupSpacing;
+	/** How the items sit: `overlap` (the default), `row`, `wrap`, or a `lattice` that nests diamonds edge to edge. */
+	layout?: AvatarGroupLayout;
+	/** Which end of the group draws on top where items overlap: `end` (the default) or `start`. */
+	stack?: AvatarGroupStack;
 	/** How many avatars beyond the shown ones to summarize as a trailing `+N` chip. */
 	overflow?: number;
 	/** Accessible name for the group (a list of people). */
@@ -20,14 +26,28 @@ interface Props {
 	[key: string]: unknown;
 }
 
-const { size: sizeInput, spacing: spacingInput, overflow, label, static: isStatic = false, class: extra, ...rest } = Astro.props;
+const {
+	size: sizeInput,
+	spacing: spacingInput,
+	layout: layoutInput,
+	stack: stackInput,
+	overflow,
+	label,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
 await checkAuthoring("avatar-group", Astro.props);
 const size = resolveOptionalVocab(sizeInput, AVATAR_GROUP_SIZES, "avatar-group size");
 const spacing = resolveOptionalVocab(spacingInput, AVATAR_GROUP_SPACINGS, "avatar-group spacing");
+const layout = resolveOptionalVocab(layoutInput, AVATAR_GROUP_LAYOUTS, "avatar-group layout");
+const stack = resolveOptionalVocab(stackInput, AVATAR_GROUP_STACKS, "avatar-group stack");
 
 const bindings = {
 	size: size ?? null,
 	spacing: spacing ?? null,
+	layout: layout ?? null,
+	stack: stack ?? null,
 	overflow: overflow ?? 0,
 	label: label ?? null,
 };
@@ -39,6 +59,8 @@ const composed = chrome.replace("<slot></slot>", () => slotHtml);
 <xtyle-avatar-group
 	size={size}
 	spacing={spacing}
+	layout={layout}
+	stack={stack}
 	overflow={overflow ?? undefined}
 	label={label}
 	class={extra}

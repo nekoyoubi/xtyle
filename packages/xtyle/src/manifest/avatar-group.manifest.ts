@@ -65,6 +65,71 @@ import { AvatarGroup, Avatar } from "@xtyle/astro";
 	<Avatar alt="Grace" tone="warn" size="sm">GR</Avatar>
 </AvatarGroup>`;
 
+const latticeHtmlExample = `<xtyle-avatar-group layout="lattice" spacing="snug" label="Rings held">
+	<xtyle-avatar shape="diamond" frame="solid" bevel tone="red" alt="Ember ring"><xtyle-icon slot="icon" name="ember--flame" aria-hidden="true"></xtyle-icon></xtyle-avatar>
+	<xtyle-avatar shape="diamond" frame="solid" bevel tone="cyan" alt="Tide ring"><xtyle-icon slot="icon" name="tide--drop" aria-hidden="true"></xtyle-icon></xtyle-avatar>
+	<xtyle-avatar shape="diamond" frame="solid" bevel tone="green" alt="Oak ring"><xtyle-icon slot="icon" name="oak--leaf" aria-hidden="true"></xtyle-icon></xtyle-avatar>
+	<xtyle-avatar shape="diamond" frame="solid" bevel tone="yellow" alt="Sun ring"><xtyle-icon slot="icon" name="sun--sun" aria-hidden="true"></xtyle-icon></xtyle-avatar>
+</xtyle-avatar-group>
+
+<xtyle-avatar-group layout="row" label="Team">
+	<xtyle-avatar user-name="Ada Lovelace" tone="accent"></xtyle-avatar>
+	<xtyle-avatar user-name="Alan Turing" tone="success"></xtyle-avatar>
+</xtyle-avatar-group>
+
+<xtyle-avatar-group stack="start" label="Queue, first up on top">
+	<xtyle-avatar user-name="Grace Hopper" tone="warn"></xtyle-avatar>
+	<xtyle-avatar user-name="Katherine Johnson" tone="info"></xtyle-avatar>
+	<xtyle-avatar user-name="Dorothy Vaughan" tone="purple"></xtyle-avatar>
+</xtyle-avatar-group>`;
+
+const latticeSvelteExample = `<script lang="ts">
+	import { AvatarGroup, Avatar, Icon } from "@xtyle/svelte";
+
+	const rings = [
+		{ name: "Ember ring", tone: "red", icon: "ember--flame" },
+		{ name: "Tide ring", tone: "cyan", icon: "tide--drop" },
+		{ name: "Oak ring", tone: "green", icon: "oak--leaf" },
+		{ name: "Sun ring", tone: "yellow", icon: "sun--sun" },
+	] as const;
+</script>
+
+<AvatarGroup layout="lattice" spacing="snug" label="Rings held">
+	{#each rings as ring (ring.name)}
+		<Avatar shape="diamond" frame="solid" bevel tone={ring.tone} alt={ring.name}>
+			{#snippet icon()}<Icon name={ring.icon} aria-hidden="true" />{/snippet}
+		</Avatar>
+	{/each}
+</AvatarGroup>
+
+<AvatarGroup stack="start" label="Queue, first up on top">
+	<Avatar userName="Grace Hopper" tone="warn" />
+	<Avatar userName="Katherine Johnson" tone="info" />
+</AvatarGroup>`;
+
+const latticeAstroExample = `---
+import { AvatarGroup, Avatar, Icon } from "@xtyle/astro";
+const rings = [
+	{ name: "Ember ring", tone: "red", icon: "ember--flame" },
+	{ name: "Tide ring", tone: "cyan", icon: "tide--drop" },
+	{ name: "Oak ring", tone: "green", icon: "oak--leaf" },
+	{ name: "Sun ring", tone: "yellow", icon: "sun--sun" },
+] as const;
+---
+
+<AvatarGroup layout="lattice" spacing="snug" label="Rings held">
+	{rings.map((ring) => (
+		<Avatar shape="diamond" frame="solid" bevel tone={ring.tone} alt={ring.name}>
+			<Icon slot="icon" name={ring.icon} aria-hidden="true" />
+		</Avatar>
+	))}
+</AvatarGroup>
+
+<AvatarGroup layout="wrap" label="Everyone">
+	<Avatar userName="Ada Lovelace" tone="accent" />
+	<Avatar userName="Alan Turing" tone="success" />
+</AvatarGroup>`;
+
 export const avatarGroupManifest: ComponentManifest = {
 	id: "avatar-group",
 	name: "Avatar Group",
@@ -74,8 +139,9 @@ export const avatarGroupManifest: ComponentManifest = {
 	seeAlso: ["avatar", "badge"],
 	summary: "A row of overlapping avatars with a trailing `+N` overflow chip, for a contributor, attendee, or reviewer stack.",
 	description:
-		"Avatar Group overlaps a set of `Avatar` children into a compact stack, the shape a contributor list, an attendee row, or a \"who's viewing\" strip takes. Each avatar carries a ring in the page background so the overlap reads as distinct faces rather than a blur, and later avatars sit over earlier ones. Slot the avatars you want shown and set `overflow` to the number of people beyond them, and the group renders a trailing `+N` chip in the neutral tone (its accessible name reads \"N more\"). `size` matches the chip to the avatars you used, and `spacing` tightens or loosens the overlap. It's a `role=\"group\"`; give it a `label` to name the set. The overflow count is explicit rather than auto-counted so the stack renders identically with no JavaScript, on the server, and in the browser.",
+		"Avatar Group overlaps a set of `Avatar` children into a compact stack, the shape a contributor list, an attendee row, or a \"who's viewing\" strip takes. Each avatar carries a ring in the page background so the overlap reads as distinct faces rather than a blur, and later avatars sit over earlier ones. Slot the avatars you want shown and set `overflow` to the number of people beyond them, and the group renders a trailing `+N` chip in the neutral tone (its accessible name reads \"N more\"). `size` matches the chip to the avatars you used, and `spacing` tightens or loosens the overlap. It's a `role=\"group\"`; give it a `label` to name the set. The overflow count is explicit rather than auto-counted so the stack renders identically with no JavaScript, on the server, and in the browser. `layout` picks how the items sit: the default `overlap`, a spaced `row`, a `wrap` that breaks onto new lines, or a `lattice` that drops every other item half a step so diamond avatars nest edge to edge. `stack=\"start\"` flips which end draws on top where items overlap.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["group", "overflow"],
 	anatomy: [
 		{
@@ -103,7 +169,7 @@ export const avatarGroupManifest: ComponentManifest = {
 			name: "size",
 			type: '"sm" | "md" | "lg" | "xl"',
 			default: "md",
-			description: "Sizes the `+N` chip to match the avatars you slotted (each `Avatar` still sets its own size).",
+			description: "Sizes the `+N` chip to match the avatars you slotted, and sets the step a `lattice` nests by (each `Avatar` still sets its own size).",
 			bindings: ["html", "svelte", "astro"],
 			options: ["sm", "md", "lg", "xl"],
 		},
@@ -111,9 +177,26 @@ export const avatarGroupManifest: ComponentManifest = {
 			name: "spacing",
 			type: '"snug" | "normal" | "loose"',
 			default: "normal",
-			description: "How far the avatars overlap: `snug` stacks them tighter, `loose` spreads them out.",
+			description: "How far the avatars overlap, or how wide the gap is in a `row`, `wrap`, or `lattice`: `snug` tighter, `loose` wider.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["snug", "normal", "loose"],
+		},
+		{
+			name: "layout",
+			type: '"overlap" | "row" | "wrap" | "lattice"',
+			default: "overlap",
+			description:
+				"How the items sit. `overlap` stacks them into a face pile with a background ring around each; `row` spaces them out with no overlap; `wrap` does the same and breaks onto new lines; `lattice` overlaps by half an item and drops every other one half a step, so diamond avatars nest edge to edge in a two-row zigzag.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["overlap", "row", "wrap", "lattice"],
+		},
+		{
+			name: "stack",
+			type: '"end" | "start"',
+			default: "end",
+			description: "Which end draws on top where items overlap: `end` (later items over earlier ones) or `start` (the first item on top). Hover and focus still raise any item over both.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["end", "start"],
 		},
 		{
 			name: "label",
@@ -122,7 +205,12 @@ export const avatarGroupManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 	],
-	variants: [],
+	variants: [
+		{ name: "overlap", description: "A face pile: items overlap, each ringed in the page background.", className: "xtyle-avatar-group--overlap", tokens: ["--bg-0", "--border-thick"] },
+		{ name: "row", description: "Spaced, with no overlap.", className: "xtyle-avatar-group--row" },
+		{ name: "wrap", description: "Spaced, breaking onto new lines.", className: "xtyle-avatar-group--wrap" },
+		{ name: "lattice", description: "A two-row zigzag that nests diamonds edge to edge.", className: "xtyle-avatar-group--lattice" },
+	],
 	sizes: [
 		{ name: "sm", description: "Compact, for dense lists.", className: "xtyle-avatar-group--sm" },
 		{ name: "md", description: "Default.", className: "xtyle-avatar-group", isDefault: true },
@@ -134,6 +222,12 @@ export const avatarGroupManifest: ComponentManifest = {
 			name: "avatar-hover",
 			description: "Hovering or focusing an avatar raises it above its neighbours so a covered face reads in full.",
 			selector: ".xtyle-avatar-group ::slotted(*:hover)",
+			tokens: [],
+		},
+		{
+			name: "stack-start",
+			description: "With `stack=\"start\"`, the first item draws on top and each later one sits under the last.",
+			selector: ".xtyle-avatar-group--stack-start",
 			tokens: [],
 		},
 	],
@@ -150,6 +244,7 @@ export const avatarGroupManifest: ComponentManifest = {
 		"--neutral-text",
 		"--border-thick",
 		"--radius-full",
+		"--space-1",
 		"--space-2",
 		"--space-3",
 		"--space-4",
@@ -171,6 +266,7 @@ export const avatarGroupManifest: ComponentManifest = {
 		"Because the faces overlap, a leading avatar is partly covered by the next; hovering or focusing one raises it above its neighbours so its full face (and initials) reads, no attribute needed.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"group\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The row is a `role=\"group\"`; a `label` names it so assistive tech announces the set (\"Contributors\").",
 		"The `+N` chip is a `role=\"img\"` with an accessible name of \"N more\", so the hidden count is spoken rather than read as a bare `+16` glyph.",
 		"Each slotted `Avatar` keeps its own accessible name (its `alt` or status), so the people in the stack are individually announced.",
@@ -187,6 +283,12 @@ export const avatarGroupManifest: ComponentManifest = {
 			title: "Sizes and spacing",
 			description: "`size` matches the chip to the avatars and `spacing=\"snug\"` tightens the overlap for a dense viewer strip.",
 			source: { html: sizeHtmlExample, svelte: sizeSvelteExample, astro: sizeAstroExample },
+		},
+		{
+			id: "layouts",
+			title: "Layouts and stacking",
+			description: "A `lattice` of bevelled diamonds, a spaced `row`, and a pile with the first item on top.",
+			source: { html: latticeHtmlExample, svelte: latticeSvelteExample, astro: latticeAstroExample },
 		},
 	],
 };

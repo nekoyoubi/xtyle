@@ -127,6 +127,31 @@ const statusTone: Record<Row["status"], "success" | "warn" | "neutral"> = {
 	</Card>
 
 	<Card>
+		<Heading slot="header" level={3} size="sm">Row and cell tones</Heading>
+		<Text slot="header" size="xs" tone="muted">
+			<Text as="span" mono size="xs">data-tone</Text> on a row paints the whole row; on a cell it paints just that
+			cell, and wins over the row. Hover still tints a toned row.
+		</Text>
+		<Table hover ariaLabel="Service deploys">
+			<table>
+				<thead>
+					<tr>
+						<th>Service</th>
+						<th>Region</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr><td>api</td><td>us-east</td><td data-tone="success">Healthy</td></tr>
+					<tr data-tone="danger"><td>billing</td><td>eu-west</td><td>Failing</td></tr>
+					<tr><td>search</td><td>ap-south</td><td data-tone="warn">Degraded</td></tr>
+					<tr data-tone="info"><td>auth</td><td>us-west</td><td data-tone="purple">Canary</td></tr>
+				</tbody>
+			</table>
+		</Table>
+	</Card>
+
+	<Card>
 		<Heading slot="header" level={3} size="sm">Bordered</Heading>
 		<Table variant="bordered" ariaLabel="Input tiers">
 			<table>

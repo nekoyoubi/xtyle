@@ -20,13 +20,8 @@ import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "./gauntlet.js";
 import { packSearchQuery, searchPacks } from "./discovery.js";
 import { packEntries, packInstallSpec, parsePackRef, selectPackEntry, PACK_MANIFEST_FIELD, PACK_MANIFEST_FILE, type PackRef } from "./pack.js";
 import { discoverInstalledPacks, readInstalledPack, resolvePackTheme } from "./host/packs.js";
-import {
-	availableAlgorithms,
-	defaultAlgorithm,
-	refreshInstalledAlgorithms,
-	resolveInstalledAlgorithm,
-	HARNESS_TIMEOUT_MS,
-} from "./host/registry.js";
+import { defaultAlgorithm, refreshInstalledAlgorithms, HARNESS_TIMEOUT_MS } from "./host/registry.js";
+import { catalogAlgorithms, resolveCatalogAlgorithm } from "./host/catalog.js";
 import { algorithmDomains, bakedAlgorithm } from "./baked.js";
 import { constraintsFrom } from "./constraints.js";
 import type { EmitFormat } from "./types.js";
@@ -225,7 +220,7 @@ Run \`xtyle --help\` for usage.
 /** A gauntlet run loads a hosted mod under {@link HARNESS_TIMEOUT_MS}, not the production rail. */
 function resolveForMode(id: string, mode: GauntletMode) {
 	const { algorithm } = migratedTarget(id);
-	return mode === "hosted" ? resolveInstalledAlgorithm(algorithm, { timeoutMs: HARNESS_TIMEOUT_MS }) : bakedAlgorithm(algorithm);
+	return mode === "hosted" ? resolveCatalogAlgorithm(algorithm, { timeoutMs: HARNESS_TIMEOUT_MS }) : bakedAlgorithm(algorithm);
 }
 
 /**
@@ -236,7 +231,7 @@ function resolveForMode(id: string, mode: GauntletMode) {
  */
 async function target(args: ParsedArgs): Promise<{ id: string; algorithm: Algorithm; knobs: Knobs }> {
 	const migrated = migratedTarget(args.algorithm, args.knobs ?? {});
-	const algorithm = await resolveInstalledAlgorithm(migrated.algorithm);
+	const algorithm = await resolveCatalogAlgorithm(migrated.algorithm);
 	return { id: migrated.algorithm, algorithm, knobs: validateKnobs(algorithm, migrated.knobs) };
 }
 
@@ -438,7 +433,7 @@ function usage(): void {
 			"  xtyle knobs [-a <algorithm>]",
 			"  xtyle mcp",
 			"",
-			`algorithms: ${availableAlgorithms().join(", ")}`,
+			`algorithms: ${catalogAlgorithms().join(", ")}`,
 			`emitters: ${emitters().join(", ")}`,
 			"",
 		].join("\n"),
@@ -455,12 +450,12 @@ async function main(): Promise<void> {
 	}
 
 	if (args.command === "list") {
-		for (const id of availableAlgorithms()) process.stdout.write(`${id}\n`);
+		for (const id of catalogAlgorithms()) process.stdout.write(`${id}\n`);
 		return;
 	}
 
 	if (args.command === "knobs") {
-		const ids = argv.includes("-a") || argv.includes("--algorithm") ? [migratedTarget(args.algorithm).algorithm] : availableAlgorithms();
+		const ids = argv.includes("-a") || argv.includes("--algorithm") ? [migratedTarget(args.algorithm).algorithm] : catalogAlgorithms();
 		const algorithms = await algorithmDomains(ids);
 		process.stdout.write(`${JSON.stringify({ algorithms }, null, 2)}\n`);
 		return;
@@ -653,7 +648,7 @@ async function main(): Promise<void> {
 	if (args.command === "gauntlet") {
 		const depth = resolveDepth(args.depth);
 		const runs = args.runs ?? GAUNTLET_DEPTH_RUNS[depth];
-		const ids = args.algorithm === "all" ? availableAlgorithms() : [args.algorithm];
+		const ids = args.algorithm === "all" ? catalogAlgorithms() : [args.algorithm];
 		const reports = [];
 		for (const id of ids) {
 			const algorithm = await resolveForMode(id, args.mode);

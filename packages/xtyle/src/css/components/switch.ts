@@ -25,7 +25,7 @@ export const switchCss = `
 	width: var(--track-w);
 	height: var(--track-h);
 	padding: 0;
-	border: var(--border-thin) solid var(--line-2);
+	border: var(--border-thin) solid var(--line-strong);
 	border-radius: var(--radius-full);
 	background: var(--neutral-bg);
 	cursor: pointer;
@@ -74,7 +74,8 @@ export const switchCss = `
 }
 .xtyle-switch__track:hover::after { background: var(--state-hover); }
 .xtyle-switch__track:active::after { background: var(--state-press); }
-.xtyle-switch__track:focus-visible {
+.xtyle-switch__track:focus-visible,
+.xtyle-switch__track[data-cursor] {
 	outline: var(--border-normal) solid transparent;
 	box-shadow: 0 0 0 var(--border-thick) var(--ring);
 }
@@ -110,6 +111,19 @@ export const switchCss = `
 .xtyle-switch--label-end {
 	flex-direction: row-reverse;
 }
+.xtyle-switch--spread {
+	display: flex;
+	flex: 1 1 auto;
+	width: 100%;
+}
+.xtyle-switch--spread .xtyle-switch__label {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.xtyle-switch--spread.xtyle-switch--label-end .xtyle-switch__label {
+	justify-content: flex-end;
+	text-align: end;
+}
 .xtyle-switch--square .xtyle-switch__track,
 .xtyle-switch--square .xtyle-switch__thumb {
 	border-radius: var(--radius-sm);
@@ -144,4 +158,31 @@ export const switchCss = `
 	top: calc(100% - var(--thumb) - var(--space-1));
 }
 ${switchToneVars}
+@media (forced-colors: active) {
+	.xtyle-switch__thumb {
+		forced-color-adjust: none;
+		background: CanvasText;
+	}
+	.xtyle-switch__track[aria-checked="true"] {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		border-color: Highlight !important;
+	}
+	.xtyle-switch__track[aria-checked="true"] .xtyle-switch__thumb {
+		background: HighlightText;
+	}
+	.xtyle-switch__track:disabled[aria-checked="true"],
+	.xtyle-switch__track[aria-disabled="true"][aria-checked="true"] {
+		background: GrayText !important;
+		border-color: GrayText !important;
+	}
+	.xtyle-switch__track:disabled .xtyle-switch__thumb,
+	.xtyle-switch__track[aria-disabled="true"] .xtyle-switch__thumb {
+		background: GrayText;
+	}
+	.xtyle-switch__track:disabled[aria-checked="true"] .xtyle-switch__thumb,
+	.xtyle-switch__track[aria-disabled="true"][aria-checked="true"] .xtyle-switch__thumb {
+		background: Canvas;
+	}
+}
 `.trim();

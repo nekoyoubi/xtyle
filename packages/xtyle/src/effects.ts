@@ -74,6 +74,11 @@ export interface EffectDefinition {
 	 * part, because the only useful override is a value and no fill would ever own it. */
 	activeAfter?: string;
 	baseAfter?: string;
+	/** Declarations on the target's `::before`, the second overlay surface. An effect that paints over
+	 * the box takes `::after` by default; one meant to stack under another overlay on the same element
+	 * takes this one, so `holo glare` can both run without one pseudo-element erasing the other. */
+	activeBefore?: string;
+	baseBefore?: string;
 	/** Whether writing the bare name (no `@condition`) turns the effect on. Default true. An effect
 	 * that must not fire until something arms it — `reveal`, which would otherwise hide content from a
 	 * reader with no runtime — sets this false and supplies its own armed rule in {@link extra}. */
@@ -85,6 +90,13 @@ export interface EffectDefinition {
 	 * is the whole reason this belongs in a library: the policy is decided once, correctly, rather than
 	 * by every adopter who happens to remember. */
 	animated?: boolean;
+	/** Whether an animated effect moves its target through `transform`, `translate`, `rotate`, or `scale`, which reduced
+	 * motion then resets. Left out, it is read from the effect's own CSS; declare it when that reading would be wrong,
+	 * and reset anything else the effect moves (`offset-path`, `inset`) through `still`. */
+	moves?: boolean;
+	/** Declarations an animated effect holds still under `prefers-reduced-motion`, so the emphasis stays
+	 * when the motion goes: a glow that lives only in its keyframes keeps its first frame. */
+	still?: string;
 	/** True when the effect must be armed before it can play — it hides its target until something says
 	 * the moment has come. `armInView` drives every effect declaring this, so a mod's own enter effect is
 	 * observed on the same terms `reveal` is instead of being a name the runtime hardcodes. */
@@ -354,10 +366,14 @@ const EASE = "var(--fx-ease, var(--ease-standard, ease))";
 
 /** A color mixed to `pct` of `--fx-color`, scaled by the theme's intensity so one dial flattens the
  * whole layer: at intensity `0` every effect mixes to fully transparent and the layer disappears. */
-const wash = (pct: number, color = COLOR): string => `color-mix(in oklab, ${color} calc(${pct}% * ${INTENSITY}), transparent)`;
+const wash = (pct: number, color = COLOR): string => washBy(`${pct}%`, color);
+const washBy = (amount: string, color: string): string => `color-mix(in oklab, ${color} calc(${amount} * ${INTENSITY}), transparent)`;
+const HOLO_HUES = ["red", "yellow", "green", "cyan", "blue", "purple", "pink", "red"];
 /** A per-effect override property layered over the shared token, so `glow:...,pink` repaints one effect
  * without disturbing anything else on the element that also reads `--fx-color`. */
 const own = (effect: string, param: string, fallback: string): string => `var(--fx-${effect}-${param}, ${fallback})`;
+
+const THROB_REST = `drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 0.5 * ${INTENSITY}) ${wash(60, own("throb", "color", COLOR))}) drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 1.2 * ${INTENSITY}) ${wash(40, own("throb", "color", COLOR))})`;
 
 const BUILT_INS: EffectDefinition[] = [
 	{
@@ -381,18 +397,43 @@ const BUILT_INS: EffectDefinition[] = [
 			{ name: "spread", unit: "px" },
 		],
 		active: `animation:xtyle-fx-throb ${own("throb", "duration", `calc(${DURATION} * 35)`)} linear infinite`,
-		extra: `@keyframes xtyle-fx-throb{0%,100%{filter:drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 0.5 * ${INTENSITY}) ${wash(60, own("throb", "color", COLOR))}) drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 1.2 * ${INTENSITY}) ${wash(40, own("throb", "color", COLOR))})}50%{filter:drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 1.4 * ${INTENSITY}) ${wash(90, own("throb", "color-alt", COLOR_ALT))}) drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 3 * ${INTENSITY}) ${wash(65, own("throb", "color-alt", COLOR_ALT))})}}`,
+		still: `filter:${THROB_REST}`,
+		extra: `@keyframes xtyle-fx-throb{0%,100%{filter:${THROB_REST}}50%{filter:drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 1.4 * ${INTENSITY}) ${wash(90, own("throb", "color-alt", COLOR_ALT))}) drop-shadow(0 0 calc(${own("throb", "spread", "7px")} * 3 * ${INTENSITY}) ${wash(65, own("throb", "color-alt", COLOR_ALT))})}}`,
 	},
 	{
 		name: "glare",
 		description: "An animated sheen that sweeps across the box.",
 		tags: ["glare", "sheen", "sweep", "shine", "gloss"],
 		animated: true,
-		params: [{ name: "angle", unit: "deg" }, { name: "rate", property: "--fx-glare-duration", unit: "ms" }, { name: "color" }],
+		params: [
+			{ name: "angle", unit: "deg" },
+			{ name: "rate", property: "--fx-glare-duration", unit: "ms" },
+			{ name: "color" },
+			{ name: "width", unit: "%" },
+			{ name: "repeat", keywords: ["infinite"] },
+			{ name: "rest" },
+			{ name: "amount", unit: "%" },
+		],
 		base: `position:relative;overflow:hidden;isolation:isolate`,
-		baseAfter: `content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;background:linear-gradient(${own("glare", "angle", "105deg")},transparent 35%,${wash(55, own("glare", "color", COLOR))} 50%,transparent 65%);transform:translateX(-120%)`,
-		activeAfter: `opacity:1;animation:xtyle-fx-glare ${own("glare", "duration", `calc(${DURATION} * 4)`)} ${EASE}`,
-		extra: `@keyframes xtyle-fx-glare{to{transform:translateX(120%)}}`,
+		baseAfter: `content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;border-radius:inherit;background:linear-gradient(${own("glare", "angle", "105deg")},transparent calc(50% - ${own("glare", "width", "15%")}),${washBy(own("glare", "amount", "55%"), own("glare", "color", COLOR))} 50%,transparent calc(50% + ${own("glare", "width", "15%")}));transform:translateX(-120%)`,
+		activeAfter: `opacity:1;animation:xtyle-fx-glare ${own("glare", "duration", `calc(${DURATION} * 4)`)} ${EASE} ${own("glare", "repeat", "1")}`,
+		extra: `@keyframes xtyle-fx-glare{to{transform:translateX(calc(120% + 240% * ${own("glare", "rest", "0")}))}}`,
+	},
+	{
+		name: "holo",
+		since: "0.13.0",
+		description: "An iridescent foil that drifts through the named hues; stacks under `glare`.",
+		tags: ["holo", "holographic", "foil", "iridescent", "rainbow", "shimmer", "rare"],
+		animated: true,
+		params: [
+			{ name: "amount", unit: "%" },
+			{ name: "angle", unit: "deg" },
+			{ name: "rate", property: "--fx-holo-duration", unit: "s" },
+		],
+		base: `position:relative;overflow:hidden;isolation:isolate`,
+		baseBefore: `content:"";position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;border-radius:inherit;mix-blend-mode:color-dodge;background:linear-gradient(${own("holo", "angle", "120deg")},${HOLO_HUES.map((hue) => washBy(own("holo", "amount", "35%"), `var(--${hue})`)).join(",")});background-size:300% 300%`,
+		activeBefore: `opacity:1;animation:xtyle-fx-holo ${own("holo", "duration", `calc(${DURATION} * 30)`)} linear infinite`,
+		extra: `@keyframes xtyle-fx-holo{from{background-position:0% 50%}to{background-position:300% 50%}}`,
 	},
 	{
 		name: "lift",
@@ -572,17 +613,20 @@ export function effectsCss(options: EffectsCssOptions = {}): string {
 	const attr = options.attribute ?? "data-fx";
 	const rules: string[] = [];
 	const atRules: string[] = [];
-	const animatedSelectors: string[] = [];
+	const reducedRules: string[] = [];
 	for (const effect of effects.values()) {
+		const animatedSelectors: string[] = [];
 		const ambient = tokenSelectors(attr, effect.name).join(",");
 		const carries = [...tokenSelectors(attr, effect.name), `[${attr}*="${effect.name}@"]`].join(",");
-		const pseudo = (selector: string): string => selector.split(",").map((sel) => `${sel}::after`).join(",");
+		const pseudo = (selector: string, which = "after"): string => selector.split(",").map((sel) => `${sel}::${which}`).join(",");
 		if (effect.base) rules.push(`${carries}{${effect.base}}`);
 		if (effect.baseAfter) rules.push(`${pseudo(carries)}{${effect.baseAfter}}`);
+		if (effect.baseBefore) rules.push(`${pseudo(carries, "before")}{${effect.baseBefore}}`);
 		const live = (selector: string): void => {
 			if (effect.active) rules.push(`${selector}{${effect.active}}`);
 			if (effect.activeAfter) rules.push(`${pseudo(selector)}{${effect.activeAfter}}`);
-			if (effect.animated) animatedSelectors.push(selector, pseudo(selector));
+			if (effect.activeBefore) rules.push(`${pseudo(selector, "before")}{${effect.activeBefore}}`);
+			if (effect.animated) animatedSelectors.push(selector, pseudo(selector), ...(effect.activeBefore || effect.baseBefore ? [pseudo(selector, "before")] : []));
 		};
 		if (effect.ambient !== false) live(ambient);
 		for (const condition of conditions.values()) {
@@ -592,9 +636,16 @@ export function effectsCss(options: EffectsCssOptions = {}): string {
 			live(scoped);
 		}
 		if (effect.extra) atRules.push(effect.extra);
+		if (animatedSelectors.length) {
+			const moves =
+				effect.moves ??
+				/(^|[;{\s])(transform|translate|rotate|scale)\s*:/.test(
+					[effect.active, effect.activeAfter, effect.activeBefore, effect.extra].filter(Boolean).join(";"),
+				);
+			const resets = `animation:none;transition:none${moves ? ";transform:none;translate:none;rotate:none;scale:none" : ""}`;
+			reducedRules.push(`${animatedSelectors.join(",")}{${resets}${effect.still ? `;${effect.still}` : ""}}`);
+		}
 	}
-	const reduced = animatedSelectors.length
-		? `@media (prefers-reduced-motion:reduce){${animatedSelectors.join(",")}{animation:none;transition:none;transform:none;translate:none;rotate:none;scale:none}}`
-		: "";
+	const reduced = reducedRules.length ? `@media (prefers-reduced-motion:reduce){${reducedRules.join("")}}` : "";
 	return [...rules, ...atRules, reduced].filter(Boolean).join("\n");
 }

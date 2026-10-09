@@ -7,8 +7,6 @@ import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import { ACCENT_VARIANTS, HUES } from "@xtyle/core";
 
-const semantic = ["accent", "neutral", "success", "warn", "danger", "info"] as const;
-
 const TONE_GROUPS = [
 	{ label: "Accents", tones: ["accent", ...ACCENT_VARIANTS, "neutral"] },
 	{ label: "Statuses", tones: ["success", "info", "warn", "danger"] },

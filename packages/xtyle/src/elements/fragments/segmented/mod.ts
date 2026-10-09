@@ -21,6 +21,7 @@ interface SegmentedBindings {
 	value?: string | null;
 	disabled?: boolean;
 	focusable?: boolean;
+	cursor?: boolean;
 	size?: string;
 	tone?: string;
 	label?: string | null;
@@ -81,6 +82,7 @@ function options(bindings: SegmentedBindings, selected: string): string {
 			const isOn = seg.value === selected;
 			const tabindex = bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1";
 			const disabledAttr = segDisabled ? " disabled" : "";
+			const cursorAttr = bindings.cursor && isOn ? ' data-cursor="true"' : "";
 			const badge = seg.badge ? `<span class="xtyle-segmented__badge" part="badge">${escapeHtml(seg.badge)}</span>` : "";
 			// INFO: a slotted segment's body is an icon (not text), so it needs an aria-label for its
 			// accessible name and a title tooltip; a text segment needs neither unless a title is given
@@ -92,7 +94,7 @@ function options(bindings: SegmentedBindings, selected: string): string {
 			const optionClass = seg.slot ? "xtyle-segmented__option xtyle-segmented__option--icon" : "xtyle-segmented__option";
 			return (
 				`<button class="${optionClass}" part="option" type="button" role="radio" ` +
-				`aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${named}${disabledAttr}>${body}${badge}</button>`
+				`aria-checked="${String(isOn)}" tabindex="${tabindex}" data-value="${escapeAttr(seg.value)}"${cursorAttr}${named}${disabledAttr}>${body}${badge}</button>`
 			);
 		})
 		.join("");
@@ -133,6 +135,7 @@ hooks.fragment.update("segmented", (bindings, ops) => {
 		const sel = `[role="radio"][data-value="${escapeSelectorValue(seg.value)}"]`;
 		ops.setAttr(sel, "aria-checked", String(isOn));
 		ops.setAttr(sel, "tabindex", bindings.focusable === false || segDisabled ? "-1" : isOn ? "0" : "-1");
+		ops.setAttr(sel, "data-cursor", bindings.cursor && isOn ? "true" : "");
 	}
 });
 

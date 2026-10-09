@@ -1,6 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs, type NativeInputDefaults } from "./native-input-attrs.js";
 import { stepKey } from "./collection/index.js";
+import { returnFocusTarget } from "../focus.js";
 import {
 	commandPaletteHostCss,
 	highlightRuns,
@@ -11,6 +12,7 @@ import {
 	type CommandScorer,
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/command-palette/source.generated.js";
 
 export type { CommandItem, CommandMatch, CommandScorer, CommandCloseReason } from "../markup/index.js";
@@ -123,6 +125,7 @@ export class XtyleCommandPalette extends XtyleElement {
 	private docWired = false;
 	private recentLoaded = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "command-palette", {
+		nameTarget: '[part="dialog"]',
 		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => this.afterApply(),
 	});
@@ -143,6 +146,7 @@ export class XtyleCommandPalette extends XtyleElement {
 			"complete-first",
 			"hotkey",
 			"storage-key",
+			...NAME_ATTRIBUTES,
 		];
 	}
 
@@ -541,11 +545,8 @@ export class XtyleCommandPalette extends XtyleElement {
 	}
 
 	private captureReturnFocus(): void {
-		if (typeof document === "undefined") return;
-		const active = document.activeElement as HTMLElement | null;
-		if (!active || active === document.body || active === document.documentElement) return;
-		if (active === this || this.contains(active)) return;
-		this.returnFocusTo = typeof active.focus === "function" ? active : null;
+		const target = returnFocusTarget(this);
+		if (target) this.returnFocusTo = target;
 	}
 
 	private syncOpen(): void {

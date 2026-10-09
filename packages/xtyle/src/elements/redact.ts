@@ -3,6 +3,7 @@ import { redactHostCss, type RedactMode, type RedactReveal } from "../markup/red
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/redact/source.generated.js";
 import { startDrag } from "./gesture.js";
+import { REDACT_MODES, REDACT_REVEALS, resolveVocab } from "../vocab.js";
 
 export type { RedactMode, RedactReveal } from "../markup/redact.js";
 
@@ -59,16 +60,14 @@ export class XtyleRedact extends XtyleElement {
 	}
 
 	get mode(): RedactMode {
-		const value = this.getAttribute("mode");
-		return value === "block" || value === "mask" ? value : "blur";
+		return resolveVocab(this.getAttribute("mode"), REDACT_MODES, "blur", "redact mode");
 	}
 	set mode(value: RedactMode) {
 		this.setAttribute("mode", value);
 	}
 
 	get reveal(): RedactReveal {
-		const value = this.getAttribute("reveal");
-		return value === "click" || value === "hold" || value === "never" ? value : "hover";
+		return resolveVocab(this.getAttribute("reveal"), REDACT_REVEALS, "hover", "redact reveal");
 	}
 	set reveal(value: RedactReveal) {
 		this.setAttribute("reveal", value);

@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
 import { selectHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/select/source.generated.js";
 import { resolveVocab, SIZES } from "../vocab.js";
 
@@ -25,6 +26,7 @@ export class XtyleSelect extends XtyleElement {
 	private errorId = `xtyle-select-error-${this.selectNumber}`;
 	private changeWired = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "select", {
+		nameTarget: '[part="select"]',
 		applyIntent: () => {},
 		afterApply: () => {
 			const field = this.field;
@@ -51,7 +53,7 @@ export class XtyleSelect extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["label", "value", "size", "disabled", "invalid", "required", "required-message", "error", "name", "focusable"];
+		return ["label", "value", "size", "disabled", "invalid", "required", "required-message", "error", "name", "focusable", "cursor", ...NAME_ATTRIBUTES];
 	}
 
 	override connectedCallback(): void {
@@ -78,6 +80,14 @@ export class XtyleSelect extends XtyleElement {
 	}
 	set disabled(value: boolean) {
 		this.reflectBoolean("disabled", value);
+	}
+
+	/** Whether the app's own keyboard cursor rests on this select: draws the focus ring without moving focus. */
+	get cursor(): boolean {
+		return this.hasAttribute("cursor");
+	}
+	set cursor(value: boolean) {
+		this.reflectBoolean("cursor", value);
 	}
 
 	get invalid(): boolean {
@@ -114,7 +124,9 @@ export class XtyleSelect extends XtyleElement {
 			value: this.getAttribute("value"),
 			size: this.size,
 			disabled: this.disabled,
-			focusable: this.focusable,			invalid: this.invalid,
+			focusable: this.focusable,
+			cursor: this.cursor,
+			invalid: this.invalid,
 			required: this.required,
 			error: this.validityMessage("error", ""),
 			name: this.getAttribute("name"),
@@ -143,7 +155,7 @@ export class XtyleSelect extends XtyleElement {
 		const error = this.validityMessage("error", "");
 		if (this.invalid && error.length > 0) field.setAttribute("aria-describedby", this.errorId);
 		else field.removeAttribute("aria-describedby");
-		this.warnIfUnnamed(field);
+		this.warnIfUnnamed();
 		this.syncFormValue();
 	}
 
@@ -171,9 +183,13 @@ export class XtyleSelect extends XtyleElement {
 		} catch {}
 	}
 
-	formResetCallback(): void {
-		const initial = this.getAttribute("value") ?? "";
-		if (this.field) this.field.value = initial;
+	override formResetCallback(): void {
+		const authored = this.defaultFormValue;
+		if (authored !== null) this.value = authored;
+		else {
+			this.removeAttribute("value");
+			for (const option of this.field?.options ?? []) option.selected = option.defaultSelected;
+		}
 		this.syncFormValue();
 	}
 
@@ -181,17 +197,8 @@ export class XtyleSelect extends XtyleElement {
 		if (this.field) this.field.disabled = disabled;
 	}
 
-	private warnIfUnnamed(field: HTMLSelectElement): void {
-		const labelText = this.getAttribute("label") ?? "";
-		if (labelText.length > 0) {
-			field.removeAttribute("aria-label");
-			return;
-		}
-		const aria = this.getAttribute("aria-label") ?? this.getAttribute("aria-labelledby");
-		if (aria) {
-			field.setAttribute(this.hasAttribute("aria-label") ? "aria-label" : "aria-labelledby", aria);
-			return;
-		}
+	private warnIfUnnamed(): void {
+		if ((this.getAttribute("label") ?? "").length > 0 || hasHostName(this)) return;
 		console.warn(
 			"xtyle-select: a select with no `label` has no accessible name. Provide a `label` or `aria-label` so it is announced.",
 		);

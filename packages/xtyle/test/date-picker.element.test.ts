@@ -584,11 +584,12 @@ describe("form participation", () => {
 		expect(lastValidity(el)?.valueMissing).toBe(true);
 	});
 
-	it("restores the reflected value on a form reset", () => {
+	it("returns to the authored value on a form reset, not the last one typed", () => {
 		const el = make({ name: "when", value: "2026-03-08" });
 		type(el, "date", "3/9/2026");
 		(el as unknown as { formResetCallback(): void }).formResetCallback();
-		expect(input(el, "date").value).toBe("03/09/2026");
+		expect(input(el, "date").value).toBe("03/08/2026");
+		expect(formValue(el)).toBe("2026-03-08");
 	});
 });
 

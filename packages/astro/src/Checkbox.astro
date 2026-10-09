@@ -49,9 +49,11 @@ const bindings = {
 	tone,
 	label: label ?? null,
 	labelledby: labelledby ?? null,
+	labelText: "",
 };
-const light = await renderFragmentLight("checkbox", bindings);
 const slotHtml = Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+bindings.labelText = slotHtml.trim() ? "" : (label ?? "");
+const light = await renderFragmentLight("checkbox", bindings);
 const composed = light.replace("<slot></slot>", () => slotHtml);
 ---
 

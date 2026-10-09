@@ -8,7 +8,8 @@ import { auditRegister } from "../audit.js";
 import { emit, emitters } from "../emit/index.js";
 import { coverage, coverComponent, coverComponents } from "../coverage.js";
 import { gauntlet, GAUNTLET_DEPTH_RUNS, resolveDepth } from "../gauntlet.js";
-import { availableAlgorithms, defaultAlgorithm, resolveInstalledAlgorithm, HARNESS_TIMEOUT_MS } from "../host/registry.js";
+import { defaultAlgorithm, HARNESS_TIMEOUT_MS } from "../host/registry.js";
+import { catalogAlgorithms, resolveCatalogAlgorithm } from "../host/catalog.js";
 import { listComponents, getComponent } from "../manifest/registry.js";
 import { buildThemeFile, migratedTarget, serializeThemeFile } from "../theme-file.js";
 import type { Algorithm, Knobs, TokenRegister } from "../types.js";
@@ -17,6 +18,7 @@ import { algorithmDomains, bakedAlgorithm } from "../baked.js";
 import { constraintsFrom } from "../constraints.js";
 import type { ServerBuildInfo } from "./server.js";
 import { existedAt, resolveAsOf, VERSION_INPUT_DESCRIPTION } from "./as-of.js";
+import { manifestAsOf } from "./members-as-of.js";
 
 interface ToolResult {
 	[key: string]: unknown;
@@ -93,7 +95,7 @@ async function resolveTarget(
 	knobs: Record<string, unknown> | undefined,
 ): Promise<{ id: string; algorithm: Algorithm; knobs: Knobs }> {
 	const migrated = migratedTarget(algorithm ?? defaultAlgorithm(), knobs ?? {});
-	const resolved = await resolveInstalledAlgorithm(migrated.algorithm);
+	const resolved = await resolveCatalogAlgorithm(migrated.algorithm);
 	return { id: migrated.algorithm, algorithm: resolved, knobs: validateKnobs(resolved, migrated.knobs) };
 }
 
@@ -130,7 +132,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 			inputSchema: {},
 		},
 		async () => {
-			const algorithms = await algorithmDomains(availableAlgorithms());
+			const algorithms = await algorithmDomains(catalogAlgorithms());
 			return json({ algorithms, formats: [...emitters(), "theme"] });
 		},
 	);
@@ -218,7 +220,7 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 		{
 			title: "List or describe components",
 			description:
-				"Without an id, list every shipped component (id, name, category, summary, keywords, seeAlso, bindings). With an id, return that component's full manifest: props, events, methods, variants, states, slots, anatomy, exposedParts, consumedTokens, accessibility, and examples. Reach for this first when building against xtyle so token names, prop shapes, and event names come from the manifest, not a guess. `events` is what the component emits: each entry's `name` is the string `addEventListener` takes, `detail` is the payload, and `handler` is the Svelte prop where that differs (a hyphenated or namespaced event has no valid identifier, so `month-change` arrives as `onmonthchange`). A component with no `events` emits nothing. `methods` is what you call on the element itself — the half of the surface a prop or an event cannot express, such as a control driven by a gesture or one whose state the platform owns. Each entry's `bindings` is load-bearing: `html` is the raw element and always reachable, `svelte` only where the wrapper re-exports the method, and never `astro`, which renders on the server and hands back no instance. `exposedParts` answers whether `anatomy`'s nodes can be reached from an outside sheet: a name listed there is `::part(name)`, and anatomy publishes the internal selector, which under a shadow render matches nothing. `keywords` are capability synonyms (a searcher's words, not the component's own name) and `seeAlso` cross-references overlapping components, so scan them to find the right component by what it does — e.g. `meter`/`gauge` lands on `progress`, `dropdown` on `select`, `modal` on `dialog`.",
+				"Without an id, list every shipped component (id, name, category, summary, keywords, seeAlso, bindings). With an id, return that component's full manifest; pinned to an older `version`, every prop, event, method, part, slot, anatomy entry and example that first shipped later is left out, counted in `omittedMembers`, and a `caveat` says that what remains is described as it is now. The manifest carries props, events, methods, variants, states, slots, render, anatomy, exposedParts, consumedTokens, accessibility, and examples. Reach for this first when building against xtyle so token names, prop shapes, and event names come from the manifest, not a guess. `events` is what the component emits: each entry's `name` is the string `addEventListener` takes, `detail` is the payload, and `handler` is the Svelte prop where that differs (a hyphenated or namespaced event has no valid identifier, so `month-change` arrives as `onmonthchange`). A component with no `events` emits nothing. `methods` is what you call on the element itself — the half of the surface a prop or an event cannot express, such as a control driven by a gesture or one whose state the platform owns. Each entry's `bindings` is load-bearing: `html` is the raw element and always reachable, `svelte` only where the wrapper re-exports the method, and never `astro`, which renders on the server and hands back no instance. `render` says where the structure lives: `shadow`, `light`, or `auto` (shadow when created from script, light when upgrading over server-rendered markup). `exposedParts` answers whether `anatomy`'s nodes can be reached from an outside sheet under a shadow render: a name listed there is `::part(name)`, and anatomy publishes the internal selector, which under a shadow render matches nothing. A `light` component lists no parts, because `::part()` cannot apply without a shadow root; there the anatomy selector is the handle. `keywords` are capability synonyms (a searcher's words, not the component's own name) and `seeAlso` cross-references overlapping components, so scan them to find the right component by what it does — e.g. `meter`/`gauge` lands on `progress`, `dropdown` on `select`, `modal` on `dialog`.",
 			inputSchema: {
 				id: z.string().optional().describe("A component id. Omit to list all components."),
 				version: z.string().optional().describe(VERSION_INPUT_DESCRIPTION),
@@ -261,7 +263,8 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 					true,
 				);
 			}
-			return json({ ...asOf, component: manifest });
+			const { component, omittedMembers, caveat } = manifestAsOf(manifest, asOf.asOf, asOf.speaks);
+			return json({ ...asOf, omittedMembers, ...(caveat ? { caveat } : {}), component });
 		},
 	);
 
@@ -379,12 +382,12 @@ export function registerTools(server: McpServer, buildInfo: ServerBuildInfo): vo
 			const runCount = runs ?? GAUNTLET_DEPTH_RUNS[resolvedDepth];
 			const resolvedMode = mode ?? "baked";
 			try {
-				const ids = id === "all" ? availableAlgorithms() : [migratedTarget(id).algorithm];
+				const ids = id === "all" ? catalogAlgorithms() : [migratedTarget(id).algorithm];
 				const reports = [];
 				for (const algId of ids) {
 					const resolved =
 						resolvedMode === "hosted"
-							? await resolveInstalledAlgorithm(algId, { timeoutMs: HARNESS_TIMEOUT_MS })
+							? await resolveCatalogAlgorithm(algId, { timeoutMs: HARNESS_TIMEOUT_MS })
 							: await bakedAlgorithm(algId);
 					reports.push({ ...gauntlet(resolved, { runs: runCount }), algorithm: algId });
 				}

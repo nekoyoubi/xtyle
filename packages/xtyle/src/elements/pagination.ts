@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { paginationHostCss } from "../markup/index.js";
 import type { FullTone, Size } from "../index.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/pagination/source.generated.js";
 import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 
@@ -12,6 +13,7 @@ import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
  */
 export class XtylePagination extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "pagination", {
+		nameTarget: '[part="pagination"]',
 		applyIntent: () => {},
 	});
 	private clickWired = false;
@@ -21,7 +23,7 @@ export class XtylePagination extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["page", "total", "siblings", "boundaries", "href", "tone", "size", "label", "prev-label", "next-label"];
+		return ["page", "total", "siblings", "boundaries", "href", "tone", "size", "label", "prev-label", "next-label", ...NAME_ATTRIBUTES];
 	}
 
 	get page(): number {

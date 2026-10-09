@@ -3,7 +3,7 @@ import { checkAuthoring } from "./internal/diagnose.js";
 import { renderFragmentLight } from "@xtyle/core/elements/ssr";
 import { resolveChartPlot } from "@xtyle/core";
 import { resolveSeriesColorsFor } from "./internal/palette.ts";
-import type { ChartSeries, ChartScheme, ChartVariant, ChartCurve, ChartXScale } from "@xtyle/core";
+import type { ChartSeries, ChartScheme, ChartVariant, ChartCurve, ChartXScale, LabelAngle } from "@xtyle/core";
 
 interface Props {
 	series?: ChartSeries[];
@@ -28,6 +28,7 @@ interface Props {
 	label?: string;
 	/** Make the plot actionable: a click or Enter at the cursor fires `select`. */
 	selectable?: boolean;
+	labelAngle?: LabelAngle;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -55,6 +56,7 @@ const {
 	height = 320,
 	label,
 	selectable = false,
+	labelAngle = "auto",
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -83,6 +85,7 @@ const bindings = {
 	title: label ?? null,
 	ariaLabel: label ?? null,
 	selectable,
+	labelAngle,
 };
 const chrome = await renderFragmentLight("chart", bindings);
 ---
@@ -105,6 +108,7 @@ const chrome = await renderFragmentLight("chart", bindings);
 	y-label={yLabel}
 	legend={legend ? undefined : "false"}
 	selectable={selectable || undefined}
+	label-angle={labelAngle === "auto" ? undefined : String(labelAngle)}
 	height={height}
 	label={label}
 	class={extra}

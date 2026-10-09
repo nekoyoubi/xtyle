@@ -781,8 +781,9 @@ export class XtyleCombobox extends XtyleElement {
 		this.disabled = disabled;
 	}
 
-	formResetCallback(): void {
+	override formResetCallback(): void {
 		this.selectionProp = null;
+		super.formResetCallback();
 		this.queryText = this.selectedQuery();
 		this.queryDirty = false;
 		this.closeList();

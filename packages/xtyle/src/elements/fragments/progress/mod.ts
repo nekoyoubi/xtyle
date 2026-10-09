@@ -22,6 +22,7 @@ interface ProgressBindings {
 	pulse?: string | null;
 	track?: string | null;
 	thickness?: string | null;
+	linecap?: string;
 	orient?: string;
 	label?: string | null;
 	reading?: string | null;
@@ -100,6 +101,7 @@ function progressClass(b: ProgressBindings): string {
 		track === "none" && "xtyle-progress--no-track",
 		track && track !== "none" && `xtyle-progress--track-${track}`,
 		fixedStroke(b) && "xtyle-progress--fixed-stroke",
+		b.linecap === "butt" && "xtyle-progress--butt",
 	]
 		.filter(Boolean)
 		.join(" ");
@@ -187,6 +189,7 @@ function circularIndicatorStyle(b: ProgressBindings): string {
 		: (CIRCUMFERENCE * (1 - fraction(b))).toFixed(3);
 	const parts = [`stroke-dasharray:${dasharray}`, `stroke-dashoffset:${offset}`];
 	if (b.ramp && b.rampColor && !b.indeterminate) parts.push(`stroke:${b.rampColor}`);
+	if (!b.indeterminate && fraction(b) <= 0) parts.push("stroke-opacity:0");
 	return parts.join(";");
 }
 

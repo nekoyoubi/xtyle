@@ -84,9 +84,32 @@ apply(register);                          // write onto :root
 apply(register, { target: previewEl });   // scope to one element
 apply(register, { persistKey: "theme" }); // and persist it`;
 
-const elementsSnippet = `import "@xtyle/core/elements";   // registers <xtyle-button>, <xtyle-card>, …`;
+const elementsSnippet = `import "@xtyle/core/elements";   // registers <xtyle-button>, <xtyle-card>, …
+import { install } from "@xtyle/core/install";
+
+install({ constraints: { "--accent": "#6ea8fe" } }); // derive, apply, and land the component + effect sheets`;
 
 const svelteSnippet = `import { Button, Card } from "@xtyle/svelte";`;
+
+const resolveSnippet = `import { formatColor } from "@xtyle/core";
+import { resolveColor } from "@xtyle/core/dom";
+
+const shade = resolveColor("color-mix(in oklab, var(--yellow), white 20%)");
+if (shade) flood.setAttribute("flood-color", formatColor(shade, "hex"));
+
+const accent = resolveColor(card, "--accent");`;
+
+const focusSnippet = `import { focusableIn, activeLeaf } from "@xtyle/core/dom";
+
+panel.addEventListener("keydown", (event) => {
+  if (event.key !== "Tab") return;
+  const ring = focusableIn(panel);
+  const active = activeLeaf();
+  const edge = event.shiftKey ? ring[0] : ring[ring.length - 1];
+  if (active !== edge) return;
+  event.preventDefault();
+  (event.shiftKey ? ring[ring.length - 1] : ring[0]).focus();
+});`;
 
 const algorithmSnippet = `// algorithms/sunrise/mod-manifest.json declares the mod;
 // algorithms/sunrise/src/mod.ts defines it:
@@ -221,6 +244,26 @@ defineXtyleAlgorithm({
 						editor, or a time-aware algorithm like nxi-nite re-deriving as the hour moves.
 						Otherwise the engine's job ends once the CSS is written.
 					</Text>
+					<Heading level={3} size="lg">Colors outside CSS</Heading>
+					<Text tone="muted">
+						Tokens derive as <code>color-mix()</code> and <code>oklch()</code>, which the cascade
+						understands and nothing else does: an SVG presentation attribute, a canvas
+						<code>fillStyle</code>, or a WebGL uniform. <code>resolveColor</code> lets the browser
+						compute the value against the live theme and hands back plain sRGB, either from an
+						expression (its <code>var()</code> references resolve against an optional context element)
+						or from a property read off an element.
+					</Text>
+					<Code lang="typescript" code={resolveSnippet} />
+					<div class="resolve-demo" data-resolve-demo>
+						<svg viewBox="0 0 64 32" width="64" height="32" aria-hidden="true">
+							<filter id="resolve-demo-flood"><feFlood data-resolve-flood flood-color="transparent" /></filter>
+							<rect width="64" height="32" filter="url(#resolve-demo-flood)" />
+						</svg>
+						<Text size="sm" tone="muted">
+							<code>color-mix(in oklab, var(--yellow), white 20%)</code> on this theme:
+							<code data-resolve-readout>(needs JavaScript)</code>
+						</Text>
+					</div>
 				</Stack>
 			</Panel>
 
@@ -233,11 +276,36 @@ defineXtyleAlgorithm({
 						framework binding.
 					</Text>
 					<Code lang="typescript" code={elementsSnippet} />
+					<Text tone="muted">
+						The entry declares every tag in <code>HTMLElementTagNameMap</code>, so
+						<code>document.createElement("xtyle-segmented")</code> and
+						<code>querySelector("xtyle-switch")</code> come back as their element classes and
+						their properties are typed, with no casts.
+					</Text>
+					<Text tone="muted">
+						In a browser, <code>install</code> is the whole bootstrap: it derives and applies
+						the theme, then puts the component and effect sheets in the document. Deriving and
+						applying alone looks right until a light-DOM component (<code>render: "light"</code>
+						in its manifest) draws without its rules or a <code>data-fx</code> spec does nothing.
+						Each call takes a claim on the sheets and <code>uninstall()</code> releases one, so two
+						apps can share a page.
+					</Text>
 					<Code lang="typescript" code={svelteSnippet} />
 					<Text tone="muted">
 						<code>@xtyle/svelte</code> and <code>@xtyle/astro</code> wrap the same elements;
 						each depends only on <code>@xtyle/core</code>.
 					</Text>
+					<Heading level={3} size="lg">Focus traps</Heading>
+					<Text tone="muted">
+						Built bare or through Svelte, a component renders its native control inside a shadow
+						root. A focus trap written against <code>querySelectorAll</code> and
+						<code>document.activeElement</code> then sees only the hosts: it finds nothing to
+						focus and never sees the edge it should wrap at. <code>focusableIn</code> walks into
+						shadow roots and through slots in tab order, and <code>activeLeaf</code> returns the
+						control that actually holds focus. <code>Dialog</code>, <code>Sheet</code>, and a modal
+						<code>Popover</code> already trap focus; these are for chrome of your own.
+					</Text>
+					<Code lang="typescript" code={focusSnippet} />
 				</Stack>
 			</Panel>
 
@@ -335,4 +403,34 @@ defineXtyleAlgorithm({
 		margin: 0;
 		white-space: pre;
 	}
+	.resolve-demo {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+	}
+	.resolve-demo svg {
+		flex: none;
+		border-radius: var(--radius-sm);
+		overflow: hidden;
+	}
 </style>
+
+<script>
+	import { formatColor } from "@xtyle/core";
+	import { THEME_APPLY_EVENT, resolveColor } from "@xtyle/core/dom";
+
+	const EXPRESSION = "color-mix(in oklab, var(--yellow), white 20%)";
+
+	function paintResolveDemo(): void {
+		const demo = document.querySelector<HTMLElement>("[data-resolve-demo]");
+		if (!demo) return;
+		const shade = resolveColor(EXPRESSION, demo);
+		const hex = shade ? formatColor(shade, "hex") : "unresolved";
+		demo.querySelector("[data-resolve-flood]")?.setAttribute("flood-color", shade ? hex : "transparent");
+		const readout = demo.querySelector("[data-resolve-readout]");
+		if (readout) readout.textContent = hex;
+	}
+
+	paintResolveDemo();
+	document.addEventListener(THEME_APPLY_EVENT, paintResolveDemo);
+</script>

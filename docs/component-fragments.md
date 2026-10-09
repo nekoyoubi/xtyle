@@ -322,6 +322,17 @@ that watches half its configuration quietly not arrive. `reveal` shipped 7 of it
 attributes this way. So the obligation is every attribute the element observes, not the
 handful the first draft happened to need.
 
+Two more things a node owes, both caught by `component-vocabulary.test.ts`:
+
+- **The config children the element reads are nodes too.** `progress` reads `<threshold>`,
+  `select` and `combobox` read `<option>` / `<optgroup>`. None of those is an `xtyle-` tag,
+  and the j5ml format speaks only `xtyle.components`, so without their own nodes a j5ml
+  fill composing a meter loses every threshold.
+- **A structured prop is typed `["string", "array", "object"]`.** j5ml can carry a list or a
+  record as a value rather than a string, so `items`, `series`, `knobs` and the rest declare
+  that they take one. The string stays in the type because a JSON-encoded attribute is still
+  what the HTML format hands over.
+
 `component-host.test.ts` holds the three gates: every slot names a capability, every markup
 slot has a built-in fill that holds it, every `component.*` slot has a matching node, and
 every `src`/`href`/`poster` prop carries a sink. `component-vocabulary.test.ts` holds the

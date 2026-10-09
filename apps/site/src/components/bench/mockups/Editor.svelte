@@ -311,19 +311,19 @@ export function accentsStayDistinct(register: TokenRegister) {
 					</Tabs>
 				</div>
 
-				<Statusbar separated label="Editor status">
-					<span class="xtyle-statusbar__item xtyle-statusbar__item--strong">feat/settle-pass</span>
-					<span class="xtyle-statusbar__item ide__status-sync">
+				<Statusbar separated overflow="collapse" label="Editor status">
+					<span class="xtyle-statusbar__item xtyle-statusbar__item--strong" data-required>feat/settle-pass</span>
+					<span class="xtyle-statusbar__item ide__status-sync" data-priority="2">
 						<Icon name="arrow-up" size="sm" label="Ahead" />2
 						<Icon name="arrow-down" size="sm" label="Behind" />0
 					</span>
-					<span class="xtyle-statusbar__item">4 problems</span>
+					<span class="xtyle-statusbar__item" data-priority="4">4 problems</span>
 					<span class="xtyle-statusbar__spacer"></span>
-					<span class="xtyle-statusbar__item">Ln 42, Col 8</span>
-					<span class="xtyle-statusbar__item">Spaces: 2</span>
-					<span class="xtyle-statusbar__item">UTF-8</span>
-					<span class="xtyle-statusbar__item">{file.langLabel}</span>
-					<span class="xtyle-statusbar__item ide__status-kbd">
+					<span class="xtyle-statusbar__item" data-priority="3">Ln 42, Col 8</span>
+					<span class="xtyle-statusbar__item" data-priority="1">Spaces: 2</span>
+					<span class="xtyle-statusbar__item" data-priority="1">UTF-8</span>
+					<span class="xtyle-statusbar__item" data-priority="2">{file.langLabel}</span>
+					<span class="xtyle-statusbar__item ide__status-kbd" data-priority="0">
 						<Kbd size="sm">Ctrl</Kbd><Kbd size="sm">`</Kbd>
 					</span>
 				</Statusbar>

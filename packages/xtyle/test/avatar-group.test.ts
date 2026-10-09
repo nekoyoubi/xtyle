@@ -45,7 +45,7 @@ describe("avatar-group", () => {
 
 	it("reflects size and spacing as classes, defaulting to md/normal without a modifier", async () => {
 		const def = await renderFragmentLight("avatar-group", {});
-		expect(def).toContain('class="xtyle-avatar-group"');
+		expect(def).toContain('class="xtyle-avatar-group xtyle-avatar-group--overlap"');
 		const sized = await renderFragmentLight("avatar-group", { size: "lg", spacing: "snug" });
 		expect(sized).toContain("xtyle-avatar-group--lg");
 		expect(sized).toContain("xtyle-avatar-group--snug");

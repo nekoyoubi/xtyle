@@ -1,6 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { splitterHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/splitter/source.generated.js";
 import { ORIENTATIONS, SPLITTER_SIZES, resolveVocab } from "../vocab.js";
 import { startDrag } from "./gesture.js";
@@ -14,6 +15,7 @@ export class XtyleSplitter extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "splitter", {
+		nameTarget: '[part="splitter"]',
 		context: () => ({ axisIsX: this.axisIsX, reversed: this.reversed }),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		// INFO: the handle is built by the async `mount` op, absent when `render()` runs on a cold
@@ -22,11 +24,11 @@ export class XtyleSplitter extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["orientation", "size", "line", "min", "max", "step", "value", "default", "disabled", "reversed", "var", "for", "label", "labelledby"];
+		return ["orientation", "size", "line", "min", "max", "step", "value", "default", "disabled", "reversed", "var", "for", "label", "labelledby", ...NAME_ATTRIBUTES];
 	}
 
 	get orientation(): SplitterOrientation {
-		return this.getAttribute("orientation") === "horizontal" ? "horizontal" : "vertical";
+		return resolveVocab(this.getAttribute("orientation"), ORIENTATIONS, "vertical", "splitter orientation");
 	}
 	set orientation(value: SplitterOrientation) {
 		this.setAttribute("orientation", value);

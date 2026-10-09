@@ -1,10 +1,13 @@
-import type { BadgeTone, Tone } from "../index.js";
+import type { BadgeTone, FullTone, Tone } from "../index.js";
 import { dotClass } from "./dot.js";
 import { escapeAttr, escapeHtml } from "./escape.js";
-import { AVATAR_SIZES, AVATAR_SHAPES } from "../vocab.js";
+import { AVATAR_SIZES, AVATAR_SHAPES, AVATAR_FRAMES } from "../vocab.js";
 
 export type AvatarSize = (typeof AVATAR_SIZES)[number];
 export type AvatarShape = (typeof AVATAR_SHAPES)[number];
+export type AvatarFrame = (typeof AVATAR_FRAMES)[number];
+
+export const AVATAR_DIAMOND = "polygon(50% 0, 100% 50%, 50% 100%, 0 50%)";
 
 export interface AvatarMarkupProps {
 	src?: string | null;
@@ -28,6 +31,12 @@ export interface AvatarMarkupProps {
 	tone?: BadgeTone;
 	size?: AvatarSize;
 	shape?: AvatarShape;
+	/** A ring around the content: `solid` in `frameTone`, or `gradient` from `frameTone` to `frameTone2`. */
+	frame?: AvatarFrame;
+	frameTone?: FullTone | null;
+	frameTone2?: FullTone | null;
+	/** Shades the frame as a raised, lit-from-above-left edge. Implies a `solid` frame when none is set. */
+	bevel?: boolean;
 	status?: Tone | null;
 	statusLabel?: string | null;
 	pulse?: boolean | "slow" | "fast" | null;
@@ -57,7 +66,7 @@ export function avatarLabel(props: AvatarMarkupProps): string {
 }
 
 /** The host-layout rule for an avatar — the one `:host` rule, shared by the element's `styles()` and the SSR declarative shadow root. */
-export const avatarHostCss = ":host { display: inline-flex; }";
+export const avatarHostCss = `:host { display: inline-flex; } :host([shape="diamond"]) { clip-path: ${AVATAR_DIAMOND}; }`;
 
 /** The pulse class for a live status dot: a bare / truthy `pulse` breathes at the slow cadence,
  * `"fast"` at the quick one. A no-op without a `status` dot to animate. */
@@ -88,11 +97,16 @@ export function avatarClass(props: AvatarMarkupProps): string {
 	const tone = props.tone ?? "neutral";
 	const size = props.size ?? "md";
 	const shape = props.shape ?? "circle";
+	const frame = props.frame && props.frame !== "none" ? props.frame : props.bevel ? "solid" : null;
 	return [
 		"xtyle-avatar",
 		`xtyle-avatar--${tone}`,
 		size !== "md" && `xtyle-avatar--${size}`,
-		shape === "square" && "xtyle-avatar--square",
+		shape !== "circle" && `xtyle-avatar--${shape}`,
+		frame && `xtyle-avatar--frame-${frame}`,
+		frame && props.frameTone && `xtyle-avatar--frame-tone-${props.frameTone}`,
+		frame && props.frameTone2 && `xtyle-avatar--frame-tone-2-${props.frameTone2}`,
+		props.bevel && "xtyle-avatar--bevel",
 		props.status && `xtyle-avatar--status-${props.status}`,
 		avatarPulseClass(props.pulse, Boolean(props.status)),
 	]
@@ -127,5 +141,5 @@ export function avatarMarkup(props: AvatarMarkupProps): string {
 	// INFO: role="img" makes the subtree presentational and an unnamed one is a WCAG failure, so
 	// only apply it when a label exists
 	const naming = label ? ` role="img" aria-label="${escapeAttr(label)}"` : "";
-	return `<span part="avatar" class="${avatarClass(props)}"${naming}>${content}${statusDot}</span>`;
+	return `<span part="avatar" class="${avatarClass(props)}"${naming}>${content}${statusDot}<span class="xtyle-avatar__marks" part="marks"></span></span>`;
 }

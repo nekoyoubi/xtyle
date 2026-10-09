@@ -51,6 +51,7 @@ export const bottomNavManifest: ComponentManifest = {
 	description:
 		"BottomNav is the tab bar that pairs with `MobileShell` the way `Statusbar` pairs with `AppShell`: the app's top-level sections, sitting where a thumb actually reaches.\n\nIt renders the tablist from its `tabs` through its own fragment, like `Tabs` and `Segmented`, so a mod can reshape a tab the same way it can reshape any other control.\n\nThe runtime adds what markup can't: a *roving tabindex*, so the whole bar is a single tab stop in the page with the arrow keys (plus Home / End) moving between sections inside it, rather than every tab being its own stop to tab past.\n\nEach tab takes an optional icon and a badge. The selected one is marked by an accent bar as well as by color, so which section you're in never rests on hue alone.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["badge", "bar", "icon", "item", "label"],
 	anatomy: [
 		{
@@ -141,6 +142,8 @@ export const bottomNavManifest: ComponentManifest = {
 		"It carries top-level sections, not actions. A destructive or one-off action belongs in the app bar or a sheet, where an accidental thumb-brush can't fire it.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"tablist\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
+		"Under `forced-colors: active` the selected item's accent bar draws in `Highlight`, since the mode flattens the bar's background to `Canvas`.",
 		"It is a real `role=\"tablist\"` of `role=\"tab\"` buttons carrying `aria-selected`, so a screen reader announces the section count and which one is current.",
 		"A roving tabindex makes the whole bar one tab stop: the arrow keys (and Home / End) move between sections, so a keyboard user doesn't have to tab past every tab to leave the bar.",
 		"The selected tab is marked by an accent bar as well as by color, so the current section reads for a color-deficient user (WCAG 1.4.1).",

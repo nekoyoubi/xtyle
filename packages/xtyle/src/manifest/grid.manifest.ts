@@ -105,6 +105,7 @@ export const gridManifest: ComponentManifest = {
 	description:
 		"Grid arranges its children with a token-driven `gap` (0–8). Three sizing modes cover most needs: pass `columns` (1–12) for a fixed equal-width column count, `minColWidth` for a responsive `auto-fit` track that packs as many columns as fit at or above that minimum, or `sidebar` for the asymmetric two-track shell — content beside a fixed-width rail, the layout behind a document with an outline, an editor with an inspector, or a list with a detail pane. `sidebar` takes precedence over both, and `minColWidth` reads as the main column's floor under it: the pair stacks when the main column would be forced narrower, and never stacks if it is omitted. Otherwise `minColWidth` wins over `columns`. `align` and `justify` control how items sit within their cells. Like the other layout primitives it adds spacing and structure but no color or chrome of its own.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["grid"],
 	anatomy: [
 		{
@@ -119,7 +120,7 @@ export const gridManifest: ComponentManifest = {
 			name: "gap",
 			type: "number",
 			default: "4",
-			description: "Spacing between grid cells, as a step on the `--space` scale (0–8).",
+			description: "Spacing between grid cells, as a step on the `--space` scale (0–8), not a size name like `sm` or `md`; anything else warns and falls back to the default.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["0", "1", "2", "3", "4", "5", "6", "7", "8"],
 		},

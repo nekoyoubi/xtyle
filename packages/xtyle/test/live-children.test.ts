@@ -45,8 +45,7 @@ describe("a light-DOM child list stays live after connect", () => {
 	});
 
 	/** An `optgroup`'s options are grandchildren, so a grouped list would otherwise only update when the
-	 * group set changed rather than the option set. Asserted through a sibling the projection can carry,
-	 * because happy-dom will not parse `optgroup` markup into a `select`. */
+	 * group set changed rather than the option set. */
 	it("re-renders for a change nested below a direct child", async () => {
 		document.body.innerHTML = `<xtyle-select label="Look"><optgroup label="warm"></optgroup></xtyle-select>`;
 		const el = document.body.firstElementChild as HTMLElement;
@@ -57,7 +56,8 @@ describe("a light-DOM child list stays live after connect", () => {
 		el.querySelector("optgroup")?.append(option("ember"));
 		el.append(option("dusk"));
 		await flush();
-		expect(projected(el)).toBe(2);
+		expect(projected(el)).toBe(3);
+		expect((el.shadowRoot ?? el).querySelector("optgroup option")?.getAttribute("value")).toBe("ember");
 	});
 
 	it("drops an option that goes away", async () => {

@@ -51,6 +51,68 @@ const sections = [
 
 <Accordion items={sections} />`;
 
+const actionsHtmlExample = `<xtyle-accordion multiple>
+	<span slot="header" value="outcomes" open>Outcomes</span>
+	<span slot="actions">
+		<xtyle-segmented size="sm" options="Rows,Chart" value="Rows" aria-label="Outcome view"></xtyle-segmented>
+	</span>
+	<div slot="panel">Each run's result, newest first.</div>
+	<span slot="header" value="roster">Roster</span>
+	<span slot="actions">
+		<xtyle-button variant="ghost" tone="neutral" size="sm" icon-only aria-label="Move Roster up">
+			<xtyle-icon slot="icon-start" name="chevron-up"></xtyle-icon>
+		</xtyle-button>
+	</span>
+	<div slot="panel">Who is on shift, as chips.</div>
+</xtyle-accordion>`;
+
+const actionsSvelteExample = `<script lang="ts">
+	import { Accordion, Button, Icon } from "@xtyle/svelte";
+
+	let sections = $state([
+		{ value: "outcomes", header: "Outcomes", open: true },
+		{ value: "roster", header: "Roster" },
+		{ value: "notes", header: "Notes" },
+	]);
+
+	function move(value: string, by: -1 | 1) {
+		const from = sections.findIndex((s) => s.value === value);
+		const to = from + by;
+		if (to < 0 || to >= sections.length) return;
+		const next = [...sections];
+		[next[from], next[to]] = [next[to], next[from]];
+		sections = next;
+	}
+</script>
+
+<Accordion multiple {sections}>
+	{#snippet actions(value)}
+		<Button variant="ghost" tone="neutral" size="sm" iconOnly aria-label="Move up" onclick={() => move(value, -1)}>
+			<Icon slot="icon-start" name="chevron-up" />
+		</Button>
+		<Button variant="ghost" tone="neutral" size="sm" iconOnly aria-label="Move down" onclick={() => move(value, 1)}>
+			<Icon slot="icon-start" name="chevron-down" />
+		</Button>
+	{/snippet}
+	{#snippet panel(value)}
+		<p>{value} goes here.</p>
+	{/snippet}
+</Accordion>`;
+
+const actionsAstroExample = `---
+import { Accordion, Segmented } from "@xtyle/astro";
+---
+
+<Accordion multiple>
+	<span data-xtyle-header aria-expanded="true">Outcomes</span>
+	<span data-xtyle-actions>
+		<Segmented size="sm" options="Rows,Chart" value="Rows" aria-label="Outcome view" />
+	</span>
+	<div data-xtyle-panel>Each run's result, newest first.</div>
+	<span data-xtyle-header>Notes</span>
+	<div data-xtyle-panel>A section without controls keeps the plain header row.</div>
+</Accordion>`;
+
 const multipleExample = `<xtyle-accordion multiple size="sm">
 	<span slot="header" open>Filters</span>
 	<div slot="panel">In stock, on sale, free shipping.</div>
@@ -98,15 +160,28 @@ export const accordionManifest: ComponentManifest = {
 	seeAlso: ["panel", "tabs", "tree"],
 	summary: "A stack of collapsible sections, one or many open at a time, driven by pointer or keyboard.",
 	description:
-		"Accordion stacks a set of disclosure sections that expand and collapse. Each section pairs a `[slot=\"header\"]` header with the `[slot=\"panel\"]` that follows it; the component wraps every header in a heading and a `role=\"button\"` trigger carrying `aria-expanded` and `aria-controls`, and turns each panel into a labelled `role=\"region\"` that hides when collapsed. By default it is single-open: opening one section closes the rest. `multiple` lets several stay open at once. Mark a header `open` to expand its section initially, or `disabled` to lock it. The heading level is `h3` by default and settable with `headingLevel`, and three sizes (`sm`, `md`, `lg`) scale the trigger density. A chevron rotates with the open state, and pointer, Enter/Space, and the arrow/Home/End keys all drive it.",
+		"Accordion stacks a set of disclosure sections that expand and collapse. Each section pairs a `[slot=\"header\"]` header with the `[slot=\"panel\"]` that follows it; the component wraps every header in a heading and a `role=\"button\"` trigger carrying `aria-expanded` and `aria-controls`, and turns each panel into a labelled `role=\"region\"` that hides when collapsed. By default it is single-open: opening one section closes the rest. `multiple` lets several stay open at once. Mark a header `open` to expand its section initially, or `disabled` to lock it. The heading level is `h3` by default and settable with `headingLevel`, and three sizes (`sm`, `md`, `lg`) scale the trigger density. A chevron rotates with the open state, and pointer, Enter/Space, and the arrow/Home/End keys all drive it. A section can also carry `[slot=\"actions\"]` controls (reorder arrows, a view switch) that sit on its header row beside the trigger rather than inside it, so they stay real buttons, never toggle the section, and stay visible while it is closed. Sections are matched by `value`, so reordering the authored pairs keeps each header, panel, open state, and keyboard focus with its section.",
 	bindings: ["html", "svelte", "astro"],
-	exposedParts: ["accordion", "chevron", "heading", "item", "panel", "trigger"],
+	render: "auto",
+	exposedParts: ["accordion", "actions", "chevron", "heading", "item", "panel", "section", "trigger"],
 	anatomy: [
 		{
 			name: "accordion",
 			description: "The bordered container stacking the sections, with hairlines between them.",
 			selector: ".xtyle-accordion",
 			tokens: ["--font-sans", "--fg-0", "--bg-1", "--border-thin", "--line", "--radius-md"],
+		},
+		{
+			name: "section",
+			description: "One section: its `<details>` disclosure plus, when it has any, the header-row actions beside it. The hairline between sections sits here.",
+			selector: ".xtyle-accordion__section",
+			tokens: ["--border-thin", "--line"],
+		},
+		{
+			name: "actions",
+			description: "The authored header-row controls, laid over the trigger's row just before the chevron; the label keeps clear of them. A sibling of the `<summary>`, never inside it.",
+			selector: ".xtyle-accordion__actions",
+			tokens: ["--space-1", "--space-3", "--space-4", "--text-body", "--leading-tight"],
 		},
 		{
 			name: "trigger",
@@ -156,6 +231,20 @@ export const accordionManifest: ComponentManifest = {
 			type: "AccordionSection[]",
 			description: "Svelte only: the sections as data, with each panel rendered by the `panel` snippet keyed by value. The same list is `items` on every other binding.",
 			bindings: ["svelte"],
+		},
+		{
+			name: "header",
+			type: "Snippet<[string]>",
+			description: "Svelte only: rich header content for each section, given its value, in place of the section's `header` text. It renders inside the trigger, so keep it non-interactive; controls belong in `actions`.",
+			bindings: ["svelte"],
+			propertyOnly: true,
+		},
+		{
+			name: "actions",
+			type: "Snippet<[string]>",
+			description: "Svelte only: a section's header-row controls, given its value. They render beside the trigger, not inside it.",
+			bindings: ["svelte"],
+			propertyOnly: true,
 		},
 		{ name: "multiple", type: "boolean", default: "false", description: "Allows several sections to stay open at once; when off, opening one closes the others.", bindings: ["html", "svelte", "astro"] },
 		{ name: "size", type: "Size", default: "md", description: "Trigger density: `sm`, `md`, or `lg`.", bindings: ["html", "svelte", "astro"], options: ["sm", "md", "lg"] },
@@ -210,6 +299,12 @@ export const accordionManifest: ComponentManifest = {
 				"Each section's collapsible content, marked `slot=\"panel\"` or `data-xtyle-panel` (use `data-xtyle-panel` under Astro), paired to the header before it by order. A full render slot: nested components keep working, and under Astro the pairing resolves at build time so the sections are complete before any script runs.",
 			bindings: ["html", "svelte", "astro"],
 		},
+		{
+			name: "actions",
+			description:
+				"Optional controls for a section's header row, marked `slot=\"actions\"` or `data-xtyle-actions` (use the marker under Astro) and placed after the header they belong to. They render beside the trigger, not inside it, so a button there is a real button. In Svelte, pass an `actions` snippet that receives the section's value.",
+			bindings: ["html", "svelte", "astro"],
+		},
 	],
 	consumedTokens: [
 		"--font-sans",
@@ -254,6 +349,7 @@ export const accordionManifest: ComponentManifest = {
 		"Pointer, Enter, and Space toggle a section; Up/Down arrows move focus between headers and Home/End jump to the first and last.",
 		"A header marked `disabled` is skipped by the arrow keys and cannot toggle. `<summary>` has no native disabled state, so it is `aria-disabled` and the toggle is cancelled; it stays focusable, which is the ARIA-preferred treatment.",
 		"Focus on a header shows an inset token ring plus a transparent outline the forced-colors base rule promotes to a real system outline.",
+		"Header-row actions are siblings of the `<summary>`, never children of it: a `<summary>` is a button, and a button nested inside one is announced wrongly and toggles the section when pressed. Give an icon-only action an `aria-label` that names its section (\"Move Roster up\"), since it sits outside the heading.",
 	],
 	examples: [
 		{
@@ -274,6 +370,12 @@ export const accordionManifest: ComponentManifest = {
 			description:
 				"The same accordion declared as a list instead of authored pairs. The attribute takes JSON, the Astro binding takes the array, and the Svelte binding spells it `sections` with a `panel` snippet.",
 			source: { html: itemsHtmlExample, svelte: svelteExample, astro: itemsAstroExample },
+		},
+		{
+			id: "header-actions",
+			title: "Controls on the header row",
+			description: "A view switch and reorder arrows beside each trigger. Reordering the sections keeps every panel, open state, and focused header with its section.",
+			source: { html: actionsHtmlExample, svelte: actionsSvelteExample, astro: actionsAstroExample },
 		},
 		{
 			id: "marker-glyph",

@@ -13,6 +13,43 @@
     return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
 
+  // packages/xtyle/src/markup/axis.ts
+  function parseLabelAngle(value) {
+    const n = typeof value === "number" ? value : value == null || value.trim() === "" ? Number.NaN : Number(value);
+    return Number.isFinite(n) ? Math.max(-90, Math.min(0, n)) : "auto";
+  }
+
+  // packages/xtyle/src/elements/fragments/axis-labels.ts
+  var TICK_FONT = 11;
+  var CHAR_WIDTH = TICK_FONT * 0.58;
+  var LABEL_GAP = 10;
+  var UPRIGHT_OFFSET = 18;
+  var UPRIGHT_SPACE = 30;
+  function clip(label, maxChars) {
+    return label.length <= maxChars ? label : `${label.slice(0, Math.max(1, maxChars - 1))}\u2026`;
+  }
+  function layoutAxisLabels(labels, slot, requested, maxSpace) {
+    const widest = Math.max(0, ...labels.map((label) => label.length)) * CHAR_WIDTH;
+    const fixed = parseLabelAngle(requested);
+    const angle = typeof fixed === "number" ? Math.round(fixed) : widest <= slot * 0.9 ? 0 : slot >= TICK_FONT * 1.3 ? -45 : -90;
+    if (angle === 0) return { angle, space: UPRIGHT_SPACE, labels: [...labels] };
+    const rad = Math.abs(angle) * Math.PI / 180;
+    const rise = Math.sin(rad);
+    const fontRise = TICK_FONT * Math.cos(rad);
+    const maxChars = Math.max(4, Math.floor((maxSpace - LABEL_GAP - fontRise) / rise / CHAR_WIDTH));
+    const clipped = labels.map((label) => clip(label, maxChars));
+    const clippedWidest = Math.max(0, ...clipped.map((label) => label.length)) * CHAR_WIDTH;
+    return { angle, space: Math.max(UPRIGHT_SPACE, LABEL_GAP + clippedWidest * rise + fontRise), labels: clipped };
+  }
+  function axisLabel(attrs, x, axisY, label, angle) {
+    const cx = x.toFixed(1);
+    if (angle === 0) {
+      return `<text ${attrs} x="${cx}" y="${(axisY + UPRIGHT_OFFSET).toFixed(1)}" text-anchor="middle">${escapeAttr(label)}</text>`;
+    }
+    const y = (axisY + LABEL_GAP).toFixed(1);
+    return `<text ${attrs} x="${cx}" y="${y}" dy="0.32em" text-anchor="end" transform="rotate(${angle} ${cx} ${y})">${escapeAttr(label)}</text>`;
+  }
+
   // packages/xtyle/src/elements/fragments/chart/mod.ts
   var IW = 640;
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -184,10 +221,17 @@
     const hasYLabel = !!b.yLabel;
     const padTop = 14;
     const padRight = 18;
-    const padBottom = 32 + (hasXLabel ? 20 : 0);
     const padLeft = 48 + (hasYLabel ? 18 : 0);
     const x0 = padLeft;
     const x1 = IW - padRight;
+    const xTickStops = Array.from({ length: xTickCount + 1 }, (_, i) => i / xTickCount);
+    const xLabelLayout = layoutAxisLabels(
+      xTickStops.map((t) => formatX(toDomain(t), b.xScale, domainSpan)),
+      (x1 - x0) / xTickCount,
+      b.labelAngle,
+      height * 0.4
+    );
+    const padBottom = xLabelLayout.space + 2 + (hasXLabel ? 20 : 0);
     const y0 = padTop;
     const y1 = height - padBottom;
     const plotW = x1 - x0;
@@ -198,9 +242,9 @@
       const y = f(yOf(t));
       return `<line class="xtyle-chart__grid" part="grid" x1="${x0}" y1="${y}" x2="${x1}" y2="${y}"></line><text class="xtyle-chart__ytick" part="ytick" x="${x0 - 8}" y="${y}" dy="0.32em" text-anchor="end">${escapeAttr(formatTick(t))}</text>`;
     }).join("");
-    const xTickMarks = Array.from({ length: xTickCount + 1 }, (_, i) => i / xTickCount).map((t) => {
+    const xTickMarks = xTickStops.map((t, i) => {
       const x = f(xOf(t));
-      return `<line class="xtyle-chart__grid xtyle-chart__grid--x" part="grid" x1="${x}" y1="${y0}" x2="${x}" y2="${y1}"></line><text class="xtyle-chart__xtick" part="xtick" x="${x}" y="${f(y1 + 18)}" text-anchor="middle">${escapeAttr(formatX(toDomain(t), b.xScale, domainSpan))}</text>`;
+      return `<line class="xtyle-chart__grid xtyle-chart__grid--x" part="grid" x1="${x}" y1="${y0}" x2="${x}" y2="${y1}"></line>${axisLabel(`class="xtyle-chart__xtick" part="xtick"`, xOf(t), y1, xLabelLayout.labels[i] ?? "", xLabelLayout.angle)}`;
     }).join("");
     const zero = yMin < 0 && yMax > 0 ? `<line class="xtyle-chart__zero" part="zero" x1="${x0}" y1="${f(yOf(0))}" x2="${x1}" y2="${f(yOf(0))}"></line>` : "";
     const axes = `<line class="xtyle-chart__axis" part="axis" x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}"></line><line class="xtyle-chart__axis" part="axis" x1="${x0}" y1="${y1}" x2="${x1}" y2="${y1}"></line>`;
@@ -224,7 +268,8 @@
     const label = b.title ?? b.ariaLabel ?? "Chart";
     const hint = b.selectable ? "Use arrow keys to read values, Enter to select a point." : "Use arrow keys to read values.";
     const svg = `<svg class="xtyle-chart__svg" viewBox="0 0 ${IW} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g class="xtyle-chart__grid-layer">${xTickMarks}${gridlines}</g>${zero}${axes}${axisTitles}<g class="xtyle-chart__plots">${plots}</g>${guide}</svg>`;
-    const plot = `<div class="xtyle-chart__plot" part="plot" tabindex="0" role="img" aria-label="${escapeAttr(`${label}. ${hint}`)}">${svg}${tooltipHtml(series, colors)}</div>`;
+    const plotName = b.hostNamed ? `aria-label="${escapeAttr(label)}" aria-description="${escapeAttr(hint)}"` : `aria-label="${escapeAttr(`${label}. ${hint}`)}"`;
+    const plot = `<div class="xtyle-chart__plot" part="plot" tabindex="0" role="img" ${plotName}>${svg}${tooltipHtml(series, colors)}</div>`;
     const legend = b.legend !== false && series.length > 1 ? legendHtml(series, colors) : "";
     const table = tableHtml(series, b.title ?? b.ariaLabel ?? "", toDomain, b.xScale, domainSpan);
     return `<figure part="chart" class="${chartClass(b)}" style="--chart-height:${height}px">${plot}${legend}${table}</figure>`;

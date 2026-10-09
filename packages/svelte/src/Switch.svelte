@@ -8,12 +8,16 @@
 		disabled?: boolean;
 		/** Set false to keep the control out of sequential focus navigation. */
 		focusable?: boolean;
+		/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+		cursor?: boolean;
 		size?: (typeof SWITCH_SIZES)[number];
 		tone?: Tone;
 		shape?: "pill" | "square";
 		orientation?: "horizontal" | "vertical";
 		reverse?: boolean;
 		labelSide?: "start" | "end";
+		/** Stretch into a full-width row: label at one edge, track at the other. */
+		spread?: boolean;
 		label?: string;
 		labelledby?: string;
 		onLabel?: string;
@@ -29,12 +33,14 @@
 		checked = $bindable(false),
 		disabled = false,
 		focusable,
+		cursor = false,
 		size = "md",
 		tone = "accent",
 		shape = "pill",
 		orientation = "horizontal",
 		reverse = false,
 		labelSide = "start",
+		spread = false,
 		label,
 		labelledby,
 		onLabel,
@@ -69,12 +75,14 @@
 	checked={checked || undefined}
 	disabled={disabled || undefined}
 	focusable={focusable === false ? "false" : undefined}
+	cursor={cursor || undefined}
 	{size}
 	{tone}
 	shape={shape !== "pill" ? shape : undefined}
 	orientation={orientation !== "horizontal" ? orientation : undefined}
 	reverse={reverse || undefined}
 	label-side={labelSide !== "start" ? labelSide : undefined}
+	spread={spread || undefined}
 	{label}
 	labelledby={labelledby || undefined}
 	off-label={offLabel}

@@ -108,4 +108,10 @@ export const swatchCss = `
 	font-family: var(--font-mono);
 	white-space: nowrap;
 }
+@media (forced-colors: active) {
+	.xtyle-swatch--selected .xtyle-swatch__dot {
+		outline: var(--border-thick) solid Highlight;
+		outline-offset: var(--border-thin);
+	}
+}
 `.trim();

@@ -112,6 +112,7 @@ export const tourManifest: ComponentManifest = {
 	description:
 		"Tour is a Spotlight with more than one step. It owns the sequence — which step is showing, the Back / Next / Skip / Done buttons, and the progress readout — and drives a single composed `<xtyle-spotlight>` through it, so every step gets the same honest isolation: the page dims, a hole is cut over the target, and a callout points at it, with the target left live underneath. Each step is an `<xtyle-tour-step>` carrying a `target` and, as its content, whatever the callout should say; any spotlight knob (`heading`, `placement`, `shape`, `pulse`, `arrow`, `dim`, `blur`, `no-dismiss`) set on a step overrides the Tour's default for that step alone. The Tour resolves each step's target against the page and hands the element to the spotlight directly, so a selector still finds a node the tour's own shadow root can't see, and the step-to-step focus handling — the part that goes wrong when a sequence is hand-rolled — is the spotlight's, already proven. The only chrome the Tour invents is the nav row; it renders through `component.tour`, so a mod can reshape Back / Next / Skip and the progress dots without touching the sequencing.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["back", "body", "nav", "next", "progress", "skip", "spotlight", "tour"],
 	anatomy: [
 		{
@@ -412,6 +413,7 @@ export const tourManifest: ComponentManifest = {
 		"Pair `noSkip` with `noDismiss` for a tour that must be finished — but leave that for the rare step that truly can't be skipped, because a walkthrough with no exit is a trap.",
 	],
 	a11y: [
+		"Under `forced-colors: active` each progress dot is outlined in `CanvasText` and the current one fills with `Highlight`; the dots are pure backgrounds, so without this they flatten to `Canvas` and disappear.",
 		"Each step is a Spotlight callout in its dialog posture: focus moves into the callout on open, and the step's `heading` names it.",
 		"The nav buttons are real buttons, reachable and operable from the keyboard; Back is removed from the tab order on the first step, and Skip on the last.",
 		"A veil click or Escape ends the tour as a skip — unless a step sets `noDismiss`, in which case only the nav moves it, and Back / Next / Skip must remain the way through.",

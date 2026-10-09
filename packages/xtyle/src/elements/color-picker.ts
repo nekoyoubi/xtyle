@@ -13,8 +13,10 @@ import {
 	type Hsv,
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/color-picker/source.generated.js";
 import { startDrag } from "./gesture.js";
+import { resolveOptionalVocab, resolveVocab } from "../vocab.js";
 
 const SNAP_TARGETS = ["web-safe", "named"] as const;
 type SnapTarget = (typeof SNAP_TARGETS)[number];
@@ -42,6 +44,7 @@ export class XtyleColorPicker extends XtyleElement {
 	private lastShape = "";
 	private needsWire = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "color-picker", {
+		nameTarget: '[part="picker"]',
 		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
 			this.verifyFormName();
@@ -54,7 +57,7 @@ export class XtyleColorPicker extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["value", "format", "modes", "channels", "snap", "plane", "trigger", "swatches", "harmony", "contrast-against", "alpha", "disabled", "label", "labelledby"];
+		return ["value", "format", "modes", "channels", "snap", "plane", "trigger", "swatches", "harmony", "contrast-against", "alpha", "disabled", "label", "labelledby", ...NAME_ATTRIBUTES];
 	}
 
 	constructor() {
@@ -69,14 +72,14 @@ export class XtyleColorPicker extends XtyleElement {
 		const picked = raw
 			.split(",")
 			.map((entry) => entry.trim())
-			.filter((entry): entry is ColorFormat => (colorFormats as string[]).includes(entry));
+			.map((entry) => resolveOptionalVocab(entry, colorFormats, "color picker mode"))
+			.filter((entry): entry is ColorFormat => entry !== null);
 		return picked.length ? picked : colorFormats;
 	}
 
 	get channelModel(): ChannelModel | null {
 		if (!this.hasAttribute("channels")) return null;
-		const raw = this.getAttribute("channels")?.trim();
-		return raw && (channelModels as string[]).includes(raw) ? (raw as ChannelModel) : "rgb";
+		return resolveVocab(this.getAttribute("channels")?.trim(), channelModels, "rgb", "color picker channels");
 	}
 
 	get snapTargets(): SnapTarget[] {
@@ -86,7 +89,8 @@ export class XtyleColorPicker extends XtyleElement {
 		const picked = raw
 			.split(",")
 			.map((entry) => entry.trim())
-			.filter((entry): entry is SnapTarget => (SNAP_TARGETS as readonly string[]).includes(entry));
+			.map((entry) => resolveOptionalVocab(entry, SNAP_TARGETS, "color picker snap"))
+			.filter((entry): entry is SnapTarget => entry !== null);
 		return picked.length ? picked : [...SNAP_TARGETS];
 	}
 
@@ -108,9 +112,8 @@ export class XtyleColorPicker extends XtyleElement {
 	}
 
 	get format(): ColorFormat {
-		const raw = this.getAttribute("format") as ColorFormat | null;
 		const modes = this.modes;
-		return raw && modes.includes(raw) ? raw : (modes[0] ?? "hex");
+		return resolveVocab(this.getAttribute("format"), modes, modes[0] ?? "hex", "color picker format");
 	}
 	set format(value: ColorFormat) {
 		this.setAttribute("format", value);
@@ -127,8 +130,7 @@ export class XtyleColorPicker extends XtyleElement {
 
 	/** The active harmony scheme, or null when the `harmony` attribute is unset or unknown. */
 	get harmonyScheme(): HarmonyScheme | null {
-		const raw = this.getAttribute("harmony") as HarmonyScheme | null;
-		return raw && harmonySchemes.includes(raw) ? raw : null;
+		return resolveOptionalVocab(this.getAttribute("harmony"), harmonySchemes, "color picker harmony");
 	}
 
 	/** Opt-in: the alpha track and an alpha channel in the value appear only when set. */
@@ -665,7 +667,7 @@ export class XtyleColorPicker extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("label") && !this.getAttribute("labelledby")) {
+		if (!this.getAttribute("label") && !this.getAttribute("labelledby") && !hasHostName(this)) {
 			console.warn(
 				"xtyle-color-picker: no accessible name. Provide a `label` or `labelledby` so the picker is announced.",
 			);

@@ -103,6 +103,35 @@ const series = [{ name: "Lines", values: [4200, 3800, 1500, 900, 2100] }];
 
 <Bar categories={categories} series={series} orientation="horizontal" scheme="skittles" label="Lines by language" height={240} />`;
 
+const longLabelsHtmlExample = `<xtyle-bar
+	categories='["North America","South America","Western Europe","Eastern Europe","Middle East","Southeast Asia","Oceania"]'
+	label="Signups by region"
+	height="260"></xtyle-bar>
+<script>
+	document.querySelector("xtyle-bar").series = [
+		{ name: "Signups", values: [820, 340, 610, 290, 180, 450, 120] },
+	];
+</script>`;
+
+const longLabelsSvelteExample = `<script lang="ts">
+	import { Bar } from "@xtyle/svelte";
+
+	const categories = ["North America", "South America", "Western Europe", "Eastern Europe", "Middle East", "Southeast Asia", "Oceania"];
+	const series = [{ name: "Signups", values: [820, 340, 610, 290, 180, 450, 120] }];
+</script>
+
+<Bar {categories} {series} label="Signups by region" height={260} />
+<Bar {categories} {series} labelAngle={-90} label="Signups by region" height={260} />`;
+
+const longLabelsAstroExample = `---
+import { Bar } from "@xtyle/astro";
+const categories = ["North America", "South America", "Western Europe", "Eastern Europe", "Middle East", "Southeast Asia", "Oceania"];
+const series = [{ name: "Signups", values: [820, 340, 610, 290, 180, 450, 120] }];
+---
+
+<Bar categories={categories} series={series} label="Signups by region" height={260} />
+<Bar categories={categories} series={series} labelAngle={-90} label="Signups by region" height={260} />`;
+
 const actionableHtmlExample = `<xtyle-bar
 	categories='["Alpha","Bravo","Charlie","Delta"]'
 	label="Runs by workflow"
@@ -156,6 +185,7 @@ export const barManifest: ComponentManifest = {
 	description:
 		"Bar plots one or more numeric series across a set of categories as an SVG chart that renders from data alone. Each series takes its color from a `scheme` naming a palette resolved off the live theme (the `accents` fan, the `skittles` hue ring, the `statuses` roster, a `thermal` cold-to-hot scale, `severity` good-to-bad), so a chart is coherent with the rest of the UI out of the box; pass an explicit color array for full control, and `reverse` to flip any palette. Bars sit side by side by default or stack with `stacked`, and run vertically or horizontally (`orientation`) for long category labels. It's interactive: hovering or focusing a bar dims the rest and floats a value readout, and the whole chart is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make it a drill-in surface: each bar becomes a button that fires a `select` event with its series, category, and value, so a click filters, navigates, or drills into that data. A value axis with gridlines and category labels come derived; a legend appears for multi-series data. Set `height` for the plot area; the chart fills its container's width. With no categories or series to plot, it shows a muted `No data` message in place of the axes.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["bar", "chart", "legend", "legend-item", "tooltip", "tooltip-row"],
 	anatomy: [
 		{
@@ -274,6 +304,14 @@ export const barManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "labelAngle",
+			type: "\"auto\" | number",
+			default: "\"auto\"",
+			description:
+				"The angle of the category labels under a vertical chart. `\"auto\"` keeps them upright until they would collide, then tilts them (-45°, or -90° when the bars are very narrow) and makes room under the plot, shortening a label too long for that room. A number fixes the angle, from `0` (upright) to `-90` (vertical). A horizontal chart widens its label gutter to fit instead. Kebab `label-angle` on the element.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
 			name: "selectable",
 			type: "boolean",
 			default: "false",
@@ -335,6 +373,7 @@ export const barManifest: ComponentManifest = {
 		"Make a dashboard chart a drill-in with `selectable` and a `select` listener: click a bar to filter the table beside it, open that category's detail, or route to a filtered view. The event's `detail` names the exact `series` / `category` / `value` clicked, so the handler needs no lookup.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"img\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The SVG is decorative (`aria-hidden`); the chart's data is mirrored into a visually-hidden `<table>` so assistive tech reads the actual numbers. `label` becomes the table's caption.",
 		"Each bar is a focusable tab stop with an `aria-label` naming its series, category, and value, so the chart is navigable by keyboard, and the value readout appears on focus as well as hover.",
 		"With `selectable`, each bar becomes a `role=\"button\"` (announced as actionable) and activates on Enter/Space as well as click, so a keyboard user can drill in; a read-only chart keeps its bars as `role=\"img\"` data points.",
@@ -352,6 +391,12 @@ export const barManifest: ComponentManifest = {
 			title: "Stacked",
 			description: "`stacked` folds each category's series into one bar; here on the `thermal` scale.",
 			source: { html: stackedHtmlExample, svelte: stackedSvelteExample, astro: stackedAstroExample },
+		},
+		{
+			id: "long-labels",
+			title: "Long labels",
+			description: "Category labels that would collide tilt to fit, and the plot makes room under them; one too long for that room is shortened. `labelAngle` (`label-angle` on the element) fixes the angle instead.",
+			source: { html: longLabelsHtmlExample, svelte: longLabelsSvelteExample, astro: longLabelsAstroExample },
 		},
 		{
 			id: "horizontal",

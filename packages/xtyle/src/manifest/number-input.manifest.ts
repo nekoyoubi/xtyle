@@ -63,6 +63,7 @@ export const numberInputManifest: ComponentManifest = {
 	description:
 		"Number Input edits a single number. A `role=\"spinbutton\"` text field sits between decrease and increase buttons; the buttons, the up/down arrow keys, and direct typing all change the value, which snaps to `step` and clamps to `[min, max]` on commit. It is form-associated; give it a `name` and its value submits with the form. It accepts decimals (e.g. a `0.01` step for currency). Set `step=\"any\"` for a free-form field: typed values commit verbatim with no grid snap and no precision cap (a graph literal, a coordinate, a scientific value), while the steppers fall back to a whole-number nudge; with no `min`/`max` the value is unbounded, exactly the native `<input type=\"number\" step=\"any\">` contract. A second granularity rides alongside `step`: holding the `modifier` (Shift by default) on a click or arrow applies `altStep`, ten times `step` out of the box, while `PageUp`/`PageDown` always jump by it, and `altDefault` flips which one is primary. Out-of-range typing reverts on commit, and the stepper buttons disable at the bounds. Three sizes: `sm`, the default `md`, and `lg`.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["control", "input", "label", "number", "step-down", "step-up"],
 	anatomy: [
 		{
@@ -182,6 +183,7 @@ export const numberInputManifest: ComponentManifest = {
 		"For an unbounded continuous range with a visible track, reach for Slider instead.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"spinbutton\"` input, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The field is `role=\"spinbutton\"` with `aria-valuenow` (and `aria-valuemin`/`aria-valuemax` when bounds are set) kept in sync.",
 		"Up and down arrow keys nudge by `step`, or `altStep` while the `modifier` is held; `PageUp`/`PageDown` always jump by `altStep`; Enter commits typed input; the keys' default behavior is handled so the value stays in range.",
 		"The stepper buttons are out of the tab order (the input is the single focus stop) and are labeled Decrease / Increase; they disable at the bounds.",

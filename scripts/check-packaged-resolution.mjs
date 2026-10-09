@@ -46,6 +46,9 @@ import { resolveAlgorithm } from "@xtyle/core/algorithms";
 import { bundledAlgorithms } from "@xtyle/core/host/bundle";
 import { resolveInstalledAlgorithm, resolveAlgorithm as deprecatedAlias } from "@xtyle/core/host";
 import { PACK_CDN, fetchPack, packBaseUrl } from "@xtyle/core/host/remote";
+import { xtyleModPlugin } from "@xtyle/core/esbuild";
+
+if (xtyleModPlugin().name !== "xtyle-mod") throw new Error("@xtyle/core/esbuild did not export the mod plugin");
 
 const ids = bundledAlgorithms();
 if (!ids.includes("xtyle-default")) throw new Error("bundledAlgorithms() omits xtyle-default: " + ids.join(","));
@@ -108,6 +111,20 @@ console.log("packaged resolution OK — " + ids.length + " algorithms, icon mark
 
 	console.log("resolving + baking from the installed package");
 	process.stdout.write(run("node", ["probe.mjs"], project));
+
+	console.log("running the installed CLI, which has no algorithms/ directory to find");
+	const cli = join(project, "node_modules", "@xtyle", "core", "dist", "cli.js");
+	const listed = run("node", [cli, "list"], project).trim().split(/\r?\n/);
+	if (!listed.includes("xtyle-default") || listed.length < 5) {
+		throw new Error("the installed CLI lists " + (listed.join(", ") || "no algorithms"));
+	}
+	const css = run("node", [cli, "derive", "--format", "css"], project);
+	if (!css.includes("--bg-0:")) throw new Error("the installed CLI's derive emitted no register:\n" + css.slice(0, 200));
+	for (const id of listed) {
+		const themed = run("node", [cli, "derive", "-a", id, "--format", "json"], project);
+		if (!JSON.parse(themed)["--accent"]) throw new Error("the installed CLI could not derive " + id);
+	}
+	console.log("installed CLI OK — " + listed.length + " algorithms listed and derived");
 	console.log("check-packaged-resolution: PASS");
 } catch (err) {
 	failed = true;

@@ -36,7 +36,8 @@ export const selectCss = `
 	pointer-events: none;
 	transition: color var(--duration-fast) var(--ease-standard);
 }
-.xtyle-select__field:focus-visible + .xtyle-select__chevron {
+.xtyle-select__field:focus-visible + .xtyle-select__chevron,
+.xtyle-select__field[data-cursor] + .xtyle-select__chevron {
 	color: var(--accent);
 }
 .xtyle-select--sm .xtyle-select__field {
@@ -52,7 +53,8 @@ export const selectCss = `
 .xtyle-select--invalid .xtyle-select__field {
 	border-color: var(--danger);
 }
-.xtyle-select--invalid .xtyle-select__field:focus-visible {
+.xtyle-select--invalid .xtyle-select__field:focus-visible,
+.xtyle-select--invalid .xtyle-select__field[data-cursor] {
 	border-color: var(--danger);
 	box-shadow: 0 0 0 var(--border-normal) var(--danger-bg);
 }
