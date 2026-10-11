@@ -76,6 +76,7 @@ export const splitButtonManifest: ComponentManifest = {
 	description:
 		"SplitButton is the control for an action that has a *default* and a *family*: Save, and also Save-and-close; Deploy, and also Deploy-to-staging; Export, and also Export-as-CSV. The press is one click away and the alternatives are two, which is the whole point — a plain Menu makes the common case cost an extra press, and a row of Buttons makes the rare case cost the same as the common one. It is a composition rather than a re-implementation: both halves carry Button's own classes, so every variant, tone, and size the button set speaks is the split button's too, and the dropdown is a real `<xtyle-menu>`, so the roving focus, the typeahead, the separators, the headings, the `hint` accelerators, the danger rows, and the `select` event all come from Menu instead of a second copy of them living here. What the element adds is the group: one shared shape with a square seam, the divider, the caret, and the menu keys answering from *either* half — ArrowDown on the primary drops the menu the way it does on the caret. The primary fires a plain `click`; the menu fires `select` with the chosen row's value, and the caret's own click never reaches a `click` listener, so the two paths never blur together.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["caret", "divider", "label", "menu", "primary", "spinner", "split-button", "toggle"],
 	anatomy: [
 		{
@@ -256,6 +257,7 @@ export const splitButtonManifest: ComponentManifest = {
 		"`loading` blocks the primary but leaves the caret live: an export that is running can still be cancelled from its own menu.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"group\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The group is a `role=\"group\"` of two real `<button>`s — the primary and a menu button carrying `aria-haspopup=\"menu\"` and an `aria-expanded` that tracks the dropdown, including when the menu closes on a path the group never saw (a light dismiss, an Escape inside the popup, a chosen row).",
 		"The menu keys answer from either half: ArrowDown opens it focused on the first row, ArrowUp on the last, from the primary as well as the caret — so the alternatives are reachable without ever leaving the default action's focus.",
 		"Escape closes the dropdown and focus returns to the caret that opened it, on every path — including a pointer press, which does not focus a button on every platform.",

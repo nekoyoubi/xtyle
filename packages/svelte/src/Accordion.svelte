@@ -19,6 +19,10 @@
 		chevronIcon?: string;
 		ontoggle?: (event: Event) => void;
 		panel: Snippet<[string]>;
+		/** Rich header content for a section, in place of its `header` text. Keep it non-interactive: it renders inside the trigger. */
+		header?: Snippet<[string]>;
+		/** Controls on a section's header row (reorder arrows, a view switch), beside the trigger rather than inside it. */
+		actions?: Snippet<[string]>;
 		/** Any other attribute (`title`, `id`, `data-*`, `aria-*`, …) passes through to the element. */
 		[key: string]: unknown;
 	}
@@ -31,6 +35,8 @@
 		chevronIcon,
 		ontoggle,
 		panel,
+		header,
+		actions,
 		...rest
 	}: Props = $props();
 </script>
@@ -48,7 +54,10 @@
 			slot="header"
 			value={section.value}
 			open={section.open || undefined}
-			disabled={section.disabled || undefined}>{section.header}</span>
+			disabled={section.disabled || undefined}
+			>{#if header}{@render header(section.value)}{:else}{section.header}{/if}</span
+		>
+		{#if actions}<span slot="actions">{@render actions(section.value)}</span>{/if}
 		<div slot="panel">{@render panel(section.value)}</div>
 	{/each}
 </xtyle-accordion>

@@ -15,6 +15,7 @@
 				"source": "switch.html",
 				"handlers": [
 					{ "selector": ".xtyle-switch__track", "on": "click", "handler": "toggle" },
+					{ "selector": ".xtyle-switch__label", "on": "click", "handler": "toggle" },
 					{ "selector": ".xtyle-switch__track", "on": "keydown", "handler": "keyToggle" }
 				]
 			}

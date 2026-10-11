@@ -25,6 +25,9 @@ const week = ["S", "M", "T", "W", "T", "F", "S"];
 const languages = ["Rust", "TypeScript", "Svelte", "Astro", "CSS"];
 const lines = [{ name: "Lines", values: [4200, 3800, 1500, 900, 2100] }];
 
+const regions = ["North America", "South America", "Western Europe", "Eastern Europe", "Middle East", "Southeast Asia", "Oceania"];
+const signups = [{ name: "Signups", values: [820, 340, 610, 290, 180, 450, 120] }];
+
 const workflows = ["Alpha", "Bravo", "Charlie", "Delta"];
 const runs = [{ name: "Runs", values: [42, 30, 18, 9] }];
 ---
@@ -48,6 +51,21 @@ const runs = [{ name: "Runs", values: [42, 30, 18, 9] }];
 				<code>stacked</code> folds each day's tiers into one bar, here on the <code>thermal</code> scale.
 			</Text>
 			<Bar categories={days} series={load} scheme="thermal" stacked label="Load by tier" height={260} />
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Long labels</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				When category labels would collide, they tilt to fit and the plot makes room under
+				them; a label too long for that room is shortened. <code>labelAngle</code> fixes the
+				angle instead, from <code>0</code> (upright) to <code>-90</code> (vertical).
+			</Text>
+			<Grid minColWidth="18rem" gap={4}>
+				<Bar categories={regions} series={signups} scheme="accents" label="Signups by region, auto" height={260} legend={false} />
+				<Bar categories={regions} series={signups} scheme="accents" labelAngle={-90} label="Signups by region, vertical" height={260} legend={false} />
+			</Grid>
 		</Stack>
 	</Card>
 

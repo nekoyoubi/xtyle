@@ -200,4 +200,18 @@ export const calendarCss = `
 	min-block-size: 2.5em;
 }
 ${toneRules}
+@media (forced-colors: active) {
+	.xtyle-calendar__cell[data-in-range],
+	.xtyle-calendar__cell[data-preview],
+	.xtyle-calendar__cell[data-filled] .xtyle-calendar__day {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+	.xtyle-calendar__cell[data-in-range] .xtyle-calendar__day,
+	.xtyle-calendar__cell[data-preview] .xtyle-calendar__day {
+		forced-color-adjust: none;
+		color: HighlightText !important;
+	}
+}
 `.trim();

@@ -31,6 +31,7 @@ import { manifest as formGroupManifest, fragmentSources as formGroupSources } fr
 import { manifest as gridManifest, fragmentSources as gridSources } from "./fragments/grid/source.generated.js";
 import { manifest as headingManifest, fragmentSources as headingSources } from "./fragments/heading/source.generated.js";
 import { manifest as kbdManifest, fragmentSources as kbdSources } from "./fragments/kbd/source.generated.js";
+import { manifest as numberFormatManifest, fragmentSources as numberFormatSources } from "./fragments/number-format/source.generated.js";
 import { manifest as iconManifest, fragmentSources as iconSources } from "./fragments/icon/source.generated.js";
 import { manifest as imageManifest, fragmentSources as imageSources } from "./fragments/image/source.generated.js";
 import { manifest as barManifest, fragmentSources as barSources } from "./fragments/bar/source.generated.js";
@@ -98,6 +99,7 @@ import {
 } from "./fragments/spotlight/source.generated.js";
 import { manifest as redactManifest, fragmentSources as redactSources } from "./fragments/redact/source.generated.js";
 import { manifest as tourManifest, fragmentSources as tourSources } from "./fragments/tour/source.generated.js";
+import { withHostHidden } from "./host-hidden.js";
 
 interface FragmentEntry {
 	manifest: FillManifest;
@@ -138,6 +140,7 @@ const fragments: Record<string, FragmentEntry> = {
 	grid: { manifest: gridManifest, fragmentSources: gridSources },
 	heading: { manifest: headingManifest, fragmentSources: headingSources },
 	kbd: { manifest: kbdManifest, fragmentSources: kbdSources },
+	"number-format": { manifest: numberFormatManifest, fragmentSources: numberFormatSources },
 	icon: { manifest: iconManifest, fragmentSources: iconSources },
 	image: { manifest: imageManifest, fragmentSources: imageSources },
 	bar: { manifest: barManifest, fragmentSources: barSources },
@@ -367,7 +370,7 @@ export async function renderFragment(
 	const { runtime } = await loadFill(entry.manifest, entry.fragmentSources);
 	const scaffold = fillScaffold(entry.manifest, entry.fragmentSources, component);
 	const ops = runtime.fireFragmentHook(component, "mount", bindings);
-	return `<style>${styles}</style>${applyOpsToHtml(scaffold, ops)}`;
+	return `<style>${withHostHidden(styles)}</style>${applyOpsToHtml(scaffold, ops)}`;
 }
 
 /**
@@ -449,6 +452,7 @@ export {
 	decorateTable,
 	markedChildren,
 	markedPairs,
+	markedExtras,
 	topLevelElements,
 	type TableParts,
 	type MarkedChild,

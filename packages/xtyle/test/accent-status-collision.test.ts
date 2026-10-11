@@ -59,9 +59,18 @@ describe("a status role holds off a colliding accent", () => {
 		expect(Math.abs(hueDelta(toOklchColor(danger("#8a8a8a")).h, natural))).toBeLessThan(1);
 	});
 
-	it("does not move info, which reads as blue by definition", () => {
-		const onBlue = toOklchColor(themeFor("#2389e2")["--info"] as string).h;
-		const away = toOklchColor(themeFor("#509a54")["--info"] as string).h;
-		expect(Math.abs(hueDelta(onBlue, away)), "info keeps its hue even under a blue accent").toBeLessThan(1);
+	it("moves info off a blue accent it would otherwise copy, by less than the full arc", () => {
+		const accent = "#2389e2";
+		const info = themeFor(accent)["--info"] as string;
+		const natural = toOklchColor(themeFor("#509a54")["--info"] as string).h;
+		expect(oklabDistance(accent, info), "info no longer reads as the accent").toBeGreaterThanOrEqual(0.05);
+		expect(Math.abs(hueDelta(toOklchColor(info).h, natural)), "info stays blue").toBeLessThan(30);
+	});
+
+	it("leaves info's hue alone when the accent is nowhere near it", () => {
+		const natural = toOklchColor(themeFor("#509a54")["--info"] as string).h;
+		for (const accent of ["#d1495b", "#b88cff", "#e0a030"]) {
+			expect(Math.abs(hueDelta(toOklchColor(themeFor(accent)["--info"] as string).h, natural)), accent).toBeLessThan(1);
+		}
 	});
 });

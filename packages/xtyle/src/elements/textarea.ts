@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
 import { textareaHostCss, type TextareaResize } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/textarea/source.generated.js";
 import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attrs.js";
 import { resolveVocab, TEXTAREA_RESIZES, SIZES } from "../vocab.js";
@@ -41,6 +42,7 @@ export class XtyleTextarea extends XtyleElement {
 	private fieldId = `xtyle-textarea-${this.textareaNumber}`;
 	private errorId = `xtyle-textarea-error-${this.textareaNumber}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "textarea", {
+		nameTarget: '[part~="textarea"]',
 		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
 			this.projectContent();
@@ -65,6 +67,7 @@ export class XtyleTextarea extends XtyleElement {
 			"name",
 			"mono",
 			...NATIVE_INPUT_ATTRS,
+			...NAME_ATTRIBUTES,
 		];
 	}
 
@@ -134,9 +137,9 @@ export class XtyleTextarea extends XtyleElement {
 		if (this.root.firstChild) this.render();
 	}
 
-	formResetCallback(): void {
-		const initial = this.getAttribute("value") ?? "";
-		if (this.field) this.field.value = initial;
+	override formResetCallback(): void {
+		const initial = this.defaultFormValue ?? "";
+		this.value = initial;
 		if (this.reportsFormValue()) this.internals?.setFormValue(initial);
 		this.syncValidity();
 	}
@@ -190,17 +193,11 @@ export class XtyleTextarea extends XtyleElement {
 		if (this.invalid && errorText.length > 0) field.setAttribute("aria-describedby", this.errorId);
 		else field.removeAttribute("aria-describedby");
 
-		const labelText = this.getAttribute("label") ?? "";
-		if (labelText.length === 0) this.warnIfUnnamed(field);
-		else field.removeAttribute("aria-label");
+		this.warnIfUnnamed();
 	}
 
-	private warnIfUnnamed(field: HTMLTextAreaElement): void {
-		const aria = this.getAttribute("aria-label") ?? this.getAttribute("aria-labelledby");
-		if (aria) {
-			field.setAttribute(this.hasAttribute("aria-label") ? "aria-label" : "aria-labelledby", aria);
-			return;
-		}
+	private warnIfUnnamed(): void {
+		if ((this.getAttribute("label") ?? "").length > 0 || hasHostName(this)) return;
 		console.warn(
 			"xtyle-textarea: a textarea with no `label` has no accessible name. Provide a `label` or `aria-label` so it is announced.",
 		);

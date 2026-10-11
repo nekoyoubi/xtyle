@@ -65,7 +65,10 @@ Conditions: `hover`, `focus`, `active`, `checked`, `disabled`, `open`, `invalid`
 `armed` (plus the ambient no-condition form).
 
 Every effect that moves is wrapped in a `prefers-reduced-motion: reduce` guard, so that
-policy is decided once by the library rather than by every adopter who remembers.
+policy is decided once by the library rather than by every adopter who remembers. The guard
+resets only what an effect animates (a filter-only effect leaves the host's own `transform`
+alone), and an effect's `still` declarations hold under it, so `throb` keeps its glow and loses
+only the pulse.
 
 ## It is extensible
 

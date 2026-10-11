@@ -33,6 +33,7 @@ import AvatarGroup from "@xtyle/astro/AvatarGroup.astro";
 import Icon from "@xtyle/astro/Icon.astro";
 import QrCode from "@xtyle/astro/Qr.astro";
 import Kbd from "@xtyle/astro/Kbd.astro";
+import NumberFormat from "@xtyle/astro/NumberFormat.astro";
 import Link from "@xtyle/astro/Link.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
@@ -63,7 +64,6 @@ interface Props {
 const { id } = Astro.props;
 
 const statusTones = ["success", "warn", "danger", "info"] as const;
-const hueTones = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "cyan"] as const;
 
 const previewZones = [
 	{ value: "Europe/London", label: "London" },
@@ -260,6 +260,12 @@ const previewBbcode = [
 	{id === "kbd" && (
 		<Cluster gap={1} align="center">
 			<Kbd>Ctrl</Kbd><Text as="span" size="xs" tone="muted">+</Text><Kbd>K</Kbd>
+		</Cluster>
+	)}
+	{id === "number-format" && (
+		<Cluster gap={2} align="baseline">
+			<NumberFormat value={1299.5} format="currency" locale="en-US" />
+			<NumberFormat value={0.042} format="percent" decimals={1} sign="exceptZero" tone="success" locale="en-US" />
 		</Cluster>
 	)}
 	{id === "link" && (

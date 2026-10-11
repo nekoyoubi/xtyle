@@ -3,10 +3,10 @@ import type { FullTone, Tone } from "../index.js";
 import { avatarHostCss, avatarInitials } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/avatar/source.generated.js";
-import { resolveTone, resolveOptionalTone, resolveVocab, AVATAR_SIZES, AVATAR_SHAPES } from "../vocab.js";
+import { resolveTone, resolveOptionalTone, resolveVocab, AVATAR_SIZES, AVATAR_SHAPES, AVATAR_FRAMES } from "../vocab.js";
 
-import type { AvatarSize, AvatarShape } from "../markup/avatar.js";
-export type { AvatarSize, AvatarShape };
+import type { AvatarSize, AvatarShape, AvatarFrame } from "../markup/avatar.js";
+export type { AvatarSize, AvatarShape, AvatarFrame };
 
 export class XtyleAvatar extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "avatar", {
@@ -21,7 +21,35 @@ export class XtyleAvatar extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["src", "alt", "user-name", "tone", "size", "shape", "status", "status-label", "pulse"];
+		return ["src", "alt", "user-name", "tone", "size", "shape", "frame", "frame-tone", "frame-tone-2", "bevel", "status", "status-label", "pulse"];
+	}
+
+	get frame(): AvatarFrame {
+		return resolveVocab(this.getAttribute("frame"), AVATAR_FRAMES, "none", "avatar frame");
+	}
+	set frame(value: AvatarFrame) {
+		this.setAttribute("frame", value);
+	}
+
+	get frameTone(): FullTone | null {
+		return resolveOptionalTone<FullTone>(this.getAttribute("frame-tone"));
+	}
+	set frameTone(value: FullTone | null | undefined) {
+		this.reflectString("frame-tone", value);
+	}
+
+	get frameTone2(): FullTone | null {
+		return resolveOptionalTone<FullTone>(this.getAttribute("frame-tone-2"));
+	}
+	set frameTone2(value: FullTone | null | undefined) {
+		this.reflectString("frame-tone-2", value);
+	}
+
+	get bevel(): boolean {
+		return this.hasAttribute("bevel");
+	}
+	set bevel(value: boolean) {
+		this.reflectBoolean("bevel", value);
 	}
 
 	get src(): string | null {
@@ -121,6 +149,10 @@ export class XtyleAvatar extends XtyleElement {
 			tone: this.tone,
 			size: this.size,
 			shape: this.shape,
+			frame: this.frame,
+			frameTone: this.frameTone,
+			frameTone2: this.frameTone2,
+			bevel: this.bevel,
 			status: this.status,
 			statusLabel: this.statusLabel,
 			pulse: this.pulse,

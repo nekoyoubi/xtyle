@@ -15,6 +15,9 @@ import {
 	NINE_PATCH_SRC_VAR,
 	type NinePatchRegion,
 } from "../markup/nine-patch.js";
+import { resolveVocab } from "../vocab.js";
+
+const NINE_PATCH_REPEATS = ["stretch", "repeat", "round", "space"] as const;
 
 /**
  * A nine-patch surface: artwork sliced into four fixed corners, four edges that stretch or repeat
@@ -74,7 +77,7 @@ export class XtyleNinePatch extends XtyleElement {
 
 	/** How the edges cover their run: `stretch`, `repeat`, `round`, or `space`. */
 	get repeat(): string {
-		return this.getAttribute("repeat") ?? "stretch";
+		return resolveVocab(this.getAttribute("repeat"), NINE_PATCH_REPEATS, "stretch", "nine patch repeat");
 	}
 	set repeat(value: string) {
 		this.setAttribute("repeat", value);

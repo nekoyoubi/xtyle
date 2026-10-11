@@ -1,8 +1,10 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, isNameAttribute } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/theme-card/source.generated.js";
 import { themeCardHostCss } from "../markup/index.js";
 import type { DeriveOptions, TokenRegister } from "../types.js";
+import { SCHEMES, resolveOptionalVocab } from "../vocab.js";
 
 type Scheme = "light" | "dark";
 
@@ -37,10 +39,11 @@ export class XtyleThemeCard extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["algorithm", "knobs", "constraints", "scheme", "name", "interactive", "selected"];
+		return ["algorithm", "knobs", "constraints", "scheme", "name", "interactive", "selected", ...NAME_ATTRIBUTES];
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "theme-card", {
+		nameTarget: '[part="card"]',
 		context: (handler) => (handler === "select" ? this.selectContext() : undefined),
 		applyIntent: (intent) => this.applyIntent(intent),
 	});
@@ -60,9 +63,7 @@ export class XtyleThemeCard extends XtyleElement {
 	}
 
 	get scheme(): Scheme | null {
-		const pinned = this.getAttribute("scheme");
-		if (pinned === "light" || pinned === "dark") return pinned;
-		return this.resolvedScheme;
+		return resolveOptionalVocab(this.getAttribute("scheme"), SCHEMES, "theme card scheme") ?? this.resolvedScheme;
 	}
 	set scheme(value: Scheme | null | undefined) {
 		this.reflectString("scheme", value);
@@ -96,6 +97,10 @@ export class XtyleThemeCard extends XtyleElement {
 
 	attributeChangedCallback(name: string): void {
 		if (!this.root.firstChild) return;
+		if (isNameAttribute(name)) {
+			this.fragment.forwardName();
+			return;
+		}
 		if (name === "interactive" || name === "selected" || name === "name") {
 			this.paint();
 			return;
@@ -137,8 +142,7 @@ export class XtyleThemeCard extends XtyleElement {
 
 	private async derive(): Promise<void> {
 		const ticket = ++this.pending;
-		const requested = this.getAttribute("scheme");
-		const wanted = requested === "light" || requested === "dark" ? requested : null;
+		const wanted = resolveOptionalVocab(this.getAttribute("scheme"), SCHEMES, "theme card scheme");
 		try {
 			const [{ derive }, { getAlgorithm }, { schemeOf }] = await Promise.all([
 				import("../index.js"),

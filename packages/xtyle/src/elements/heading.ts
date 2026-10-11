@@ -4,7 +4,7 @@ import type { HeadingLevel, HeadingSize, HeadingTone } from "../index.js";
 import { headingHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/heading/source.generated.js";
-import { resolveTone, resolveVocab, EMPHASIS_TONES, HEADING_SIZES } from "../vocab.js";
+import { resolveIntegerIn, resolveTone, resolveVocab, EMPHASIS_TONES, HEADING_SIZES } from "../vocab.js";
 
 export class XtyleHeading extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "heading", {
@@ -20,8 +20,7 @@ export class XtyleHeading extends XtyleElement {
 	}
 
 	get level(): HeadingLevel {
-		const raw = Number(this.getAttribute("level"));
-		return (raw >= 1 && raw <= 6 ? raw : 2) as HeadingLevel;
+		return (resolveIntegerIn(this.getAttribute("level"), 1, 6, "heading level", "a heading level") ?? 2) as HeadingLevel;
 	}
 	set level(value: HeadingLevel) {
 		this.setAttribute("level", String(value));

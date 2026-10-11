@@ -23,12 +23,14 @@ export class XtyleSegmented extends XtyleElement {
 	}
 	private elementId = `xtyle-segmented-${Math.random().toString(36).slice(2, 8)}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "segmented", {
+		nameTarget: '[part="segmented"]',
+		hostName: false,
 		context: (handler) => (handler === "navKeydown" ? this.navContext() : undefined),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["value", "options", "disabled", "size", "tone", "label", "labelledby", "aria-label", "name", "focusable"];
+		return ["value", "options", "disabled", "size", "tone", "label", "labelledby", "aria-label", "name", "focusable", "cursor"];
 	}
 
 	constructor() {
@@ -130,6 +132,14 @@ export class XtyleSegmented extends XtyleElement {
 		this.reflectBoolean("disabled", value);
 	}
 
+	/** Whether the app's own keyboard cursor rests on this group: draws the focus ring on the selected segment without moving focus. */
+	get cursor(): boolean {
+		return this.hasAttribute("cursor");
+	}
+	set cursor(value: boolean) {
+		this.reflectBoolean("cursor", value);
+	}
+
 	get size(): Size {
 		return resolveVocab(this.getAttribute("size"), SIZES, "md", "segmented size");
 	}
@@ -153,7 +163,9 @@ export class XtyleSegmented extends XtyleElement {
 			segments: this.segments,
 			value: this.getAttribute("value"),
 			disabled: this.disabled,
-			focusable: this.focusable,			size: this.size,
+			focusable: this.focusable,
+			cursor: this.cursor,
+			size: this.size,
 			tone: this.tone,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),

@@ -4,6 +4,9 @@ import "./theme-swatch.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/theme-picker/source.generated.js";
 import { themePickerHostCss } from "../markup/index.js";
+import { resolveVocab } from "../vocab.js";
+
+const PICKER_LAYOUTS = ["gallery", "menu"] as const;
 
 /** One choice offered by the picker: a name to show and the invocation behind it. */
 export interface PickerTheme {
@@ -88,7 +91,7 @@ export class XtyleThemePicker extends XtyleElement {
 
 	/** `gallery` lays the choices out in place; `menu` puts the same gallery behind a trigger. */
 	get layout(): "gallery" | "menu" {
-		return this.getAttribute("layout") === "menu" ? "menu" : "gallery";
+		return resolveVocab(this.getAttribute("layout"), PICKER_LAYOUTS, "gallery", "theme picker layout");
 	}
 	set layout(value: "gallery" | "menu") {
 		this.setAttribute("layout", value);

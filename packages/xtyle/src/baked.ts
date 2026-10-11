@@ -19,8 +19,8 @@ export async function bakedAlgorithm(id: string): Promise<Algorithm> {
 	try {
 		return await bakedOracle(id);
 	} catch {
-		const { resolveInstalledAlgorithm } = await import("./host/registry.js");
-		return resolveInstalledAlgorithm(id);
+		const { resolveCatalogAlgorithm } = await import("./host/catalog.js");
+		return resolveCatalogAlgorithm(id);
 	}
 }
 
@@ -44,10 +44,10 @@ export interface AlgorithmDomain {
  * whichever one answered.
  */
 export async function algorithmDomains(ids: readonly string[]): Promise<AlgorithmDomain[]> {
-	const { algorithmManifest } = await import("./host/registry.js");
+	const { catalogManifest } = await import("./host/catalog.js");
 	return Promise.all(
 		ids.map(async (id) => {
-			const declared = algorithmManifest(id);
+			const declared = catalogManifest(id);
 			if (declared) {
 				return {
 					id,

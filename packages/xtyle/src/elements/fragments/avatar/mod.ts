@@ -17,6 +17,10 @@ interface AvatarBindings {
 	tone?: string;
 	size?: string;
 	shape?: string;
+	frame?: string;
+	frameTone?: string | null;
+	frameTone2?: string | null;
+	bevel?: boolean;
 	status?: string | null;
 	statusLabel?: string | null;
 	pulse?: boolean | string | null;
@@ -54,11 +58,16 @@ function avatarClass(b: AvatarBindings): string {
 	const tone = b.tone ?? "neutral";
 	const size = b.size ?? "md";
 	const shape = b.shape ?? "circle";
+	const frame = b.frame && b.frame !== "none" ? b.frame : b.bevel ? "solid" : null;
 	return [
 		"xtyle-avatar",
 		`xtyle-avatar--${tone}`,
 		size !== "md" && `xtyle-avatar--${size}`,
-		shape === "square" && "xtyle-avatar--square",
+		shape !== "circle" && `xtyle-avatar--${shape}`,
+		frame && `xtyle-avatar--frame-${frame}`,
+		frame && b.frameTone && `xtyle-avatar--frame-tone-${b.frameTone}`,
+		frame && b.frameTone2 && `xtyle-avatar--frame-tone-2-${b.frameTone2}`,
+		b.bevel && "xtyle-avatar--bevel",
 		b.status && `xtyle-avatar--status-${b.status}`,
 		avatarPulseClass(b.pulse, Boolean(b.status)),
 	]
@@ -88,7 +97,7 @@ function avatarInner(b: AvatarBindings): string {
 	const statusDot = b.status
 		? `<span class="${avatarStatusDotClass(b)}" part="status-dot" aria-hidden="true"></span>`
 		: "";
-	return `${image}${fallback}${statusDot}`;
+	return `${image}${fallback}${statusDot}<span class="xtyle-avatar__marks" part="marks"></span>`;
 }
 
 function avatarHtml(b: AvatarBindings): string {

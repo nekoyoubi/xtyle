@@ -1,9 +1,18 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { revealHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/reveal/source.generated.js";
 import { startDrag, settle, type DragAxis } from "./gesture.js";
-import { REVEAL_DIRECTIONS, REVEAL_BEHAVIORS, REVEAL_GRIP_STYLES, resolveVocab, resolveOptionalTone, type FullTone } from "../vocab.js";
+import {
+	REVEAL_DIRECTIONS,
+	REVEAL_BEHAVIORS,
+	REVEAL_GRIP_STYLES,
+	resolveVocab,
+	resolveOptionalVocab,
+	resolveOptionalTone,
+	type FullTone,
+} from "../vocab.js";
 import { resolveRevealShape } from "../reveal-shapes.js";
 import { iconBody } from "../icon-registry.js";
 
@@ -37,10 +46,13 @@ export class XtyleReveal extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "reveal", {
+		nameTarget: '[part="lid"]',
 		context: () => ({ directions: this.liveDirections, open: this.open }),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => this.wireLid(),
 	});
+
+	static override readonly ownedData = ["data-dragging"];
 
 	static get observedAttributes(): string[] {
 		return [
@@ -71,6 +83,7 @@ export class XtyleReveal extends XtyleElement {
 				`${direction}-grip`,
 				`${direction}-grip-style`,
 			]),
+			...NAME_ATTRIBUTES,
 		];
 	}
 
@@ -82,8 +95,7 @@ export class XtyleReveal extends XtyleElement {
 	}
 
 	get open(): RevealDirection | null {
-		const raw = this.getAttribute("open");
-		return raw !== null && (REVEAL_DIRECTIONS as readonly string[]).includes(raw) ? (raw as RevealDirection) : null;
+		return resolveOptionalVocab(this.getAttribute("open"), REVEAL_DIRECTIONS, "reveal open");
 	}
 	set open(value: RevealDirection | null | undefined) {
 		this.reflectString("open", value);
@@ -119,6 +131,12 @@ export class XtyleReveal extends XtyleElement {
 	behaviorFor(direction: RevealDirection): RevealBehavior {
 		const raw = this.getAttribute(`${direction}-behavior`) ?? this.getAttribute("behavior");
 		return resolveVocab(raw, REVEAL_BEHAVIORS, "latch", "reveal behavior");
+	}
+
+	private checkVocab(): void {
+		for (const name of ["behavior", ...REVEAL_DIRECTIONS.map((d) => `${d}-behavior`)]) {
+			resolveVocab(this.getAttribute(name), REVEAL_BEHAVIORS, "latch", `reveal ${name.replace("-", " ")}`);
+		}
 	}
 
 	latchAt(direction: RevealDirection): number {
@@ -584,6 +602,7 @@ export class XtyleReveal extends XtyleElement {
 		this.adoptComponentSheet();
 		this.applyGripSizing();
 		this.applyShape();
+		this.checkVocab();
 		this.fragment.ensureScaffold(revealHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);

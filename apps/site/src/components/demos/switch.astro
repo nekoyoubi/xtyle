@@ -1,5 +1,6 @@
 ---
 import Switch from "@xtyle/astro/Switch.astro";
+import Button from "@xtyle/astro/Button.astro";
 import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Heading from "@xtyle/astro/Heading.astro";
@@ -38,6 +39,19 @@ const TONE_GROUPS = [
 				</div>
 				<Switch label="Beta channel" checked disabled />
 			</div>
+		</Stack>
+	</section>
+
+	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">Spread &amp; clickable labels</Heading>
+		<Text size="sm" tone="muted"><code>spread</code> stretches each switch across its row, so the tracks line up at the far edge; click a label anywhere to flip its switch. With <code>labelSide="end"</code> the track leads instead.</Text>
+		<Stack gap={3} class="demo__rows">
+			<Switch spread label="Autosave drafts" checked />
+			<Switch spread label="Show line numbers" />
+			<Switch spread label="Spell check" size="sm" checked />
+			<Switch spread label="Sync over metered connections" onLabel="On" offLabel="Off" />
+			<Switch spread label="Telemetry" disabled />
+			<Switch spread label="Track first, label at the end" labelSide="end" checked />
 		</Stack>
 	</section>
 
@@ -95,6 +109,21 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
+		<Heading level={3} size="sm" tone="muted">An app-owned cursor</Heading>
+		<Text size="sm" tone="muted">A settings list driven from the app's own input layer never moves DOM focus. <code>cursor</code> marks the row the app's cursor rests on and draws the track's focus ring there, with no ARIA change. The buttons stand in for the app's own input.</Text>
+		<Stack gap={3} class="demo__rows demo__cursor-list">
+			<Switch spread label="Subtitles" focusable={false} cursor checked />
+			<Switch spread label="Screen shake" focusable={false} />
+			<Switch spread label="Vibration" focusable={false} checked />
+		</Stack>
+		<Cluster gap={2}>
+			<Button variant="outline" tone="neutral" size="sm" data-switch-cursor-step="-1">Menu up</Button>
+			<Button variant="outline" tone="neutral" size="sm" data-switch-cursor-step="1">Menu down</Button>
+			<Button variant="outline" tone="neutral" size="sm" data-switch-cursor-confirm>Confirm</Button>
+		</Cluster>
+	</section>
+
+	<section class="demo__group">
 		<div class="demo__group-head">
 			<Heading level={3} size="sm" tone="muted">Every tone</Heading>
 			<Switch label="Toggle all" id="tone-all" class="tone-all" checked />
@@ -114,9 +143,23 @@ const TONE_GROUPS = [
 </Stack>
 
 <script>
-	type Toggle = HTMLElement & { checked: boolean };
+	type Toggle = HTMLElement & { checked: boolean; cursor: boolean };
 
 	customElements.whenDefined("xtyle-switch").then(() => {
+		const rows = Array.from(document.querySelectorAll<Toggle>(".demo__cursor-list xtyle-switch"));
+		let at = rows.findIndex((row) => row.cursor);
+		for (const control of document.querySelectorAll<HTMLElement>("[data-switch-cursor-step]")) {
+			control.addEventListener("click", () => {
+				if (!rows.length) return;
+				rows[at].cursor = false;
+				at = (at + Number(control.dataset.switchCursorStep) + rows.length) % rows.length;
+				rows[at].cursor = true;
+			});
+		}
+		document.querySelector("[data-switch-cursor-confirm]")?.addEventListener("click", () => {
+			if (rows[at]) rows[at].checked = !rows[at].checked;
+		});
+
 		const all = document.getElementById("tone-all") as Toggle | null;
 		if (all) {
 			const switches = Array.from(document.querySelectorAll<Toggle>(".tone-sw"));

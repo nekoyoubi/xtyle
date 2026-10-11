@@ -39,7 +39,7 @@ export const radioCss = `
 	flex: none;
 	width: 1.15em;
 	height: 1.15em;
-	border: var(--border-normal) solid var(--field-border);
+	border: var(--border-normal) solid var(--line-strong);
 	border-radius: var(--radius-full);
 	background: var(--field-bg);
 	transition:
@@ -124,7 +124,6 @@ ${checkedRules}
 	transform: scale(1);
 }
 .xtyle-radio:hover .xtyle-radio__indicator {
-	border-color: var(--line-2);
 	background: var(--state-hover);
 }
 .xtyle-radio__control:checked ~ .xtyle-radio__indicator {
@@ -182,5 +181,24 @@ ${checkedRules}
 }
 .xtyle-radio-group--horizontal .xtyle-radio-group__label {
 	flex: none;
+}
+@media (forced-colors: active) {
+	.xtyle-radio__control:checked ~ .xtyle-radio__indicator {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		border-color: Highlight !important;
+	}
+	.xtyle-radio__control:checked ~ .xtyle-radio__indicator .xtyle-radio__dot {
+		forced-color-adjust: none;
+		background: HighlightText !important;
+	}
+	.xtyle-radio__control:disabled:checked ~ .xtyle-radio__indicator {
+		background: GrayText !important;
+		border-color: GrayText !important;
+	}
+	.xtyle-radio--card:has(.xtyle-radio__control:checked) {
+		outline: var(--border-thick) solid Highlight;
+		outline-offset: calc(-1 * var(--border-thick));
+	}
 }
 `.trim();

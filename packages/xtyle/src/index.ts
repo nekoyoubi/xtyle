@@ -198,6 +198,14 @@ export type { TablePart } from "./markup/table.js";
 export type { TourSpec, TourStepSpec, TourProgress } from "./markup/tour.js";
 export type { MethodDef } from "./manifest/types.js";
 export { resolveSparklineBounds, formatSparklineValue } from "./markup/sparkline.js";
+export { formatNumber, formatNumberParts, parseNumberValue, type NumberPart } from "./markup/number-format.js";
+export type {
+	NumberFormatOptions,
+	NumberFormatStyle,
+	NumberCurrencyDisplay,
+	NumberUnitDisplay,
+	NumberSign,
+} from "./markup/number-format.js";
 export { resolveChartPlot, CHART_VARIANTS, CHART_CURVES, CHART_X_SCALES } from "./markup/chart.js";
 export { hoverMediaHtml } from "./markup/image.js";
 export {
@@ -214,6 +222,7 @@ export type { BbcodeTag, BbcodeTagContext, BbcodeOptions } from "./markup/bbcode
 export type {
 	BarSeries,
 	BarScheme,
+	LabelAngle,
 	ChartSeries,
 	ChartScheme,
 	ChartVariant,
@@ -337,11 +346,14 @@ export {
 	resolveBaseInputs,
 	buildPassContext,
 	DEFAULT_ANCHORS,
+	PRESET_DEFAULTS,
+	resolvePreset,
 	SHARED_KNOBS,
 	SHARED_KNOB_SPECS,
 	resolveKnobSpecs,
 	KEYWORD_DOMAINS,
 	type PresetDefaults,
+	type PresetInput,
 	type PresetAnchors,
 } from "./algorithms/factory.js";
 export { loadAlgorithm, loadAuthoredAlgorithm } from "./host/index.js";

@@ -32,7 +32,7 @@ beforeAll(() => {
 		const id = (this as unknown as { fragmentId?: string }).fragmentId ?? "";
 		if (id) {
 			const seen = observed.get(id) ?? new Set<string>();
-			for (const key of Object.keys(bindings)) seen.add(key);
+			for (const key of Object.keys(this.fillBindings(bindings))) seen.add(key);
 			observed.set(id, seen);
 		}
 		return realUpdate.call(this, bindings);

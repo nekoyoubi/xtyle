@@ -45,6 +45,7 @@ export const REGRESSION_IDS = [
 	"menu",
 	"mobile-shell",
 	"nine-patch",
+	"number-format",
 	"number-input",
 	"pagination",
 	"panel",

@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { breadcrumbHostCss, type BreadcrumbItem } from "../markup/index.js";
 import type { Size, FullTone } from "../index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/breadcrumb/source.generated.js";
 import { resolveTone, resolveVocab, SIZES } from "../vocab.js";
 
@@ -11,6 +12,7 @@ export class XtyleBreadcrumb extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "breadcrumb", {
+		nameTarget: '[part="breadcrumb"]',
 		applyIntent: (intent) => this.applyIntent(intent),
 	});
 
@@ -27,7 +29,7 @@ export class XtyleBreadcrumb extends XtyleElement {
 	}
 
 	static get observedAttributes(): string[] {
-		return ["items", "separator", "tone", "size", "label"];
+		return ["items", "separator", "tone", "size", "label", ...NAME_ATTRIBUTES];
 	}
 
 	get tone(): FullTone {

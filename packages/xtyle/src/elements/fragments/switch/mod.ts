@@ -10,12 +10,14 @@ interface SwitchBindings {
 	checked?: boolean;
 	disabled?: boolean;
 	focusable?: boolean;
+	cursor?: boolean;
 	size?: string;
 	tone?: string;
 	shape?: string;
 	orientation?: string;
 	reverse?: boolean;
 	labelSide?: string;
+	spread?: boolean;
 	label?: string | null;
 	labelledby?: string | null;
 	onLabel?: string | null;
@@ -24,6 +26,7 @@ interface SwitchBindings {
 }
 
 interface EventPayload {
+	dataset?: Record<string, string | undefined>;
 	disabled?: boolean;
 	ariaDisabled?: string;
 	key?: string;
@@ -50,6 +53,7 @@ function switchClass(b: SwitchBindings): string {
 		b.orientation === "vertical" && "xtyle-switch--vertical",
 		b.reverse && "xtyle-switch--reverse",
 		b.labelSide === "end" && "xtyle-switch--label-end",
+		b.spread && "xtyle-switch--spread",
 		b.disabled && "xtyle-switch--disabled",
 	]
 		.filter(Boolean)
@@ -77,7 +81,7 @@ function inner(b: SwitchBindings): string {
 
 	const disabledAttr = disabled ? ' disabled aria-disabled="true"' : "";
 	const leadingLabel = b.label
-		? `<span class="xtyle-switch__label" part="label" id="${labelId}">${escapeHtml(b.label)}</span>`
+		? `<span class="xtyle-switch__label" part="label" id="${labelId}"${disabled ? " data-disabled" : ""}>${escapeHtml(b.label)}</span>`
 		: "";
 	const trailingState = hasState
 		? `<span class="xtyle-switch__state" part="state" id="${stateId}">${escapeHtml(stateText)}</span>`
@@ -85,7 +89,7 @@ function inner(b: SwitchBindings): string {
 
 	return (
 		leadingLabel +
-		`<button class="xtyle-switch__track" part="track" type="button" role="switch"${b.focusable === false ? ' tabindex="-1"' : ""} ` +
+		`<button class="xtyle-switch__track" part="track" type="button" role="switch"${b.focusable === false ? ' tabindex="-1"' : ""}${b.cursor ? ' data-cursor="true"' : ""} ` +
 		`aria-checked="${String(checked)}"${nameAttr}${disabledAttr}>` +
 		`<span class="xtyle-switch__thumb" part="thumb" aria-hidden="true"></span></button>` +
 		trailingState
@@ -101,13 +105,14 @@ hooks.fragment.update("switch", (bindings, ops) => {
 	ops.setAttr(".xtyle-switch", "class", switchClass(bindings));
 	ops.setAttr('[role="switch"]', "aria-checked", String(bindings.checked ?? false));
 	ops.setAttr('[role="switch"]', "tabindex", bindings.focusable === false ? "-1" : "");
+	ops.setAttr('[role="switch"]', "data-cursor", bindings.cursor ? "true" : "");
 	const text = stateLabel(bindings);
 	if (text !== null) ops.setText('[part="state"]', text);
 });
 
 xript.exports.register("toggle", (payload: unknown): Intent => {
 	const e = payload as EventPayload;
-	if (e.disabled || e.ariaDisabled === "true") return {};
+	if (e.disabled || e.ariaDisabled === "true" || e.dataset?.disabled !== undefined) return {};
 	return { toggleChecked: true };
 });
 

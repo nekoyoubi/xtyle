@@ -1,4 +1,4 @@
-import { escapeAttr } from "../escape.js";
+import { escapeAttr, escapeHtml } from "../escape.js";
 
 interface OpsBuilder {
 	replaceChildren(selector: string, html: string): void;
@@ -13,6 +13,7 @@ interface CheckboxBindings {
 	tone?: string;
 	label?: string | null;
 	labelledby?: string | null;
+	labelText?: string;
 }
 
 interface EventPayload {
@@ -61,7 +62,7 @@ function inner(b: CheckboxBindings): string {
 		`<input part="control" class="xtyle-checkbox__control" type="checkbox"${checkedAttr}${disabledAttr}${ariaLabel}${ariaLabelledby} />` +
 		INDICATOR +
 		`</span>`;
-	const labelPart = `<span class="xtyle-checkbox__label" part="label"><slot></slot></span>`;
+	const labelPart = `<span class="xtyle-checkbox__label" part="label"><slot></slot>${escapeHtml(b.labelText ?? "")}</span>`;
 	return box + labelPart;
 }
 

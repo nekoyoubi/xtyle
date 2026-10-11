@@ -61,6 +61,7 @@ export const tooltipManifest: ComponentManifest = {
 	description:
 		"Tooltip wraps an interactive trigger and surfaces a short, supplementary hint on hover and on keyboard focus. The hint is linked to the trigger with `aria-describedby` so assistive tech announces it as the element's description, and it floats to one of four `placement` sides (top, bottom, left, right) over an elevated overlay surface with a pointing arrow. It satisfies WCAG 1.4.13 Content on Hover or Focus: the hint is dismissible with Escape, hoverable (the pointer can travel onto the tooltip without it vanishing), and persistent (it stays until focus leaves or the pointer departs both trigger and tooltip). Tip text comes from the `text` prop, or richer markup from the `content` slot. The hint scales past a one-line label: a `mode` of `rich` opens it into a roomier, left-aligned panel that wraps multi-line text and holds structured content (a detail card, a stat or progress readout); `size` dials the padding, and a `tone` colors it, as a leading edge over the neutral overlay by default or as a fully `soft`/`solid` toned surface.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["arrow", "content", "tooltip"],
 	anatomy: [
 		{
@@ -243,6 +244,7 @@ export const tooltipManifest: ComponentManifest = {
 		"For a label that must always be readable, use a visible caption instead; tooltips are progressive enhancement.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"tooltip\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The hint carries `role=\"tooltip\"` and is linked to the trigger via `aria-describedby`, so it is announced as the trigger's description.",
 		"Shows on BOTH pointer hover and keyboard focus, so the hint is reachable without a mouse.",
 		"WCAG 1.4.13 dismissible: Escape hides the hint without moving the pointer or focus, so a hint raised by hover alone is dismissible too. A hint the author forced open with `open` is theirs, and stays.",

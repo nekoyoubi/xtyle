@@ -2,6 +2,8 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { placeOverlay, type OverlayAlign, type OverlayPlacement, type OverlayRect } from "./overlay-position.js";
 import { menuHostCss, type MenuItem } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
+import { returnFocusTarget } from "../focus.js";
 import { manifest, fragmentSources } from "./fragments/menu/source.generated.js";
 
 export type { MenuItem, MenuAction } from "../markup/index.js";
@@ -31,13 +33,14 @@ export class XtyleMenu extends XtyleElement {
 	private cursorAlign: OverlayAlign = "start";
 	private returnFocusTo: HTMLElement | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "menu", {
+		nameTarget: '[role="menu"]',
 		context: (handler) => (handler === "itemClick" || handler === "itemKeydown" ? this.navContext() : undefined),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => this.afterApply(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["items", "label", "open", "context"];
+		return ["items", "label", "open", "context", ...NAME_ATTRIBUTES];
 	}
 
 	get items(): MenuItem[] {
@@ -177,11 +180,8 @@ export class XtyleMenu extends XtyleElement {
 	}
 
 	private captureReturnFocus(): void {
-		if (typeof document === "undefined") return;
-		const active = document.activeElement as HTMLElement | null;
-		if (!active || active === document.body || active === document.documentElement) return;
-		if (active === this || this.contains(active)) return;
-		this.returnFocusTo = typeof active.focus === "function" ? active : null;
+		const target = returnFocusTarget(this);
+		if (target) this.returnFocusTo = target;
 	}
 
 	private clearCursor(): void {

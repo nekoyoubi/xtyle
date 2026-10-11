@@ -387,7 +387,12 @@ not architecture:
   Pushing the other way is worse than magenta: it lands `danger` within ten degrees of `--warn`, which
   breaks the mutual-distinguishability invariant that is a hard promise, to protect hue semantics that
   are not.
-  **`--info` is deliberately NOT guarded**, and the measurement is why. It reads as blue by definition
+  **Every other status role is now guarded by measured distance.** When a role's floored fill sits within
+  `ACCENT_STATUS_SEPARATION` (0.05) of the accent's, it rotates away in 2° steps until it doesn't, capped at the
+  same 30°. So a blue `--info` under a blue accent turns 12–20° on `loud`, `hc` and `nxi-nite`, stays blue, and
+  is left exactly where it was on a theme where the two already read apart. Low-chroma `xtyle-quiet` hits the cap
+  and separates by about 0.03, which is the most a 30° turn buys at its chroma. The history of that call follows.
+  **`--info` was deliberately NOT guarded by hue**, and the measurement is why. It reads as blue by definition
   and the blessed accents are blues, so guarding it rotates every shipped `--info` about thirty degrees
   into violet (`#8b8fff` on `hc`, `#736eff` on `loud`) on four of the five algorithms at their default
   anchors. That trades a role that cannot be told from the accent for a role that is no longer the color
@@ -556,6 +561,17 @@ not architecture:
 `--field-border` ~1.5:1 minimum against `--field-bg`; the state-overlay alpha boost as the bg
 anchor nears its scheme's extreme (near-black hover measured ~1.10:1, now ~1.17:1, matching
 mid-range, while mid-range themes are untouched); and `--link`'s light-theme black-collapse.
+**Control edges: DECIDED, a separate token.** `--field-border` held 1.5:1, so no form control in the four
+soft algorithms met WCAG 1.4.11. `--line-strong` is derived to clear 3:1 against `--field-bg` and every
+surface, and the controls whose shape must be visible draw with it: the shared `.xtyle-control` border,
+`field`, `combobox`, the `checkbox` and `radio` boxes, the `switch` track, the `slider` rail and value
+input, and a hairline around the `avatar` fallback disc. `--field-border`, `--line` and `--line-2` stay
+soft for dividers and decoration. A disabled control keeps the soft edge, which 1.4.11 exempts.
+**The neutral and gray families: DECIDED.** `--neutral-text` now takes the smallest lift that clears the floor on
+every panel, so it stops pinning to white in dark, and `--neutral-vivid` is that ink pushed on to 7:1, so the family
+has three values like every other tone. `--gray` was grouped with the absolutes by proximity rather than intent:
+its ladder now flips with the scheme, so a light theme's gray chip is a light tint with a dark ink beside the other
+named hues. `--white` and `--black` stay invariant, as their names promise.
 The deeper per-algorithm **policy** items above (accent-N identity, accent↔danger, soft-status,
 status-text vividness, surface minimum step, soft-vs-solid) remain; those want a human eye.
 
@@ -884,7 +900,21 @@ half. That is question 18's closing paragraph (`pageFloor` floors against `--bg-
 from the direction it named, and the failure is sharper in light because the surface ladder *descends*, so
 `--bg-2` moves toward a fill rather than away from one.
 
-## 18. A preset's accent outranks the algorithm's own surface-separation floor
+## 18. A preset's accent outranks the algorithm's own surface-separation floor: RESOLVED
+
+**Decided: a preset accent is the algorithm's taste, and it is floored.** A caller's `--accent` constraint is
+still honoured verbatim; an accent the algorithm itself supplies goes through `pageFloor` like any synthesized
+fill, so it is left alone wherever it already clears and moved only where the page would swallow it.
+
+**And `pageFloor` now floors against the whole ladder, at 3:1.** A synthesized solid fill (`--accent`, `--neutral`,
+the four statuses) is walked until it clears `FILL_SURFACE_FLOOR` (WCAG 1.4.11's 3:1) against `--bg-0`, `--bg-1`
+and `--bg-2`, keeping its text headroom. Where no candidate can clear 3:1 and still carry its ink (a mid-luminance
+page), it falls back to the old 1.5 separation against `--bg-0` rather than collapsing to a pole. The status roles
+take the 3:1 tier together or not at all, so they never trade mutual distinguishability for edge contrast. Every
+blessed algorithm's fills now clear 3:1 on every surface in both schemes, which `fill-surface-floor.test.ts` pins.
+The hard invariant is unchanged at 1.5 against `--bg-0`, because 3:1 is not reachable on every page.
+
+What follows is the record of the conflict as it stood.
 
 Two stated intents collide, and they cannot both hold.
 

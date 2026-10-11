@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "@xtyle/core/elements/bar.js";
-	import type { BarSeries, BarScheme } from "@xtyle/core";
+	import type { BarSeries, BarScheme, LabelAngle } from "@xtyle/core";
 
 	interface Props {
 		series?: BarSeries[];
@@ -16,6 +16,8 @@
 		label?: string;
 		/** Make bars actionable: each becomes a `role="button"` that fires `select` on click or Enter/Space. */
 		selectable?: boolean;
+		/** Angle of the category labels: `"auto"` tilts them only when they would collide; a number fixes it, `0` upright to `-90` vertical. */
+		labelAngle?: LabelAngle;
 		/** Fired when a bar is activated (only when `selectable`), carrying the series, category, value, and indices. */
 		onselect?: (
 			event: CustomEvent<{ series: string; category: string; value: number; seriesIndex: number; categoryIndex: number }>,
@@ -37,6 +39,7 @@
 		height = 320,
 		label,
 		selectable = false,
+		labelAngle = "auto",
 		onselect,
 		...rest
 	}: Props = $props();
@@ -63,6 +66,7 @@
 	show-values={showValues || undefined}
 	legend={legend ? undefined : "false"}
 	selectable={selectable || undefined}
+	label-angle={labelAngle === "auto" ? undefined : String(labelAngle)}
 	{onselect}
 	{height}
 	{label}

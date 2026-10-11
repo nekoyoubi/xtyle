@@ -49,6 +49,7 @@ const builtInFills: Record<string, BuiltInFill> = {
 	"component.icon": { name: "xtyle-icon-default", load: () => import("./fragments/icon/source.generated.js") },
 	"component.image": { name: "xtyle-image-default", load: () => import("./fragments/image/source.generated.js") },
 	"component.kbd": { name: "xtyle-kbd-default", load: () => import("./fragments/kbd/source.generated.js") },
+	"component.number-format": { name: "xtyle-number-format-default", load: () => import("./fragments/number-format/source.generated.js") },
 	"component.link": { name: "xtyle-link-default", load: () => import("./fragments/link/source.generated.js") },
 	"component.list": { name: "xtyle-list-default", load: () => import("./fragments/list/source.generated.js") },
 	"component.markdown": { name: "xtyle-markdown-default", load: () => import("./fragments/markdown/source.generated.js") },

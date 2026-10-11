@@ -1,8 +1,10 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { DeriveOptions, TokenRegister } from "../types.js";
+import { SCHEMES, resolveOptionalVocab, resolveVocab } from "../vocab.js";
 
 type Scheme = "light" | "dark";
-type ScopeTarget = "self" | "root";
+const SCOPE_TARGETS = ["self", "root"] as const;
+type ScopeTarget = (typeof SCOPE_TARGETS)[number];
 
 /** Fired on the scope (bubbling, composed) once a derivation lands, so a surrounding page can mirror
  * the scope's state. `detail.scheme` is the scheme now rendering and `detail.register` the applied
@@ -42,6 +44,8 @@ export class XtyleThemeScope extends XtyleElement {
 		return "inherit";
 	}
 
+	static override readonly ownedData = ["data-effective-scheme"];
+
 	static get observedAttributes(): string[] {
 		return ["algorithm", "knobs", "constraints", "scheme", "target"];
 	}
@@ -54,7 +58,7 @@ export class XtyleThemeScope extends XtyleElement {
 	}
 
 	get target(): ScopeTarget {
-		return this.getAttribute("target") === "root" ? "root" : "self";
+		return resolveVocab(this.getAttribute("target"), SCOPE_TARGETS, "self", "theme scope target");
 	}
 	set target(value: ScopeTarget) {
 		this.setAttribute("target", value);
@@ -64,9 +68,7 @@ export class XtyleThemeScope extends XtyleElement {
 	 * derivation actually produced, so a scope with no `scheme` set reports its algorithm's native
 	 * mode rather than a guess. */
 	get scheme(): Scheme {
-		const pinned = this.getAttribute("scheme");
-		if (pinned === "light" || pinned === "dark") return pinned;
-		return this.resolvedScheme ?? "dark";
+		return resolveOptionalVocab(this.getAttribute("scheme"), SCHEMES, "theme scope scheme") ?? this.resolvedScheme ?? "dark";
 	}
 	set scheme(value: Scheme) {
 		this.setAttribute("scheme", value);
@@ -118,8 +120,8 @@ export class XtyleThemeScope extends XtyleElement {
 	private async derive(): Promise<void> {
 		if (typeof document === "undefined") return;
 		const ticket = ++this.pending;
-		const requested = this.getAttribute("scheme");
-		const wanted = requested === "light" || requested === "dark" ? requested : null;
+		const target = this.applyTarget;
+		const wanted = resolveOptionalVocab(this.getAttribute("scheme"), SCHEMES, "theme scope scheme");
 
 		try {
 			const [{ derive }, { getAlgorithm }, { apply }, { schemeOf }] = await Promise.all([
@@ -141,7 +143,7 @@ export class XtyleThemeScope extends XtyleElement {
 			if (ticket !== this.pending) return;
 
 			this.releaseApplied();
-			apply(register, { target: this.applyTarget });
+			apply(register, { target });
 			this.applied = register;
 			this.resolvedScheme = scheme === "light" ? "light" : "dark";
 			this.setAttribute("data-effective-scheme", this.resolvedScheme);
@@ -162,10 +164,19 @@ export class XtyleThemeScope extends XtyleElement {
 		void this.derive();
 	}
 
+	private connectedBefore = false;
+
+	override connectedCallback(): void {
+		const reconnecting = this.connectedBefore;
+		this.connectedBefore = true;
+		super.connectedCallback();
+		if (reconnecting && !this.applied) void this.derive();
+	}
+
 	override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.pending++;
-		this.releaseApplied();
+		if (this.target === "root") this.releaseApplied();
 	}
 }
 

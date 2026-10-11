@@ -37,6 +37,7 @@ export const paginationManifest: ComponentManifest = {
 	description:
 		'Pagination walks a reader through a paged collection. It is a `<nav>` landmark wrapping previous and next controls and an ordered list of page numbers; the current page is marked `aria-current="page"`, and a sibling window around it keeps the control compact, collapsing the gaps to an ellipsis when there are more pages than fit. The visible range is computed from `page` and `total` plus two knobs: `siblings` (links on each side of the current page) and `boundaries` (links pinned at each end). Give it an `href` template containing `{page}` and every page renders as a real link, so the control navigates with zero JavaScript and works on the static Astro path; omit the template and the pages render as buttons that emit a `page-change` event carrying the chosen page. A `tone` colors the current-page pill and three `size`s scale the type.',
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["control", "ellipsis", "item-wrap", "list", "page", "pagination"],
 	anatomy: [
 		{
@@ -223,6 +224,8 @@ export const paginationManifest: ComponentManifest = {
 		"Drop `siblings`/`boundaries` to `0`/`1` for the most compact control, or raise `siblings` when there's room for a wider window.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `<nav>`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
+		"Under `forced-colors: active` the current page fills with the system `Highlight` and `HighlightText`, since the mode flattens its tone fill to `Canvas`.",
 		'Renders a `<nav>` landmark with an accessible name (`aria-label`, default "Pagination") so screen readers can find and announce the pager.',
 		'The current page carries `aria-current="page"` and is not actionable; it is the destination, not a target.',
 		"Each page and control has an explicit accessible name (`Go to page N`, `Previous page`, `Next page`), so the digit or arrow glyph is never read bare.",

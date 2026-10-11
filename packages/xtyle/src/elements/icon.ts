@@ -135,10 +135,15 @@ export class XtyleIcon extends XtyleElement {
 		return "";
 	}
 
+	private checkVocab(): void {
+		void this.colors;
+	}
+
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(iconHostCss);
 		this.fragment.update(this.bindings);
+		this.checkVocab();
 	}
 }
 

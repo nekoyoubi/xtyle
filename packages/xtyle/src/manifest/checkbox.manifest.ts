@@ -72,6 +72,7 @@ export const checkboxManifest: ComponentManifest = {
 	description:
 		"Checkbox stages a single boolean value: unlike a switch it doesn't apply on toggle, contributing its `value` to an enclosing form only on submit. It styles a native `<input type=\"checkbox\">` with `appearance: none` and overlays a custom indicator, so it keeps every native affordance (keyboard activation, form participation, label association) while looking the part. Beyond the on/off pair it carries a third visual state, `indeterminate`, for the classic select-all / partial-selection pattern; the indicator switches from a check mark to a dash, and any user interaction clears it. Two sizes, `sm` and `md`, cover compact and default density.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["box", "checkbox", "control", "indicator", "label"],
 	anatomy: [
 		{
@@ -86,7 +87,7 @@ export const checkboxManifest: ComponentManifest = {
 			selector: ".xtyle-checkbox__control",
 			tokens: [
 				"--field-bg",
-				"--field-border",
+				"--line-strong",
 				"--border-thin",
 				"--radius-sm",
 				"--accent",
@@ -160,7 +161,8 @@ export const checkboxManifest: ComponentManifest = {
 		{
 			name: "label",
 			type: "string",
-			description: "Accessible name when no visible label text is slotted.",
+			description:
+				"The visible label beside the box, and its accessible name, when nothing is slotted. Slotted content wins when both are given. To name the box without showing text, use `aria-label`, the same split as `Switch` and `Segmented`.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -226,6 +228,7 @@ export const checkboxManifest: ComponentManifest = {
 		"--weight-semibold",
 		"--field-bg",
 		"--field-border",
+		"--line-strong",
 		"--border-thin",
 		"--border-normal",
 		"--radius-sm",
@@ -241,6 +244,8 @@ export const checkboxManifest: ComponentManifest = {
 		"For a one-of-many choice use a radio group instead; checkbox is for independent booleans.",
 	],
 	a11y: [
+		"The box's edge is drawn in `--line-strong` and clears 3:1 against the page; a disabled box keeps the soft edge, which 1.4.11 exempts.",
+		"The host's `aria-label` / `aria-labelledby` names the inner checkbox `<input>` (on `<xtyle-checkbox-group>`, its `role=\"group\"`), ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"Wraps a native `<input type=\"checkbox\">` inside a `<label>`, so keyboard toggling, focus, and label association come for free.",
 		"`indeterminate` is a presentation-only state on the native input; the box reports checked/unchecked to assistive tech, never a mixed value.",
 		"With no slotted text the checkbox REQUIRES a `label` or `labelledby`; the binding warns at runtime when no accessible name is found.",

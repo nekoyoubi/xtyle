@@ -55,19 +55,19 @@ export default defineConfig({
 		},
 		{
 			name: "events",
-			testMatch: /(events|keyboard|forms)\.spec\.ts/,
+			testMatch: /(events|keyboard|forms|resolve-color|attribute-writes).spec.ts/,
 			use: { ...devices["Desktop Chrome"], channel: undefined },
 		},
 		// INFO: structural, never pixel — glyph rasterisation differs per engine, so a cross-engine
 		// baseline diffs fonts rather than markup and teaches you to ignore it.
 		{
 			name: "firefox",
-			testMatch: /(render|bench|events|keyboard|forms)\.spec\.ts/,
+			testMatch: /(render|bench|events|keyboard|forms|resolve-color|attribute-writes).spec.ts/,
 			use: { ...devices["Desktop Firefox"] },
 		},
 		{
 			name: "webkit",
-			testMatch: /(render|bench|events|keyboard|forms)\.spec\.ts/,
+			testMatch: /(render|bench|events|keyboard|forms|resolve-color|attribute-writes).spec.ts/,
 			use: { ...devices["Desktop Safari"] },
 		},
 		// INFO: the only project that isn't 1280 wide — every other sweep would pass a layout that

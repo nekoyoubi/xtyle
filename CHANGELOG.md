@@ -1,5 +1,91 @@
 # Changelog
 
+## v0.13.0
+
+One new component and a lot of new reach on the ones already here. Every solid fill now clears 3:1 against every surface it sits on, and the edges of form controls get a token that clears it too. Around that: a one-call browser bootstrap, a way to hand a token's color to SVG and canvas, forms that submit and reset the way native controls do, and a record of which version every export arrived in.
+
+### Contrast
+
+- **Solid fills clear 3:1 on every surface.** `--accent`, `--neutral`, and the four statuses are walked until they clear WCAG 1.4.11's 3:1 against `--bg-0`, `--bg-1`, and `--bg-2`, in both schemes, on every blessed algorithm
+  - where no candidate can clear 3:1 and still carry its ink (a mid-luminance page), a fill falls back to the old 1.5 separation against `--bg-0` rather than collapsing to a pole
+  - the statuses take the 3:1 tier together or not at all, so they never trade distinguishability from each other for edge contrast
+  - an accent an algorithm supplies as its own default is floored like any other synthesized fill; an `--accent` you pin is still honoured exactly
+- **`--line-strong` draws the edges a control needs you to see.** `--field-border` held 1.5:1, so no form control in the four soft algorithms met 1.4.11; the new token clears 3:1 against `--field-bg` and every surface
+  - the shared `.xtyle-control` border, `field`, `combobox`, the `checkbox` and `radio` boxes, the `switch` track, the `slider` rail, and the `avatar` fallback disc draw with it
+  - `--field-border`, `--line`, and `--line-2` stay soft for dividers, and a disabled control keeps the soft edge, which 1.4.11 exempts
+- **`--info` no longer lands on the accent.** A status role whose fill sits too close to the accent's rotates away a few degrees at a time, up to 30°, so a blue `--info` under a blue accent stays blue and still reads as a different color; a theme where the two already read apart is left alone
+- **The neutral family has three values like every other tone.** `--neutral-text` takes the smallest lift that clears the floor on every panel instead of pinning to white in dark, and `--neutral-vivid` pushes on to 7:1
+- **`--gray` flips with the scheme.** A light theme's gray chip is a light tint with a dark ink, beside the other named hues; `--white` and `--black` stay invariant, as their names promise
+
+### Algorithms
+
+- **Algorithm mods do their color math through the host.** The `cuti` binding carries the color primitives into the sandbox, so no mod bundles a color library, and each blessed mod dropped from about 220 KB to about 116 KB
+- **`@xtyle/core/esbuild` is the mod build plugin,** `xtyleModPlugin`, so a third-party pack builds its algorithm the same way the blessed set does
+- **`resolvePreset` fills a partial preset out to a whole one** against the exported `PRESET_DEFAULTS`, and a field passed as `undefined` takes the default instead of reaching the derivation as `NaN`
+
+### In the browser
+
+- **`@xtyle/core/install` is the whole bootstrap in one call.** `install()` derives, applies, and puts the component and effect sheets in the document; `derive` plus `apply` alone looks right until a light-DOM component draws without its rules or a `data-fx` spec does nothing
+  - each call takes a claim on the sheets and `uninstall()` releases one, so two apps sharing a page don't remove each other's rules
+- **`resolveColor` turns a token into plain sRGB.** Tokens derive as `color-mix()` and `oklch()`, which only the cascade understands; `resolveColor` from `@xtyle/core/dom` lets the browser compute an expression or a property against the live theme, for an SVG attribute, a canvas `fillStyle`, or a WebGL uniform
+- **`focusableIn` and `activeLeaf` see through shadow roots,** so a focus trap built from `@xtyle/core/dom` cycles through the controls inside xtyle's elements rather than stopping at their hosts
+- **Every xtyle tag is in `HTMLElementTagNameMap`.** `document.createElement("xtyle-segmented")` and `querySelector("xtyle-switch")` come back typed as their element classes, with no casts
+- **A manifest says where a component renders.** `render` is `shadow`, `light`, or `auto`, which is what decides whether `::part()` reaches anything or the anatomy selectors are the handle
+- **`@xtyle/core/api-since.json` records the version every export arrived in,** and the MCP server's version-pinned component answers drop the props, events, and methods that shipped after the pin, naming what they omitted
+
+### Components
+
+- **`NumberFormat` renders a number for its locale.** Decimal, `currency`, `percent`, `compact`, and `unit` formats, with sign, currency display, and unit display controls; `formatNumber` and `parseNumberValue` export alongside it for use outside the element
+  - a fill receives `parts` beside the formatted string, the output split into typed pieces so a mod can style the currency symbol or the cents on their own; `formatNumberParts` gives the same split outside the element
+- **`xtyle-list` does menus and save slots now.** Headings split a list into labelled sections (toned sections paint the whole group), a `checked` row is a toggle, and rows take a second line of `description`, a `badge`, per-row `solid` / `outline` / `subtle` variants, underlined accelerator keys, and `separator` breaks
+  - trailing fields expose `trail-1` to `trail-3`, and the `group-items` part takes `subgrid`, so columns line up across rows and across sections
+  - `checkedLabel` and `uncheckedLabel` set the words a toggle row announces, for a list in another language
+- **`Avatar` has diamonds, frames, and bevels.** `shape="diamond"` turns the square 45° with the content kept upright, and an effect's overlay clips to the diamond, so `glare` and `holo` stay inside it; `frame` paints a `solid` or `gradient` ring in `frameTone` / `frameTone2`, and `bevel` shades it from the theme's own `--white` and `--black`
+- **`AvatarGroup` lays out more than a face pile.** `layout` takes `overlap`, `row`, `wrap`, or `lattice` (a zigzag that nests diamonds edge to edge), and `stack="start"` puts the first item on top
+- **Table rows and cells take a tone.** `data-tone` on a row paints the row, on a cell just the cell, and the hover tint lays over it rather than replacing it
+- **Accordion sections carry header-row controls.** An `actions` slot sits beside the trigger, never inside it, and the Svelte binding adds a rich `header` snippet; reordering sections keeps every panel's open state and the focused header with its section
+- **Circular `progress` takes a `linecap`.** `butt` stops the arc exactly at the value, which is why a `meter` defaults to it; `round` is softer and runs a little long
+- **Chart and bar axis labels tilt instead of colliding.** Labels that would overlap rotate to fit and the plot makes room under them, one too long for that room is shortened, and `labelAngle` fixes the angle when you'd rather choose
+- **`Switch` has a `spread` row,** label at the start and track at the end, so a column of settings lines up
+- **An app can own the keyboard cursor.** `cursor` on `Button`, `Switch`, `Segmented`, and `Select` draws the same focus ring and forced-colors outline while DOM focus stays where it is, for a game or kiosk menu driven by its own input
+- **A `Button` submits a form from anywhere** through `form`, the way a native button's `form` attribute works
+- **`Checkbox` shows its `label`,** the same split as `Switch` and `Segmented`: `label` is visible text, slotted content wins over it, and `aria-label` names the box without showing anything
+- **A mod can draw what a component has no prop for.** The host's own `data-*` attributes reach every fill as `bindings.hostData`, and `Avatar` has an empty `marks` part for exactly that, so `<xtyle-avatar data-rank="3">` can grow rank pips with no core change
+
+### Effects
+
+- **`glare` can glint.** `width`, `repeat`, `rest`, and `amount` turn the single sweep into a thin streak that crosses, stays off the box for a while, and crosses again: `glare?repeat:infinite,rest:3,width:6%`
+- **`holo` is an iridescent foil** that drifts through the named hues, and it takes `amount`, `angle`, and `rate`
+- **Two overlays can share an element.** An effect can paint on `::before` as well as `::after`, so `data-fx="holo glare"` runs both, the glint passing over the foil
+
+### Fixes
+
+- **Reduced motion stopped flattening effects that don't move.** It used to reset `transform` on everything animated; it now resets only what an effect actually moves, and an effect whose emphasis lives in its keyframes holds a still frame, so a reduced-motion `throb` still glows
+  - `moves` on a registered effect overrides the guess the library makes from its CSS, for an effect that guess gets wrong
+- **The `hidden` attribute hides every element.** A component sheet giving its host a `display` outranked the UA rule, so `hidden` did nothing on several of them; every shadow host sheet now leads with a guard, and the light-DOM layer covers its variants too
+- **Form controls reset.** A form's reset returns every xtyle control to its authored `value`, `values`, or `checked`, as `defaultValue` does natively, including a `select` that had no authored value
+- **A name on the host reaches the control.** `aria-label` and `aria-labelledby` on an `xtyle-field`, `xtyle-checkbox`, `xtyle-number-input`, and the rest are forwarded to the inner element carrying the role, and `aria-labelledby` ids resolve from the host's own tree rather than inside the shadow root
+- **Arrow keys follow the writing direction.** Under `dir="rtl"` a radio group, a rating, a bottom nav, and the other inline-axis keyboards move toward the side the key points at
+- **A `theme-scope` keeps its theme across a reparent** instead of dropping it when it's moved in the DOM
+- **A property set before an element upgrades is no longer lost.** It's routed through the element's setter on upgrade instead of shadowing it
+- **`select` shows its value however the options arrive,** before connect, after it, or one at a time, and `number-input` rewrites the field with the clamped value when a commit lands outside the range
+- **An attribute write that changes nothing no longer re-renders.** A host that re-applies its state every frame stops redrawing elements whose inputs didn't move
+- **An enumerated attribute outside its options warns** rather than silently rendering the default, and the `gap` on `Stack`, `Cluster`, and `Grid` says it takes a `--space` step, not a size name
+- **A popover, menu, or command palette returns focus to its trigger when that trigger lives inside a shadow root**
+- **Token colors paint in an icon's outline in every engine.** The outline filter's `flood-color` moved into `style`, where a `var()` resolves
+- **`progress`, selected tabs, and carousel dots stay visible under forced colors,** where they had flattened to `Canvas` and disappeared
+- **The tooltip arrow no longer scrolls its box,** and a search `Field` with a clear button no longer shows the browser's own clear button beside it
+- **Code highlights when `prismjs` isn't pre-bundled.** A bundler serving it un-optimized handed back an empty namespace, so code rendered plain with no warning; the highlighter is read from the global as well, and a grammar that fails to load says so once in the console
+- **The published CLI derives without a checkout.** `xtyle derive` and the rest looked for algorithms in the repo's own `algorithms/` folder; they now reach the blessed set bundled in the package
+- **`carousel` stopped advertising `::part()` names** it could never honour, since it renders light DOM
+
+| package | tests |
+|---|---|
+| `@xtyle/core` | 4495 |
+| `@xtyle/site` | 101 |
+| `@xtyle/svelte` | 30 |
+| visual regression | 1647 |
+
 ## v0.12.0
 
 No new components this time. v0.12.0 finishes what was already here. A theme declares two schemes and had only ever derived one: the light half came off an anchor nobody chose, went ungraded by the audit, and had never been drawn in the visual suite. All three are closed. The discovery path reached the browser at the same time, so the generator derives with any published algorithm rather than the bundled five. Under both sits the largest defect sweep the project has run: which channel a control posts on, what a manifest promises against what an element does, and a keyboard driven through three engines instead of assumed from one.

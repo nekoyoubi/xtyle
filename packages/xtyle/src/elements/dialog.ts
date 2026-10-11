@@ -1,6 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { dialogHostCss, type DialogSize } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/dialog/source.generated.js";
 import { resolveVocab, DIALOG_SIZES } from "../vocab.js";
 
@@ -18,6 +19,7 @@ export class XtyleDialog extends XtyleElement {
 	private wiredDialog: HTMLDialogElement | null = null;
 	private portalMarker: Comment | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "dialog", {
+		nameTarget: '[part="dialog"]',
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => {
 			this.wireNative();
@@ -26,7 +28,7 @@ export class XtyleDialog extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["open", "size", "heading", "label", "labelledby", "close-label", "no-close-button"];
+		return ["open", "size", "heading", "label", "labelledby", "close-label", "no-close-button", ...NAME_ATTRIBUTES];
 	}
 
 	get open(): boolean {
@@ -131,7 +133,7 @@ export class XtyleDialog extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("heading") && !this.getAttribute("labelledby") && !this.getAttribute("label")) {
+		if (!this.getAttribute("heading") && !this.getAttribute("labelledby") && !this.getAttribute("label") && !hasHostName(this)) {
 			console.warn(
 				"xtyle-dialog: no accessible name. Provide a `heading`, `label`, or `labelledby` so the dialog is announced.",
 			);

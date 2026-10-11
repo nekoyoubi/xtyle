@@ -198,4 +198,11 @@ export const datePickerCss = `
 	white-space: nowrap;
 	border: 0;
 }
+@media (forced-colors: active) {
+	.xtyle-datepicker__time-option[aria-selected="true"] {
+		forced-color-adjust: none;
+		background: Highlight;
+		color: HighlightText;
+	}
+}
 `.trim();

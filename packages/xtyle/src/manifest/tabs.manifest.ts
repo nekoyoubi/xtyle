@@ -150,6 +150,7 @@ export const tabsManifest: ComponentManifest = {
 	description:
 		"Tabs presents one panel of content at a time, switched by a row of tab triggers. It implements the complete WAI-ARIA tabs pattern: a `role=\"tablist\"` of `role=\"tab\"` buttons paired with `role=\"tabpanel\"` regions, roving tabindex (only the selected tab is in the tab order), arrow-key navigation with Home/End jumps, and `aria-selected` / `aria-controls` / `aria-labelledby` wiring done for you. The `activation` knob chooses automatic activation (arrowing selects as you move) or manual (arrow to move focus, Enter/Space to select). Three visual treatments (underline, pill, and enclosed) change the chrome without touching the semantics. Authors declare each tab as a `slot=\"tab\"` (or `data-xtyle-tab`) element and its content as the matching `slot=\"panel\"` (or `data-xtyle-panel`) element; the element pairs them by order, assigns ids, and owns the selection state. Astro consumes a child's `slot` attribute to route it, so the `data-` markers are the ones that survive there.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["panel", "panels", "tab", "tablist", "tabs"],
 	anatomy: [
 		{
@@ -420,6 +421,8 @@ export const tabsManifest: ComponentManifest = {
 		"Set `tablist` (or omit the Svelte `panel` snippet) when the tabs control only part of a layout: an editor whose left pane switches per tab while a right sidebar persists across all of them, keeping its own scroll and selection.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"tablist\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
+		"Under `forced-colors: active` the selected tab fills with the system `Highlight` and `HighlightText` in every variant, since the mode forces the accent ink, underline and pill to the same system colors as the other tabs.",
 		"Implements the WAI-ARIA tabs pattern: `role=\"tablist\"` / `role=\"tab\"` / `role=\"tabpanel\"` with `aria-selected`, `aria-controls`, and `aria-labelledby` wired automatically; in `tablist` mode the element owns no panels, so tabs omit `aria-controls` and stand as a bare tablist.",
 		"Roving tabindex: only the selected tab is in the tab order; arrow keys move between tabs, Home/End jump to the first/last enabled tab.",
 		"`activation` chooses automatic (select on focus) or manual (Enter/Space to select) per the WAI-ARIA guidance for cheap vs. expensive panels.",

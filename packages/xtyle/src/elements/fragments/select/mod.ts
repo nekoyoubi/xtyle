@@ -11,6 +11,7 @@ interface SelectBindings {
 	size?: string;
 	disabled?: boolean;
 	focusable?: boolean;
+	cursor?: boolean;
 	invalid?: boolean;
 	required?: boolean;
 	error?: string | null;
@@ -66,6 +67,7 @@ hooks.fragment.mount("select", (bindings, ops) => {
 	}
 	ops.setAttr("[data-control]", "aria-invalid", String(invalid));
 	ops.setAttr("[data-control]", "tabindex", bindings.focusable === false ? "-1" : "");
+	if (bindings.cursor) ops.setAttr("[data-control]", "data-cursor", "true");
 	if (bindings.value != null) ops.setAttr("[data-control]", "value", bindings.value);
 	if (invalid && error.length > 0) ops.setAttr("[data-control]", "aria-describedby", errorId);
 	ops.replaceChildren("[data-control]", bindings.optionsHtml ?? "");
@@ -86,6 +88,8 @@ hooks.fragment.update("select", (bindings, ops) => {
 	ops.toggle("[data-label]", label.length > 0);
 
 	ops.setAttr("[data-control]", "aria-invalid", String(invalid));
+	ops.setAttr("[data-control]", "tabindex", bindings.focusable === false ? "-1" : "");
+	ops.setAttr("[data-control]", "data-cursor", bindings.cursor ? "true" : "");
 	const fieldId = bindings.fieldId ?? "xtyle-select";
 	const errorId = bindings.errorId ?? `${fieldId}-error`;
 	ops.setAttr("[data-control]", "aria-describedby", invalid && error.length > 0 ? errorId : "");

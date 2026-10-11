@@ -15,7 +15,6 @@ import CardLink from "@xtyle/astro/CardLink.astro";
 import Toc from "@xtyle/astro/Toc.astro";
 import Dock from "@xtyle/astro/Dock.astro";
 import Badge from "@xtyle/astro/Badge.astro";
-import Link from "@xtyle/astro/Link.astro";
 import Heading from "@xtyle/astro/Heading.astro";
 import Text from "@xtyle/astro/Text.astro";
 import Separator from "@xtyle/astro/Separator.astro";
@@ -106,6 +105,14 @@ const events = component.events ?? [];
 const methods = component.methods ?? [];
 const exposedParts = component.exposedParts ?? [];
 const hasExposedParts = exposedParts.length > 0;
+const anatomyNote =
+	component.render === "light"
+		? "The named parts that make up the component, with their selectors. This one renders light DOM, so the selector is the handle and ::part() does not apply."
+		: hasExposedParts
+			? component.render === "auto"
+				? "The named parts that make up the component. Created from script it renders a shadow root, where a ::part() handle is reachable from your own stylesheet and the class beside it is internal. Upgraded over server-rendered markup it renders light DOM, where the class is the handle."
+				: "The named parts that make up the component. A ::part() handle is reachable from your own stylesheet; the class beside it is the component's internal selector, which a shadow boundary keeps to itself."
+			: "The named parts that make up the component, with their internal selectors. None is exposed as a ::part() handle, so a shadow-rendered instance styles through tokens rather than selectors.";
 
 const trimmedDescription = component.description.trim();
 const firstParagraph = trimmedDescription.split(/\n{2,}/)[0];
@@ -359,11 +366,7 @@ const crumbs = [
 				<Stack gap={3}>
 					<Stack gap={1}>
 						<Heading level={2} size="lg">Anatomy</Heading>
-						<Text tone="muted" size="sm">
-							{hasExposedParts
-								? "The named parts that make up the component. A ::part() handle is reachable from your own stylesheet; the class beside it is the component's internal selector, which a shadow boundary keeps to itself."
-								: "The named parts that make up the component, with their selectors. This one renders light DOM, so the selector is the handle."}
-						</Text>
+						<Text tone="muted" size="sm">{anatomyNote}</Text>
 					</Stack>
 					<Stack gap={3}>
 						{component.anatomy.map((part) => (

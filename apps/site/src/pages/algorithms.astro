@@ -147,6 +147,18 @@ npx xtyle audit -a sunrise`;
 const loadSnippet = `npm run build:mods            # bundles src/mod.ts → src/mod.js
 npx xtyle derive -a sunrise    # loads by id, derives a theme`;
 
+const pluginSnippet = `import { build } from "esbuild";
+import { xtyleModPlugin } from "@xtyle/core/esbuild";
+
+await build({
+  entryPoints: ["algorithms/sunrise/src/mod.ts"],
+  outfile: "algorithms/sunrise/src/mod.js",
+  bundle: true,
+  format: "iife",
+  platform: "neutral",
+  plugins: [xtyleModPlugin()],
+});`;
+
 const packManifestSnippet = `{
   "name": "@someone/xtyle-sunrise",
   "version": "1.0.0",
@@ -449,6 +461,14 @@ const fanComparison = [
 						CLI, the importable API, and the browser.
 					</Text>
 					<Code lang="bash" code={loadSnippet} />
+					<Text tone="muted">
+						Building outside this repo, add <code>xtyleModPlugin</code> to your esbuild call.
+						It points the engine's color math at the host's <code>cuti</code> binding instead
+						of bundling a color library into the mod, which halves its size and speeds up every
+						derive with identical output. A mod built without it still works; it just carries
+						its own copy.
+					</Text>
+					<Code lang="typescript" code={pluginSnippet} />
 				</Stack>
 			</Panel>
 

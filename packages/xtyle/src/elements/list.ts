@@ -15,7 +15,7 @@ import { resolveRoving, SelectionModel } from "./collection/index.js";
 import { manifest, fragmentSources } from "./fragments/list/source.generated.js";
 import { resolveVocab, LIST_INTERACTIONS, LIST_SELECTIONS, ORIENTATIONS, SIZES } from "../vocab.js";
 
-export type { ListItem, ListAction, ListInput } from "../markup/index.js";
+export type { ListItem, ListAction, ListBadge, ListInput } from "../markup/index.js";
 
 interface ListNavContext {
 	navItems: Array<{ key: string; skip?: boolean }>;
@@ -35,13 +35,15 @@ export class XtyleList extends XtyleElement {
 	private seeded = false;
 	private elementId = `xtyle-list-${Math.random().toString(36).slice(2, 8)}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "list", {
+		nameTarget: '[part="list"]',
+		hostName: false,
 		context: (handler) =>
 			handler === "navKeydown" || handler === "selectItem" ? this.navContext() : undefined,
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["items", "options", "interaction", "selection", "orientation", "size", "label", "labelledby", "aria-label"];
+		return ["items", "options", "interaction", "selection", "orientation", "size", "label", "labelledby", "aria-label", "checked-label", "unchecked-label"];
 	}
 
 	get items(): ListItem[] {
@@ -90,6 +92,22 @@ export class XtyleList extends XtyleElement {
 		this.setAttribute("size", value);
 	}
 
+	/** Announced after a checked row's label, in place of `checked`, for a list in another language. */
+	get checkedLabel(): string {
+		return this.getAttribute("checked-label") || "checked";
+	}
+	set checkedLabel(value: string | null | undefined) {
+		this.reflectString("checked-label", value);
+	}
+
+	/** Announced after an unchecked row's label, in place of `not checked`. */
+	get uncheckedLabel(): string {
+		return this.getAttribute("unchecked-label") || "not checked";
+	}
+	set uncheckedLabel(value: string | null | undefined) {
+		this.reflectString("unchecked-label", value);
+	}
+
 	/** The selected item values (empty in `none`, at most one in `single`). */
 	get selected(): string[] {
 		return this.selection.selectedKeys();
@@ -123,14 +141,22 @@ export class XtyleList extends XtyleElement {
 			this.seeded = true;
 			return;
 		}
-		this.selection.retain(new Set(this.items.map((item) => item.value)));
-		if (this.rovingValue !== null && !this.items.some((item) => item.value === this.rovingValue)) {
+		this.selection.retain(new Set(this.choosableValues()));
+		if (this.rovingValue !== null && !this.choosableValues().includes(this.rovingValue)) {
 			this.rovingValue = null;
 		}
 	}
 
+	private choosable(): ListItem[] {
+		return this.items.filter((item) => !item.heading && !item.separator);
+	}
+
+	private choosableValues(): string[] {
+		return this.choosable().map((item) => item.value);
+	}
+
 	private navItems(): Array<{ key: string; skip?: boolean }> {
-		return this.items.map((item) => ({ key: item.value, skip: item.disabled }));
+		return this.choosable().map((item) => ({ key: item.value, skip: item.disabled }));
 	}
 
 	private ensureRoving(): string | null {
@@ -159,6 +185,8 @@ export class XtyleList extends XtyleElement {
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
 			ariaLabel: this.getAttribute("aria-label"),
+			checkedLabel: this.checkedLabel,
+			uncheckedLabel: this.uncheckedLabel,
 			elementId: this.elementId,
 		};
 	}
@@ -175,7 +203,7 @@ export class XtyleList extends XtyleElement {
 		}
 		if (intent.select !== undefined) {
 			const key = intent.select;
-			const order = this.items.map((item) => item.value);
+			const order = this.choosableValues();
 			if (intent.selectMode === "toggle") this.selection.toggle(key);
 			else if (intent.selectMode === "range") this.selection.extendTo(key, order);
 			else this.selection.replaceWith(key);

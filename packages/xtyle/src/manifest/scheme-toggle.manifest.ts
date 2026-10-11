@@ -59,6 +59,7 @@ export const schemeToggleManifest: ComponentManifest = {
 	description:
 		"Scheme Toggle is the dark/light switch, and it *is* an icon-only `<xtyle-button>` — it composes the button rather than reinventing a control, so it inherits its variants, sizes, focus ring, hover, and mods for free. Inside an `<xtyle-theme-scope>` it drives the scope, which re-derives the active theme through the engine's inversion so every surface lands where the algorithm places it for the opposite mode. Standalone, with no scope in sight, it flips `:root[data-scheme]`, persists the choice to `localStorage` (key `storage-key`, default `xtyle.scheme`), and fires an `xtyle:scheme-change` event. The glyph follows the convention of showing the mode you'd switch *to* — a sun while dark, a moon while light. `light-icon` and `dark-icon` swap either glyph for any named xtyle icon, and `reverse` flips the convention to show the mode you're currently *in* (for the contrarians).",
 	bindings: ["html", "svelte", "astro"],
+	render: "light",
 	anatomy: [
 		{
 			name: "control",

@@ -178,4 +178,11 @@ export const tabsCss = `
 		font-size: 0.85em;
 	}
 }
+@media (forced-colors: active) {
+	.xtyle-tabs__tab[aria-selected="true"] {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+}
 `.trim();

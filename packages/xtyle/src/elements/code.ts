@@ -74,9 +74,10 @@ export class XtyleCode extends XtyleElement {
 		this.reflectBoolean("preload", value);
 	}
 
-	/** The copy-to-clipboard button is on by default; set `copy="false"` to drop it. */
+	/** The copy-to-clipboard button is on by default; set `copy="false"` or `copy="none"` to drop it. */
 	get copy(): boolean {
-		return this.getAttribute("copy") !== "false";
+		const copy = this.getAttribute("copy");
+		return copy !== "false" && copy !== "none";
 	}
 	set copy(value: boolean) {
 		if (value) this.removeAttribute("copy");

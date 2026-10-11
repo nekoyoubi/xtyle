@@ -2,8 +2,9 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
 import { numberInputHostCss, clampNumber } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/number-input/source.generated.js";
-import { resolveVocab, SIZES } from "../vocab.js";
+import { resolveVocab, SIZES, STEP_MODIFIERS } from "../vocab.js";
 
 export class XtyleNumberInput extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -19,6 +20,7 @@ export class XtyleNumberInput extends XtyleElement {
 	}
 	private elementId = `xtyle-number-${Math.random().toString(36).slice(2, 8)}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "number-input", {
+		nameTarget: '[role="spinbutton"]',
 		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
 			this.syncStepButtons();
@@ -27,7 +29,7 @@ export class XtyleNumberInput extends XtyleElement {
 	});
 
 	static get observedAttributes(): string[] {
-		return ["value", "min", "max", "step", "alt-step", "alt-default", "modifier", "disabled", "size", "label", "labelledby", "name", "placeholder"];
+		return ["value", "min", "max", "step", "alt-step", "alt-default", "modifier", "disabled", "size", "label", "labelledby", "name", "placeholder", ...NAME_ATTRIBUTES];
 	}
 
 	constructor() {
@@ -61,8 +63,7 @@ export class XtyleNumberInput extends XtyleElement {
 		return this.hasAttribute("alt-default");
 	}
 	get modifier(): "shift" | "alt" | "ctrl" | "meta" {
-		const raw = (this.getAttribute("modifier") ?? "shift").toLowerCase();
-		return raw === "alt" || raw === "ctrl" || raw === "meta" ? raw : "shift";
+		return resolveVocab(this.getAttribute("modifier")?.toLowerCase(), STEP_MODIFIERS, "shift", "number input modifier");
 	}
 	private get snapGrid(): number {
 		return Math.min(this.step, this.altStep);
@@ -137,9 +138,9 @@ export class XtyleNumberInput extends XtyleElement {
 		this.internals?.setFormValue(this.value);
 	}
 
-	private syncDisplay(): void {
+	private syncDisplay(committed = false): void {
 		const input = this.input;
-		if (input && input !== this.root.activeElement) input.value = this.value;
+		if (input && (committed || input !== this.root.activeElement) && input.value !== this.value) input.value = this.value;
 		this.syncForm();
 	}
 
@@ -153,13 +154,13 @@ export class XtyleNumberInput extends XtyleElement {
 			const n = Number(trimmed);
 			if (Number.isNaN(n)) {
 				this.fragment.update(this.bindings);
-				this.syncDisplay();
+				this.syncDisplay(true);
 				return;
 			}
 			this.value = String(n);
 		}
 		this.fragment.update(this.bindings);
-		this.syncDisplay();
+		this.syncDisplay(true);
 		if (kind === "change" && this.value === before) {
 			this.silenceEcho(kind);
 			return;
@@ -191,7 +192,7 @@ export class XtyleNumberInput extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("label") && !this.getAttribute("labelledby")) {
+		if (!this.getAttribute("label") && !this.getAttribute("labelledby") && !hasHostName(this)) {
 			console.warn(
 				"xtyle-number-input: no accessible name. Provide a `label` or `labelledby` so the field is announced.",
 			);
@@ -238,12 +239,17 @@ export class XtyleNumberInput extends XtyleElement {
 		return "";
 	}
 
+	private checkVocab(): void {
+		void this.modifier;
+	}
+
 	protected override render(): void {
 		this.adoptComponentSheet();
 		this.fragment.ensureScaffold(numberInputHostCss);
 		this.fragment.reshapeIfChanged(this.shapeSignature());
 		this.fragment.update(this.bindings);
 		this.warnIfUnnamed();
+		this.checkVocab();
 		this.syncDisplay();
 	}
 }

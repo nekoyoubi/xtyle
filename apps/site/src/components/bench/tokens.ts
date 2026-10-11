@@ -46,6 +46,7 @@ const EXPLICIT_GROUPS: TokenGroup[] = [
 			"--ring-bg",
 			"--field-bg",
 			"--field-border",
+			"--line-strong",
 		],
 	},
 	{

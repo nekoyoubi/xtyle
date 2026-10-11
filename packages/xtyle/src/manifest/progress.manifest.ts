@@ -190,6 +190,7 @@ export const progressManifest: ComponentManifest = {
 		"Progress shows how far along a task is, or how full a capacity is. The `variant` axis picks the shape (a horizontal `linear` bar or a circular `svg` ring) and the `tone` axis picks the color from the full roster (the six semantic roles, the accent variants, the twelve named hues). A determinate bar fills to `value` between `min` and `max`; an `indeterminate` mode animates a moving sweep when the amount of work is unknown. Declarative `<threshold below tone pulse>` children turn it into a self-coloring meter: each band names a percentage ceiling, and the active band (the first the current value falls under) overrides the tone and can `pulse` the fill (`slow` or `fast`) to flag a critical level, the pulse routed through motion tokens so the reduced-motion base rule stills it. Set `meter` to report `role=\"meter\"` (a measurement against a capacity, like disk used) instead of the default `role=\"progressbar\"` (a task advancing); either way it carries `aria-valuenow`/`aria-valuemin`/`aria-valuemax`. An optional inline readout (`show-value`) shows the percentage, the raw value, or `value/max` (`value-format`), sits at the end or inset over the bar (`value-position`), and can take the active tone (`colorize-value`).",
 	keywords: ["meter", "gauge", "capacity", "threshold", "disk", "battery", "usage", "quota", "score"],
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["bar", "caption", "indicator", "label", "note", "progress", "reading", "track", "value"],
 	anatomy: [
 		{
@@ -387,6 +388,15 @@ export const progressManifest: ComponentManifest = {
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
+			name: "linecap",
+			type: '"butt" | "round"',
+			default: '"butt" on a meter, "round" otherwise',
+			description:
+				"How a `circular` arc ends. `butt` stops exactly at the value. `round` adds a half-stroke cap past each end, which reads softer but draws more than the value, most visibly on a small, heavy ring. A `meter` defaults to `butt` because its reading should be exact. Either way, an empty ring draws no arc at all.",
+			bindings: ["html", "svelte", "astro"],
+			options: ["butt", "round"],
+		},
+		{
 			name: "label",
 			type: "string",
 			description: "The visible caption above the bar. Distinct from `ariaLabel`, which names the meter for a screen reader and renders nothing: two bars stacked in a panel are told apart by AT and not by eye unless one of them says what it is. Setting `label` alone also names the meter, so the string is written once; an explicit `ariaLabel` still wins.",
@@ -486,6 +496,7 @@ export const progressManifest: ComponentManifest = {
 	],
 	consumedTokens: [
 		"--font-sans",
+		"--border-thin",
 		"--bg-0",
 		"--fg-0",
 		"--fg-1",
@@ -558,6 +569,16 @@ export const progressManifest: ComponentManifest = {
 			title: "A ring as a frame",
 			description: "A circular meter sized to its container reads as a frame rather than a widget. `track=\"none\"` drops the groove (an always-on rail around a portrait reads as a border, not an empty meter), `--xtyle-progress-size` takes the diameter off the `size` scale, and `thickness` sets the band weight independent of that diameter, so a large ring can stay thin. Both variants expose `::part(track)`, so a mod or an app can reach the groove either way.",
 			source: { html: frameHtmlExample, svelte: frameSvelteExample, astro: frameAstroExample },
+		},
+		{
+			id: "linecap",
+			title: "Exact ends or rounded ones",
+			description: "`linecap=\"butt\"` stops the arc exactly at the value, which is why a `meter` defaults to it. `round` caps both ends, softer but longer than the value it shows.",
+			source: {
+				html: `<xtyle-progress variant="circular" meter value="3" max="15" thickness="6" aria-label="Rank 3 of 15"></xtyle-progress>\n<xtyle-progress variant="circular" meter linecap="round" value="3" max="15" thickness="6" aria-label="Rank 3 of 15, rounded"></xtyle-progress>`,
+				svelte: `<Progress variant="circular" meter value={3} max={15} thickness={6} aria-label="Rank 3 of 15" />\n<Progress variant="circular" meter linecap="round" value={3} max={15} thickness={6} aria-label="Rank 3 of 15, rounded" />`,
+				astro: `<Progress variant="circular" meter value={3} max={15} thickness={6} aria-label="Rank 3 of 15" />\n<Progress variant="circular" meter linecap="round" value={3} max={15} thickness={6} aria-label="Rank 3 of 15, rounded" />`,
+			},
 		},
 	],
 };

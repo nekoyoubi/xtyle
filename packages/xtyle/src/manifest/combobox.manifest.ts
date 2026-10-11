@@ -155,6 +155,7 @@ export const comboboxManifest: ComponentManifest = {
 	description:
 		"Field hands its suggestions to a native `<datalist>` and Select to a native `<select>`. Both are right for the common case — the platform's own control is accessible, familiar, and free. Both are also drawn by the browser, which means a theming engine's tokens stop at their edge: the popup a `<datalist>` renders is the one surface in the set no algorithm can reach. Combobox is the answer to that. It draws the whole surface — the control, the caret, the floating listbox, the option rows, the chips — out of the register, so a theme actually reaches the thing the user is looking at.\n\nIt speaks the option contract Field and Select already speak (a `string[]`, a `{ value, label }[]`, or a JSON `options` attribute), so moving a control across is a tag change rather than a rewrite. Typing filters the list (`contains` by default, `starts` for a prefix match, `none` when the server already filtered and a second pass here would fight it). `allow-custom` lets a value the list never offered through, which is what a search box or a free-tag field needs.\n\n`multiple` turns it into the tag input: every pick becomes a removable chip in the control, Backspace on an empty query takes the last one back, the clear action empties the lot, and the listbox becomes `aria-multiselectable` with a check on each chosen row. In a `<form>` it posts one hidden input per selection under its `name`, the way a native multi-`<select>` does — plumbing that never renders.\n\nThe listbox floats in a `<xtyle-popover>`, so the anchoring, the flip near a viewport edge, the top-layer stacking, and the light-dismiss are the overlay family's and are not re-derived. Keyboard is the full WAI-ARIA combobox pattern: DOM focus never leaves the text input, and `aria-activedescendant` carries the cursor through the list.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["check", "chip", "chip-remove", "chips", "clear", "combobox", "control", "description", "empty", "error", "input", "label", "list", "option", "popup", "required", "toggle"],
 	anatomy: [
 		{
@@ -176,7 +177,7 @@ export const comboboxManifest: ComponentManifest = {
 			selector: ".xtyle-combobox__control",
 			tokens: [
 				"--field-bg",
-				"--field-border",
+				"--line-strong",
 				"--border-thin",
 				"--border-normal",
 				"--radius-md",
@@ -508,7 +509,7 @@ export const comboboxManifest: ComponentManifest = {
 		"--fg-2",
 		"--fg-disabled",
 		"--field-bg",
-		"--field-border",
+		"--line-strong",
 		"--font-sans",
 		"--leading-normal",
 		"--leading-tight",

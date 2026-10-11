@@ -93,4 +93,14 @@ xtyle-tour-step[hidden] {
 		transition: none;
 	}
 }
+@media (forced-colors: active) {
+	.xtyle-tour__dot {
+		border: var(--border-thin) solid CanvasText;
+	}
+	.xtyle-tour__dot--on {
+		forced-color-adjust: none;
+		background: Highlight;
+		border-color: Highlight;
+	}
+}
 `;

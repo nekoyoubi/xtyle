@@ -1,5 +1,5 @@
 import type { ComponentManifest } from "./types.js";
-import { FULL_TONES } from "../vocab.js";
+import { FULL_TONES, REVEAL_DIRECTIONS } from "../vocab.js";
 
 const htmlExample = `<!-- One direction: slide the lid aside to read what's under it -->
 <xtyle-reveal>
@@ -89,7 +89,16 @@ export const revealManifest: ComponentManifest = {
 	description:
 		"Reveal layers a **lid** over as many as four **bellies**, one per direction, and slides the lid to expose whichever the gesture asks for. Which directions are live is inferred from the bellies you fill: a `[slot=\"end\"]` makes the end direction live and nothing else does, so there is no second list of directions to keep in sync. Travel is locked to one axis per gesture, so a component offering `start` and `bottom` still only ever moves one way at a time. Every knob is a host attribute, so the same markup configures identically from HTML, Svelte, and Astro; `behavior` sets the default and `endBehavior` and friends override one direction. Each direction decides what its own slide means: `latch` opens and stays, `commit` fires an action and springs back, and `both` gives the short pull a latch and the full pull the action. Give several reveals a shared `name` and they behave like radios, where opening one closes the last; leave the name off and they behave like checkboxes, each independent. A concealed belly is `inert`, so its buttons never sit in the tab order waiting to be tabbed into by accident.",
 	bindings: ["html", "svelte", "astro"],
-	exposedParts: ["belly", "belly-${direction}", "content", "grip", "grip-${direction}", "lid", "reveal"],
+	render: "auto",
+	exposedParts: [
+		"belly",
+		...REVEAL_DIRECTIONS.map((direction) => `belly-${direction}`),
+		"content",
+		"grip",
+		...REVEAL_DIRECTIONS.map((direction) => `grip-${direction}`),
+		"lid",
+		"reveal",
+	],
 	anatomy: [
 		{
 			name: "lid",
@@ -589,6 +598,7 @@ export const revealManifest: ComponentManifest = {
 		"Override the `component.reveal` fill to reshape the grips or the belly containers without touching the content either side of them.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"group\"` lid, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The lid is focusable and announced as a group carrying `aria-expanded`, so the disclosure is legible without a pointer.",
 		"Arrow keys open the belly on the matching edge and Escape closes whichever is open. `Enter` and `Space` take the action: they fire the same `xtyle:reveal-commit` a full pull does, on the open direction, or on the sole live one when nothing is open and there is no ambiguity about which action was meant. A `latch` direction has no action behind it — being open is the whole interaction — so there they open and close instead.",
 		"`control` declares the lid a control rather than a container, swapping `role=\"group\"` for `role=\"button\"`. A reveal whose lid carries a picture and a name, and whose pull is the only way to act, is a button by every test a screen reader applies, and announcing it as a group describes the furniture instead of the affordance. It is opt-in because the lid takes whatever you slot into it: a lid holding its own buttons is genuinely a container, and a `button` role there would fold its children into itself. Pair it with `label`.",

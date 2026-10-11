@@ -1,3 +1,4 @@
+import { axisLabel, fitSideLabels, layoutAxisLabels, type LabelAngle } from "../axis-labels.js";
 import { escapeAttr, escapeHtml } from "../escape.js";
 
 interface OpsBuilder {
@@ -22,6 +23,7 @@ interface BarBindings {
 	title?: string | null;
 	ariaLabel?: string | null;
 	selectable?: boolean;
+	labelAngle?: LabelAngle;
 }
 
 declare const hooks: {
@@ -128,6 +130,8 @@ function verticalPlot(b: BarBindings, series: { name: string; values: number[] }
 	const pad = { top: 12, right: 12, bottom: 30, left: 44 };
 	const plotX0 = pad.left;
 	const plotX1 = IW - pad.right;
+	const xLabelLayout = layoutAxisLabels(categories, categories.length > 0 ? (plotX1 - plotX0) / categories.length : plotX1 - plotX0, b.labelAngle, height * 0.4);
+	pad.bottom = xLabelLayout.space;
 	const plotY0 = pad.top;
 	const plotY1 = height - pad.bottom;
 	const plotW = plotX1 - plotX0;
@@ -156,9 +160,7 @@ function verticalPlot(b: BarBindings, series: { name: string; values: number[] }
 	for (let ci = 0; ci < n; ci++) {
 		const bandX = plotX0 + ci * bandW;
 		const centerX = bandX + bandW / 2;
-		xLabels.push(
-			`<text class="xtyle-bar__xtick" x="${centerX.toFixed(1)}" y="${(plotY1 + 18).toFixed(1)}" text-anchor="middle">${escapeAttr(categories[ci] ?? "")}</text>`,
-		);
+		xLabels.push(axisLabel(`class="xtyle-bar__xtick"`, centerX, plotY1, xLabelLayout.labels[ci] ?? "", xLabelLayout.angle));
 		if (stacked) {
 			const barW = bandW * 0.6;
 			const x = bandX + (bandW - barW) / 2;
@@ -200,7 +202,8 @@ function horizontalPlot(b: BarBindings, series: { name: string; values: number[]
 	const categories = b.categories ?? [];
 	const stacked = !!b.stacked;
 	const selectable = !!b.selectable;
-	const pad = { top: 12, right: 16, bottom: 28, left: 76 };
+	const sideLabels = fitSideLabels(categories, 76, IW * 0.4);
+	const pad = { top: 12, right: 16, bottom: 28, left: sideLabels.pad };
 	const plotX0 = pad.left;
 	const plotX1 = IW - pad.right;
 	const plotY0 = pad.top;
@@ -232,7 +235,7 @@ function horizontalPlot(b: BarBindings, series: { name: string; values: number[]
 		const bandY = plotY0 + ci * bandH;
 		const centerY = bandY + bandH / 2;
 		catLabels.push(
-			`<text class="xtyle-bar__ytick" x="${(plotX0 - 8).toFixed(1)}" y="${centerY.toFixed(1)}" dy="0.32em" text-anchor="end">${escapeAttr(categories[ci] ?? "")}</text>`,
+			`<text class="xtyle-bar__ytick" x="${(plotX0 - 8).toFixed(1)}" y="${centerY.toFixed(1)}" dy="0.32em" text-anchor="end">${escapeAttr(sideLabels.labels[ci] ?? "")}</text>`,
 		);
 		if (stacked) {
 			const barH = bandH * 0.6;

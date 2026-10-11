@@ -71,6 +71,7 @@ export const toastManifest: ComponentManifest = {
 	description:
 		"Toast surfaces brief, transient feedback without stealing focus. Two axes drive it independently. `severity` (success, warn, danger, info) carries the *meaning*: the status glyph and the live-region politeness, so `danger`/`warn` announce assertively. `tone` carries the *color*, from the full palette. A severity paints its standard color by default (danger reads red), but a `tone` overrides it, and a color-only toast (a non-status `tone`, no `severity`) shows no glyph and announces politely. A `xtyle-toast-region` is a fixed live-region container with an imperative `toast(opts)` method that pushes cards; each carries one of two variants: `soft`, an overlay card with a colored edge, or `solid`, a fully filled card. Toasts enter and leave with a tokened transition, auto-dismiss after a configurable delay that pauses while the pointer or focus rests on them, and may carry a single action button and a close button. A standalone `xtyle-toast` element is also exposed for declarative, statically-placed notices.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["action", "body", "close", "icon", "message", "toast"],
 	anatomy: [
 		{
@@ -317,6 +318,7 @@ export const toastManifest: ComponentManifest = {
 		"For persistent, in-flow status that should not auto-dismiss, reach for Alert instead; Toast is for the transient.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"status\"` region, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The region is an `aria-live` container that never receives focus, so toasts never interrupt the user's place.",
 		"Politeness follows `severity`, not color: `danger`/`warn` get `role=\"alert\"` (assertive); other severities and color-only toasts get `role=\"status\"` (polite).",
 		"Each toast is `aria-atomic` so the whole message is announced as a unit.",

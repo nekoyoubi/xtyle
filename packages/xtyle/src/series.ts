@@ -144,13 +144,30 @@ export function resolvePaletteName(value: string | null | undefined, fallback: P
 	if (value === null || value === undefined || value === "") return fallback;
 	const resolved = resolvePalette(value);
 	if (resolved) return resolved;
-	if (!warnedPalettes.has(value)) {
-		warnedPalettes.add(value);
-		globalThis.console?.warn?.(
-			`xtyle: "${value}" is not a valid ${label}. Valid palettes are ${paletteNames().join(", ")}. Falling back to "${fallback}".`,
-		);
-	}
+	warnPaletteOnce(value, label, `Falling back to "${fallback}".`);
 	return fallback;
+}
+
+/**
+ * The same typo-catching read for an accessor where unset legitimately means "no palette" — a Progress
+ * `ramp` given as one bare name. A set name that resolves to nothing warns and answers `null`, the same
+ * as unset.
+ */
+export function resolveOptionalPaletteName(value: string | null | undefined, label: string): Palette | null {
+	if (value === null || value === undefined || value === "") return null;
+	const resolved = resolvePalette(value);
+	if (resolved) return resolved;
+	warnPaletteOnce(value, label, "Rendering with none.");
+	return null;
+}
+
+function warnPaletteOnce(value: string, label: string, outcome: string): void {
+	const key = `${label}\u0000${value}`;
+	if (warnedPalettes.has(key)) return;
+	warnedPalettes.add(key);
+	globalThis.console?.warn?.(
+		`xtyle: "${value}" is not a valid ${label}. Valid palettes are ${paletteNames().join(", ")}. ${outcome}`,
+	);
 }
 
 /** The stop list for a palette or an explicit color array, as authored (token names unresolved). */

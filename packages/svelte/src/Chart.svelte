@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "@xtyle/core/elements/chart.js";
-	import type { ChartSeries, ChartScheme, ChartVariant, ChartCurve, ChartXScale } from "@xtyle/core";
+	import type { ChartSeries, ChartScheme, ChartVariant, ChartCurve, ChartXScale, LabelAngle } from "@xtyle/core";
 
 	interface Props {
 		series?: ChartSeries[];
@@ -17,6 +17,8 @@
 		yMin?: number;
 		yMax?: number;
 		xTicks?: number;
+		/** Angle of the x-axis labels: `"auto"` tilts them only when they would collide; a number fixes it, `0` upright to `-90` vertical. */
+		labelAngle?: LabelAngle;
 		yTicks?: number;
 		xLabel?: string;
 		yLabel?: string;
@@ -51,6 +53,7 @@
 		yMin,
 		yMax,
 		xTicks,
+		labelAngle = "auto",
 		yTicks,
 		xLabel,
 		yLabel,
@@ -84,6 +87,7 @@
 	y-min={yMin}
 	y-max={yMax}
 	x-ticks={xTicks}
+	label-angle={labelAngle === "auto" ? undefined : String(labelAngle)}
 	y-ticks={yTicks}
 	x-label={xLabel}
 	y-label={yLabel}

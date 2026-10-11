@@ -116,6 +116,7 @@ export const segmentedManifest: ComponentManifest = {
 	description:
 		"Segmented picks one option from a small, fixed set rendered as a connected button bar. It's the compact alternative to a radio group when the choices are few and worth showing at once. It is a `role=\"radiogroup\"` of `role=\"radio\"` buttons with roving tabindex: the selected segment is the tab stop, arrow keys move and select with wraparound, and Home/End jump to the ends. Options are declared as a comma-separated `options` string (bare labels, or `label:value` pairs), or as a structured `{ value, label }[]` when a label differs from its value or carries a comma or colon. For rich segments, drop in `<Segment value=\"…\" label=\"…\">` children holding an icon or other markup instead of a text label; they win over `options` when both are present. It's form-associated; give it a `name` and the chosen value submits. Three sizes: `sm`, `md`, `lg`.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["badge", "field", "label", "option", "segmented"],
 	anatomy: [
 		{
@@ -156,6 +157,14 @@ export const segmentedManifest: ComponentManifest = {
 			default: "true",
 			description:
 				"Set `false` to keep the control out of sequential focus navigation, for an app driving selection from its own keyboard cursor. The host's own `tabindex` cannot express this, because focus lands on the inner control rather than the host, and setting it there from outside does not survive the next render.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "cursor",
+			type: "boolean",
+			default: "false",
+			description:
+				"Marks the group as the one an app-owned keyboard cursor rests on, and draws exactly the `:focus-visible` ring (forced-colors outline included) on the selected segment without moving DOM focus: the segment real focus would land on, since a radiogroup's selection follows its focus. For a settings list driven from the app's own input layer, usually alongside `focusable={false}`, with left/right setting `value`. Controlled: move it in your own input handler. Changes no ARIA.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{ name: "value", type: "string", description: "The selected option's value. Defaults to the first option. Reflected and form-submitted.", bindings: ["html", "svelte", "astro"] },
@@ -201,6 +210,12 @@ export const segmentedManifest: ComponentManifest = {
 			name: "focus-visible",
 			description: "Keyboard focus on a segment: a token ring plus a transparent outline that becomes real in forced-colors mode.",
 			selector: ".xtyle-segmented__option:focus-visible",
+			tokens: ["--border-normal", "--border-thick", "--ring"],
+		},
+		{
+			name: "cursor",
+			description: "App-owned keyboard cursor: `cursor` puts `data-cursor` on the selected segment, which shares the focus-visible rule, so it draws the same ring and the same forced-colors outline while DOM focus stays where it is. The mark follows `value`.",
+			selector: ".xtyle-segmented__option[data-cursor]",
 			tokens: ["--border-normal", "--border-thick", "--ring"],
 		},
 		{
@@ -253,11 +268,13 @@ export const segmentedManifest: ComponentManifest = {
 		"For icon-only or icon-plus-text segments, use `<Segment>` children instead of `options`, and give each an accessible `label`.",
 	],
 	a11y: [
+		"Under `forced-colors: active` the selected segment fills with the system `Highlight` and `HighlightText`, since the mode flattens the token fill to the same `Canvas` as its neighbours.",
 		"The bar is `role=\"radiogroup\"` and each segment `role=\"radio\"` with `aria-checked`, never conveying selection by color alone.",
 		"Roving tabindex: the selected segment is the single tab stop; arrow keys move and select with wraparound, Home/End jump to the ends, click selects.",
 		"Requires an accessible name: `labelledby` wins, then a visible `label`, then a bare `aria-label` for an unlabeled icon bar; the binding warns at runtime when none is present.",
 		"An icon segment owns its option's name and tooltip: the radio carries `aria-label` and a `title` from the `<Segment>`'s `label`, so the projected icon stays decorative and hovering the option (not the glyph) shows what it selects.",
 		"Focus is shown with a token ring and a transparent outline the forced-colors base rule promotes to a real system outline.",
+		"`cursor` is visual only and sets no ARIA: an app-owned cursor is not focus, so it is not announced as focus, and the selection stays in `aria-checked` alone. An app that needs the cursor position announced owns that channel itself, typically by moving real focus or with a live region.",
 		"Selection carries a non-color channel on demand: when the theme sets `--selection-cue: marker`, the selected segment gains a check glyph alongside the color fill, satisfying WCAG 1.4.1. High-contrast emits `marker` by default, and any algorithm can opt in via the `cues` knob.",
 		"The group-level `disabled` blocks selection, drops the segments out of the tab order, and mutes the bar; a per-option `disabled` does the same for one segment, so the arrow keys skip it and the default selection lands on the first enabled option.",
 		"A per-option `badge` is trailing text inside the segment (a count); it rides along with the option's label as part of that radio's accessible name.",

@@ -2,7 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { cardHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/card/source.generated.js";
-import { resolveOptionalTone } from "../vocab.js";
+import { CARD_DEPTH_STRENGTHS, resolveOptionalTone, resolveOptionalVocab } from "../vocab.js";
 
 export class XtyleCard extends XtyleElement {
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "card", {
@@ -28,7 +28,7 @@ export class XtyleCard extends XtyleElement {
 	}
 
 	get depthStrength(): string | null {
-		return this.getAttribute("depth-strength");
+		return resolveOptionalVocab(this.getAttribute("depth-strength"), CARD_DEPTH_STRENGTHS, "card depth strength");
 	}
 	set depthStrength(value: string | null | undefined) {
 		this.reflectString("depth-strength", value);

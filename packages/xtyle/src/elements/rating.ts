@@ -5,6 +5,8 @@ import { PALETTE_TOKENS, resolvePaletteName, type Palette } from "../series.js";
 import { FragmentHost } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/rating/source.generated.js";
 import { startDrag } from "./gesture.js";
+import { flowKey } from "./flow-key.js";
+import { SIZES, resolveVocab } from "../vocab.js";
 
 /** The neutral track/surface color (the `e` "empty" nibble, shared with the Progress groove); also every
  * register token the icon marks read, so a browser-only consumer can reconstruct the minimal register the
@@ -105,7 +107,18 @@ export class XtyleRating extends XtyleElement {
 
 	disconnectedCallback(): void {
 		this.unbind();
+		this.watchFormReset(null);
 		super.disconnectedCallback();
+	}
+
+	private resetForm: HTMLFormElement | null = null;
+	private readonly onFormReset = (): void => queueMicrotask(() => this.formResetCallback());
+
+	private watchFormReset(form: HTMLFormElement | null): void {
+		if (form === this.resetForm) return;
+		this.resetForm?.removeEventListener("reset", this.onFormReset);
+		this.resetForm = form;
+		form?.addEventListener("reset", this.onFormReset);
 	}
 
 	attributeChangedCallback(): void {
@@ -145,10 +158,11 @@ export class XtyleRating extends XtyleElement {
 	protected override render(): void {
 		const max = this.max;
 		const value = clamp(0, max, this.value);
+		const size = resolveVocab(this.getAttribute("size"), SIZES, "md", "rating size");
 
 		this.classList.add("xtyle-rating");
-		this.classList.toggle("xtyle-rating--sm", this.getAttribute("size") === "sm");
-		this.classList.toggle("xtyle-rating--lg", this.getAttribute("size") === "lg");
+		this.classList.toggle("xtyle-rating--sm", size === "sm");
+		this.classList.toggle("xtyle-rating--lg", size === "lg");
 		this.classList.toggle("xtyle-rating--interactive", !this.readonly);
 		const tone = this.getAttribute("tone");
 		this.style.setProperty("--rating-fill", tone ? `var(--${tone})` : "");
@@ -172,7 +186,7 @@ export class XtyleRating extends XtyleElement {
 			filledIcon: filled,
 			readonly: this.readonly,
 			allowHalf: this.allowHalf,
-			size: this.getAttribute("size") ?? "md",
+			size,
 		});
 
 		this.applyA11y(value);
@@ -208,6 +222,7 @@ export class XtyleRating extends XtyleElement {
 		if (!name || this.readonly) {
 			this.hiddenInput?.remove();
 			this.hiddenInput = null;
+			this.watchFormReset(null);
 			return;
 		}
 		if (!this.hiddenInput) {
@@ -219,6 +234,7 @@ export class XtyleRating extends XtyleElement {
 		this.hiddenInput.name = name;
 		this.hiddenInput.value = String(value);
 		this.appendChild(this.hiddenInput);
+		this.watchFormReset(this.hiddenInput.form);
 	}
 
 	/** Set the filled overlay to a preview fraction without committing the value. */
@@ -274,8 +290,9 @@ export class XtyleRating extends XtyleElement {
 		if (this.readonly) return;
 		const v = clamp(0, this.max, this.value);
 		let next: number | null = null;
-		if (e.key === "ArrowRight" || e.key === "ArrowUp") next = v + this.step;
-		else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = v - this.step;
+		const key = flowKey(e.key, this);
+		if (key === "ArrowRight" || key === "ArrowUp") next = v + this.step;
+		else if (key === "ArrowLeft" || key === "ArrowDown") next = v - this.step;
 		else if (e.key === "Home") next = 0;
 		else if (e.key === "End") next = this.max;
 		if (next === null) return;

@@ -14,6 +14,8 @@ interface Props {
 	size?: Size;
 	align?: ButtonAlign;
 	type?: "button" | "submit" | "reset";
+	/** The id of the form this button submits or resets, when it sits outside that form. */
+	form?: string;
 	href?: string;
 	disabled?: boolean;
 	loading?: boolean;
@@ -23,6 +25,8 @@ interface Props {
 	selected?: boolean;
 	/** Set false to keep the control out of sequential focus navigation. */
 	focusable?: boolean;
+	/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+	cursor?: boolean;
 	/** Render zero-JS: emit the resolved light-DOM markup but never load the runtime to hydrate it. */
 	static?: boolean;
 	class?: string;
@@ -44,6 +48,7 @@ const {
 	pressed,
 	selected,
 	focusable,
+	cursor = false,
 	static: isStatic = false,
 	class: extra,
 	...rest
@@ -58,7 +63,7 @@ const bindings = {
 	tone,
 	size,
 	align,
-	type,
+	type: typeof rest.form === "string" ? "button" : type,
 	href: href ?? null,
 	disabled,
 	loading,
@@ -67,6 +72,7 @@ const bindings = {
 	pressed: pressed ?? null,
 	selected: selected ?? null,
 	focusable: focusable ?? true,
+	cursor,
 	ariaLabel: (rest as Record<string, unknown>)["aria-label"] ?? null,
 	ariaLabelledby: (rest as Record<string, unknown>)["aria-labelledby"] ?? null,
 };
@@ -94,6 +100,7 @@ const composed = chrome
 	pressed={pressed === undefined ? undefined : String(pressed)}
 	selected={selected === undefined ? undefined : String(selected)}
 	focusable={focusable === false ? "false" : undefined}
+	cursor={cursor || undefined}
 	class={extra}
 	set:html={composed}
 	{...rest}

@@ -1,6 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { tocHostCss, tocTargetFallbackCss, TOC_SPY_ATTR, type TocItem } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/toc/source.generated.js";
 
 export type { TocItem };
@@ -11,6 +12,7 @@ export class XtyleToc extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "toc", {
+		nameTarget: '[part="toc"]',
 		applyIntent: () => {},
 		afterApply: () => this.paintActive(),
 	});
@@ -18,8 +20,10 @@ export class XtyleToc extends XtyleElement {
 	private visible = new Set<string>();
 	private activeId: string | null = null;
 
+	static override readonly ownedData = [TOC_SPY_ATTR];
+
 	static get observedAttributes(): string[] {
-		return ["items", "label", "sticky"];
+		return ["items", "label", "sticky", ...NAME_ATTRIBUTES];
 	}
 
 	get items(): TocItem[] {

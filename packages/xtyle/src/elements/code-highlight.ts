@@ -31,10 +31,23 @@ const customGrammars: Record<string, PrismGrammar> = {};
 
 let prismPromise: Promise<PrismLike> | null = null;
 const grammarPromises = new Map<string, Promise<void>>();
+const grammarFailures = new Set<string>();
+
+function isPrism(value: unknown): value is PrismLike {
+	return typeof value === "object" && value !== null && typeof (value as PrismLike).languages === "object" && typeof (value as PrismLike).highlight === "function";
+}
+
+function resolvePrism(mod: unknown): PrismLike {
+	const fromModule = (mod as { default?: unknown } | null)?.default;
+	if (isPrism(fromModule)) return fromModule;
+	const fromGlobal = (globalThis as { Prism?: unknown }).Prism;
+	if (isPrism(fromGlobal)) return fromGlobal;
+	throw new Error("xtyle-code: prismjs loaded but exposed no highlighter, so code renders unhighlighted");
+}
 
 function loadPrism(): Promise<PrismLike> {
 	if (!prismPromise) {
-		prismPromise = import("prismjs").then((mod) => (mod as { default: PrismLike }).default);
+		prismPromise = import("prismjs").then(resolvePrism);
 	}
 	return prismPromise;
 }
@@ -96,7 +109,11 @@ export async function highlight(code: string, lang: string | null | undefined): 
 	if (!canonical) return { language: null, html: escapeCode(code) };
 	try {
 		await loadGrammar(canonical);
-	} catch {
+	} catch (error) {
+		if (!grammarFailures.has(canonical) && typeof console !== "undefined") {
+			grammarFailures.add(canonical);
+			console.warn(`xtyle-code: the "${canonical}" grammar failed to load, so it renders unhighlighted.`, error);
+		}
 		return { language: null, html: escapeCode(code) };
 	}
 	const prism = await loadPrism();

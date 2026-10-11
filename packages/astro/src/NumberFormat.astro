@@ -1,0 +1,118 @@
+---
+import { checkAuthoring } from "./internal/diagnose.js";
+import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+
+import {
+	formatNumber,
+	parseNumberValue,
+	resolveIntegerIn,
+	resolveOptionalTone,
+	resolveVocab,
+	NUMBER_CURRENCY_DISPLAYS,
+	NUMBER_FORMATS,
+	NUMBER_SIGNS,
+	NUMBER_UNIT_DISPLAYS,
+} from "@xtyle/core";
+import type { FullTone, NumberCurrencyDisplay, NumberFormatStyle, NumberSign, NumberUnitDisplay } from "@xtyle/core";
+
+interface Props {
+	value?: number | string | null;
+	format?: NumberFormatStyle;
+	currency?: string;
+	currencyDisplay?: NumberCurrencyDisplay;
+	unit?: string;
+	unitDisplay?: NumberUnitDisplay;
+	decimals?: number;
+	minDecimals?: number;
+	maxDecimals?: number;
+	sign?: NumberSign;
+	grouping?: boolean;
+	locale?: string;
+	fallback?: string;
+	tone?: FullTone;
+	tabular?: boolean;
+	/** Render zero-JS: emit the formatted light-DOM markup but never load the runtime to hydrate it. */
+	static?: boolean;
+	class?: string;
+	/** Any other attribute (`id`, `title`, `lang`, `data-*`, `aria-*`, …) passes through to the element. */
+	[key: string]: unknown;
+}
+
+const {
+	value: valueInput,
+	format: formatInput,
+	currency: currencyInput,
+	currencyDisplay: currencyDisplayInput,
+	unit,
+	unitDisplay: unitDisplayInput,
+	decimals: decimalsInput,
+	minDecimals: minDecimalsInput,
+	maxDecimals: maxDecimalsInput,
+	sign: signInput,
+	grouping = true,
+	locale,
+	fallback = "",
+	tone: toneInput,
+	tabular = true,
+	static: isStatic = false,
+	class: extra,
+	...rest
+} = Astro.props;
+await checkAuthoring("number-format", Astro.props);
+
+const digits = (input: number | undefined, label: string) =>
+	resolveIntegerIn(input === undefined ? undefined : String(input), 0, 20, `number-format ${label}`, "a whole number of fraction digits");
+
+const value = parseNumberValue(valueInput);
+const format = resolveVocab(formatInput, NUMBER_FORMATS, "decimal", "number-format format");
+const currency = currencyInput || "USD";
+const currencyDisplay = resolveVocab(currencyDisplayInput, NUMBER_CURRENCY_DISPLAYS, "symbol", "number-format currency-display");
+const unitDisplay = resolveVocab(unitDisplayInput, NUMBER_UNIT_DISPLAYS, "short", "number-format unit-display");
+const decimals = digits(decimalsInput, "decimals");
+const minDecimals = digits(minDecimalsInput, "min-decimals");
+const maxDecimals = digits(maxDecimalsInput, "max-decimals");
+const sign = resolveVocab(signInput, NUMBER_SIGNS, "auto", "number-format sign");
+const tone = resolveOptionalTone(toneInput);
+const lang = typeof rest.lang === "string" && rest.lang ? rest.lang : undefined;
+
+const formatted = formatNumber(value, {
+	format,
+	currency,
+	currencyDisplay,
+	unit: unit || undefined,
+	unitDisplay,
+	decimals: decimals ?? undefined,
+	minDecimals: minDecimals ?? undefined,
+	maxDecimals: maxDecimals ?? undefined,
+	sign,
+	grouping,
+	locale: locale || lang,
+	fallback,
+});
+
+const bindings = { formatted, value: value === null ? "" : String(value), tone, tabular };
+const composed = await renderFragmentLight("number-format", bindings);
+---
+
+<xtyle-number-format
+	value={value === null ? undefined : String(value)}
+	format={formatInput ? format : undefined}
+	currency={currencyInput || undefined}
+	currency-display={currencyDisplayInput ? currencyDisplay : undefined}
+	unit={unit || undefined}
+	unit-display={unitDisplayInput ? unitDisplay : undefined}
+	decimals={decimals ?? undefined}
+	min-decimals={minDecimals ?? undefined}
+	max-decimals={maxDecimals ?? undefined}
+	sign={signInput ? sign : undefined}
+	grouping={grouping ? undefined : "false"}
+	locale={locale || undefined}
+	fallback={fallback || undefined}
+	tone={tone || undefined}
+	tabular={tabular ? undefined : "false"}
+	class={extra}
+	set:html={composed}
+	{...rest}
+/>
+
+{!isStatic && <script>import "@xtyle/core/elements";</script>}

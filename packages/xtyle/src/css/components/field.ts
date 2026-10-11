@@ -25,7 +25,7 @@ export const fieldCss = `
 	isolation: isolate;
 	color: var(--fg-0);
 	background: var(--field-bg);
-	border: var(--border-thin) solid var(--field-border);
+	border: var(--border-thin) solid var(--line-strong);
 	border-radius: var(--radius-md);
 	transition:
 		border-color var(--duration-fast) var(--ease-standard),
@@ -131,4 +131,9 @@ export const fieldCss = `
 .xtyle-field__label[hidden],
 .xtyle-field__adornment[hidden],
 .xtyle-field__action[hidden] { display: none; }
+.xtyle-field__control:has(> [data-action="clear"]:not([hidden])) .xtyle-field__input::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	appearance: none;
+	display: none;
+}
 `.trim();

@@ -2,6 +2,9 @@ import { initXript, type XriptRuntime, type ModInstance, type FragmentOp } from 
 import componentHost from "./fragments/component-host.json" with { type: "json" };
 import { sandboxInitOptions } from "../sandbox.js";
 import { builtInFillFor } from "./built-in-fills.js";
+import { flowKey } from "./flow-key.js";
+import { withHostHidden } from "./host-hidden.js";
+import { forwardAccessibleName } from "./accessible-name.js";
 
 /**
  * Event types that never bubble, so a root-delegated listener has to catch them on the way *down*.
@@ -129,6 +132,15 @@ export interface FragmentBinding {
 	 * the freshly-built nodes) that must outlast a deferred first-load mount rebuild.
 	 */
 	afterApply?(): void;
+	/**
+	 * A selector for the inner element that carries the component's role, which receives the host's
+	 * `aria-label` / `aria-labelledby` after every apply. Matches inside a nested custom element are
+	 * skipped, so a light-DOM render never names a consumer's own component.
+	 */
+	nameTarget?: string;
+	/** `false` when the component names `nameTarget` from the host's `aria-label` itself, leaving the
+	 * forward to repair only IDREFs that cross the shadow boundary. Defaults to `true`. */
+	hostName?: boolean;
 }
 
 const grantedCapabilities = Object.keys(
@@ -183,6 +195,25 @@ function filledSlots(manifest: unknown): string[] {
  * The built-in's own load short-circuits (it is mod-zero for its slot), and a slot xtyle ships no
  * fill for is nobody's to precede, so both cost nothing but a lookup.
  */
+const RESERVED_DATA = /^(fx|xtyle|root|slot)(?:[A-Z]|$)/;
+
+/**
+ * The author's own `data-*` attributes on a component's host, handed to every fill as
+ * `bindings.hostData` (camelCased, as `dataset` spells them). It is how a mod draws something the
+ * component has no prop for: `<xtyle-avatar data-rank="3">` reaches a fill that paints rank pips,
+ * with no core change. xtyle's own `data-fx*` / `data-xtyle*` plumbing is left out.
+ */
+export function hostData(host: Element): Record<string, string> {
+	const out: Record<string, string> = {};
+	const owned = (host.constructor as { ownedData?: readonly string[] }).ownedData ?? [];
+	for (const { name, value } of Array.from(host.attributes)) {
+		if (!name.startsWith("data-") || owned.includes(name)) continue;
+		const key = name.slice(5).replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+		if (!RESERVED_DATA.test(key)) out[key] = value;
+	}
+	return out;
+}
+
 async function loadModZero(manifest: unknown): Promise<void> {
 	const self = (manifest as { name: string }).name;
 	await Promise.all(
@@ -365,7 +396,7 @@ function serializeEvent(el: HTMLElement, event: Event): SerializedEvent {
 		value: typeof input.value === "string" ? input.value : undefined,
 		checked: typeof input.checked === "boolean" ? input.checked : undefined,
 		text: (el.textContent ?? "").trim(),
-		key: event instanceof KeyboardEvent ? event.key : undefined,
+		key: event instanceof KeyboardEvent ? flowKey(event.key, el) : undefined,
 		disabled: input.disabled === true || undefined,
 		ariaDisabled: el.getAttribute("aria-disabled") ?? undefined,
 		ctrlKey: typeof mod.ctrlKey === "boolean" ? mod.ctrlKey : undefined,
@@ -478,6 +509,7 @@ export class FragmentHost {
 		this.handlers = collectHandlers(manifest);
 		this.template = fillScaffold(manifest, fragmentSources, fragmentId);
 		this.lightDom = !(typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot);
+		this.listen();
 	}
 
 	/** Force the next `update` to rebuild the structure (a `mount`) — for a change ops can't express, like a tag switch. */
@@ -540,7 +572,7 @@ export class FragmentHost {
 			return;
 		}
 		if (existing) return;
-		this.root.innerHTML = `<style>${hostCss}</style>${this.template}`;
+		this.root.innerHTML = `<style>${withHostHidden(hostCss)}</style>${this.template}`;
 	}
 
 	/** The consumer's content grouped by slot name. In light DOM it's the map captured at scaffold
@@ -676,8 +708,13 @@ export class FragmentHost {
 		return this.lightDom ? (this.root as HTMLElement) : (this.root as ShadowRoot).host;
 	}
 
-	private apply(loaded: LoadedFill, bindings: Record<string, unknown>): void {
-		this.lastBindings = bindings;
+	fillBindings(given: Record<string, unknown>): Record<string, unknown> {
+		return { hostData: hostData(this.hostElement()), ...given };
+	}
+
+	private apply(loaded: LoadedFill, given: Record<string, unknown>): void {
+		const bindings = this.fillBindings(given);
+		this.lastBindings = given;
 		if (!this.registered) {
 			this.registered = true;
 			mountedHosts.add(new WeakRef(this));
@@ -704,6 +741,32 @@ export class FragmentHost {
 			this.wired = true;
 		}
 		this.binding.afterApply?.();
+		this.forwardName();
+	}
+
+	/** The element `nameTarget` selects in this fill's own output, or `null` without one. */
+	nameTargetElement(): Element | null {
+		const selector = this.binding.nameTarget;
+		if (!selector) return null;
+		const boundary = this.root as unknown as Node;
+		for (const el of this.root.querySelectorAll(selector)) {
+			let nested = false;
+			for (let parent = el.parentElement; parent && parent !== boundary; parent = parent.parentElement) {
+				if (parent.tagName.includes("-")) {
+					nested = true;
+					break;
+				}
+			}
+			if (!nested) return el;
+		}
+		return null;
+	}
+
+	/** Carry the host's `aria-label` / `aria-labelledby` onto `nameTarget`. Call on a change to either
+	 * attribute when the element does not re-apply the fill for it. */
+	forwardName(): void {
+		if (!this.binding.nameTarget) return;
+		forwardAccessibleName(this.hostElement(), this.nameTargetElement(), { hostName: this.binding.hostName });
 	}
 
 	/**
@@ -724,9 +787,17 @@ export class FragmentHost {
 	}
 
 	private wire(runtime: XriptRuntime): void {
+		this.runtime = runtime;
+	}
+
+	private runtime: XriptRuntime | null = null;
+
+	private listen(): void {
 		const eventTypes = [...new Set(this.handlers.map((h) => h.on))];
 		for (const type of eventTypes) {
 			this.root.addEventListener(type, (event) => {
+				const runtime = this.runtime;
+				if (!runtime) return;
 				const path = event.composedPath();
 				if (path.length === 0) return;
 				for (const decl of this.handlers) {

@@ -1,6 +1,6 @@
 {
 	"name": "@xtyle/site",
-	"version": "0.12.0",
+	"version": "0.13.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -10,6 +10,7 @@
 		"build": "astro build",
 		"preview": "astro preview",
 		"check": "astro check",
+		"pretest": "astro check",
 		"test": "vitest run"
 	},
 	"dependencies": {
@@ -20,9 +21,9 @@
 		"@fontsource/poppins": "^5.2.7",
 		"@fontsource/sigmar": "^5.2.7",
 		"@fontsource/teko": "^5.2.7",
-		"@xtyle/astro": "^0.12.0",
-		"@xtyle/core": "^0.12.0",
-		"@xtyle/svelte": "^0.12.0",
+		"@xtyle/astro": "^0.13.0",
+		"@xtyle/core": "^0.13.0",
+		"@xtyle/svelte": "^0.13.0",
 		"astro": "^6.4.8",
 		"svelte": "^5.0.0"
 	},

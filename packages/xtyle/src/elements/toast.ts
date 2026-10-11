@@ -9,6 +9,7 @@ import {
 	type ToastVariant,
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/toast/source.generated.js";
 import { resolveOptionalTone, resolveOptionalVocab, TOAST_SEVERITIES, resolveVocab, TOAST_VARIANTS } from "../vocab.js";
 
@@ -51,11 +52,12 @@ export class XtyleToast extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "toast", {
+		nameTarget: '[part="toast"]',
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["tone", "severity", "variant", "closable", "close-label", "action-label"];
+		return ["tone", "severity", "variant", "closable", "close-label", "action-label", ...NAME_ATTRIBUTES];
 	}
 
 	get tone(): ToastTone | null {

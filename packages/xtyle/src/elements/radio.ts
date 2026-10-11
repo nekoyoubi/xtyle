@@ -7,8 +7,10 @@ import {
 	type RadioGroupMarkupProps,
 } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, forwardAccessibleName, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/radio/source.generated.js";
 import { resolveTone, resolveVocab, SIZES, ORIENTATIONS } from "../vocab.js";
+import { flowKey } from "./flow-key.js";
 
 export class XtyleRadio extends XtyleElement {
 	protected override get styleMode(): StyleMode {
@@ -27,6 +29,7 @@ export class XtyleRadio extends XtyleElement {
 		return true;
 	}
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "radio", {
+		nameTarget: '[part="control"]',
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
@@ -40,7 +43,7 @@ export class XtyleRadio extends XtyleElement {
 	private descriptionId = `xtyle-radio-desc-${Math.random().toString(36).slice(2, 8)}`;
 
 	static get observedAttributes(): string[] {
-		return ["tone", "size", "name", "value", "checked", "disabled", "invalid", "label", "labelledby", "description", "card"];
+		return ["tone", "size", "name", "value", "checked", "disabled", "invalid", "label", "labelledby", "description", "card", ...NAME_ATTRIBUTES];
 	}
 
 	get tone(): FullTone {
@@ -178,7 +181,7 @@ export class XtyleRadio extends XtyleElement {
 	private warnIfUnnamed(): void {
 		const hasLabel =
 			this.getAttribute("label") || this.getAttribute("labelledby") || this.textContent?.trim();
-		if (!hasLabel && !this.getAttribute("aria-label")) {
+		if (!hasLabel && !hasHostName(this)) {
 			console.warn(
 				"xtyle-radio: no accessible name. Provide label text in the default slot, or a `label` / `labelledby` attribute.",
 			);
@@ -206,6 +209,7 @@ export class XtyleRadio extends XtyleElement {
 		if (control) {
 			control.checked = this.checked;
 			this.nameControl(control);
+			this.fragment.forwardName();
 		}
 		this.warnIfUnnamed();
 		this.syncForm();
@@ -224,7 +228,7 @@ export class XtyleRadio extends XtyleElement {
 
 export class XtyleRadioGroup extends XtyleElement {
 	static get observedAttributes(): string[] {
-		return ["orientation", "label", "labelledby", "disabled"];
+		return ["orientation", "label", "labelledby", "disabled", ...NAME_ATTRIBUTES];
 	}
 
 	get orientation(): "vertical" | "horizontal" {
@@ -286,12 +290,13 @@ export class XtyleRadioGroup extends XtyleElement {
 
 	private onKeydown = (event: KeyboardEvent): void => {
 		const keys = ["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"];
-		if (!keys.includes(event.key)) return;
+		const key = flowKey(event.key, this);
+		if (!keys.includes(key)) return;
 		const radios = this.radios();
 		if (radios.length === 0) return;
 		const current = (event.target as Element | null)?.closest("xtyle-radio") as XtyleRadio | null;
 		const index = current ? radios.indexOf(current) : -1;
-		const forward = event.key === "ArrowDown" || event.key === "ArrowRight";
+		const forward = key === "ArrowDown" || key === "ArrowRight";
 		const next = radios[(index + (forward ? 1 : radios.length - 1) + radios.length) % radios.length];
 		if (!next) return;
 		event.preventDefault();
@@ -303,7 +308,7 @@ export class XtyleRadioGroup extends XtyleElement {
 	};
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("label") && !this.getAttribute("labelledby") && !this.getAttribute("aria-label")) {
+		if (!this.getAttribute("label") && !this.getAttribute("labelledby") && !hasHostName(this)) {
 			console.warn(
 				"xtyle-radio-group: no accessible name. Provide a `label`, `labelledby`, or `aria-label` so the group is announced.",
 			);
@@ -312,6 +317,7 @@ export class XtyleRadioGroup extends XtyleElement {
 
 	protected override render(): void {
 		super.render();
+		forwardAccessibleName(this, this.root.querySelector('[role="radiogroup"]'));
 		this.warnIfUnnamed();
 	}
 

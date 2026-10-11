@@ -1,14 +1,4 @@
-import {
-	clampChroma,
-	converter,
-	formatHex,
-	formatRgb,
-	parse,
-	wcagContrast,
-	type Oklch,
-} from "culori";
-
-const toOklch = converter("oklch");
+import { contrastRatio, formatColor, gamutClamp, parseColor } from "./color-primitives.js";
 
 export interface OklchColor {
 	l: number;
@@ -19,6 +9,26 @@ export interface OklchColor {
 
 const DEFAULT_OKLCH: OklchColor = { l: 0, c: 0, h: 0, alpha: 1 };
 
+const MEMO_LIMIT = 4096;
+
+function memoized<T>(cache: Map<string, T>, key: string, compute: () => T): T {
+	const hit = cache.get(key);
+	if (hit !== undefined) return hit;
+	const value = compute();
+	if (cache.size >= MEMO_LIMIT) cache.clear();
+	cache.set(key, value);
+	return value;
+}
+
+const parsedColors = new Map<string, OklchColor>();
+const formattedStrings = new Map<string, string>();
+const formattedColors = new Map<string, string>();
+const contrastRatios = new Map<string, number>();
+
+function oklchKey(color: OklchColor): string {
+	return `${color.l} ${color.c} ${color.h} ${color.alpha}`;
+}
+
 /**
  * Parses any CSS color string (or passes an `OklchColor` through) into an `OklchColor`. Hex follows CSS:
  * `#RGB` / `#RRGGBB`, and an 8-digit `#RRGGBBAA` is alpha-*last*. Alpha-first ARGB (`#AARRGGBB`) is not a
@@ -26,16 +36,7 @@ const DEFAULT_OKLCH: OklchColor = { l: 0, c: 0, h: 0, alpha: 1 };
  */
 export function toOklchColor(input: string | OklchColor): OklchColor {
 	if (typeof input !== "string") return input;
-	const parsed = parse(input);
-	if (!parsed) throw new Error(`xtyle: unparseable color "${input}"`);
-	const o = toOklch(parsed) as Oklch | undefined;
-	if (!o) throw new Error(`xtyle: cannot convert color "${input}" to oklch`);
-	return {
-		l: clamp01(o.l ?? 0),
-		c: Math.max(0, o.c ?? 0),
-		h: o.h ?? 0,
-		alpha: o.alpha ?? 1,
-	};
+	return { ...memoized(parsedColors, input, () => parseColor(input)) };
 }
 
 export function oklch(l: number, c: number, h: number, alpha = 1): OklchColor {
@@ -98,8 +99,9 @@ export function argbToRgbHex(hex: string): string {
  * `argbToRgbHex` first.
  */
 export function contrast(a: string | OklchColor, b: string | OklchColor): number {
-	const value = wcagContrast(formatCss(a), formatCss(b));
-	return value ?? 1;
+	const x = formatCss(a);
+	const y = formatCss(b);
+	return memoized(contrastRatios, `${x}|${y}`, () => contrastRatio(x, y));
 }
 
 /**
@@ -177,33 +179,12 @@ export function separationAxes(a: string | OklchColor, b: string | OklchColor): 
 }
 
 export function clampToGamut(color: OklchColor): OklchColor {
-	const mapped = clampChroma(
-		{ mode: "oklch", l: color.l, c: color.c, h: color.h, alpha: color.alpha },
-		"oklch",
-		"rgb",
-	) as Oklch;
-	return {
-		l: mapped.l ?? color.l,
-		c: Math.max(0, mapped.c ?? 0),
-		h: mapped.h ?? color.h,
-		alpha: mapped.alpha ?? color.alpha,
-	};
+	return gamutClamp(color);
 }
 
 export function formatCss(input: string | OklchColor): string {
-	const source = typeof input === "string" ? toOklchColor(input) : input;
-	const color = clampToGamut(source);
-	const culoriColor: Oklch = {
-		mode: "oklch",
-		l: color.l,
-		c: color.c,
-		h: color.h,
-		alpha: color.alpha,
-	};
-	if (color.alpha < 1) {
-		return formatRgb(culoriColor) ?? formatHex(culoriColor) ?? "#000000";
-	}
-	return formatHex(culoriColor) ?? "#000000";
+	if (typeof input === "string") return memoized(formattedStrings, input, () => formatColor(toOklchColor(input)));
+	return memoized(formattedColors, oklchKey(input), () => formatColor(input));
 }
 
 /**

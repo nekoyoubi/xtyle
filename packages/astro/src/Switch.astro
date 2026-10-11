@@ -11,12 +11,16 @@ interface Props {
 	disabled?: boolean;
 	/** Set false to keep the control out of sequential focus navigation. */
 	focusable?: boolean;
+	/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+	cursor?: boolean;
 	size?: Size;
 	tone?: Tone;
 	shape?: "pill" | "square";
 	orientation?: "horizontal" | "vertical";
 	reverse?: boolean;
 	labelSide?: "start" | "end";
+	/** Stretch into a full-width row: label at one edge, track at the other. */
+	spread?: boolean;
 	label?: string;
 	labelledby?: string;
 	onLabel?: string;
@@ -34,12 +38,14 @@ const {
 	checked = false,
 	disabled = false,
 	focusable,
+	cursor = false,
 	size: sizeInput,
 	tone: toneInput,
 	shape = "pill",
 	orientation = "horizontal",
 	reverse = false,
 	labelSide = "start",
+	spread = false,
 	label,
 	labelledby,
 	onLabel,
@@ -60,12 +66,14 @@ const bindings = {
 	checked,
 	disabled,
 	focusable: focusable ?? true,
+	cursor,
 	size,
 	tone,
 	shape,
 	orientation,
 	reverse,
 	labelSide,
+	spread,
 	label: label ?? null,
 	labelledby: labelledby ?? null,
 	onLabel: onLabel ?? null,
@@ -79,12 +87,14 @@ const light = await renderFragmentLight("switch", bindings);
 	checked={checked || undefined}
 	disabled={disabled || undefined}
 	focusable={focusable === false ? "false" : undefined}
+	cursor={cursor || undefined}
 	size={size}
 	tone={tone}
 	shape={shape !== "pill" ? shape : undefined}
 	orientation={orientation !== "horizontal" ? orientation : undefined}
 	reverse={reverse || undefined}
 	label-side={labelSide !== "start" ? labelSide : undefined}
+	spread={spread || undefined}
 	label={label}
 	labelledby={labelledby}
 	on-label={onLabel}

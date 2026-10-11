@@ -35,6 +35,13 @@ const drift = [
 	{ name: "Drift", points: [-4, -2, 1, -3, 2, 5, 3, 6].map((value, at) => ({ at, value })) },
 ];
 
+const burst = [
+	{
+		name: "Requests",
+		points: [14, 22, 19, 31, 27, 40, 36, 52, 47, 44, 58, 51, 63].map((value, i) => ({ at: now - (90 - i * 7.5) * 1000, value })),
+	},
+];
+
 const errors = [
 	{ name: "5xx", points: [0.2, 0.3, 0.4, 1.9, 0.6, 0.4, 0.3].map((value, i) => ({ at: minutesAgo(6 - i), value })) },
 ];
@@ -98,6 +105,18 @@ const errors = [
 				yLabel="ms"
 				height={260}
 			/>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Dense ticks</Heading>
+		<Stack gap={3}>
+			<Text tone="muted" size="sm">
+				Twelve ticks across a ninety-second window leave each clock label less room than it
+				needs, so the labels tilt to fit and the plot makes room under them.
+				<code>labelAngle</code> fixes the angle instead.
+			</Text>
+			<Chart series={burst} xScale="time" xTicks={12} markers label="Requests in the last 90 seconds" height={240} legend={false} />
 		</Stack>
 	</Card>
 

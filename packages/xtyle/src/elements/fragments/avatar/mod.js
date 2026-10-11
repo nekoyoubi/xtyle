@@ -66,11 +66,16 @@
     const tone = b.tone ?? "neutral";
     const size = b.size ?? "md";
     const shape = b.shape ?? "circle";
+    const frame = b.frame && b.frame !== "none" ? b.frame : b.bevel ? "solid" : null;
     return [
       "xtyle-avatar",
       `xtyle-avatar--${tone}`,
       size !== "md" && `xtyle-avatar--${size}`,
-      shape === "square" && "xtyle-avatar--square",
+      shape !== "circle" && `xtyle-avatar--${shape}`,
+      frame && `xtyle-avatar--frame-${frame}`,
+      frame && b.frameTone && `xtyle-avatar--frame-tone-${b.frameTone}`,
+      frame && b.frameTone2 && `xtyle-avatar--frame-tone-2-${b.frameTone2}`,
+      b.bevel && "xtyle-avatar--bevel",
       b.status && `xtyle-avatar--status-${b.status}`,
       avatarPulseClass(b.pulse, Boolean(b.status))
     ].filter(Boolean).join(" ");
@@ -89,7 +94,7 @@
     const initialsSpan = initials ? `<span class="xtyle-avatar__initials" part="initials">${initials}</span>` : "";
     const fallback = `<span class="xtyle-avatar__fallback" part="fallback"><span class="xtyle-slot"><slot name="icon"></slot></span>${initialsSpan}<span class="xtyle-slot"><slot></slot></span></span>`;
     const statusDot = b.status ? `<span class="${avatarStatusDotClass(b)}" part="status-dot" aria-hidden="true"></span>` : "";
-    return `${image}${fallback}${statusDot}`;
+    return `${image}${fallback}${statusDot}<span class="xtyle-avatar__marks" part="marks"></span>`;
   }
   function avatarHtml(b) {
     const label = avatarLabel(b);

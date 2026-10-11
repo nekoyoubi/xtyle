@@ -74,6 +74,7 @@ export { default as Eyebrow } from "./Eyebrow.svelte";
 export { default as CardLink } from "./CardLink.svelte";
 export { default as Toc } from "./Toc.svelte";
 export { default as Kbd } from "./Kbd.svelte";
+export { default as NumberFormat } from "./NumberFormat.svelte";
 export { default as Icon } from "./Icon.svelte";
 export { default as Image } from "./Image.svelte";
 export { default as Carousel } from "./Carousel.svelte";
@@ -174,6 +175,7 @@ export {
 	XtyleCardLink,
 	XtyleToc,
 	XtyleKbd,
+	XtyleNumberFormat,
 	XtyleIcon,
 	XtyleImage,
 	XtyleLightbox,

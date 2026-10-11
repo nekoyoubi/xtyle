@@ -11,7 +11,7 @@ Monorepo managed via npm workspaces. TypeScript throughout.
 ```
 xtyle/
 ├── packages/
-│   ├── xtyle/         # the engine + raw custom elements, published as `@xtyle/core` (CLI `xtyle`, browser API, `@xtyle/core/elements`, `@xtyle/core/fx`, `@xtyle/core/vite`)
+│   ├── xtyle/         # the engine + raw custom elements, published as `@xtyle/core` (CLI `xtyle`, browser API, `@xtyle/core/elements`, `@xtyle/core/fx`, `@xtyle/core/install`, `@xtyle/core/vite`, `@xtyle/core/esbuild`)
 │   ├── svelte/       # @xtyle/svelte: thin Svelte wrapper
 │   └── astro/        # @xtyle/astro: Astro components (the site's binding)
 ├── algorithms/       # the built-in blessed set, each its own xript plugin
@@ -27,7 +27,7 @@ xtyle/
 ## Tech Stack
 
 - **Engine**: TypeScript, OKLCH color math (via `culori`), zero DOM in the neutral core
-- **Algorithms**: xript plugins (manifest + xript code), run in xript's zero-authority sandbox
+- **Algorithms**: xript plugins (manifest + xript code), run in xript's zero-authority sandbox; color reaches a mod through the `cuti` host binding (the build swaps `color-primitives` for a twin), so a mod never bundles a color library. `@xtyle/core/esbuild` (`xtyleModPlugin`) is the mod build
 - **Package management**: npm workspaces
 - **Site**: Astro, deployed to xtyle.dev
 - **Test runner**: vitest

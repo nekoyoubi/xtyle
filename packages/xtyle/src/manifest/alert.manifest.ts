@@ -66,6 +66,7 @@ export const alertManifest: ComponentManifest = {
 	description:
 		"Alert presents a persistent, inline message. Two axes drive it independently. `severity` (success, warn, danger, info) carries the *meaning*: the leading status glyph and the live-region politeness. `tone` carries the *color*, drawn from the full palette (semantic roles, accent variants, or named hues). By default a severity paints itself its standard color (danger reads red), but a `tone` overrides that, so a `danger` can be repainted pink and still announce as danger, while a color-only notice (a pink awareness banner with no `severity`) shows no glyph and announces politely. A `soft` variant tints the banner; a `solid` variant fills it for higher emphasis. An optional title sits above the message, an actions footer holds buttons, and a `dismissible` form adds a close button (also closable with Escape) that emits a `dismiss` event before removing the banner.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["actions", "alert", "body", "dismiss", "icon", "message", "title"],
 	anatomy: [
 		{
@@ -247,6 +248,7 @@ export const alertManifest: ComponentManifest = {
 		"The leading icon is built in per `severity`; project your own into the `icon` slot to override it. A color-only notice that carries no severity shows no icon at all.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"status\"` region, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"Live-region semantics follow `severity`, not color: danger/warn render `role=\"alert\"` with `aria-live=\"assertive\"`, success/info render `role=\"status\"` with `aria-live=\"polite\"`, and a severity-less notice is polite `role=\"status\"`.",
 		"The leading status glyph is decorative (`aria-hidden`) and appears only with a `severity`; meaning is carried by the text and the role, never by color alone.",
 		"The dismissible form is closable by pointer or the Escape key and exposes an accessible label on the close button (`dismissLabel`, default \"Dismiss\").",

@@ -267,4 +267,11 @@ xtyle-dock-zone [data-dock-panel-host] { display: block; }
 	border-bottom-right-radius: var(--radius-md);
 }
 .xtyle-dock-zone__float-resize:hover { opacity: 0.85; }
+@media (forced-colors: active) {
+	.xtyle-dock-zone__tab.is-active {
+		forced-color-adjust: none;
+		background: Highlight;
+		color: HighlightText;
+	}
+}
 `.trim();

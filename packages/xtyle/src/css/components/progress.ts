@@ -146,6 +146,9 @@ ${linearToneRules}
 	stroke-linecap: round;
 	transition: stroke-dashoffset var(--duration-base) var(--ease-emphasized);
 }
+.xtyle-progress--circular.xtyle-progress--butt .xtyle-progress__indicator {
+	stroke-linecap: butt;
+}
 .xtyle-progress--circular .xtyle-progress__track-ring,
 .xtyle-progress--circular .xtyle-progress__indicator {
 	stroke-width: var(--xtyle-progress-stroke, 4);
@@ -277,6 +280,22 @@ ${colorizeToneRules}
 @keyframes xtyle-progress-spin {
 	from { transform: rotate(-90deg); }
 	to { transform: rotate(270deg); }
+}
+@media (forced-colors: active) {
+	.xtyle-progress__track {
+		border: var(--border-thin) solid CanvasText;
+	}
+	.xtyle-progress--linear .xtyle-progress__indicator {
+		forced-color-adjust: none;
+		background: Highlight !important;
+	}
+	.xtyle-progress__track-ring {
+		stroke: CanvasText;
+	}
+	.xtyle-progress--circular .xtyle-progress__indicator {
+		forced-color-adjust: none;
+		stroke: Highlight !important;
+	}
 }
 @keyframes xtyle-progress-pulse {
 	50% { opacity: 0.4; }

@@ -202,6 +202,17 @@
 					"tone": {
 						"type": "string",
 						"description": "The tone the checked indicator takes."
+					},
+					"labelText": {
+						"type": "string",
+						"description": "The visible label text beside the box: the label attribute when nothing is slotted, otherwise empty."
+					},
+					"hostData": {
+						"type": "object",
+						"description": "The host's own `data-*` attributes, camelCased as `dataset` spells them, with xtyle's `data-fx` / `data-xtyle` / `data-root` / `data-slot` plumbing left out. Every fill receives it; it is how a mod draws something the component has no prop for.",
+						"additionalProperties": {
+							"type": "string"
+						}
 					}
 				}
 			}
@@ -366,6 +377,13 @@
 					"descriptionId": {
 						"type": "string",
 						"description": "Generated id for the description region."
+					},
+					"hostData": {
+						"type": "object",
+						"description": "The host's own `data-*` attributes, camelCased as `dataset` spells them, with xtyle's `data-fx` / `data-xtyle` / `data-root` / `data-slot` plumbing left out. Every fill receives it; it is how a mod draws something the component has no prop for.",
+						"additionalProperties": {
+							"type": "string"
+						}
 					}
 				}
 			}
@@ -530,6 +548,13 @@
 					"panelId": {
 						"type": "string",
 						"description": "Generated id for the popup panel."
+					},
+					"hostData": {
+						"type": "object",
+						"description": "The host's own `data-*` attributes, camelCased as `dataset` spells them, with xtyle's `data-fx` / `data-xtyle` / `data-root` / `data-slot` plumbing left out. Every fill receives it; it is how a mod draws something the component has no prop for.",
+						"additionalProperties": {
+							"type": "string"
+						}
 					}
 				}
 			}
@@ -714,6 +739,13 @@
 					"hasSuffix": {
 						"type": "boolean",
 						"description": "Whether a consumer filled the `suffix` slot."
+					},
+					"hostData": {
+						"type": "object",
+						"description": "The host's own `data-*` attributes, camelCased as `dataset` spells them, with xtyle's `data-fx` / `data-xtyle` / `data-root` / `data-slot` plumbing left out. Every fill receives it; it is how a mod draws something the component has no prop for.",
+						"additionalProperties": {
+							"type": "string"
+						}
 					}
 				}
 			}
@@ -785,6 +817,16 @@
 				"application/x-xtyle+html"
 			],
 			"capability": "xtyle.component.kbd",
+			"multiple": false,
+			"style": "inherit"
+		},
+		{
+			"id": "component.number-format",
+			"description": "The built-in fill for the xtyle NumberFormat component: the mod-zero markup every app inherits and may override.",
+			"accepts": [
+				"application/x-xtyle+html"
+			],
+			"capability": "xtyle.component.number-format",
 			"multiple": false,
 			"style": "inherit"
 		},
@@ -982,6 +1024,13 @@
 					"descriptionId": {
 						"type": "string",
 						"description": "Generated id for the description region."
+					},
+					"hostData": {
+						"type": "object",
+						"description": "The host's own `data-*` attributes, camelCased as `dataset` spells them, with xtyle's `data-fx` / `data-xtyle` / `data-root` / `data-slot` plumbing left out. Every fill receives it; it is how a mod draws something the component has no prop for.",
+						"additionalProperties": {
+							"type": "string"
+						}
 					}
 				}
 			}
@@ -1086,6 +1135,10 @@
 						"type": "boolean",
 						"description": "Whether the control takes a tab stop."
 					},
+					"cursor": {
+						"type": "boolean",
+						"description": "Whether an app-owned keyboard cursor rests on the control: the fill writes `data-cursor` onto it so it draws the focus ring without moving focus."
+					},
 					"invalid": {
 						"type": "boolean",
 						"description": "Whether the control renders its error state."
@@ -1116,6 +1169,13 @@
 					"optionsHtml": {
 						"type": "string",
 						"description": "The consumer's `<option>` / `<optgroup>` markup, projected verbatim."
+					},
+					"hostData": {
+						"type": "object",
+						"description": "The host's own `data-*` attributes, camelCased as `dataset` spells them, with xtyle's `data-fx` / `data-xtyle` / `data-root` / `data-slot` plumbing left out. Every fill receives it; it is how a mod draws something the component has no prop for.",
+						"additionalProperties": {
+							"type": "string"
+						}
 					}
 				}
 			}
@@ -1403,6 +1463,13 @@
 					"errorId": {
 						"type": "string",
 						"description": "Generated id for the error region."
+					},
+					"hostData": {
+						"type": "object",
+						"description": "The host's own `data-*` attributes, camelCased as `dataset` spells them, with xtyle's `data-fx` / `data-xtyle` / `data-root` / `data-slot` plumbing left out. Every fill receives it; it is how a mod draws something the component has no prop for.",
+						"additionalProperties": {
+							"type": "string"
+						}
 					}
 				}
 			}
@@ -1568,7 +1635,13 @@
 						"multiple": {},
 						"size": {},
 						"heading-level": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"chevron-icon": {}
 					}
 				},
@@ -1591,7 +1664,9 @@
 						"severity": {},
 						"variant": {},
 						"dismissible": {},
-						"dismiss-label": {}
+						"dismiss-label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-app-shell": {
@@ -1647,7 +1722,11 @@
 						"shape": {},
 						"status": {},
 						"status-label": {},
-						"pulse": {}
+						"pulse": {},
+						"frame": {},
+						"frame-tone": {},
+						"frame-tone-2": {},
+						"bevel": {}
 					}
 				},
 				"xtyle-avatar-group": {
@@ -1668,7 +1747,11 @@
 						"size": {},
 						"spacing": {},
 						"overflow": {},
-						"label": {}
+						"label": {},
+						"aria-label": {},
+						"aria-labelledby": {},
+						"layout": {},
+						"stack": {}
 					}
 				},
 				"xtyle-badge": {
@@ -1711,9 +1794,27 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"series": {},
-						"categories": {},
-						"scheme": {},
+						"series": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"categories": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"scheme": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"reverse": {},
 						"color-by": {},
 						"orientation": {},
@@ -1722,7 +1823,10 @@
 						"legend": {},
 						"height": {},
 						"label": {},
-						"selectable": {}
+						"selectable": {},
+						"label-angle": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-bbcode": {
@@ -1765,7 +1869,15 @@
 						"dir": {},
 						"value": {},
 						"label": {},
-						"tabs": {}
+						"tabs": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-breadcrumb": {
@@ -1783,11 +1895,19 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"separator": {},
 						"tone": {},
 						"size": {},
-						"label": {}
+						"label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-button": {
@@ -1810,6 +1930,7 @@
 						"size": {},
 						"align": {},
 						"type": {},
+						"form": {},
 						"href": {
 							"type": "string",
 							"sink": "uri"
@@ -1821,6 +1942,7 @@
 						"pressed": {},
 						"selected": {},
 						"focusable": {},
+						"cursor": {},
 						"aria-label": {},
 						"aria-labelledby": {}
 					}
@@ -1862,8 +1984,20 @@
 						"prev-label": {},
 						"next-label": {},
 						"week-label": {},
-						"disabled-dates": {},
-						"decorations": {},
+						"disabled-dates": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"decorations": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"next-icon": {},
 						"prev-icon": {}
 					}
@@ -1958,8 +2092,20 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"series": {},
-						"scheme": {},
+						"series": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"scheme": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"reverse": {},
 						"variant": {},
 						"curve": {},
@@ -1970,13 +2116,16 @@
 						"y-min": {},
 						"y-max": {},
 						"x-ticks": {},
+						"label-angle": {},
 						"y-ticks": {},
 						"x-label": {},
 						"y-label": {},
 						"legend": {},
 						"height": {},
 						"label": {},
-						"selectable": {}
+						"selectable": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-checkbox": {
@@ -2002,7 +2151,9 @@
 						"name": {},
 						"value": {},
 						"label": {},
-						"labelledby": {}
+						"labelledby": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-checkbox-group": {
@@ -2025,7 +2176,9 @@
 						"tone": {},
 						"size": {},
 						"disabled": {},
-						"manual": {}
+						"manual": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-cluster": {
@@ -2103,7 +2256,9 @@
 						"alpha": {},
 						"disabled": {},
 						"label": {},
-						"labelledby": {}
+						"labelledby": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-combobox": {
@@ -2125,7 +2280,13 @@
 						"name": {},
 						"placeholder": {},
 						"value": {},
-						"values": {},
+						"values": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"size": {},
 						"multiple": {},
 						"open": {},
@@ -2140,7 +2301,13 @@
 						"description": {},
 						"error": {},
 						"empty-text": {},
-						"options": {},
+						"options": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"spellcheck": {},
 						"inputmode": {},
 						"autocomplete": {},
@@ -2165,7 +2332,13 @@
 						"lang": {},
 						"dir": {},
 						"open": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"label": {},
 						"placeholder": {},
 						"empty-text": {},
@@ -2182,7 +2355,9 @@
 						"autocorrect": {},
 						"enterkeyhint": {},
 						"inputmode": {},
-						"spellcheck": {}
+						"spellcheck": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-date-picker": {
@@ -2210,7 +2385,13 @@
 						"timezone": {},
 						"hour-cycle": {},
 						"first-day-of-week": {},
-						"disabled-weekdays": {},
+						"disabled-weekdays": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"disabled": {},
 						"readonly": {},
 						"required": {},
@@ -2249,7 +2430,9 @@
 						"label": {},
 						"labelledby": {},
 						"close-label": {},
-						"no-close-button": {}
+						"no-close-button": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-dock": {
@@ -2292,7 +2475,13 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"layout": {},
+						"layout": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"mode": {}
 					}
 				},
@@ -2417,7 +2606,13 @@
 						"clearable": {},
 						"description": {},
 						"error": {},
-						"options": {},
+						"options": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"mono": {},
 						"spellcheck": {},
 						"inputmode": {},
@@ -2425,7 +2620,9 @@
 						"autocapitalize": {},
 						"autocorrect": {},
 						"enterkeyhint": {},
-						"list": {}
+						"list": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-form-group": {
@@ -2512,15 +2709,57 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"values": {},
-						"glow": {},
-						"rows": {},
-						"cols": {},
-						"current": {},
+						"values": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"glow": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"rows": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"cols": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"current": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"current-tone": {},
 						"current-pulse": {},
-						"titles": {},
-						"scheme": {},
+						"titles": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"scheme": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"reverse": {},
 						"max": {},
 						"glow-max": {},
@@ -2531,7 +2770,9 @@
 						"selectable": {},
 						"categorical": {},
 						"category-axis": {},
-						"label": {}
+						"label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-hero": {
@@ -2634,6 +2875,38 @@
 						"tone": {}
 					}
 				},
+				"xtyle-number-format": {
+					"props": {
+						"class": {},
+						"part": {},
+						"slot": {},
+						"style": {
+							"type": "string",
+							"sink": "css"
+						},
+						"title": {},
+						"hidden": {},
+						"tabindex": {},
+						"role": {},
+						"lang": {},
+						"dir": {},
+						"value": {},
+						"format": {},
+						"currency": {},
+						"currency-display": {},
+						"unit": {},
+						"unit-display": {},
+						"decimals": {},
+						"min-decimals": {},
+						"max-decimals": {},
+						"sign": {},
+						"grouping": {},
+						"locale": {},
+						"fallback": {},
+						"tone": {},
+						"tabular": {}
+					}
+				},
 				"xtyle-lightbox": {
 					"props": {
 						"class": {},
@@ -2692,7 +2965,13 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"options": {},
 						"interaction": {},
 						"selection": {},
@@ -2700,7 +2979,9 @@
 						"size": {},
 						"label": {},
 						"labelledby": {},
-						"aria-label": {}
+						"aria-label": {},
+						"checked-label": {},
+						"unchecked-label": {}
 					}
 				},
 				"xtyle-markdown": {
@@ -2741,10 +3022,18 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"label": {},
 						"open": {},
-						"context": {}
+						"context": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-mobile-shell": {
@@ -2790,8 +3079,20 @@
 						"repeat": {},
 						"fill": {},
 						"tint": {},
-						"pieces": {},
-						"tints": {},
+						"pieces": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"tints": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"inset": {},
 						"outset": {}
 					}
@@ -2823,7 +3124,9 @@
 						"label": {},
 						"labelledby": {},
 						"name": {},
-						"placeholder": {}
+						"placeholder": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-pagination": {
@@ -2853,7 +3156,9 @@
 						"size": {},
 						"label": {},
 						"prev-label": {},
-						"next-label": {}
+						"next-label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-panel": {
@@ -2916,14 +3221,28 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"data": {},
-						"scheme": {},
+						"data": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"scheme": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"reverse": {},
 						"variant": {},
 						"show-values": {},
 						"legend": {},
 						"size": {},
-						"label": {}
+						"label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-popover": {
@@ -2956,7 +3275,9 @@
 						"no-close-on-select": {},
 						"complete-first": {},
 						"no-light-dismiss": {},
-						"popover": {}
+						"popover": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-progress": {
@@ -2991,13 +3312,18 @@
 						"reading": {},
 						"note": {},
 						"meter": {},
-						"ramp": {},
+						"ramp": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"ramp-mode": {},
 						"reverse": {},
 						"track": {},
 						"thickness": {},
-						"below": {},
-						"pulse": {},
+						"linecap": {},
 						"aria-label": {}
 					}
 				},
@@ -3034,7 +3360,9 @@
 						"frame": {},
 						"caption": {},
 						"mode-toggle": {},
-						"label": {}
+						"label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-radio": {
@@ -3062,7 +3390,9 @@
 						"label": {},
 						"labelledby": {},
 						"description": {},
-						"card": {}
+						"card": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-radio-group": {
@@ -3083,7 +3413,9 @@
 						"orientation": {},
 						"label": {},
 						"labelledby": {},
-						"disabled": {}
+						"disabled": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-rating": {
@@ -3197,7 +3529,9 @@
 						"bottom-travel": {},
 						"bottom-tone": {},
 						"bottom-grip": {},
-						"bottom-grip-style": {}
+						"bottom-grip-style": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-reveal-group": {
@@ -3307,9 +3641,16 @@
 						"lang": {},
 						"dir": {},
 						"value": {},
-						"options": {},
+						"options": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"disabled": {},
 						"focusable": {},
+						"cursor": {},
 						"size": {},
 						"tone": {},
 						"label": {},
@@ -3338,11 +3679,14 @@
 						"size": {},
 						"disabled": {},
 						"focusable": {},
+						"cursor": {},
 						"invalid": {},
 						"required": {},
 						"required-message": {},
 						"error": {},
-						"name": {}
+						"name": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-separator": {
@@ -3390,7 +3734,9 @@
 						"no-close-button": {},
 						"no-grabber": {},
 						"no-swipe": {},
-						"non-modal": {}
+						"non-modal": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-skeleton": {
@@ -3444,7 +3790,9 @@
 						"show-value": {},
 						"hide-label": {},
 						"default": {},
-						"static-value": {}
+						"static-value": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-sparkline": {
@@ -3462,8 +3810,20 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"values": {},
-						"points": {},
+						"values": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"points": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"window": {},
 						"domain": {},
 						"step": {},
@@ -3474,7 +3834,9 @@
 						"max": {},
 						"bounds": {},
 						"format": {},
-						"label": {}
+						"label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-spinner": {
@@ -3521,7 +3883,15 @@
 						"block": {},
 						"open": {},
 						"menu-label": {},
-						"items": {}
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-splitter": {
@@ -3552,7 +3922,9 @@
 						"var": {},
 						"for": {},
 						"label": {},
-						"labelledby": {}
+						"labelledby": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-spotlight": {
@@ -3716,12 +4088,14 @@
 						"checked": {},
 						"disabled": {},
 						"focusable": {},
+						"cursor": {},
 						"size": {},
 						"tone": {},
 						"shape": {},
 						"orientation": {},
 						"reverse": {},
 						"label-side": {},
+						"spread": {},
 						"label": {},
 						"labelledby": {},
 						"label-on": {},
@@ -3729,7 +4103,9 @@
 						"off-label": {},
 						"name": {},
 						"value": {},
-						"on-label": {}
+						"on-label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-table": {
@@ -3778,11 +4154,19 @@
 						"value": {},
 						"label": {},
 						"labelledby": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"sticky": {},
 						"tablist": {},
 						"fill": {},
-						"overflow": {}
+						"overflow": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-text": {
@@ -3841,7 +4225,9 @@
 						"autocomplete": {},
 						"autocapitalize": {},
 						"autocorrect": {},
-						"enterkeyhint": {}
+						"enterkeyhint": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-theme-card": {
@@ -3862,11 +4248,25 @@
 						"algorithm": {},
 						"name": {},
 						"scheme": {},
-						"knobs": {},
-						"constraints": {},
+						"knobs": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"constraints": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"interactive": {},
 						"selected": {},
-						"data-key": {}
+						"data-key": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-theme-picker": {
@@ -3884,7 +4284,13 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"themes": {},
+						"themes": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"value": {},
 						"label": {},
 						"swatches": {},
@@ -3912,8 +4318,20 @@
 						"algorithm": {},
 						"target": {},
 						"scheme": {},
-						"knobs": {},
-						"constraints": {}
+						"knobs": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"constraints": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						}
 					}
 				},
 				"xtyle-theme-swatch": {
@@ -3932,13 +4350,31 @@
 						"lang": {},
 						"dir": {},
 						"algorithm": {},
-						"tokens": {},
+						"tokens": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"scheme": {},
 						"size": {},
 						"labels": {},
 						"details": {},
-						"knobs": {},
-						"constraints": {}
+						"knobs": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
+						"constraints": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						}
 					}
 				},
 				"xtyle-timeline": {
@@ -3978,7 +4414,9 @@
 						"variant": {},
 						"closable": {},
 						"close-label": {},
-						"action-label": {}
+						"action-label": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-toast-region": {
@@ -4022,9 +4460,17 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"label": {},
-						"sticky": {}
+						"sticky": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-toolbar": {
@@ -4075,13 +4521,21 @@
 						"variant": {},
 						"mode": {},
 						"size": {},
-						"popover": {}
+						"popover": {},
+						"aria-label": {},
+						"aria-labelledby": {}
 					}
 				},
 				"xtyle-tour": {
 					"props": {
 						"taken": {},
-						"spec": {},
+						"spec": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"class": {},
 						"part": {},
 						"slot": {},
@@ -4162,10 +4616,49 @@
 						"role": {},
 						"lang": {},
 						"dir": {},
-						"items": {},
+						"items": {
+							"type": [
+								"string",
+								"array",
+								"object"
+							]
+						},
 						"size": {},
 						"label": {},
-						"labelledby": {}
+						"labelledby": {},
+						"aria-label": {},
+						"aria-labelledby": {}
+					}
+				},
+				"threshold": {
+					"props": {
+						"below": {},
+						"tone": {},
+						"pulse": {}
+					}
+				},
+				"option": {
+					"props": {
+						"value": {},
+						"label": {},
+						"selected": {},
+						"disabled": {}
+					}
+				},
+				"optgroup": {
+					"props": {
+						"label": {},
+						"disabled": {}
+					}
+				},
+				"data": {
+					"props": {
+						"class": {},
+						"part": {},
+						"value": {},
+						"title": {},
+						"lang": {},
+						"dir": {}
 					}
 				}
 			}
@@ -4314,6 +4807,10 @@
 		},
 		"xtyle.component.kbd": {
 			"description": "Permits a mod to provide the markup of the xtyle Kbd component.",
+			"risk": "low"
+		},
+		"xtyle.component.number-format": {
+			"description": "Permits a mod to provide the markup of the xtyle NumberFormat component.",
 			"risk": "low"
 		},
 		"xtyle.component.link": {

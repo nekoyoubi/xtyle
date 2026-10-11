@@ -3,8 +3,17 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { placeOverlay, tooltipTetherShift } from "./overlay-position.js";
 import { tooltipHostCss, type TooltipPlacement } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/tooltip/source.generated.js";
-import { resolveOptionalTone, resolveVocab, TOOLTIP_PLACEMENTS } from "../vocab.js";
+import {
+	resolveOptionalTone,
+	resolveOptionalVocab,
+	resolveVocab,
+	TOOLTIP_MODES,
+	TOOLTIP_PLACEMENTS,
+	TOOLTIP_SIZES,
+	TOOLTIP_VARIANTS,
+} from "../vocab.js";
 
 type Placement = TooltipPlacement;
 
@@ -26,11 +35,12 @@ export class XtyleTooltip extends XtyleElement {
 	/** Set around our own `open` writes so `attributeChangedCallback` can tell them from the author's. */
 	private selfDriven = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "tooltip", {
+		nameTarget: '[part="content"]',
 		applyIntent: () => {},
 	});
 
 	static get observedAttributes(): string[] {
-		return ["text", "placement", "open", "tone", "variant", "mode", "size"];
+		return ["text", "placement", "open", "tone", "variant", "mode", "size", ...NAME_ATTRIBUTES];
 	}
 
 	get text(): string | null {
@@ -55,21 +65,21 @@ export class XtyleTooltip extends XtyleElement {
 	}
 
 	get variant(): string | null {
-		return this.getAttribute("variant");
+		return resolveOptionalVocab(this.getAttribute("variant"), TOOLTIP_VARIANTS, "tooltip variant");
 	}
 	set variant(value: string) {
 		this.setAttribute("variant", value);
 	}
 
 	get mode(): string | null {
-		return this.getAttribute("mode");
+		return resolveOptionalVocab(this.getAttribute("mode"), TOOLTIP_MODES, "tooltip mode");
 	}
 	set mode(value: string) {
 		this.setAttribute("mode", value);
 	}
 
 	get size(): string | null {
-		return this.getAttribute("size");
+		return resolveOptionalVocab(this.getAttribute("size"), TOOLTIP_SIZES, "tooltip size");
 	}
 	set size(value: string) {
 		this.setAttribute("size", value);

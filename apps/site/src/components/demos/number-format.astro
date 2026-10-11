@@ -1,0 +1,101 @@
+---
+import NumberFormat from "@xtyle/astro/NumberFormat.astro";
+import Card from "@xtyle/astro/Card.astro";
+import Stack from "@xtyle/astro/Stack.astro";
+import Cluster from "@xtyle/astro/Cluster.astro";
+import Heading from "@xtyle/astro/Heading.astro";
+import Text from "@xtyle/astro/Text.astro";
+
+const column = [1299.5, 84.25, 10402.1, 7, 911.75];
+---
+
+<Stack gap={6}>
+	<Card>
+		<Heading slot="header" level={3} size="sm">Formats</Heading>
+		<Stack gap={2}>
+			<Cluster gap={2} align="baseline">
+				<Text as="span" size="sm" tone="muted" mono>decimal</Text>
+				<NumberFormat value={1234567.891} locale="en-US" />
+			</Cluster>
+			<Cluster gap={2} align="baseline">
+				<Text as="span" size="sm" tone="muted" mono>currency</Text>
+				<NumberFormat value={1299.5} format="currency" currency="USD" locale="en-US" />
+				<NumberFormat value={1299.5} format="currency" currency="JPY" currencyDisplay="name" locale="en-US" />
+			</Cluster>
+			<Cluster gap={2} align="baseline">
+				<Text as="span" size="sm" tone="muted" mono>percent</Text>
+				<NumberFormat value={0.4237} format="percent" decimals={1} locale="en-US" />
+				<Text as="span" size="xs" tone="subtle">from 0.4237, Intl semantics</Text>
+			</Cluster>
+			<Cluster gap={2} align="baseline">
+				<Text as="span" size="sm" tone="muted" mono>compact</Text>
+				<NumberFormat value={2450000} format="compact" locale="en-US" />
+				<NumberFormat value={18300} format="compact" locale="en-US" />
+			</Cluster>
+			<Cluster gap={2} align="baseline">
+				<Text as="span" size="sm" tone="muted" mono>unit</Text>
+				<NumberFormat value={512} format="unit" unit="kilobyte" unitDisplay="long" locale="en-US" />
+				<NumberFormat value={21.5} format="unit" unit="celsius" locale="en-US" />
+				<NumberFormat value={88} format="unit" unit="kilometer-per-hour" locale="en-US" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Decimals and sign</Heading>
+		<Stack gap={2}>
+			<Cluster gap={3} align="baseline">
+				<NumberFormat value={3.14159} decimals={2} locale="en-US" />
+				<NumberFormat value={3} minDecimals={2} locale="en-US" />
+				<NumberFormat value={3.14159} decimals={2} maxDecimals={4} locale="en-US" />
+				<NumberFormat value={2026} grouping={false} locale="en-US" />
+			</Cluster>
+			<Cluster gap={3} align="baseline">
+				<NumberFormat value={0.042} format="percent" decimals={1} sign="exceptZero" locale="en-US" />
+				<NumberFormat value={0} format="percent" decimals={1} sign="exceptZero" locale="en-US" />
+				<NumberFormat value={-12} sign="never" locale="en-US" />
+				<NumberFormat value={12} sign="always" locale="en-US" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Locale</Heading>
+		<Stack gap={2}>
+			<Text size="sm" tone="muted">
+				The same value through <Text as="span" mono size="sm">locale</Text>, and through a <Text as="span" mono size="sm">lang</Text> on the element.
+			</Text>
+			<Cluster gap={3} align="baseline">
+				<NumberFormat value={1299.5} format="currency" currency="EUR" locale="de-DE" />
+				<NumberFormat value={1299.5} format="currency" currency="EUR" locale="fr-FR" />
+				<NumberFormat value={1299.5} format="currency" currency="INR" lang="en-IN" />
+				<NumberFormat value={1234567.891} lang="de-DE" />
+			</Cluster>
+		</Stack>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Tones and fallback</Heading>
+		<Cluster gap={3} align="baseline">
+			<NumberFormat value={0.081} format="percent" decimals={1} sign="exceptZero" tone="success" locale="en-US" />
+			<NumberFormat value={-0.027} format="percent" decimals={1} sign="exceptZero" tone="danger" locale="en-US" />
+			<NumberFormat value={41} format="unit" unit="percent" tone="warn" locale="en-US" />
+			<NumberFormat value={9.5} format="currency" tone="accent" locale="en-US" />
+			<NumberFormat value={null} fallback="n/a" tone="neutral" />
+		</Cluster>
+	</Card>
+
+	<Card>
+		<Heading slot="header" level={3} size="sm">Tabular figures</Heading>
+		<Cluster gap={8} align="start">
+			<Stack gap={1} align="end">
+				<Text as="span" size="xs" tone="muted">tabular (default)</Text>
+				{column.map((value) => <NumberFormat value={value} format="currency" locale="en-US" />)}
+			</Stack>
+			<Stack gap={1} align="end">
+				<Text as="span" size="xs" tone="muted">tabular=false</Text>
+				{column.map((value) => <NumberFormat value={value} format="currency" tabular={false} locale="en-US" />)}
+			</Stack>
+		</Cluster>
+	</Card>
+</Stack>

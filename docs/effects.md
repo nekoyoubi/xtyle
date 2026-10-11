@@ -66,7 +66,8 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 |---|---|
 | `glow` | a halo, the accent bloom |
 | `throb` | a slow pulse that drifts between `--fx-color` and `--fx-color-alt` |
-| `glare` | an animated sheen that sweeps across the box |
+| `glare` | an animated sheen that sweeps across the box, once or on a repeat |
+| `holo` | an iridescent foil that drifts through the named hues |
 | `lift` | a small rise with a shadow under it |
 | `tint` | a color wash over the surface |
 | `frost` | a backdrop blur and saturation bump |
@@ -173,7 +174,8 @@ spec anyone has already written.
 |---|---|
 | `glow` | `spread` (px), `color` |
 | `throb` | `rate` (s), `color`, `color-alt`, `colors` (list), `spread` (px) |
-| `glare` | `angle` (deg), `rate` (ms), `color` |
+| `glare` | `angle` (deg), `rate` (ms), `color`, `amount` (% wash), `width` (%), `repeat` (a count, or `infinite`), `rest` (a unitless multiple of the sweep spent off the box between passes) |
+| `holo` | `amount` (%), `angle` (deg), `rate` (s) |
 | `lift` | `distance` (px), `color` |
 | `tint` | `amount` (%), `color` |
 | `frost` | `blur` (px), `saturation` (%) |
@@ -184,6 +186,16 @@ spec anyone has already written.
 | `pop` | `scale` (a unitless overshoot), `rate` (ms) |
 | `wobble` | `angle` (deg), `rate` (ms) |
 | `saturate` | `amount` (%) — `0` grayscale, `100` unchanged, `200` double |
+
+`glare?repeat:infinite,rest:3,width:6%` is the shape of a glint: a thin streak that crosses, stays
+off the box for three sweeps' worth of travel, and crosses again. `rest` stretches the travel rather
+than adding a delay, so it needs no time arithmetic and every engine runs it the same way.
+
+**Two overlays can share an element.** An effect paints over its target on `::after` (`baseAfter` /
+`activeAfter`), and one meant to sit under another takes `::before` instead (`baseBefore` /
+`activeBefore`). `holo` uses `::before`, so `data-fx="holo glare"` runs both, the glint passing over
+the foil. Two effects on the same pseudo-element still collide; the second channel is the escape, not
+a stack.
 
 A **bracketed list** fans out to a related group, so a pair that is nearly always set together can be
 written as one: `colors:[accent,accent-2]` fills `color` and `color-alt`. Its commas stay inside the

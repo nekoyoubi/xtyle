@@ -8,13 +8,19 @@ import {
 	matrixCeiling,
 	GLOW_MAX_BLUR,
 	paletteRegisterTokens,
+	resolvePaletteName,
 	type Palette,
 } from "../series.js";
+import { resolveOptionalVocab, resolveVocab } from "../vocab.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/heatmap/source.generated.js";
 
 export type { HeatmapScheme };
+
+const CURRENT_TONES = ["success", "danger", "warn", "info", "neutral"] as const;
+const CATEGORY_AXES = ["col", "row"] as const;
 
 function parseJson<T>(raw: string | null): T | null {
 	if (!raw) return null;
@@ -42,12 +48,13 @@ export class XtyleHeatmap extends XtyleElement {
 	private titlesProp: string[][] | null = null;
 	private schemeProp: HeatmapScheme | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "heatmap", {
+		nameTarget: '.xtyle-heatmap__a11y > table, .xtyle-heatmap__empty',
 		applyIntent: () => {},
 		afterApply: () => this.wireInteraction(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["values", "glow", "rows", "cols", "current", "current-tone", "current-pulse", "titles", "scheme", "reverse", "max", "glow-max", "glow-blur", "glow-label", "scale", "show-values", "selectable", "categorical", "category-axis", "label"];
+		return ["values", "glow", "rows", "cols", "current", "current-tone", "current-pulse", "titles", "scheme", "reverse", "max", "glow-max", "glow-blur", "glow-label", "scale", "show-values", "selectable", "categorical", "category-axis", "label", ...NAME_ATTRIBUTES];
 	}
 
 	get values(): number[][] {
@@ -104,7 +111,7 @@ export class XtyleHeatmap extends XtyleElement {
 		const raw = this.getAttribute("scheme");
 		if (!raw) return fallback;
 		if (raw.startsWith("[")) return parseJson<string[]>(raw) ?? fallback;
-		return raw as Palette;
+		return resolvePaletteName(raw, fallback, "heatmap scheme");
 	}
 	set scheme(value: HeatmapScheme) {
 		this.schemeProp = value;
@@ -140,7 +147,7 @@ export class XtyleHeatmap extends XtyleElement {
 	}
 
 	get categoryAxis(): "col" | "row" {
-		return this.getAttribute("category-axis") === "row" ? "row" : "col";
+		return resolveVocab(this.getAttribute("category-axis"), CATEGORY_AXES, "col", "heatmap category axis");
 	}
 	set categoryAxis(value: "col" | "row") {
 		this.setAttribute("category-axis", value);
@@ -172,9 +179,9 @@ export class XtyleHeatmap extends XtyleElement {
 
 	/** A categorical grid's per-category hues plus each cell's fill (surface → its category hue by
 	 * value); the intensity-ramp sibling is {@link rampCellColors}. */
-	private categoricalPalette(values: number[][]): { cellColors: string[][]; hues: string[] } {
+	private categoricalPalette(values: number[][], axis: "col" | "row"): { cellColors: string[][]; hues: string[] } {
 		return categoricalHeatColors(this.scheme, values, this.paletteRegister(), {
-			axis: this.categoryAxis,
+			axis,
 			reverse: this.reverse,
 			max: this.ceiling("max", values),
 		});
@@ -231,7 +238,8 @@ export class XtyleHeatmap extends XtyleElement {
 		const values = this.values;
 		const glow = this.glow;
 		const scale = this.scale;
-		const palette = this.categorical ? this.categoricalPalette(values) : null;
+		const axis = this.categoryAxis;
+		const palette = this.categorical ? this.categoricalPalette(values, axis) : null;
 		const key = scale ? (palette ? this.legendKey(palette.hues) : this.scaleKey(values)) : {};
 		return {
 			values,
@@ -242,7 +250,7 @@ export class XtyleHeatmap extends XtyleElement {
 			glowValues: glow,
 			glowLabel: this.glowLabel(glow),
 			current: this.current,
-			currentTone: this.getAttribute("current-tone"),
+			currentTone: resolveOptionalVocab(this.getAttribute("current-tone"), CURRENT_TONES, "heatmap current tone"),
 			currentPulse: this.hasAttribute("current-pulse"),
 			titles: this.titles,
 			scale,

@@ -9,6 +9,8 @@ import {
 	type PopoverPlacement,
 } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
+import { focusableIn, activeLeaf, returnFocusTarget } from "../focus.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/popover/source.generated.js";
 import { resolveVocab, POPOVER_PLACEMENTS, POPOVER_ALIGNS, POPOVER_PANEL_ROLES, POPOVER_FOCUS } from "../vocab.js";
 
@@ -28,9 +30,6 @@ export interface PopoverOpenOptions {
 
 /** What the popover is currently anchored to — reported on the `open` event. */
 export type PopoverAnchorKind = "trigger" | "element" | "point";
-
-const FOCUSABLE =
-	'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const NON_VISUAL = new Set(["SCRIPT", "STYLE", "TEMPLATE", "LINK"]);
 
@@ -86,6 +85,7 @@ export class XtylePopover extends XtyleElement {
 	 * to the swap, not to the panel, so neither is announced. */
 	private settling = false;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "popover", {
+		nameTarget: '[part="panel"]',
 		applyIntent: () => {},
 		afterApply: () => this.afterApply(),
 	});
@@ -106,6 +106,7 @@ export class XtylePopover extends XtyleElement {
 			"focus-on-open",
 			"no-close-on-select",
 			"no-light-dismiss",
+			...NAME_ATTRIBUTES,
 		];
 	}
 
@@ -590,28 +591,13 @@ export class XtylePopover extends XtyleElement {
 	}
 
 	private captureReturnFocus(): void {
-		if (typeof document === "undefined") return;
-		const active = document.activeElement as HTMLElement | null;
-		if (!active || active === document.body || active === document.documentElement) return;
-		if (active === this || this.contains(active)) return;
-		this.returnFocusTo = typeof active.focus === "function" ? active : null;
+		const target = returnFocusTarget(this);
+		if (target) this.returnFocusTo = target;
 	}
 
-	/** The panel's focus ring, in DOM order. In light DOM the consumer's body sits inside the panel, so a
-	 * plain query finds it; in shadow DOM the body is projected and lives on the host, so it has to be
-	 * read off the slot's assigned nodes instead — the same content, a different tree. */
 	private focusables(): HTMLElement[] {
 		const panel = this.panel;
-		if (!panel) return [];
-		const own = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)];
-		if (own.length > 0) return own;
-		return this.fragment
-			.slottedNodes()
-			.flatMap((node) =>
-				node instanceof HTMLElement
-					? [...(node.matches(FOCUSABLE) ? [node] : []), ...node.querySelectorAll<HTMLElement>(FOCUSABLE)]
-					: [],
-			);
+		return panel ? focusableIn(panel) : [];
 	}
 
 	private applyFocus(focus: PopoverFocus): void {
@@ -627,9 +613,7 @@ export class XtylePopover extends XtyleElement {
 	}
 
 	private activeElementInPanel(): Element | null {
-		const shadow = (this.root as ShadowRoot).activeElement;
-		if (shadow) return shadow;
-		return typeof document === "undefined" ? null : document.activeElement;
+		return typeof document === "undefined" ? null : activeLeaf();
 	}
 
 	/** The modal focus trap. A modal `<dialog>` already contains Tab natively, so this is the belt to the
@@ -817,7 +801,7 @@ export class XtylePopover extends XtyleElement {
 
 	private warnIfUnnamed(): void {
 		if (this.panelRole !== "dialog") return;
-		if (this.label || this.labelledby || this.getAttribute("aria-label")) return;
+		if (this.label || this.labelledby || hasHostName(this)) return;
 		console.warn(
 			"xtyle-popover: no accessible name. Provide a `label` or `labelledby` so the panel is announced, or set `panel-role` to the role its content really is.",
 		);

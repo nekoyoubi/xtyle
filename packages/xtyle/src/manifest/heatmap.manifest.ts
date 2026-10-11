@@ -218,6 +218,7 @@ export const heatmapManifest: ComponentManifest = {
 	description:
 		"Heatmap renders a matrix of values as a grid of colored cells, each cell's fill scaled by its value on an intensity ramp resolved off the live theme, the activity-calendar / punch-card shape (runs per hour over a week, load by host and resource, a GitHub-style contribution grid). Feed it a dense `values` matrix (row-major) plus optional `rows` and `cols` labels; the default `intensity` ramp washes from a faint surface up to the accent, and `thermal` or `severity` (or an explicit color array) swap the scale. Set `categorical` to color by category instead of intensity: each column (or each row, with `categoryAxis=\"row\"`) takes a distinct color sampled off any `Palette` (`accents` / `skittles` / `statuses`), and the cell value washes that hue from the surface up. One grid, then, reads its categories by hue and their magnitude by fill: the categorical heat-grid. Turn `scale` on and a legend keys the hues. Every cell's intensity is normalized against the data's own maximum, or an explicit `max` so several grids share one scale. It's interactive: hovering or focusing a cell floats a value readout, and the whole grid is mirrored into a visually-hidden data table so assistive tech reads the numbers, not the pixels. Set `selectable` to make cells a drill-in surface, each firing a `select` event with its row, column, and value. `showValues` prints the number in each cell. Feed an optional second `glow` matrix (the same shape as `values`) to carry a second signal in one grid: the fill reads one metric while a per-cell halo reads another (run count vs total runtime, requests vs error rate). An empty matrix shows a muted `No data` message in place of the grid.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["cell", "chart", "empty", "legend", "scale", "tooltip", "tooltip-row"],
 	anatomy: [
 		{
@@ -473,6 +474,7 @@ export const heatmapManifest: ComponentManifest = {
 		"Give cells richer hover detail with `titles`, a matrix parallel to `values`: a `titles[row][col]` becomes that cell's readout and accessible name, so a cell can spell out a full timestamp and breakdown (\"Wed PM: 6 runs, 2 failed\") instead of a bare number, without a bespoke tooltip layer.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner data table assistive tech reads, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"The SVG is decorative (`aria-hidden`); the grid's data is mirrored into a visually-hidden `<table>` so assistive tech reads the actual numbers. `label` becomes the table's caption.",
 		"Each cell is a focusable tab stop with an `aria-label` naming its row, column, and value, so the grid is navigable by keyboard and the value readout appears on focus as well as hover.",
 		"With `selectable`, each cell becomes a `role=\"button\"` (announced as actionable) and activates on Enter/Space as well as click; a read-only grid keeps its cells as `role=\"img\"` data points.",

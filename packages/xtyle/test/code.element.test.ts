@@ -129,3 +129,25 @@ describe("<xtyle-code> source rendering survives the gutter conversion", () => {
 		expect(text).toBe(SOURCE);
 	});
 });
+
+describe("<xtyle-code> copy button", () => {
+	function copyButton(el: HTMLElement): HTMLElement | null {
+		return root(el).querySelector<HTMLElement>("[data-copy]");
+	}
+
+	it("drops the button for copy=\"false\" and copy=\"none\", and draws nothing in its place", () => {
+		for (const copy of ["false", "none"]) {
+			const el = make({ copy });
+			const button = copyButton(el);
+			expect(button?.hidden, copy).toBe(true);
+			expect(getComputedStyle(button!).display, copy).toBe("none");
+		}
+	});
+
+	it("turns the button back on when the attribute goes", () => {
+		const el = make({ copy: "false" }) as HTMLElement & { copy: boolean };
+		el.copy = true;
+		expect(el.hasAttribute("copy")).toBe(false);
+		expect(copyButton(el)?.hidden).toBe(!navigator.clipboard);
+	});
+});

@@ -2,7 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import { panelHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/panel/source.generated.js";
-import { PANEL_VARIANTS, resolveVocab } from "../vocab.js";
+import { PANEL_VARIANTS, resolveIntegerIn, resolveVocab } from "../vocab.js";
 import { iconBody } from "../icon-registry.js";
 
 type PanelVariant = (typeof PANEL_VARIANTS)[number];
@@ -58,8 +58,7 @@ export class XtylePanel extends XtyleElement {
 	}
 
 	get level(): number {
-		const raw = Number(this.getAttribute("level"));
-		return raw >= 1 && raw <= 6 ? Math.trunc(raw) : 2;
+		return resolveIntegerIn(this.getAttribute("level"), 1, 6, "panel level", "a heading level") ?? 2;
 	}
 	set level(value: number) {
 		this.setAttribute("level", String(value));

@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { FullTone } from "../index.js";
 import { splitButtonHostCss, type SplitButtonSize, type SplitButtonVariant, type MenuItem } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/split-button/source.generated.js";
 // INFO: the dropdown is a real <xtyle-menu> the fill declares, so its tag must be registered here
 import "./menu.js";
@@ -30,12 +31,13 @@ export class XtyleSplitButton extends XtyleElement {
 	private itemsProp: MenuItem[] | null = null;
 	private watchedMenu: XtyleMenu | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "split-button", {
+		nameTarget: '[part="split-button"]',
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => this.watchMenu(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "tone", "size", "type", "disabled", "loading", "block", "open", "menu-label", "items"];
+		return ["variant", "tone", "size", "type", "disabled", "loading", "block", "open", "menu-label", "items", ...NAME_ATTRIBUTES];
 	}
 
 	get variant(): SplitButtonVariant {

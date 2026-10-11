@@ -13,7 +13,7 @@ import { manifest, fragmentSources } from "./fragments/spotlight/source.generate
 import "./popover.js";
 import type { XtylePopover } from "./popover.js";
 import type { OverlayPlacement } from "./overlay-position.js";
-import { resolveVocab, SPOTLIGHT_SHAPES, SPOTLIGHT_ARROWS, POPOVER_PLACEMENTS } from "../vocab.js";
+import { resolveVocab, SPOTLIGHT_SHAPES, SPOTLIGHT_ARROWS, SPOTLIGHT_PULSES, POPOVER_PLACEMENTS } from "../vocab.js";
 
 export type { SpotlightShape, SpotlightArrow, SpotlightPulse } from "../markup/spotlight.js";
 
@@ -116,8 +116,7 @@ export class XtyleSpotlight extends XtyleElement {
 	 * `prefers-reduced-motion`. A bare `pulse` attribute reads as `slow`. */
 	get pulse(): SpotlightPulse {
 		if (!this.hasAttribute("pulse")) return "none";
-		const value = this.getAttribute("pulse");
-		return value === "fast" ? "fast" : "slow";
+		return resolveVocab(this.getAttribute("pulse"), SPOTLIGHT_PULSES, "slow", "spotlight pulse");
 	}
 	set pulse(value: SpotlightPulse | boolean) {
 		if (value === false || value === "none") this.removeAttribute("pulse");

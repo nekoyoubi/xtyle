@@ -52,6 +52,7 @@ export const themeCardManifest: ComponentManifest = {
 	description:
 		"Theme Card derives an invocation exactly the way `<xtyle-theme-scope>` does — a named algorithm plus its `knobs` and token `constraints` — but *paints* the result instead of applying it, so a theme can be shown without the page having to wear it. What it draws is a **fake**: a small simulated interface in the theme's own colors, with a surface, a title, a row of swatches, a filled button, and the status dots. A fake reads a palette faster than a list of hex values does, because it shows the colors doing the job they were derived for. The whole drawing lives in the component's fill, so a mod can redraw the fake into whatever preview an app wants — a different mock, more swatches, a type specimen — without touching the element. `interactive` turns the card into a real button that emits `select`, which is what a theme picker listens to; `selected` marks the current one. A bad invocation shows its error on the card rather than a blank frame.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["body", "card", "error", "meta", "name", "preview"],
 	anatomy: [
 		{
@@ -176,6 +177,8 @@ export const themeCardManifest: ComponentManifest = {
 		"Override the `component.theme-card` fill to redraw the fake when an app wants a different preview.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"group\"` card, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
+		"Under `forced-colors: active` a selected card draws a `Highlight` outline, since the mode forces its accent border to the same color as every other card's.",
 		"Under `interactive` the card is a real `<button>` with `aria-pressed`, so it is reachable, announced, and operable from the keyboard.",
 		"The fake is decorative (`aria-hidden`); the card's accessible name carries the theme's name, algorithm, and scheme instead.",
 		"A static card is a labelled group rather than a control, so it is never a focus stop that does nothing.",

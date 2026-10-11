@@ -141,7 +141,8 @@
       const label = section.headerSlot ? `<slot name="${escapeAttr(section.headerSlot)}"></slot>` : escapeHtml(section.header);
       const labelRegion = section.headerSlot ? ` data-slot="${escapeAttr(section.headerSlot)}"` : "";
       const group = bindings.multiple ? "" : ` name="${escapeAttr(uid)}-group"`;
-      return `<details class="xtyle-accordion__item" part="item" data-key="${key}"${group}${isOpen ? " open" : ""}><summary class="xtyle-accordion__trigger" part="trigger" id="${triggerId}" data-key="${key}" aria-controls="${panelId}"${disabledAttr}><h${level} class="xtyle-accordion__heading" part="heading"><span class="xtyle-accordion__label"${labelRegion}>${label}</span></h${level}>${chev}</summary><div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" aria-labelledby="${triggerId}"><div class="xtyle-accordion__content"${bodyRegion}>${body}</div></div></details>`;
+      const actions = section.actionsSlot ? `<div class="xtyle-accordion__actions" part="actions" data-slot="${escapeAttr(section.actionsSlot)}"><slot name="${escapeAttr(section.actionsSlot)}"></slot></div>` : "";
+      return `<div class="xtyle-accordion__section" part="section" data-key="${key}"><details class="xtyle-accordion__item" part="item" data-key="${key}"${group}${isOpen ? " open" : ""}><summary class="xtyle-accordion__trigger" part="trigger" id="${triggerId}" data-key="${key}" aria-controls="${panelId}"${disabledAttr}><h${level} class="xtyle-accordion__heading" part="heading"><span class="xtyle-accordion__label"${labelRegion}>${label}</span></h${level}>${chev}</summary><div class="xtyle-accordion__panel" part="panel" id="${panelId}" data-key="${key}" role="region" aria-labelledby="${triggerId}"><div class="xtyle-accordion__content"${bodyRegion}>${body}</div></div></details>` + actions + `</div>`;
     }).join("");
   }
   hooks.fragment.mount("accordion", (bindings, ops) => {

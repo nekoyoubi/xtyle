@@ -26,6 +26,7 @@ export const tooltipCss = `
 	width: max-content;
 	max-width: min(18rem, calc(100vw - var(--space-8)));
 	margin: 0;
+	overflow: visible;
 	padding: var(--tt-pad-y) var(--tt-pad-x) var(--tt-pad-y) calc(var(--tt-pad-x) + var(--tt-edge-w));
 	font-family: var(--font-sans);
 	font-size: var(--text-sm);

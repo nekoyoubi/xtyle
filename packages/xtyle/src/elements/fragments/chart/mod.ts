@@ -1,3 +1,4 @@
+import { axisLabel, layoutAxisLabels, type LabelAngle } from "../axis-labels.js";
 import { escapeAttr } from "../escape.js";
 
 interface OpsBuilder {
@@ -26,6 +27,7 @@ interface ChartBindings {
 	yMin?: number;
 	yMax?: number;
 	xTicks?: number;
+	labelAngle?: LabelAngle;
 	yTicks?: number;
 	xLabel?: string | null;
 	yLabel?: string | null;
@@ -34,6 +36,8 @@ interface ChartBindings {
 	title?: string | null;
 	ariaLabel?: string | null;
 	selectable?: boolean;
+	/** Whether the host names the chart itself, so the plot's keyboard hint moves to `aria-description`. */
+	hostNamed?: boolean;
 }
 
 declare const hooks: {
@@ -279,10 +283,17 @@ function chartHtml(b: ChartBindings): string {
 	const hasYLabel = !!b.yLabel;
 	const padTop = 14;
 	const padRight = 18;
-	const padBottom = 32 + (hasXLabel ? 20 : 0);
 	const padLeft = 48 + (hasYLabel ? 18 : 0);
 	const x0 = padLeft;
 	const x1 = IW - padRight;
+	const xTickStops = Array.from({ length: xTickCount + 1 }, (_, i) => i / xTickCount);
+	const xLabelLayout = layoutAxisLabels(
+		xTickStops.map((t) => formatX(toDomain(t), b.xScale, domainSpan)),
+		(x1 - x0) / xTickCount,
+		b.labelAngle,
+		height * 0.4,
+	);
+	const padBottom = xLabelLayout.space + 2 + (hasXLabel ? 20 : 0);
 	const y0 = padTop;
 	const y1 = height - padBottom;
 	const plotW = x1 - x0;
@@ -298,10 +309,10 @@ function chartHtml(b: ChartBindings): string {
 		})
 		.join("");
 
-	const xTickMarks = Array.from({ length: xTickCount + 1 }, (_, i) => i / xTickCount)
-		.map((t) => {
+	const xTickMarks = xTickStops
+		.map((t, i) => {
 			const x = f(xOf(t));
-			return `<line class="xtyle-chart__grid xtyle-chart__grid--x" part="grid" x1="${x}" y1="${y0}" x2="${x}" y2="${y1}"></line><text class="xtyle-chart__xtick" part="xtick" x="${x}" y="${f(y1 + 18)}" text-anchor="middle">${escapeAttr(formatX(toDomain(t), b.xScale, domainSpan))}</text>`;
+			return `<line class="xtyle-chart__grid xtyle-chart__grid--x" part="grid" x1="${x}" y1="${y0}" x2="${x}" y2="${y1}"></line>${axisLabel(`class="xtyle-chart__xtick" part="xtick"`, xOf(t), y1, xLabelLayout.labels[i] ?? "", xLabelLayout.angle)}`;
 		})
 		.join("");
 
@@ -356,8 +367,11 @@ function chartHtml(b: ChartBindings): string {
 		`<g class="xtyle-chart__grid-layer">${xTickMarks}${gridlines}</g>${zero}${axes}${axisTitles}` +
 		`<g class="xtyle-chart__plots">${plots}</g>${guide}</svg>`;
 
+	const plotName = b.hostNamed
+		? `aria-label="${escapeAttr(label)}" aria-description="${escapeAttr(hint)}"`
+		: `aria-label="${escapeAttr(`${label}. ${hint}`)}"`;
 	const plot =
-		`<div class="xtyle-chart__plot" part="plot" tabindex="0" role="img" aria-label="${escapeAttr(`${label}. ${hint}`)}">` +
+		`<div class="xtyle-chart__plot" part="plot" tabindex="0" role="img" ${plotName}>` +
 		`${svg}${tooltipHtml(series, colors)}</div>`;
 	const legend = b.legend !== false && series.length > 1 ? legendHtml(series, colors) : "";
 	const table = tableHtml(series, b.title ?? b.ariaLabel ?? "", toDomain, b.xScale, domainSpan);

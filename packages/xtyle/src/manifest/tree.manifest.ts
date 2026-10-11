@@ -136,6 +136,7 @@ export const treeManifest: ComponentManifest = {
 	description:
 		"Tree renders a nested hierarchy from an `items` array. Each node carries a `label`, an optional `value`, `href`, and `children`, plus flags for `expanded`, `selected`, and `disabled`. It builds the WAI-ARIA tree pattern: a `role=\"tree\"` with nested `role=\"group\"` levels and `role=\"treeitem\"` nodes carrying `aria-level`, `aria-expanded`, and `aria-selected`, with a single roving tab stop so the whole tree is one Tab stop and the arrow keys walk it. A twisty rotates on expand. A node with an `href` renders its row as a link whether or not it has children, so a branch can be both navigable and a group; the row navigates while the twisty (and Left/Right) work the children. A branch without an `href` is a pure container that toggles on click. A node also carries per-row trailing content: one or more `badge` pills (a count plus a toned status pill after the label) and `actions` (hover-revealed row buttons that fire a `tree-action` event, each optionally `disabled` in place), the file-tree-with-inline-controls shape. Being data-driven keeps it robust across the bindings and a natural fit for a file or navigation tree. Three sizes (`sm`, `md`, `lg`) scale the row density.\n\nExpansion, selection, and the roving tab stop are **host-owned**: the node flags only *seed* them, and an `items` re-assignment reconciles rather than resets. So a live data feed (a per-row word count that ticks on every keystroke) can re-set `items` as often as it likes without re-expanding a branch the user collapsed or moving the tab stop. A key that disappears is dropped; a genuinely new branch seeds from its own `expanded` / `locked` flag. Call `resetState()` for the deliberate clean slate — loading a different document, not repainting the same one.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["actions", "badge", "row", "row-action", "tree"],
 	anatomy: [
 		{
@@ -277,6 +278,7 @@ export const treeManifest: ComponentManifest = {
 		"For a flat set of collapsible sections rather than a hierarchy, reach for Accordion instead.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"tree\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"Builds the WAI-ARIA tree pattern: a `role=\"tree\"` containing `role=\"treeitem\"` nodes and nested `role=\"group\"` levels, each item carrying `aria-level`, `aria-selected`, and (on parents) `aria-expanded`.",
 		"A single roving tab stop makes the whole tree one Tab stop; Up/Down move between visible nodes, Right expands or steps into a node, Left collapses or steps out to the parent, and Home/End jump to the first and last.",
 		"Enter or Space activates a node: selecting it, toggling a parent, or following a leaf's link.",

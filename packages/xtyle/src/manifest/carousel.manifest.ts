@@ -78,7 +78,7 @@ export const carouselManifest: ComponentManifest = {
 	description:
 		"Carousel lays its slotted children out as a horizontal scroll-snap track: each child is a slide, and the browser's own scrolling does the paging, so the track is swipeable and keyboard-scrollable with no JavaScript at all. When the runtime is present it grows a control bar, prev and next buttons (drawn with the chevron icons), a row of pagination dots that track and drive the active slide, and arrow-key and Home/End navigation, all wired over the same native scroll. An opt-in `autoplay` advances the track on an `interval`, pausing on hover and focus and standing still entirely under `prefers-reduced-motion`; `loop` wraps the ends seamlessly, scrolling into an inert clone of the far slide and then silently snapping to the real one so the wrap never rewinds. The `transition` prop swaps the paging model: `slide` keeps the scroll-snap track, while `fade`, `scale`, and `flip` stack the slides and cross-fade the active one, so a testimonial or hero rotator can dissolve rather than slide. It is content-agnostic: the slides can be `Image`s, `Card`s, or any markup, and it exposes itself as a labelled carousel region with each slide named for assistive tech.\n\nEverything the carousel draws — the viewport, the track, the control bar, the arrows, the dots, and the play toggle — is its fragment's markup, so a mod can restyle or restructure the chrome (swap the chevrons for arrows, turn the dots into thumbnails, move the bar) without touching the scroll math, the keyboard, or the loop. The slides themselves are never re-authored: the fill's track is filled with the consumer's own nodes, so framework content stays live.",
 	bindings: ["html", "svelte", "astro"],
-	exposedParts: ["controls", "dot", "dots", "nav", "play", "track", "viewport"],
+	render: "light",
 	anatomy: [
 		{
 			name: "viewport",
@@ -237,6 +237,7 @@ export const carouselManifest: ComponentManifest = {
 		"A vertical `direction` (`up` / `down`) suits uniform, media-shaped slides: it pins each slide to `--carousel-height` and clips the overflow, so give it a height that fits the content and reach for it over long text cards.",
 	],
 	a11y: [
+		"Under `forced-colors: active` each dot is outlined in `CanvasText` and the active one fills with `Highlight`; the dots are pure backgrounds, so without this every dot flattens to `Canvas` and disappears.",
 		"The carousel is a labelled `region` with `aria-roledescription=\"carousel\"`, and each slide is a labelled group announced as `N of M`.",
 		"The track is focusable and scrolls with the arrow keys and Home/End; the prev/next buttons and dots are labelled controls.",
 		"Autoplay pauses on hover and focus, and stops entirely under `prefers-reduced-motion`, so motion never runs against a user's stated preference.",

@@ -81,6 +81,7 @@ import { eyebrowCss } from "./components/eyebrow.js";
 import { cardLinkCss } from "./components/card-link.js";
 import { tocCss } from "./components/toc.js";
 import { kbdCss } from "./components/kbd.js";
+import { numberFormatCss } from "./components/number-format.js";
 import { iconCss } from "./components/icon.js";
 import { imageCss } from "./components/image.js";
 import { carouselCss } from "./components/carousel.js";
@@ -125,6 +126,7 @@ const hostDisplayCss = [
 	"xtyle-panel { display: block; } xtyle-panel[fill] { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }",
 	"xtyle-section { display: block; }",
 	"xtyle-kbd { display: inline-block; }",
+	"xtyle-number-format { display: inline; }",
 	"xtyle-icon { display: inline-flex; }",
 	"xtyle-image { display: block; }",
 	"xtyle-bar { display: block; }",
@@ -146,7 +148,7 @@ const hostDisplayCss = [
 	"xtyle-toast { display: block; }",
 	"xtyle-breadcrumb { display: block; }",
 	"xtyle-code { display: block; position: relative; }",
-	"xtyle-switch { display: inline-flex; }",
+	"xtyle-switch { display: inline-flex; } xtyle-switch[spread] { display: flex; }",
 	"xtyle-pagination { display: block; }",
 	"xtyle-calendar { display: block; }",
 	"xtyle-segmented { display: inline-block; }",
@@ -185,8 +187,12 @@ const hostDisplayCss = [
 		"xtyle-stat[align], xtyle-hero[align], xtyle-popover[align] { text-align: inherit; }",
 ].join("\n");
 
-/** The full component class layer, concatenated. */
-export const componentsCss: string = [
+function hostHiddenCss(css: string): string {
+	const tags = [...new Set(css.match(/(?<![.\w-])xtyle-[a-z-]+(?=\s*[{[,:>]|\s+[a-z.[*])/g) ?? [])];
+	return `${tags.map((tag) => `${tag}[hidden]`).join(", ")} { display: none !important; }`;
+}
+
+const componentLayers: string = [
 	hostDisplayCss,
 	baseCss,
 	buttonCss,
@@ -258,6 +264,7 @@ export const componentsCss: string = [
 	cardLinkCss,
 	tocCss,
 	kbdCss,
+	numberFormatCss,
 	iconCss,
 	imageCss,
 	carouselCss,
@@ -281,3 +288,6 @@ export const componentsCss: string = [
 	calendarCss,
 	dropzoneCss,
 ].join("\n");
+
+/** The full component class layer, concatenated, with every element it gives a display hidden again by `[hidden]`. */
+export const componentsCss: string = [componentLayers, hostHiddenCss(componentLayers)].join("\n");

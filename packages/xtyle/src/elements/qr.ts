@@ -3,8 +3,15 @@ import { qrHostCss, qrLogoModules, qrLinkHref, QR_ICON_SCALES, type QrMode, type
 import { encodeQr, qrPath, type QrEcLevel, type QrModuleShape, type QrMatrix } from "../qr.js";
 import { qrScannability } from "../audit.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { readLiveRegister } from "./live-register.js";
 import { manifest, fragmentSources } from "./fragments/qr/source.generated.js";
+import { resolveVocab } from "../vocab.js";
+
+const QR_EC_LEVELS: readonly QrEcLevel[] = ["L", "M", "Q", "H"];
+const QR_MODES: readonly QrMode[] = ["theme", "bitonal", "auto"];
+const QR_MODULE_SHAPES: readonly QrModuleShape[] = ["square", "dot", "rounded"];
+const QR_ICON_SIZES: readonly QrIconSize[] = ["sm", "md", "lg", "xl"];
 
 const BITONAL_MODULE = "#000000";
 const BITONAL_BG = "#ffffff";
@@ -24,12 +31,13 @@ export class XtyleQrCode extends XtyleElement {
 	/** The mode the `mode-toggle` button returns to when it swaps back out of bitonal. */
 	private baseMode: QrMode = "theme";
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "qr", {
+		nameTarget: '[role="img"]',
 		applyIntent: () => {},
 		afterApply: () => this.wireToggle(),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["data", "ec-level", "mode", "module-shape", "quiet-zone", "size", "icon", "logo", "icon-size", "icon-scale", "icon-overlay", "icon-outline", "frame", "caption", "mode-toggle", "label"];
+		return ["data", "ec-level", "mode", "module-shape", "quiet-zone", "size", "icon", "logo", "icon-size", "icon-scale", "icon-overlay", "icon-outline", "frame", "caption", "mode-toggle", "label", ...NAME_ATTRIBUTES];
 	}
 
 	get data(): string {
@@ -40,24 +48,21 @@ export class XtyleQrCode extends XtyleElement {
 	}
 
 	get ecLevel(): QrEcLevel {
-		const raw = this.getAttribute("ec-level");
-		return raw === "L" || raw === "M" || raw === "Q" || raw === "H" ? raw : "M";
+		return resolveVocab(this.getAttribute("ec-level"), QR_EC_LEVELS, "M", "qr ec level");
 	}
 	set ecLevel(value: QrEcLevel) {
 		this.setAttribute("ec-level", value);
 	}
 
 	get mode(): QrMode {
-		const raw = this.getAttribute("mode");
-		return raw === "bitonal" || raw === "auto" ? raw : "theme";
+		return resolveVocab(this.getAttribute("mode"), QR_MODES, "theme", "qr mode");
 	}
 	set mode(value: QrMode) {
 		this.setAttribute("mode", value);
 	}
 
 	get moduleShape(): QrModuleShape {
-		const raw = this.getAttribute("module-shape");
-		return raw === "dot" || raw === "rounded" ? raw : "square";
+		return resolveVocab(this.getAttribute("module-shape"), QR_MODULE_SHAPES, "square", "qr module shape");
 	}
 	set moduleShape(value: QrModuleShape) {
 		this.setAttribute("module-shape", value);
@@ -78,8 +83,7 @@ export class XtyleQrCode extends XtyleElement {
 	}
 
 	get iconSize(): QrIconSize {
-		const raw = this.getAttribute("icon-size");
-		return raw === "sm" || raw === "lg" || raw === "xl" ? raw : "md";
+		return resolveVocab(this.getAttribute("icon-size"), QR_ICON_SIZES, "md", "qr icon size");
 	}
 	set iconSize(value: QrIconSize) {
 		this.setAttribute("icon-size", value);

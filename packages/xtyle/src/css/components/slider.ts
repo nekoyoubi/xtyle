@@ -25,11 +25,12 @@ export const sliderCss = `
 }
 .xtyle-slider__groove {
 	position: absolute;
+	box-sizing: border-box;
 	inset-inline: 0;
 	height: var(--rail-h);
 	border-radius: var(--radius-full);
 	background: var(--neutral-bg);
-	border: var(--border-thin) solid var(--line-2);
+	border: var(--border-thin) solid var(--line-strong);
 }
 .xtyle-slider__fill {
 	position: absolute;
@@ -41,6 +42,7 @@ export const sliderCss = `
 }
 .xtyle-slider__thumb {
 	position: absolute;
+	box-sizing: border-box;
 	inset-inline-start: 0%;
 	transform: translateX(-50%);
 	width: var(--thumb);
@@ -108,7 +110,7 @@ export const sliderCss = `
 	color: var(--fg-0);
 	text-align: right;
 	background: var(--field-bg);
-	border: var(--border-thin) solid var(--field-border);
+	border: var(--border-thin) solid var(--line-strong);
 	border-radius: var(--radius-sm);
 	padding: 0 var(--space-1);
 }

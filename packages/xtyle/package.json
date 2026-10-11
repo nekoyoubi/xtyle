@@ -1,6 +1,6 @@
 {
 	"name": "@xtyle/core",
-	"version": "0.12.0",
+	"version": "0.13.0",
 	"description": "A themable-derivation engine: an algorithm plus a few anchors derive a full register of CSS-ready tokens.",
 	"type": "module",
 	"license": "MIT",
@@ -20,8 +20,11 @@
 		"./authoring": "./dist/authoring.js",
 		"./concepts": "./dist/concepts.js",
 		"./dom": "./dist/dom.js",
+		"./install": "./dist/install.js",
+		"./api-since.json": "./api-since.json",
 		"./fx": "./dist/fx.js",
 		"./vite": "./dist/vite.js",
+		"./esbuild": "./dist/esbuild.js",
 		"./css": "./dist/css/index.js",
 		"./markup": "./dist/markup/index.js",
 		"./host": "./dist/host/registry.js",
@@ -35,6 +38,7 @@
 		"concepts",
 		"algorithms.d.ts",
 		"manifest.json",
+		"api-since.json",
 		"README.md"
 	],
 	"scripts": {

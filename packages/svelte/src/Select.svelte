@@ -11,6 +11,8 @@
 		disabled?: boolean;
 		/** Set false to keep the control out of sequential focus navigation. */
 		focusable?: boolean;
+		/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+		cursor?: boolean;
 		invalid?: boolean;
 		required?: boolean;
 		requiredMessage?: string;
@@ -29,6 +31,7 @@
 		name,
 		disabled = false,
 		focusable,
+		cursor = false,
 		invalid = false,
 		required = false,
 		requiredMessage,
@@ -53,6 +56,7 @@
 	{name}
 	disabled={disabled || undefined}
 	focusable={focusable === false ? "false" : undefined}
+	cursor={cursor || undefined}
 	invalid={invalid || undefined}
 	required={required || undefined}
 	required-message={requiredMessage}

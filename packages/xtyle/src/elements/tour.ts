@@ -4,6 +4,14 @@ import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
 import { manifest, fragmentSources } from "./fragments/tour/source.generated.js";
 import "./spotlight.js";
 import type { XtyleSpotlight } from "./spotlight.js";
+import {
+	SPOTLIGHT_ARROWS,
+	SPOTLIGHT_PULSES,
+	SPOTLIGHT_SHAPES,
+	TOUR_PROGRESS,
+	resolveOptionalVocab,
+	resolveVocab,
+} from "../vocab.js";
 
 function readSpec(value: unknown): TourSpec | null {
 	const parsed: unknown = typeof value === "string" ? tryParse(value) : value;
@@ -95,8 +103,7 @@ export class XtyleTour extends XtyleElement {
 	}
 
 	get progress(): TourProgress {
-		const value = this.getAttribute("progress");
-		return value === "dots" || value === "none" ? value : "count";
+		return resolveVocab(this.getAttribute("progress"), TOUR_PROGRESS, "count", "tour progress");
 	}
 	set progress(value: TourProgress) {
 		this.setAttribute("progress", value);
@@ -449,8 +456,15 @@ export class XtyleTour extends XtyleElement {
 			if (this.running) this.applyStep();
 			return;
 		}
+		this.checkVocab();
 		this.repaint();
 		this.syncSpotlight();
+	}
+
+	private checkVocab(): void {
+		resolveVocab(this.getAttribute("shape"), SPOTLIGHT_SHAPES, "auto", "tour shape");
+		resolveOptionalVocab(this.getAttribute("pulse"), SPOTLIGHT_PULSES, "tour pulse");
+		resolveVocab(this.getAttribute("arrow"), SPOTLIGHT_ARROWS, "bounce", "tour arrow");
 	}
 
 	protected template(): string {
@@ -459,6 +473,7 @@ export class XtyleTour extends XtyleElement {
 
 	protected override render(): void {
 		this.adoptComponentSheet();
+		this.checkVocab();
 		this.fragment.ensureScaffold(tourHostCss);
 		this.fragment.update(this.bindings);
 	}

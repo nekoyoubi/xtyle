@@ -10,6 +10,7 @@ export { dotCss } from "./components/dot.js";
 export { ribbonCss } from "./components/ribbon.js";
 export { eyebrowCss } from "./components/eyebrow.js";
 export { kbdCss } from "./components/kbd.js";
+export { numberFormatCss } from "./components/number-format.js";
 export { iconCss } from "./components/icon.js";
 export { imageCss } from "./components/image.js";
 export { carouselCss } from "./components/carousel.js";

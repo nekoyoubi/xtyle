@@ -44,6 +44,7 @@ export const textareaManifest: ComponentManifest = {
 	description:
 		"Textarea is a styled multi-line text control. It renders a native `<textarea>` that inherits the shared `.xtyle-control` chrome, wrapped with an optional label and an error message slot. The `rows` attribute sets the initial visible height and `resize` controls the user's drag handle (vertical by default, or none / horizontal / both). It exposes the same `invalid` / `disabled` / `required` and `sm` / `md` / `lg` size surface as the rest of the form family. The custom element is form-associated, so its value participates in native form submission, reset, and constraint validation; `required` and `invalid` reach the form itself, and an empty required textarea blocks the submit rather than only looking wrong.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["control", "error", "label", "root", "textarea"],
 	anatomy: [
 		{
@@ -279,6 +280,7 @@ export const textareaManifest: ComponentManifest = {
 	a11y: [
 		"Renders a native `<textarea>`, so editing, selection, and screen-reader semantics come for free.",
 		"The `label` is wired to the control via `for` / `id`; with no `label`, the binding falls back to `aria-label` and warns when neither is present.",
+		"The host's `aria-label` / `aria-labelledby` names the inner `<textarea>`, ahead of `label`; `aria-labelledby` ids are read from the host's own tree.",
 		"`invalid` sets `aria-invalid=\"true\"`; when an `error` is present it is linked through `aria-describedby`.",
 		"`required` is reflected as `aria-required` on the control.",
 		"Focus is shown with the shared control ring plus a transparent outline that the forced-colors base rule promotes to a real system outline.",

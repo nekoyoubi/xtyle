@@ -1092,7 +1092,7 @@ export function composeIcon(composition: IconComposition, opts: ComposeIconOptio
 		const ocolor = resolveColor(composition.outline.color, paintOpts);
 		const outlineId = `xol-${id}`;
 		defs.push(
-			`<filter id="${outlineId}" filterUnits="userSpaceOnUse" x="-${GRID}" y="-${GRID}" width="${GRID * 3}" height="${GRID * 3}"><feMorphology in="SourceAlpha" operator="dilate" radius="${n(ow)}" result="d"/><feFlood flood-color="${ocolor}" result="c"/><feComposite in="c" in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`,
+			`<filter id="${outlineId}" filterUnits="userSpaceOnUse" x="-${GRID}" y="-${GRID}" width="${GRID * 3}" height="${GRID * 3}"><feMorphology in="SourceAlpha" operator="dilate" radius="${n(ow)}" result="d"/><feFlood style="flood-color:${ocolor}" result="c"/><feComposite in="c" in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`,
 		);
 		body = `<g filter="url(#${outlineId})">${body}</g>`;
 		overflow = ` style="overflow:visible"`;

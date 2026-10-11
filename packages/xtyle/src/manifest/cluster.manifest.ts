@@ -64,6 +64,7 @@ export const clusterManifest: ComponentManifest = {
 	description:
 		"Cluster lays its children out in a horizontal flex row that wraps onto new lines as space runs out, with a token-driven `gap` (0–8) between every item, including across wrapped rows. It vertically centers its children by default and exposes `align` and `justify` for finer control. A `nowrap` flag pins everything to a single row when wrapping is unwanted. Like Stack it carries no chrome of its own, making it the natural home for button groups, badge and tag lists, breadcrumb trails, and any run of inline-ish boxes that should breathe consistently.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["cluster"],
 	anatomy: [
 		{
@@ -78,7 +79,7 @@ export const clusterManifest: ComponentManifest = {
 			name: "gap",
 			type: "number",
 			default: "2",
-			description: "Spacing between children (and across wrapped rows), as a step on the `--space` scale (0–8).",
+			description: "Spacing between children (and across wrapped rows), as a step on the `--space` scale (0–8), not a size name like `sm` or `md`; anything else warns and falls back to the default.",
 			bindings: ["html", "svelte", "astro"],
 			options: ["0", "1", "2", "3", "4", "5", "6", "7", "8"],
 		},

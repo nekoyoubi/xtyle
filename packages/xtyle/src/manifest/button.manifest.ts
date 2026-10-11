@@ -88,6 +88,86 @@ const listRowAstro = `<Button block align="start" variant="ghost" tone="neutral"
 	</svg>
 </Button>`;
 
+const outsideFormHtml = `<form id="profile">
+	<xtyle-field label="Display name" name="display-name" required></xtyle-field>
+</form>
+
+<xtyle-cluster gap="2" justify="end">
+	<xtyle-button type="reset" form="profile" variant="ghost" tone="neutral">Reset</xtyle-button>
+	<xtyle-button type="submit" form="profile">Save</xtyle-button>
+</xtyle-cluster>`;
+
+const outsideFormSvelte = `<script lang="ts">
+	import { Button, Cluster, Field } from "@xtyle/svelte";
+</script>
+
+<form id="profile" onsubmit={save}>
+	<Field label="Display name" name="display-name" required />
+</form>
+
+<Cluster gap={2} justify="end">
+	<Button type="reset" form="profile" variant="ghost" tone="neutral">Reset</Button>
+	<Button type="submit" form="profile">Save</Button>
+</Cluster>`;
+
+const outsideFormAstro = `---
+import { Button, Cluster, Field } from "@xtyle/astro";
+---
+
+<form id="profile">
+	<Field label="Display name" name="display-name" required />
+</form>
+
+<Cluster gap={2} justify="end">
+	<Button type="reset" form="profile" variant="ghost" tone="neutral">Reset</Button>
+	<Button type="submit" form="profile">Save</Button>
+</Cluster>`;
+
+const cursorHtml = `<xtyle-stack gap="2" id="pause-menu">
+	<xtyle-button block variant="ghost" tone="neutral" focusable="false" cursor>Resume</xtyle-button>
+	<xtyle-button block variant="ghost" tone="neutral" focusable="false">Options</xtyle-button>
+	<xtyle-button block variant="ghost" tone="neutral" focusable="false">Quit</xtyle-button>
+</xtyle-stack>
+
+<script>
+	const rows = [...document.querySelectorAll("#pause-menu xtyle-button")];
+	let at = 0;
+	function moveCursor(step) {
+		rows[at].cursor = false;
+		at = (at + step + rows.length) % rows.length;
+		rows[at].cursor = true;
+	}
+	input.on("menu-up", () => moveCursor(-1));
+	input.on("menu-down", () => moveCursor(1));
+	input.on("confirm", () => rows[at].click());
+</script>`;
+
+const cursorSvelte = `<script lang="ts">
+	import { Button, Stack } from "@xtyle/svelte";
+
+	const rows = ["Resume", "Options", "Quit"];
+	let at = $state(0);
+
+	input.on("menu-up", () => (at = (at - 1 + rows.length) % rows.length));
+	input.on("menu-down", () => (at = (at + 1) % rows.length));
+</script>
+
+<Stack gap={2}>
+	{#each rows as row, i}
+		<Button block variant="ghost" tone="neutral" focusable={false} cursor={i === at}>{row}</Button>
+	{/each}
+</Stack>`;
+
+const cursorAstro = `---
+import { Button, Stack } from "@xtyle/astro";
+---
+
+<Stack gap={2}>
+	<Button block variant="ghost" tone="neutral" focusable={false} cursor>Resume</Button>
+	<Button block variant="ghost" tone="neutral" focusable={false}>Options</Button>
+	<Button block variant="ghost" tone="neutral" focusable={false}>Quit</Button>
+</Stack>`;
+
 export const buttonManifest: ComponentManifest = {
 	id: "button",
 	name: "Button",
@@ -99,6 +179,7 @@ export const buttonManifest: ComponentManifest = {
 	description:
 		"Button triggers an action or navigates. Visual treatment (`variant`) and semantic color (`tone`) are independent axes: any of the five variants (solid, outline, ghost, subtle, link) can carry any of the six tones (accent, neutral, danger, success, warn, info). It renders a native `<button>` by default and an `<a>` when given an `href`, so the same component covers both actions and links. Icon slots, an icon-only square form, a loading state with an inline accessible spinner, and a full-width block mode round out the surface.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["button", "icon-end", "icon-start", "label", "spinner"],
 	anatomy: [
 		{
@@ -170,7 +251,15 @@ export const buttonManifest: ComponentManifest = {
 			name: "type",
 			type: '"button" | "submit" | "reset"',
 			default: "button",
-			description: "Native button type. Ignored when `href` is set.",
+			description:
+				"Native button type. `submit` and `reset` act on the button's form whether it renders in light DOM or behind a shadow root, where a native button would have no form at all. Ignored when `href` is set.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "form",
+			type: "string",
+			description:
+				"The id of the form a `submit` or `reset` button acts on, for a button that sits outside it: a dialog footer, a sticky action bar. Same as the native `form` attribute.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -229,6 +318,14 @@ export const buttonManifest: ComponentManifest = {
 			default: "true",
 			description:
 				"Set `false` to keep the control out of sequential focus navigation. A component rendering a native control makes it tab-reachable whether or not the app wants it: an app driving selection from its own keyboard cursor otherwise gets two focus rings that diverge, and Enter activates through both, firing one keypress twice. The host's own `tabindex` cannot express this, because focus lands on the inner control rather than the host.",
+			bindings: ["html", "svelte", "astro"],
+		},
+		{
+			name: "cursor",
+			type: "boolean",
+			default: "false",
+			description:
+				"Marks the button as the one an app-owned keyboard cursor rests on, and draws exactly the `:focus-visible` ring (forced-colors outline included) without moving DOM focus. For a menu driven from the app's own input layer, usually alongside `focusable={false}`: focus never lands, so `:focus-visible` never paints, and `selected` is the wrong state (it means current within a set). Controlled: move it in your own input handler. Changes no ARIA.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
@@ -309,6 +406,12 @@ export const buttonManifest: ComponentManifest = {
 			tokens: ["--border-normal", "--border-thick", "--ring"],
 		},
 		{
+			name: "cursor",
+			description: "App-owned keyboard cursor: `cursor` puts `data-cursor` on the control, which shares the focus-visible rule, so it draws the same ring and the same forced-colors outline while DOM focus stays where it is.",
+			selector: ".xtyle-button[data-cursor]",
+			tokens: ["--border-normal", "--border-thick", "--ring"],
+		},
+		{
 			name: "disabled",
 			description: "Non-interactive: muted fill and ink, overlay suppressed.",
 			selector: '.xtyle-button:disabled, .xtyle-button[aria-disabled="true"]',
@@ -369,12 +472,13 @@ export const buttonManifest: ComponentManifest = {
 		...toneTokens,
 	],
 	composition: [
-		"Pair with Field for form submit/reset actions; bind the button `type` accordingly.",
+		"Pair with Field for form submit/reset actions; bind the button `type` accordingly. A button outside its form, such as one in a dialog footer, names the form with `form`.",
 		"Use the `icon-start` / `icon-end` slots with an Icon component once it lands; for now any inline SVG works.",
 		"The icon-only form is the seed of a future IconButton convenience wrapper.",
 		"For a left-aligned action row (a settings entry, a recent-file row, or a nav item running a callback), pair `block` with `align=\"start\"` and hang a chevron or meta in the `icon-end` slot.",
 	],
 	a11y: [
+		"Under `forced-colors: active` a pressed (`aria-pressed`) or current (`aria-current`) button fills with the system `Highlight` and `HighlightText`, since the state wash is a background the mode flattens to `Canvas`. The link variant keeps its underline instead.",
 		"Renders a native `<button>` (or `<a>` with `href`) so keyboard and screen-reader semantics come for free.",
 		"`disabled` blocks interaction; on an anchor it applies `aria-disabled` and drops `href` (anchors cannot be natively disabled).",
 		"`loading` sets `aria-busy=\"true\"` and prevents activation.",
@@ -382,6 +486,7 @@ export const buttonManifest: ComponentManifest = {
 		"`selected` marks membership in a set via `aria-current` (distinct from `pressed`); it is controlled the same way. The consumer flips it, the button reflects.",
 		"The icon-only form has no visible text, so it REQUIRES an `aria-label`; the binding warns at runtime when one is missing.",
 		"Focus is shown with a token ring and a transparent outline that the forced-colors base rule promotes to a real system outline.",
+		"`cursor` is visual only and sets no ARIA: an app-owned cursor is not focus, so it is not announced as focus, and it is not `aria-current` (that is `selected`). An app that needs the cursor position announced owns that channel itself, typically by moving real focus or with a live region.",
 		"The spinner is decorative (`aria-hidden`); busy state is conveyed by `aria-busy`, not the spinner.",
 	],
 	examples: [
@@ -397,6 +502,20 @@ export const buttonManifest: ComponentManifest = {
 			description:
 				"A full-width action row that runs a callback: `block` gives it the width, `align=\"start\"` left-aligns the label, and a trailing icon reads as a chevron.",
 			source: { html: listRowHtml, svelte: listRowSvelte, astro: listRowAstro },
+		},
+		{
+			id: "outside-its-form",
+			title: "A button outside its form",
+			description:
+				"The footer actions sit outside the form they act on, as in a dialog whose body scrolls. `form` names the form by id, and `submit` runs its validation before it submits.",
+			source: { html: outsideFormHtml, svelte: outsideFormSvelte, astro: outsideFormAstro },
+		},
+		{
+			id: "app-owned-cursor",
+			title: "An app-owned keyboard cursor",
+			description:
+				"A menu driven from the app's own input layer rather than DOM focus: `focusable={false}` keeps the browser's tab stop out of it, and `cursor` on the current row draws the focus ring there. `input` stands in for the app's own action bindings.",
+			source: { html: cursorHtml, svelte: cursorSvelte, astro: cursorAstro },
 		},
 	],
 };

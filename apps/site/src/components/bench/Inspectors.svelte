@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Algorithm, TokenLineageNode, TokenRegister } from "@xtyle/core";
 	import { auditRegister, clampToGamut, coverComponents, toOklchColor } from "@xtyle/core";
+	import { Button } from "@xtyle/svelte";
+	import type { SandboxProof } from "./hosted.js";
 	import { isColorToken } from "./tokens.js";
 
 	interface Props {
@@ -9,6 +11,8 @@
 		algorithm: Algorithm;
 		/** Which derivation path produced `register`: the sandboxed mod, the baked oracle, or still resolving. */
 		derivePath: "hosted" | "baked" | "pending";
+		sandboxProof?: SandboxProof;
+		onverify?: () => void;
 		/** The edges of the derivation that produced `register` — resolved once by the bench and passed
 		 * down, so opening this tab reads the graph rather than deriving a second one to read it from. */
 		lineage: TokenLineageNode[];
@@ -16,7 +20,7 @@
 		panel: string;
 	}
 
-	let { register, algorithm, derivePath, lineage, panel }: Props = $props();
+	let { register, algorithm, derivePath, sandboxProof = { status: "idle" }, onverify, lineage, panel }: Props = $props();
 
 	const ringFloor = $derived(algorithm.declares?.focusRingFloor);
 	const audit = $derived(
@@ -145,13 +149,31 @@
 				The honest derivation graph — each token names what it derives from. Produced by the
 				{#if derivePath === "hosted"}
 					<strong>sandboxed mod</strong>.
-				{:else if derivePath === "pending"}
-					<strong>baked oracle</strong> while the sandboxed mod is still loading.
 				{:else}
-					<strong>baked oracle</strong>. The two are proven byte-identical, so nothing in the
-					register distinguishes them.
+					<strong>baked oracle</strong>, which keeps every edit live; the sandboxed mod is the same
+					algorithm, checked against it rather than run on every change.
+					{#if sandboxProof.status === "matched"}
+						Checked in the sandbox: byte-identical.
+					{:else if sandboxProof.status === "differed"}
+						Checked in the sandbox: <strong>the registers differ</strong>.
+					{:else if sandboxProof.status === "verifying"}
+						Checking in the sandbox…
+					{:else if sandboxProof.status === "stale"}
+						Last checked in the sandbox before this edit.
+					{:else if sandboxProof.status === "failed"}
+						The sandbox check failed: {sandboxProof.message}
+					{:else if derivePath === "pending"}
+						The sandboxed mod is still loading.
+					{/if}
 				{/if}
 			</p>
+			{#if derivePath !== "hosted" && onverify}
+				<Button
+					size="sm"
+					variant="subtle"
+					disabled={derivePath === "pending" || sandboxProof.status === "verifying"}
+					onclick={onverify}>Check in the sandbox</Button>
+			{/if}
 			<input
 				class="bench-graph__filter"
 				type="search"

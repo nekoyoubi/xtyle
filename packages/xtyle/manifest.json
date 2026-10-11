@@ -363,6 +363,67 @@
 					],
 					"returns": "string",
 					"capability": "color-math"
+				},
+				"format": {
+					"description": "Format exact OKLCH coordinates as CSS, gamut-clamped and otherwise untouched: `#rrggbb`, or `rgba(...)` below full alpha. The primitive the engine's own `formatCss` is built on.",
+					"params": [
+						{
+							"name": "l",
+							"type": "number"
+						},
+						{
+							"name": "c",
+							"type": "number"
+						},
+						{
+							"name": "h",
+							"type": "number"
+						},
+						{
+							"name": "alpha",
+							"type": "number"
+						}
+					],
+					"returns": "string",
+					"capability": "color-math"
+				},
+				"clamp": {
+					"description": "Clamp exact OKLCH coordinates into the sRGB gamut without normalizing them first. The primitive the engine's own `clampToGamut` is built on.",
+					"params": [
+						{
+							"name": "l",
+							"type": "number"
+						},
+						{
+							"name": "c",
+							"type": "number"
+						},
+						{
+							"name": "h",
+							"type": "number"
+						},
+						{
+							"name": "alpha",
+							"type": "number"
+						}
+					],
+					"returns": "OklchColor",
+					"capability": "color-math"
+				},
+				"ratio": {
+					"description": "The WCAG 2.x contrast ratio between two CSS colors, read as given with no re-formatting. The primitive the engine's own `contrast` is built on.",
+					"params": [
+						{
+							"name": "a",
+							"type": "string"
+						},
+						{
+							"name": "b",
+							"type": "string"
+						}
+					],
+					"returns": "number",
+					"capability": "color-math"
 				}
 			}
 		}
@@ -676,7 +737,10 @@
 						"type": "array",
 						"items": {
 							"type": "string",
-							"enum": ["dark", "light"]
+							"enum": [
+								"dark",
+								"light"
+							]
 						},
 						"description": "The schemes this algorithm states an anchor pair for. A grader reads it to know whether the other half is a theme the algorithm answers for or just a lightness flip of the one it does."
 					},

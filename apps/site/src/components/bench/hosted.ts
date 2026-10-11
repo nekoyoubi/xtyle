@@ -36,6 +36,10 @@ function whenIdle(): Promise<void> {
 /** Which derivation path produced a register: the sandboxed mod, the baked oracle, or still resolving. */
 export type DerivePath = "hosted" | "baked" | "pending";
 
+export type SandboxProof =
+	| { status: "idle" | "verifying" | "stale" | "unavailable" | "matched" | "differed" }
+	| { status: "failed"; message: string };
+
 /**
  * Which path actually produced a register: the zero-authority sandbox, or the baked oracle.
  *

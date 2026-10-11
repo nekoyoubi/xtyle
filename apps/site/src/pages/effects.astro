@@ -14,7 +14,7 @@ import Stack from "@xtyle/astro/Stack.astro";
 import Cluster from "@xtyle/astro/Cluster.astro";
 import Eyebrow from "@xtyle/astro/Eyebrow.astro";
 import { listEffects, listConditions, fxStyleAttr, EFFECT_TOKENS } from "@xtyle/core";
-import { BLURB, DEMOS, type EffectDemo } from "../data/effect-demos";
+import { BLURB, DEMOS } from "../data/effect-demos";
 
 const sections = [
 	{ id: "shape", label: "The shape" },
@@ -37,6 +37,8 @@ const PARAM_DEMOS = [
 	"glow@hover?spread:20,color:pink",
 	"throb?rate:1.2s,colors:[green,blue]",
 	"glare@hover?angle:315,rate:700ms,color:#ffffff",
+	"glare?repeat:infinite,rest:3,width:6%",
+	"holo glare?repeat:infinite,rest:2,width:5%",
 	"lift@hover?distance:10,color:purple",
 	"tint@hover?amount:60,color:red",
 ];
@@ -326,7 +328,12 @@ registerCondition({ name: "dragging", selector: "[data-dragging]" });
 				<Text tone="muted">
 					Every effect that moves is wrapped in a <code>prefers-reduced-motion: reduce</code> guard that
 					returns it to stillness. This is a large part of why the layer is worth having: the policy is
-					decided once, correctly, instead of by every adopter who happens to remember.
+					decided once, correctly, instead of by every adopter who happens to remember. The guard resets
+					only what an effect moves, so a filter-only effect like <code>throb</code> leaves your own
+					<code>transform</code> alone, and an effect can declare a <code>still</code> pose to hold: a
+					throb keeps its glow and loses only the pulse. A registered effect that moves some other way, by
+					<code>offset-path</code> or <code>inset</code>, says so with <code>moves</code> and resets the rest in its
+					<code>still</code> pose.
 				</Text>
 				<Alert severity="warn" variant="soft">
 					<strong>reveal</strong> is the one effect that needs a runtime, and it is built so the absence

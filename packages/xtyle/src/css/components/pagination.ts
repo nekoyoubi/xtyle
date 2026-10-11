@@ -105,4 +105,11 @@ ${toneRules}
 .xtyle-pagination--lg {
 	font-size: var(--text-body);
 }
+@media (forced-colors: active) {
+	.xtyle-pagination__page--current {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
+	}
+}
 `.trim();

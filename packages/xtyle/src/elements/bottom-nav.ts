@@ -1,9 +1,11 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { bottomNavHostCss } from "../markup/index.js";
 import { FragmentHost } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/bottom-nav/source.generated.js";
 import type { BottomNavTab } from "../markup/bottom-nav.js";
 import { iconBody } from "../icon-registry.js";
+import { flowKey } from "./flow-key.js";
 
 /**
  * The thumb-reachable bottom tab bar that pairs with `mobile-shell` the way `statusbar` pairs with
@@ -19,6 +21,7 @@ export class XtyleBottomNav extends XtyleElement {
 	}
 
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "bottom-nav", {
+		nameTarget: '[role="tablist"]',
 		applyIntent: () => {},
 	});
 
@@ -26,7 +29,7 @@ export class XtyleBottomNav extends XtyleElement {
 	private tabsProp: BottomNavTab[] | null = null;
 
 	static get observedAttributes(): string[] {
-		return ["value", "label", "tabs"];
+		return ["value", "label", "tabs", ...NAME_ATTRIBUTES];
 	}
 
 	get value(): string {
@@ -91,8 +94,9 @@ export class XtyleBottomNav extends XtyleElement {
 		const current = tabs.findIndex((t) => t.value === this.value);
 		const from = current < 0 ? 0 : current;
 		let next = -1;
-		if (event.key === "ArrowRight") next = (from + 1) % tabs.length;
-		else if (event.key === "ArrowLeft") next = (from - 1 + tabs.length) % tabs.length;
+		const key = flowKey(event.key, this);
+		if (key === "ArrowRight") next = (from + 1) % tabs.length;
+		else if (key === "ArrowLeft") next = (from - 1 + tabs.length) % tabs.length;
 		else if (event.key === "Home") next = 0;
 		else if (event.key === "End") next = tabs.length - 1;
 		if (next < 0) return;

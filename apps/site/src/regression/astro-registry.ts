@@ -44,6 +44,7 @@ import Markdown from "@xtyle/astro/Markdown.astro";
 import Menu from "@xtyle/astro/Menu.astro";
 import MobileShell from "@xtyle/astro/MobileShell.astro";
 import NinePatch from "@xtyle/astro/NinePatch.astro";
+import NumberFormat from "@xtyle/astro/NumberFormat.astro";
 import NumberInput from "@xtyle/astro/NumberInput.astro";
 import Pagination from "@xtyle/astro/Pagination.astro";
 import Panel from "@xtyle/astro/Panel.astro";
@@ -138,6 +139,7 @@ export const astroRegistry: Record<string, unknown> = {
 	"menu": Menu,
 	"mobile-shell": MobileShell,
 	"nine-patch": NinePatch,
+	"number-format": NumberFormat,
 	"number-input": NumberInput,
 	"pagination": Pagination,
 	"panel": Panel,

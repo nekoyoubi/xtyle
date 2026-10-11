@@ -167,4 +167,11 @@ export const commandPaletteCss = `
 	align-items: center;
 	gap: var(--space-1);
 }
+@media (forced-colors: active) {
+	.xtyle-command-palette__option[data-active="true"] {
+		forced-color-adjust: none;
+		background: Highlight;
+		color: HighlightText;
+	}
+}
 `.trim();

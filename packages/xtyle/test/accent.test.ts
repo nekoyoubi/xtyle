@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	DEFAULT_ANCHORS,
 	SHARED_KNOBS,
+	contrast,
 	derive,
 	gauntlet,
 	hueDelta,
@@ -135,9 +136,18 @@ describe("makeXtyleAlgorithm preset accent (flavor authors)", () => {
 	});
 	const bare = makeXtyleAlgorithm({ ...flavorBase, defaultAnchors: { ...DEFAULT_ANCHORS } });
 
-	it("honors a baked defaultAnchors.accent exactly as a call-site accent would resolve", () => {
-		const fromPreset = derive(baked)["--accent"];
-		expect(fromPreset).toBe(derive(bare, { constraints: { "--accent": "#c026d3" } })["--accent"]);
+	it("floors a baked defaultAnchors.accent the surfaces would swallow, where a call-site accent stays verbatim", () => {
+		const fromPreset = derive(baked);
+		expect(derive(bare, { constraints: { "--accent": "#c026d3" } })["--accent"]).toBe("#c026d3");
+		expect(fromPreset["--accent"]).not.toBe("#c026d3");
+		for (const surface of ["--bg-0", "--bg-1", "--bg-2"]) {
+			expect(contrast(fromPreset["--accent"] as string, fromPreset[surface] as string)).toBeGreaterThanOrEqual(3);
+		}
+	});
+
+	it("keeps a baked defaultAnchors.accent verbatim when it already clears every surface", () => {
+		const clear = makeXtyleAlgorithm({ ...flavorBase, defaultAnchors: { ...DEFAULT_ANCHORS, accent: "#f0abfc" } });
+		expect(derive(clear)["--accent"]).toBe("#f0abfc");
 	});
 
 	it("does not bg-derive when the preset bakes an accent", () => {

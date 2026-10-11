@@ -2,7 +2,7 @@ import { build } from "esbuild";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { buildMod, discoverAlgorithms } from "./algorithms.mjs";
+import { buildMod, discoverAlgorithms, modPlugin } from "./algorithms.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const mods = discoverAlgorithms(root);
@@ -23,6 +23,7 @@ const prelude = await build({
 	write: false,
 	legalComments: "none",
 	logLevel: "warning",
+	plugins: [await modPlugin()],
 });
 writeFileSync(
 	join(core, "src/host/authoring-prelude.generated.ts"),

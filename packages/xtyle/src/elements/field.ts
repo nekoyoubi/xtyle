@@ -2,6 +2,7 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size } from "../index.js";
 import { fieldHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/field/source.generated.js";
 import { normalizeFieldOptions, type FieldOption } from "./field-options.js";
 import { NATIVE_INPUT_ATTRS, forwardNativeInputAttrs } from "./native-input-attrs.js";
@@ -36,6 +37,7 @@ export class XtyleField extends XtyleElement {
 	private optionsProp: FieldOption[] | null = null;
 	private lastShape = "";
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "field", {
+		nameTarget: '[part="input"]',
 		applyIntent: (intent, event) => this.applying(event, () => this.applyIntent(intent, event)),
 		afterApply: () => {
 			this.syncDatalist();
@@ -74,6 +76,7 @@ export class XtyleField extends XtyleElement {
 			"options",
 			"mono",
 			...NATIVE_INPUT_ATTRS,
+			...NAME_ATTRIBUTES,
 		];
 	}
 
@@ -231,7 +234,7 @@ export class XtyleField extends XtyleElement {
 
 	private warnIfUnnamed(): void {
 		const hasLabel = (this.getAttribute("label") ?? "").length > 0;
-		const hasAria = !!this.getAttribute("aria-label") || (this.getAttribute("placeholder") ?? "").length > 0;
+		const hasAria = hasHostName(this) || (this.getAttribute("placeholder") ?? "").length > 0;
 		if (!hasLabel && !hasAria) {
 			console.warn(
 				"xtyle-field: the input has no accessible name. Provide a `label`, an `aria-label`, or at least a `placeholder`.",
@@ -327,8 +330,8 @@ export class XtyleField extends XtyleElement {
 		this.disabled = disabled;
 	}
 
-	formResetCallback(): void {
-		this.value = this.getAttribute("value") ?? "";
+	override formResetCallback(): void {
+		this.value = this.defaultFormValue ?? "";
 	}
 }
 

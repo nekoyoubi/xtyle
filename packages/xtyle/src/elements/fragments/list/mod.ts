@@ -20,8 +20,17 @@ interface ListItem {
 	label: string;
 	disabled?: boolean;
 	lead?: string;
-	trail?: string;
+	trail?: string | string[];
 	actions?: ListAction[];
+	heading?: boolean;
+	checked?: boolean;
+	tone?: string;
+	description?: string;
+	badge?: Array<{ text: string; tone?: string }>;
+	separator?: boolean;
+	trailTone?: string;
+	accelerator?: string;
+	variant?: string;
 }
 
 interface ListBindings {
@@ -35,6 +44,8 @@ interface ListBindings {
 	label?: string | null;
 	labelledby?: string | null;
 	ariaLabel?: string | null;
+	checkedLabel?: string;
+	uncheckedLabel?: string;
 	elementId?: string;
 }
 
@@ -90,12 +101,35 @@ function rootClass(bindings: ListBindings): string {
 		.join(" ");
 }
 
+const TRAIL_PARTS = ['part="trail trail-1"', 'part="trail trail-2"', 'part="trail trail-3"'];
+const TRAIL_PARTS_BEYOND = 'part="trail"';
+
+function checkMark(item: ListItem): string {
+	if (typeof item.checked !== "boolean") return "";
+	const icon = item.checked ? "--border--check-s60" : "--border";
+	return `<span class="xtyle-list__check" part="check" aria-hidden="true"><xtyle-icon name="${icon}"></xtyle-icon></span>`;
+}
+
+function checkState(item: ListItem, bindings: ListBindings): string {
+	if (typeof item.checked !== "boolean" || isSelectable(bindings)) return "";
+	return `<span class="xtyle-list__state" part="state">, ${escapeHtml(item.checked ? (bindings.checkedLabel ?? "checked") : (bindings.uncheckedLabel ?? "not checked"))}</span>`;
+}
+
 function itemBody(item: ListItem, bindings: ListBindings): string {
 	const lead = item.lead
 		? `<span class="xtyle-list__lead" part="lead"><xtyle-icon name="${escapeAttr(item.lead)}"></xtyle-icon></span>`
 		: "";
-	const label = `<span class="xtyle-list__label" part="label">${escapeHtml(item.label)}</span>`;
-	const trail = item.trail ? `<span class="xtyle-list__trail" part="trail">${escapeHtml(item.trail)}</span>` : "";
+	const labelSpan = `<span class="xtyle-list__label" part="label">${acceleratedLabel(item)}</span>`;
+	const label = item.description
+		? `<span class="xtyle-list__content" part="content">${labelSpan}<span class="xtyle-list__description" part="description" id="${escapeAttr(descriptionId(item, bindings))}">${escapeHtml(item.description)}</span></span>`
+		: labelSpan;
+	const badges = (item.badge ?? [])
+		.map((b) => `<span class="xtyle-list__badge${b.tone ? ` xtyle-list__badge--${escapeAttr(b.tone)}` : ""}" part="badge">${escapeHtml(b.text)}</span>`)
+		.join("");
+	const trails = typeof item.trail === "string" ? [item.trail] : (item.trail ?? []);
+	const trail = trails
+		.map((text, i) => `<span class="xtyle-list__trail${trailToneClass(item)}" ${TRAIL_PARTS[i] ?? TRAIL_PARTS_BEYOND}>${escapeHtml(text)}</span>`)
+		.join("");
 	const actionable = bindings.interaction === "actionable";
 	const actions =
 		actionable && item.actions && item.actions.length
@@ -106,26 +140,74 @@ function itemBody(item: ListItem, bindings: ListBindings): string {
 					})
 					.join("")}</span>`
 			: "";
-	return `${lead}${label}${trail}${actions}`;
+	return `${checkMark(item)}${lead}${label}${badges}${checkState(item, bindings)}${trail}${actions}`;
 }
 
-function items(bindings: ListBindings): string {
-	const list = bindings.items ?? [];
+function acceleratedLabel(item: ListItem): string {
+	const at = item.accelerator ? item.label.toLowerCase().indexOf(item.accelerator.toLowerCase()) : -1;
+	if (at < 0 || !item.accelerator) return escapeHtml(item.label);
+	const end = at + item.accelerator.length;
+	return `${escapeHtml(item.label.slice(0, at))}<span class="xtyle-list__accelerator" part="accelerator">${escapeHtml(item.label.slice(at, end))}</span>${escapeHtml(item.label.slice(end))}`;
+}
+
+function descriptionId(item: ListItem, bindings: ListBindings): string {
+	return `${bindings.elementId ?? "xtyle-list"}-description-${(bindings.items ?? []).indexOf(item)}`;
+}
+
+function trailToneClass(item: ListItem): string {
+	return item.trailTone ? ` xtyle-list__trail--${escapeAttr(item.trailTone)}` : "";
+}
+
+function toneClass(block: string, item: ListItem): string {
+	const tone = item.tone ?? (item.variant && block === "xtyle-list__item" ? "accent" : undefined);
+	return tone ? ` ${block}--${escapeAttr(tone)}` : "";
+}
+
+function itemRow(item: ListItem, bindings: ListBindings): string {
+	if (item.separator) return `<li class="xtyle-list__separator" part="separator" role="none" aria-hidden="true"></li>`;
 	const selectable = isSelectable(bindings);
 	const roving = isRoving(bindings);
 	const selected = new Set(bindings.selectedKeys ?? []);
 	const rovingValue = bindings.rovingValue ?? null;
 	const role = selectable ? "option" : "listitem";
-	return list
-		.map((item) => {
-			const disabled = item.disabled ?? false;
-			const disabledAttr = disabled ? ' aria-disabled="true" data-disabled="true"' : "";
-			const selAttr = selectable ? ` aria-selected="${String(selected.has(item.value))}"` : "";
-			const tabindex = roving ? (!disabled && item.value === rovingValue ? "0" : "-1") : "";
-			const tabAttr = roving ? ` tabindex="${tabindex}"` : "";
-			return `<li class="xtyle-list__item" part="item" role="${role}" data-value="${escapeAttr(item.value)}"${selAttr}${disabledAttr}${tabAttr}>${itemBody(item, bindings)}</li>`;
-		})
-		.join("");
+	const disabled = item.disabled ?? false;
+	const disabledAttr = disabled ? ' aria-disabled="true" data-disabled="true"' : "";
+	const selAttr = selectable ? ` aria-selected="${String(selected.has(item.value))}"` : "";
+	const tabindex = roving ? (!disabled && item.value === rovingValue ? "0" : "-1") : "";
+	const tabAttr = roving ? ` tabindex="${tabindex}"` : "";
+	const checkedAttr = typeof item.checked === "boolean" ? ` data-checked="${String(item.checked)}"${selectable ? ` aria-checked="${String(item.checked)}"` : ""}` : "";
+	const describedAttr = item.description ? ` aria-describedby="${escapeAttr(descriptionId(item, bindings))}"` : "";
+	const shortcutAttr = item.accelerator ? ` aria-keyshortcuts="${escapeAttr(item.accelerator)}"` : "";
+	const variantClass = item.variant ? ` xtyle-list__item--${escapeAttr(item.variant)}` : "";
+	return `<li class="xtyle-list__item${toneClass("xtyle-list__item", item)}${variantClass}" part="item" role="${role}" data-value="${escapeAttr(item.value)}"${selAttr}${checkedAttr}${describedAttr}${shortcutAttr}${disabledAttr}${tabAttr}>${itemBody(item, bindings)}</li>`;
+}
+
+function group(heading: ListItem, members: ListItem[], index: number, bindings: ListBindings): string {
+	const selectable = isSelectable(bindings);
+	const headingId = `${bindings.elementId ?? "xtyle-list"}-heading-${index}`;
+	const groupRole = selectable ? "group" : "listitem";
+	const membersRole = selectable ? "none" : "list";
+	const rows = members.map((item) => itemRow(item, bindings)).join("");
+	return (
+		`<li class="xtyle-list__group${toneClass("xtyle-list__group", heading)}" part="group" role="${groupRole}" aria-labelledby="${escapeAttr(headingId)}" data-heading="${escapeAttr(heading.value)}">` +
+		`<span class="xtyle-list__heading" part="heading" id="${escapeAttr(headingId)}">${escapeHtml(heading.label)}</span>` +
+		`<ul class="xtyle-list__group-items" part="group-items" role="${membersRole}">${rows}</ul>` +
+		`</li>`
+	);
+}
+
+function items(bindings: ListBindings): string {
+	const list = bindings.items ?? [];
+	let html = "";
+	let index = 0;
+	while (index < list.length && !list[index]!.heading) html += itemRow(list[index++]!, bindings);
+	while (index < list.length) {
+		const heading = list[index]!;
+		const start = ++index;
+		while (index < list.length && !list[index]!.heading) index++;
+		html += group(heading, list.slice(start, index), start - 1, bindings);
+	}
+	return html;
 }
 
 function listInner(bindings: ListBindings): string {
@@ -160,8 +242,9 @@ hooks.fragment.update("list", (bindings, ops) => {
 	const roving = isRoving(bindings);
 	const selected = new Set(bindings.selectedKeys ?? []);
 	const rovingValue = bindings.rovingValue ?? null;
-	ops.setAttr('[role="listbox"], [role="list"]', "class", rootClass(bindings));
+	ops.setAttr('[part="list"]', "class", rootClass(bindings));
 	for (const item of bindings.items ?? []) {
+		if (item.heading || item.separator) continue;
 		const sel = `[data-value="${escapeSelectorValue(item.value)}"]`;
 		if (selectable) ops.setAttr(sel, "aria-selected", String(selected.has(item.value)));
 		if (roving) ops.setAttr(sel, "tabindex", !item.disabled && item.value === rovingValue ? "0" : "-1");

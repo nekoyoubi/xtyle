@@ -1,3 +1,15 @@
+import { FULL_TONES } from "../../vocab.js";
+
+const toneRules = FULL_TONES.map(
+	(t) => `.xtyle-table__row[data-tone="${t}"] > .xtyle-table__cell,
+.xtyle-table__row[data-tone="${t}"] > .xtyle-table__header-cell,
+.xtyle-table__row > .xtyle-table__cell[data-tone="${t}"],
+.xtyle-table__row > .xtyle-table__header-cell[data-tone="${t}"] {
+	background-color: var(--${t}-bg);
+	color: var(--${t}-text);
+}`,
+).join("\n");
+
 export const tableCss = `
 .xtyle-table-wrap {
 	--xtyle-table-max-height: none;
@@ -74,11 +86,9 @@ export const tableCss = `
 .xtyle-table--striped .xtyle-table__body .xtyle-table__row:nth-child(even) {
 	background: var(--bg-2);
 }
-.xtyle-table--hover .xtyle-table__body .xtyle-table__row {
-	transition: background-color var(--duration-fast) var(--ease-standard);
-}
-.xtyle-table--hover .xtyle-table__body .xtyle-table__row:hover {
-	background: var(--state-hover);
+${toneRules}
+.xtyle-table--hover .xtyle-table__body .xtyle-table__row:hover > * {
+	background-image: linear-gradient(var(--state-hover), var(--state-hover));
 }
 .xtyle-table--sticky .xtyle-table__head .xtyle-table__header-cell {
 	position: sticky;
@@ -162,6 +172,13 @@ export const tableCss = `
 		content: "✓";
 		margin-inline-end: var(--space-2);
 		font-size: 0.85em;
+	}
+}
+@media (forced-colors: active) {
+	.xtyle-table__body .xtyle-table__row[aria-selected="true"] > .xtyle-table__cell {
+		forced-color-adjust: none;
+		background: Highlight !important;
+		color: HighlightText !important;
 	}
 }
 `.trim();

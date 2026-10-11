@@ -26,12 +26,13 @@ const TONE_GROUPS = [
 	</section>
 
 	<section class="demo__group">
-		<Heading level={2} size="sm" tone="muted">Sizes &amp; disabled</Heading>
+		<Heading level={2} size="sm" tone="muted">Sizes &amp; states</Heading>
 		<Stack gap={4} align="start">
 			<Segmented size="sm" label="Small" options="One,Two,Three" value="Two" />
 			<Segmented label="Medium (default)" options="One,Two,Three" value="Two" />
 			<Segmented size="lg" label="Large" options="One,Two,Three" value="Two" />
 			<Segmented label="Locked" options="One,Two,Three" value="Two" disabled />
+			<Segmented label="App cursor" options="One,Two,Three" value="Two" focusable={false} cursor />
 		</Stack>
 	</section>
 

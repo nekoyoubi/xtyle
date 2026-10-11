@@ -2,8 +2,9 @@ import { XtyleElement, define, type StyleMode } from "./base.js";
 import type { Size, FullTone } from "../index.js";
 import { switchHostCss } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/switch/source.generated.js";
-import { resolveTone, resolveVocab, SWITCH_SIZES } from "../vocab.js";
+import { ORIENTATIONS, resolveTone, resolveVocab, SWITCH_LABEL_SIDES, SWITCH_SHAPES, SWITCH_SIZES } from "../vocab.js";
 
 export class XtyleSwitch extends XtyleElement {
 	static formAssociated = true;
@@ -19,11 +20,12 @@ export class XtyleSwitch extends XtyleElement {
 	}
 	private elementId = `xtyle-switch-${Math.random().toString(36).slice(2, 8)}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "switch", {
+		nameTarget: '[role="switch"]',
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["checked", "disabled", "size", "tone", "shape", "orientation", "reverse", "label-side", "label", "labelledby", "on-label", "off-label", "label-on", "label-off", "name", "value", "focusable"];
+		return ["checked", "disabled", "size", "tone", "shape", "orientation", "reverse", "label-side", "spread", "label", "labelledby", "on-label", "off-label", "label-on", "label-off", "name", "value", "focusable", "cursor", ...NAME_ATTRIBUTES];
 	}
 
 	constructor() {
@@ -47,6 +49,14 @@ export class XtyleSwitch extends XtyleElement {
 		this.reflectBoolean("disabled", value);
 	}
 
+	/** Whether the app's own keyboard cursor rests on this switch: draws the focus ring without moving focus. */
+	get cursor(): boolean {
+		return this.hasAttribute("cursor");
+	}
+	set cursor(value: boolean) {
+		this.reflectBoolean("cursor", value);
+	}
+
 	get size(): Size {
 		return resolveVocab(this.getAttribute("size"), SWITCH_SIZES, "md", "switch size");
 	}
@@ -62,14 +72,14 @@ export class XtyleSwitch extends XtyleElement {
 	}
 
 	get shape(): "pill" | "square" {
-		return this.getAttribute("shape") === "square" ? "square" : "pill";
+		return resolveVocab(this.getAttribute("shape"), SWITCH_SHAPES, "pill", "switch shape");
 	}
 	set shape(value: "pill" | "square") {
 		this.setAttribute("shape", value);
 	}
 
 	get orientation(): "horizontal" | "vertical" {
-		return this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal";
+		return resolveVocab(this.getAttribute("orientation"), ORIENTATIONS, "horizontal", "switch orientation");
 	}
 	set orientation(value: "horizontal" | "vertical") {
 		this.setAttribute("orientation", value);
@@ -83,10 +93,17 @@ export class XtyleSwitch extends XtyleElement {
 	}
 
 	get labelSide(): "start" | "end" {
-		return this.getAttribute("label-side") === "end" ? "end" : "start";
+		return resolveVocab(this.getAttribute("label-side"), SWITCH_LABEL_SIDES, "start", "switch label side");
 	}
 	set labelSide(value: "start" | "end") {
 		this.setAttribute("label-side", value);
+	}
+
+	get spread(): boolean {
+		return this.hasAttribute("spread");
+	}
+	set spread(value: boolean) {
+		this.reflectBoolean("spread", value);
 	}
 
 	get value(): string {
@@ -104,12 +121,15 @@ export class XtyleSwitch extends XtyleElement {
 		return {
 			checked: this.checked,
 			disabled: this.disabled,
-			focusable: this.focusable,			size: this.size,
+			focusable: this.focusable,
+			cursor: this.cursor,
+			size: this.size,
 			tone: this.tone,
 			shape: this.shape,
 			orientation: this.orientation,
 			reverse: this.reverse,
 			labelSide: this.labelSide,
+			spread: this.spread,
 			label: this.getAttribute("label"),
 			labelledby: this.getAttribute("labelledby"),
 			onLabel: this.stateLabel("on"),
@@ -142,7 +162,8 @@ export class XtyleSwitch extends XtyleElement {
 			this.getAttribute("labelledby") ||
 			this.getAttribute("label") ||
 			this.stateLabel("on") ||
-			this.stateLabel("off");
+			this.stateLabel("off") ||
+			hasHostName(this);
 		if (!hasName) {
 			console.warn(
 				"xtyle-switch: no accessible name. Provide a `label`, `labelledby`, or `label-on`/`label-off` so the toggle is announced.",

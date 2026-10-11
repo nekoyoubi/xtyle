@@ -149,3 +149,25 @@ describe("xtyle-progress stands up without being rotated", () => {
 		expect(style).toContain("background-position:bottom");
 	});
 });
+
+describe("xtyle-progress circular ends", () => {
+	function ring(attrs: string): Element {
+		document.body.innerHTML = `<xtyle-progress variant="circular" aria-label="Ring" ${attrs}></xtyle-progress>`;
+		const host = document.body.firstElementChild as Element;
+		return host.shadowRoot ?? host;
+	}
+
+	it("ends a meter's arc flat and a progressbar's round, unless told otherwise", () => {
+		expect(ring(`meter value="3" max="15"`).querySelector(".xtyle-progress--butt")).not.toBeNull();
+		expect(ring(`value="3" max="15"`).querySelector(".xtyle-progress--butt")).toBeNull();
+		expect(ring(`meter linecap="round" value="3" max="15"`).querySelector(".xtyle-progress--butt")).toBeNull();
+		expect(ring(`linecap="butt" value="3" max="15"`).querySelector(".xtyle-progress--butt")).not.toBeNull();
+	});
+
+	it("draws no arc at all at the minimum, so an empty ring is exactly empty", () => {
+		const style = (root: Element) => root.querySelector('[part="indicator"]')?.getAttribute("style") ?? "";
+		expect(style(ring(`value="0" max="15"`))).toContain("stroke-opacity:0");
+		expect(style(ring(`value="1" max="15"`))).not.toContain("stroke-opacity");
+		expect(style(ring(`indeterminate`))).not.toContain("stroke-opacity");
+	});
+});

@@ -2,6 +2,9 @@ import { schemeOf } from "./color.js";
 import { emitCss } from "./emit/index.js";
 import type { EmitOptions, TokenRegister } from "./types.js";
 
+export { focusableIn, activeLeaf } from "./focus.js";
+export { resolveColor } from "./resolve-color.js";
+
 export interface ApplyOptions {
 	target?: HTMLElement;
 	persistKey?: string;

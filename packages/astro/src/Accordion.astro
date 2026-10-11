@@ -1,6 +1,6 @@
 ---
 import { type AccordionSection } from "@xtyle/core/markup";
-import { renderFragmentLight } from "@xtyle/core/elements/ssr";
+import { renderFragmentLight, markedExtras, topLevelElements } from "@xtyle/core/elements/ssr";
 import { authoredPairs } from "./internal/paired-slots.js";
 import { checkAuthoring } from "./internal/diagnose.js";
 import { SIZES, resolveVocab, iconBody } from "@xtyle/core";
@@ -38,6 +38,10 @@ const size = resolveVocab(sizeInput, SIZES, "md", "accordion size");
 const uid = `xtyle-accordion-${Math.random().toString(36).slice(2, 9)}`;
 
 const authored = items ? [] : await authoredPairs(Astro.slots, "header", "panel");
+const defaultHtml = !items && Astro.slots.has("default") ? await Astro.slots.render("default") : "";
+const markedActions = markedExtras(defaultHtml, "header", "panel", "actions");
+const namedActions = !items && Astro.slots.has("actions") ? topLevelElements(await Astro.slots.render("actions")) : [];
+const actionsHtml = authored.map((_, i) => (markedActions.length ? markedActions[i]?.html : namedActions[i]?.html) ?? null);
 
 const sections: AccordionSection[] = items
 	? items.map((section, i) => ({ ...section, value: section.value ?? String(i) }))
@@ -46,6 +50,7 @@ const sections: AccordionSection[] = items
 			headerSlot: `header-${i}`,
 			panel: "",
 			panelSlot: `panel-${i}`,
+			actionsSlot: actionsHtml[i] !== null ? `actions-${i}` : undefined,
 			open: lead.attrs.open !== undefined || lead.attrs["aria-expanded"] === "true",
 			disabled: lead.attrs.disabled !== undefined || lead.attrs["aria-disabled"] === "true",
 			value: lead.attrs["data-value"] ?? lead.attrs.value ?? String(i),
@@ -65,6 +70,7 @@ const bindings = {
 		headerSlot: section.headerSlot,
 		panel: section.panel,
 		panelSlot: section.panelSlot,
+		actionsSlot: section.actionsSlot,
 		value: section.value ?? String(i),
 		disabled: section.disabled,
 	})),
@@ -81,7 +87,8 @@ const composed = authored.reduce(
 	(html, pair, i) =>
 		html
 			.replace(`<slot name="header-${i}"></slot>`, () => pair.lead.html)
-			.replace(`<slot name="panel-${i}"></slot>`, () => pair.body?.html ?? ""),
+			.replace(`<slot name="panel-${i}"></slot>`, () => pair.body?.html ?? "")
+			.replace(`<slot name="actions-${i}"></slot>`, () => actionsHtml[i] ?? ""),
 	light,
 );
 ---

@@ -25,10 +25,10 @@ export function styleQueriedTokensInCss(css: string): Set<string> {
 export function declaredPropsInCss(css: string): Set<string> {
 	const queried = styleQueriedTokensInCss(css);
 	const found = new Set<string>();
-	const pattern = /(--[a-z0-9-]+)\s*:/gi;
+	const pattern = /(^|[\s{;(])(--[a-z0-9-]+)\s*:/gi;
 	let match: RegExpExecArray | null;
 	while ((match = pattern.exec(css)) !== null) {
-		const prop = match[1];
+		const prop = match[2];
 		if (prop && !queried.has(prop)) found.add(prop);
 	}
 	return found;

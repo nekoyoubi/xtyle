@@ -1,6 +1,7 @@
 import { XtyleElement, define, type StyleMode } from "./base.js";
 import { sheetHostCss, type SheetSide, type SheetSize } from "../markup/sheet.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES, hasHostName } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/sheet/source.generated.js";
 import { resolveVocab, SHEET_SIDES, SHEET_SIZES } from "../vocab.js";
 import { startDrag } from "./gesture.js";
@@ -38,6 +39,7 @@ export class XtyleSheet extends XtyleElement {
 	private wiredDialog: HTMLDialogElement | null = null;
 	private portalMarker: Comment | null = null;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "sheet", {
+		nameTarget: '[part="sheet"]',
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 		afterApply: () => {
 			this.wireNative();
@@ -58,6 +60,7 @@ export class XtyleSheet extends XtyleElement {
 			"no-grabber",
 			"no-swipe",
 			"non-modal",
+			...NAME_ATTRIBUTES,
 		];
 	}
 
@@ -196,7 +199,7 @@ export class XtyleSheet extends XtyleElement {
 	}
 
 	private warnIfUnnamed(): void {
-		if (!this.getAttribute("heading") && !this.getAttribute("labelledby") && !this.getAttribute("label")) {
+		if (!this.getAttribute("heading") && !this.getAttribute("labelledby") && !this.getAttribute("label") && !hasHostName(this)) {
 			console.warn(
 				"xtyle-sheet: no accessible name. Provide a `heading`, `label`, or `labelledby` so the sheet is announced.",
 			);

@@ -2,8 +2,9 @@ import { XtyleElement, define, readAttrOrProp, readBoolAttrOrProp, type StyleMod
 import type { Size } from "../index.js";
 import { tabsHostCss, type TabItemData, type TabsVariant, type TabsActivation, type TabsOverflow } from "../markup/index.js";
 import { FragmentHost, type FragmentIntent } from "./fragment-host.js";
+import { NAME_ATTRIBUTES } from "./accessible-name.js";
 import { manifest, fragmentSources } from "./fragments/tabs/source.generated.js";
-import { resolveVocab, TABS_VARIANTS, TABS_SIZES, TABS_OVERFLOWS } from "../vocab.js";
+import { resolveVocab, TABS_ACTIVATIONS, TABS_VARIANTS, TABS_SIZES, TABS_OVERFLOWS } from "../vocab.js";
 
 let tabsSeq = 0;
 
@@ -26,12 +27,13 @@ export class XtyleTabs extends XtyleElement {
 
 	private uid = `xtyle-tabs-${tabsSeq++}`;
 	private fragment = new FragmentHost(this.root, manifest, fragmentSources, "tabs", {
+		nameTarget: '[role="tablist"]',
 		context: (handler) => (handler === "navKeydown" ? this.navContext() : undefined),
 		applyIntent: (intent, event) => this.applyIntent(intent, event),
 	});
 
 	static get observedAttributes(): string[] {
-		return ["variant", "size", "activation", "value", "label", "labelledby", "items", "sticky", "tablist", "fill", "overflow"];
+		return ["variant", "size", "activation", "value", "label", "labelledby", "items", "sticky", "tablist", "fill", "overflow", ...NAME_ATTRIBUTES];
 	}
 
 	get variant(): TabsVariant {
@@ -56,7 +58,7 @@ export class XtyleTabs extends XtyleElement {
 	}
 
 	get activation(): TabsActivation {
-		return this.getAttribute("activation") === "manual" ? "manual" : "automatic";
+		return resolveVocab(this.getAttribute("activation"), TABS_ACTIVATIONS, "automatic", "tabs activation");
 	}
 	set activation(value: TabsActivation) {
 		this.setAttribute("activation", value);
@@ -287,7 +289,11 @@ export class XtyleTabs extends XtyleElement {
 
 	private shapeSignature(): string {
 		const items = this.markupItems.map((item, i) => `${item.value ?? String(i)}:${item.disabled ? 1 : 0}`);
-		return `${this.tablist}|${items.join(" ")}`;
+		return `${this.tablist}|${items.join("\u0000")}`;
+	}
+
+	private checkVocab(): void {
+		void this.activation;
 	}
 
 	protected override render(): void {
@@ -298,6 +304,7 @@ export class XtyleTabs extends XtyleElement {
 		this.fragment.update(this.bindings);
 		this.warnIfUnnamed();
 		this.warnIfUnmapped();
+		this.checkVocab();
 	}
 }
 

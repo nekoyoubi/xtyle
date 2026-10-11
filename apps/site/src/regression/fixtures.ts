@@ -216,6 +216,10 @@ export const fixtures: Record<string, Fixture> = {
 	eyebrow: { props: {}, childrenHtml: "Overline" },
 	heading: { props: { level: 2, size: "lg" }, childrenHtml: "A themed heading" },
 	kbd: { props: {}, childrenHtml: "Ctrl" },
+	"number-format": {
+		props: { value: 1299.5, format: "currency", currency: "USD", locale: "en-US" },
+		childrenHtml: "",
+	},
 	link: { props: { href: "#" }, childrenHtml: "A themed link" },
 	markdown: {
 		props: { source: "# Title\n\nSome **bold** and _italic_ copy with a [link](#)." },

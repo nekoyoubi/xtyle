@@ -11,6 +11,8 @@
 		size?: ButtonSize;
 		align?: ButtonAlign;
 		type?: "button" | "submit" | "reset";
+		/** The id of the form this button submits or resets, when it sits outside that form. */
+		form?: string;
 		href?: string;
 		disabled?: boolean;
 		loading?: boolean;
@@ -20,6 +22,8 @@
 		selected?: boolean;
 		/** Set false to keep the control out of sequential focus navigation. */
 		focusable?: boolean;
+		/** Mark this as the one an app-owned keyboard cursor rests on: draws the focus ring without moving focus. */
+		cursor?: boolean;
 		ariaLabel?: string;
 		onclick?: (event: MouseEvent) => void;
 		iconStart?: Snippet;
@@ -35,6 +39,7 @@
 		size = "md",
 		align = "center",
 		type = "button",
+		form,
 		href,
 		disabled = false,
 		loading = false,
@@ -43,6 +48,7 @@
 		pressed,
 		selected,
 		focusable,
+		cursor = false,
 		ariaLabel,
 		onclick,
 		iconStart,
@@ -61,6 +67,7 @@
 	{size}
 	{align}
 	{type}
+	{form}
 	href={href && !blocked ? href : undefined}
 	disabled={disabled || undefined}
 	loading={loading || undefined}
@@ -69,6 +76,7 @@
 	pressed={pressed === undefined ? undefined : String(pressed)}
 	selected={selected === undefined ? undefined : String(selected)}
 	focusable={focusable === false ? "false" : undefined}
+	cursor={cursor || undefined}
 	aria-label={ariaLabel ?? (rest["aria-label"] as string | undefined)}
 	{onclick}
 >

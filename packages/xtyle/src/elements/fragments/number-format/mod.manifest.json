@@ -1,0 +1,22 @@
+{
+	"$schema": "https://xript.dev/schema/mod-manifest/v0.8.json",
+	"xript": "0.8",
+	"name": "xtyle-number-format-default",
+	"version": "0.0.1",
+	"title": "Xtyle NumberFormat (default)",
+	"description": "The built-in fill for the xtyle NumberFormat component: the mod-zero markup every app inherits and may override.",
+	"capabilities": ["xtyle.component.number-format"],
+	"entry": { "script": "mod.js", "format": "script" },
+	"fills": {
+		"component.number-format": [
+			{
+				"id": "number-format",
+				"format": "application/x-xtyle+html",
+				"source": "number-format.html",
+				"meta": {
+					"tokens": []
+				}
+			}
+		]
+	}
+}

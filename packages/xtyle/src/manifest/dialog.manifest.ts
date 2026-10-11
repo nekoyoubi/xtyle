@@ -67,6 +67,7 @@ export const dialogManifest: ComponentManifest = {
 	description:
 		"Dialog is a centered modal that wraps the platform `<dialog>` element, so the native modal machinery (the top-layer scrim, the focus trap, focus restore on close, `Escape` to dismiss, and the `role`/`aria-modal` semantics) all comes from the browser rather than re-implemented JavaScript. Open and close it imperatively with `showModal()` / `close()` (or the reactive `open` prop in the framework wrappers). It lays out a header, a scrolling body, and a footer via named slots, and ships a close button by default. The header is wired to the dialog with `aria-labelledby` whenever a `heading` (or explicit `labelledby`) is supplied; a dialog that brings its own `header` slot instead names itself with `label`, since `aria-labelledby` cannot reach a slotted title across the shadow boundary. Five sizes (sm, md, lg, xl, full) cap its width while it stays responsive on small screens; `xl` (64rem) and `full` cover editor-class content, and the inner panel is exposed as `::part(dialog)` so a consumer can size or style it to an exact width directly.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["body", "close", "dialog", "footer", "header"],
 	anatomy: [
 		{
@@ -289,9 +290,10 @@ export const dialogManifest: ComponentManifest = {
 		"For a wide, editor-class host (a code editor, a multi-column form), reach for `size=\"xl\"` (64rem) or `size=\"full\"`; for an exact width or any other panel styling, target `::part(dialog)` from the consumer's own stylesheet (`xtyle-dialog::part(dialog) { width: min(1100px, 96vw); }`).",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `<dialog>`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"Built on the native `<dialog>` element, so `role=\"dialog\"`, `aria-modal=\"true\"`, the focus trap, focus restore on close, and `Escape`-to-dismiss all come from the browser.",
 		"`showModal()` places the dialog in the top layer and renders the `::backdrop` scrim; a click on the backdrop closes it.",
-		"A `heading` (or explicit `labelledby`) wires the dialog to its title via `aria-labelledby`; a `header`-slot dialog names itself with `label` (an `aria-label`) instead, since the IDREF cannot cross into the slotted light DOM. The binding warns at runtime when none is present.",
+		"A `heading` (or explicit `labelledby`) wires the dialog to its title via `aria-labelledby`. An IDREF cannot cross into the slotted light DOM, so a `labelledby` naming an element outside the shadow root is resolved to that element's text and set as the dialog's `aria-label`; `label` names a `header`-slot dialog directly. The binding warns at runtime when none is present.",
 		"The built-in close button carries an `aria-label` (default \"Close\", overridable via `closeLabel`) and its glyph is `aria-hidden`.",
 		"Focus on the close button is shown with a token ring and a transparent outline that the forced-colors base rule promotes to a real system outline.",
 		"Closing (by `Escape`, the close button, a backdrop click, or `close()`) fires a `close` event and clears the `open` state.",

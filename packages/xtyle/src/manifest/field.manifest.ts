@@ -106,6 +106,7 @@ export const fieldManifest: ComponentManifest = {
 	description:
 		"Field is the complete single-line text input: a label, an input, a persistent description, and an error message wired together with the right accessibility relationships out of the box. The input inherits the shared `.xtyle-control` chrome and adds field-specific layout: a unified control box that holds leading and trailing adornment slots (icons, currency prefixes, unit suffixes) alongside the input. It generates a stable `id` and links it to the label, builds `aria-describedby` from both the description and the error, and ships two optional built-in actions: a clear button and a password reveal toggle. In the HTML and Svelte bindings the element is form-associated, participating in native form submission and constraint validation. Sizes (sm / md / lg) match the Button padding scale, and `readonly`, `required`, `disabled`, and `invalid` are all first-class.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["action-clear", "action-reveal", "adornment", "control", "description", "error", "field", "input", "label", "required"],
 	anatomy: [
 		{
@@ -124,7 +125,7 @@ export const fieldManifest: ComponentManifest = {
 			name: "control",
 			description: "The bordered box that wraps the input and its adornments; paints the focus-within ring.",
 			selector: ".xtyle-field__control",
-			tokens: ["--field-bg", "--field-border", "--border-thin", "--radius-md", "--accent", "--ring", "--border-normal"],
+			tokens: ["--field-bg", "--line-strong", "--border-thin", "--radius-md", "--accent", "--ring", "--border-normal"],
 		},
 		{
 			name: "input",
@@ -310,7 +311,7 @@ export const fieldManifest: ComponentManifest = {
 			name: "default",
 			description: "The standard field: neutral border, accent focus ring.",
 			className: "xtyle-field",
-			tokens: ["--field-border", "--accent"],
+			tokens: ["--line-strong", "--accent"],
 		},
 		{
 			name: "invalid",
@@ -406,7 +407,7 @@ export const fieldManifest: ComponentManifest = {
 		"--fg-2",
 		"--fg-disabled",
 		"--field-bg",
-		"--field-border",
+		"--line-strong",
 		"--bg-1",
 		"--accent",
 		"--danger",
@@ -421,6 +422,8 @@ export const fieldManifest: ComponentManifest = {
 		"Native input attributes (`spellcheck`, `inputmode`, `autocomplete`, `autocapitalize`, `autocorrect`, `enterkeyhint`) set on the host are forwarded to the inner input, so `spellcheck=\"false\"` on a code field works without reaching through `::part`.",
 	],
 	a11y: [
+		"The border is drawn in `--line-strong`, which clears 3:1 against the field and the page, so the input's boundary is identifiable (WCAG 1.4.11).",
+		"The host's `aria-label` / `aria-labelledby` names the inner `<input>`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"Always generates a stable input `id` and links the label with `for`, so clicking the label focuses the input.",
 		"`aria-describedby` is built from both the description and the error, so assistive tech announces helper text and validation together.",
 		"`invalid` sets `aria-invalid`; `required` sets `aria-required` and a non-color `*` indicator so requirement is not conveyed by color alone.",

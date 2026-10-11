@@ -13,6 +13,49 @@
     return escapeHtml(value).replace(DQUOTE, "&quot;").replace(SQUOTE, "&#39;");
   }
 
+  // packages/xtyle/src/markup/axis.ts
+  function parseLabelAngle(value) {
+    const n = typeof value === "number" ? value : value == null || value.trim() === "" ? Number.NaN : Number(value);
+    return Number.isFinite(n) ? Math.max(-90, Math.min(0, n)) : "auto";
+  }
+
+  // packages/xtyle/src/elements/fragments/axis-labels.ts
+  var TICK_FONT = 11;
+  var CHAR_WIDTH = TICK_FONT * 0.58;
+  var LABEL_GAP = 10;
+  var UPRIGHT_OFFSET = 18;
+  var UPRIGHT_SPACE = 30;
+  function clip(label, maxChars) {
+    return label.length <= maxChars ? label : `${label.slice(0, Math.max(1, maxChars - 1))}\u2026`;
+  }
+  function layoutAxisLabels(labels, slot, requested, maxSpace) {
+    const widest = Math.max(0, ...labels.map((label) => label.length)) * CHAR_WIDTH;
+    const fixed = parseLabelAngle(requested);
+    const angle = typeof fixed === "number" ? Math.round(fixed) : widest <= slot * 0.9 ? 0 : slot >= TICK_FONT * 1.3 ? -45 : -90;
+    if (angle === 0) return { angle, space: UPRIGHT_SPACE, labels: [...labels] };
+    const rad = Math.abs(angle) * Math.PI / 180;
+    const rise = Math.sin(rad);
+    const fontRise = TICK_FONT * Math.cos(rad);
+    const maxChars = Math.max(4, Math.floor((maxSpace - LABEL_GAP - fontRise) / rise / CHAR_WIDTH));
+    const clipped = labels.map((label) => clip(label, maxChars));
+    const clippedWidest = Math.max(0, ...clipped.map((label) => label.length)) * CHAR_WIDTH;
+    return { angle, space: Math.max(UPRIGHT_SPACE, LABEL_GAP + clippedWidest * rise + fontRise), labels: clipped };
+  }
+  function fitSideLabels(labels, minPad, maxPad) {
+    const maxChars = Math.max(4, Math.floor((maxPad - LABEL_GAP) / CHAR_WIDTH));
+    const clipped = labels.map((label) => clip(label, maxChars));
+    const widest = Math.max(0, ...clipped.map((label) => label.length)) * CHAR_WIDTH;
+    return { pad: Math.max(minPad, Math.min(maxPad, Math.ceil(widest + LABEL_GAP))), labels: clipped };
+  }
+  function axisLabel(attrs, x, axisY, label, angle) {
+    const cx = x.toFixed(1);
+    if (angle === 0) {
+      return `<text ${attrs} x="${cx}" y="${(axisY + UPRIGHT_OFFSET).toFixed(1)}" text-anchor="middle">${escapeAttr(label)}</text>`;
+    }
+    const y = (axisY + LABEL_GAP).toFixed(1);
+    return `<text ${attrs} x="${cx}" y="${y}" dy="0.32em" text-anchor="end" transform="rotate(${angle} ${cx} ${y})">${escapeAttr(label)}</text>`;
+  }
+
   // packages/xtyle/src/elements/fragments/bar/mod.ts
   var IW = 640;
   function niceMax(raw) {
@@ -78,6 +121,8 @@
     const pad = { top: 12, right: 12, bottom: 30, left: 44 };
     const plotX0 = pad.left;
     const plotX1 = IW - pad.right;
+    const xLabelLayout = layoutAxisLabels(categories, categories.length > 0 ? (plotX1 - plotX0) / categories.length : plotX1 - plotX0, b.labelAngle, height * 0.4);
+    pad.bottom = xLabelLayout.space;
     const plotY0 = pad.top;
     const plotY1 = height - pad.bottom;
     const plotW = plotX1 - plotX0;
@@ -98,9 +143,7 @@
     for (let ci = 0; ci < n; ci++) {
       const bandX = plotX0 + ci * bandW;
       const centerX = bandX + bandW / 2;
-      xLabels.push(
-        `<text class="xtyle-bar__xtick" x="${centerX.toFixed(1)}" y="${(plotY1 + 18).toFixed(1)}" text-anchor="middle">${escapeAttr(categories[ci] ?? "")}</text>`
-      );
+      xLabels.push(axisLabel(`class="xtyle-bar__xtick"`, centerX, plotY1, xLabelLayout.labels[ci] ?? "", xLabelLayout.angle));
       if (stacked) {
         const barW = bandW * 0.6;
         const x = bandX + (bandW - barW) / 2;
@@ -136,7 +179,8 @@
     const categories = b.categories ?? [];
     const stacked = !!b.stacked;
     const selectable = !!b.selectable;
-    const pad = { top: 12, right: 16, bottom: 28, left: 76 };
+    const sideLabels = fitSideLabels(categories, 76, IW * 0.4);
+    const pad = { top: 12, right: 16, bottom: 28, left: sideLabels.pad };
     const plotX0 = pad.left;
     const plotX1 = IW - pad.right;
     const plotY0 = pad.top;
@@ -160,7 +204,7 @@
       const bandY = plotY0 + ci * bandH;
       const centerY = bandY + bandH / 2;
       catLabels.push(
-        `<text class="xtyle-bar__ytick" x="${(plotX0 - 8).toFixed(1)}" y="${centerY.toFixed(1)}" dy="0.32em" text-anchor="end">${escapeAttr(categories[ci] ?? "")}</text>`
+        `<text class="xtyle-bar__ytick" x="${(plotX0 - 8).toFixed(1)}" y="${centerY.toFixed(1)}" dy="0.32em" text-anchor="end">${escapeAttr(sideLabels.labels[ci] ?? "")}</text>`
       );
       if (stacked) {
         const barH = bandH * 0.6;

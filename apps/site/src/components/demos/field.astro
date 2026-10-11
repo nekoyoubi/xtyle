@@ -36,6 +36,7 @@ import Heading from "@xtyle/astro/Heading.astro";
 	<section class="demo__group">
 		<Heading level={2} size="sm" tone="muted">Adornments</Heading>
 		<Grid minColWidth="16rem" gap={4}>
+			<Field label="Filter rows" name="filter" type="search" value="pending" clearable placeholder="Filter…" />
 			<Field label="Search" name="q" placeholder="Search the docs…">
 				<svg slot="prefix" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
 					<path fill="currentColor" d="M10 4a6 6 0 1 0 3.5 10.9l4.3 4.3 1.4-1.4-4.3-4.3A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" />

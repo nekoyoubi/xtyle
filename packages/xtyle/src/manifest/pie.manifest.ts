@@ -127,6 +127,7 @@ export const pieManifest: ComponentManifest = {
 	description:
 		"Pie plots a set of labelled values as wedges of a circle, each a share of the whole. Each slice takes its color from a `scheme` resolved off the live theme (`skittles` by default, so the parts read as distinct), or pass explicit colors and `reverse`. Set `variant=\"donut\"` for a ring with the total in its center. It's interactive: hovering or focusing a slice dims the rest and floats its value and share, and the chart is mirrored into a visually-hidden table so assistive tech reads the numbers. A legend names each slice; optional `showValues` prints the percentage on each wedge. Size it with `size`; zero and negative values drop out, and a chart with nothing left to plot shows a muted `No data` message in place of the wedges.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["chart", "legend", "legend-item", "slice", "tooltip", "tooltip-row"],
 	anatomy: [
 		{
@@ -279,6 +280,7 @@ export const pieManifest: ComponentManifest = {
 		"Pair with a `Stat` or a `Bar` in the Metrics family for a composition-plus-trend view.",
 	],
 	a11y: [
+		"The host's `aria-label` / `aria-labelledby` names the inner `role=\"img\"`, ahead of the component's own naming; `aria-labelledby` ids are read from the host's own tree.",
 		"Each slice carries `role=\"img\"` and an `aria-label` naming its label, value, and share, and is a focusable tab stop, so the chart is navigable by keyboard.",
 		"The full breakdown is mirrored into a visually-hidden `<table>` (label, value, share), and the legend names every slice in text, so meaning never rides on color alone.",
 	],

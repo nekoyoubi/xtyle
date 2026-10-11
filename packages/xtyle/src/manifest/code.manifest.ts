@@ -103,6 +103,7 @@ export const codeManifest: ComponentManifest = {
 	description:
 		"Code is a turnkey, read-only code block with the tokenizer built in; it's the first component to read the `--code-*` family. It tokenizes with Prism, whose output is class-based, so the block re-themes live the moment the theme changes: the colors are just cascading CSS variables, never baked inline. The `lang` prop names the language with aliases resolved (`ts` → `typescript`), and the source is the element's text content (or, for Astro, a `code` prop). Grammar loading is fully lazy and per-language. A page with no code block loads nothing; a page with a few languages loads Prism core once plus only those grammar chunks, walking each grammar's dependencies first. At runtime the block paints immediately as plain-but-themed text and recolors in place once the grammar resolves, so there is no flash and no layout shift; the Astro binding tokenizes at build and ships pre-colored with zero browser JS. `preload` warms a block's grammar eagerly to kill even the minor recolor flash, sharing one warm path with the page-level `XtyleCode.warm()` static. An unknown language falls back to plain-but-themed text rather than erroring.",
 	bindings: ["html", "svelte", "astro"],
+	render: "auto",
 	exposedParts: ["caption", "code", "copy", "pre"],
 	anatomy: [
 		{
@@ -177,7 +178,7 @@ export const codeManifest: ComponentManifest = {
 			type: "boolean",
 			default: "true",
 			description:
-				"The copy-to-clipboard button. On by default; set `copy=\"false\"` to drop it. It only paints where it can work: hidden in an insecure context (no Clipboard API) and on the zero-JS Astro path.",
+				"The copy-to-clipboard button. On by default; set `copy=\"false\"` (or `copy=\"none\"`) to drop it. It only paints where it can work: hidden in an insecure context (no Clipboard API) and on the zero-JS Astro path.",
 			bindings: ["html", "svelte", "astro"],
 		},
 		{
